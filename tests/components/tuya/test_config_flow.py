@@ -70,7 +70,9 @@ async def test_import(hass, tuya):
         "homeassistant.components.tuya.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=TUYA_USER_DATA,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
