@@ -22,8 +22,6 @@ from homeassistant.util import slugify
 DOMAIN = "ais_cloud"
 _LOGGER = logging.getLogger(__name__)
 CLOUD_APP_URL = "https://powiedz.co/ords/f?p=100:1&x01=TOKEN:"
-CLOUD_WS_TOKEN = None
-CLOUD_WS_HEADER = {}
 G_PLAYERS = []
 
 
@@ -43,11 +41,10 @@ def get_player_data(player_name):
             return player
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Initialize the radio station list."""
     data = hass.data[DOMAIN] = AisColudData(hass)
-    yield from data.get_types_async()
+    await data.async_get_types()
     #
     hass.states.async_set("sensor.radiolist", -1, {})
     hass.states.async_set("sensor.podcastlist", -1, {})
@@ -272,20 +269,15 @@ def async_setup(hass, config):
 
 
 class AisCloudWS:
-    def __init__(self):
+    def __init__(self, hass):
         """Initialize the cloud WS connections."""
         self.url = "https://powiedz.co/ords/dom/dom/"
         self.url_gh = "https://powiedz.co/ords/dom/gh/"
-
-    def setCloudToken(self):
-        # take the token from secrets
-        global CLOUD_WS_TOKEN, CLOUD_WS_HEADER
-        if CLOUD_WS_TOKEN is None:
-            CLOUD_WS_TOKEN = ais_global.get_sercure_android_id_dom()
-            CLOUD_WS_HEADER = {"Authorization": f"{CLOUD_WS_TOKEN}"}
+        self.hass = hass
+        self.cloud_ws_token = ais_global.get_sercure_android_id_dom()
+        self.cloud_ws_header = {"Authorization": f"{self.cloud_ws_token}"}
 
     def gh_ais_add_device(self, oauth_json):
-        self.setCloudToken()
         payload = {
             "user": ais_global.get_sercure_android_id_dom(),
             "oauthJson": oauth_json,
@@ -293,13 +285,12 @@ class AisCloudWS:
         ws_resp = requests.post(
             self.url_gh + "ais_add_device",
             json=payload,
-            headers=CLOUD_WS_HEADER,
+            headers=self.cloud_ws_header,
             timeout=5,
         )
         return ws_resp
 
     def gh_ais_add_token(self, oauth_code):
-        self.setCloudToken()
         payload = {
             "user": ais_global.get_sercure_android_id_dom(),
             "oauthCode": oauth_code,
@@ -307,24 +298,22 @@ class AisCloudWS:
         ws_resp = requests.post(
             self.url_gh + "ais_add_token",
             json=payload,
-            headers=CLOUD_WS_HEADER,
+            headers=self.cloud_ws_header,
             timeout=5,
         )
         return ws_resp
 
     def gh_ais_remove_integration(self):
-        self.setCloudToken()
         payload = {"user": ais_global.get_sercure_android_id_dom()}
         ws_resp = requests.post(
             self.url_gh + "ais_remove_integration",
             json=payload,
-            headers=CLOUD_WS_HEADER,
+            headers=self.cloud_ws_header,
             timeout=5,
         )
         return ws_resp
 
     async def async_ask_json_gh(self, question, hass):
-        self.setCloudToken()
         web_session = aiohttp_client.async_get_clientsession(hass)
         payload = {
             "command": question,
@@ -334,78 +323,64 @@ class AisCloudWS:
         }
         with async_timeout.timeout(5):
             ws_resp = await web_session.post(
-                self.url_gh + "ask_json", json=payload, headers=CLOUD_WS_HEADER
+                self.url_gh + "ask_json", json=payload, headers=self.cloud_ws_header
             )
             return await ws_resp.json()
 
     def ask(self, question, org_answer):
-        self.setCloudToken()
         payload = {"question": question, "org_answer": org_answer}
         ws_resp = requests.get(
-            self.url + "ask", headers=CLOUD_WS_HEADER, params=payload, timeout=5
+            self.url + "ask", headers=self.cloud_ws_header, params=payload, timeout=5
         )
         return ws_resp
 
     def audio_type(self, nature):
-        self.setCloudToken()
         try:
             rest_url = self.url + "audio_type?nature=" + nature
-            ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+            ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
             return ws_resp
         except:
             _LOGGER.error("Can't connect to AIS WS!!! " + rest_url)
             ais_global.G_OFFLINE_MODE = True
 
     def audio_name(self, nature, a_type):
-        self.setCloudToken()
         rest_url = self.url + "audio_name?nature=" + nature
         rest_url += "&type=" + a_type
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
         return ws_resp
 
     def audio(self, item, a_type, text_input):
-        self.setCloudToken()
         rest_url = self.url + "audio?item=" + item + "&type="
         rest_url += a_type + "&text_input=" + text_input
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
         return ws_resp
 
     def key(self, service):
-        self.setCloudToken()
         rest_url = self.url + "key?service=" + service
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
         return ws_resp.json()
 
-    def new_key(self, service, old_key):
-        self.setCloudToken()
-        rest_url = self.url + "new_key?service=" + service + "&old_key=" + old_key
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
-        return ws_resp.json()
-
-    async def async_key(self, service, hass):
-        self.setCloudToken()
-        web_session = aiohttp_client.async_get_clientsession(hass)
+    async def async_key(self, service):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "key?service=" + service
         try:
             # during the system start lot of things is done 300 sec should be enough
             with async_timeout.timeout(300):
-                ws_resp = await web_session.get(rest_url, headers=CLOUD_WS_HEADER)
+                ws_resp = await web_session.get(rest_url, headers=self.cloud_ws_header)
                 return await ws_resp.json()
         except Exception as e:
             _LOGGER.error("Couldn't fetch data for: " + service + " " + str(e))
             # import traceback
             # traceback.print_exc()
 
-    async def async_new_key(self, service, old_key, hass):
-        self.setCloudToken()
-        web_session = aiohttp_client.async_get_clientsession(hass)
+    async def async_new_key(self, service, old_key):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "new_key?service=" + service + "&old_key=" + old_key
         with async_timeout.timeout(10):
-            ws_resp = await web_session.get(rest_url, headers=CLOUD_WS_HEADER)
+            ws_resp = await web_session.get(rest_url, headers=self.cloud_ws_header)
             return await ws_resp.json()
 
     def extract_media(self, url, local_extractor_version):
-        self.setCloudToken()
         rest_url = (
             self.url
             + "extract_media?url="
@@ -413,23 +388,20 @@ class AisCloudWS:
             + "&extractor_version="
             + local_extractor_version
         )
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=10)
+        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=10)
         return ws_resp
 
     def delete_key(self, service):
-        self.setCloudToken()
         rest_url = self.url + "key?service=" + service
-        ws_resp = requests.delete(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        ws_resp = requests.delete(rest_url, headers=self.cloud_ws_header, timeout=5)
         return ws_resp
 
     def get_backup_info(self):
-        self.setCloudToken()
         rest_url = self.url + "backup_info"
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
         return ws_resp
 
     def post_backup(self, file, backup_type):
-        self.setCloudToken()
         if backup_type == "ha":
             rest_url = self.url + "backup"
         elif backup_type == "zigbee":
@@ -438,28 +410,26 @@ class AisCloudWS:
             rest_url = self.url + "backup_zwave"
         with open(file, "rb") as payload:
             ws_resp = requests.post(
-                rest_url, headers=CLOUD_WS_HEADER, data=payload, timeout=60
+                rest_url, headers=self.cloud_ws_header, data=payload, timeout=60
             )
         return ws_resp
 
     def download_backup(self, file, backup_type):
-        self.setCloudToken()
         if backup_type == "ha":
             rest_url = self.url + "backup"
         elif backup_type == "zigbee":
             rest_url = self.url + "backup_zigbee"
         elif backup_type == "zwave":
             rest_url = self.url + "backup_zwave"
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=60)
+        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=60)
         with open(file, "wb") as f:
             for chunk in ws_resp.iter_content(1024):
                 f.write(chunk)
         return ws_resp
 
     def get_gate_parring_pin(self):
-        self.setCloudToken()
         rest_url = self.url + "gate_id_from_pin"
-        ws_resp = requests.post(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        ws_resp = requests.post(rest_url, headers=self.cloud_ws_header, timeout=5)
         return ws_resp
 
 
@@ -507,49 +477,45 @@ class AisColudData:
     def __init__(self, hass):
         self.hass = hass
         self.audio_name = None
-        self.cloud = AisCloudWS()
+        self.cloud = AisCloudWS(hass)
         self.cache = AisCacheData(hass)
         self.news_channels = []
 
-    @asyncio.coroutine
-    def get_types_async(self):
-        def load():
-            # check if we have data stored in local files
-            # otherwise we should work in online mode and get data from cloud
-            # ----------------
-            # ----- RADIO ----
-            # ----------------
-            ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
-            try:
-                json_ws_resp = ws_resp.json()
-                self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
-                types = [ais_global.G_EMPTY_OPTION]
-            except Exception as e:
-                _LOGGER.error("RADIO WS resp " + str(ws_resp) + " " + str(e))
+    async def async_get_types(self):
+        # check if we have data stored in local files
+        # otherwise we should work in online mode and get data from cloud
+        # ----------------
+        # ----- RADIO ----
+        # ----------------
+        ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
+        try:
+            json_ws_resp = ws_resp.json()
+            self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
+            types = [ais_global.G_EMPTY_OPTION]
+        except Exception as e:
+            _LOGGER.error("RADIO WS resp " + str(ws_resp) + " " + str(e))
 
-            # ----------------
-            # --- PODCASTS ---
-            # ----------------
-            ws_resp = self.cloud.audio_type(ais_global.G_AN_PODCAST)
-            try:
-                json_ws_resp = ws_resp.json()
-                self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
-                types = [ais_global.G_EMPTY_OPTION]
-            except Exception as e:
-                _LOGGER.error("PODCASTS WS resp " + str(ws_resp) + " " + str(e))
+        # ----------------
+        # --- PODCASTS ---
+        # ----------------
+        ws_resp = self.cloud.audio_type(ais_global.G_AN_PODCAST)
+        try:
+            json_ws_resp = ws_resp.json()
+            self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
+            types = [ais_global.G_EMPTY_OPTION]
+        except Exception as e:
+            _LOGGER.error("PODCASTS WS resp " + str(ws_resp) + " " + str(e))
 
-            # ----------------
-            # ----- NEWS -----
-            # ----------------
-            ws_resp = self.cloud.audio_type(ais_global.G_AN_NEWS)
-            try:
-                json_ws_resp = ws_resp.json()
-                self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
-                types = [ais_global.G_EMPTY_OPTION]
-            except Exception as e:
-                _LOGGER.error("NEWS WS resp " + str(ws_resp) + " " + str(e))
-
-        yield from self.hass.async_add_job(load)
+        # ----------------
+        # ----- NEWS -----
+        # ----------------
+        ws_resp = self.cloud.audio_type(ais_global.G_AN_NEWS)
+        try:
+            json_ws_resp = ws_resp.json()
+            self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
+            types = [ais_global.G_EMPTY_OPTION]
+        except Exception as e:
+            _LOGGER.error("NEWS WS resp " + str(ws_resp) + " " + str(e))
 
     def get_radio_types(self, call):
         ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)

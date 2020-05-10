@@ -503,6 +503,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         units=units,
         language=language,
         interval=interval,
+        hass=hass,
     )
     forecast_data.update()
     forecast_data.update_currently()
@@ -783,7 +784,7 @@ def convert_to_camel(data):
 class DarkSkyData:
     """Get the latest data from Darksky."""
 
-    def __init__(self, api_key, latitude, longitude, units, language, interval):
+    def __init__(self, api_key, latitude, longitude, units, language, interval, hass):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
@@ -806,24 +807,20 @@ class DarkSkyData:
         self.update_hourly = Throttle(interval)(self._update_hourly)
         self.update_daily = Throttle(interval)(self._update_daily)
         self.update_alerts = Throttle(interval)(self._update_alerts)
-
-    def ais_dom_api(self):
         # aid-dom part
         if self._api_key == "use_ais_dom_api_key":
             try:
                 from homeassistant.components import ais_cloud
 
-                aiscloud = ais_cloud.AisCloudWS()
+                aiscloud = ais_cloud.AisCloudWS(hass)
                 json_ws_resp = aiscloud.key("darksky_sensor")
                 self._api_key = json_ws_resp["key"]
             except Exception as error:
                 _LOGGER.error(
-                    "Unable to get the API Key to OpenWeatherMap from AIS dom. %s",
-                    error,
+                    "Unable to get the API Key to DarkSky from AIS dom. %s", error,
                 )
 
     def _update(self):
-        self.ais_dom_api()
         """Get the latest data from Dark Sky."""
         try:
             self.data = forecastio.load_forecast(

@@ -73,7 +73,7 @@ from homeassistant.util import dt as dt_util
 
 from .ais_agent import AisAgent
 
-aisCloudWS = ais_cloud.AisCloudWS()
+aisCloudWS = None
 
 
 ATTR_TEXT = "text"
@@ -2300,6 +2300,8 @@ async def async_process_json_from_frame(hass, json_req):
 
 async def async_setup(hass, config):
     """Register the process service."""
+    global aisCloudWS
+    aisCloudWS = ais_cloud.AisCloudWS(hass)
     warnings.filterwarnings("ignore", module="fuzzywuzzy")
     config = config.get(DOMAIN, {})
     intents = hass.data.get(DOMAIN)

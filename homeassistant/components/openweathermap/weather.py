@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         owm = None
 
-    data = WeatherData(owm, latitude, longitude, mode)
+    data = WeatherData(owm, latitude, longitude, mode, hass)
 
     add_entities(
         [OpenWeatherMapWeather(name, data, hass.config.units.temperature_unit, mode)],
@@ -243,7 +243,7 @@ class OpenWeatherMapWeather(WeatherEntity):
 class WeatherData:
     """Get the latest data from OpenWeatherMap."""
 
-    def __init__(self, owm, latitude, longitude, mode):
+    def __init__(self, owm, latitude, longitude, mode, hass):
         """Initialize the data object."""
         self._mode = mode
         self.owm = owm
@@ -251,30 +251,21 @@ class WeatherData:
         self.longitude = longitude
         self.data = None
         self.forecast_data = None
-
-    def ais_dom_api(self):
-        # aid-dom part
+        self.hass = hass
+        # AIS dom fix
         if not self.owm:
+            from homeassistant.components import ais_cloud
             import pyowm
 
+            aiscloud = ais_cloud.AisCloudWS(hass)
+            json_ws_resp = aiscloud.key("openweathermap_weather")
             try:
-                from homeassistant.components import ais_cloud
-
-                aiscloud = ais_cloud.AisCloudWS()
-                json_ws_resp = aiscloud.key("openweathermap_weather")
-                try:
-                    self.owm = pyowm.OWM(json_ws_resp["key"])
-                except pyowm.exceptions.api_call_error.APICallError:
-                    _LOGGER.error("Error while connecting to OpenWeatherMap")
-            except Exception as error:
-                _LOGGER.error(
-                    "Unable to get the API Key to OpenWeatherMap from AIS dom. %s",
-                    error,
-                )
+                self.owm = pyowm.OWM(json_ws_resp["key"])
+            except pyowm.exceptions.api_call_error.APICallError:
+                _LOGGER.error("Error while connecting to OpenWeatherMap")
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        self.ais_dom_api()
         """Get the latest data from OpenWeatherMap."""
         obs = self.owm.weather_at_coords(self.latitude, self.longitude)
         if obs is None:
@@ -285,7 +276,6 @@ class WeatherData:
 
     @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
     def update_forecast(self):
-        self.ais_dom_api()
         """Get the latest forecast from OpenWeatherMap."""
         try:
             if self._mode == "daily":

@@ -12,7 +12,7 @@ from homeassistant.components.ais_dom import ais_global
 
 from .config_flow import configured_service, setUrl
 
-aisCloud = ais_cloud.AisCloudWS()
+aisCloud = None
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +43,8 @@ _CONFIGURING = {}
 
 async def async_setup(hass, config):
     """Set up the Spotify platform."""
+    global aisCloud
+    aisCloud = ais_cloud.AisCloudWS(hass)
     import spotipy.oauth2
     import json
 
@@ -57,13 +59,13 @@ async def async_setup(hass, config):
         await hass.async_block_till_done()
 
     try:
-        json_ws_resp = await aisCloud.async_key("spotify_oauth", hass)
+        json_ws_resp = await aisCloud.async_key("spotify_oauth")
         spotify_redirect_url = json_ws_resp["SPOTIFY_REDIRECT_URL"]
         spotify_client_id = json_ws_resp["SPOTIFY_CLIENT_ID"]
         spotify_client_secret = json_ws_resp["SPOTIFY_CLIENT_SECRET"]
         spotify_scope = json_ws_resp["SPOTIFY_SCOPE"]
         try:
-            json_ws_resp = await aisCloud.async_key("spotify_token", hass)
+            json_ws_resp = await aisCloud.async_key("spotify_token")
             key = json_ws_resp["key"]
             AIS_SPOTIFY_TOKEN = json.loads(key)
         except:

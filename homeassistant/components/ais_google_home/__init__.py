@@ -4,7 +4,6 @@ Support for AIS Google Home
 For more details about this component, please refer to the documentation at
 https://www.ai-speaker.com
 """
-import asyncio
 import json
 import logging
 
@@ -14,19 +13,20 @@ from homeassistant.components.ais_dom import ais_global
 from .config_flow import configured_google_homes
 from .const import DOMAIN
 
-aisCloud = ais_cloud.AisCloudWS()
-aisCloudWS = ais_cloud.AisCloudWS()
 _LOGGER = logging.getLogger(__name__)
+aisCloudWS = None
 
 
 async def async_setup(hass, config):
     """Register the service."""
+    global aisCloudWS
 
     async def command(service):
         """ask service about info"""
         await _process_command(hass, service)
 
     hass.services.async_register(DOMAIN, "command", command)
+    aisCloudWS = ais_cloud.AisCloudWS(hass)
 
     return True
 

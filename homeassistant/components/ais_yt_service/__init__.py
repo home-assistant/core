@@ -10,7 +10,7 @@ import requests
 from homeassistant.components import ais_cloud, ais_updater
 from homeassistant.components.ais_dom import ais_global
 
-aisCloud = ais_cloud.AisCloudWS()
+aisCloud = None
 URL_BASE = "https://www.googleapis.com/youtube/v3/search"
 DEFAULT_ACTION = "No video"
 
@@ -23,6 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
+    global aisCloud
+    aisCloud = ais_cloud.AisCloudWS(hass)
     """Register the service."""
     data = hass.data[DOMAIN] = YouTubeData(hass)
     await data.async_get_key(hass)
@@ -52,7 +54,7 @@ class YouTubeData:
 
     async def async_get_key(self, hass):
         try:
-            json_ws_resp = await aisCloud.async_key("ytsearch", hass)
+            json_ws_resp = await aisCloud.async_key("ytsearch")
             self.yt_key = json_ws_resp["key"]
         except Exception as e:
             _LOGGER.error("ais_yt_service async_get_key: " + str(e))
@@ -60,7 +62,7 @@ class YouTubeData:
 
     async def async_get_new_key(self, old_key, query, prev_page_token, next_page_token):
         try:
-            json_ws_resp = await aisCloud.async_new_key("ytsearch", old_key, self.hass)
+            json_ws_resp = await aisCloud.async_new_key("ytsearch", old_key)
             self.yt_key = json_ws_resp["key"]
         except Exception as e:
             _LOGGER.error("YouTube " + str(e))
@@ -114,7 +116,7 @@ class YouTubeData:
 
         if self.yt_key is None:
             try:
-                json_ws_resp = aisCloud.key("ytsearch")
+                json_ws_resp = await aisCloud.async_key("ytsearch")
                 self.yt_key = json_ws_resp["key"]
             except Exception as e:
                 ais_global.G_OFFLINE_MODE = True

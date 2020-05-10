@@ -12,12 +12,9 @@ import platform
 import subprocess
 import time
 
-from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
 
 from .config_flow import configured_drivers
-
-aisCloud = ais_cloud.AisCloudWS()
 
 DOMAIN = "ais_drives_service"
 G_LOCAL_FILES_ROOT = "/data/data/pl.sviete.dom/files/home/dom"
@@ -950,7 +947,9 @@ class LocalData:
 
     async def async_load_all(self, hass):
         """Load all the folders and files."""
+        from homeassistant.components import ais_cloud
 
+        aisCloud = ais_cloud.AisCloudWS(hass)
         self.display_root_items(False)
         global G_DRIVE_SECRET, G_DRIVE_CLIENT_ID
 
@@ -964,9 +963,9 @@ class LocalData:
 
         # set client and secret
         try:
-            json_ws_resp = await aisCloud.async_key("gdrive_client_id", hass)
+            json_ws_resp = await aisCloud.async_key("gdrive_client_id")
             G_DRIVE_CLIENT_ID = json_ws_resp["key"]
-            json_ws_resp = await aisCloud.async_key("gdrive_secret", hass)
+            json_ws_resp = await aisCloud.async_key("gdrive_secret")
             G_DRIVE_SECRET = json_ws_resp["key"]
         except Exception as e:
             _LOGGER.error("Error ais_drives_service async_load_all: " + str(e))

@@ -19,11 +19,9 @@ import async_timeout
 import requests
 import voluptuous as vol
 
-from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
-    STATE_OFF,
     STATE_ON,
     __version__ as current_version,
 )
@@ -31,8 +29,6 @@ from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-aisCloud = ais_cloud.AisCloudWS()
 
 _LOGGER = logging.getLogger(__name__)
 
