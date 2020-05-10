@@ -1,4 +1,5 @@
 """Config flow for Lutron Caseta."""
+import logging
 
 from pylutron_caseta.smartbridge import Smartbridge
 
@@ -15,6 +16,8 @@ from .const import (
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 ENTRY_DEFAULT_TITLE = "Caséta bridge"
 
@@ -92,4 +95,8 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await bridge.close()
             return True
         except Exception:
+            _LOGGER.error(
+                "Exception while checking connectivity to bridge %s",
+                self.data[CONF_HOST],
+            )
             return False
