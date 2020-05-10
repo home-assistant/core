@@ -68,10 +68,7 @@ async def test_import(hass, tuya):
 
 async def test_abort_if_already_setup(hass, tuya):
     """Test we abort if Tuya is already setup."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data=TUYA_USER_DATA,
-    ).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data=TUYA_USER_DATA).add_to_hass(hass)
 
     # Should fail, config exist (import)
     result = await hass.config_entries.flow.async_init(
