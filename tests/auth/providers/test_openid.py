@@ -26,7 +26,10 @@ CONST_DESCRIPTION = {
     "jwks_uri": CONST_JWKS_URI,
     "authorization_endpoint": CONST_AUTHORIZATION_ENDPOINT,
     "token_endpoint": CONST_TOKEN_ENDPOINT,
+    "token_endpoint_auth_methods_supported": "client_secret_post",
+    "id_token_signing_alg_values_supported": ["RS256", "HS256"],
     "scopes_supported": ["openid", "email", "profile"],
+    "response_types_supported": "code",
 }
 
 CONST_ACCESS_TOKEN = "dummy_access_token"
@@ -35,7 +38,7 @@ CONST_NONCE = "dummy_nonce"
 CONST_EMAIL = "john.doe@openid.test"
 
 CONST_ID_TOKEN = {
-    "iss": "https://openid.test/",
+    "iss": CONST_DESCRIPTION_URI,
     "sub": "248289761001",
     "aud": CONST_CLIENT_ID,
     "nonce": CONST_NONCE,
@@ -81,7 +84,7 @@ async def test_login_flow_validates(hass, aiohttp_client, openid_server):
         [
             {
                 "type": "openid",
-                "issuer": "https://openid.test/",
+                "configuration": CONST_DESCRIPTION_URI,
                 "client_id": CONST_CLIENT_ID,
                 "client_secret": CONST_CLIENT_SECRET,
                 "emails": [CONST_EMAIL],
