@@ -98,33 +98,57 @@ async def async_parse_image_too_bright(uid: str, msg) -> Event:
         return None
 
 
-@PARSERS.register("tns1:RuleEngine/LineDetector/Crossed")
+@PARSERS.register("tns1:VideoSource/GlobalSceneChange/AnalyticsService")
+@PARSERS.register("tns1:VideoSource/ImageTooBlurry/ImagingService")
+@PARSERS.register("tns1:VideoSource/ImageTooBlurry/RecordingService")
 # pylint: disable=protected-access
-async def async_parse_line_detector(uid: str, msg) -> Event:
+async def async_parse_scene_change(uid: str, msg) -> Event:
     """Handle parsing event message.
 
-    Topic: tns1:RuleEngine/LineDetector/Crossed
+    Topic: tns1:VideoSource/GlobalSceneChange/AnalyticsService
     Async Friendly.
     """
     try:
-        video_source = ""
-        video_analytics = ""
+        source = msg.Message._value_1.Source.SimpleItem[0].Value
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{source}",
+            f"{source} Global Scene Change",
+            "binary_sensor",
+            "motion",
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:AudioAnalytics/Audio/DetectedSound")
+# pylint: disable=protected-access
+async def async_parse_detected_sound(uid: str, msg) -> Event:
+    """Handle parsing event message.
+
+    Topic: tns1:AudioAnalytics/Audio/DetectedSound
+    Async Friendly.
+    """
+    try:
+        audio_source = ""
+        audio_analytics = ""
         rule = ""
         for source in msg.Message._value_1.Source.SimpleItem:
-            if source.Name == "VideoSourceConfigurationToken":
-                video_source = source.Value
-            if source.Name == "VideoAnalyticsConfigurationToken":
-                video_analytics = source.Value
+            if source.Name == "AudioSourceConfigurationToken":
+                audio_source = source.Value
+            if source.Name == "AudioAnalyticsConfigurationToken":
+                audio_analytics = source.Value
             if source.Name == "Rule":
                 rule = source.Value
 
         return Event(
-            f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
-            f"{rule} Line Crossing",
+            f"{uid}_{msg.Topic._value_1}_{audio_source}_{audio_analytics}_{rule}",
+            f"{rule} Detected Sound",
             "binary_sensor",
-            "motion",
+            "sound",
             None,
-            int(msg.Message._value_1.Data.SimpleItem[0].Value) > 0,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
         )
     except (AttributeError, KeyError):
         return None
