@@ -30,10 +30,10 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_LIMIT, default=DEFAULT_LIMIT): vol.All(
+        vol.Optional(CONF_LIMIT, default=DEFAULT_LIMIT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=500)
         ),
-        vol.Required(CONF_ORDER, default=DEFAULT_ORDER): vol.All(
+        vol.Optional(CONF_ORDER, default=DEFAULT_ORDER): vol.All(
             vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES.keys())
         ),
         vol.Optional(CONF_USERNAME): str,
@@ -88,8 +88,8 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import from Transmission client config."""
-        import_config[CONF_LIMIT] = import_config[CONF_LIMIT]
-        import_config[CONF_ORDER] = import_config[CONF_ORDER]
+        import_config[CONF_LIMIT] = import_config.get(CONF_LIMIT, DEFAULT_LIMIT)
+        import_config[CONF_ORDER] = import_config.get(CONF_ORDER, DEFAULT_ORDER)
         import_config[CONF_SCAN_INTERVAL] = import_config[CONF_SCAN_INTERVAL].seconds
         return await self.async_step_user(user_input=import_config)
 
