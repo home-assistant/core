@@ -251,12 +251,13 @@ class Camera(HomeAccessory, PyhapCamera):
     async def _async_ffmpeg_watch(self, _):
         """Check to make sure ffmpeg is still running and cleanup if not."""
         ffmpeg_pid = self._cur_session[FFMPEG_PID]
+        session_id = self._cur_session[SESSION_ID]
         if pid_is_alive(ffmpeg_pid):
             return True
 
         _LOGGER.warning("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
         self._async_stop_ffmpeg_watch()
-        self._async_set_streaming_available(self._cur_session[SESSION_ID])
+        self._async_set_streaming_available(session_id)
         return False
 
     @callback
@@ -270,8 +271,6 @@ class Camera(HomeAccessory, PyhapCamera):
     @callback
     def _async_set_streaming_available(self, session_id):
         """Free the session so they can start another."""
-        if session_id in self.sessions:
-            del self.sessions[session_id]
         self.streaming_status = STREAMING_STATUS["AVAILABLE"]
         self.get_service(SERV_CAMERA_RTP_STREAM_MANAGEMENT).get_characteristic(
             CHAR_STREAMING_STRATUS
