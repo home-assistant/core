@@ -165,7 +165,8 @@ class AtagDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.atag.async_update()
             except (AtagException) as error:
                 raise UpdateFailed(error)
-
+        if not self.atag.sensordata:
+            return False
         return self.atag.sensordata
 
 
