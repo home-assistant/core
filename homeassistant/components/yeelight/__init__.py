@@ -236,7 +236,7 @@ class YeelightDevice:
         """Return configured device model.
 
         Model method returns declared model, and if not, it tries to get it from
-        capabilities call. This way even if model is not defined, we can get real model
+        cached capabilities. This way even if model is not defined, we can get real model
         here. Useful for correct color temp range etc.
         """
         return self._bulb_device.model
