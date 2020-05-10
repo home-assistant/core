@@ -12,15 +12,17 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
+    CONFIG_ENTRY_SCAN_INTERVAL,
+    CONFIG_ENTRY_UDN,
     DATA_PACKETS,
     DATA_RATE_PACKETS_PER_SECOND,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     KIBIBYTE,
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     TIMESTAMP,
-    UPDATE_INTERVAL,
 )
 from .device import Device
 
@@ -78,21 +80,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up the UPnP/IGD sensors."""
     data = config_entry.data
-    if "udn" in data:
-        udn = data["udn"]
+    if CONFIG_ENTRY_UDN in data:
+        udn = data[CONFIG_ENTRY_UDN]
     else:
         # any device will do
         udn = list(hass.data[DOMAIN]["devices"].keys())[0]
 
     device: Device = hass.data[DOMAIN]["devices"][udn]
 
+    update_interval_sec = data.get(CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    update_interval = timedelta(seconds=update_interval_sec)
+    _LOGGER.debug("update_interval: %s", update_interval)
     _LOGGER.debug("Adding sensors")
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=device.name,
         update_method=device.async_get_traffic_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL.seconds),
+        update_interval=update_interval,
     )
     await coordinator.async_refresh()
 
@@ -117,11 +122,14 @@ class UpnpSensor(Entity):
         coordinator: DataUpdateCoordinator,
         device: Device,
         sensor_type: Mapping[str, str],
+        update_multiplier: int = 2,
     ) -> None:
         """Initialize the base sensor."""
         self._coordinator = coordinator
         self._device = device
         self._sensor_type = sensor_type
+        self._update_counter_max = update_multiplier
+        self._update_counter = 0
 
     @property
     def should_poll(self) -> bool:
