@@ -42,8 +42,6 @@ async def async_setup(hass: core.HomeAssistant, config: dict):
     if conf is None:
         conf = {}
 
-    hass.data[DOMAIN] = {}
-
     # User has configured hubs
     if CONF_HUBS not in conf:
         return True
