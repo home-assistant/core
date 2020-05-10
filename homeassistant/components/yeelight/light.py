@@ -478,7 +478,8 @@ class YeelightGenericLight(LightEntity):
         Uses data returned from get_capabilities call ( https://yeelight.readthedocs.io/en/latest/yeelight.html#yeelight.Bulb.get_capabilities )
 
         """
-        return self._bulb.capabilities["id"]
+
+        return self._bulb.capabilities.get("id")
 
     @property
     def available(self) -> bool:
@@ -915,7 +916,10 @@ class YeelightNightLightMode(YeelightGenericLight):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return super().unique_id + "-nightlight"
+        unique = super().unique_id
+
+        if unique:
+            return unique + "-nightlight"
 
     @property
     def name(self) -> str:
@@ -1003,7 +1007,10 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return super().unique_id + "-ambilight"
+        unique = super().unique_id
+
+        if unique:
+            return unique + "-ambilight"
 
     @property
     def name(self) -> str:
