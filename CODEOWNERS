@@ -63,6 +63,7 @@ homeassistant/components/braviatv/* @robbiet480 @bieniu
 homeassistant/components/broadlink/* @danielhiversen @felipediel
 homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
+homeassistant/components/bsblan/* @liudger
 homeassistant/components/bt_smarthub/* @jxwolstenholme
 homeassistant/components/buienradar/* @mjj4791 @ties
 homeassistant/components/cast/* @emontnemery
@@ -125,6 +126,7 @@ homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
 homeassistant/components/fitbit/* @robbiet480
 homeassistant/components/fixer/* @fabaff
+homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya

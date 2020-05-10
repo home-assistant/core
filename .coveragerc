@@ -100,6 +100,9 @@ omit =
     homeassistant/components/brottsplatskartan/sensor.py
     homeassistant/components/browser/*
     homeassistant/components/brunt/cover.py
+    homeassistant/components/bsblan/__init__.py
+    homeassistant/components/bsblan/climate.py
+    homeassistant/components/bsblan/const.py
     homeassistant/components/bt_home_hub_5/device_tracker.py
     homeassistant/components/bt_smarthub/device_tracker.py
     homeassistant/components/buienradar/sensor.py
@@ -233,6 +236,9 @@ omit =
     homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
     homeassistant/components/flic/binary_sensor.py
+    homeassistant/components/flick_electric/__init__.py
+    homeassistant/components/flick_electric/const.py
+    homeassistant/components/flick_electric/sensor.py
     homeassistant/components/flock/notify.py
     homeassistant/components/flume/*
     homeassistant/components/flunearyou/__init__.py
@@ -618,7 +624,6 @@ omit =
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
-    homeassistant/components/roku/remote.py
     homeassistant/components/roomba/binary_sensor.py
     homeassistant/components/roomba/braava.py
     homeassistant/components/roomba/irobot_base.py
@@ -691,8 +696,6 @@ omit =
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonarr/sensor.py
-    homeassistant/components/songpal/__init__.py
-    homeassistant/components/songpal/media_player.py
     homeassistant/components/sonos/*
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*

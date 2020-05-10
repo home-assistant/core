@@ -4,26 +4,31 @@ from typing import Callable
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_GROUP
 
 from homeassistant.components.switch import DOMAIN as SWITCH, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ISY994_NODES, ISY994_PROGRAMS
-from .const import _LOGGER
+from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .helpers import migrate_old_unique_ids
 
 
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list], None],
+) -> bool:
     """Set up the ISY994 switch platform."""
+    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     devices = []
-    for node in hass.data[ISY994_NODES][SWITCH]:
+    for node in hass_isy_data[ISY994_NODES][SWITCH]:
         devices.append(ISYSwitchEntity(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][SWITCH]:
+    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][SWITCH]:
         devices.append(ISYSwitchProgramEntity(name, status, actions))
 
-    add_entities(devices)
+    await migrate_old_unique_ids(hass, SWITCH, devices)
+    async_add_entities(devices)
 
 
 class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):

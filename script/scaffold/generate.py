@@ -125,9 +125,9 @@ def _custom_tasks(template, info) -> None:
                     }
                 },
                 "error": {
-                    "cannot_connect": "[%key:common::config_flow::abort::cannot_connect%]",
-                    "invalid_auth": "[%key:common::config_flow::abort::invalid_auth%]",
-                    "unknown": "[%key:common::config_flow::abort::unknown%]",
+                    "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+                    "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+                    "unknown": "[%key:common::config_flow::error::unknown%]",
                 },
                 "abort": {
                     "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

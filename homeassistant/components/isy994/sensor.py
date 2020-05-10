@@ -4,25 +4,36 @@ from typing import Callable
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ISY994_NODES
-from .const import _LOGGER, UOM_FRIENDLY_NAME, UOM_TO_STATES
+from .const import (
+    _LOGGER,
+    DOMAIN as ISY994_DOMAIN,
+    ISY994_NODES,
+    UOM_FRIENDLY_NAME,
+    UOM_TO_STATES,
+)
 from .entity import ISYNodeEntity
+from .helpers import migrate_old_unique_ids
 
 
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list], None],
+) -> bool:
     """Set up the ISY994 sensor platform."""
+    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     devices = []
 
-    for node in hass.data[ISY994_NODES][SENSOR]:
+    for node in hass_isy_data[ISY994_NODES][SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
         devices.append(ISYSensorEntity(node))
 
-    add_entities(devices)
+    await migrate_old_unique_ids(hass, SENSOR, devices)
+    async_add_entities(devices)
 
 
 class ISYSensorEntity(ISYNodeEntity):

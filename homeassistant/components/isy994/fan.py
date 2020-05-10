@@ -10,11 +10,12 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ISY994_NODES, ISY994_PROGRAMS
-from .const import _LOGGER
+from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .helpers import migrate_old_unique_ids
 
 VALUE_TO_STATE = {
     0: SPEED_OFF,
@@ -30,19 +31,23 @@ for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
 
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list], None],
+) -> bool:
     """Set up the ISY994 fan platform."""
+    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     devices = []
 
-    for node in hass.data[ISY994_NODES][FAN]:
+    for node in hass_isy_data[ISY994_NODES][FAN]:
         devices.append(ISYFanEntity(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][FAN]:
+    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][FAN]:
         devices.append(ISYFanProgramEntity(name, status, actions))
 
-    add_entities(devices)
+    await migrate_old_unique_ids(hass, FAN, devices)
+    async_add_entities(devices)
 
 
 class ISYFanEntity(ISYNodeEntity, FanEntity):
