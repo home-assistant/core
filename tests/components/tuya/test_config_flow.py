@@ -2,8 +2,7 @@
 import pytest
 from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException
 
-from homeassistant import data_entry_flow
-from homeassistant.components.tuya import config_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tuya.const import CONF_COUNTRYCODE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 
@@ -15,6 +14,13 @@ PASSWORD = "myPassword"
 COUNTRY_CODE = "1"
 TUYA_PLATFORM = "tuya"
 
+TUYA_USER_DATA = {
+    CONF_USERNAME: USERNAME,
+    CONF_PASSWORD: PASSWORD,
+    CONF_COUNTRYCODE: COUNTRY_CODE,
+    CONF_PLATFORM: TUYA_PLATFORM,
+}
+
 
 @pytest.fixture(name="tuya")
 def tuya_fixture() -> Mock:
@@ -23,28 +29,17 @@ def tuya_fixture() -> Mock:
         yield tuya
 
 
-def init_config_flow(hass):
-    """Init a configuration flow."""
-    flow = config_flow.TuyaConfigFlow()
-    flow.hass = hass
-    return flow
-
-
 async def test_user(hass, tuya):
     """Test user config."""
-    flow = init_config_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-    result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    result = await flow.async_step_user(
-        {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRYCODE: COUNTRY_CODE,
-            CONF_PLATFORM: TUYA_PLATFORM,
-        }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=TUYA_USER_DATA
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -53,19 +48,13 @@ async def test_user(hass, tuya):
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_COUNTRYCODE] == COUNTRY_CODE
     assert result["data"][CONF_PLATFORM] == TUYA_PLATFORM
+    assert not result["result"].unique_id
 
 
 async def test_import(hass, tuya):
     """Test import step."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_import(
-        {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRYCODE: COUNTRY_CODE,
-            CONF_PLATFORM: TUYA_PLATFORM,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -74,97 +63,66 @@ async def test_import(hass, tuya):
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_COUNTRYCODE] == COUNTRY_CODE
     assert result["data"][CONF_PLATFORM] == TUYA_PLATFORM
+    assert not result["result"].unique_id
 
 
 async def test_abort_if_already_setup(hass, tuya):
     """Test we abort if Tuya is already setup."""
-    flow = init_config_flow(hass)
     MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRYCODE: COUNTRY_CODE,
-            CONF_PLATFORM: TUYA_PLATFORM,
-        },
+        data=TUYA_USER_DATA,
     ).add_to_hass(hass)
 
     # Should fail, config exist (import)
-    result = await flow.async_step_import(
-        {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRYCODE: COUNTRY_CODE,
-            CONF_PLATFORM: TUYA_PLATFORM,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TUYA_USER_DATA
     )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
 
     # Should fail, config exist (flow)
-    result = await flow.async_step_user(
-        {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRYCODE: COUNTRY_CODE,
-            CONF_PLATFORM: TUYA_PLATFORM,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
 async def test_abort_on_invalid_credentials(hass, tuya):
     """Test when we have invalid credentials."""
-    flow = init_config_flow(hass)
     tuya().init.side_effect = TuyaAPIException("Boom")
 
-    result = await flow.async_step_user(
-        {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRYCODE: COUNTRY_CODE,
-            CONF_PLATFORM: TUYA_PLATFORM,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TUYA_USER_DATA
     )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "auth_failed"}
 
-    result = await flow.async_step_import(
-        {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRYCODE: COUNTRY_CODE,
-            CONF_PLATFORM: TUYA_PLATFORM,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "auth_failed"
 
 
 async def test_abort_on_connection_error(hass, tuya):
     """Test when we have a network error."""
-    flow = init_config_flow(hass)
     tuya().init.side_effect = TuyaNetException("Boom")
 
-    result = await flow.async_step_user(
-        {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRYCODE: COUNTRY_CODE,
-            CONF_PLATFORM: TUYA_PLATFORM,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TUYA_USER_DATA
     )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "conn_error"
 
-    result = await flow.async_step_import(
-        {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRYCODE: COUNTRY_CODE,
-            CONF_PLATFORM: TUYA_PLATFORM,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "conn_error"
