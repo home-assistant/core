@@ -139,7 +139,6 @@ def check_presets_in_both_modes(*keys: str) -> Callable:
             raise vol.Invalid(
                 "{preset} is set for {HVAC_MODE_COOL} but not for {HVAC_MODE_HEAT}"
             )
-        return
 
     def validate(obj: Dict) -> Dict:
         if HVAC_MODE_HEAT in obj.keys() and HVAC_MODE_COOL in obj.keys():
@@ -725,8 +724,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         """Return the list of supported features."""
         if self.preset_modes == [PRESET_NONE]:
             return SUPPORT_TARGET_TEMPERATURE
-        else:
-            return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
 
     @property
     def temperature_unit(self):
