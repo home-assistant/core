@@ -63,7 +63,6 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not self.blink.key_required:
                 # No key required, we're good
-                await self.hass.async_add_executor_job(self.blink.setup_post_verify)
                 self.hass.data[DOMAIN] = self.blink
                 config_data = {
                     CONF_USERNAME: user_input[CONF_USERNAME],
