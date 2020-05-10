@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if not connected:
             _LOGGER.error("Unable to connect to Smile")
-            raise PlatformNotReady
+            raise ConfigEntryNotReady
 
     except Smile.PlugwiseError:
         _LOGGER.error("Error while communicating to device")
