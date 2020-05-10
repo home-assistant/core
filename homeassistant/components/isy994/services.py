@@ -183,12 +183,12 @@ def async_setup_services(hass: HomeAssistantType):
                     address,
                     isy.configuration["uuid"],
                 )
-                hass.async_add_executor_job(isy.query, address)
+                await hass.async_add_executor_job(isy.query, address)
                 return
             _LOGGER.debug(
                 "Requesting system query of ISY %s", isy.configuration["uuid"]
             )
-            hass.async_add_executor_job(isy.query)
+            await hass.async_add_executor_job(isy.query)
 
     async def async_run_network_resource_service_handler(service):
         """Handle a network resource service call."""
@@ -208,7 +208,7 @@ def async_setup_services(hass: HomeAssistantType):
             if name:
                 command = isy.networking.get_by_name(name)
             if command is not None:
-                hass.async_add_executor_job(command.run)
+                await hass.async_add_executor_job(command.run)
                 return
         _LOGGER.error(
             "Could not run network resource command. Not found or enabled on the ISY."
@@ -231,7 +231,7 @@ def async_setup_services(hass: HomeAssistantType):
             if name:
                 program = isy.programs.get_by_name(name)
             if program is not None:
-                hass.async_add_executor_job(getattr(program, command))
+                await hass.async_add_executor_job(getattr(program, command))
                 return
         _LOGGER.error(
             "Could not send program command. Not found or enabled on the ISY."
@@ -256,7 +256,7 @@ def async_setup_services(hass: HomeAssistantType):
             if address and vtype:
                 variable = isy.variables.vobjs[vtype].get(address)
             if variable is not None:
-                hass.async_add_executor_job(variable.set_value, value, init)
+                await hass.async_add_executor_job(variable.set_value, value, init)
                 return
         _LOGGER.error("Could not set variable value. Not found or enabled on the ISY.")
 
@@ -267,13 +267,13 @@ def async_setup_services(hass: HomeAssistantType):
         current_unique_ids = []
 
         for config_entry_id in hass.data[DOMAIN]:
-            config_entities = er.async_entries_for_config_entry(
+            config_entry_owned_entities = er.async_entries_for_config_entry(
                 entity_registry, config_entry_id
             )
             config_ids.extend(
                 [
-                    (item.unique_id, item.entity_id, item.device_id)
-                    for item in config_entities
+                    (entity.unique_id, entity.entity_id, entity.device_id)
+                    for entity in config_entry_owned_entities
                 ]
             )
 
@@ -304,7 +304,7 @@ def async_setup_services(hass: HomeAssistantType):
             if entity_registry.async_is_registered(entity_id):
                 entity_registry.async_remove(entity_id)
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Cleaning up ISY994 Entities and devices: Config Entries: %s, Current Entries: %s, "
             "Extra Entries Removed: %s",
             len(config_ids),
