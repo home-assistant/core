@@ -163,10 +163,10 @@ class AtagDataUpdateCoordinator(DataUpdateCoordinator):
         with async_timeout.timeout(20):
             try:
                 await self.atag.async_update()
+                if not self.atag.sensordata:
+                    raise UpdateFailed()
             except (AtagException) as error:
                 raise UpdateFailed(error)
-        if not self.atag.sensordata:
-            return False
         return self.atag.sensordata
 
 
