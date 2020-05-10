@@ -20,19 +20,22 @@ from .const import (
     CONF_RESTORE_LIGHT_STATE,
     CONF_SENSOR_STRING,
     CONF_TLS_VER,
+    CONF_VAR_SENSOR_STRING,
     DEFAULT_IGNORE_STRING,
     DEFAULT_RESTORE_LIGHT_STATE,
     DEFAULT_SENSOR_STRING,
+    DEFAULT_VAR_SENSOR_STRING,
     DOMAIN,
     ISY994_ISY,
     ISY994_NODES,
     ISY994_PROGRAMS,
+    ISY994_VARIABLES,
     MANUFACTURER,
     SUPPORTED_PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
-from .helpers import _categorize_nodes, _categorize_programs
+from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -47,6 +50,9 @@ CONFIG_SCHEMA = vol.Schema(
                 ): cv.string,
                 vol.Optional(
                     CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
+                ): cv.string,
+                vol.Optional(
+                    CONF_VAR_SENSOR_STRING, default=DEFAULT_VAR_SENSOR_STRING
                 ): cv.string,
                 vol.Required(
                     CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
@@ -111,6 +117,8 @@ async def async_setup_entry(
     for platform in SUPPORTED_PROGRAM_PLATFORMS:
         hass_isy_data[ISY994_PROGRAMS][platform] = []
 
+    hass_isy_data[ISY994_VARIABLES] = []
+
     isy_config = entry.data
     isy_options = entry.options
 
@@ -123,6 +131,9 @@ async def async_setup_entry(
     tls_version = isy_config.get(CONF_TLS_VER)
     ignore_identifier = isy_options.get(CONF_IGNORE_STRING, DEFAULT_IGNORE_STRING)
     sensor_identifier = isy_options.get(CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
+    variable_identifier = isy_options.get(
+        CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING
+    )
 
     if host.scheme == "http":
         https = False
@@ -153,6 +164,7 @@ async def async_setup_entry(
 
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass_isy_data, isy.programs)
+    _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
     _LOGGER.info(repr(isy.clock))
