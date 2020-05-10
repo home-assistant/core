@@ -334,7 +334,7 @@ class AisCloudWS:
         }
         with async_timeout.timeout(5):
             ws_resp = await web_session.post(
-                self.url_gh + "ask_json", headers=CLOUD_WS_HEADER
+                self.url_gh + "ask_json", json=payload, headers=CLOUD_WS_HEADER
             )
             return await ws_resp.json()
 
