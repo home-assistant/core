@@ -2,6 +2,7 @@
 """Tests for the Daikin config flow."""
 import asyncio
 
+from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
 from homeassistant import data_entry_flow
@@ -90,7 +91,11 @@ async def test_discovery(hass, mock_daikin):
 
 @pytest.mark.parametrize(
     "s_effect,reason",
-    [(asyncio.TimeoutError, "device_timeout"), (Exception, "device_fail")],
+    [
+        (asyncio.TimeoutError, "device_timeout"),
+        (HTTPForbidden, "forbidden"),
+        (Exception, "device_fail"),
+    ],
 )
 async def test_device_abort(hass, mock_daikin, s_effect, reason):
     """Test device abort."""

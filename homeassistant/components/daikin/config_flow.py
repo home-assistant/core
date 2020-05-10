@@ -3,7 +3,7 @@ import asyncio
 import logging
 from uuid import uuid4
 
-from aiohttp import ClientError
+from aiohttp import ClientError, web_exceptions
 from async_timeout import timeout
 from pydaikin.daikin_base import Appliance
 import voluptuous as vol
@@ -65,6 +65,8 @@ class FlowHandler(config_entries.ConfigFlow):
                 )
         except asyncio.TimeoutError:
             return self.async_abort(reason="device_timeout")
+        except web_exceptions.HTTPForbidden:
+            return self.async_abort(reason="forbidden")
         except ClientError:
             _LOGGER.exception("ClientError")
             return self.async_abort(reason="device_fail")

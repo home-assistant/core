@@ -13,6 +13,7 @@
     },
     "abort": {
       "device_timeout": "Timeout connecting to the device.",
+      "forbidden": "Authentication error, please verify key/password.",
       "device_fail": "Unexpected error creating device.",
       "already_configured": "Device is already configured"
     }
