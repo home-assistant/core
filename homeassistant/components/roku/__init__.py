@@ -1,8 +1,8 @@
 """Support for Roku."""
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from rokuecp import Roku, RokuError
 from rokuecp.models import Device
