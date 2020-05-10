@@ -68,8 +68,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if is_import:
                     _LOGGER.error("Failed to import: name %s already existed", name)
                 return self.async_abort(reason="duplicated_name")
-            await self.async_set_unique_id(endpoint)
-            self._abort_if_unique_id_configured()
 
             try:
                 await self._async_try_connect(
