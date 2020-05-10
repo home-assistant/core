@@ -8,20 +8,17 @@ from .const import DOMAIN, MANUFACTURER, MODEL
 class PowerWallEntity(Entity):
     """Base class for powerwall entities."""
 
-    def __init__(self, coordinator, site_info, status, device_type):
+    def __init__(
+        self, coordinator, site_info, status, device_type, powerwalls_serial_numbers
+    ):
         """Initialize the sensor."""
         super().__init__()
         self._coordinator = coordinator
         self._site_info = site_info
         self._device_type = device_type
         self._version = status.version
-        # This group of properties will be unique to to the site
-        unique_group = (
-            site_info.utility,
-            site_info.grid_code,
-            str(site_info.nominal_system_energy_kWh),
-        )
-        self.base_unique_id = "_".join(unique_group)
+        # The serial numbers of the powerwalls are unique to every site
+        self.base_unique_id = "_".join(powerwalls_serial_numbers)
 
     @property
     def device_info(self):
@@ -56,8 +53,6 @@ class PowerWallEntity(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )

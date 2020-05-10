@@ -1,12 +1,12 @@
 """The binary sensor tests for the powerwall platform."""
 
-from asynctest import patch
-
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .mocks import _mock_get_config, _mock_powerwall_with_fixtures
+
+from tests.async_mock import patch
 
 
 async def test_sensors(hass):
@@ -48,6 +48,16 @@ async def test_sensors(hass):
     expected_attributes = {
         "friendly_name": "Powerwall Connected to Tesla",
         "device_class": "connectivity",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
+
+    state = hass.states.get("binary_sensor.powerwall_charging")
+    assert state.state == STATE_ON
+    expected_attributes = {
+        "friendly_name": "Powerwall Charging",
+        "device_class": "battery_charging",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears

@@ -1,20 +1,15 @@
 {
-  "title": "August",
   "config": {
     "error": {
       "unknown": "Unexpected error",
       "cannot_connect": "Failed to connect, please try again",
       "invalid_auth": "Invalid authentication"
     },
-    "abort": {
-      "already_configured": "Account is already configured"
-    },
+    "abort": { "already_configured": "Account is already configured" },
     "step": {
       "validation": {
         "title": "Two factor authentication",
-        "data": {
-          "code": "Verification code"
-        },
+        "data": { "code": "Verification code" },
         "description": "Please check your {login_method} ({username}) and enter the verification code below"
       },
       "user": {

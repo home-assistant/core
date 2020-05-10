@@ -1,5 +1,4 @@
 {
-  "title": "Huawei LTE",
   "config": {
     "abort": {
       "already_configured": "This device has already been configured",

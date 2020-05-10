@@ -1,12 +1,11 @@
 """Test the base functions of the media player."""
 import base64
 
-from asynctest import patch
-
+from homeassistant.components import media_player
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 async def test_get_image(hass, hass_ws_client, caplog):
@@ -18,9 +17,9 @@ async def test_get_image(hass, hass_ws_client, caplog):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.media_player.MediaPlayerDevice."
+        "homeassistant.components.media_player.MediaPlayerEntity."
         "async_get_media_image",
-        return_value=mock_coro((b"image", "image/jpeg")),
+        return_value=(b"image", "image/jpeg"),
     ):
         await client.send_json(
             {
@@ -53,7 +52,7 @@ async def test_get_image_http(hass, aiohttp_client):
     client = await aiohttp_client(hass.http.app)
 
     with patch(
-        "homeassistant.components.media_player.MediaPlayerDevice."
+        "homeassistant.components.media_player.MediaPlayerEntity."
         "async_get_media_image",
         return_value=(b"image", "image/jpeg"),
     ):
@@ -66,7 +65,7 @@ async def test_get_image_http(hass, aiohttp_client):
 async def test_get_image_http_remote(hass, aiohttp_client):
     """Test get image url via http command."""
     with patch(
-        "homeassistant.components.media_player.MediaPlayerDevice."
+        "homeassistant.components.media_player.MediaPlayerEntity."
         "media_image_remotely_accessible",
         return_value=True,
     ):
@@ -80,7 +79,7 @@ async def test_get_image_http_remote(hass, aiohttp_client):
         client = await aiohttp_client(hass.http.app)
 
         with patch(
-            "homeassistant.components.media_player.MediaPlayerDevice."
+            "homeassistant.components.media_player.MediaPlayerEntity."
             "async_get_media_image",
             return_value=(b"image", "image/jpeg"),
         ):
@@ -88,3 +87,13 @@ async def test_get_image_http_remote(hass, aiohttp_client):
             content = await resp.read()
 
         assert content == b"image"
+
+
+def test_deprecated_base_class(caplog):
+    """Test deprecated base class."""
+
+    class CustomMediaPlayer(media_player.MediaPlayerDevice):
+        pass
+
+    CustomMediaPlayer()
+    assert "MediaPlayerDevice is deprecated, modify CustomMediaPlayer" in caplog.text

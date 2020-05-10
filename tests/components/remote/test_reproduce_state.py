@@ -15,7 +15,6 @@ async def test_reproducing_states(hass, caplog):
     # These calls should do nothing as entities already in desired state
     await hass.helpers.state.async_reproduce_state(
         [State("remote.entity_off", "off"), State("remote.entity_on", "on")],
-        blocking=True,
     )
 
     assert len(turn_on_calls) == 0
@@ -23,7 +22,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("remote.entity_off", "not_supported")], blocking=True
+        [State("remote.entity_off", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -38,7 +37,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("remote.non_existing", "on"),
         ],
-        blocking=True,
     )
 
     assert len(turn_on_calls) == 1

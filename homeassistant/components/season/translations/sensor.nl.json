@@ -1,0 +1,16 @@
+{
+    "state": {
+        "season__season": {
+            "autumn": "Herfst",
+            "spring": "Lente",
+            "summer": "Zomer",
+            "winter": "Winter"
+        },
+        "season__season__": {
+            "autumn": "Herfst",
+            "spring": "Lente",
+            "summer": "Zomer",
+            "winter": "Winter"
+        }
+    }
+}

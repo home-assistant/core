@@ -15,6 +15,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -23,6 +25,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    BARE_TEMP_CELSIUS,
+    BARE_TEMP_FAHRENHEIT,
     CONF_AREA,
     CONF_AUTO_CONFIGURE,
     CONF_COUNTER,
@@ -119,7 +123,10 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME, default=""): cv.string,
         vol.Optional(CONF_PASSWORD, default=""): cv.string,
         vol.Optional(CONF_AUTO_CONFIGURE, default=False): cv.boolean,
-        vol.Optional(CONF_TEMPERATURE_UNIT, default="F"): cv.temperature_unit,
+        # cv.temperature_unit will mutate 'C' -> '°C' and 'F' -> '°F'
+        vol.Optional(
+            CONF_TEMPERATURE_UNIT, default=BARE_TEMP_FAHRENHEIT
+        ): cv.temperature_unit,
         vol.Optional(CONF_AREA, default={}): DEVICE_SCHEMA_SUBDOMAIN,
         vol.Optional(CONF_COUNTER, default={}): DEVICE_SCHEMA_SUBDOMAIN,
         vol.Optional(CONF_KEYPAD, default={}): DEVICE_SCHEMA_SUBDOMAIN,
@@ -187,7 +194,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
-    config = {"temperature_unit": conf[CONF_TEMPERATURE_UNIT]}
+    temperature_unit = TEMP_FAHRENHEIT
+    if conf[CONF_TEMPERATURE_UNIT] in (BARE_TEMP_CELSIUS, TEMP_CELSIUS):
+        temperature_unit = TEMP_CELSIUS
+
+    config = {"temperature_unit": temperature_unit}
 
     if not conf[CONF_AUTO_CONFIGURE]:
         # With elkm1-lib==0.7.16 and later auto configure is available

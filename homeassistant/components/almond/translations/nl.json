@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "U kunt slechts \u00e9\u00e9n Almond-account configureren.",
+            "cannot_connect": "Kan geen verbinding maken met de Almond-server.",
+            "missing_configuration": "Raadpleeg de documentatie over het instellen van Almond."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met Almond die wordt aangeboden door de hass.io add-on {addon} ?",
+                "title": "Almond via Hass.io add-on"
+            },
+            "pick_implementation": {
+                "title": "Kies de authenticatie methode"
+            }
+        }
+    }
+}

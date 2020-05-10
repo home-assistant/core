@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components import litejet
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 ATTR_NUMBER = "number"
 
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class LiteJetSwitch(SwitchDevice):
+class LiteJetSwitch(SwitchEntity):
     """Representation of a single LiteJet switch."""
 
     def __init__(self, hass, lj, i, name):

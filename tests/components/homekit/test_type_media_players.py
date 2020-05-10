@@ -58,6 +58,7 @@ async def test_media_player_set_state(hass, hk_driver, events):
     await hass.async_block_till_done()
     acc = MediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, config)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 8  # Switch
@@ -199,6 +200,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 31  # Television
@@ -346,6 +348,7 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.chars_tv == []
     assert acc.chars_speaker == []
@@ -364,6 +367,26 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
     assert acc.char_active.value == 1
 
     assert not caplog.messages or "Error" not in caplog.messages[-1]
+
+
+async def test_media_player_television_supports_source_select_no_sources(
+    hass, hk_driver, events, caplog
+):
+    """Test if basic tv that supports source select but is missing a source list."""
+    entity_id = "media_player.television"
+
+    # Supports turn_on', 'turn_off'
+    hass.states.async_set(
+        entity_id,
+        None,
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV, ATTR_SUPPORTED_FEATURES: 3469},
+    )
+    await hass.async_block_till_done()
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+    assert acc.support_select_source is False
 
 
 async def test_tv_restore(hass, hk_driver, events):

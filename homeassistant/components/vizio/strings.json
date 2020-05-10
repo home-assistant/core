@@ -1,5 +1,4 @@
 {
-  "title": "VIZIO SmartCast",
   "config": {
     "step": {
       "user": {
@@ -15,9 +14,7 @@
       "pair_tv": {
         "title": "Complete Pairing Process",
         "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
-        "data": {
-          "pin": "PIN"
-        }
+        "data": { "pin": "PIN" }
       },
       "pairing_complete": {
         "title": "Pairing Complete",

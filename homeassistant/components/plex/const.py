@@ -30,6 +30,7 @@ CONF_SERVER_IDENTIFIER = "server_id"
 CONF_USE_EPISODE_ART = "use_episode_art"
 CONF_SHOW_ALL_CONTROLS = "show_all_controls"
 CONF_IGNORE_NEW_SHARED_USERS = "ignore_new_shared_users"
+CONF_IGNORE_PLEX_WEB_CLIENTS = "ignore_plex_web_clients"
 CONF_MONITORED_USERS = "monitored_users"
 
 AUTH_CALLBACK_PATH = "/auth/plex/callback"
@@ -40,5 +41,5 @@ X_PLEX_PLATFORM = "Home Assistant"
 X_PLEX_PRODUCT = "Home Assistant"
 X_PLEX_VERSION = __version__
 
-COMMAND_MEDIA_TYPE_MUSIC = "music"
-COMMAND_MEDIA_TYPE_VIDEO = "video"
+AUTOMATIC_SETUP_STRING = "Obtain a new token from plex.tv"
+MANUAL_SETUP_STRING = "Configure Plex server manually"

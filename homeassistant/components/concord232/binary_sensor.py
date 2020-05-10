@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -95,7 +95,7 @@ def get_opening_type(zone):
     return "opening"
 
 
-class Concord232ZoneSensor(BinarySensorDevice):
+class Concord232ZoneSensor(BinarySensorEntity):
     """Representation of a Concord232 zone as a sensor."""
 
     def __init__(self, hass, client, zone, zone_type):

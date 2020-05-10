@@ -139,7 +139,7 @@ TADO_SWING_ON = "ON"
 
 DOMAIN = "tado"
 
-SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}_{}"
+SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}_{}_{}"
 UNIQUE_ID = "unique_id"
 
 DEFAULT_NAME = "Tado"

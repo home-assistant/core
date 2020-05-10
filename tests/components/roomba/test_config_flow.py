@@ -1,17 +1,16 @@
 """Test the iRobot Roomba config flow."""
-from asynctest import MagicMock, PropertyMock, patch
 from roomba import RoombaConnectionError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.roomba.const import (
     CONF_BLID,
-    CONF_CERT,
     CONF_CONTINUOUS,
     CONF_DELAY,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
+from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 VALID_CONFIG = {CONF_HOST: "1.2.3.4", CONF_BLID: "blid", CONF_PASSWORD: "password"}
@@ -20,7 +19,6 @@ VALID_YAML_CONFIG = {
     CONF_HOST: "1.2.3.4",
     CONF_BLID: "blid",
     CONF_PASSWORD: "password",
-    CONF_CERT: "/etc/ssl/certs/ca-certificates.crt",
     CONF_CONTINUOUS: True,
     CONF_DELAY: 1,
 }
@@ -69,7 +67,6 @@ async def test_form(hass):
     assert result2["result"].unique_id == "blid"
     assert result2["data"] == {
         CONF_BLID: "blid",
-        CONF_CERT: "/etc/ssl/certs/ca-certificates.crt",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
         CONF_HOST: "1.2.3.4",
@@ -131,7 +128,6 @@ async def test_form_import(hass):
     assert result["title"] == "imported_roomba"
     assert result["data"] == {
         CONF_BLID: "blid",
-        CONF_CERT: "/etc/ssl/certs/ca-certificates.crt",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
         CONF_HOST: "1.2.3.4",

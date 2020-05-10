@@ -1,10 +1,8 @@
 """Test the Coolmaster config flow."""
-from unittest.mock import patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.coolmaster.const import AVAILABLE_MODES, DOMAIN
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 def _flow_data():
@@ -27,10 +25,9 @@ async def test_form(hass):
         "homeassistant.components.coolmaster.config_flow.CoolMasterNet.devices",
         return_value=[1],
     ), patch(
-        "homeassistant.components.coolmaster.async_setup", return_value=mock_coro(True)
+        "homeassistant.components.coolmaster.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.coolmaster.async_setup_entry",
-        return_value=mock_coro(True),
+        "homeassistant.components.coolmaster.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()

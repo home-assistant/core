@@ -1,9 +1,7 @@
 {
-  "title": "TP-Link Smart Home",
   "config": {
     "step": {
       "confirm": {
-        "title": "TP-Link Smart Home",
         "description": "Do you want to setup TP-Link smart devices?"
       }
     },

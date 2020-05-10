@@ -1,13 +1,14 @@
 """The tests for the Xiaomi router device tracker platform."""
 import logging
 
-from asynctest import mock, patch
 import requests
 
 from homeassistant.components.device_tracker import DOMAIN
 import homeassistant.components.xiaomi.device_tracker as xiaomi
 from homeassistant.components.xiaomi.device_tracker import get_scanner
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+
+from tests.async_mock import MagicMock, call, patch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +145,7 @@ def mocked_requests(*args, **kwargs):
 
 @patch(
     "homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner",
-    return_value=mock.MagicMock(),
+    return_value=MagicMock(),
 )
 async def test_config(xiaomi_mock, hass):
     """Testing minimal configuration."""
@@ -159,7 +160,7 @@ async def test_config(xiaomi_mock, hass):
     }
     xiaomi.get_scanner(hass, config)
     assert xiaomi_mock.call_count == 1
-    assert xiaomi_mock.call_args == mock.call(config[DOMAIN])
+    assert xiaomi_mock.call_args == call(config[DOMAIN])
     call_arg = xiaomi_mock.call_args[0][0]
     assert call_arg["username"] == "admin"
     assert call_arg["password"] == "passwordTest"
@@ -169,7 +170,7 @@ async def test_config(xiaomi_mock, hass):
 
 @patch(
     "homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner",
-    return_value=mock.MagicMock(),
+    return_value=MagicMock(),
 )
 async def test_config_full(xiaomi_mock, hass):
     """Testing full configuration."""
@@ -185,7 +186,7 @@ async def test_config_full(xiaomi_mock, hass):
     }
     xiaomi.get_scanner(hass, config)
     assert xiaomi_mock.call_count == 1
-    assert xiaomi_mock.call_args == mock.call(config[DOMAIN])
+    assert xiaomi_mock.call_args == call(config[DOMAIN])
     call_arg = xiaomi_mock.call_args[0][0]
     assert call_arg["username"] == "alternativeAdminName"
     assert call_arg["password"] == "passwordTest"

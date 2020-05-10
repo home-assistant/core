@@ -1,5 +1,4 @@
 {
-  "title": "iRobot Roomba",
   "config": {
     "step": {
       "user": {
@@ -9,25 +8,18 @@
           "host": "Hostname or IP Address",
           "blid": "BLID",
           "password": "Password",
-          "certificate": "Certificate",
           "continuous": "Continuous",
           "delay": "Delay"
         }
       }
     },
     "error": {
-      "unknown": "Unexpected error",
       "cannot_connect": "Failed to connect, please try again"
     }
   },
   "options": {
     "step": {
-      "init": {
-        "data": {
-          "continuous": "Continuous",
-          "delay": "Delay"
-        }
-      }
+      "init": { "data": { "continuous": "Continuous", "delay": "Delay" } }
     }
   }
 }

@@ -13,6 +13,8 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.util import slugify
 
@@ -33,7 +35,9 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME, default=""): str,
         vol.Optional(CONF_PASSWORD, default=""): str,
         vol.Optional(CONF_PREFIX, default=""): str,
-        vol.Optional(CONF_TEMPERATURE_UNIT, default="F"): vol.In(["F", "C"]),
+        vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT): vol.In(
+            [TEMP_FAHRENHEIT, TEMP_CELSIUS]
+        ),
     }
 )
 

@@ -1,13 +1,9 @@
 {
-  "title": "Freebox",
   "config": {
     "step": {
       "user": {
         "title": "Freebox",
-        "data": {
-          "host": "Host",
-          "port": "Port"
-        }
+        "data": { "host": "Host", "port": "Port" }
       },
       "link": {
         "title": "Link Freebox router",
@@ -19,8 +15,6 @@
       "connection_failed": "Failed to connect, please try again",
       "unknown": "Unknown error: please retry later"
     },
-    "abort": {
-      "already_configured": "Host already configured"
-    }
+    "abort": { "already_configured": "Host already configured" }
   }
 }

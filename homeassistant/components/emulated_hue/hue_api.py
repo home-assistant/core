@@ -89,7 +89,7 @@ HUE_API_STATE_SAT_MAX = 254
 HUE_API_STATE_CT_MIN = 153  # Color temp
 HUE_API_STATE_CT_MAX = 500
 
-HUE_API_USERNAME = "12345678901234567890"
+HUE_API_USERNAME = "nouser"
 UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
 ]
@@ -226,9 +226,42 @@ class HueFullStateView(HomeAssistantView):
             "config": {
                 "mac": "00:00:00:00:00:00",
                 "swversion": "01003542",
+                "apiversion": "1.17.0",
                 "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
                 "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
+                "linkbutton": True,
             },
+        }
+
+        return self.json(json_response)
+
+
+class HueConfigView(HomeAssistantView):
+    """Return config view of emulated hue."""
+
+    url = "/api/{username}/config"
+    name = "emulated_hue:username:config"
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username):
+        """Process a request to get the configuration."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
+        if username != HUE_API_USERNAME:
+            return self.json(UNAUTHORIZED_USER)
+
+        json_response = {
+            "mac": "00:00:00:00:00:00",
+            "swversion": "01003542",
+            "apiversion": "1.17.0",
+            "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
+            "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
+            "linkbutton": True,
         }
 
         return self.json(json_response)
@@ -367,7 +400,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 cover.DOMAIN,
                 climate.DOMAIN,
             ]:
-                # Convert 0-255 to 0-100
+                # Convert 0-254 to 0-100
                 level = (parsed[STATE_BRIGHTNESS] / HUE_API_STATE_BRI_MAX) * 100
                 parsed[STATE_BRIGHTNESS] = round(level)
                 parsed[STATE_ON] = True
@@ -390,7 +423,9 @@ class HueOneLightChangeView(HomeAssistantView):
             if parsed[STATE_ON]:
                 if entity_features & SUPPORT_BRIGHTNESS:
                     if parsed[STATE_BRIGHTNESS] is not None:
-                        data[ATTR_BRIGHTNESS] = parsed[STATE_BRIGHTNESS]
+                        data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
+                            parsed[STATE_BRIGHTNESS]
+                        )
 
                 if entity_features & SUPPORT_COLOR:
                     if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
@@ -504,7 +539,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Create success responses for all received keys
         json_response = [
-            create_hue_success_response(entity_id, HUE_API_STATE_ON, parsed[STATE_ON])
+            create_hue_success_response(
+                entity_number, HUE_API_STATE_ON, parsed[STATE_ON]
+            )
         ]
 
         for (key, val) in (
@@ -515,7 +552,7 @@ class HueOneLightChangeView(HomeAssistantView):
         ):
             if parsed[key] is not None:
                 json_response.append(
-                    create_hue_success_response(entity_id, val, parsed[key])
+                    create_hue_success_response(entity_number, val, parsed[key])
                 )
 
         return self.json(json_response)
@@ -536,7 +573,9 @@ def get_entity_state(config, entity):
         data[STATE_ON] = entity.state != STATE_OFF
 
         if data[STATE_ON]:
-            data[STATE_BRIGHTNESS] = entity.attributes.get(ATTR_BRIGHTNESS, 0)
+            data[STATE_BRIGHTNESS] = hass_to_hue_brightness(
+                entity.attributes.get(ATTR_BRIGHTNESS, 0)
+            )
             hue_sat = entity.attributes.get(ATTR_HS_COLOR)
             if hue_sat is not None:
                 hue = hue_sat[0]
@@ -563,32 +602,32 @@ def get_entity_state(config, entity):
                 pass
         elif entity.domain == climate.DOMAIN:
             temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
-            # Convert 0-100 to 0-255
-            data[STATE_BRIGHTNESS] = round(temperature * 255 / 100)
+            # Convert 0-100 to 0-254
+            data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
         elif entity.domain == media_player.DOMAIN:
             level = entity.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0
             )
-            # Convert 0.0-1.0 to 0-255
-            data[STATE_BRIGHTNESS] = round(min(1.0, level) * 255)
+            # Convert 0.0-1.0 to 0-254
+            data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
         elif entity.domain == fan.DOMAIN:
             speed = entity.attributes.get(ATTR_SPEED, 0)
-            # Convert 0.0-1.0 to 0-255
+            # Convert 0.0-1.0 to 0-254
             data[STATE_BRIGHTNESS] = 0
             if speed == SPEED_LOW:
                 data[STATE_BRIGHTNESS] = 85
             elif speed == SPEED_MEDIUM:
                 data[STATE_BRIGHTNESS] = 170
             elif speed == SPEED_HIGH:
-                data[STATE_BRIGHTNESS] = 255
+                data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX
         elif entity.domain == cover.DOMAIN:
             level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
-            data[STATE_BRIGHTNESS] = round(level / 100 * 255)
+            data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     else:
         data = cached_state
         # Make sure brightness is valid
         if data[STATE_BRIGHTNESS] is None:
-            data[STATE_BRIGHTNESS] = 255 if data[STATE_ON] else 0
+            data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX if data[STATE_ON] else 0
 
         # Make sure hue/saturation are valid
         if (data[STATE_HUE] is None) or (data[STATE_SATURATION] is None):
@@ -706,9 +745,9 @@ def entity_to_json(config, entity):
     return retval
 
 
-def create_hue_success_response(entity_id, attr, value):
+def create_hue_success_response(entity_number, attr, value):
     """Create a success response for an attribute set on a light."""
-    success_key = f"/lights/{entity_id}/state/{attr}"
+    success_key = f"/lights/{entity_number}/state/{attr}"
     return {"success": {success_key: value}}
 
 
@@ -723,3 +762,13 @@ def create_list_of_entities(config, request):
             json_response[number] = entity_to_json(config, entity)
 
     return json_response
+
+
+def hue_brightness_to_hass(value):
+    """Convert hue brightness 1..254 to hass format 0..255."""
+    return min(255, round((value / HUE_API_STATE_BRI_MAX) * 255))
+
+
+def hass_to_hue_brightness(value):
+    """Convert hass brightness 0..255 to hue 1..254 scale."""
+    return max(1, round((value / 255) * HUE_API_STATE_BRI_MAX))
