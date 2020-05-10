@@ -56,6 +56,7 @@ from . import (
     DATA_UPDATED,
     DATA_YEELIGHT,
     DOMAIN,
+    MODEL_TO_DEVICE_TYPE,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
     YEELIGHT_SERVICE_SCHEMA,
@@ -125,25 +126,6 @@ YEELIGHT_COLOR_EFFECT_LIST = [
     EFFECT_SLOWDOWN,
     *YEELIGHT_MONO_EFFECT_LIST,
 ]
-
-MODEL_TO_DEVICE_TYPE = {
-    "mono": BulbType.White,
-    "mono1": BulbType.White,
-    "color": BulbType.Color,
-    "color1": BulbType.Color,
-    "color2": BulbType.Color,
-    "strip1": BulbType.Color,
-    "bslamp1": BulbType.Color,
-    "bslamp2": BulbType.Color,
-    "RGBW": BulbType.Color,
-    "lamp1": BulbType.WhiteTemp,
-    "ceiling1": BulbType.WhiteTemp,
-    "ceiling2": BulbType.WhiteTemp,
-    "ceiling3": BulbType.WhiteTemp,
-    "ceiling4": BulbType.WhiteTempMood,
-    "ceiling10": BulbType.WhiteTempMood,
-    "ceiling13": BulbType.WhiteTemp,
-}
 
 EFFECTS_MAP = {
     EFFECT_DISCO: yee_transitions.disco,

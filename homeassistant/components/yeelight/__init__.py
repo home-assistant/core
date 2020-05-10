@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
-from yeelight import Bulb, BulbException
+from yeelight import Bulb, BulbException, BulbType
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.discovery import SERVICE_YEELIGHT
@@ -60,6 +60,25 @@ YEELIGHT_HSV_TRANSACTION = "HSVTransition"
 YEELIGHT_TEMPERATURE_TRANSACTION = "TemperatureTransition"
 YEELIGHT_SLEEP_TRANSACTION = "SleepTransition"
 
+MODEL_TO_DEVICE_TYPE = {
+    "mono": BulbType.White,
+    "mono1": BulbType.White,
+    "color": BulbType.Color,
+    "color1": BulbType.Color,
+    "color2": BulbType.Color,
+    "strip1": BulbType.Color,
+    "bslamp1": BulbType.Color,
+    "bslamp2": BulbType.Color,
+    "RGBW": BulbType.Color,
+    "lamp1": BulbType.WhiteTemp,
+    "ceiling1": BulbType.WhiteTemp,
+    "ceiling2": BulbType.WhiteTemp,
+    "ceiling3": BulbType.WhiteTemp,
+    "ceiling4": BulbType.WhiteTempMood,
+    "ceiling10": BulbType.WhiteTempMood,
+    "ceiling13": BulbType.WhiteTemp,
+}
+
 YEELIGHT_FLOW_TRANSITION_SCHEMA = {
     vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
     vol.Optional(ATTR_ACTION, default=ACTION_RECOVER): vol.Any(
@@ -92,7 +111,7 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE): vol.Any(
             NIGHTLIGHT_SWITCH_TYPE_LIGHT
         ),
-        vol.Optional(CONF_MODEL): cv.string,
+        vol.Optional(CONF_MODEL): vol.Any(*list(MODEL_TO_DEVICE_TYPE)),
     }
 )
 
@@ -115,6 +134,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 YEELIGHT_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
+
 
 UPDATE_REQUEST_PROPERTIES = [
     "power",
