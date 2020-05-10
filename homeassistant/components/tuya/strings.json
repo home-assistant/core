@@ -7,20 +7,20 @@
         "description": "Enter your Tuya credential.",
         "data": {
           "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
-          "password": "Your password to log in to Tuya",
+          "password": "[%key:common::config_flow::data::password%]",
           "platform": "The app where your account register",
-          "username": "Your username to log in to Tuya"
+          "username": "[%key:common::config_flow::data::username%]"
         }
       }
     },
     "abort": {
       "already_in_progress": "Tuya configuration is already in progress.",
-      "auth_failed": "Configured Tuya credential are incorrect.",
-      "conn_error": "Connection to Tuya failed.",
-      "single_instance_allowed": "Only a single configuration of Tuya is allowed."
+      "auth_failed": "[%key:common::config_flow::error::invalid_auth%]",
+      "conn_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "auth_failed": "Provided credential are incorrect."
+      "auth_failed": "[%key:common::config_flow::error::invalid_auth%]"
     }
   }
 }

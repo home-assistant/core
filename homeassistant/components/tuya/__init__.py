@@ -29,7 +29,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_ENTRY_IS_SETUP = "tuya_config_entry_is_setup"
+ENTRY_IS_SETUP = "tuya_entry_is_setup"
 
 PARALLEL_UPDATES = 0
 
@@ -92,8 +92,8 @@ async def async_setup_entry(hass, entry):
         await hass.async_add_executor_job(
             tuya.init, username, password, country_code, platform
         )
-    except (TuyaNetException, TuyaServerException) as exc:
-        raise ConfigEntryNotReady() from exc
+    except (TuyaNetException, TuyaServerException):
+        raise ConfigEntryNotReady()
 
     except TuyaAPIException as exc:
         _LOGGER.error(
@@ -101,9 +101,10 @@ async def async_setup_entry(hass, entry):
         )
         return False
 
-    hass.data[TUYA_DATA] = tuya
-    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
     hass.data[DOMAIN] = {
+        TUYA_DATA: tuya,
+        TUYA_TRACKER: None,
+        ENTRY_IS_SETUP: set(),
         "entities": {},
         "pending": {},
     }
@@ -125,24 +126,27 @@ async def async_setup_entry(hass, entry):
 
         for ha_type, dev_ids in device_type_list.items():
             config_entries_key = f"{ha_type}.tuya"
-            if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+            if config_entries_key not in hass.data[DOMAIN][ENTRY_IS_SETUP]:
                 hass.data[DOMAIN]["pending"][ha_type] = dev_ids
                 hass.async_create_task(
                     hass.config_entries.async_forward_entry_setup(entry, ha_type)
                 )
-                hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+                hass.data[DOMAIN][ENTRY_IS_SETUP].add(config_entries_key)
             else:
                 async_dispatcher_send(hass, TUYA_DISCOVERY_NEW.format(ha_type), dev_ids)
 
     device_list = await hass.async_add_executor_job(tuya.get_all_devices)
     await async_load_devices(device_list)
 
+    def _get_updated_devices():
+        tuya.poll_devices_update()
+        return tuya.get_all_devices()
+
     async def async_poll_devices_update(event_time):
         """Check if accesstoken is expired and pull device list from server."""
         _LOGGER.debug("Pull devices from Tuya.")
-        await hass.async_add_executor_job(tuya.poll_devices_update)
         # Add new discover device.
-        device_list = await hass.async_add_executor_job(tuya.get_all_devices)
+        device_list = await hass.async_add_executor_job(_get_updated_devices)
         await async_load_devices(device_list)
         # Delete not exist device.
         newlist_ids = []
@@ -153,7 +157,7 @@ async def async_setup_entry(hass, entry):
                 async_dispatcher_send(hass, SIGNAL_DELETE_ENTITY, dev_id)
                 hass.data[DOMAIN]["entities"].pop(dev_id)
 
-    hass.data[TUYA_TRACKER] = async_track_time_interval(
+    hass.data[DOMAIN][TUYA_TRACKER] = async_track_time_interval(
         hass, async_poll_devices_update, timedelta(minutes=5)
     )
 
@@ -178,15 +182,15 @@ async def async_unload_entry(hass, entry):
                 hass.config_entries.async_forward_entry_unload(
                     entry, component.split(".", 1)[0]
                 )
-                for component in hass.data[CONFIG_ENTRY_IS_SETUP]
+                for component in hass.data[DOMAIN][ENTRY_IS_SETUP]
             ]
         )
     )
     if unload_ok:
-        hass.data[CONFIG_ENTRY_IS_SETUP] = set()
-        hass.data[TUYA_TRACKER]()
-        hass.data[TUYA_TRACKER] = None
-        hass.data[TUYA_DATA] = None
+        hass.data[DOMAIN][ENTRY_IS_SETUP] = set()
+        hass.data[DOMAIN][TUYA_TRACKER]()
+        hass.data[DOMAIN][TUYA_TRACKER] = None
+        hass.data[DOMAIN][TUYA_DATA] = None
         hass.services.async_remove(DOMAIN, SERVICE_FORCE_UPDATE)
         hass.services.async_remove(DOMAIN, SERVICE_PULL_DEVICES)
         hass.data.pop(DOMAIN)

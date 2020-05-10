@@ -24,7 +24,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Discover and add a discovered tuya sensor."""
         if not dev_ids:
             return
-        await _async_setup_entity(hass, async_add_entities, dev_ids, platform)
+        entities = await hass.async_add_executor_job(
+            _setup_entities, hass, dev_ids, platform,
+        )
+        async_add_entities(entities)
 
     async_dispatcher_connect(
         hass, TUYA_DISCOVERY_NEW.format(SENSOR_DOMAIN), async_discover_sensor
@@ -34,16 +37,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_discover_sensor(devices_ids)
 
 
-async def _async_setup_entity(hass, async_add_entities, dev_ids, platform):
-    """Set up Tuya Switch device."""
-    tuya = hass.data[TUYA_DATA]
-    devices = []
+def _setup_entities(hass, dev_ids, platform):
+    """Set up Tuya Fan device."""
+    tuya = hass.data[DOMAIN][TUYA_DATA]
+    entities = []
     for dev_id in dev_ids:
-        device = await hass.async_add_executor_job(tuya.get_device_by_id, dev_id)
-        if device is None:
+        entity = tuya.get_device_by_id(dev_id)
+        if entity is None:
             continue
-        devices.append(TuyaFanDevice(device, platform))
-    async_add_entities(devices)
+        entities.append(TuyaFanDevice(entity, platform))
+    return entities
 
 
 class TuyaFanDevice(TuyaDevice, FanEntity):
