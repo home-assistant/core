@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
@@ -179,7 +179,7 @@ async def async_setup_entry(hass, entry):
         hass.data[DOMAIN][name] = pi_hole
     except HoleError as ex:
         LOGGER.warning("Failed to connect: %s", ex)
-        raise PlatformNotReady
+        raise ConfigEntryNotReady
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
