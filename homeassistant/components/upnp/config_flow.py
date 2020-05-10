@@ -5,10 +5,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.const import CONF_SCAN_INTERVAL
 
 from .const import (  # pylint: disable=unused-import
+    CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
+    DEFAULT_SCAN_INTERVAL,
     DISCOVERY_LOCATION,
     DISCOVERY_NAME,
     DISCOVERY_ST,
@@ -54,7 +57,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 discovery[DISCOVERY_USN], raise_on_progress=False
             )
-            return await self._async_create_entry_from_data(discovery)
+            return await self._async_create_entry_from_discovery(
+                discovery, user_input[CONF_SCAN_INTERVAL]
+            )
 
         # Discover devices.
         discoveries = await Device.async_discover(self.hass)
@@ -82,6 +87,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         for discovery in self._discoveries
                     }
                 ),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL,
+                ): vol.All(vol.Coerce(int), vol.Range(min=30)),
             }
         )
         return self.async_show_form(step_id="user", data_schema=data_schema,)
@@ -119,7 +127,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         discovery = self._discoveries[0]
-        return await self._async_create_entry_from_data(discovery)
+        return await self._async_create_entry_from_discovery(
+            discovery, DEFAULT_SCAN_INTERVAL
+        )
 
     async def async_step_ssdp(self, discovery_info: Mapping):
         """Handle a discovered UPnP/IGD device.
@@ -160,11 +170,19 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="ssdp_confirm")
 
         discovery = self._discoveries[0]
-        return await self._async_create_entry_from_data(discovery)
+        return await self._async_create_entry_from_discovery(
+            discovery, DEFAULT_SCAN_INTERVAL
+        )
 
-    async def _async_create_entry_from_data(self, discovery: Mapping):
-        """Create an entry from own _data."""
-        _LOGGER.debug("_async_create_entry_from_data: discovery: %s", discovery)
+    async def _async_create_entry_from_discovery(
+        self, discovery: Mapping, scan_interval
+    ):
+        """Create an entry from discovery."""
+        _LOGGER.debug(
+            "_async_create_entry_from_data: discovery: %s, scan_interval: %s",
+            discovery,
+            scan_interval,
+        )
         # Get name from device, if not found already.
         if DISCOVERY_NAME not in discovery and DISCOVERY_LOCATION in discovery:
             discovery[DISCOVERY_NAME] = await self._async_get_name_for_discovery(
@@ -175,6 +193,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = {
             CONFIG_ENTRY_UDN: discovery[DISCOVERY_UDN],
             CONFIG_ENTRY_ST: discovery[DISCOVERY_ST],
+            CONFIG_ENTRY_SCAN_INTERVAL: scan_interval,
         }
         return self.async_create_entry(title=title, data=data)
 
