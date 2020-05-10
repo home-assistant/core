@@ -17,6 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     _encode_jwt,
     async_register_view,
 )
+from homeassistant.helpers.network import get_url
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
@@ -109,7 +110,8 @@ class OpenIdAuthProvider(AuthProvider):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}"  # type: ignore
+        url = URL(get_url(self.hass, prefer_external=True, allow_cloud=False))
+        return str(url.with_path(AUTH_CALLBACK_PATH))
 
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
