@@ -382,6 +382,9 @@ brottsplatskartan==0.0.1
 # homeassistant.components.brunt
 brunt==0.1.3
 
+# homeassistant.components.bsblan
+bsblan==0.3.6
+
 # homeassistant.components.bluetooth_tracker
 bt_proximity==0.2
 

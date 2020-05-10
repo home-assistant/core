@@ -20,6 +20,7 @@ FLOWS = [
     "blebox",
     "braviatv",
     "brother",
+    "bsblan",
     "cast",
     "cert_expiry",
     "coolmaster",
