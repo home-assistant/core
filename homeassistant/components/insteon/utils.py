@@ -118,7 +118,7 @@ def register_new_device_callback(hass, config):
         _LOGGER.debug(
             "Adding new INSTEON device to Home Assistant with address %s", address
         )
-        hass.async_add_job(devices.async_save, hass.config.config_dir)
+        hass.async_add_executor_job(devices.async_save, hass.config.config_dir)
         device = devices[address]
         device.status()
         platforms = get_device_platforms(device)
@@ -144,24 +144,24 @@ def register_new_device_callback(hass, config):
 def async_register_services(hass):
     """Register services used by insteon component."""
 
-    def add_all_link(service):
+    async def async_srv_add_all_link(service):
         """Add an INSTEON All-Link between two devices."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
         mode = service.data.get(SRV_ALL_LINK_MODE)
         link_mode = mode.lower() == SRV_CONTROLLER
-        hass.async_add_job(async_enter_linking_mode, link_mode, group)
+        await async_enter_linking_mode(link_mode, group)
 
-    def del_all_link(service):
+    async def async_srv_del_all_link(service):
         """Delete an INSTEON All-Link between two devices."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
-        hass.async_add_job(async_enter_unlinking_mode, group)
+        await async_enter_unlinking_mode(group)
 
-    def load_aldb(service):
+    async def async_srv_load_aldb(service):
         """Load the device All-Link database."""
         entity_id = service.data[CONF_ENTITY_ID]
         reload = service.data[SRV_LOAD_DB_RELOAD]
         if entity_id.lower() == ENTITY_MATCH_ALL:
-            hass.async_add_job(_load_aldb_all, reload)
+            await async_srv_load_aldb_all(reload)
         else:
             _send_load_aldb_signal(entity_id, reload)
 
@@ -170,17 +170,20 @@ def async_register_services(hass):
         signal = f"{entity_id}_{SIGNAL_LOAD_ALDB}"
         dispatcher_send(hass, signal, reload)
 
-    async def _load_aldb_all(reload):
+    async def async_srv_load_aldb_all(reload):
         """Load the All-Link database for all devices."""
+        # Cannot be done concurrently due to issues with the underlying protocol.
         for address in devices:
             device = devices[address]
             if device != devices.modem and device.cat != 0x03:
-                await device.aldb.async_load(refresh=reload, callback=_save_devices)
+                await device.aldb.async_load(
+                    refresh=reload, callback=async_srv_save_devices
+                )
 
-    def _save_devices():
+    async def async_srv_save_devices():
         """Write the Insteon device configuration to file."""
         _LOGGER.debug("Saving Insteon devices")
-        hass.async_add_job(devices.async_save, hass.config.config_dir)
+        await devices.async_save(hass.config.config_dir)
 
     def print_aldb(service):
         """Print the All-Link Database for a device."""
@@ -196,60 +199,69 @@ def async_register_services(hass):
         # Future direction is to create an INSTEON control panel.
         print_aldb_to_log(devices.modem.aldb)
 
-    def x10_all_units_off(service):
+    async def async_srv_x10_all_units_off(service):
         """Send the X10 All Units Off command."""
         housecode = service.data.get(SRV_HOUSECODE)
-        hass.async_add_job(async_x10_all_units_off, housecode)
+        await async_x10_all_units_off(housecode)
 
-    def x10_all_lights_off(service):
+    async def async_srv_x10_all_lights_off(service):
         """Send the X10 All Lights Off command."""
         housecode = service.data.get(SRV_HOUSECODE)
-        hass.async_add_job(async_x10_all_lights_off, housecode)
+        await async_x10_all_lights_off(housecode)
 
-    def x10_all_lights_on(service):
+    async def async_srv_x10_all_lights_on(service):
         """Send the X10 All Lights On command."""
         housecode = service.data.get(SRV_HOUSECODE)
-        hass.async_add_job(async_x10_all_lights_on, housecode)
+        await async_x10_all_lights_on(housecode)
 
-    def scene_on(service):
+    async def async_srv_scene_on(service):
         """Trigger an INSTEON scene ON."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
-        hass.async_add_job(async_trigger_scene_on, group)
+        await async_trigger_scene_on(group)
 
-    def scene_off(service):
+    async def async_srv_scene_off(service):
         """Trigger an INSTEON scene ON."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
-        hass.async_add_job(async_trigger_scene_off, group)
+        await async_trigger_scene_off(group)
 
     hass.services.async_register(
-        DOMAIN, SRV_ADD_ALL_LINK, add_all_link, schema=ADD_ALL_LINK_SCHEMA
+        DOMAIN, SRV_ADD_ALL_LINK, async_srv_add_all_link, schema=ADD_ALL_LINK_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SRV_DEL_ALL_LINK, del_all_link, schema=DEL_ALL_LINK_SCHEMA
+        DOMAIN, SRV_DEL_ALL_LINK, async_srv_del_all_link, schema=DEL_ALL_LINK_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SRV_LOAD_ALDB, load_aldb, schema=LOAD_ALDB_SCHEMA
+        DOMAIN, SRV_LOAD_ALDB, async_srv_load_aldb, schema=LOAD_ALDB_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SRV_PRINT_ALDB, print_aldb, schema=PRINT_ALDB_SCHEMA
     )
     hass.services.async_register(DOMAIN, SRV_PRINT_IM_ALDB, print_im_aldb, schema=None)
     hass.services.async_register(
-        DOMAIN, SRV_X10_ALL_UNITS_OFF, x10_all_units_off, schema=X10_HOUSECODE_SCHEMA
+        DOMAIN,
+        SRV_X10_ALL_UNITS_OFF,
+        async_srv_x10_all_units_off,
+        schema=X10_HOUSECODE_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SRV_X10_ALL_LIGHTS_OFF, x10_all_lights_off, schema=X10_HOUSECODE_SCHEMA
+        DOMAIN,
+        SRV_X10_ALL_LIGHTS_OFF,
+        async_srv_x10_all_lights_off,
+        schema=X10_HOUSECODE_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SRV_X10_ALL_LIGHTS_ON, x10_all_lights_on, schema=X10_HOUSECODE_SCHEMA
+        DOMAIN,
+        SRV_X10_ALL_LIGHTS_ON,
+        async_srv_x10_all_lights_on,
+        schema=X10_HOUSECODE_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SRV_SCENE_ON, scene_on, schema=TRIGGER_SCENE_SCHEMA
+        DOMAIN, SRV_SCENE_ON, async_srv_scene_on, schema=TRIGGER_SCENE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SRV_SCENE_OFF, scene_off, schema=TRIGGER_SCENE_SCHEMA
+        DOMAIN, SRV_SCENE_OFF, async_srv_scene_off, schema=TRIGGER_SCENE_SCHEMA
     )
-    async_dispatcher_connect(hass, SIGNAL_SAVE_DEVICES, _save_devices)
+    async_dispatcher_connect(hass, SIGNAL_SAVE_DEVICES, async_srv_save_devices)
     _LOGGER.debug("Insteon Services registered")
 
 
@@ -295,12 +307,6 @@ def async_add_insteon_entities(
         device = devices[address]
         groups = get_platform_groups(device, platform)
         for group in groups:
-            _LOGGER.debug(
-                "Adding device %s group %s to %s platform",
-                device.address,
-                group,
-                platform,
-            )
             new_entities.append(entity_type(device, group))
     if new_entities:
         async_add_entities(new_entities)
