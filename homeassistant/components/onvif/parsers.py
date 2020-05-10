@@ -99,8 +99,8 @@ async def async_parse_image_too_bright(uid: str, msg) -> Event:
 
 
 @PARSERS.register("tns1:VideoSource/GlobalSceneChange/AnalyticsService")
-@PARSERS.register("tns1:VideoSource/ImageTooBlurry/ImagingService")
-@PARSERS.register("tns1:VideoSource/ImageTooBlurry/RecordingService")
+@PARSERS.register("tns1:VideoSource/GlobalSceneChange/ImagingService")
+@PARSERS.register("tns1:VideoSource/GlobalSceneChange/RecordingService")
 # pylint: disable=protected-access
 async def async_parse_scene_change(uid: str, msg) -> Event:
     """Handle parsing event message.
@@ -114,7 +114,7 @@ async def async_parse_scene_change(uid: str, msg) -> Event:
             f"{uid}_{msg.Topic._value_1}_{source}",
             f"{source} Global Scene Change",
             "binary_sensor",
-            "motion",
+            "problem",
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "true",
         )
