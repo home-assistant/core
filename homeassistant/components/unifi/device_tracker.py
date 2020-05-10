@@ -304,7 +304,10 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
                 dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 10),
             )
 
-        elif self.device.event.event in DEVICE_UPGRADED:
+        elif (
+            self.device.last_updated == SOURCE_EVENT
+            and self.device.event.event in DEVICE_UPGRADED
+        ):
             self.hass.async_create_task(self.async_update_device_registry())
             return
 
