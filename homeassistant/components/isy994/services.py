@@ -56,6 +56,7 @@ SERVICE_SET_RAMP_RATE = "set_ramp_rate"
 CONF_PARAMETERS = "parameters"
 CONF_VALUE = "value"
 CONF_INIT = "init"
+CONF_ISY = "isy"
 
 VALID_NODE_COMMANDS = [
     "beep",
@@ -92,7 +93,9 @@ def valid_isy_commands(value: Any) -> str:
 
 SCHEMA_GROUP = "name-address"
 
-SERVICE_SYSTEM_QUERY_SCHEMA = vol.Schema({vol.Optional(CONF_ADDRESS): cv.string})
+SERVICE_SYSTEM_QUERY_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_ADDRESS): cv.string, vol.Optional(CONF_ISY): cv.string}
+)
 
 SERVICE_SET_RAMP_RATE_SCHEMA = {
     vol.Required(CONF_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 31))
@@ -124,6 +127,7 @@ SERVICE_SET_VARIABLE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_INIT, default=False): bool,
             vol.Required(CONF_VALUE): vol.Coerce(int),
+            vol.Optional(CONF_ISY): cv.string,
         }
     ),
 )
@@ -135,6 +139,7 @@ SERVICE_SEND_PROGRAM_COMMAND_SCHEMA = vol.All(
             vol.Exclusive(CONF_NAME, SCHEMA_GROUP): cv.string,
             vol.Exclusive(CONF_ADDRESS, SCHEMA_GROUP): cv.string,
             vol.Required(CONF_COMMAND): vol.In(VALID_PROGRAM_COMMANDS),
+            vol.Optional(CONF_ISY): cv.string,
         }
     ),
 )
@@ -145,6 +150,7 @@ SERVICE_RUN_NETWORK_RESOURCE_SCHEMA = vol.All(
         {
             vol.Exclusive(CONF_NAME, SCHEMA_GROUP): cv.string,
             vol.Exclusive(CONF_ADDRESS, SCHEMA_GROUP): vol.Coerce(int),
+            vol.Optional(CONF_ISY): cv.string,
         }
     ),
 )
@@ -163,9 +169,12 @@ def async_setup_services(hass: HomeAssistantType):
     async def async_system_query_service_handler(service):
         """Handle a system query service call."""
         address = service.data.get(CONF_ADDRESS)
+        isy_name = service.data.get(CONF_ISY)
 
-        for entry in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][entry][ISY994_ISY]
+        for config_entry_id in hass.data[DOMAIN]:
+            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
+            if isy_name and not isy_name == isy.configuration["name"]:
+                continue
             # If an address is provided, make sure we query the correct ISY.
             # Otherwise, query the whole system on all ISY's connected.
             if address and isy.nodes.get_by_id(address) is not None:
@@ -185,10 +194,13 @@ def async_setup_services(hass: HomeAssistantType):
         """Handle a network resource service call."""
         address = service.data.get(CONF_ADDRESS)
         name = service.data.get(CONF_NAME)
+        isy_name = service.data.get(CONF_ISY)
 
-        for entry in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][entry][ISY994_ISY]
-            if not hasattr(isy, "networking"):
+        for config_entry_id in hass.data[DOMAIN]:
+            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
+            if isy_name and not isy_name == isy.configuration["name"]:
+                continue
+            if not hasattr(isy, "networking") or isy.networking is None:
                 continue
             command = None
             if address:
@@ -207,9 +219,12 @@ def async_setup_services(hass: HomeAssistantType):
         address = service.data.get(CONF_ADDRESS)
         name = service.data.get(CONF_NAME)
         command = service.data.get(CONF_COMMAND)
+        isy_name = service.data.get(CONF_ISY)
 
-        for entry in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][entry][ISY994_ISY]
+        for config_entry_id in hass.data[DOMAIN]:
+            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
+            if isy_name and not isy_name == isy.configuration["name"]:
+                continue
             program = None
             if address:
                 program = isy.programs.get_by_id(address)
@@ -229,9 +244,12 @@ def async_setup_services(hass: HomeAssistantType):
         name = service.data.get(CONF_NAME)
         value = service.data.get(CONF_VALUE)
         init = service.data.get(CONF_INIT, False)
+        isy_name = service.data.get(CONF_ISY)
 
-        for entry in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][entry][ISY994_ISY]
+        for config_entry_id in hass.data[DOMAIN]:
+            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
+            if isy_name and not isy_name == isy.configuration["name"]:
+                continue
             variable = None
             if name:
                 variable = isy.variables.get_by_name(name)
@@ -248,8 +266,10 @@ def async_setup_services(hass: HomeAssistantType):
         config_ids = []
         current_unique_ids = []
 
-        for entry in hass.data[DOMAIN]:
-            config_entities = er.async_entries_for_config_entry(entity_registry, entry)
+        for config_entry_id in hass.data[DOMAIN]:
+            config_entities = er.async_entries_for_config_entry(
+                entity_registry, config_entry_id
+            )
             config_ids.extend(
                 [
                     (item.unique_id, item.entity_id, item.device_id)
@@ -257,7 +277,7 @@ def async_setup_services(hass: HomeAssistantType):
                 ]
             )
 
-            hass_isy_data = hass.data[DOMAIN][entry]
+            hass_isy_data = hass.data[DOMAIN][config_entry_id]
             uuid = hass_isy_data[ISY994_ISY].configuration["uuid"]
 
             for platform in SUPPORTED_PLATFORMS:
@@ -294,8 +314,8 @@ def async_setup_services(hass: HomeAssistantType):
 
     async def async_reload_config_entries(service) -> None:
         """Trigger a reload of all ISY994 config entries."""
-        for entry in hass.data[DOMAIN]:
-            hass.async_create_task(hass.config_entries.async_reload(entry))
+        for config_entry_id in hass.data[DOMAIN]:
+            hass.async_create_task(hass.config_entries.async_reload(config_entry_id))
 
     hass.services.async_register(
         domain=DOMAIN,
