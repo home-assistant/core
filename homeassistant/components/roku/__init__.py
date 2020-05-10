@@ -110,9 +110,8 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> Device:
         """Fetch data from Roku."""
-        full_update = (
-            self.last_full_update is None
-            or utcnow() >= (self.last_full_update + self.full_update_interval)
+        full_update = self.last_full_update is None or utcnow() >= (
+            self.last_full_update + self.full_update_interval
         )
 
         try:
