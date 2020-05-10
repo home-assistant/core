@@ -373,6 +373,9 @@ meteofrance==0.3.7
 # homeassistant.components.mfi
 mficlient==0.3.0
 
+# homeassistant.components.mill
+millheater==0.3.4
+
 # homeassistant.components.minio
 minio==4.0.9
 
