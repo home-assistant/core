@@ -133,10 +133,6 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator):
             self._unsub_full_update()
             self._unsub_full_update = None
 
-        # We _floor_ utcnow to create a schedule on a rounded second,
-        # minimizing the time between the point and the real activation.
-        # That way we obtain a constant update frequency,
-        # as long as the update process takes less than a second
         self._unsub_full_update = async_track_point_in_utc_time(
             self.hass,
             self._handle_full_update_interval,
