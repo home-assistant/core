@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    BLINK_CONFIG,
     DEFAULT_OFFSET,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -66,6 +67,7 @@ async def async_setup(hass, config):
         device_id="Home Assistant",
     )
     hass.data[DOMAIN].refresh_rate = scan_interval
+    hass.data[BLINK_CONFIG] = conf
     await hass.async_add_executor_job(hass.data[DOMAIN].start)
 
     if not hass.config_entries.async_entries(DOMAIN) and hass.data[DOMAIN]:

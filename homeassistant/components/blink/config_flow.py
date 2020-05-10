@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import DEFAULT_OFFSET, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import BLINK_CONFIG, DEFAULT_OFFSET, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,25 +36,30 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         stored_password = ""
         stored_interval = DEFAULT_SCAN_INTERVAL
 
-        if DOMAIN in self.hass.data:
-            stored_username = self.hass.data[DOMAIN].get(CONF_USERNAME)
-            stored_password = self.hass.data[DOMAIN].get(CONF_PASSWORD)
-            stored_interval = self.hass.data[DOMAIN].get(CONF_SCAN_INTERVAL)
+        if BLINK_CONFIG in self.hass.data:
+            stored_username = self.hass.data[BLINK_CONFIG].get(CONF_USERNAME)
+            stored_password = self.hass.data[BLINK_CONFIG].get(CONF_PASSWORD)
+            stored_interval = self.hass.data[BLINK_CONFIG].get(CONF_SCAN_INTERVAL)
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_USERNAME])
-            self.blink = blinkpy.Blink(
-                username=user_input["username"],
-                password=user_input["password"],
-                motion_interval=DEFAULT_OFFSET,
-                legacy_subdomain=False,
-                no_prompt=True,
-                device_id="Home Assistant",
-            )
+
             if CONF_SCAN_INTERVAL not in user_input:
                 user_input[CONF_SCAN_INTERVAL] = stored_interval
-            self.blink.refresh_rate = user_input[CONF_SCAN_INTERVAL]
-            await self.hass.async_add_executor_job(self.blink.start)
+
+            try:
+                self.blink = self.hass.data[DOMAIN]
+            except KeyError:
+                self.blink = blinkpy.Blink(
+                    username=user_input["username"],
+                    password=user_input["password"],
+                    motion_interval=DEFAULT_OFFSET,
+                    legacy_subdomain=False,
+                    no_prompt=True,
+                    device_id="Home Assistant",
+                )
+                self.blink.refresh_rate = user_input[CONF_SCAN_INTERVAL]
+                await self.hass.async_add_executor_job(self.blink.start)
 
             if not self.blink.key_required:
                 # No key required, we're good
