@@ -4,11 +4,11 @@ Climate on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
 """
-from datetime import timedelta
+from datetime import datetime, timedelta
 import enum
 import functools
 import logging
-import time
+from random import randint
 from typing import List, Optional, Tuple
 
 from homeassistant.components.climate import ClimateEntity
@@ -38,8 +38,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.temperature import convert_temperature
+from homeassistant.helpers.event import async_track_time_interval
+import homeassistant.util.dt as dt_util
 
 from .core import discovery
 from .core.const import (
@@ -140,7 +142,6 @@ SYSTEM_MODE_2_HVAC = {
 }
 
 ZCL_TEMP = 100
-SECS_2000_01_01 = 946_702_800
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -529,41 +530,50 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
     async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
         """Set the preset mode via handler."""
-        
+
         handler = getattr(self, f"async_preset_handler_{preset}")
         return await handler(enable)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_THERMOSTAT, manufacturers="Sinope Technologies")
+@STRICT_MATCH(
+    channel_names={CHANNEL_THERMOSTAT, "sinope_manufacturer_specific"},
+    manufacturers="Sinope Technologies",
+)
 class SinopeTechnologiesThermostat(Thermostat):
     """Sinope Technologies Thermostat."""
 
     manufacturer = 0x119C
-    update_time_interval = timedelta(minutes=15)
+    update_time_interval = timedelta(minutes=randint(45, 75))
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize ZHA Thermostat instance."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._presets = [PRESET_AWAY, PRESET_NONE]
         self._supported_flags |= SUPPORT_PRESET_MODE
+        self._manufacturer_ch = self.cluster_channels["sinope_manufacturer_specific"]
 
-    async def _async_update_time(self, timestamp=None):
+    @callback
+    def _async_update_time(self, timestamp=None) -> None:
         """Update thermostat's time display."""
 
-        secs_since_2k = int(time.mktime(time.localtime()) - SECS_2000_01_01)
-        self.debug("Updating time: %s", secs_since_2k)
-        cluster = self.endpoint.sinope_manufacturer_specific
-        res = await cluster.write_attributes(
-            {"secs_since_2k": secs_since_2k}, manufacturer=self.manufacturer
+        secs_2k = (
+            dt_util.now().replace(tzinfo=None) - datetime(2000, 1, 1, 0, 0, 0, 0)
+        ).total_seconds()
+
+        self.debug("Updating time: %s", secs_2k)
+        self._manufacturer_ch.cluster.create_catching_task(
+            self._manufacturer_ch.cluster.write_attributes(
+                {"secs_since_2k": secs_2k}, manufacturer=self.manufacturer
+            )
         )
-        self.debug("Write Attr: %s", res)
 
     async def async_added_to_hass(self):
         """Run when about to be added to Hass."""
         await super().async_added_to_hass()
-        # async_track_time_interval(self.hass, self._async_update_time,
-        #                          self.update_time_interval)
-        # async_call_later(self.hass, randint(30, 45), self._async_update_time)
+        async_track_time_interval(
+            self.hass, self._async_update_time, self.update_time_interval
+        )
+        self._async_update_time()
 
     async def async_preset_handler_away(self, is_away: bool = False) -> bool:
         """Set occupancy."""
