@@ -109,9 +109,8 @@ async def test_flow_user(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf_data
         )
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "duplicated_name"}
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "duplicated_name"
 
 
 async def test_flow_user_invalid(hass):

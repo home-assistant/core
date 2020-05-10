@@ -50,47 +50,31 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            host = (
+                user_input.get(CONF_HOST)
+                if is_import
+                else f"{user_input.get(CONF_HOST)}:{user_input.get(CONF_PORT)}"
+            )
+            name = user_input.get(CONF_NAME)
+            location = user_input.get(CONF_LOCATION)
+            tls = user_input.get(CONF_SSL)
+            verify_tls = user_input.get(CONF_VERIFY_SSL)
+            api_token = user_input.get(CONF_API_KEY)
+            endpoint = f"{host}/{location}"
+
+            if await self._async_endpoint_existed(endpoint):
+                return self.async_abort(reason="already_configured")
+            if await self._async_name_existed(name):
+                if is_import:
+                    _LOGGER.error("Failed to import: name %s already existed", name)
+                return self.async_abort(reason="duplicated_name")
+            await self.async_set_unique_id(endpoint)
+            self._abort_if_unique_id_configured()
+
             try:
-                host = (
-                    user_input.get(CONF_HOST)
-                    if is_import
-                    else f"{user_input.get(CONF_HOST)}:{user_input.get(CONF_PORT)}"
+                await self._async_try_connect(
+                    host, location, tls, verify_tls, api_token
                 )
-                name = user_input.get(CONF_NAME)
-                location = user_input.get(CONF_LOCATION)
-                tls = user_input.get(CONF_SSL)
-                verify_tls = user_input.get(CONF_VERIFY_SSL)
-                api_token = user_input.get(CONF_API_KEY)
-
-                # check unique host
-                endpoint = f"{host}/{location}"
-                existing_endpoints = [
-                    f"{entry.data.get(CONF_HOST)}/{entry.data.get(CONF_LOCATION)}"
-                    for entry in self._async_current_entries()
-                ]
-                if endpoint in existing_endpoints:
-                    return self.async_abort(reason="already_configured")
-                await self.async_set_unique_id(endpoint)
-                self._abort_if_unique_id_configured()
-
-                # check unique name
-                existing_names = [
-                    entry.data.get(CONF_NAME) for entry in self._async_current_entries()
-                ]
-                if name in existing_names:
-                    raise DuplicatedNameException
-
-                session = async_get_clientsession(self.hass, verify_tls)
-                pi_hole = Hole(
-                    host,
-                    self.hass.loop,
-                    session,
-                    location=location,
-                    tls=tls,
-                    api_token=api_token,
-                )
-                await pi_hole.get_data()
-
                 return self.async_create_entry(
                     title=name,
                     data={
@@ -108,11 +92,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     _LOGGER.error("Failed to import: %s", ex)
                     return self.async_abort(reason="connection")
                 errors["base"] = "connection"
-            except DuplicatedNameException:
-                if is_import:
-                    _LOGGER.error("Failed to import: name %s already existed", name)
-                    return self.async_abort(reason="duplicated_name")
-                errors["base"] = "duplicated_name"
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -146,3 +125,28 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def _async_endpoint_existed(self, endpoint):
+        existing_endpoints = [
+            f"{entry.data.get(CONF_HOST)}/{entry.data.get(CONF_LOCATION)}"
+            for entry in self._async_current_entries()
+        ]
+        return endpoint in existing_endpoints
+
+    async def _async_name_existed(self, name):
+        existing_names = [
+            entry.data.get(CONF_NAME) for entry in self._async_current_entries()
+        ]
+        return name in existing_names
+
+    async def _async_try_connect(self, host, location, tls, verify_tls, api_token):
+        session = async_get_clientsession(self.hass, verify_tls)
+        pi_hole = Hole(
+            host,
+            self.hass.loop,
+            session,
+            location=location,
+            tls=tls,
+            api_token=api_token,
+        )
+        await pi_hole.get_data()
