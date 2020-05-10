@@ -1,28 +1,41 @@
 """Support for Synology DSM binary sensors."""
 from typing import Dict
 
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import SynologyDSMEntity
-from .const import DOMAIN, STORAGE_DISK_BINARY_SENSORS, SYNO_API
+from .const import (
+    DOMAIN,
+    SECURITY_BINARY_SENSORS,
+    STORAGE_DISK_BINARY_SENSORS,
+    SYNO_API,
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Set up the Synology NAS Sensor."""
+    """Set up the Synology NAS binary sensor."""
 
     api = hass.data[DOMAIN][entry.unique_id][SYNO_API]
 
     entities = []
 
+    if api.security:
+        entities += [
+            SynoDSMSecurityBinarySensor(
+                api, "status", SECURITY_BINARY_SENSORS["status"]
+            )
+        ]
+
     # Handle all disks
     if api.storage.disks_ids:
         for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids):
             entities += [
-                SynoNasStorageSensor(
+                SynoDSMStorageBinarySensor(
                     api, sensor_type, STORAGE_DISK_BINARY_SENSORS[sensor_type], disk
                 )
                 for sensor_type in STORAGE_DISK_BINARY_SENSORS
@@ -31,11 +44,20 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoNasStorageSensor(SynologyDSMEntity):
-    """Representation a Synology Storage sensor."""
+class SynoDSMSecurityBinarySensor(SynologyDSMEntity, BinarySensorEntity):
+    """Representation a Synology Security binary sensor."""
 
     @property
-    def state(self):
+    def is_on(self):
+        """Return the state."""
+        return getattr(self._api.security, self.entity_type) != "safe"
+
+
+class SynoDSMStorageBinarySensor(SynologyDSMEntity, BinarySensorEntity):
+    """Representation a Synology Storage binary sensor."""
+
+    @property
+    def is_on(self):
         """Return the state."""
         attr = getattr(self._api.storage, self.entity_type)(self._device_id)
         if attr is None:

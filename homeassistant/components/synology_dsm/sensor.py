@@ -17,7 +17,6 @@ from . import SynologyDSMEntity
 from .const import (
     CONF_VOLUMES,
     DOMAIN,
-    SECURITY_SENSORS,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
     SYNO_API,
@@ -33,22 +32,16 @@ async def async_setup_entry(
 
     api = hass.data[DOMAIN][entry.unique_id][SYNO_API]
 
-    sensors = [
-        SynoNasUtilSensor(api, sensor_type, UTILISATION_SENSORS[sensor_type])
+    entities = [
+        SynoDSMUtilSensor(api, sensor_type, UTILISATION_SENSORS[sensor_type])
         for sensor_type in UTILISATION_SENSORS
     ]
-
-    if api.security:
-        sensors += [
-            SynoNasSecuritySensor(api, sensor_type, SECURITY_SENSORS[sensor_type])
-            for sensor_type in SECURITY_SENSORS
-        ]
 
     # Handle all volumes
     if api.storage.volumes_ids:
         for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes_ids):
-            sensors += [
-                SynoNasStorageSensor(
+            entities += [
+                SynoDSMStorageSensor(
                     api, sensor_type, STORAGE_VOL_SENSORS[sensor_type], volume
                 )
                 for sensor_type in STORAGE_VOL_SENSORS
@@ -57,17 +50,17 @@ async def async_setup_entry(
     # Handle all disks
     if api.storage.disks_ids:
         for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids):
-            sensors += [
-                SynoNasStorageSensor(
+            entities += [
+                SynoDSMStorageSensor(
                     api, sensor_type, STORAGE_DISK_SENSORS[sensor_type], disk
                 )
                 for sensor_type in STORAGE_DISK_SENSORS
             ]
 
-    async_add_entities(sensors)
+    async_add_entities(entities)
 
 
-class SynoNasUtilSensor(SynologyDSMEntity):
+class SynoDSMUtilSensor(SynologyDSMEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
@@ -90,7 +83,7 @@ class SynoNasUtilSensor(SynologyDSMEntity):
         return attr
 
 
-class SynoNasStorageSensor(SynologyDSMEntity):
+class SynoDSMStorageSensor(SynologyDSMEntity):
     """Representation a Synology Storage sensor."""
 
     @property
@@ -121,33 +114,3 @@ class SynoNasStorageSensor(SynologyDSMEntity):
             "sw_version": self._device_firmware,
             "via_device": (DOMAIN, self._api.information.serial),
         }
-
-
-class SynoNasSecuritySensor(SynologyDSMEntity):
-    """Representation a Synology Security sensor."""
-
-    @property
-    def state(self):
-        """Return the state."""
-        return getattr(self._api.security, self.entity_type)
-
-    async def async_remove(self):
-        """Clean up when removing entity.
-
-        Remove entity if no entry in entity registry exist.
-        Remove entity registry entry if no entry in device registry exist.
-        Remove entity registry entry if there are more than one entity linked to the device registry entry.
-        """
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        entity_entry = entity_registry.async_get(self.entity_id)
-        if not entity_entry:
-            await super().async_remove()
-            return
-
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(entity_entry.device_id)
-        if not device_entry:
-            entity_registry.async_remove(self.entity_id)
-            return
-
-        entity_registry.async_remove(self.entity_id)

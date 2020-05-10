@@ -39,6 +39,11 @@ from .const import (
     DEFAULT_SECURITY,
     DEFAULT_SSL,
     DOMAIN,
+    ENTITY_CLASS,
+    ENTITY_ENABLE,
+    ENTITY_ICON,
+    ENTITY_NAME,
+    ENTITY_UNIT,
     PLATFORMS,
     SYNO_API,
     TEMP_SENSORS_KEYS,
@@ -213,8 +218,10 @@ class SynologyDSMEntity(Entity):
         self._api = api
         self.entity_type = entity_type
         self._name = BASE_NAME
-        self._unit = entity_info[1]
-        self._icon = entity_info[2]
+        self._class = entity_info[ENTITY_CLASS]
+        self._enable_default = entity_info[ENTITY_ENABLE]
+        self._icon = entity_info[ENTITY_ICON]
+        self._unit = entity_info[ENTITY_UNIT]
         self._unique_id = f"{self._api.information.serial}_{entity_type}"
         self._device_id = device_id
         self._device_name = None
@@ -247,7 +254,7 @@ class SynologyDSMEntity(Entity):
             self._name += f" {self._device_name}"
             self._unique_id += f"_{self._device_id}"
 
-        self._name += f" {entity_info[0]}"
+        self._name += f" {entity_info[ENTITY_NAME]}"
 
         self._unsub_dispatcher = None
 
@@ -274,6 +281,11 @@ class SynologyDSMEntity(Entity):
         return self._unit
 
     @property
+    def device_class(self) -> str:
+        """Return the class of this device."""
+        return self._class
+
+    @property
     def device_state_attributes(self) -> Dict[str, any]:
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
@@ -288,6 +300,11 @@ class SynologyDSMEntity(Entity):
             "model": self._api.information.model,
             "sw_version": self._api.information.version_string,
         }
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enable_default
 
     @property
     def should_poll(self) -> bool:
@@ -310,3 +327,24 @@ class SynologyDSMEntity(Entity):
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         self._unsub_dispatcher()
+
+    async def async_remove(self):
+        """Clean up when removing entity.
+
+        Remove entity if no entry in entity registry exist.
+        Remove entity registry entry if no entry in device registry exist.
+        Remove entity registry entry if there are more than one entity linked to the device registry entry.
+        """
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_entry = entity_registry.async_get(self.entity_id)
+        if not entity_entry:
+            await super().async_remove()
+            return
+
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get(entity_entry.device_id)
+        if not device_entry:
+            entity_registry.async_remove(self.entity_id)
+            return
+
+        entity_registry.async_remove(self.entity_id)
