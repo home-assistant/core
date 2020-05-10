@@ -201,8 +201,7 @@ class YeelightDevice:
         self._config = config
         self._ipaddr = ipaddr
         self._name = config.get(CONF_NAME)
-        self._model = config.get(CONF_MODEL)
-        self._bulb_device = Bulb(self.ipaddr, model=self._model)
+        self._bulb_device = Bulb(self.ipaddr, model=config.get(CONF_MODEL))
         self._device_type = None
         self._available = False
         self._initialized = False
@@ -234,8 +233,13 @@ class YeelightDevice:
 
     @property
     def model(self):
-        """Return configured device model."""
-        return self._model
+        """Return configured device model.
+
+        Model method returns declared model, and if not, it tries to get it from
+        capabilities call. This way even if model is not defined, we can get real model
+        here. Useful for correct color temp range etc.
+        """
+        return self._bulb_device.model
 
     @property
     def is_nightlight_supported(self) -> bool:
@@ -313,8 +317,6 @@ class YeelightDevice:
         try:
             self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
-            if not self._initialized:
-                self._initialize_device()
         except BulbException as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
@@ -323,6 +325,22 @@ class YeelightDevice:
             self._available = False
 
         return self._available
+
+    def _get_capabilities(self):
+        """Read new properties from the device."""
+        if not self.bulb:
+            return
+
+        try:
+            self.bulb.get_capabilities()
+        except BulbException as ex:
+            if self._available:  # just inform once
+                _LOGGER.error(
+                    "Unable to get device capabilities %s, %s: %s",
+                    self.ipaddr,
+                    self.name,
+                    ex,
+                )
 
     def _initialize_device(self):
         self._initialized = True
@@ -337,6 +355,11 @@ class YeelightDevice:
         """Fetch initial device properties."""
         initial_update = self._update_properties()
 
-        # We can build correct class anyway.
-        if not initial_update and self.model:
+        if initial_update:
+            # Try to get capabilities for reported model / fw version
+            self._get_capabilities()
             self._initialize_device()
+        else:
+            # We can build correct class anyway.
+            if self.model:
+                self._initialize_device()
