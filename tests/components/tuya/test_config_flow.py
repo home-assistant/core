@@ -2,7 +2,7 @@
 import pytest
 from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.tuya.const import CONF_COUNTRYCODE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 
@@ -31,6 +31,7 @@ def tuya_fixture() -> Mock:
 
 async def test_user(hass, tuya):
     """Test user config."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -38,9 +39,14 @@ async def test_user(hass, tuya):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_USER_DATA
-    )
+    with patch(
+        "homeassistant.components.tuya.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.tuya.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=TUYA_USER_DATA
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
@@ -49,13 +55,23 @@ async def test_user(hass, tuya):
     assert result["data"][CONF_COUNTRYCODE] == COUNTRY_CODE
     assert result["data"][CONF_PLATFORM] == TUYA_PLATFORM
     assert not result["result"].unique_id
+
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import(hass, tuya):
     """Test import step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
-    )
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "homeassistant.components.tuya.async_setup", return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.tuya.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
@@ -64,6 +80,10 @@ async def test_import(hass, tuya):
     assert result["data"][CONF_COUNTRYCODE] == COUNTRY_CODE
     assert result["data"][CONF_PLATFORM] == TUYA_PLATFORM
     assert not result["result"].unique_id
+
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_abort_if_already_setup(hass, tuya):
