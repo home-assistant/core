@@ -6,7 +6,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "name": "Name",
-          "api_key": "[%key:common::config_flow::data::api_key%] (Optional)",
+          "api_key": "API Key (Optional)",
           "ssl": "Use SSL",
           "verify_ssl": "Verify SSL certificate"
         }
