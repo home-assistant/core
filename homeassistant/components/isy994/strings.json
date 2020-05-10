@@ -27,10 +27,11 @@
     "step": {
       "init": {
         "title": "ISY994 Options",
-        "description": "Set the options for the ISY Integration: \n • Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n • Ignore String: Any device with 'Ignore String' in the name will be ignored.  \n • Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
+        "description": "Set the options for the ISY Integration: \n • Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n • Ignore String: Any device with 'Ignore String' in the name will be ignored. \n • Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n • Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
         "data": {
           "sensor_string": "Node Sensor String",
           "ignore_string": "Ignore String",
+          "variable_sensor_string": "Variable Sensor String",
           "restore_light_state": "Restore Light Brightness"
         }
       }

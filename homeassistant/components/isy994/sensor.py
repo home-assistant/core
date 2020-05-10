@@ -1,5 +1,5 @@
 """Support for ISY994 sensors."""
-from typing import Callable
+from typing import Callable, Dict
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
@@ -12,10 +12,11 @@ from .const import (
     _LOGGER,
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
+    ISY994_VARIABLES,
     UOM_FRIENDLY_NAME,
     UOM_TO_STATES,
 )
-from .entity import ISYNodeEntity
+from .entity import ISYEntity, ISYNodeEntity
 from .helpers import migrate_old_unique_ids
 
 
@@ -31,6 +32,9 @@ async def async_setup_entry(
     for node in hass_isy_data[ISY994_NODES][SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
         devices.append(ISYSensorEntity(node))
+
+    for vname, vobj in hass_isy_data[ISY994_VARIABLES]:
+        devices.append(ISYSensorVariableEntity(vname, vobj))
 
     await migrate_old_unique_ids(hass, SENSOR, devices)
     async_add_entities(devices)
@@ -84,3 +88,27 @@ class ISYSensorEntity(ISYNodeEntity):
         if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
             return self.hass.config.units.temperature_unit
         return raw_units
+
+
+class ISYSensorVariableEntity(ISYEntity):
+    """Representation of an ISY994 variable as a sensor device."""
+
+    def __init__(self, vname: str, vobj: object) -> None:
+        """Initialize the ISY994 binary sensor program."""
+        super().__init__(vobj)
+        self._name = vname
+
+    @property
+    def state(self):
+        """Return the state of the variable."""
+        return self.value
+
+    @property
+    def device_state_attributes(self) -> Dict:
+        """Get the state attributes for the device."""
+        return {"init_value": int(self._node.init)}
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return "mdi:counter"
