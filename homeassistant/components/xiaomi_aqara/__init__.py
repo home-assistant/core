@@ -3,38 +3,33 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
-from xiaomi_gateway import XiaomiGatewayDiscovery
+from xiaomi_gateway import XiaomiGateway
 
-from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_VOLTAGE,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant import config_entries, core
 from homeassistant.core import callback
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+from .config_flow import (
+    DOMAIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
+
+GATEWAY_PLATFORMS = ["binary_sensor", "sensor", "switch", "light", "cover", "lock"]
 
 ATTR_GW_MAC = "gw_mac"
 ATTR_RINGTONE_ID = "ringtone_id"
 ATTR_RINGTONE_VOL = "ringtone_vol"
 ATTR_DEVICE_ID = "device_id"
-
-CONF_DISCOVERY_RETRY = "discovery_retry"
-CONF_GATEWAYS = "gateways"
-CONF_INTERFACE = "interface"
-CONF_KEY = "key"
-CONF_DISABLE = "disable"
-
-DOMAIN = "xiaomi_aqara"
 
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
 
@@ -44,10 +39,6 @@ SERVICE_PLAY_RINGTONE = "play_ringtone"
 SERVICE_STOP_RINGTONE = "stop_ringtone"
 SERVICE_ADD_DEVICE = "add_device"
 SERVICE_REMOVE_DEVICE = "remove_device"
-
-GW_MAC = vol.All(
-    cv.string, lambda value: value.replace(":", "").lower(), vol.Length(min=12, max=12)
-)
 
 SERVICE_SCHEMA_PLAY_RINGTONE = vol.Schema(
     {
@@ -64,103 +55,8 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
     {vol.Required(ATTR_DEVICE_ID): vol.All(cv.string, vol.Length(min=14, max=14))}
 )
 
-
-GATEWAY_CONFIG = vol.Schema(
-    {
-        vol.Optional(CONF_KEY): vol.All(cv.string, vol.Length(min=16, max=16)),
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=9898): cv.port,
-        vol.Optional(CONF_DISABLE, default=False): cv.boolean,
-    }
-)
-
-GATEWAY_CONFIG_MAC_OPTIONAL = GATEWAY_CONFIG.extend({vol.Optional(CONF_MAC): GW_MAC})
-
-GATEWAY_CONFIG_MAC_REQUIRED = GATEWAY_CONFIG.extend({vol.Required(CONF_MAC): GW_MAC})
-
-
-def _fix_conf_defaults(config):
-    """Update some configuration defaults."""
-    config["sid"] = config.pop(CONF_MAC, None)
-
-    if config.get(CONF_KEY) is None:
-        _LOGGER.warning(
-            "Key is not provided for gateway %s. Controlling the gateway "
-            "will not be possible",
-            config["sid"],
-        )
-
-    if config.get(CONF_HOST) is None:
-        config.pop(CONF_PORT)
-
-    return config
-
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_GATEWAYS, default={}): vol.All(
-                    cv.ensure_list,
-                    vol.Any(
-                        vol.All([GATEWAY_CONFIG_MAC_OPTIONAL], vol.Length(max=1)),
-                        vol.All([GATEWAY_CONFIG_MAC_REQUIRED], vol.Length(min=2)),
-                    ),
-                    [_fix_conf_defaults],
-                ),
-                vol.Optional(CONF_INTERFACE, default="any"): cv.string,
-                vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
 def setup(hass, config):
     """Set up the Xiaomi component."""
-    gateways = []
-    interface = "any"
-    discovery_retry = 3
-    if DOMAIN in config:
-        gateways = config[DOMAIN][CONF_GATEWAYS]
-        interface = config[DOMAIN][CONF_INTERFACE]
-        discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
-
-    async def xiaomi_gw_discovered(service, discovery_info):
-        """Perform action when Xiaomi Gateway device(s) has been found."""
-        # We don't need to do anything here, the purpose of Home Assistant's
-        # discovery service is to just trigger loading of this
-        # component, and then its own discovery process kicks in.
-
-    discovery.listen(hass, SERVICE_XIAOMI_GW, xiaomi_gw_discovered)
-
-    xiaomi = hass.data[PY_XIAOMI_GATEWAY] = XiaomiGatewayDiscovery(
-        hass.add_job, gateways, interface
-    )
-
-    _LOGGER.debug("Expecting %s gateways", len(gateways))
-    for k in range(discovery_retry):
-        _LOGGER.info("Discovering Xiaomi Gateways (Try %s)", k + 1)
-        xiaomi.discover_gateways()
-        if len(xiaomi.gateways) >= len(gateways):
-            break
-
-    if not xiaomi.gateways:
-        _LOGGER.error("No gateway discovered")
-        return False
-    xiaomi.listen()
-    _LOGGER.debug("Gateways discovered. Listening for broadcasts")
-
-    for component in ["binary_sensor", "sensor", "switch", "light", "cover", "lock"]:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
-
-    def stop_xiaomi(event):
-        """Stop Xiaomi Socket."""
-        _LOGGER.info("Shutting down Xiaomi Hub")
-        xiaomi.stop_listen()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
 
     def play_ringtone_service(call):
         """Service to play ringtone through Gateway."""
@@ -219,6 +115,47 @@ def setup(hass, config):
         remove_device_service,
         schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_REMOVE_DEVICE),
     )
+
+    return True
+
+
+async def async_setup_entry(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Set up the xiaomi aqara components from a config entry."""
+    if hass.data[DOMAIN] is None:
+        hass.data[DOMAIN] = {}
+
+    # Connect to Xiaomi Aqara Gateway
+    xiaomi_gateway = XiaomiGateway(entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_SID], entry.data[CONF_KEY], entry.data[CONF_DISCOVERY_RETRY], entry.data[CONF_INTERFACE], proto=entry.data[CONF_PROTOCOL])
+    hass.data[DOMAIN][entry.entry_id] = xiaomi_gateway
+
+    # start listining for local pushes
+    xiaomi_gateway.listen()
+    _LOGGER.debug("Gateway with host '%s' connected, listening for broadcasts", entry.data[CONF_HOST])
+
+    # register stop callback to shutdown listining for local pushes
+    def stop_xiaomi(event):
+        """Stop Xiaomi Socket."""
+        _LOGGER.info("Shutting down Xiaomi Gateway")
+        xiaomi_gateway.stop_listen()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
+    
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])},
+        identifiers={(DOMAIN, entry.unique_id)},
+        manufacturer="Xiaomi Aqara",
+        name=entry.title,
+        sw_version=entry.data[CONF_PROTOCOL],
+    )
+
+    for component in GATEWAY_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 

@@ -162,6 +162,7 @@ FLOWS = [
     "withings",
     "wled",
     "wwlln",
+    "xiaomi_aqara",
     "xiaomi_miio",
     "zerproc",
     "zha",
