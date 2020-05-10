@@ -23,6 +23,10 @@ AUDIO_CODEC_COPY = "copy"
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
+ATTR_INTERGRATION = "platform"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL = "model"
+ATTR_SOFTWARE_VERSION = "sw_version"
 
 # #### Config ####
 CONF_ADVERTISE_IP = "advertise_ip"
@@ -50,6 +54,7 @@ CONF_VIDEO_MAP = "video_map"
 CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 
 # #### Config Defaults ####
+DEFAULT_SUPPORT_AUDIO = False
 DEFAULT_AUDIO_CODEC = AUDIO_CODEC_OPUS
 DEFAULT_AUDIO_MAP = "0:a:0"
 DEFAULT_AUDIO_PACKET_SIZE = 188

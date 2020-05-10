@@ -14,6 +14,10 @@ from homeassistant.components.homekit.accessories import (
 )
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
+    ATTR_INTERGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_NAME,
@@ -80,11 +84,17 @@ async def test_debounce(hass):
 
 async def test_home_accessory(hass, hk_driver):
     """Test HomeAccessory class."""
-    entity_id = "homekit.accessory"
+    entity_id = "sensor.accessory"
+    entity_id2 = "light.accessory"
+
     hass.states.async_set(entity_id, None)
+    hass.states.async_set(entity_id2, None)
+
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, None)
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
+    )
     assert acc.hass == hass
     assert acc.display_name == "Home Accessory"
     assert acc.aid == 2
@@ -93,9 +103,35 @@ async def test_home_accessory(hass, hk_driver):
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
-    assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
-    assert serv.get_characteristic(CHAR_MODEL).value == "Homekit"
-    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "homekit.accessory"
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Isy994"
+    assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "sensor.accessory"
+
+    acc2 = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id2, 3, {})
+    serv = acc2.services[0]  # SERV_ACCESSORY_INFO
+    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == f"{MANUFACTURER} Light"
+    assert serv.get_characteristic(CHAR_MODEL).value == "Light"
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "light.accessory"
+
+    acc3 = HomeAccessory(
+        hass,
+        hk_driver,
+        "Home Accessory",
+        entity_id2,
+        3,
+        {
+            ATTR_MODEL: "Awesome",
+            ATTR_MANUFACTURER: "Lux Brands",
+            ATTR_SOFTWARE_VERSION: "0.4.3",
+            ATTR_INTERGRATION: "luxe",
+        },
+    )
+    serv = acc3.services[0]  # SERV_ACCESSORY_INFO
+    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Lux Brands"
+    assert serv.get_characteristic(CHAR_MODEL).value == "Awesome"
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "light.accessory"
 
     hass.states.async_set(entity_id, "on")
     await hass.async_block_till_done()
@@ -441,9 +477,7 @@ async def test_battery_appears_after_startup(hass, hk_driver, caplog):
     hass.states.async_set(entity_id, None, {})
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(
-        hass, hk_driver, "Accessory without battery", entity_id, 2, None
-    )
+    acc = HomeAccessory(hass, hk_driver, "Accessory without battery", entity_id, 2, {})
     assert acc._char_battery is None
 
     with patch(
@@ -469,7 +503,7 @@ async def test_call_service(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, None)
+    acc = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, {})
     call_service = async_mock_service(hass, "cover", "open_cover")
 
     test_domain = "cover"
