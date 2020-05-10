@@ -174,6 +174,10 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         stdout_pipe=False,
     )
 
+    await _async_setup_endpoints(hass, acc)
+    working_ffmpeg = _get_working_mock_ffmpeg()
+    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
+
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="rtsp://example.local",
@@ -286,6 +290,8 @@ async def test_camera_stream_source_found(hass, run_driver, events):
     ):
         await _async_start_streaming(hass, acc)
         await _async_stop_all_streams(hass, acc)
+
+    await _async_setup_endpoints(hass, acc)
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
