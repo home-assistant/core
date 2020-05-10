@@ -64,15 +64,16 @@ def _init_radio_lt8900(radio_config):
 
     reset_module_via_gpio = None
     if gpio_pin is not None:
-        # Need to keep this attached to drive the line high -- if the object disappears then
-        # the GPIO port gets reconfigured as an input port
         # Note: broadcom pin numbers are used
         gpio_pin = int(gpio_pin)
 
         def reset_module_via_gpio_func(gpio_pin):
+            # Need to keep this attached to drive the line high -- if the object disappears then
+            # the GPIO port gets reconfigured as an input port
             global reset_gpio
             reset_gpio = None
             reset_gpio = gpiozero.LED(gpio_pin)
+
             reset_gpio.off()
             time.sleep(0.1)
             reset_gpio.on()
