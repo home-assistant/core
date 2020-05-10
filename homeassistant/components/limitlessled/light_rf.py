@@ -10,11 +10,13 @@ import lt8900_spi
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
     Light,
 )
 import homeassistant.helpers.config_validation as config_validation
@@ -43,6 +45,13 @@ CONF_REMOTE_TYPE = "type"
 CONF_REMOTE_COUNT = "count"
 CONF_REMOTE_ZONES = "zones"
 CONF_REMOTE_RETRIES = "retries"
+
+
+EFFECT_NIGHT = "night"
+
+
+# Define which types have which effects
+type_effect_map = {"rgbw": [EFFECT_NIGHT], "cct": [EFFECT_NIGHT]}
 
 
 def _debug_log(source, message):
@@ -243,14 +252,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     remote_id, zone_id, remote_format, zone_format
                 )
 
-                remote_zone = LimitlessLEDRFZone(remote_zone_name, remote, zone_id)
+                remote_zone = LimitlessLEDRFZone(
+                    remote_zone_name, remote, remote_type, zone_id
+                )
                 remotes_zones.append(remote_zone)
                 remote_zones.append(remote_zone)
 
             # If the entire remote is included, let it know about the other zone objects
             if 0 in remote_zone_ids:
                 remotes_zones.append(
-                    LimitlessLED_RF_HASS(remote_global_name, remote, None, remote_zones)
+                    LimitlessLEDRFZone(
+                        remote_global_name, remote, remote_type, None, remote_zones
+                    )
                 )
 
     # Register an event handler to pair or unpair a bulb
@@ -267,30 +280,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LimitlessLEDRFZone(Light):
     """HomeAssistant Representation of a LimitessLED (remote, zone)."""
 
-    def __init__(self, name, remote, zone, child_zones=[]):
+    def __init__(self, name, remote, remote_type, zone, child_zones=[]):
         """Create a new LimitlessLED (remote, zone) or remote tuple for Home Assistant to interact with."""
         self._name = name
         self._remote = remote
         self._zone = zone
         self._child_zones = child_zones
 
+        # Fill in information based on this type of remote
+        self._supported_effects = type_effect_map[remote_type]
+
         # Assume the initial bulb state
         self._state_on = True
         self._brightness = 128
         self._color = 0x800000
+        self._effect = None
 
         # XXX: Determine if this is cool/warm rgbw bulb ?
         self._temperature = 5000
-
-        # Enforce our world view ?
-        if False and zone is None:
-            if self._state_on:
-                self._remote.on(self._zone)
-                self._remote.set_color(self._color, self._zone)
-                self._remote.set_temperature(self._temperature, self._zone)
-                self._remote.set_brightness(self._brightness, self._zone)
-            else:
-                self._remote.off(self._zone)
 
         return None
 
@@ -331,6 +338,10 @@ class LimitlessLEDRFZone(Light):
         elif self._remote.get_type() == "cct":
             features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
+        # If we support at least one effect, indicate so
+        if self._supported_effects is not None and len(self._supported_effects) > 0:
+            features |= SUPPORT_EFFECT
+
         return features
 
     @property
@@ -358,6 +369,8 @@ class LimitlessLEDRFZone(Light):
             self._temperature = color_temperature_mired_to_kelvin(other.color_temp)
         if "color" in attrs_to_copy:
             self._color = _rgb_list_to_int(other.rgb_color)
+        if "effect" in attrs_to_copy:
+            self._effect = other.effect
 
         return None
 
@@ -420,13 +433,13 @@ class LimitlessLEDRFZone(Light):
 
     @property
     def effect(self):
-        """Stub: Incomplete: Get the current recorded effect."""
-        return None
+        """Get the current recorded effect."""
+        return self._effect
 
     @property
     def effect_list(self):
-        """Stub: Incomplete: Get the list of effects supported by this bulb type."""
-        return []
+        """Get the list of effects supported by this bulb type."""
+        return self._supported_effects
 
     # pylint: disable=arguments-differ
     def turn_off(self, **kwargs):
@@ -465,9 +478,14 @@ class LimitlessLEDRFZone(Light):
         attr_hs_color = kwargs.get(ATTR_HS_COLOR)
         attr_rgb_color = kwargs.get(ATTR_RGB_COLOR)
         attr_color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        attr_effect = kwargs.get(ATTR_EFFECT)
 
-        # For now just record the brightness, we'll actually set it
-        # after turning the bulb on
+        # For now just record change, we'll apply them after turning the light on
+        if attr_effect is not None:
+            if attr_effect in self._supported_effects:
+                self._effect = attr_effect
+                attrs_to_copy.append("effect")
+
         if attr_brightness is not None:
             self._brightness = attr_brightness
             attrs_to_copy.append("brightness")
@@ -497,7 +515,20 @@ class LimitlessLEDRFZone(Light):
                 )
             )
 
-        self._remote.on(self._zone)
+        # If we are setting any attribute other than on+effect, cancel any effect
+        # that is either being applied or is already set
+        if (
+            "color" in attrs_to_copy
+            or "brightness" in attrs_to_copy
+            or "temperature" in attrs_to_copy
+        ):
+            attrs_to_copy.append("effect")
+            self._effect = None
+
+        if self._effect == EFFECT_NIGHT:
+            self._remote.night(self._zone)
+        else:
+            self._remote.on(self._zone)
 
         # Apply the changes now that the bulb has been turned on
         if "brightness" in attrs_to_copy:
