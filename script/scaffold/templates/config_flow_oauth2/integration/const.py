@@ -1,4 +1,6 @@
-"""Constants for NEW_NAME."""
+"""Constants for the NEW_NAME integration."""
+
+DOMAIN = "NEW_DOMAIN"
 
 # TODO Update with your own urls
 OAUTH2_AUTHORIZE = "https://www.example.com/auth/authorize"
