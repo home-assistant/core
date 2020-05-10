@@ -31,6 +31,7 @@ def str_to_int_list(data: str) -> List[int]:
     """Convert a string to an int list."""
     return [int(s) for s in LIST_REGEX.split(data) if len(s) > 0]
 
+
 def list_to_str(data: List[Any]) -> str:
     """Convert an int list to a string."""
     return " ".join([str(i) for i in data])
