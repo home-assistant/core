@@ -166,10 +166,14 @@ class OpenIdAuthProvider(AuthProvider):
             ),
         )
         if id_token.get("nonce") != nonce:
-            raise InvalidAuthError(f"Nonce mismatch in id_token")
+            raise InvalidAuthError("Nonce mismatch in id_token")
 
         if id_token["email"] not in self.config[CONF_EMAILS]:
             raise InvalidAuthError(f"Email {id_token['email']} not in allowed users")
+
+        if not id_token["email_verified"]:
+            raise InvalidAuthError(f"Email {id_token['email']} must be verified")
+
         return id_token
 
     async def async_generate_authorize_url(self, flow_id: str, nonce: str) -> str:
@@ -261,6 +265,7 @@ class OpenIdLoginFlow(LoginFlow):
         try:
             token = await provider.async_retrieve_token(self.external_data)
             result = await provider.async_validate_token(token, self.nonce)
-        except InvalidAuthError:
+        except InvalidAuthError as error:
+            _LOGGER.error("Login failed: %s", str(error))
             return self.async_abort(reason="invalid_auth")
         return await self.async_finish(result)
