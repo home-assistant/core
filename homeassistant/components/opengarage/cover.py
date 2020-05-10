@@ -73,11 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             async_get_clientsession(hass),
         )
 
-        covers.append(
-            OpenGarageCover(
-                device_config.get(CONF_NAME), open_garage
-            )
-        )
+        covers.append(OpenGarageCover(device_config.get(CONF_NAME), open_garage))
 
     add_entities(covers, True)
 
