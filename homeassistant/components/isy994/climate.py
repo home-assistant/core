@@ -67,14 +67,14 @@ async def async_setup_entry(
     async_add_entities: Callable[[list], None],
 ) -> bool:
     """Set up the ISY994 thermostat platform."""
-    devices = []
+    entities = []
 
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     for node in hass_isy_data[ISY994_NODES][CLIMATE]:
-        devices.append(ISYThermostatEntity(node))
+        entities.append(ISYThermostatEntity(node))
 
-    await migrate_old_unique_ids(hass, CLIMATE, devices)
-    async_add_entities(devices)
+    await migrate_old_unique_ids(hass, CLIMATE, entities)
+    async_add_entities(entities)
 
 
 def convert_isy_temp_to_hass(
@@ -98,10 +98,10 @@ def convert_isy_temp_to_hass(
 
 
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
-    """Representation of an ISY994 thermostat device."""
+    """Representation of an ISY994 thermostat entity."""
 
     def __init__(self, node) -> None:
-        """Initialize the ISY Thermostat Device."""
+        """Initialize the ISY Thermostat entity."""
         super().__init__(node)
         self._node = node
         self._uom = self._node.uom

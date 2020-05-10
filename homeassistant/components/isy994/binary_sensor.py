@@ -37,7 +37,16 @@ from .const import (
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
     ISY994_PROGRAMS,
+    SUBNODE_CLIMATE_COOL,
+    SUBNODE_CLIMATE_HEAT,
+    SUBNODE_DUSK_DAWN,
+    SUBNODE_HEARTBEAT,
+    SUBNODE_LOW_BATTERY,
+    SUBNODE_MOTION_DISABLED,
+    SUBNODE_NEGATIVE,
+    SUBNODE_TAMPER,
     TYPE_CATEGORY_CLIMATE,
+    TYPE_INSTEON_MOTION,
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
@@ -47,17 +56,6 @@ DEVICE_PARENT_REQUIRED = [
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
 ]
-
-SUBNODE_CLIMATE_COOL = 2
-SUBNODE_CLIMATE_HEAT = 3
-SUBNODE_NEGATIVE = 2
-SUBNODE_HEARTBEAT = 4
-SUBNODE_DUSK_DAWN = 2
-SUBNODE_LOW_BATTERY = 3
-SUBNODE_TAMPER = (10, 16)  # Int->10 or Hex->0xA depending on firmware
-SUBNODE_MOTION_DISABLED = (13, 19)  # Int->13 or Hex->0xD depending on firmware
-
-TYPE_INSTEON_MOTION = ("16.1.", "16.22.")
 
 
 async def async_setup_entry(

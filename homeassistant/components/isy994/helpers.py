@@ -35,19 +35,19 @@ from .const import (
     KEY_ACTIONS,
     KEY_STATUS,
     NODE_FILTERS,
+    SUBNODE_CLIMATE_COOL,
+    SUBNODE_CLIMATE_HEAT,
+    SUBNODE_EZIO2X4_SENSORS,
+    SUBNODE_FANLINC_LIGHT,
+    SUBNODE_IOLINC_RELAY,
     SUPPORTED_PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
     TYPE_CATEGORY_SENSOR_ACTUATORS,
+    TYPE_EZIO2X4,
 )
 
 BINARY_SENSOR_UOMS = ["2", "78"]
 BINARY_SENSOR_ISY_STATES = ["on", "off"]
-
-TYPE_EZIO2X4 = "7.3.255."
-
-SUBNODE_EZIO2X4_SENSORS = [9, 10, 11, 12]
-SUBNODE_FANLINC_LIGHT = 1
-SUBNODE_IOLINC_RELAY = 2
 
 
 def _check_for_node_def(
@@ -109,7 +109,10 @@ def _check_for_insteon_type(
                 return True
 
             # Thermostats, which has a "Heat" and "Cool" sub-node on address 2 and 3
-            if platform == CLIMATE and str(node.address[-1]) in ["2", "3"]:
+            if platform == CLIMATE and str(node.address[-1]) in [
+                SUBNODE_CLIMATE_COOL,
+                SUBNODE_CLIMATE_HEAT,
+            ]:
                 hass_isy_data[ISY994_NODES][BINARY_SENSOR].append(node)
                 return True
 
