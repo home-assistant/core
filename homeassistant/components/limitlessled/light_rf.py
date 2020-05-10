@@ -243,7 +243,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     remote_id, zone_id, remote_format, zone_format
                 )
 
-                remote_zone = LimitlessLED_RF_HASS(remote_zone_name, remote, zone_id)
+                remote_zone = LimitlessLEDRFZone(remote_zone_name, remote, zone_id)
                 remotes_zones.append(remote_zone)
                 remote_zones.append(remote_zone)
 
@@ -264,7 +264,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(remotes_zones)
 
 
-class LimitlessLED_RF_HASS(Light):
+class LimitlessLEDRFZone(Light):
     """HomeAssistant Representation of a LimitessLED (remote, zone)."""
 
     def __init__(self, name, remote, zone, child_zones=[]):
