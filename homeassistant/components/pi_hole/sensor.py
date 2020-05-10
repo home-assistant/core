@@ -17,18 +17,22 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the pi-hole sensor."""
     pi_hole = hass.data[PIHOLE_DOMAIN][entry.data[CONF_NAME]]
-    sensors = [PiHoleSensor(pi_hole, sensor_name) for sensor_name in SENSOR_LIST]
+    sensors = [
+        PiHoleSensor(pi_hole, sensor_name, entry.entry_id)
+        for sensor_name in SENSOR_LIST
+    ]
     async_add_entities(sensors, True)
 
 
 class PiHoleSensor(Entity):
     """Representation of a Pi-hole sensor."""
 
-    def __init__(self, pi_hole, sensor_name):
+    def __init__(self, pi_hole, sensor_name, server_unique_id):
         """Initialize a Pi-hole sensor."""
         self.pi_hole = pi_hole
         self._name = pi_hole.name
         self._condition = sensor_name
+        self._server_unique_id = server_unique_id
 
         variable_info = SENSOR_DICT[sensor_name]
         self._condition_name = variable_info[0]
@@ -42,20 +46,15 @@ class PiHoleSensor(Entity):
         return f"{self._name} {self._condition_name}"
 
     @property
-    def server_unique_id(self):
-        """Return the unique id of the server."""
-        return f"{self.pi_hole.api.host}/{self.pi_hole.api.location}"
-
-    @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return f"{self.server_unique_id}/{self._condition_name}"
+        return f"{self._server_unique_id}/{self._condition_name}"
 
     @property
     def device_info(self):
         """Return the device information of the sensor."""
         return {
-            "identifiers": {(PIHOLE_DOMAIN, self.server_unique_id)},
+            "identifiers": {(PIHOLE_DOMAIN, self._server_unique_id)},
             "name": self._name,
             "manufacturer": "Pi-hole",
         }
