@@ -81,10 +81,10 @@ SUPPORTED_PRESET_MODES = [PRESET_NONE, PRESET_AWAY, PRESET_ECO, PRESET_COMFORT]
 
 
 def validate_initial_preset_mode(*keys: str) -> Callable:
-    """If an initial preset mode has been set, check if the values are set in both modes"""
+    """If an initial preset mode has been set, check if the values are set in both modes."""
 
     def validate_by_mode(obj: Dict, preset: str, config_preset: str):
-        """Helper to validate mode by mode."""
+        """Use a helper to validate mode by mode."""
         if HVAC_MODE_HEAT in obj.keys() and config_preset not in obj[HVAC_MODE_HEAT]:
             raise vol.Invalid(
                 "The preset {preset} has been set as initial preset but the {config_preset} is not present on {HVAC_MODE_HEAT} mode"
@@ -482,7 +482,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         self.async_write_ha_state()
 
     async def _async_check_sensor_not_responding(self, now=None):
-        """Check if the sensor has emitted a value during the allowed stale period"""
+        """Check if the sensor has emitted a value during the allowed stale period."""
 
         sensor_state = self.hass.states.get(self._sensor_entity_id)
 
@@ -655,7 +655,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data)
 
     async def _activate_emergency_stop(self):
-        """Send an emergency OFF order to HVAC devices"""
+        """Send an emergency OFF order to HVAC devices."""
         _LOGGER.debug("Emergency OFF order send to devices")
         self._emergency_stop = True
         if self._hvac_mode == HVAC_MODE_HEAT:
