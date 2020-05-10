@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         covers.append(
             OpenGarageCover(
-                device_config.get(CONF_NAME), device_config.get(CONF_HOST), open_garage
+                device_config.get(CONF_NAME), open_garage
             )
         )
 
@@ -86,10 +85,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class OpenGarageCover(CoverEntity):
     """Representation of a OpenGarage cover."""
 
-    def __init__(self, name, host, open_garage):
+    def __init__(self, name, open_garage):
         """Initialize the cover."""
         self._name = name
-        self._host = host
         self._open_garage = open_garage
         self._state = None
         self._state_before_move = None
@@ -117,11 +115,6 @@ class OpenGarageCover(CoverEntity):
         if self._state is None:
             return None
         return self._state in [STATE_CLOSED, STATE_OPENING]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return slugify(self._host)
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
