@@ -294,7 +294,7 @@ class Camera(HomeAccessory, PyhapCamera):
         for shutdown_method in ["close", "kill"]:
             _LOGGER.info("[%s] %s stream.", session_id, shutdown_method)
             try:
-                await getattr(stream, shutdown_method)
+                await getattr(stream, shutdown_method)()
                 return
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
