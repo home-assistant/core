@@ -106,8 +106,10 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> Device:
         """Fetch data from Roku."""
+        full_update = self.data is None
+
         try:
-            return await self.roku.update()
+            return await self.roku.update(full_update=full_update)
         except RokuError as error:
             raise UpdateFailed(f"Invalid response from API: {error}")
 
