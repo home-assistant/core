@@ -1,7 +1,6 @@
 """Test UPnP/IGD config flow."""
 
-import pytest
-import voluptuous as vol
+from types import SimpleNamespace
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
@@ -22,6 +21,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .mock_device import MockDevice
 
 from tests.async_mock import AsyncMock, patch
+from tests.common import MockConfigEntry
 
 
 async def test_flow_ssdp_discovery(hass: HomeAssistantType):
@@ -61,7 +61,6 @@ async def test_flow_ssdp_discovery(hass: HomeAssistantType):
         assert result["data"] == {
             CONFIG_ENTRY_ST: mock_device.device_type,
             CONFIG_ENTRY_UDN: mock_device.udn,
-            CONFIG_ENTRY_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         }
 
 
@@ -99,81 +98,7 @@ async def test_flow_user(hass: HomeAssistantType):
         assert result["data"] == {
             CONFIG_ENTRY_ST: mock_device.device_type,
             CONFIG_ENTRY_UDN: mock_device.udn,
-            CONFIG_ENTRY_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         }
-
-
-async def test_flow_user_update_interval(hass: HomeAssistantType):
-    """Test config flow: discovered + configured through user with non-default scan_interval."""
-    udn = "uuid:device_1"
-    mock_device = MockDevice(udn)
-    usn = f"{mock_device.udn}::{mock_device.device_type}"
-    scan_interval = 60
-    discovery_infos = [
-        {
-            DISCOVERY_USN: usn,
-            DISCOVERY_ST: mock_device.device_type,
-            DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_LOCATION: "dummy",
-        }
-    ]
-
-    with patch.object(
-        Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", AsyncMock(return_value=discovery_infos)):
-        # Discovered via step user.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-
-        # Confirmed via step user.
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"usn": usn, CONFIG_ENTRY_SCAN_INTERVAL: scan_interval},
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == mock_device.name
-        assert result["data"] == {
-            CONFIG_ENTRY_ST: mock_device.device_type,
-            CONFIG_ENTRY_UDN: mock_device.udn,
-            CONFIG_ENTRY_SCAN_INTERVAL: scan_interval,
-        }
-
-
-async def test_flow_user_update_interval_min_30(hass: HomeAssistantType):
-    """Test config flow: discovered + configured through user with non-default scan_interval."""
-    udn = "uuid:device_1"
-    mock_device = MockDevice(udn)
-    usn = f"{mock_device.udn}::{mock_device.device_type}"
-    scan_interval = 15
-    discovery_infos = [
-        {
-            DISCOVERY_USN: usn,
-            DISCOVERY_ST: mock_device.device_type,
-            DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_LOCATION: "dummy",
-        }
-    ]
-
-    with patch.object(
-        Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", AsyncMock(return_value=discovery_infos)):
-        # Discovered via step user.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-
-        # Confirmed via step user.
-        with pytest.raises(vol.error.MultipleInvalid):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input={"usn": usn, CONFIG_ENTRY_SCAN_INTERVAL: scan_interval},
-            )
 
 
 async def test_flow_config(hass: HomeAssistantType):
@@ -203,5 +128,33 @@ async def test_flow_config(hass: HomeAssistantType):
         assert result["data"] == {
             CONFIG_ENTRY_ST: mock_device.device_type,
             CONFIG_ENTRY_UDN: mock_device.udn,
-            CONFIG_ENTRY_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         }
+
+
+async def test_options_flow(hass: HomeAssistantType):
+    """Test options flow."""
+    udn = "uuid:device_1"
+    mock_device = MockDevice(udn)
+    st = mock_device.device_type  # pylint: disable=invalid-name
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONFIG_ENTRY_UDN: udn, CONFIG_ENTRY_ST: st},
+        options={CONFIG_ENTRY_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+    )
+    config_entry.add_to_hass(hass)
+
+    hass.data[DOMAIN] = {
+        "coordinators": {udn: SimpleNamespace(update_interval=DEFAULT_SCAN_INTERVAL)}
+    }
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id,)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONFIG_ENTRY_SCAN_INTERVAL: 60},
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        CONFIG_ENTRY_SCAN_INTERVAL: 60,
+    }
