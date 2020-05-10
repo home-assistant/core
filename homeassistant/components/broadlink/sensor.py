@@ -128,11 +128,10 @@ class BroadlinkSensor(Entity):
     async def async_update(self):
         """Get the latest data from the sensor."""
         await self._broadlink_data.async_update()
-        self._state = (
-            self._broadlink_data.data[self._type]
-            if self._broadlink_data.device.available
-            else None
-        )
+        try:
+            self._state = self._broadlink_data.data[self._type]
+        except TypeError:
+            pass
 
 
 class BroadlinkData:
@@ -152,9 +151,9 @@ class BroadlinkData:
                 vol.Optional("noise"): vol.Any(0, 1, 2),
             }
         )
-        self.async_update = Throttle(interval)(self._async_fetch_sensor_data)
+        self.async_update = Throttle(interval)(self._async_fetch_data)
 
-    async def _async_fetch_sensor_data(self):
+    async def _async_fetch_data(self):
         """Fetch sensor data."""
         try:
             data = await self.device.async_request(self.check_sensors)
