@@ -27,7 +27,7 @@ async def async_setup_entry(
     if api.security:
         entities += [
             SynoDSMSecurityBinarySensor(
-                api, "status", SECURITY_BINARY_SENSORS["status"]
+                api, "security:status", SECURITY_BINARY_SENSORS["security:status"]
             )
         ]
 

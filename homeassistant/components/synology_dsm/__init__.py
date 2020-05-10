@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -33,10 +34,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     BASE_NAME,
-    CONF_SECURITY,
     CONF_VOLUMES,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SECURITY,
     DEFAULT_SSL,
     DOMAIN,
     ENTITY_CLASS,
@@ -149,11 +148,17 @@ class SynoApi:
         self._hass = hass
         self._entry = entry
 
+        # DSM APIs
         self.dsm: SynologyDSM = None
         self.information: SynoDSMInformation = None
-        self.utilisation: SynoCoreUtilization = None
         self.security: SynoCoreSecurity = None
         self.storage: SynoStorage = None
+        self.utilisation: SynoCoreUtilization = None
+
+        # Should we fetch them
+        self._with_security = False
+        self._with_storage = False
+        self._with_utilisation = False
 
         self._unsub_dispatcher = None
 
@@ -173,6 +178,8 @@ class SynoApi:
             device_token=self._entry.data.get("device_token"),
         )
 
+        await self._should_fetch_api()
+
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.async_update()
 
@@ -186,13 +193,75 @@ class SynoApi:
             ),
         )
 
+    async def _should_fetch_api(self):
+
+        entity_reg = await self._hass.helpers.entity_registry.async_get_registry()
+        entity_entries = entity_registry.async_entries_for_config_entry(
+            entity_reg, self._entry.entry_id
+        )
+        if not entity_entries:
+            self._with_security = True
+            self._with_storage = True
+            self._with_utilisation = True
+            return
+
+        self._with_security = False
+        self._with_storage = False
+        self._with_utilisation = False
+        for entity_entry in entity_entries:
+            print("----------------------------------------------")
+            print(entity_entry)
+            # Pass disabled entries
+            if entity_entry.disabled_by:
+                continue
+
+            # Check if we should fetch specific APIs
+            # for api_key in SECURITY_API_KEYS:
+            #     if api_key in entity_entry.unique_id:
+            #         print("#################################################")
+            #         print(entity_entry)
+            #         print("#################################################")
+            #         self._with_security = True
+
+            if "security" in entity_entry.unique_id:
+                self._with_security = True
+
+            # for api_key in STORAGE_API_KEYS:
+            #     if api_key in entity_entry.unique_id:
+            #         self._with_storage = True
+            if "storage" in entity_entry.unique_id:
+                self._with_storage = True
+
+            # for api_key in UTILISATION_API_KEYS:
+            #     if api_key in entity_entry.unique_id:
+            #         self._with_utilisation = True
+            if "utilisation" in entity_entry.unique_id:
+                self._with_utilisation = True
+
+        if not self._with_security:
+            self.dsm._security = None  # pylint: disable=protected-access
+            self.security = None
+
+        if not self._with_storage:
+            self.dsm._storage = None  # pylint: disable=protected-access
+            self.storage = None
+
+        if not self._with_utilisation:
+            self.dsm._utilisation = None  # pylint: disable=protected-access
+            self.utilisation = None
+
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
         self.information = self.dsm.information
-        self.utilisation = self.dsm.utilisation
-        if self._entry.options.get(CONF_SECURITY, DEFAULT_SECURITY):
+
+        if self._with_security:
             self.security = self.dsm.security
-        self.storage = self.dsm.storage
+
+        if self._with_storage:
+            self.storage = self.dsm.storage
+
+        if self._with_utilisation:
+            self.utilisation = self.dsm.utilisation
 
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
@@ -200,6 +269,13 @@ class SynoApi:
 
     async def async_update(self, now=None):
         """Update function for updating API information."""
+        print("secu ", self._with_security)
+        print("stor ", self._with_storage)
+        print("util ", self._with_utilisation)
+        await self._should_fetch_api()
+        print("secuAPI ", self.security)
+        print("storAPI ", self.storage)
+        print("utilAPI ", self.utilisation)
         await self._hass.async_add_executor_job(self.dsm.update)
         async_dispatcher_send(self._hass, self.signal_sensor_update)
 
@@ -216,8 +292,9 @@ class SynologyDSMEntity(Entity):
     ):
         """Initialize the Synology DSM entity."""
         self._api = api
-        self.entity_type = entity_type
+        self.entity_type = entity_type.split(":")[-1]
         self._name = BASE_NAME
+        # self._api_key = entity_info[ENTITY_API]
         self._class = entity_info[ENTITY_CLASS]
         self._enable_default = entity_info[ENTITY_ENABLE]
         self._icon = entity_info[ENTITY_ICON]
@@ -301,6 +378,11 @@ class SynologyDSMEntity(Entity):
             "sw_version": self._api.information.version_string,
         }
 
+    # @property
+    # def api_key(self) -> str:
+    #     """Return the api key."""
+    #     return self._api_key
+
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
@@ -327,24 +409,3 @@ class SynologyDSMEntity(Entity):
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         self._unsub_dispatcher()
-
-    async def async_remove(self):
-        """Clean up when removing entity.
-
-        Remove entity if no entry in entity registry exist.
-        Remove entity registry entry if no entry in device registry exist.
-        Remove entity registry entry if there are more than one entity linked to the device registry entry.
-        """
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        entity_entry = entity_registry.async_get(self.entity_id)
-        if not entity_entry:
-            await super().async_remove()
-            return
-
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(entity_entry.device_id)
-        if not device_entry:
-            entity_registry.async_remove(self.entity_id)
-            return
-
-        entity_registry.async_remove(self.entity_id)

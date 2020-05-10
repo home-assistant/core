@@ -1,4 +1,8 @@
 """Constants for Synology DSM."""
+# from synology_dsm.api.core.security import SynoCoreSecurity
+# from synology_dsm.api.core.utilization import SynoCoreUtilization
+# from synology_dsm.api.storage.storage import SynoStorage
+
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
@@ -35,14 +39,14 @@ ENTITY_ENABLE = "enable"
 
 # Binary sensors
 STORAGE_DISK_BINARY_SENSORS = {
-    "disk_exceed_bad_sector_thr": {
+    "storage:disk_exceed_bad_sector_thr": {
         ENTITY_NAME: "Exceeded Max Bad Sectors",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:test-tube",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "disk_below_remain_life_thr": {
+    "storage:disk_below_remain_life_thr": {
         ENTITY_NAME: "Below Min Remaining Life",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:test-tube",
@@ -52,7 +56,7 @@ STORAGE_DISK_BINARY_SENSORS = {
 }
 
 SECURITY_BINARY_SENSORS = {
-    "status": {
+    "security:status": {
         ENTITY_NAME: "Security status",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
@@ -63,112 +67,112 @@ SECURITY_BINARY_SENSORS = {
 
 # Sensors
 UTILISATION_SENSORS = {
-    "cpu_other_load": {
+    "utilisation:cpu_other_load": {
         ENTITY_NAME: "CPU Load (Other)",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
-    "cpu_user_load": {
+    "utilisation:cpu_user_load": {
         ENTITY_NAME: "CPU Load (User)",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "cpu_system_load": {
+    "utilisation:cpu_system_load": {
         ENTITY_NAME: "CPU Load (System)",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
-    "cpu_total_load": {
+    "utilisation:cpu_total_load": {
         ENTITY_NAME: "CPU Load (Total)",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "cpu_1min_load": {
+    "utilisation:cpu_1min_load": {
         ENTITY_NAME: "CPU Load (1 min)",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
-    "cpu_5min_load": {
+    "utilisation:cpu_5min_load": {
         ENTITY_NAME: "CPU Load (5 min)",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "cpu_15min_load": {
+    "utilisation:cpu_15min_load": {
         ENTITY_NAME: "CPU Load (15 min)",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "memory_real_usage": {
+    "utilisation:memory_real_usage": {
         ENTITY_NAME: "Memory Usage (Real)",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:memory",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "memory_size": {
+    "utilisation:memory_size": {
         ENTITY_NAME: "Memory Size",
         ENTITY_UNIT: DATA_MEGABYTES,
         ENTITY_ICON: "mdi:memory",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
-    "memory_cached": {
+    "utilisation:memory_cached": {
         ENTITY_NAME: "Memory Cached",
         ENTITY_UNIT: DATA_MEGABYTES,
         ENTITY_ICON: "mdi:memory",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
-    "memory_available_swap": {
+    "utilisation:memory_available_swap": {
         ENTITY_NAME: "Memory Available (Swap)",
         ENTITY_UNIT: DATA_MEGABYTES,
         ENTITY_ICON: "mdi:memory",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "memory_available_real": {
+    "utilisation:memory_available_real": {
         ENTITY_NAME: "Memory Available (Real)",
         ENTITY_UNIT: DATA_MEGABYTES,
         ENTITY_ICON: "mdi:memory",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "memory_total_swap": {
+    "utilisation:memory_total_swap": {
         ENTITY_NAME: "Memory Total (Swap)",
         ENTITY_UNIT: DATA_MEGABYTES,
         ENTITY_ICON: "mdi:memory",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "memory_total_real": {
+    "utilisation:memory_total_real": {
         ENTITY_NAME: "Memory Total (Real)",
         ENTITY_UNIT: DATA_MEGABYTES,
         ENTITY_ICON: "mdi:memory",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "network_up": {
+    "utilisation:network_up": {
         ENTITY_NAME: "Network Up",
         ENTITY_UNIT: DATA_RATE_KILOBYTES_PER_SECOND,
         ENTITY_ICON: "mdi:upload",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "network_down": {
+    "utilisation:network_down": {
         ENTITY_NAME: "Network Down",
         ENTITY_UNIT: DATA_RATE_KILOBYTES_PER_SECOND,
         ENTITY_ICON: "mdi:download",
@@ -177,42 +181,42 @@ UTILISATION_SENSORS = {
     },
 }
 STORAGE_VOL_SENSORS = {
-    "volume_status": {
+    "storage:volume_status": {
         ENTITY_NAME: "Status",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "volume_size_total": {
+    "storage:volume_size_total": {
         ENTITY_NAME: "Total Size",
         ENTITY_UNIT: DATA_TERABYTES,
         ENTITY_ICON: "mdi:chart-pie",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
-    "volume_size_used": {
+    "storage:volume_size_used": {
         ENTITY_NAME: "Used Space",
         ENTITY_UNIT: DATA_TERABYTES,
         ENTITY_ICON: "mdi:chart-pie",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "volume_percentage_used": {
+    "storage:volume_percentage_used": {
         ENTITY_NAME: "Volume Used",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:chart-pie",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "volume_disk_temp_avg": {
+    "storage:volume_disk_temp_avg": {
         ENTITY_NAME: "Average Disk Temp",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:thermometer",
         ENTITY_CLASS: "temperature",
         ENTITY_ENABLE: True,
     },
-    "volume_disk_temp_max": {
+    "storage:volume_disk_temp_max": {
         ENTITY_NAME: "Maximum Disk Temp",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:thermometer",
@@ -221,21 +225,21 @@ STORAGE_VOL_SENSORS = {
     },
 }
 STORAGE_DISK_SENSORS = {
-    "disk_smart_status": {
+    "storage:disk_smart_status": {
         ENTITY_NAME: "Status (Smart)",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
-    "disk_status": {
+    "storage:disk_status": {
         ENTITY_NAME: "Status",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
-    "disk_temp": {
+    "storage:disk_temp": {
         ENTITY_NAME: "Temperature",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:thermometer",
