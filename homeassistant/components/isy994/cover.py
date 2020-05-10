@@ -1,52 +1,50 @@
 """Support for ISY994 covers."""
-import logging
 from typing import Callable
 
-from homeassistant.components.cover import DOMAIN, CoverDevice
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_UNKNOWN,
+from pyisy.constants import ISY_VALUE_UNKNOWN
+
+from homeassistant.components.cover import DOMAIN as COVER, CoverEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import (
+    _LOGGER,
+    DOMAIN as ISY994_DOMAIN,
+    ISY994_NODES,
+    ISY994_PROGRAMS,
+    UOM_TO_STATES,
 )
-from homeassistant.helpers.typing import ConfigType
-
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
-
-VALUE_TO_STATE = {
-    0: STATE_CLOSED,
-    101: STATE_UNKNOWN,
-    102: "stopped",
-    103: STATE_CLOSING,
-    104: STATE_OPENING,
-}
+from .entity import ISYNodeEntity, ISYProgramEntity
+from .helpers import migrate_old_unique_ids
 
 
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list], None],
+) -> bool:
     """Set up the ISY994 cover platform."""
+    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     devices = []
-    for node in hass.data[ISY994_NODES][DOMAIN]:
-        devices.append(ISYCoverDevice(node))
+    for node in hass_isy_data[ISY994_NODES][COVER]:
+        devices.append(ISYCoverEntity(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
-        devices.append(ISYCoverProgram(name, status, actions))
+    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][COVER]:
+        devices.append(ISYCoverProgramEntity(name, status, actions))
 
-    add_entities(devices)
+    await migrate_old_unique_ids(hass, COVER, devices)
+    async_add_entities(devices)
 
 
-class ISYCoverDevice(ISYDevice, CoverDevice):
+class ISYCoverEntity(ISYNodeEntity, CoverEntity):
     """Representation of an ISY994 cover device."""
 
     @property
     def current_cover_position(self) -> int:
         """Return the current cover position."""
-        if self.is_unknown() or self.value is None:
-            return None
+        if self.value in [None, ISY_VALUE_UNKNOWN]:
+            return STATE_UNKNOWN
         return sorted((0, self.value, 100))[1]
 
     @property
@@ -57,29 +55,23 @@ class ISYCoverDevice(ISYDevice, CoverDevice):
     @property
     def state(self) -> str:
         """Get the state of the ISY994 cover device."""
-        if self.is_unknown():
-            return None
-        return VALUE_TO_STATE.get(self.value, STATE_OPEN)
+        if self.value == ISY_VALUE_UNKNOWN:
+            return STATE_UNKNOWN
+        return UOM_TO_STATES["97"].get(self.value, STATE_OPEN)
 
     def open_cover(self, **kwargs) -> None:
         """Send the open cover command to the ISY994 cover device."""
-        if not self._node.on(val=100):
+        if not self._node.turn_on(val=100):
             _LOGGER.error("Unable to open the cover")
 
     def close_cover(self, **kwargs) -> None:
         """Send the close cover command to the ISY994 cover device."""
-        if not self._node.off():
+        if not self._node.turn_off():
             _LOGGER.error("Unable to close the cover")
 
 
-class ISYCoverProgram(ISYCoverDevice):
+class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
     """Representation of an ISY994 cover program."""
-
-    def __init__(self, name: str, node: object, actions: object) -> None:
-        """Initialize the ISY994 cover program."""
-        super().__init__(node)
-        self._name = name
-        self._actions = actions
 
     @property
     def state(self) -> str:
@@ -88,10 +80,10 @@ class ISYCoverProgram(ISYCoverDevice):
 
     def open_cover(self, **kwargs) -> None:
         """Send the open cover command to the ISY994 cover program."""
-        if not self._actions.runThen():
+        if not self._actions.run_then():
             _LOGGER.error("Unable to open the cover")
 
     def close_cover(self, **kwargs) -> None:
         """Send the close cover command to the ISY994 cover program."""
-        if not self._actions.runElse():
+        if not self._actions.run_else():
             _LOGGER.error("Unable to close the cover")

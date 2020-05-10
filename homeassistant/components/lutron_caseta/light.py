@@ -5,7 +5,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
@@ -41,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class LutronCasetaLight(LutronCasetaDevice, Light):
+class LutronCasetaLight(LutronCasetaDevice, LightEntity):
     """Representation of a Lutron Light, including dimmable."""
 
     @property

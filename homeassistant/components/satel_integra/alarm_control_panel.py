@@ -52,7 +52,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
+class SatelIntegraAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     def __init__(self, controller, name, arm_home_mode, partition_id):

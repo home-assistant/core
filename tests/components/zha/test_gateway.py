@@ -1,6 +1,8 @@
 """Test ZHA Gateway."""
+import asyncio
 import logging
 import time
+from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha as zha
@@ -8,6 +10,7 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.zha.core.group import GroupMember
 
 from .common import async_enable_traffic, async_find_group_entity_id, get_zha_gateway
 
@@ -52,6 +55,7 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
         },
         ieee="00:15:8d:00:02:32:4f:32",
         nwk=0x0000,
+        node_descriptor=b"\xf8\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff",
     )
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.set_available(True)
@@ -127,17 +131,16 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
     device_light_1._zha_gateway = zha_gateway
     device_light_2._zha_gateway = zha_gateway
     member_ieee_addresses = [device_light_1.ieee, device_light_2.ieee]
+    members = [GroupMember(device_light_1.ieee, 1), GroupMember(device_light_2.ieee, 1)]
 
     # test creating a group with 2 members
-    zha_group = await zha_gateway.async_create_zigpy_group(
-        "Test Group", member_ieee_addresses
-    )
+    zha_group = await zha_gateway.async_create_zigpy_group("Test Group", members)
     await hass.async_block_till_done()
 
     assert zha_group is not None
     assert len(zha_group.members) == 2
     for member in zha_group.members:
-        assert member.ieee in member_ieee_addresses
+        assert member.device.ieee in member_ieee_addresses
 
     entity_id = async_find_group_entity_id(hass, LIGHT_DOMAIN, zha_group)
     assert hass.states.get(entity_id) is not None
@@ -157,17 +160,23 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
 
     # test creating a group with 1 member
     zha_group = await zha_gateway.async_create_zigpy_group(
-        "Test Group", [device_light_1.ieee]
+        "Test Group", [GroupMember(device_light_1.ieee, 1)]
     )
     await hass.async_block_till_done()
 
     assert zha_group is not None
     assert len(zha_group.members) == 1
     for member in zha_group.members:
-        assert member.ieee in [device_light_1.ieee]
+        assert member.device.ieee in [device_light_1.ieee]
 
     # the group entity should not have been cleaned up
     assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
+
+    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+        await zha_group.members[0].async_remove_from_group()
+        assert len(zha_group.members) == 1
+        for member in zha_group.members:
+            assert member.device.ieee in [device_light_1.ieee]
 
 
 async def test_updating_device_store(hass, zigpy_dev_basic, zha_dev_basic):

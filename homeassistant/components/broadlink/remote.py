@@ -22,7 +22,7 @@ from homeassistant.components.remote import (
     DOMAIN as COMPONENT,
     PLATFORM_SCHEMA,
     SUPPORT_LEARN_COMMAND,
-    RemoteDevice,
+    RemoteEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.core import callback
@@ -124,7 +124,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([remote], False)
 
 
-class BroadlinkRemote(RemoteDevice):
+class BroadlinkRemote(RemoteEntity):
     """Representation of a Broadlink remote."""
 
     def __init__(self, name, unique_id, api, code_storage, flag_storage):

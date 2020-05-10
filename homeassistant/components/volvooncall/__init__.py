@@ -281,3 +281,8 @@ class VolvoEntity(Entity):
             self.instrument.attributes,
             model=f"{self.vehicle.vehicle_type}/{self.vehicle.model_year}",
         )
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.vin}-{self.component}-{self.attribute}"

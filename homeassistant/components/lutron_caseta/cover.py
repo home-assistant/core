@@ -7,7 +7,7 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class LutronCasetaCover(LutronCasetaDevice, CoverDevice):
+class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
     """Representation of a Lutron shade."""
 
     @property

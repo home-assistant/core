@@ -7,6 +7,8 @@ from . import DATA_TUYA, TuyaDevice
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
+PARALLEL_UPDATES = 0
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tuya scenes."""

@@ -8,7 +8,7 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     TEMP_CELSIUS,
-    ClimateDevice,
+    ClimateEntity,
 )
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -63,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SchluterThermostat(ClimateDevice):
+class SchluterThermostat(ClimateEntity):
     """Representation of a Schluter thermostat."""
 
     def __init__(self, coordinator, serial_number, api, session_id):

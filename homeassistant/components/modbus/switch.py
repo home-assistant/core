@@ -170,10 +170,8 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
             self._available = False
             return
 
-        value = bool(result.bits[0])
         self._available = True
-
-        return value
+        return bool(result.bits[0])
 
     def _write_coil(self, coil, value):
         """Write coil using the Modbus hub slave."""
@@ -273,10 +271,12 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
     def _read_register(self) -> Optional[int]:
         try:
             if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(self._slave, self._register, 1)
+                result = self._hub.read_input_registers(
+                    self._slave, self._verify_register, 1
+                )
             else:
                 result = self._hub.read_holding_registers(
-                    self._slave, self._register, 1
+                    self._slave, self._verify_register, 1
                 )
         except ConnectionException:
             self._available = False
@@ -286,10 +286,9 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._available = False
             return
 
-        value = int(result.registers[0])
         self._available = True
 
-        return value
+        return int(result.registers[0])
 
     def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""

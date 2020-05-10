@@ -3,7 +3,7 @@ import logging
 
 from bimmer_connected.state import ChargingState, LockState
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
 
 from . import DOMAIN as BMW_DOMAIN
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class BMWConnectedDriveSensor(BinarySensorDevice):
+class BMWConnectedDriveSensor(BinarySensorEntity):
     """Representation of a BMW vehicle binary sensor."""
 
     def __init__(

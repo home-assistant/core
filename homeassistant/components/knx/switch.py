@@ -2,7 +2,7 @@
 import voluptuous as vol
 from xknx.devices import Switch as XknxSwitch
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -52,7 +52,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     async_add_entities([KNXSwitch(switch)])
 
 
-class KNXSwitch(SwitchDevice):
+class KNXSwitch(SwitchEntity):
     """Representation of a KNX switch."""
 
     def __init__(self, device):

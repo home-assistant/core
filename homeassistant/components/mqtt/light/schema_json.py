@@ -22,7 +22,7 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC,
@@ -81,6 +81,9 @@ CONF_FLASH_TIME_LONG = "flash_time_long"
 CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_HS = "hs"
 
+CONF_MAX_MIREDS = "max_mireds"
+CONF_MIN_MIREDS = "min_mireds"
+
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA_JSON = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
@@ -100,6 +103,8 @@ PLATFORM_SCHEMA_JSON = (
                 CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT
             ): cv.positive_int,
             vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
+            vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
+            vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS): vol.All(
@@ -131,7 +136,7 @@ class MqttLightJson(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    Light,
+    LightEntity,
     RestoreEntity,
 ):
     """Representation of a MQTT JSON light."""
@@ -359,6 +364,16 @@ class MqttLightJson(
         return self._color_temp
 
     @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._config.get(CONF_MIN_MIREDS, super().min_mireds)
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._config.get(CONF_MAX_MIREDS, super().max_mireds)
+
+    @property
     def effect(self):
         """Return the current effect."""
         return self._effect
@@ -428,9 +443,7 @@ class MqttLightJson(
                 if self._brightness is not None:
                     brightness = 255
                 else:
-                    brightness = kwargs.get(
-                        ATTR_BRIGHTNESS, self._brightness if self._brightness else 255
-                    )
+                    brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
                 rgb = color_util.color_hsv_to_RGB(
                     hs_color[0], hs_color[1], brightness / 255 * 100
                 )
@@ -461,11 +474,14 @@ class MqttLightJson(
             message["transition"] = kwargs[ATTR_TRANSITION]
 
         if ATTR_BRIGHTNESS in kwargs and self._brightness is not None:
-            message["brightness"] = int(
-                kwargs[ATTR_BRIGHTNESS]
-                / float(DEFAULT_BRIGHTNESS_SCALE)
-                * self._config[CONF_BRIGHTNESS_SCALE]
+            brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_SCALE
+            brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
+            device_brightness = min(
+                round(brightness_normalized * brightness_scale), brightness_scale
             )
+            # Make sure the brightness is not rounded down to 0
+            device_brightness = max(device_brightness, 1)
+            message["brightness"] = device_brightness
 
             if self._optimistic:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]

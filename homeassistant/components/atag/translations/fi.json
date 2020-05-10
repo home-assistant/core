@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Palvelin",
+                    "port": "Portti (10000)"
+                },
+                "title": "Yhdist\u00e4 laitteeseen"
+            }
+        }
+    },
+    "title": "Atag"
+}

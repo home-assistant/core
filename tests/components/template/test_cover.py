@@ -30,8 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_COVER = "cover.test_template_cover"
 
 
-@pytest.fixture
-def calls(hass):
+@pytest.fixture(name="calls")
+def calls_fixture(hass):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
