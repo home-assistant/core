@@ -42,6 +42,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class UpbLink(UpbEntity, Scene):
     """Representation of an UPB Link."""
 
+    def _element_changed(self, element, changeset):
+        """Callback from UPB lib when event on link occurred."""
+
+        change = changeset.get("last_change")
+        if change is None:
+            return
+        if change.get("command") is None:
+            return
+        if change["command"] not in TRIGGER_TYPES:
+            return
+
+        event = f"{DOMAIN}.scene_{change['command']}"
+        data = {ATTR_ENTITY_ID: self.entity_id}
+        data[ATTR_BRIGHTNESS_PCT] = change.get("level", -1)
+        data[ATTR_RATE] = change.get("rate", -1)
+        async_dispatcher_send(hass, f"{}.scene_event", data)
+
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""
         self._element.activate()

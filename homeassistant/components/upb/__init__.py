@@ -34,6 +34,15 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
+    def _scene_event(changeset):
+        self.hass.bus.fire(event, changeset)
+
+    async_dispatcher_connect(
+        self.hass,
+        f"{DOMAIN}.scene_event",
+        _scene_event,
+    )
+
     return True
 
 
