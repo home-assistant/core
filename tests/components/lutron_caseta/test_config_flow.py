@@ -1,5 +1,6 @@
 """Test the Lutron Caseta config flow."""
 from asynctest import patch
+from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.lutron_caseta import DOMAIN
@@ -16,6 +17,28 @@ from homeassistant.const import CONF_HOST
 from tests.common import MockConfigEntry
 
 
+class MockBridge:
+    """Mock Lutron bridge that emulates configured connected status."""
+
+    def __init__(self, can_connect=True):
+        """Initialize MockBridge instance with configured mock connectivity."""
+        self.can_connect = can_connect
+        self.is_currently_connected = False
+
+    async def connect(self):
+        """Connect the mock bridge."""
+        if self.can_connect:
+            self.is_currently_connected = True
+
+    def is_connected(self):
+        """Return whether the mock bridge is connected."""
+        return self.is_currently_connected
+
+    async def close(self):
+        """Close the mock bridge connection."""
+        self.is_currently_connected = False
+
+
 async def test_bridge_import_flow(hass):
     """Test a bridge entry gets created and set up during the import flow."""
 
@@ -28,10 +51,9 @@ async def test_bridge_import_flow(hass):
 
     with patch(
         "homeassistant.components.lutron_caseta.async_setup_entry", return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.lutron_caseta.config_flow.LutronCasetaFlowHandler.async_validate_connectable_bridge_config",
-        return_value=True,
-    ):
+    ) as mock_setup_entry, patch.object(Smartbridge, "create_tls") as create_tls:
+        create_tls.return_value = MockBridge(can_connect=True)
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -57,10 +79,9 @@ async def test_bridge_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.lutron_caseta.async_setup_entry", return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.lutron_caseta.config_flow.LutronCasetaFlowHandler.async_validate_connectable_bridge_config",
-        return_value=False,
-    ):
+    ) as mock_setup_entry, patch.object(Smartbridge, "create_tls") as create_tls:
+        create_tls.return_value = MockBridge(can_connect=False)
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
