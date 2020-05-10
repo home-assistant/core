@@ -19,15 +19,7 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Do setup of Gogogate2."""
-    # Config entry is coming from config flow and needs options set.
-    if not config_entry.options:
-        hass.config_entries.async_update_entry(
-            config_entry, data={}, options=config_entry.data,
-        )
-
-    config_entry.add_update_listener(async_options_updated)
-
-    api = get_api(config_entry.options)
+    api = get_api(config_entry.data)
     if await async_api_info_or_none(hass, api) is None:
         raise ConfigEntryNotReady()
 
@@ -39,12 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     return True
-
-
-async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Options were updated."""
-    config_entry.update_listeners = []
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
