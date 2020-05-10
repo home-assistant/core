@@ -3,6 +3,5 @@
   "name": "Insteon",
   "documentation": "https://www.home-assistant.io/integrations/insteon",
   "requirements": ["pyinsteon==1.0.0"],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@teharris1"]
 }
