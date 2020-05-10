@@ -2,10 +2,18 @@
 from typing import Any
 
 from homeassistant.components.scene import Scene
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import entity_platform
 
 from . import UpbEntity
-from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
+from .const import (
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_RATE,
+    DOMAIN,
+    TRIGGER_TYPES,
+    UPB_BLINK_RATE_SCHEMA,
+    UPB_BRIGHTNESS_RATE_SCHEMA,
+)
 
 SERVICE_LINK_DEACTIVATE = "link_deactivate"
 SERVICE_LINK_FADE_STOP = "link_fade_stop"
@@ -41,6 +49,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class UpbLink(UpbEntity, Scene):
     """Representation of an UPB Link."""
+
+    @property
+    def device_info(self):
+        """Device info for the entity."""
+        return {
+            "name": self._element.name,
+            "identifiers": {(DOMAIN, self._element.index)},
+            "manufacturer": "Generic",
+            "model": "UPB PIM",
+        }
+
+    def _element_changed(self, element, changeset):
+        change = changeset.get("last_change")
+        if change is None:
+            return
+        if change.get("command") is None:
+            return
+        if change["command"] not in TRIGGER_TYPES:
+            return
+
+        event = f"{DOMAIN}.scene_{change['command']}"
+        data = {ATTR_ENTITY_ID: self.entity_id}
+        data[ATTR_BRIGHTNESS_PCT] = change.get("level", -1)
+        data[ATTR_RATE] = change.get("rate", -1)
+        self.hass.bus.fire(event, data)
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""

@@ -7,6 +7,15 @@ import homeassistant.helpers.config_validation as cv
 CONF_NETWORK = "network"
 DOMAIN = "upb"
 
+TRIGGER_TYPES = {
+    "goto",
+    "activated",
+    "deactivated",
+    "blink",
+    "fade_started",
+    "fade_stopped",
+}
+
 ATTR_BLINK_RATE = "blink_rate"
 ATTR_BRIGHTNESS = "brightness"
 ATTR_BRIGHTNESS_PCT = "brightness_pct"

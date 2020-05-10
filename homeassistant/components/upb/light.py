@@ -10,7 +10,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.helpers import entity_platform
 
-from . import UpbAttachedEntity
+from . import UpbEntity
 from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
 
 SERVICE_LIGHT_FADE_START = "light_fade_start"
@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class UpbLight(UpbAttachedEntity, LightEntity):
+class UpbLight(UpbEntity, LightEntity):
     """Representation of an UPB Light."""
 
     def __init__(self, element, unique_id, upb):
@@ -54,6 +54,17 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         if self._element.dimmable:
             return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_FLASH
         return SUPPORT_FLASH
+
+    @property
+    def device_info(self):
+        """Device info for the entity."""
+        return {
+            "name": self._element.name,
+            "identifiers": {(DOMAIN, self._element.index)},
+            "sw_version": self._element.version,
+            "manufacturer": self._element.manufacturer,
+            "model": self._element.product,
+        }
 
     @property
     def brightness(self):

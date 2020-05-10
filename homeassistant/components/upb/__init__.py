@@ -105,18 +105,3 @@ class UpbEntity(Entity):
         """Register callback for UPB changes and update entity state."""
         self._element.add_callback(self._element_callback)
         self._element_callback(self._element, {})
-
-
-class UpbAttachedEntity(UpbEntity):
-    """Base class for UPB attached entities."""
-
-    @property
-    def device_info(self):
-        """Device info for the entity."""
-        return {
-            "name": self._element.name,
-            "identifiers": {(DOMAIN, self._element.index)},
-            "sw_version": self._element.version,
-            "manufacturer": self._element.manufacturer,
-            "model": self._element.product,
-        }

@@ -19,5 +19,15 @@
     "abort": {
       "address_already_configured": "An UPB PIM with this address is already configured."
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "goto": "{entity_name} goto level",
+      "activated": "{entity_name} activated",
+      "deactivated": "{entity_name} deactivated",
+      "blink": "{entity_name} blinking started",
+      "fade_started": "{entity_name} fade started",
+      "fade_stopped": "{entity_name} fade stopped"
+    }
   }
 }
