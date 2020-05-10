@@ -6,7 +6,7 @@ from hole.exceptions import HoleError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.pi_hole.const import (
+from homeassistant.components.pi_hole.const import (  # pylint: disable=unused-import
     CONF_LOCATION,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -111,7 +111,7 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except DuplicatedNameException:
                 if is_import:
                     _LOGGER.error("Failed to import: name %s already existed", name)
-                    return self.async_abort(reason="duplicated name")
+                    return self.async_abort(reason="duplicated_name")
                 errors["base"] = "duplicated_name"
 
         user_input = user_input or {}
