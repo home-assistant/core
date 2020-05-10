@@ -37,5 +37,14 @@
       "unknown": "Unknown error: please check logs to get more details"
     },
     "abort": { "already_configured": "Host already configured" }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Minutes between scans"
+        }
+      }
+    }
   }
 }

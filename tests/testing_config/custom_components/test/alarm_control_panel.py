@@ -32,12 +32,12 @@ def init(empty=False):
         if empty
         else {
             "arm_code": MockAlarm(
-                name=f"Alarm arm code",
+                name="Alarm arm code",
                 code_arm_required=True,
                 unique_id="unique_arm_code",
             ),
             "no_arm_code": MockAlarm(
-                name=f"Alarm no arm code",
+                name="Alarm no arm code",
                 code_arm_required=False,
                 unique_id="unique_no_arm_code",
             ),

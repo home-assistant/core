@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
+            "invalid_credentials": "Credenciales no v\u00e1lidas",
             "user_already_configured": "La cuenta ya ha sido configurada"
+        },
+        "create_entry": {
+            "default": "Para establecer opciones avanzadas, consulte [Documentaci\u00f3n de Life360] ({docs_url})."
         },
         "error": {
             "invalid_credentials": "Credenciales no v\u00e1lidas",
@@ -15,6 +19,7 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
+                "description": "Para establecer opciones avanzadas, consulte [Documentaci\u00f3n de Life360] ( {docs_url} ). \n Es posible que desee hacer eso antes de agregar cuentas.",
                 "title": "Informaci\u00f3n de la cuenta Life360"
             }
         }

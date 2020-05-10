@@ -1,5 +1,4 @@
 """Test the Tesla config flow."""
-from asynctest import patch
 from teslajsonpy import TeslaException
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -19,7 +18,8 @@ from homeassistant.const import (
     HTTP_NOT_FOUND,
 )
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -33,11 +33,11 @@ async def test_form(hass):
 
     with patch(
         "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
-        return_value=mock_coro(("test-refresh-token", "test-access-token")),
+        return_value=("test-refresh-token", "test-access-token"),
     ), patch(
-        "homeassistant.components.tesla.async_setup", return_value=mock_coro(True)
+        "homeassistant.components.tesla.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.tesla.async_setup_entry", return_value=mock_coro(True)
+        "homeassistant.components.tesla.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "test", CONF_USERNAME: "test@email.com"}
@@ -102,7 +102,7 @@ async def test_form_repeat_identifier(hass):
     )
     with patch(
         "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
-        return_value=mock_coro(("test-refresh-token", "test-access-token")),
+        return_value=("test-refresh-token", "test-access-token"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -118,7 +118,7 @@ async def test_import(hass):
 
     with patch(
         "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
-        return_value=mock_coro(("test-refresh-token", "test-access-token")),
+        return_value=("test-refresh-token", "test-access-token"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

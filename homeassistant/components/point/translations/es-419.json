@@ -3,7 +3,12 @@
         "abort": {
             "already_setup": "Solo puede configurar una cuenta Point.",
             "authorize_url_fail": "Error desconocido al generar una URL de autorizaci\u00f3n.",
-            "external_setup": "Punto configurado con \u00e9xito desde otro flujo."
+            "authorize_url_timeout": "Tiempo de espera agotado para generar la URL de autorizaci\u00f3n.",
+            "external_setup": "Punto configurado con \u00e9xito desde otro flujo.",
+            "no_flows": "Debe configurar Point antes de poder autenticarse con \u00e9l. [Lea las instrucciones] (https://www.home-assistant.io/components/point/)."
+        },
+        "create_entry": {
+            "default": "Autenticado con \u00e9xito con Minut para sus dispositivos Point"
         },
         "error": {
             "follow_link": "Por favor, siga el enlace y autent\u00edquese antes de presionar Enviar",
@@ -11,7 +16,8 @@
         },
         "step": {
             "auth": {
-                "description": "Siga el enlace a continuaci\u00f3n y <b> Aceptar </b> acceso a su cuenta de Minut, luego vuelva y presione <b> Enviar </b> continuaci\u00f3n. \n\n [Enlace] ( {authorization_url} )"
+                "description": "Siga el enlace a continuaci\u00f3n y <b> Aceptar </b> acceso a su cuenta de Minut, luego vuelva y presione <b> Enviar </b> continuaci\u00f3n. \n\n [Enlace] ( {authorization_url} )",
+                "title": "Autenticaci\u00f3n Point"
             },
             "user": {
                 "data": {

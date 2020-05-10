@@ -3,7 +3,6 @@ import asyncio
 import logging
 from time import time
 
-from asynctest import CoroutineMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -11,6 +10,7 @@ from homeassistant.components.cloud import account_link
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
@@ -109,7 +109,7 @@ async def test_implementation(hass, flow_handler):
     flow_finished = asyncio.Future()
 
     helper = Mock(
-        async_get_authorize_url=CoroutineMock(return_value="http://example.com/auth"),
+        async_get_authorize_url=AsyncMock(return_value="http://example.com/auth"),
         async_get_tokens=Mock(return_value=flow_finished),
     )
 

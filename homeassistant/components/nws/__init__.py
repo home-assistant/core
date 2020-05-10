@@ -4,13 +4,12 @@ import datetime
 import logging
 
 from pynws import SimpleNWS
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -24,26 +23,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-_INDIVIDUAL_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-        vol.Optional(CONF_STATION): cv.string,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [_INDIVIDUAL_SCHEMA])}, extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS = ["weather"]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
+
+DEBOUNCE_TIME = 60  # in seconds
 
 
 def base_unique_id(latitude, longitude):
@@ -75,6 +59,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name=f"NWS observation station {station}",
         update_method=nws_data.update_observation,
         update_interval=DEFAULT_SCAN_INTERVAL,
+        request_refresh_debouncer=debounce.Debouncer(
+            hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
+        ),
     )
 
     coordinator_forecast = DataUpdateCoordinator(
@@ -83,6 +70,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name=f"NWS forecast station {station}",
         update_method=nws_data.update_forecast,
         update_interval=DEFAULT_SCAN_INTERVAL,
+        request_refresh_debouncer=debounce.Debouncer(
+            hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
+        ),
     )
 
     coordinator_forecast_hourly = DataUpdateCoordinator(
@@ -91,6 +81,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name=f"NWS forecast hourly station {station}",
         update_method=nws_data.update_forecast_hourly,
         update_interval=DEFAULT_SCAN_INTERVAL,
+        request_refresh_debouncer=debounce.Debouncer(
+            hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
+        ),
     )
     nws_hass_data = hass.data.setdefault(DOMAIN, {})
     nws_hass_data[entry.entry_id] = {

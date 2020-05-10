@@ -8,7 +8,9 @@
       "pat": {
         "title": "Enter Personal Access Token",
         "description": "Please enter a SmartThings [Personal Access Token]({token_url}) that has been created per the [instructions]({component_url}).  This will be used to create the Home Assistant integration within your SmartThings account.",
-        "data": { "access_token": "Access Token" }
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
       },
       "select_location": {
         "title": "Select Location",

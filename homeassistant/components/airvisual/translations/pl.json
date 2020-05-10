@@ -15,6 +15,7 @@
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
                 },
+                "description": "U\u017cyj interfejsu API chmury AirVisual do monitorowania lokalizacji geograficznej.",
                 "title": "Konfiguracja Geography"
             },
             "node_pro": {

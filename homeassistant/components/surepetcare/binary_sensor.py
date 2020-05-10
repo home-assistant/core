@@ -105,7 +105,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         return None if not self._device_class else self._device_class
 
     @property
-    def unique_id(self: BinarySensorEntity) -> str:
+    def unique_id(self) -> str:
         """Return an unique ID."""
         return f"{self._spc_data['household_id']}-{self._id}"
 
@@ -214,7 +214,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         return f"{self._name}_connectivity"
 
     @property
-    def unique_id(self: BinarySensorEntity) -> str:
+    def unique_id(self) -> str:
         """Return an unique ID."""
         return f"{self._spc_data['household_id']}-{self._id}-connectivity"
 

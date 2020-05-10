@@ -1,11 +1,10 @@
 """Test Axis config flow."""
-from asynctest import Mock, patch
-
 from homeassistant.components import axis
 from homeassistant.components.axis import config_flow
 
 from .test_device import MAC, MODEL, NAME, setup_axis_integration
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 

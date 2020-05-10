@@ -48,6 +48,13 @@
                     "other": "Vide"
                 }
             },
+            "simple_options": {
+                "data": {
+                    "track_clients": "Suivi de clients r\u00e9seaux",
+                    "track_devices": "Suivi d'\u00e9quipement r\u00e9seau (Equipements Ubiquiti)"
+                },
+                "description": "Configurer l'int\u00e9gration UniFi"
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Cr\u00e9er des capteurs d'utilisation de la bande passante pour les clients r\u00e9seau"
