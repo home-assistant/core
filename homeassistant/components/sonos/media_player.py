@@ -98,6 +98,7 @@ ATTR_WITH_GROUP = "with_group"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
+ATTR_STATUS_LIGHT = "status_light"
 
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
@@ -279,6 +280,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {
             vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
             vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
+            vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
         },
         "set_option",
     )
@@ -387,6 +389,7 @@ class SonosEntity(MediaPlayerEntity):
         self._favorites = []
         self._soco_snapshot = None
         self._snapshot_group = None
+        self._status_light = None
 
         # Set these early since device_info() needs them
         speaker_info = self.soco.get_speaker_info(True)
@@ -700,12 +703,16 @@ class SonosEntity(MediaPlayerEntity):
             if "dialog_level" in variables:
                 self._speech_enhance = variables["dialog_level"] == "1"
 
+            if "status_light" in variables:
+                self._status_light = variables["status_light"] == "1"
+
             self.schedule_update_ha_state()
         else:
             self._player_volume = self.soco.volume
             self._player_muted = self.soco.mute
             self._night_sound = self.soco.night_mode
             self._speech_enhance = self.soco.dialog_mode
+            self._status_light = self.soco.status_light
 
     def update_groups(self, event=None):
         """Handle callback for topology change event."""
@@ -1213,13 +1220,16 @@ class SonosEntity(MediaPlayerEntity):
         alarm.save()
 
     @soco_error()
-    def set_option(self, night_sound=None, speech_enhance=None):
+    def set_option(self, night_sound=None, speech_enhance=None, status_light=None):
         """Modify playback options."""
         if night_sound is not None and self._night_sound is not None:
             self.soco.night_mode = night_sound
 
         if speech_enhance is not None and self._speech_enhance is not None:
             self.soco.dialog_mode = speech_enhance
+
+        if status_light is not None and self._status_light is not None:
+            self.soco.status_light = status_light
 
     @soco_error()
     def play_queue(self, queue_position=0):
@@ -1236,5 +1246,8 @@ class SonosEntity(MediaPlayerEntity):
 
         if self._speech_enhance is not None:
             attributes[ATTR_SPEECH_ENHANCE] = self._speech_enhance
+
+        if self._status_light is not None:
+            attributes[ATTR_STATUS_LIGHT] = self._status_light
 
         return attributes

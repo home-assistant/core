@@ -64,6 +64,9 @@ set_option:
     speech_enhance:
       description: Enable Speech Enhancement mode
       example: "true"
+    status_light:
+      description: Enable Status (LED) Light
+      example: "true"
 
 play_queue:
   description: Starts playing the queue from the first item.
