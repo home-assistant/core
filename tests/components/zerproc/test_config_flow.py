@@ -1,30 +1,73 @@
 """Test the zerproc config flow."""
 from asynctest import patch
 
-from homeassistant.components.zerproc.config_flow import _async_has_devices
+from homeassistant import config_entries, setup
+from homeassistant.components.zerproc.config_flow import DOMAIN
 
 
-class MockException(Exception):
-    """Mock exception class."""
-
-
-async def test_has_devices(hass):
+async def test_flow_success(hass):
     """Test we get the form."""
-    with patch(
-        "homeassistant.components.zerproc.config_flow.pyzerproc.discover",
-        return_value=[],
-    ):
-        assert await _async_has_devices(hass) is False
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] is None
+
     with patch(
         "homeassistant.components.zerproc.config_flow.pyzerproc.discover",
         return_value=["Light1", "Light2"],
-    ):
-        assert await _async_has_devices(hass) is True
+    ), patch(
+        "homeassistant.components.zerproc.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.zerproc.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Zerproc"
+    assert result2["data"] == {}
+
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_flow_no_devices_found(hass):
+    """Test we get the form."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] is None
+
     with patch(
         "homeassistant.components.zerproc.config_flow.pyzerproc.discover",
-        side_effect=MockException("TEST"),
+        return_value=[],
     ), patch(
-        "homeassistant.components.zerproc.config_flow.pyzerproc.ZerprocException",
-        new=MockException,
-    ):
-        assert await _async_has_devices(hass) is False
+        "homeassistant.components.zerproc.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.zerproc.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "no_devices_found"
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0

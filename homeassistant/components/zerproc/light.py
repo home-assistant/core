@@ -1,8 +1,7 @@
 """Zerproc light platform."""
-import asyncio
 from datetime import timedelta
 import logging
-from typing import Callable, List, Optional
+from typing import Callable, List
 
 import pyzerproc
 
@@ -29,23 +28,25 @@ SUPPORT_ZERPROC = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
-
-def connect_light(light: pyzerproc.Light) -> Optional[pyzerproc.Light]:
-    """Attempt to connect to the light, and return the entity."""
-    try:
-        light.connect(auto_reconnect=True)
-    except pyzerproc.ZerprocException:
-        _LOGGER.debug("Unable to connect to '%s'", light.address, exc_info=True)
-        return None
-
-    return light
+PARALLEL_UPDATES = 0
 
 
-async def discover_entities(
-    hass: HomeAssistant, async_add_entities: Callable[[List[Entity], bool], None]
-) -> List[Entity]:
+def connect_lights(lights: List[pyzerproc.Light]) -> List[pyzerproc.Light]:
+    """Attempt to connect to lights, and return the connected lights."""
+    connected = []
+    for light in lights:
+        try:
+            light.connect(auto_reconnect=True)
+            connected.append(light)
+        except pyzerproc.ZerprocException:
+            _LOGGER.debug("Unable to connect to '%s'", light.address, exc_info=True)
+
+    return connected
+
+
+def discover_entities(hass: HomeAssistant) -> List[Entity]:
     """Attempt to discover new lights."""
-    lights = await hass.async_add_executor_job(pyzerproc.discover)
+    lights = pyzerproc.discover()
 
     # Filter out already discovered lights
     new_lights = [
@@ -55,15 +56,14 @@ async def discover_entities(
     ]
 
     entities = []
-    for light in await asyncio.gather(
-        *[hass.async_add_executor_job(connect_light, light) for light in new_lights]
-    ):
-        if light is not None:
+    for light in connect_lights(new_lights):
+        # Double-check the light hasn't been added in another thread
+        if light.address not in hass.data[DOMAIN]["light_entities"]:
             entity = ZerprocLight(hass, light)
             hass.data[DOMAIN]["light_entities"][light.address] = entity
             entities.append(ZerprocLight(hass, light))
 
-    async_add_entities(entities, update_before_add=True)
+    return entities
 
 
 async def async_setup_entry(
@@ -83,7 +83,8 @@ async def async_setup_entry(
         """Wrap discovery to include params."""
         nonlocal warned
         try:
-            await discover_entities(hass, async_add_entities)
+            entities = await hass.async_add_executor_job(discover_entities, hass)
+            async_add_entities(entities, update_before_add=True)
             warned = False
         except pyzerproc.ZerprocException:
             if warned is False:
@@ -109,7 +110,9 @@ class ZerprocLight(Light):
         self._brightness = None
         self._available = True
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_hass_shutdown)
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_hass_shutdown)
 
     def on_hass_shutdown(self, event):
         """Execute when Home Assistant is shutting down."""
@@ -131,6 +134,7 @@ class ZerprocLight(Light):
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
+            "manufacturer": "Zerproc",
         }
 
     @property

@@ -1,232 +1,276 @@
 """Test the zerproc lights."""
 from asynctest import patch
+import pytest
+import pyzerproc
 
+from homeassistant import setup
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
+    ATTR_XY_COLOR,
+    SCAN_INTERVAL,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
 )
-from homeassistant.components.zerproc.light import (
-    DOMAIN,
-    ZerprocLight,
-    async_setup_entry,
+from homeassistant.components.zerproc.light import DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+import homeassistant.util.dt as dt_util
 
-from tests.async_mock import MagicMock
-
-
-class MockException(Exception):
-    """Mock exception class."""
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-class MockLight(MagicMock):
-    """Mock pyzerproc light class."""
+@pytest.fixture
+async def mock_light(hass):
+    """Create a mock light entity."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
 
-    def __init__(self, address, name=None):
-        """Initialize the mock class."""
-        super().__init__()
-        self.address = address
-        self.name = name
+    mock_entry = MockConfigEntry(domain=DOMAIN)
+    mock_entry.add_to_hass(hass)
 
-    def _get_child_mock(self, **kwargs):
-        return MagicMock(**kwargs)
+    light = pyzerproc.Light("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
+
+    mock_state = pyzerproc.LightState(False, (0, 0, 0))
+
+    with patch(
+        "homeassistant.components.zerproc.light.pyzerproc.discover",
+        return_value=[light],
+    ), patch.object(light, "connect"), patch.object(
+        light, "get_state", return_value=mock_state
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return light
 
 
 async def test_init(hass):
     """Test platform setup."""
-    hass.async_add_job = MagicMock()
-    discover = None
+    await setup.async_setup_component(hass, "persistent_notification", {})
 
-    def async_track_time_interval(hass, action, interval):
-        nonlocal discover
-        discover = action
+    mock_entry = MockConfigEntry(domain=DOMAIN)
+    mock_entry.add_to_hass(hass)
 
-    entities_added = []
+    mock_light_1 = pyzerproc.Light("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
+    mock_light_2 = pyzerproc.Light("11:22:33:44:55:66", "LEDBlue-33445566")
 
-    def async_add_entities(entities, update_before_add=False):
-        nonlocal entities_added
-        entities_added += entities
+    mock_state_1 = pyzerproc.LightState(False, (0, 0, 0))
+    mock_state_2 = pyzerproc.LightState(True, (0, 80, 255))
 
     with patch(
-        "homeassistant.components.zerproc.light.async_track_time_interval",
-        new=async_track_time_interval,
-    ):
-        await async_setup_entry(hass, None, async_add_entities)
-
-    assert discover is not None
-
-    mock_light_1 = MockLight("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
-    mock_light_2 = MockLight("11:22:33:44:55:66", "LEDBlue-33445566")
-
-    with patch(
-        "homeassistant.components.zerproc.light.pyzerproc.Light", MockLight
-    ), patch(
         "homeassistant.components.zerproc.light.pyzerproc.discover",
         return_value=[mock_light_1, mock_light_2],
+    ), patch.object(mock_light_1, "connect"), patch.object(
+        mock_light_2, "connect"
+    ), patch.object(
+        mock_light_1, "get_state", return_value=mock_state_1
+    ), patch.object(
+        mock_light_2, "get_state", return_value=mock_state_2
     ):
-        await discover(None)
-        # Calling twice should not create duplicate entities
-        await discover(None)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert len(entities_added) == 2
-    assert entities_added[0].name == "LEDBlue-CCDDEEFF"
-    assert entities_added[0].unique_id == "AA:BB:CC:DD:EE:FF"
-    assert entities_added[1].name == "LEDBlue-33445566"
-    assert entities_added[1].unique_id == "11:22:33:44:55:66"
-
-    entities_added.clear()
-    hass.data[DOMAIN]["light_entities"] = {}
-
-    # Test an exception connecting to one of the lights
-    mock_light_1.connect.side_effect = MockException("FOO")
-    with patch(
-        "homeassistant.components.zerproc.light.pyzerproc.Light", MockLight
-    ), patch(
-        "homeassistant.components.zerproc.light.pyzerproc.discover",
-        return_value=[mock_light_1, mock_light_2],
-    ), patch(
-        "homeassistant.components.zerproc.light.pyzerproc.ZerprocException",
-        new=MockException,
-    ):
-        await discover(None)
-
-    # The second light should still have been added correctly
-    assert len(entities_added) == 1
-    assert entities_added[0].name == "LEDBlue-33445566"
-    assert entities_added[0].unique_id == "11:22:33:44:55:66"
-
-    entities_added.clear()
-    hass.data[DOMAIN]["light_entities"] = {}
-
-    # Test an exception during discovery
-    with patch(
-        "homeassistant.components.zerproc.light.pyzerproc.discover",
-        side_effect=MockException("TEST"),
-    ), patch(
-        "homeassistant.components.zerproc.light.pyzerproc.ZerprocException",
-        new=MockException,
-    ):
-        await discover(None)
-
-    # Should not add entities and the exception should be captured
-    assert len(entities_added) == 0
-
-
-def test_light_properties(hass):
-    """Test ZerprocLight class properties."""
-    hass.bus.async_listen_once = MagicMock()
-
-    light = MockLight("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
-    entity = ZerprocLight(hass, light)
-
-    hass.bus.async_listen_once.assert_called_with(
-        EVENT_HOMEASSISTANT_STOP, entity.on_hass_shutdown
-    )
-
-    assert entity.name == "LEDBlue-CCDDEEFF"
-    assert entity.unique_id == "AA:BB:CC:DD:EE:FF"
-    assert entity.device_info == {
-        "identifiers": {(DOMAIN, entity.unique_id)},
-        "name": entity.name,
+    state = hass.states.get("light.ledblue_ccddeeff")
+    assert state.state == STATE_OFF
+    assert state.attributes == {
+        ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+        ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
     }
-    assert entity.supported_features == SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+
+    state = hass.states.get("light.ledblue_33445566")
+    assert state.state == STATE_ON
+    assert state.attributes == {
+        ATTR_FRIENDLY_NAME: "LEDBlue-33445566",
+        ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_BRIGHTNESS: 255,
+        ATTR_HS_COLOR: (221.176, 100.0),
+        ATTR_RGB_COLOR: (0, 80, 255),
+        ATTR_XY_COLOR: (0.138, 0.08),
+    }
+
+    with patch.object(hass.loop, "stop"), patch.object(
+        mock_light_1, "disconnect"
+    ) as mock_disconnect_1, patch.object(
+        mock_light_2, "disconnect"
+    ) as mock_disconnect_2:
+        await hass.async_stop()
+
+    assert mock_disconnect_1.called
+    assert mock_disconnect_2.called
 
 
-def test_light_turn_on(hass):
+async def test_light_turn_on(hass, mock_light):
     """Test ZerprocLight turn_on."""
-    light = MockLight("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
-    entity = ZerprocLight(hass, light)
+    utcnow = dt_util.utcnow()
+    with patch.object(mock_light, "turn_on") as mock_turn_on:
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {ATTR_ENTITY_ID: "light.ledblue_ccddeeff"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    mock_turn_on.assert_called()
 
-    entity.turn_on()
-    light.turn_on.assert_called()
+    with patch.object(mock_light, "set_color") as mock_set_color:
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {ATTR_ENTITY_ID: "light.ledblue_ccddeeff", ATTR_BRIGHTNESS: 25},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    mock_set_color.assert_called_with(25, 25, 25)
 
-    light.reset_mock()
+    # Make sure no discovery calls are made while we emulate time passing
+    with patch("homeassistant.components.zerproc.light.pyzerproc.discover"):
+        with patch.object(
+            mock_light,
+            "get_state",
+            return_value=pyzerproc.LightState(True, (175, 150, 220)),
+        ):
+            utcnow = utcnow + SCAN_INTERVAL
+            async_fire_time_changed(hass, utcnow)
+            await hass.async_block_till_done()
 
-    entity.turn_on(**{ATTR_BRIGHTNESS: 25})
+        with patch.object(mock_light, "set_color") as mock_set_color:
+            await hass.services.async_call(
+                "light",
+                "turn_on",
+                {ATTR_ENTITY_ID: "light.ledblue_ccddeeff", ATTR_BRIGHTNESS: 25},
+                blocking=True,
+            )
+            await hass.async_block_till_done()
 
-    light.turn_on.assert_not_called()
-    light.set_color.assert_called_with(25, 25, 25)
+        mock_set_color.assert_called_with(19, 17, 25)
 
-    light.reset_mock()
-    entity._hs_color = (50, 50)
+        with patch.object(mock_light, "set_color") as mock_set_color:
+            await hass.services.async_call(
+                "light",
+                "turn_on",
+                {ATTR_ENTITY_ID: "light.ledblue_ccddeeff", ATTR_HS_COLOR: (50, 50)},
+                blocking=True,
+            )
+            await hass.async_block_till_done()
 
-    entity.turn_on(**{ATTR_BRIGHTNESS: 25})
+        mock_set_color.assert_called_with(220, 201, 110)
 
-    light.turn_on.assert_not_called()
-    light.set_color.assert_called_with(25, 22, 12)
+        with patch.object(
+            mock_light,
+            "get_state",
+            return_value=pyzerproc.LightState(True, (75, 75, 75)),
+        ):
+            utcnow = utcnow + SCAN_INTERVAL
+            async_fire_time_changed(hass, utcnow)
+            await hass.async_block_till_done()
 
-    light.reset_mock()
+        with patch.object(mock_light, "set_color") as mock_set_color:
+            await hass.services.async_call(
+                "light",
+                "turn_on",
+                {ATTR_ENTITY_ID: "light.ledblue_ccddeeff", ATTR_HS_COLOR: (50, 50)},
+                blocking=True,
+            )
+            await hass.async_block_till_done()
 
-    entity.turn_on(**{ATTR_HS_COLOR: (50, 50)})
+        mock_set_color.assert_called_with(75, 68, 37)
 
-    light.turn_on.assert_not_called()
-    light.set_color.assert_called_with(255, 233, 127)
+        with patch.object(mock_light, "set_color") as mock_set_color:
+            await hass.services.async_call(
+                "light",
+                "turn_on",
+                {
+                    ATTR_ENTITY_ID: "light.ledblue_ccddeeff",
+                    ATTR_BRIGHTNESS: 200,
+                    ATTR_HS_COLOR: (75, 75),
+                },
+                blocking=True,
+            )
+            await hass.async_block_till_done()
 
-    light.reset_mock()
-    entity._brightness = 75
-
-    entity.turn_on(**{ATTR_HS_COLOR: (50, 50)})
-
-    light.turn_on.assert_not_called()
-    light.set_color.assert_called_with(75, 68, 37)
-
-    light.reset_mock()
-
-    entity.turn_on(**{ATTR_BRIGHTNESS: 200, ATTR_HS_COLOR: (75, 75)})
-
-    light.turn_on.assert_not_called()
-    light.set_color.assert_called_with(162, 200, 50)
-
-
-def test_light_turn_off(hass):
-    """Test ZerprocLight turn_off."""
-    light = MockLight("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
-    entity = ZerprocLight(hass, light)
-
-    entity.turn_off()
-    light.turn_off.assert_called()
+        mock_set_color.assert_called_with(162, 200, 50)
 
 
-def test_light_update(hass):
+async def test_light_turn_off(hass, mock_light):
+    """Test ZerprocLight turn_on."""
+    with patch.object(mock_light, "turn_off") as mock_turn_off:
+        await hass.services.async_call(
+            "light",
+            "turn_off",
+            {ATTR_ENTITY_ID: "light.ledblue_ccddeeff"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    mock_turn_off.assert_called()
+
+
+async def test_light_update(hass, mock_light):
     """Test ZerprocLight update."""
-    light = MockLight("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
-    entity = ZerprocLight(hass, light)
+    utcnow = dt_util.utcnow()
 
-    assert entity.available is True
+    state = hass.states.get("light.ledblue_ccddeeff")
+    assert state.state == STATE_OFF
+    assert state.attributes == {
+        ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+        ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+    }
 
-    # Test an exception during discovery
-    with patch(
-        "homeassistant.components.zerproc.light.pyzerproc.ZerprocException",
-        new=MockException,
-    ):
-        light.get_state.side_effect = MockException("TEST")
-        entity.update()
+    # Make sure no discovery calls are made while we emulate time passing
+    with patch("homeassistant.components.zerproc.light.pyzerproc.discover"):
+        # Test an exception during discovery
+        with patch.object(
+            mock_light, "get_state", side_effect=pyzerproc.ZerprocException("TEST")
+        ):
+            utcnow = utcnow + SCAN_INTERVAL
+            async_fire_time_changed(hass, utcnow)
+            await hass.async_block_till_done()
 
-    assert entity.available is False
+        state = hass.states.get("light.ledblue_ccddeeff")
+        assert state.state == STATE_UNAVAILABLE
+        assert state.attributes == {
+            ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+            ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        }
 
-    state = MagicMock()
-    state.is_on = False
-    state.color = (200, 128, 100)
-    light.get_state.side_effect = None
-    light.get_state.return_value = state
+        with patch.object(
+            mock_light,
+            "get_state",
+            return_value=pyzerproc.LightState(False, (200, 128, 100)),
+        ):
+            utcnow = utcnow + SCAN_INTERVAL
+            async_fire_time_changed(hass, utcnow)
+            await hass.async_block_till_done()
 
-    entity.update()
+        state = hass.states.get("light.ledblue_ccddeeff")
+        assert state.state == STATE_OFF
+        assert state.attributes == {
+            ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+            ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        }
 
-    assert entity.available is True
-    assert entity.brightness == 200
-    assert entity.is_on is False
-    assert entity.hs_color == (16.8, 50.0)
+        with patch.object(
+            mock_light,
+            "get_state",
+            return_value=pyzerproc.LightState(True, (175, 150, 220)),
+        ):
+            utcnow = utcnow + SCAN_INTERVAL
+            async_fire_time_changed(hass, utcnow)
+            await hass.async_block_till_done()
 
-    state.is_on = True
-    state.color = (175, 150, 220)
-    light.get_state.side_effect = None
-    light.get_state.return_value = state
-
-    entity.update()
-
-    assert entity.available is True
-    assert entity.brightness == 220
-    assert entity.is_on is True
-    assert entity.hs_color == (261.429, 31.818)
+        state = hass.states.get("light.ledblue_ccddeeff")
+        assert state.state == STATE_ON
+        assert state.attributes == {
+            ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
+            ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_BRIGHTNESS: 220,
+            ATTR_HS_COLOR: (261.429, 31.818),
+            ATTR_RGB_COLOR: (202, 173, 255),
+            ATTR_XY_COLOR: (0.291, 0.232),
+        }
