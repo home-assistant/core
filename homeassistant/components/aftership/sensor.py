@@ -5,13 +5,13 @@ import logging
 from pyaftership.tracker import Tracking
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from homeassistant.config_entries import ConfigEntry
 
 from .const import DOMAIN
 
