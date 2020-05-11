@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.singleton import singleton
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,12 +55,40 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+@singleton(DOMAIN)
+async def async_get_instance(hass):
+    """Zeroconf instance to be shared with other integrations that use it."""
+    return await hass.async_add_executor_job(_get_instance, hass)
+
+
+def _get_instance(hass, default_interface=False):
+    """Create an instance."""
+    args = [InterfaceChoice.Default] if default_interface else []
+    zeroconf = HaZeroconf(*args)
+
+    def stop_zeroconf(_):
+        """Stop Zeroconf."""
+        zeroconf.ha_close()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
+
+    return zeroconf
+
+
+class HaZeroconf(Zeroconf):
+    """Zeroconf that cannot be closed."""
+
+    def close(self):
+        """Fake method to avoid integrations closing it."""
+
+    ha_close = Zeroconf.close
+
+
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    if DOMAIN in config and config[DOMAIN].get(CONF_DEFAULT_INTERFACE):
-        zeroconf = Zeroconf(interfaces=InterfaceChoice.Default)
-    else:
-        zeroconf = Zeroconf()
+    zeroconf = hass.data[DOMAIN] = _get_instance(
+        hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
+    )
     zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
 
     params = {
@@ -141,12 +170,6 @@ def setup(hass, config):
 
     if HOMEKIT_TYPE not in ZEROCONF:
         ServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
-
-    def stop_zeroconf(_):
-        """Stop Zeroconf."""
-        zeroconf.close()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
 
     return True
 
