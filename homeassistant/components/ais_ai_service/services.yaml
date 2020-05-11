@@ -4,7 +4,7 @@ mob_notify:
    fields:
      device_id:
        description: 'Identyfikator urządzenia.'
-       example: 'mobile_ais_'
+       example: 'mobile_ais_dom_'
      message:
        description: 'Tekst wiadomości'
        example: 'Dzwonek do drzwi.'
@@ -12,8 +12,14 @@ mob_notify:
        description: 'Tytuł powiadomienia'
        example: 'Powiadomienie z AI-Speaker.'
      image:
-       description: 'URL zdjęcia do wyświetlenia w powiadomieniu'
+       description: 'URL obrazu do wyświetlenia w powiadomieniu (max 1MB)'
        example: 'http://ai-speaker.com/images/doorbell.jpg'
+     priority:
+       description: 'Priorytet wiadomości normal albo high'
+       example: 'high'
+     say:
+       description: 'Czy wiadomość po odbebraniu ma być przeczytana na telefonie'
+       example: True
 
 check_local_ip:
   description: 'Sprawdzenie lokalnego IP bramki i ustawienie go jako wartość encji sensor.internal_ip_address. Ta usługa wykonaywana jest automatycznie przy starcie urządzenia.'

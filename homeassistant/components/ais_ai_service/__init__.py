@@ -2507,6 +2507,14 @@ async def async_setup(hass, config):
             data["title"] = "Powiadomienie z AI-Speaker"
         if "image" in service.data:
             data["image"] = service.data["image"]
+        if "say" in service.data:
+            data["say"] = service.data["say"]
+        else:
+            data["say"] = False
+        if "priority" in service.data:
+            data["priority"] = service.data["priority"]
+        else:
+            data["priority"] = "normal"
         if "data" in service.data:
             data["data"] = service.data["data"]
         else:
