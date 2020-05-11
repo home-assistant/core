@@ -375,7 +375,7 @@ class ZWaveListValueSensor(ZWaveDeviceEntity, BinarySensorEntity):
         # Note: We're assuming that we don't retrieve 2 values with different location
         value_label = value_label.split(" on ")[0]
         value_label = value_label.split(" at ")[0]
-        return f"{base_name} - {value_label}"
+        return f"{base_name}: {value_label}"
 
     @property
     def unique_id(self):
