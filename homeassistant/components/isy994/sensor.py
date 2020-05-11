@@ -16,11 +16,10 @@ from .const import (
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
     UOM_INDEX,
-    UOM_ON_OFF,
     UOM_TO_STATES,
 )
 from .entity import ISYEntity, ISYNodeEntity
-from .helpers import migrate_old_unique_ids
+from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 from .services import async_setup_device_services
 
 
@@ -57,7 +56,7 @@ class ISYSensorEntity(ISYNodeEntity):
         if isinstance(uom, list):
             return UOM_FRIENDLY_NAME.get(uom[0], uom[0])
         # Special case for ISY UOM 101 0.5-precision degrees and index units:
-        if uom in (UOM_DOUBLE_TEMP, UOM_INDEX, UOM_ON_OFF):
+        if uom in (UOM_DOUBLE_TEMP, UOM_INDEX):
             return uom
         return UOM_FRIENDLY_NAME.get(uom)
 
@@ -68,39 +67,30 @@ class ISYSensorEntity(ISYNodeEntity):
         if value == ISY_VALUE_UNKNOWN:
             return None
 
+        # Get the translated ISY Unit of Measurement
         uom = self.raw_unit_of_measurement
-        if (
-            uom in [None, UOM_INDEX, UOM_ON_OFF]
-            and hasattr(self._node, "formatted")
-            and not self._node.formatted == ISY_VALUE_UNKNOWN
-        ):
-            # Use the ISY-provided formatted value if the UOM is an index-type.
-            return self._node.formatted
 
-        states = UOM_TO_STATES.get(uom)
-        if states and states.get(value) is not None:
-            return states.get(value)
+        # Check if this is a known key:value pair UOM
+        isy_states = UOM_TO_STATES.get(uom)
+        if isy_states and isy_states.get(value) is not None:
+            return isy_states[value]
 
-        if self._node.prec != "0":
-            int_prec = int(self._node.prec)
-            value = round(float(value) / 10 ** int_prec, int_prec)
+        # Handle ISY precision and rounding
+        value = convert_isy_value_to_hass(value, uom, self._node.prec)
 
+        # Convert temperatures to Home Assistant's unit
         if uom in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             value = self.hass.config.units.temperature(value, uom)
-        elif uom == UOM_DOUBLE_TEMP:
-            # Special case for ISY UOM 101 0.5-precision degrees unit
-            # Assume the same temp unit as Hass. Not reported by ISY.
-            value = round(float(value) / 2.0, 1)
 
         return value
 
     @property
     def unit_of_measurement(self) -> str:
-        """Get the unit of measurement for the ISY994 sensor device."""
+        """Get the Home Assistant unit of measurement for the device."""
         raw_units = self.raw_unit_of_measurement
         if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS, UOM_DOUBLE_TEMP):
             return self.hass.config.units.temperature_unit
-        if raw_units in (UOM_INDEX, UOM_ON_OFF):
+        if raw_units == UOM_INDEX:
             return None
         return raw_units
 
@@ -116,7 +106,7 @@ class ISYSensorVariableEntity(ISYEntity):
     @property
     def state(self):
         """Return the state of the variable."""
-        return self.value
+        return self._node.status
 
     @property
     def device_state_attributes(self) -> Dict:
