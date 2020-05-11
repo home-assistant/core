@@ -91,7 +91,7 @@ class EventManager:
 
         return self.started
 
-    async def async_stop(self, event) -> None:
+    async def async_stop(self, event=None) -> None:
         """Unsubscribe from events."""
         if not self._subscription:
             return
@@ -158,11 +158,11 @@ class EventManager:
                 LOGGER.warning("Unable to parse event: %s", msg)
                 return
 
-            self._events[event.idx] = event
+            self._events[event.uid] = event
 
-    def get(self, idx) -> Event:
+    def get_uid(self, uid) -> Event:
         """Retrieve event for given id."""
-        return self._events[idx]
+        return self._events[uid]
 
     def get_platform(self, platform) -> List[Event]:
         """Retrieve events for given platform."""

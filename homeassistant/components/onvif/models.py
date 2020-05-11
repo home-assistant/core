@@ -63,9 +63,10 @@ class Capabilities:
 class Event:
     """Represents a ONVIF event."""
 
-    idx: str
+    uid: str
     name: str
     platform: str
     device_class: str = None
     unit_of_measurement: str = None
     value: Any = None
+    entity_enabled: bool = True

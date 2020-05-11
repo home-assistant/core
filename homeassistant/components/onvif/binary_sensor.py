@@ -13,7 +13,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device = hass.data[DOMAIN][config_entry.unique_id]
 
     entities = {
-        event.idx: ONVIFBinarySensor(event.idx, device)
+        event.uid: ONVIFBinarySensor(event.uid, device)
         for event in device.events.get_platform("binary_sensor")
     }
 
@@ -24,9 +24,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Check if we have added an entity for the event."""
         new_entities = []
         for event in device.events.get_platform("binary_sensor"):
-            if event.idx not in entities:
-                entities[event.idx] = ONVIFBinarySensor(event.idx, device)
-                new_entities.append(entities[event.idx])
+            if event.uid not in entities:
+                entities[event.uid] = ONVIFBinarySensor(event.uid, device)
+                new_entities.append(entities[event.uid])
         async_add_entities(new_entities)
 
     device.events.async_add_listener(async_check_entities)
@@ -37,32 +37,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ONVIFBinarySensor(ONVIFBaseEntity, BinarySensorEntity):
     """Representation of a binary ONVIF event."""
 
-    def __init__(self, idx, device):
+    def __init__(self, uid, device):
         """Initialize the ONVIF binary sensor."""
         ONVIFBaseEntity.__init__(self, device)
         BinarySensorEntity.__init__(self)
 
-        self.idx = idx
+        self.uid = uid
 
     @property
     def is_on(self) -> bool:
         """Return true if event is active."""
-        return self.device.events.get(self.idx).value
+        return self.device.events.get_uid(self.uid).value
 
     @property
     def name(self) -> str:
         """Return the name of the event."""
-        return self.device.events.get(self.idx).name
+        return self.device.events.get_uid(self.uid).name
 
     @property
     def device_class(self) -> Optional[str]:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return self.device.events.get(self.idx).device_class
+        return self.device.events.get_uid(self.uid).device_class
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self.idx
+        return self.uid
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self.device.events.get_uid(self.uid).entity_enabled
 
     @property
     def should_poll(self) -> bool:

@@ -13,7 +13,6 @@ async def async_parse_motion_alarm(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:VideoSource/MotionAlarm
-    Async Friendly.
     """
     try:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
@@ -36,7 +35,7 @@ async def async_parse_motion_alarm(uid: str, msg) -> Event:
 async def async_parse_image_too_blurry(uid: str, msg) -> Event:
     """Handle parsing event message.
 
-    Async Friendly.
+    Topic: tns1:VideoSource/ImageTooBlurry/*
     """
     try:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
@@ -59,7 +58,7 @@ async def async_parse_image_too_blurry(uid: str, msg) -> Event:
 async def async_parse_image_too_dark(uid: str, msg) -> Event:
     """Handle parsing event message.
 
-    Async Friendly.
+    Topic: tns1:VideoSource/ImageTooDark/*
     """
     try:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
@@ -82,7 +81,7 @@ async def async_parse_image_too_dark(uid: str, msg) -> Event:
 async def async_parse_image_too_bright(uid: str, msg) -> Event:
     """Handle parsing event message.
 
-    Async Friendly.
+    Topic: tns1:VideoSource/ImageTooBright/*
     """
     try:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
@@ -105,8 +104,7 @@ async def async_parse_image_too_bright(uid: str, msg) -> Event:
 async def async_parse_scene_change(uid: str, msg) -> Event:
     """Handle parsing event message.
 
-    Topic: tns1:VideoSource/GlobalSceneChange/AnalyticsService
-    Async Friendly.
+    Topic: tns1:VideoSource/GlobalSceneChange/*
     """
     try:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
@@ -128,7 +126,6 @@ async def async_parse_detected_sound(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:AudioAnalytics/Audio/DetectedSound
-    Async Friendly.
     """
     try:
         audio_source = ""
@@ -160,7 +157,6 @@ async def async_parse_field_detector(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:RuleEngine/FieldDetector/ObjectsInside
-    Async Friendly.
     """
     try:
         video_source = ""
@@ -193,7 +189,6 @@ async def async_parse_cell_motion_detector(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:RuleEngine/CellMotionDetector/Motion
-    Async Friendly.
     """
     try:
         video_source = ""
@@ -225,7 +220,6 @@ async def async_parse_tamper_detector(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:RuleEngine/TamperDetector/Tamper
-    Async Friendly.
     """
     try:
         video_source = ""
@@ -257,7 +251,6 @@ async def async_parse_storage_failure(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:Device/HardwareFailure/StorageFailure
-    Async Friendly.
     """
     try:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
@@ -279,7 +272,6 @@ async def async_parse_processor_usage(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:Monitoring/ProcessorUsage
-    Async Friendly.
     """
     try:
         usage = float(msg.Message._value_1.Data.SimpleItem[0].Value)
@@ -304,7 +296,6 @@ async def async_parse_last_reboot(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:Monitoring/OperatingTime/LastReboot
-    Async Friendly.
     """
     try:
         return Event(
@@ -327,7 +318,6 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:Monitoring/OperatingTime/LastReset
-    Async Friendly.
     """
     try:
         return Event(
@@ -350,7 +340,6 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event:
     """Handle parsing event message.
 
     Topic: tns1:Monitoring/OperatingTime/LastClockSynchronization
-    Async Friendly.
     """
     try:
         return Event(
@@ -362,6 +351,7 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event:
             dt_util.as_local(
                 dt_util.parse_datetime(msg.Message._value_1.Data.SimpleItem[0].Value)
             ),
+            entity_enabled=False,
         )
     except (AttributeError, KeyError):
         return None
