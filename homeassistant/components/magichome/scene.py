@@ -31,4 +31,4 @@ class MagicHomeScene(MagicHomeDevice, Scene):
 
     def activate(self):
         """Activate the scene."""
-        self.magichome.activate()
+        self.magichome.activate(self)

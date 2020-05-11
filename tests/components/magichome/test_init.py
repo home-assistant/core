@@ -62,20 +62,6 @@ async def test_setting_up_magichome(hass):
         )
 
 
-async def test_magichome_api(hass):
-    """Test magichome api Normal configuration."""
-    magichome = MagicHomeApi()
-    assert magichome.init("test@user.com", "123456", "ZG001", "ZG001")
-    devices = magichome.discover_devices()
-    assert devices != []
-
-
-async def mock_magichome_api_fail(hass):
-    """Test magichome api fail configuration."""
-    mock_of_magic_home_api = MagicHomeApi()
-    assert mock_of_magic_home_api.init("test@user.com", "password", "ZG001", "ZG001")
-
-
 async def test_light(hass):
     """Test MagicHome Light."""
 
