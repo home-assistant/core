@@ -295,7 +295,7 @@ def async_setup_services(hass: HomeAssistantType):
                     current_unique_ids.append(f"{uuid}_{node.address}")
 
         extra_entities = [
-            (entity_id)
+            entity_id
             for unique_id, entity_id in config_ids
             if unique_id not in current_unique_ids
         ]
