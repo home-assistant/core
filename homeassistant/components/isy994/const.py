@@ -326,7 +326,7 @@ UOM_FRIENDLY_NAME = {
     "22": "%RH",
     "23": PRESSURE_INHG,
     "24": f"{LENGTH_INCHES}/{TIME_HOURS}",
-    UOM_INDEX: "",  # Index type. Use "node.formatted" for value
+    UOM_INDEX: "index",  # Index type. Use "node.formatted" for value
     "26": TEMP_KELVIN,
     "27": "keyword",
     "28": MASS_KILOGRAMS,
@@ -385,7 +385,7 @@ UOM_FRIENDLY_NAME = {
     "91": DEGREE,
     "92": f"{DEGREE} South",
     "100": "",  # Range 0-255, no unit.
-    UOM_DOUBLE_TEMP: f"{DEGREE} (x2)",
+    UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
     "103": "$",
     "104": "¢",
