@@ -15,8 +15,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.avri.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.avri.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -39,12 +37,11 @@ async def test_form(hass):
         "country_code": "NL",
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_house_number(hass):
-    """Test we handle invalid auth."""
+    """Test we handle invalid house number."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -64,7 +61,7 @@ async def test_form_invalid_house_number(hass):
 
 
 async def test_form_invalid_country_code(hass):
-    """Test we handle invalid auth."""
+    """Test we handle invalid county code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
