@@ -51,7 +51,8 @@
         "data": {
           "use_episode_art": "Use episode art",
           "ignore_new_shared_users": "Ignore new managed/shared users",
-          "monitored_users": "Monitored users"
+          "monitored_users": "Monitored users",
+          "ignore_plex_web_clients": "Ignore Plex Web clients"
         }
       }
     }

@@ -8,7 +8,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "key": "Authentication key (only used by BRP072C/Zena devices)",
+                    "password": "Device password (only used by SKYFi devices)"
                 },
                 "description": "Enter IP address of your Daikin AC.",
                 "title": "Configure Daikin AC"

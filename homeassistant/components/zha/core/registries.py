@@ -3,19 +3,9 @@ import collections
 from typing import Callable, Dict, List, Set, Tuple, Union
 
 import attr
-import bellows.ezsp
-import bellows.zigbee.application
 import zigpy.profiles.zha
 import zigpy.profiles.zll
 import zigpy.zcl as zcl
-import zigpy_cc.api
-import zigpy_cc.zigbee.application
-import zigpy_deconz.api
-import zigpy_deconz.zigbee.application
-import zigpy_xbee.api
-import zigpy_xbee.zigbee.application
-import zigpy_zigate.api
-import zigpy_zigate.zigbee.application
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.cover import DOMAIN as COVER
@@ -28,7 +18,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 
 # importing channels updates registries
 from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
-from .const import CONTROLLER, ZHA_GW_RADIO, ZHA_GW_RADIO_DESCRIPTION, RadioType
 from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 from .typing import ChannelType
 
@@ -128,34 +117,6 @@ DEVICE_TRACKER_CLUSTERS = SetRegistry()
 LIGHT_CLUSTERS = SetRegistry()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLIENT_CHANNELS_REGISTRY = DictRegistry()
-
-RADIO_TYPES = {
-    RadioType.deconz.name: {
-        ZHA_GW_RADIO: zigpy_deconz.api.Deconz,
-        CONTROLLER: zigpy_deconz.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "Deconz",
-    },
-    RadioType.ezsp.name: {
-        ZHA_GW_RADIO: bellows.ezsp.EZSP,
-        CONTROLLER: bellows.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "EZSP",
-    },
-    RadioType.ti_cc.name: {
-        ZHA_GW_RADIO: zigpy_cc.api.API,
-        CONTROLLER: zigpy_cc.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "TI CC",
-    },
-    RadioType.xbee.name: {
-        ZHA_GW_RADIO: zigpy_xbee.api.XBee,
-        CONTROLLER: zigpy_xbee.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "XBee",
-    },
-    RadioType.zigate.name: {
-        ZHA_GW_RADIO: zigpy_zigate.api.ZiGate,
-        CONTROLLER: zigpy_zigate.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "ZiGate",
-    },
-}
 
 COMPONENT_CLUSTERS = {
     BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,

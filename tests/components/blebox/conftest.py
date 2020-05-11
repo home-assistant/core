@@ -70,8 +70,8 @@ def config_fixture():
     return {DOMAIN: {CONF_HOST: "172.100.123.4", CONF_PORT: 80}}
 
 
-@pytest.fixture
-def wrapper(request):
+@pytest.fixture(name="feature")
+def feature(request):
     """Return an entity wrapper from given fixture name."""
     return request.getfixturevalue(request.param)
 
