@@ -40,6 +40,10 @@ from homeassistant.util.decorator import Registry
 
 from .const import (
     ATTR_DISPLAY_NAME,
+    ATTR_INTERGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_SERIAL_NUMBER,
@@ -235,15 +239,32 @@ class HomeAccessory(Accessory):
     ):
         """Initialize a Accessory object."""
         super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
-        model = split_entity_id(entity_id)[0].replace("_", " ").title()
+        self.config = config or {}
+        domain = split_entity_id(entity_id)[0].replace("_", " ")
+
+        if ATTR_MANUFACTURER in self.config:
+            manufacturer = self.config[ATTR_MANUFACTURER]
+        elif ATTR_INTERGRATION in self.config:
+            manufacturer = self.config[ATTR_INTERGRATION].replace("_", " ").title()
+        else:
+            manufacturer = f"{MANUFACTURER} {domain}".title()
+        if ATTR_MODEL in self.config:
+            model = self.config[ATTR_MODEL]
+        else:
+            model = domain.title()
+        if ATTR_SOFTWARE_VERSION in self.config:
+            sw_version = self.config[ATTR_SOFTWARE_VERSION]
+        else:
+            sw_version = __version__
+
         self.set_info_service(
-            firmware_revision=__version__,
-            manufacturer=MANUFACTURER,
+            manufacturer=manufacturer,
             model=model,
             serial_number=entity_id,
+            firmware_revision=sw_version,
         )
+
         self.category = category
-        self.config = config or {}
         self.entity_id = entity_id
         self.hass = hass
         self.debounce = {}

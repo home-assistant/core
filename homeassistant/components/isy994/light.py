@@ -21,6 +21,7 @@ from .const import (
 )
 from .entity import ISYNodeEntity
 from .helpers import migrate_old_unique_ids
+from .services import async_setup_device_services, async_setup_light_services
 
 ATTR_LAST_BRIGHTNESS = "last_brightness"
 
@@ -41,6 +42,8 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, LIGHT, devices)
     async_add_entities(devices)
+    async_setup_device_services(hass)
+    async_setup_light_services(hass)
 
 
 class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
@@ -110,3 +113,11 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             and last_state.attributes[ATTR_LAST_BRIGHTNESS]
         ):
             self._last_brightness = last_state.attributes[ATTR_LAST_BRIGHTNESS]
+
+    def set_on_level(self, value):
+        """Set the ON Level for a device."""
+        self._node.set_on_level(value)
+
+    def set_ramp_rate(self, value):
+        """Set the Ramp Rate for a device."""
+        self._node.set_ramp_rate(value)

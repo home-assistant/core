@@ -14,7 +14,6 @@
       }
     },
     "abort": {
-      "already_in_progress": "Tuya configuration is already in progress.",
       "auth_failed": "[%key:common::config_flow::error::invalid_auth%]",
       "conn_error": "[%key:common::config_flow::error::cannot_connect%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
