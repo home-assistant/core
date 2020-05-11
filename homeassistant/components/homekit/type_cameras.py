@@ -33,7 +33,6 @@ from .const import (
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
-    SERV_CAMERA_RTP_STREAM_MANAGEMENT,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -44,10 +43,10 @@ from .const import (
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
+    SERV_CAMERA_RTP_STREAM_MANAGEMENT,
 )
-
 from .img_util import scale_jpeg_camera_image
-from .util import CAMERA_SCHEMA, pid_is_alive
+from .util import pid_is_alive
 
 _LOGGER = logging.getLogger(__name__)
 
