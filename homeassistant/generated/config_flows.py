@@ -141,6 +141,7 @@ FLOWS = [
     "traccar",
     "tradfri",
     "transmission",
+    "tuya",
     "twentemilieu",
     "twilio",
     "unifi",

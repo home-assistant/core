@@ -417,6 +417,7 @@ homeassistant/components/tradfri/* @ggravlingen
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli
+homeassistant/components/tuya/* @ollo69
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480
 homeassistant/components/twilio_sms/* @robbiet480
