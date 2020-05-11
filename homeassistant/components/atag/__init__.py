@@ -91,11 +91,11 @@ async def async_unload_entry(hass, entry):
 class AtagEntity(Entity):
     """Defines a base Atag entity."""
 
-    def __init__(self, coordinator: AtagDataUpdateCoordinator, entity_id: str) -> None:
+    def __init__(self, coordinator: AtagDataUpdateCoordinator, id: str) -> None:
         """Initialize the Atag entity."""
         self.coordinator = coordinator
 
-        self._id = entity_id
+        self._id = id
         self._name = DOMAIN.title()
 
     @property
