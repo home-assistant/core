@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Tuya configuration is already in progress.",
             "auth_failed": "Configured Tuya credential are incorrect.",
             "conn_error": "Connection to Tuya failed.",
             "single_instance_allowed": "Only a single configuration of Tuya is allowed."
