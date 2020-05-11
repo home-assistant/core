@@ -6,7 +6,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 
 from tests.async_mock import AsyncMock, MagicMock, patch
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 def _get_mock_powerview_userdata(userdata=None, get_resources=None):
@@ -101,6 +101,9 @@ async def test_form_import(hass):
 async def test_form_homekit(hass):
     """Test we get the form with homekit source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
+
+    ignored_config_entry = MockConfigEntry(domain=DOMAIN, data={}, source="ignore")
+    ignored_config_entry.add_to_hass(hass)
 
     mock_powerview_userdata = _get_mock_powerview_userdata()
     with patch(

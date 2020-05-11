@@ -24,7 +24,6 @@ class HideSensitiveDataFilter(logging.Filter):
         return True
 
 
-# pylint: disable=invalid-name
 class AsyncHandler:
     """Logging handler wrapper to add an async layer."""
 
@@ -36,6 +35,7 @@ class AsyncHandler:
         self._thread = threading.Thread(target=self._process)
 
         # Delegate from handler
+        # pylint: disable=invalid-name
         self.setLevel = handler.setLevel
         self.setFormatter = handler.setFormatter
         self.addFilter = handler.addFilter
@@ -94,7 +94,7 @@ class AsyncHandler:
         except asyncio.CancelledError:
             self.handler.close()
 
-    def createLock(self) -> None:
+    def createLock(self) -> None:  # pylint: disable=invalid-name
         """Ignore lock stuff."""
 
     def acquire(self) -> None:

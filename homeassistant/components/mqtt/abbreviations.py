@@ -69,6 +69,8 @@ ABBREVIATIONS = {
     "json_attr": "json_attributes",
     "json_attr_t": "json_attributes_topic",
     "json_attr_tpl": "json_attributes_template",
+    "max_mirs": "max_mireds",
+    "min_mirs": "min_mireds",
     "max_temp": "max_temp",
     "min_temp": "min_temp",
     "mode_cmd_t": "mode_command_topic",

@@ -1,10 +1,6 @@
 """Test the songpal config flow."""
 import copy
 
-from asynctest import MagicMock, patch
-from songpal import SongpalException
-from songpal.containers import InterfaceInfo
-
 from homeassistant.components import ssdp
 from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
@@ -15,13 +11,20 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from . import (
+    CONF_DATA,
+    ENDPOINT,
+    FRIENDLY_NAME,
+    HOST,
+    MODEL,
+    _create_mocked_device,
+    _patch_config_flow_device,
+)
+
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 UDN = "uuid:1234"
-FRIENDLY_NAME = "friendly name"
-HOST = "0.0.0.0"
-ENDPOINT = f"http://{HOST}:10000/sony"
-MODEL = "model"
 
 SSDP_DATA = {
     ssdp.ATTR_UPNP_UDN: UDN,
@@ -35,58 +38,18 @@ SSDP_DATA = {
     },
 }
 
-CONF_DATA = {
-    CONF_NAME: FRIENDLY_NAME,
-    CONF_ENDPOINT: ENDPOINT,
-}
-
-
-async def _async_return_value():
-    pass
-
-
-def _get_supported_methods(throw_exception):
-    def get_supported_methods():
-        if throw_exception:
-            raise SongpalException("Unable to do POST request: ")
-        return _async_return_value()
-
-    return get_supported_methods
-
-
-async def _get_interface_information():
-    return InterfaceInfo(
-        productName="product name",
-        modelName=MODEL,
-        productCategory="product category",
-        interfaceVersion="interface version",
-        serverName="server name",
-    )
-
-
-def _create_mocked_device(throw_exception=False):
-    mocked_device = MagicMock()
-    type(mocked_device).get_supported_methods = MagicMock(
-        side_effect=_get_supported_methods(throw_exception)
-    )
-    type(mocked_device).get_interface_information = MagicMock(
-        side_effect=_get_interface_information
-    )
-    return mocked_device
-
-
-def _patch_config_flow_device(mocked_device):
-    return patch(
-        "homeassistant.components.songpal.config_flow.Device",
-        return_value=mocked_device,
-    )
-
 
 def _flow_next(hass, flow_id):
     return next(
         flow
         for flow in hass.config_entries.flow.async_progress()
         if flow["flow_id"] == flow_id
+    )
+
+
+def _patch_setup():
+    return patch(
+        "homeassistant.components.songpal.async_setup_entry", return_value=True,
     )
 
 
@@ -104,19 +67,20 @@ async def test_flow_ssdp(hass):
     flow = _flow_next(hass, result["flow_id"])
     assert flow["context"]["unique_id"] == UDN
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == FRIENDLY_NAME
-    assert result["data"] == CONF_DATA
+    with _patch_setup():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == FRIENDLY_NAME
+        assert result["data"] == CONF_DATA
 
 
 async def test_flow_user(hass):
     """Test working user initialized flow."""
     mocked_device = _create_mocked_device()
 
-    with _patch_config_flow_device(mocked_device):
+    with _patch_config_flow_device(mocked_device), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER},
         )
@@ -143,7 +107,7 @@ async def test_flow_import(hass):
     """Test working import flow."""
     mocked_device = _create_mocked_device()
 
-    with _patch_config_flow_device(mocked_device):
+    with _patch_config_flow_device(mocked_device), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
@@ -153,6 +117,22 @@ async def test_flow_import(hass):
 
     mocked_device.get_supported_methods.assert_called_once()
     mocked_device.get_interface_information.assert_not_called()
+
+
+async def test_flow_import_without_name(hass):
+    """Test import flow without optional name."""
+    mocked_device = _create_mocked_device()
+
+    with _patch_config_flow_device(mocked_device), _patch_setup():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_ENDPOINT: ENDPOINT}
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == MODEL
+        assert result["data"] == {CONF_NAME: MODEL, CONF_ENDPOINT: ENDPOINT}
+
+    mocked_device.get_supported_methods.assert_called_once()
+    mocked_device.get_interface_information.assert_called_once()
 
 
 def _create_mock_config_entry(hass):

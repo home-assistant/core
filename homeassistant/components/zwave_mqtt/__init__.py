@@ -107,6 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     @callback
     def async_value_added(value):
         node = value.node
+        # Clean up node.node_id and node.id use. They are the same.
         node_id = value.node.node_id
 
         # Filter out CommandClasses we're definitely not interested in.
@@ -147,6 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             values = ZWaveDeviceEntityValues(hass, options, schema, value)
             values.async_setup()
 
+            # This is legacy and can be cleaned up since we are in the main thread:
             # We create a new list and update the reference here so that
             # the list can be safely iterated over in the main thread
             data_values[node_id] = node_data_values + [values]

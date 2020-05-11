@@ -9,7 +9,8 @@
       },
       "user": {
         "data": {
-          "usn": "Device"
+          "usn": "Device",
+          "scan_interval": "Update interval (seconds, minimal 30)"
         }
       }
     },
