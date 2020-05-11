@@ -20,6 +20,6 @@ async def test_binary_sensor(hass, generic_data):
     assert entry.disabled_by == "integration"
 
     # Test sensor for Notification CC
-    state = hass.states.get("binary_sensor.trisensor_pir_home_security_motion_detected")
+    state = hass.states.get("binary_sensor.trisensor_home_security_motion_detected")
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MOTION

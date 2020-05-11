@@ -16,8 +16,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
-    BinarySensorEntity,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
