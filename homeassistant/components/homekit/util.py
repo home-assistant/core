@@ -472,3 +472,13 @@ def find_next_available_port(start_port: int):
             if port == MAX_PORT:
                 raise
             continue
+
+
+def pid_is_alive(pid):
+    """Check to see if a process is alive."""
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        pass
+    return False
