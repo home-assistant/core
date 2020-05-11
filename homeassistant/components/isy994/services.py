@@ -267,13 +267,13 @@ def async_setup_services(hass: HomeAssistantType):
         current_unique_ids = []
 
         for config_entry_id in hass.data[DOMAIN]:
-            config_entry_owned_entities = er.async_entries_for_config_entry(
+            entries_for_this_config = er.async_entries_for_config_entry(
                 entity_registry, config_entry_id
             )
             config_ids.extend(
                 [
-                    (entity.unique_id, entity.entity_id, entity.device_id)
-                    for entity in config_entry_owned_entities
+                    (entity.unique_id, entity.entity_id)
+                    for entity in entries_for_this_config
                 ]
             )
 
@@ -295,12 +295,12 @@ def async_setup_services(hass: HomeAssistantType):
                     current_unique_ids.append(f"{uuid}_{node.address}")
 
         extra_entities = [
-            (entity_id, device_id)
-            for unique_id, entity_id, device_id in config_ids
+            (entity_id)
+            for unique_id, entity_id in config_ids
             if unique_id not in current_unique_ids
         ]
 
-        for entity_id, _ in extra_entities:
+        for entity_id in extra_entities:
             if entity_registry.async_is_registered(entity_id):
                 entity_registry.async_remove(entity_id)
 
