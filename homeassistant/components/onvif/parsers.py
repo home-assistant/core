@@ -329,6 +329,7 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
             dt_util.as_local(
                 dt_util.parse_datetime(msg.Message._value_1.Data.SimpleItem[0].Value)
             ),
+            entity_enabled=False,
         )
     except (AttributeError, KeyError):
         return None
