@@ -5,8 +5,21 @@ from inspect import getmodule
 import logging
 
 from pyhap.accessory import Accessory, Bridge
-from pyhap.accessory_driver import AccessoryDriver
-from pyhap.const import CATEGORY_OTHER
+from pyhap.accessory_driver import (
+    CHAR_STAT_OK,
+    SERVICE_COMMUNICATION_FAILURE,
+    AccessoryDriver,
+)
+from pyhap.characteristic import CharacteristicError
+from pyhap.const import (
+    CATEGORY_OTHER,
+    HAP_REPR_AID,
+    HAP_REPR_CHARS,
+    HAP_REPR_IID,
+    HAP_REPR_STATUS,
+    HAP_REPR_VALUE,
+    STANDALONE_AID,
+)
 
 from homeassistant.components import cover, vacuum
 from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
@@ -25,6 +38,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
@@ -40,6 +54,10 @@ from homeassistant.util.decorator import Registry
 
 from .const import (
     ATTR_DISPLAY_NAME,
+    ATTR_INTERGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_SERIAL_NUMBER,
@@ -235,15 +253,32 @@ class HomeAccessory(Accessory):
     ):
         """Initialize a Accessory object."""
         super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
-        model = split_entity_id(entity_id)[0].replace("_", " ").title()
+        self.config = config or {}
+        domain = split_entity_id(entity_id)[0].replace("_", " ")
+
+        if ATTR_MANUFACTURER in self.config:
+            manufacturer = self.config[ATTR_MANUFACTURER]
+        elif ATTR_INTERGRATION in self.config:
+            manufacturer = self.config[ATTR_INTERGRATION].replace("_", " ").title()
+        else:
+            manufacturer = f"{MANUFACTURER} {domain}".title()
+        if ATTR_MODEL in self.config:
+            model = self.config[ATTR_MODEL]
+        else:
+            model = domain.title()
+        if ATTR_SOFTWARE_VERSION in self.config:
+            sw_version = self.config[ATTR_SOFTWARE_VERSION]
+        else:
+            sw_version = __version__
+
         self.set_info_service(
-            firmware_revision=__version__,
-            manufacturer=MANUFACTURER,
+            manufacturer=manufacturer,
             model=model,
             serial_number=entity_id,
+            firmware_revision=sw_version,
         )
+
         self.category = category
-        self.config = config or {}
         self.entity_id = entity_id
         self.hass = hass
         self.debounce = {}
@@ -299,6 +334,11 @@ class HomeAccessory(Accessory):
         self._char_low_battery = serv_battery.configure_char(
             CHAR_STATUS_LOW_BATTERY, value=0
         )
+
+    @property
+    def available(self):
+        """Return if accessory is available."""
+        return self.hass.states.get(self.entity_id).state != STATE_UNAVAILABLE
 
     async def run(self):
         """Handle accessory driver started event.
@@ -510,3 +550,33 @@ class HomeDriver(AccessoryDriver):
             self.state.pincode,
             self.accessory.xhm_uri(),
         )
+
+    def get_characteristics(self, char_ids):
+        """Build a get characteristics response."""
+        chars = []
+        for aid_iid in char_ids:
+            aid, iid = (int(i) for i in aid_iid.split("."))
+            rep = {
+                HAP_REPR_AID: aid,
+                HAP_REPR_IID: iid,
+                HAP_REPR_STATUS: SERVICE_COMMUNICATION_FAILURE,
+            }
+
+            if aid == STANDALONE_AID:
+                char = self.accessory.iid_manager.get_obj(iid)
+                available = True
+            else:
+                acc = self.accessory.accessories.get(aid)
+                available = acc.available
+                char = acc.iid_manager.get_obj(iid)
+
+            if available:
+                try:
+                    rep[HAP_REPR_VALUE] = char.get_value()
+                    rep[HAP_REPR_STATUS] = CHAR_STAT_OK
+                except CharacteristicError:
+                    _LOGGER.error("Error getting value for characteristic %s.", id)
+
+            chars.append(rep)
+        _LOGGER.debug("Get chars response: %s", chars)
+        return {HAP_REPR_CHARS: chars}
