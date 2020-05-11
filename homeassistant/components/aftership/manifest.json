@@ -1,7 +1,12 @@
 {
   "domain": "aftership",
-  "name": "AfterShip",
+  "name": "AafterShip",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aftership",
   "requirements": ["pyaftership==0.1.2"],
-  "codeowners": []
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@a1ex4"]
 }

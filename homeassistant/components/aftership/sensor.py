@@ -5,13 +5,13 @@ import logging
 from pyaftership.tracker import Tracking
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, HTTP_OK
+from homeassistant.const import ATTR_ATTRIBUTION, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.config_entries import ConfigEntry
 
 from .const import DOMAIN
 
@@ -48,18 +48,13 @@ REMOVE_TRACKING_SERVICE_SCHEMA = vol.Schema(
     {vol.Required(CONF_SLUG): cv.string, vol.Required(CONF_TRACKING_NUMBER): cv.string}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
+async def async_setup_entry(hass, entry: ConfigEntry, async_add_entities) -> None:
+    """Set up the AfterShip Sensor from ConfigEntry."""
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the AfterShip sensor platform."""
-    apikey = config[CONF_API_KEY]
-    name = config[CONF_NAME]
+    apikey = entry.data["api_key"]
+    name = entry.data["name"]
+    unique_id = entry.data["unique_id"]
 
     session = async_get_clientsession(hass)
     aftership = Tracking(hass.loop, session, apikey)
@@ -72,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         return
 
-    instance = AfterShipSensor(aftership, name)
+    instance = AfterShipSensor(aftership, name, unique_id)
 
     async_add_entities([instance], True)
 
@@ -111,11 +106,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AfterShipSensor(Entity):
     """Representation of a AfterShip sensor."""
 
-    def __init__(self, aftership, name):
+    def __init__(self, aftership, name, unique_id):
         """Initialize the sensor."""
         self._attributes = {}
         self._name = name
         self._state = None
+        self._unique_id = unique_id
         self.aftership = aftership
 
     @property
@@ -142,6 +138,11 @@ class AfterShipSensor(Entity):
     def icon(self):
         """Icon to use in the frontend."""
         return ICON
+
+    @property
+    def unique_id(self):
+        """Return the unique_id of this entity."""
+        return self._unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""

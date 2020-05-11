@@ -1,0 +1,23 @@
+{
+  "title": "AfterShip",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup AfterShip",
+        "description": "Grab your [AfterShip API key](https://admin.aftership.com/settings/api-keys) to authenticate with Home Assistant.",
+        "data": {
+          "name": "Integration name",
+          "api_key": "API key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication, check your API key",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "AfterShip is already configured"
+    }
+  }
+}
