@@ -5,7 +5,7 @@ import logging
 import pyeiscp
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_SELECT_SOUND_MODE,
@@ -285,7 +285,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(active_zones.values())
 
 
-class OnkyoAVR(MediaPlayerDevice):
+class OnkyoAVR(MediaPlayerEntity):
     """Entity reading values from Onkyo AVR protocol."""
 
     def __init__(self, avr, name, sources, zone, max_volume):
