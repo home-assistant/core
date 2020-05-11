@@ -599,6 +599,9 @@ pylinky==0.4.0
 # homeassistant.components.litejet
 pylitejet==0.1
 
+# homeassistant.components.lutron_caseta
+pylutron-caseta==0.6.1
+
 # homeassistant.components.mailgun
 pymailgunner==1.4
 

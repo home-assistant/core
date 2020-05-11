@@ -3,7 +3,7 @@
     "step": {
       "import_failed": {
         "title": "Failed to import Caséta bridge configuration.",
-        "description": "Couldn’t import Caséta bridge (host: {host}) from configuration.yaml."
+        "description": "Couldn’t setup bridge (host: {host}) imported from configuration.yaml."
       }
     },
     "error": {
