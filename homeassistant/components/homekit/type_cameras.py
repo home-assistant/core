@@ -12,6 +12,7 @@ from pyhap.const import CATEGORY_CAMERA
 
 from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.core import callback
 from homeassistant.util import get_local_ip
 
 from .accessories import TYPES, HomeAccessory
@@ -144,7 +145,8 @@ class Camera(HomeAccessory, PyhapCamera):
             options=options,
         )
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Handle state change to update HomeKit value."""
         pass  # pylint: disable=unnecessary-pass
 
