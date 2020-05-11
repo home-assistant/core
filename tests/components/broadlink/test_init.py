@@ -80,7 +80,6 @@ async def test_learn_timeout(hass):
     device = BroadlinkDevice(hass, mock_api)
 
     await async_setup_service(hass, DUMMY_HOST, device)
-    await hass.async_block_till_done()
 
     now = utcnow()
 
