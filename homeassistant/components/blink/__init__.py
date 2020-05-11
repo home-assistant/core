@@ -55,22 +55,9 @@ async def async_setup(hass, config):
         return True
 
     conf = config.get(DOMAIN, {})
-    username = conf[CONF_USERNAME]
-    password = conf[CONF_PASSWORD]
-    scan_interval = conf[CONF_SCAN_INTERVAL]
-    hass.data[DOMAIN] = blinkpy.Blink(
-        username=username,
-        password=password,
-        motion_interval=DEFAULT_OFFSET,
-        legacy_subdomain=False,
-        no_prompt=True,
-        device_id="Home Assistant",
-    )
-    hass.data[DOMAIN].refresh_rate = scan_interval
     hass.data[BLINK_CONFIG] = conf
-    await hass.async_add_executor_job(hass.data[DOMAIN].start)
 
-    if not hass.config_entries.async_entries(DOMAIN) and hass.data[DOMAIN]:
+    if not hass.config_entries.async_entries(DOMAIN) and hass.data[BLINK_CONFIG]:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}

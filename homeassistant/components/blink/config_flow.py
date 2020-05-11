@@ -29,9 +29,6 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
         stored_username = ""
         stored_password = ""
         stored_interval = DEFAULT_SCAN_INTERVAL
@@ -90,7 +87,9 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             pin = user_input[CONF_PIN]
             if not pin or pin.lower() == "none":
                 pin = None
-            if self.blink.login_handler.send_auth_key(self.blink, pin):
+            if await self.hass.async_add_executor_job(
+                self.blink.login_handler.send_auth_key, self.blink, pin
+            ):
                 await self.hass.async_add_executor_job(self.blink.setup_post_verify)
                 self.hass.data[DOMAIN] = self.blink
                 config_data = {
