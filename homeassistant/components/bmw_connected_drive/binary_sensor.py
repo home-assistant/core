@@ -28,30 +28,29 @@ SENSOR_TYPES_ELEC = {
 SENSOR_TYPES_ELEC.update(SENSOR_TYPES)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the BMW sensors."""
-    accounts = hass.data[BMW_DOMAIN]
-    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the BMW ConnectedDrive binary sensors from config entry."""
+    account = hass.data[BMW_DOMAIN][config_entry.entry_id]
     devices = []
-    for account in accounts:
-        for vehicle in account.account.vehicles:
-            if vehicle.has_hv_battery:
-                _LOGGER.debug("BMW with a high voltage battery")
-                for key, value in sorted(SENSOR_TYPES_ELEC.items()):
-                    if key in vehicle.available_attributes:
-                        device = BMWConnectedDriveSensor(
-                            account, vehicle, key, value[0], value[1], value[2]
-                        )
-                        devices.append(device)
-            elif vehicle.has_internal_combustion_engine:
-                _LOGGER.debug("BMW with an internal combustion engine")
-                for key, value in sorted(SENSOR_TYPES.items()):
-                    if key in vehicle.available_attributes:
-                        device = BMWConnectedDriveSensor(
-                            account, vehicle, key, value[0], value[1], value[2]
-                        )
-                        devices.append(device)
-    add_entities(devices, True)
+
+    for vehicle in account.account.vehicles:
+        if vehicle.has_hv_battery:
+            _LOGGER.debug("BMW with a high voltage battery")
+            for key, value in sorted(SENSOR_TYPES_ELEC.items()):
+                if key in vehicle.available_attributes:
+                    device = BMWConnectedDriveSensor(
+                        account, vehicle, key, value[0], value[1], value[2]
+                    )
+                    devices.append(device)
+        elif vehicle.has_internal_combustion_engine:
+            _LOGGER.debug("BMW with an internal combustion engine")
+            for key, value in sorted(SENSOR_TYPES.items()):
+                if key in vehicle.available_attributes:
+                    device = BMWConnectedDriveSensor(
+                        account, vehicle, key, value[0], value[1], value[2]
+                    )
+                    devices.append(device)
+    async_add_entities(devices, True)
 
 
 class BMWConnectedDriveSensor(BinarySensorEntity):
@@ -70,6 +69,17 @@ class BMWConnectedDriveSensor(BinarySensorEntity):
         self._device_class = device_class
         self._icon = icon
         self._state = None
+
+    @property
+    def device_info(self) -> dict:
+        """Return info for device registry."""
+        return {
+            "identifiers": {(BMW_DOMAIN, self._vehicle.vin)},
+            "sw_version": self._vehicle.vin,
+            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
+            "model": self._vehicle.name,
+            "manufacturer": self._vehicle.attributes.get("brand"),
+        }
 
     @property
     def should_poll(self) -> bool:

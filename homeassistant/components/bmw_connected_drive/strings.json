@@ -1,0 +1,35 @@
+{
+  "title": "BMW ConnectedDrive",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to BMW ConnectedDrive",
+        "data": {
+          "username": "Email",
+          "password": "Password",
+          "region": "ConnectedDrive Region",
+          "read_only": "Read-only"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "account_options": {
+        "title": "BMW ConnectedDrive settings",
+        "data": {
+          "read_only": "Read-only (only sensors and notify, no execution of services, no lock)",
+          "use_location": "Use Home Assistant location for car location polls (required for non i3/i8 vehicles produced before 7/2014)"
+        }
+      }
+    }
+  }
+}
