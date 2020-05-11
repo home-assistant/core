@@ -3,22 +3,18 @@ DOMAIN = "transmission"
 
 SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
 
-ORDER_AGE = "age"
-ORDER_AGE_DESC = "age_desc"
-ORDER_ID = "id"
-ORDER_ID_DESC = "id_desc"
-ORDER_RATIO = "ratio"
-ORDER_RATIO_DESC = "ratio_desc"
+ORDER_NEWEST_FIRST = "newest_first"
+ORDER_OLDEST_FIRST = "oldest_first"
+ORDER_BEST_RATIO_FIRST = "best_ratio_first"
+ORDER_WORST_RATIO_FIRST = "worst_ratio_first"
 
 SUPPORTED_ORDER_MODES = {
-    ORDER_AGE: lambda torrents: sorted(
+    ORDER_NEWEST_FIRST: lambda torrents: sorted(
         torrents, key=lambda t: t.addedDate, reverse=True
     ),
-    ORDER_AGE_DESC: lambda torrents: sorted(torrents, key=lambda t: t.addedDate),
-    ORDER_ID: lambda torrents: sorted(torrents, key=lambda t: t.id),
-    ORDER_ID_DESC: lambda torrents: sorted(torrents, key=lambda t: t.id, reverse=True),
-    ORDER_RATIO: lambda torrents: sorted(torrents, key=lambda t: t.ratio),
-    ORDER_RATIO_DESC: lambda torrents: sorted(
+    ORDER_OLDEST_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.addedDate),
+    ORDER_WORST_RATIO_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.ratio),
+    ORDER_BEST_RATIO_FIRST: lambda torrents: sorted(
         torrents, key=lambda t: t.ratio, reverse=True
     ),
 }
@@ -28,7 +24,7 @@ CONF_ORDER = "order"
 
 DEFAULT_DELETE_DATA = False
 DEFAULT_LIMIT = 10
-DEFAULT_ORDER = ORDER_AGE_DESC
+DEFAULT_ORDER = ORDER_OLDEST_FIRST
 DEFAULT_NAME = "Transmission"
 DEFAULT_PORT = 9091
 DEFAULT_SCAN_INTERVAL = 120
