@@ -32,6 +32,8 @@ SERVICE_PULL_DEVICES = "pull_devices"
 
 MAGICHOME_TYPE_TO_HA = ["light", "scene"]
 
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -131,7 +133,7 @@ class MagicHomeDevice(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "magichome.{}".format(self.magichome.object_id())
+        return ENTITY_ID_FORMAT.format(self.magichome.object_id())
 
     @property
     def name(self):
