@@ -1,4 +1,14 @@
 {
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Daikin",
+        "data": {
+          "temperature_steps": "Use 0.5 steps for target temperature (default is 1.0)."
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {

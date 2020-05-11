@@ -63,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     conf = entry.data
     daikin_api = await daikin_api_setup(
         hass,
+        entry,
         conf[CONF_HOST],
         conf.get(CONF_KEY),
         conf.get(CONF_UUID),
@@ -92,7 +93,7 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-async def daikin_api_setup(hass, host, key, uuid, password):
+async def daikin_api_setup(hass, entry, host, key, uuid, password):
     """Create a Daikin instance only once."""
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
@@ -111,7 +112,7 @@ async def daikin_api_setup(hass, host, key, uuid, password):
         _LOGGER.error("Unexpected error creating device %s", host)
         return None
 
-    api = DaikinApi(device)
+    api = DaikinApi(device, entry)
 
     return api
 
@@ -119,9 +120,10 @@ async def daikin_api_setup(hass, host, key, uuid, password):
 class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
-    def __init__(self, device: Appliance):
+    def __init__(self, device: Appliance, entry: ConfigEntry):
         """Initialize the Daikin Handle."""
         self.device = device
+        self.entry = entry
         self.name = device.values.get("name", "Daikin AC")
         self.ip_address = device.device_ip
         self._available = True

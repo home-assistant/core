@@ -10,8 +10,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.core import callback
 
-from .const import CONF_KEY, CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
+from .const import CONF_KEY, CONF_TEMPERATURE_STEPS, CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,12 @@ class FlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return DaikinOptionsFlowHandler(config_entry)
 
     def _create_entry(self, host, mac, key=None, uuid=None, password=None):
         """Register new entry."""
@@ -115,3 +122,30 @@ class FlowHandler(config_entries.ConfigFlow):
         """Initialize step from discovery."""
         _LOGGER.info("Discovered device: %s", user_input)
         return self._create_entry(user_input[KEY_IP], user_input[KEY_MAC])
+
+
+class DaikinOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Daikin client options."""
+
+    def __init__(self, config_entry):
+        """Initialize Daikin options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Daikin options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_TEMPERATURE_STEPS,
+                        default=self.config_entry.options.get(
+                            CONF_TEMPERATURE_STEPS, False
+                        ),
+                    ): bool
+                }
+            ),
+        )
