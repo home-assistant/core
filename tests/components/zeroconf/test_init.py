@@ -4,6 +4,7 @@ from zeroconf import InterfaceChoice, ServiceInfo, ServiceStateChange
 
 from homeassistant.components import zeroconf
 from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
 
@@ -21,7 +22,7 @@ PROPERTIES = {
 @pytest.fixture
 def mock_zeroconf():
     """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.Zeroconf") as mock_zc:
+    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
         yield mock_zc.return_value
 
 
@@ -77,6 +78,10 @@ async def test_setup(hass, mock_zeroconf):
     for matching_components in zc_gen.ZEROCONF.values():
         expected_flow_calls += len(matching_components)
     assert len(mock_config_flow.mock_calls) == expected_flow_calls
+
+    # Test instance is set.
+    assert "zeroconf" in hass.data
+    assert await hass.components.zeroconf.async_get_instance() is mock_zeroconf
 
 
 async def test_setup_with_default_interface(hass, mock_zeroconf):
@@ -171,3 +176,11 @@ async def test_info_from_service_non_utf8(hass):
     assert len(info["properties"]) <= len(raw_info)
     assert "non-utf8-value" not in info["properties"]
     assert raw_info["non-utf8-value"] is NON_UTF8_VALUE
+
+
+async def test_get_instance(hass, mock_zeroconf):
+    """Test we get an instance."""
+    assert await hass.components.zeroconf.async_get_instance() is mock_zeroconf
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert len(mock_zeroconf.ha_close.mock_calls) == 1
