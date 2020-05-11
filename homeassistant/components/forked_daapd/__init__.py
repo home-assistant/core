@@ -20,9 +20,15 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Remove forked-daapd component."""
     status = await hass.config_entries.async_forward_entry_unload(entry, MP_DOMAIN)
-    if status and hass.data.get(DOMAIN):
-        hass.data[DOMAIN][HASS_DATA_UPDATER_KEY].websocket_handler.cancel()
-        for remove_listener in hass.data[DOMAIN][HASS_DATA_REMOVE_LISTENERS_KEY]:
+    if status and hass.data.get(DOMAIN) and hass.data[DOMAIN].get(entry.unique_id):
+        hass.data[DOMAIN][entry.unique_id][
+            HASS_DATA_UPDATER_KEY
+        ].websocket_handler.cancel()
+        for remove_listener in hass.data[DOMAIN][entry.unique_id][
+            HASS_DATA_REMOVE_LISTENERS_KEY
+        ]:
             remove_listener()
-        del hass.data[DOMAIN]
+        del hass.data[DOMAIN][entry.unique_id]
+        if not hass.data[DOMAIN]:
+            del hass.data[DOMAIN]
     return status

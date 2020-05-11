@@ -28,8 +28,8 @@ from homeassistant.util.dt import utcnow
 
 from .const import (
     CALLBACK_TIMEOUT,
-    CONF_PIPE_CONTROL,
-    CONF_PIPE_CONTROL_PORT,
+    CONF_LIBRESPOT_JAVA_PORT,
+    CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
     CONF_TTS_VOLUME,
     DEFAULT_TTS_PAUSE_TIME,
@@ -37,12 +37,10 @@ from .const import (
     DEFAULT_UNMUTE_VOLUME,
     DOMAIN,
     FD_NAME,
-    HASS_DATA_OUTPUTS_KEY,
     HASS_DATA_REMOVE_LISTENERS_KEY,
     HASS_DATA_UPDATER_KEY,
     KNOWN_PIPES,
     PIPE_FUNCTION_MAP,
-    SERVER_UNIQUE_ID,
     SIGNAL_ADD_ZONES,
     SIGNAL_CONFIG_OPTIONS_UPDATE,
     SIGNAL_UPDATE_DATABASE,
@@ -85,48 +83,58 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_add_zones(api, outputs):
         zone_entities = []
         for output in outputs:
-            zone_entities.append(ForkedDaapdZone(api, output))
+            zone_entities.append(ForkedDaapdZone(api, output, config_entry.unique_id))
         async_add_entities(zone_entities, False)
 
     remove_add_zones_listener = async_dispatcher_connect(
-        hass, SIGNAL_ADD_ZONES, async_add_zones
+        hass, SIGNAL_ADD_ZONES + config_entry.unique_id, async_add_zones
     )
     remove_entry_listener = config_entry.add_update_listener(update_listener)
 
-    hass.data[DOMAIN] = {
+    if not hass.data.get(DOMAIN):
+        hass.data[DOMAIN] = {config_entry.unique_id: {}}
+    hass.data[DOMAIN][config_entry.unique_id] = {
         HASS_DATA_REMOVE_LISTENERS_KEY: [
             remove_add_zones_listener,
             remove_entry_listener,
-        ],
-        HASS_DATA_OUTPUTS_KEY: [],
+        ]
     }
     async_add_entities([forked_daapd_master], False)
-    forked_daapd_updater = ForkedDaapdUpdater(hass, forked_daapd_api)
+    forked_daapd_updater = ForkedDaapdUpdater(
+        hass, forked_daapd_api, config_entry.unique_id
+    )
     await forked_daapd_updater.async_init()
-    hass.data[DOMAIN][HASS_DATA_UPDATER_KEY] = forked_daapd_updater
+    hass.data[DOMAIN][config_entry.unique_id][
+        HASS_DATA_UPDATER_KEY
+    ] = forked_daapd_updater
 
 
 async def update_listener(hass, entry):
     """Handle options update."""
-    async_dispatcher_send(hass, SIGNAL_CONFIG_OPTIONS_UPDATE, entry.options)
+    async_dispatcher_send(
+        hass, SIGNAL_CONFIG_OPTIONS_UPDATE + entry.unique_id, entry.options
+    )
 
 
 class ForkedDaapdZone(MediaPlayerDevice):
     """Representation of a forked-daapd output."""
 
-    def __init__(self, api, output):
+    def __init__(self, api, output, machine_id):
         """Initialize the ForkedDaapd Zone."""
         self._api = api
         self._output = output
         self._output_id = output["id"]
         self._last_volume = DEFAULT_UNMUTE_VOLUME  # used for mute/unmute
         self._available = True
+        self._machine_id = machine_id
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_OUTPUTS, self._async_update_output_callback
+                self.hass,
+                SIGNAL_UPDATE_OUTPUTS + self._machine_id,
+                self._async_update_output_callback,
             )
         )
 
@@ -143,7 +151,7 @@ class ForkedDaapdZone(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return unique ID."""
-        return self._output_id
+        return f"{self._machine_id}-{self._output_id}"
 
     @property
     def should_poll(self) -> bool:
@@ -173,7 +181,7 @@ class ForkedDaapdZone(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the zone."""
-        return f"{FD_NAME} output ({self._output['name']})"
+        return f"{FD_NAME} {self._machine_id} output ({self._output['name']})"
 
     @property
     def state(self):
@@ -250,35 +258,50 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         self._pause_requested = False
         self._sources_uris = {}
         self._source = SOURCE_NAME_DEFAULT
+        self._max_playlists = None
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_PLAYER, self._update_player
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_UPDATE_QUEUE, self._update_queue)
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_OUTPUTS, self._update_outputs
+                self.hass,
+                SIGNAL_UPDATE_PLAYER + self._config_entry.unique_id,
+                self._update_player,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_MASTER, self._update_callback
+                self.hass,
+                SIGNAL_UPDATE_QUEUE + self._config_entry.unique_id,
+                self._update_queue,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_CONFIG_OPTIONS_UPDATE, self.update_options
+                self.hass,
+                SIGNAL_UPDATE_OUTPUTS + self._config_entry.unique_id,
+                self._update_outputs,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_DATABASE, self._update_database
+                self.hass,
+                SIGNAL_UPDATE_MASTER + self._config_entry.unique_id,
+                self._update_callback,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_CONFIG_OPTIONS_UPDATE + self._config_entry.unique_id,
+                self.update_options,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_DATABASE + self._config_entry.unique_id,
+                self._update_database,
             )
         )
 
@@ -291,14 +314,17 @@ class ForkedDaapdMaster(MediaPlayerDevice):
     @callback
     def update_options(self, options):
         """Update forked-daapd server options."""
-        if options.get(CONF_PIPE_CONTROL) == "librespot-java":
+        if CONF_LIBRESPOT_JAVA_PORT in options:
             self._pipe_control_api["librespot-java"] = LibrespotJavaAPI(
-                self._clientsession, self._ip_address, options[CONF_PIPE_CONTROL_PORT]
+                self._clientsession, self._ip_address, options[CONF_LIBRESPOT_JAVA_PORT]
             )
         if CONF_TTS_PAUSE_TIME in options:
             self._tts_pause_time = options[CONF_TTS_PAUSE_TIME]
         if CONF_TTS_VOLUME in options:
             self._tts_volume = options[CONF_TTS_VOLUME]
+        if CONF_MAX_PLAYLISTS in options:
+            # sources not updated until next _update_database call
+            self._max_playlists = options[CONF_MAX_PLAYLISTS]
 
     @callback
     def _update_player(self, player, event):
@@ -337,18 +363,18 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         self._sources_uris = {SOURCE_NAME_CLEAR: None, SOURCE_NAME_DEFAULT: None}
         if pipes:
             self._sources_uris.update(
-                dict(
-                    (pipe["title"] + " (pipe)", pipe["uri"])
+                {
+                    pipe["title"] + " (pipe)": pipe["uri"]
                     for pipe in pipes
                     if pipe["title"] in KNOWN_PIPES
-                )
+                }
             )
         if playlists:
             self._sources_uris.update(
-                dict(
-                    (playlist["name"] + " (playlist)", playlist["uri"])
-                    for playlist in playlists
-                )
+                {
+                    playlist["name"] + " (playlist)": playlist["uri"]
+                    for playlist in playlists[: self._max_playlists]
+                }
             )
         event.set()
 
@@ -366,7 +392,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return unique ID."""
-        return SERVER_UNIQUE_ID
+        return self._config_entry.unique_id
 
     @property
     def should_poll(self) -> bool:
@@ -421,7 +447,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{FD_NAME} server"
+        return f"{FD_NAME} {self._config_entry.unique_id} server"
 
     @property
     def state(self):
@@ -718,12 +744,13 @@ class ForkedDaapdMaster(MediaPlayerDevice):
 class ForkedDaapdUpdater:
     """Manage updates for the forked-daapd device."""
 
-    def __init__(self, hass, api):
+    def __init__(self, hass, api, machine_id):
         """Initialize."""
         self.hass = hass
         self._api = api
         self.websocket_handler = None
         self._all_output_ids = set()
+        self._machine_id = machine_id
 
     async def async_init(self):
         """Perform async portion of class initialization."""
@@ -743,8 +770,8 @@ class ForkedDaapdUpdater:
             _LOGGER.error("Invalid websocket port")
 
     def _disconnected_callback(self):
-        async_dispatcher_send(self.hass, SIGNAL_UPDATE_MASTER, False)
-        async_dispatcher_send(self.hass, SIGNAL_UPDATE_OUTPUTS, [])
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_MASTER + self._machine_id, False)
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_OUTPUTS + self._machine_id, [])
 
     async def _update(self, update_types):
         """Private update method."""
@@ -757,7 +784,10 @@ class ForkedDaapdUpdater:
             queue = await self._api.get_request("queue")
             update_events["queue"] = asyncio.Event()
             async_dispatcher_send(
-                self.hass, SIGNAL_UPDATE_QUEUE, queue, update_events["queue"]
+                self.hass,
+                SIGNAL_UPDATE_QUEUE + self._machine_id,
+                queue,
+                update_events["queue"],
             )
         # order of below don't matter
         if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
@@ -766,7 +796,10 @@ class ForkedDaapdUpdater:
                 "outputs"
             ] = asyncio.Event()  # only for master, zones should ignore
             async_dispatcher_send(
-                self.hass, SIGNAL_UPDATE_OUTPUTS, outputs, update_events["outputs"]
+                self.hass,
+                SIGNAL_UPDATE_OUTPUTS + self._machine_id,
+                outputs,
+                update_events["outputs"],
             )
             self._add_zones(outputs)
         if not {"database"}.isdisjoint(update_types):
@@ -776,7 +809,7 @@ class ForkedDaapdUpdater:
             update_events["database"] = asyncio.Event()
             async_dispatcher_send(
                 self.hass,
-                SIGNAL_UPDATE_DATABASE,
+                SIGNAL_UPDATE_DATABASE + self._machine_id,
                 pipes,
                 playlists,
                 update_events["database"],
@@ -793,13 +826,18 @@ class ForkedDaapdUpdater:
                     "queue"
                 ].wait()  # make sure queue done before player for async_play_media
             async_dispatcher_send(
-                self.hass, SIGNAL_UPDATE_PLAYER, player, update_events["player"]
+                self.hass,
+                SIGNAL_UPDATE_PLAYER + self._machine_id,
+                player,
+                update_events["player"],
             )
         if update_events:
             await asyncio.wait(
                 [event.wait() for event in update_events.values()]
             )  # make sure callbacks done before update
-            async_dispatcher_send(self.hass, SIGNAL_UPDATE_MASTER, True)
+            async_dispatcher_send(
+                self.hass, SIGNAL_UPDATE_MASTER + self._machine_id, True
+            )
 
     def _add_zones(self, outputs):
         outputs_to_add = []
@@ -809,5 +847,8 @@ class ForkedDaapdUpdater:
                 outputs_to_add.append(output)
         if outputs_to_add:
             async_dispatcher_send(
-                self.hass, SIGNAL_ADD_ZONES, self._api, outputs_to_add
+                self.hass,
+                SIGNAL_ADD_ZONES + self._machine_id,
+                self._api,
+                outputs_to_add,
             )

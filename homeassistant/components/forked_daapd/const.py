@@ -17,12 +17,10 @@ from homeassistant.components.media_player.const import (
 )
 
 CALLBACK_TIMEOUT = 8  # max time between command and callback from forked-daapd server
-CONFIG_FLOW_UNIQUE_ID = "forked-daapd"
-CONF_PIPE_CONTROL = "pipe_control"
-CONF_PIPE_CONTROL_PORT = "pipe_control_port"
+CONF_LIBRESPOT_JAVA_PORT = "librespot_java_port"
+CONF_MAX_PLAYLISTS = "max_playlists"
 CONF_TTS_PAUSE_TIME = "tts_pause_time"
 CONF_TTS_VOLUME = "tts_volume"
-DEFAULT_PIPE_CONTROL_PORT = 24879
 DEFAULT_PORT = 3689
 DEFAULT_SERVER_NAME = "My Server"
 DEFAULT_TTS_PAUSE_TIME = 1.2
@@ -31,7 +29,6 @@ DEFAULT_UNMUTE_VOLUME = 0.6
 DOMAIN = "forked_daapd"  # key for hass.data
 FD_NAME = "forked-daapd"
 HASS_DATA_REMOVE_LISTENERS_KEY = "REMOVE_LISTENERS"
-HASS_DATA_OUTPUTS_KEY = "OUTPUTS"
 HASS_DATA_UPDATER_KEY = "UPDATER"
 KNOWN_PIPES = {"librespot-java"}
 PIPE_FUNCTION_MAP = {
@@ -43,7 +40,6 @@ PIPE_FUNCTION_MAP = {
         "async_media_next_track": "player_next",
     }
 }
-SERVER_UNIQUE_ID = "server"
 SIGNAL_ADD_ZONES = "forked-daapd_add_zones"
 SIGNAL_CONFIG_OPTIONS_UPDATE = "forked-daapd_config_options_update"
 SIGNAL_UPDATE_DATABASE = "forked-daapd_update_database"

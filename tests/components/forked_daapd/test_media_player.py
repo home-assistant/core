@@ -3,11 +3,10 @@
 import pytest
 
 from homeassistant.components.forked_daapd.const import (
-    CONF_PIPE_CONTROL,
-    CONF_PIPE_CONTROL_PORT,
+    CONF_LIBRESPOT_JAVA_PORT,
+    CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
     CONF_TTS_VOLUME,
-    CONFIG_FLOW_UNIQUE_ID,
     DOMAIN,
     SOURCE_NAME_CLEAR,
     SOURCE_NAME_DEFAULT,
@@ -66,17 +65,15 @@ from homeassistant.const import (
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
-TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
+TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_efefefef_server"
 TEST_ZONE_ENTITY_NAMES = [
-    "media_player.forked_daapd_output_" + x
+    "media_player.forked_daapd_efefefef_output_" + x
     for x in ["kitchen", "computer", "daapd_fifo"]
 ]
-TEST_MASTER_FRIENDLY_NAME = "forked-daapd server"
-TEST_ZONE_FRIENDLY_NAME = "forked-daapd output (kitchen)"
 
 OPTIONS_DATA = {
-    CONF_PIPE_CONTROL: "librespot-java",
-    CONF_PIPE_CONTROL_PORT: "123",
+    CONF_LIBRESPOT_JAVA_PORT: "123",
+    CONF_MAX_PLAYLISTS: 8,
     CONF_TTS_PAUSE_TIME: 0,
     CONF_TTS_VOLUME: 0.25,
 }
@@ -264,7 +261,7 @@ def config_entry_fixture():
         system_options={},
         source=SOURCE_USER,
         connection_class=CONN_CLASS_LOCAL_PUSH,
-        unique_id=CONFIG_FLOW_UNIQUE_ID,
+        unique_id="EFEFEFEF",
         entry_id=1,
     )
 
@@ -337,7 +334,8 @@ def test_master_state(hass, mock_api_object):
     """Test master state attributes."""
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert state.state == STATE_PAUSED
-    assert state.attributes[ATTR_FRIENDLY_NAME] == TEST_MASTER_FRIENDLY_NAME
+    assert state.attributes[ATTR_FRIENDLY_NAME][0:12] == "forked-daapd"
+    assert state.attributes[ATTR_FRIENDLY_NAME][-6:] == "server"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
@@ -370,7 +368,8 @@ async def test_zone(hass, mock_api_object):
     """Test zone attributes and methods."""
     zone_entity_name = TEST_ZONE_ENTITY_NAMES[0]
     state = hass.states.get(zone_entity_name)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == TEST_ZONE_FRIENDLY_NAME
+    assert state.attributes[ATTR_FRIENDLY_NAME][0:12] == "forked-daapd"
+    assert state.attributes[ATTR_FRIENDLY_NAME][-16:] == "output (kitchen)"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES_ZONE
     assert state.state == STATE_ON
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.5
