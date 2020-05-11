@@ -40,10 +40,10 @@ def _setup_entities(hass, dev_ids, platform):
     tuya = hass.data[DOMAIN][TUYA_DATA]
     entities = []
     for dev_id in dev_ids:
-        entity = tuya.get_device_by_id(dev_id)
-        if entity is None:
+        device = tuya.get_device_by_id(dev_id)
+        if device is None:
             continue
-        entities.append(TuyaSwitch(entity, platform))
+        entities.append(TuyaSwitch(device, platform))
     return entities
 
 
