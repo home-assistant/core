@@ -38,12 +38,10 @@ class FlowHandler(config_entries.ConfigFlow):
         """Get the options flow for this handler."""
         return DaikinOptionsFlowHandler(config_entry)
 
-    def _create_entry(self, host, mac, key=None, uuid=None, password=None):
+    async def _create_entry(self, host, mac, key=None, uuid=None, password=None):
         """Register new entry."""
-        # Check if mac already is registered
-        for entry in self._async_current_entries():
-            if entry.data[KEY_MAC] == mac:
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(mac)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=host,
@@ -99,7 +97,7 @@ class FlowHandler(config_entries.ConfigFlow):
             )
 
         mac = device.mac
-        return self._create_entry(host, mac, key, uuid, password)
+        return await self._create_entry(host, mac, key, uuid, password)
 
     async def async_step_user(self, user_input=None):
         """User initiated config flow."""
@@ -121,7 +119,15 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_discovery(self, user_input):
         """Initialize step from discovery."""
         _LOGGER.info("Discovered device: %s", user_input)
-        return self._create_entry(user_input[KEY_IP], user_input[KEY_MAC])
+        return await self._create_entry(user_input[KEY_IP], user_input[KEY_MAC])
+
+    async def async_step_zeroconf(self, discovery_info):
+        """Prepare configuration for a discovered Daikin device."""
+        _LOGGER.info("Zeroconf discovery_info: %s", discovery_info)
+        host = discovery_info.get(CONF_HOST)
+        if not host:
+            return await self.async_step_user()
+        return await self._create_device(host)
 
 
 class DaikinOptionsFlowHandler(config_entries.OptionsFlow):
