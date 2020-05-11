@@ -68,7 +68,7 @@ async def test_setup(hass, mock_zeroconf):
     with patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
-        zeroconf, "ServiceBrowser", side_effect=service_update_mock
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_service_info_mock
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
@@ -87,7 +87,7 @@ async def test_setup(hass, mock_zeroconf):
 async def test_setup_with_default_interface(hass, mock_zeroconf):
     """Test default interface config."""
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
-        zeroconf, "ServiceBrowser", side_effect=service_update_mock
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ):
         mock_zeroconf.get_service_info.side_effect = get_service_info_mock
         assert await async_setup_component(
@@ -100,7 +100,7 @@ async def test_setup_with_default_interface(hass, mock_zeroconf):
 async def test_setup_without_default_interface(hass, mock_zeroconf):
     """Test without default interface config."""
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
-        zeroconf, "ServiceBrowser", side_effect=service_update_mock
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ):
         mock_zeroconf.get_service_info.side_effect = get_service_info_mock
         assert await async_setup_component(
@@ -117,7 +117,7 @@ async def test_homekit_match_partial_space(hass, mock_zeroconf):
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
-        zeroconf, "ServiceBrowser", side_effect=service_update_mock
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_homekit_info_mock("LIFX bulb")
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
@@ -134,7 +134,7 @@ async def test_homekit_match_partial_dash(hass, mock_zeroconf):
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
-        zeroconf, "ServiceBrowser", side_effect=service_update_mock
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_homekit_info_mock(
             "Rachio-fa46ba"
@@ -153,7 +153,7 @@ async def test_homekit_match_full(hass, mock_zeroconf):
     ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
-        zeroconf, "ServiceBrowser", side_effect=service_update_mock
+        zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_homekit_info_mock("BSB002")
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
