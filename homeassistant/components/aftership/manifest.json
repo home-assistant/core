@@ -1,6 +1,6 @@
 {
   "domain": "aftership",
-  "name": "AafterShip",
+  "name": "AfterShip",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aftership",
   "requirements": ["pyaftership==0.1.2"],
