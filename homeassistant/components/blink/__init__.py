@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    BLINK_CONFIG,
     DEFAULT_OFFSET,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -55,12 +54,11 @@ async def async_setup(hass, config):
         return True
 
     conf = config.get(DOMAIN, {})
-    hass.data[BLINK_CONFIG] = conf
 
-    if not hass.config_entries.async_entries(DOMAIN) and hass.data[BLINK_CONFIG]:
+    if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
             )
         )
 
@@ -73,7 +71,7 @@ async def async_setup_entry(hass, entry):
         username = entry.data[CONF_USERNAME]
         password = entry.data[CONF_PASSWORD]
         scan_interval = entry.data[CONF_SCAN_INTERVAL]
-        hass.data[DOMAIN] = blinkpy.Blink(
+        blink = blinkpy.Blink(
             username=username,
             password=password,
             motion_interval=DEFAULT_OFFSET,
@@ -81,8 +79,9 @@ async def async_setup_entry(hass, entry):
             no_prompt=True,
             device_id="Home Assistant",
         )
-        hass.data[DOMAIN].refresh_rate = scan_interval
-        await hass.async_add_executor_job(hass.data[DOMAIN].start)
+        blink.refresh_rate = scan_interval
+        await hass.async_add_executor_job(blink.start)
+        hass.data[DOMAIN] = {entry.unique_id: blink}
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -91,11 +90,11 @@ async def async_setup_entry(hass, entry):
 
     def force_refresh():
         """Force a blink refresh."""
-        return hass.data[DOMAIN].refresh(force_cache=True)
+        return hass.data[DOMAIN][entry.unique_id].refresh(force_cache=True)
 
     async def async_trigger_camera(call):
         """Trigger a camera."""
-        cameras = hass.data[DOMAIN].cameras
+        cameras = hass.data[DOMAIN][entry.unique_id].cameras
         name = call.data[CONF_NAME]
         if name in cameras:
             await hass.async_add_executor_job(cameras[name].snap_picture)
@@ -107,13 +106,15 @@ async def async_setup_entry(hass, entry):
 
     async def async_save_video(call):
         """Call save video service handler."""
-        await async_handle_save_video_service(hass, call)
+        await async_handle_save_video_service(hass, entry, call)
 
     async def async_send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
         await hass.async_add_executor_job(
-            hass.data[DOMAIN].login_handler.send_auth_key, hass.data[DOMAIN], pin
+            hass.data[DOMAIN][entry.unique_id].login_handler.send_auth_key,
+            hass.data[DOMAIN][entry.unique_id],
+            pin,
         )
 
     hass.services.async_register(DOMAIN, SERVICE_REFRESH, async_blink_refresh)
@@ -146,7 +147,7 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-async def async_handle_save_video_service(hass, call):
+async def async_handle_save_video_service(hass, entry, call):
     """Handle save video service calls."""
     camera_name = call.data[CONF_NAME]
     video_path = call.data[CONF_FILENAME]
@@ -156,7 +157,7 @@ async def async_handle_save_video_service(hass, call):
 
     def _write_video(camera_name, video_path):
         """Call video write."""
-        all_cameras = hass.data[DOMAIN].cameras
+        all_cameras = hass.data[DOMAIN][entry.unique_id].cameras
         if camera_name in all_cameras:
             all_cameras[camera_name].video_to_file(video_path)
 

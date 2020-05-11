@@ -17,7 +17,7 @@ SENSORS = {
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Initialize a Blink sensor."""
-    data = hass.data[DOMAIN]
+    data = hass.data[DOMAIN][config.unique_id]
     devs = []
     for camera in data.cameras:
         for sensor_type in SENSORS:

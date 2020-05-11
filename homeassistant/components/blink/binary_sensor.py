@@ -11,7 +11,7 @@ BINARY_SENSORS = {
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up the blink binary sensors."""
-    data = hass.data[DOMAIN]
+    data = hass.data[DOMAIN][config.unique_id]
 
     devs = []
     for camera in data.cameras:

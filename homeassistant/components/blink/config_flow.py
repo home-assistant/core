@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import BLINK_CONFIG, DEFAULT_OFFSET, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_OFFSET, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,56 +26,52 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the blink flow."""
         self.blink = None
+        self.data = {
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        }
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        stored_username = ""
-        stored_password = ""
-        stored_interval = DEFAULT_SCAN_INTERVAL
-
-        if BLINK_CONFIG in self.hass.data:
-            stored_username = self.hass.data[BLINK_CONFIG].get(CONF_USERNAME)
-            stored_password = self.hass.data[BLINK_CONFIG].get(CONF_PASSWORD)
-            stored_interval = self.hass.data[BLINK_CONFIG].get(CONF_SCAN_INTERVAL)
-
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self.data[CONF_USERNAME] = user_input["username"]
+            self.data[CONF_PASSWORD] = user_input["password"]
 
-            if CONF_SCAN_INTERVAL not in user_input:
-                user_input[CONF_SCAN_INTERVAL] = stored_interval
+            await self.async_set_unique_id(self.data[CONF_USERNAME])
+
+            if CONF_SCAN_INTERVAL in user_input:
+                self.data[CONF_SCAN_INTERVAL] = user_input["scan_interval"]
 
             try:
                 self.blink = self.hass.data[DOMAIN]
             except KeyError:
                 self.blink = blinkpy.Blink(
-                    username=user_input["username"],
-                    password=user_input["password"],
+                    username=self.data[CONF_USERNAME],
+                    password=self.data[CONF_PASSWORD],
                     motion_interval=DEFAULT_OFFSET,
                     legacy_subdomain=False,
                     no_prompt=True,
                     device_id="Home Assistant",
                 )
-                self.blink.refresh_rate = user_input[CONF_SCAN_INTERVAL]
+                self.blink.refresh_rate = self.data[CONF_SCAN_INTERVAL]
                 await self.hass.async_add_executor_job(self.blink.start)
 
             if not self.blink.key_required:
                 # No key required, we're good
-                self.hass.data[DOMAIN] = self.blink
-                config_data = {
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
-                }
-                return self.async_create_entry(title=DOMAIN, data=config_data,)
+                self.hass.data[DOMAIN] = {self.unique_id: self.blink}
+                return self.async_create_entry(title=DOMAIN, data=self.data,)
             return await self.async_step_2fa()
 
         data_schema = {
-            vol.Required("username", default=stored_username): str,
-            vol.Required("password", default=stored_password): str,
+            vol.Required("username"): str,
+            vol.Required("password"): str,
         }
 
         if self.show_advanced_options:
-            data_schema[vol.Required("scan_interval", default=stored_interval)] = int
+            data_schema[
+                vol.Required("scan_interval", default=DEFAULT_SCAN_INTERVAL)
+            ] = int
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(data_schema), errors={},
@@ -91,13 +87,8 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.blink.login_handler.send_auth_key, self.blink, pin
             ):
                 await self.hass.async_add_executor_job(self.blink.setup_post_verify)
-                self.hass.data[DOMAIN] = self.blink
-                config_data = {
-                    CONF_USERNAME: self.blink.login_handler.data["username"],
-                    CONF_PASSWORD: self.blink.login_handler.data["password"],
-                    CONF_SCAN_INTERVAL: self.blink.refresh_rate,
-                }
-                return self.async_create_entry(title=DOMAIN, data=config_data,)
+                self.hass.data[DOMAIN] = {self.unique_id: self.blink}
+                return self.async_create_entry(title=DOMAIN, data=self.data,)
 
         return self.async_show_form(
             step_id="2fa", data_schema=vol.Schema({vol.Required("pin"): str}),
