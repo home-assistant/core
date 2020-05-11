@@ -33,10 +33,20 @@ from .const import (
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    DEFAULT_AUDIO_CODEC,
+    DEFAULT_AUDIO_MAP,
+    DEFAULT_AUDIO_PACKET_SIZE,
+    DEFAULT_MAX_FPS,
+    DEFAULT_MAX_HEIGHT,
+    DEFAULT_MAX_WIDTH,
+    DEFAULT_SUPPORT_AUDIO,
+    DEFAULT_VIDEO_CODEC,
+    DEFAULT_VIDEO_MAP,
+    DEFAULT_VIDEO_PACKET_SIZE,
     SERV_CAMERA_RTP_STREAM_MANAGEMENT,
 )
 from .img_util import scale_jpeg_camera_image
-from .util import CAMERA_SCHEMA, pid_is_alive
+from .util import pid_is_alive
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +104,19 @@ FFMPEG_WATCHER = "ffmpeg_watcher"
 FFMPEG_PID = "ffmpeg_pid"
 SESSION_ID = "session_id"
 
+CONFIG_DEFAULTS = {
+    CONF_SUPPORT_AUDIO: DEFAULT_SUPPORT_AUDIO,
+    CONF_MAX_WIDTH: DEFAULT_MAX_WIDTH,
+    CONF_MAX_HEIGHT: DEFAULT_MAX_HEIGHT,
+    CONF_MAX_FPS: DEFAULT_MAX_FPS,
+    CONF_AUDIO_CODEC: DEFAULT_AUDIO_CODEC,
+    CONF_AUDIO_MAP: DEFAULT_AUDIO_MAP,
+    CONF_VIDEO_MAP: DEFAULT_VIDEO_MAP,
+    CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
+    CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
+    CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
+}
+
 
 @TYPES.register("Camera")
 class Camera(HomeAccessory, PyhapCamera):
@@ -104,11 +127,13 @@ class Camera(HomeAccessory, PyhapCamera):
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._cur_session = None
         self._camera = hass.data[DOMAIN_CAMERA]
-        config_w_defaults = CAMERA_SCHEMA(config)
+        for config_key in CONFIG_DEFAULTS:
+            if config_key not in config:
+                config[config_key] = CONFIG_DEFAULTS[config_key]
 
-        max_fps = config_w_defaults[CONF_MAX_FPS]
-        max_width = config_w_defaults[CONF_MAX_WIDTH]
-        max_height = config_w_defaults[CONF_MAX_HEIGHT]
+        max_fps = config[CONF_MAX_FPS]
+        max_width = config[CONF_MAX_WIDTH]
+        max_height = config[CONF_MAX_HEIGHT]
         resolutions = [
             (w, h, fps)
             for w, h, fps in SLOW_RESOLUTIONS
@@ -136,7 +161,7 @@ class Camera(HomeAccessory, PyhapCamera):
         }
         audio_options = {"codecs": [{"type": "OPUS", "samplerate": 24}]}
 
-        stream_address = config_w_defaults.get(CONF_STREAM_ADDRESS, get_local_ip())
+        stream_address = config.get(CONF_STREAM_ADDRESS, get_local_ip())
 
         options = {
             "video": video_options,
@@ -151,7 +176,7 @@ class Camera(HomeAccessory, PyhapCamera):
             name,
             entity_id,
             aid,
-            config_w_defaults,
+            config,
             category=CATEGORY_CAMERA,
             options=options,
         )
