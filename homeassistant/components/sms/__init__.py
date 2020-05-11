@@ -62,14 +62,44 @@ class Gateway:
         """Get pending incoming sms and publish them to the event bus."""
         _LOGGER.debug("Fetching new sms")
 
+        sms = []
+        start = True
         while True:
-            sms = self._state_machine.GetNextSMS(0, True)
-            if sms is not None:
-                _LOGGER.debug("Got new sms from %s", sms)
-                self._hass.bus.fire("%s.incoming_sms" % DOMAIN, sms)
-                self._state_machine.DeleteSMS(0, sms[0]['Location'])
+            if start:
+                cursms = self._state_machine.GetNextSMS(Folder=0, Start=True)
+                start = False
             else:
+                cursms = self._state_machine.GetNextSMS(Folder=0, Location=cursms[0]['Location'])
+            
+            if not cursms:
                 _LOGGER.debug("No new sms")
                 break
+            
+            _LOGGER.debug("Fetched new sms")
+            sms.append(cursms)
+            self._state_machine.DeleteSMS(0, sms[0]['Location'])
         
+        data = gammu.LinkSMS(sms)
+
+        for x in data:
+            v = gammu.DecodeSMS(x)
+
+            message = x[0]
+
+            _LOGGER.debug("Processing sms %s, decoded: %s", message, v)
+
+            if v is None:
+                text = m['Text']
+            else:
+                text = ""
+                for e in v['Entries']:
+                    if e['Buffer'] is not None:
+                        text = text + e['Buffer']
+
+            self._hass.bus.fire("{}.incoming_sms".format(DOMAIN), {
+                phone: message['Number'],
+                date: str(message['DateTime']),
+                text
+            })
+
         _LOGGER.info("Fetching completed")
