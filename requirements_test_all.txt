@@ -828,6 +828,9 @@ total_connect_client==0.54.1
 # homeassistant.components.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.tuya
+tuyaha==0.0.6
+
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
 
