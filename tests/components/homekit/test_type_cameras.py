@@ -30,6 +30,27 @@ MOCK_END_POINTS_TLV = "ARAzA9UDF8xGmrZykkNqcaL2AgEAAxoBAQACDTE5Mi4xNjguMjA4LjUDA
 MOCK_START_STREAM_SESSION_UUID = UUID("3303d503-17cc-469a-b672-92436a71a2f6")
 
 
+async def _async_start_streaming(hass, acc):
+    """Start streaming a camera."""
+    acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+
+async def _async_setup_endpoints(hass, acc):
+    """Set camera endpoints."""
+    acc.set_endpoints(MOCK_END_POINTS_TLV)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+
+async def _async_stop_stream(hass, acc):
+    """Stop a camera stream."""
+    await acc.stop()
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+
 @pytest.fixture()
 def run_driver(hass):
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
@@ -92,9 +113,9 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
     assert acc.aid == 2
     assert acc.category == 17  # Camera
 
-    acc.set_endpoints(MOCK_END_POINTS_TLV)
-    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
+    await _async_setup_endpoints(hass, acc)
     working_ffmpeg = _get_working_mock_ffmpeg()
+    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -103,8 +124,8 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         "homeassistant.components.homekit.type_cameras.HAFFmpeg",
         return_value=working_ffmpeg,
     ):
-        acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
-        await hass.async_block_till_done()
+        await _async_start_streaming(hass, acc)
+        await _async_stop_stream(hass, acc)
 
     expected_output = (
         "-map 0:v:0 -an -c:v libx264 -profile:v high -tune zerolatency -pix_fmt "
@@ -132,11 +153,10 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         "homeassistant.components.homekit.type_cameras.HAFFmpeg",
         return_value=working_ffmpeg,
     ):
-        acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
-        await acc.stop_stream(session_info)
+        await _async_start_streaming(hass, acc)
+        await _async_stop_stream(hass, acc)
         # Calling a second time should not throw
-        await acc.stop_stream(session_info)
-        await hass.async_block_till_done()
+        await _async_stop_stream(hass, acc)
 
     turbo_jpeg = mock_turbo_jpeg(
         first_width=16, first_height=12, second_width=300, second_height=200
@@ -195,8 +215,7 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
     assert acc.aid == 2
     assert acc.category == 17  # Camera
 
-    acc.set_endpoints(MOCK_END_POINTS_TLV)
-    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
+    await _async_setup_endpoints(hass, acc)
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -205,11 +224,10 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
         "homeassistant.components.homekit.type_cameras.HAFFmpeg",
         return_value=_get_failing_mock_ffmpeg(),
     ):
-        acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
-        await acc.stop_stream(session_info)
+        await _async_start_streaming(hass, acc)
+        await _async_stop_stream(hass, acc)
         # Calling a second time should not throw
-        await acc.stop_stream(session_info)
-        await hass.async_block_till_done()
+        await _async_stop_stream(hass, acc)
 
 
 async def test_camera_stream_source_found(hass, run_driver, events):
@@ -229,8 +247,7 @@ async def test_camera_stream_source_found(hass, run_driver, events):
     assert acc.aid == 2
     assert acc.category == 17  # Camera
 
-    acc.set_endpoints(MOCK_END_POINTS_TLV)
-    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
+    await _async_setup_endpoints(hass, acc)
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -239,9 +256,8 @@ async def test_camera_stream_source_found(hass, run_driver, events):
         "homeassistant.components.homekit.type_cameras.HAFFmpeg",
         return_value=_get_working_mock_ffmpeg(),
     ):
-        acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
-        await acc.stop_stream(session_info)
-        await hass.async_block_till_done()
+        await _async_start_streaming(hass, acc)
+        await _async_stop_stream(hass, acc)
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -250,9 +266,8 @@ async def test_camera_stream_source_found(hass, run_driver, events):
         "homeassistant.components.homekit.type_cameras.HAFFmpeg",
         return_value=_get_working_mock_ffmpeg(),
     ):
-        acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
-        await acc.stop_stream(session_info)
-        await hass.async_block_till_done()
+        await _async_start_streaming(hass, acc)
+        await _async_stop_stream(hass, acc)
 
 
 async def test_camera_stream_source_fails(hass, run_driver, events):
@@ -272,8 +287,7 @@ async def test_camera_stream_source_fails(hass, run_driver, events):
     assert acc.aid == 2
     assert acc.category == 17  # Camera
 
-    acc.set_endpoints(MOCK_END_POINTS_TLV)
-    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
+    await _async_setup_endpoints(hass, acc)
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -282,9 +296,8 @@ async def test_camera_stream_source_fails(hass, run_driver, events):
         "homeassistant.components.homekit.type_cameras.HAFFmpeg",
         return_value=_get_working_mock_ffmpeg(),
     ):
-        acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
-        await acc.stop_stream(session_info)
-        await hass.async_block_till_done()
+        await _async_start_streaming(hass, acc)
+        await _async_stop_stream(hass, acc)
 
 
 async def test_camera_with_no_stream(hass, run_driver, events):
@@ -302,9 +315,9 @@ async def test_camera_with_no_stream(hass, run_driver, events):
     assert acc.aid == 2
     assert acc.category == 17  # Camera
 
-    acc.set_endpoints(MOCK_END_POINTS_TLV)
-    acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
-    await hass.async_block_till_done()
+    await _async_setup_endpoints(hass, acc)
+    await _async_start_streaming(hass, acc)
+    await _async_stop_stream(hass, acc)
 
     with pytest.raises(HomeAssistantError):
         await hass.async_add_executor_job(
@@ -344,7 +357,7 @@ async def test_camera_stream_source_configured_and_copy_codec(hass, run_driver, 
     assert acc.aid == 2
     assert acc.category == 17  # Camera
 
-    acc.set_endpoints(MOCK_END_POINTS_TLV)
+    await _async_setup_endpoints(hass, acc)
     session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
 
     working_ffmpeg = _get_working_mock_ffmpeg()
@@ -356,9 +369,8 @@ async def test_camera_stream_source_configured_and_copy_codec(hass, run_driver, 
         "homeassistant.components.homekit.type_cameras.HAFFmpeg",
         return_value=working_ffmpeg,
     ):
-        acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
-        await acc.stop_stream(session_info)
-        await hass.async_block_till_done()
+        await _async_start_streaming(hass, acc)
+        await _async_stop_stream(hass, acc)
 
     expected_output = (
         "-map 0:v:0 -an -c:v copy -tune zerolatency -pix_fmt yuv420p -r 30 -b:v 299k "
