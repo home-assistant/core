@@ -126,7 +126,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a hub with the host address configured."""
         existing_hosts = {
-            entry.data[CONF_HOST] for entry in self._async_current_entries()
+            entry.data[CONF_HOST]
+            for entry in self._async_current_entries()
+            if CONF_HOST in entry.data
         }
         return host in existing_hosts
 
