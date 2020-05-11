@@ -20,7 +20,7 @@
       },
       "select": {
         "title": "Select the receiver that you wish to connect",
-        "description": "Run the setup again if you want to connect aditional receivers",
+        "description": "Run the setup again if you want to connect additional receivers",
         "data": {
           "select_host": "Receiver IP"
         }
