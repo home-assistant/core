@@ -1,5 +1,5 @@
 """Utilities used by insteon component."""
-
+import asyncio
 import logging
 
 from pyinsteon import devices
@@ -22,7 +22,11 @@ from pyinsteon.managers.x10_manager import (
 from homeassistant.const import CONF_ADDRESS, CONF_ENTITY_ID, ENTITY_MATCH_ALL
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+    dispatcher_send,
+)
 
 from .const import (
     DOMAIN,
@@ -111,23 +115,29 @@ def add_on_off_event_device(hass, device):
 
 def register_new_device_callback(hass, config):
     """Register callback for new Insteon device."""
+    new_device_lock = asyncio.Lock()
 
     @callback
     def async_new_insteon_device(address=None):
         """Detect device from transport to be delegated to platform."""
+        hass.async_create_task(async_create_new_entities(address))
+
+    async def async_create_new_entities(address):
         _LOGGER.debug(
             "Adding new INSTEON device to Home Assistant with address %s", address
         )
-        hass.async_add_executor_job(devices.async_save, hass.config.config_dir)
+        await new_device_lock.acquire()
+        await devices.async_save(workdir=hass.config.config_dir)
         device = devices[address]
-        device.status()
+        await device.async_status()
         platforms = get_device_platforms(device)
+        tasks = []
         for platform in platforms:
             if platform == ON_OFF_EVENTS:
                 add_on_off_event_device(hass, device)
 
             else:
-                hass.async_create_task(
+                tasks.append(
                     discovery.async_load_platform(
                         hass,
                         platform,
@@ -136,6 +146,8 @@ def register_new_device_callback(hass, config):
                         hass_config=config,
                     )
                 )
+        await asyncio.gather(*tasks)
+        new_device_lock.release()
 
     devices.subscribe(async_new_insteon_device, force_strong_ref=True)
 
@@ -163,12 +175,8 @@ def async_register_services(hass):
         if entity_id.lower() == ENTITY_MATCH_ALL:
             await async_srv_load_aldb_all(reload)
         else:
-            _send_load_aldb_signal(entity_id, reload)
-
-    def _send_load_aldb_signal(entity_id, reload):
-        """Send the load All-Link database signal to INSTEON entity."""
-        signal = f"{entity_id}_{SIGNAL_LOAD_ALDB}"
-        dispatcher_send(hass, signal, reload)
+            signal = f"{entity_id}_{SIGNAL_LOAD_ALDB}"
+            async_dispatcher_send(hass, signal, reload)
 
     async def async_srv_load_aldb_all(reload):
         """Load the All-Link database for all devices."""
