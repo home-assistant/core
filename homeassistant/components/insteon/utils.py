@@ -126,28 +126,27 @@ def register_new_device_callback(hass, config):
         _LOGGER.debug(
             "Adding new INSTEON device to Home Assistant with address %s", address
         )
-        await new_device_lock.acquire()
-        await devices.async_save(workdir=hass.config.config_dir)
-        device = devices[address]
-        await device.async_status()
-        platforms = get_device_platforms(device)
-        tasks = []
-        for platform in platforms:
-            if platform == ON_OFF_EVENTS:
-                add_on_off_event_device(hass, device)
+        async with new_device_lock:
+            await devices.async_save(workdir=hass.config.config_dir)
+            device = devices[address]
+            await device.async_status()
+            platforms = get_device_platforms(device)
+            tasks = []
+            for platform in platforms:
+                if platform == ON_OFF_EVENTS:
+                    add_on_off_event_device(hass, device)
 
-            else:
-                tasks.append(
-                    discovery.async_load_platform(
-                        hass,
-                        platform,
-                        DOMAIN,
-                        discovered={"address": device.address.id},
-                        hass_config=config,
+                else:
+                    tasks.append(
+                        discovery.async_load_platform(
+                            hass,
+                            platform,
+                            DOMAIN,
+                            discovered={"address": device.address.id},
+                            hass_config=config,
+                        )
                     )
-                )
-        await asyncio.gather(*tasks)
-        new_device_lock.release()
+            await asyncio.gather(*tasks)
 
     devices.subscribe(async_new_insteon_device, force_strong_ref=True)
 
