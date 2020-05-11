@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from gogogate2_api import GogoGate2Api
 from gogogate2_api.common import (
     ActivateResponse,
+    ApiError,
     Door,
     DoorMode,
     DoorStatus,
@@ -31,6 +32,31 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory
+
+
+async def test_import_fail(
+    hass: HomeAssistant, component_factory: ComponentFactory
+) -> None:
+    """Test the failure to import."""
+    api = MagicMock(spec=GogoGate2Api)
+    api.info.side_effect = ApiError(22, "Error")
+
+    component_factory.api_class_mock.return_value = api
+
+    await component_factory.configure_component(
+        cover_config=[
+            {
+                CONF_PLATFORM: "gogogate2",
+                CONF_NAME: "cover0",
+                CONF_IP_ADDRESS: "127.0.1.0",
+                CONF_USERNAME: "user0",
+                CONF_PASSWORD: "password0",
+            }
+        ]
+    )
+
+    entity_ids = hass.states.async_entity_ids(COVER_DOMAIN)
+    assert not entity_ids
 
 
 async def test_import(hass: HomeAssistant, component_factory: ComponentFactory) -> None:
@@ -342,7 +368,7 @@ async def test_availability(
     assert hass.states.get("cover.door1").state == STATE_OPEN
 
     component_data.api.info.side_effect = Exception("Error")
-    component_data.data_manager.async_update_door(None)
+    await component_data.data_manager.async_update()
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_UNAVAILABLE
 

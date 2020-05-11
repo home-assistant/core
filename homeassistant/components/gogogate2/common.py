@@ -6,16 +6,13 @@ from typing import Callable, NamedTuple, Optional
 from gogogate2_api import GogoGate2Api, InfoResponse
 from gogogate2_api.common import Door, get_configured_doors
 
-from homeassistant.components.gogogate2.const import (
-    DATA_MANAGERS,
-    DATA_UPDATED_SIGNAL,
-    DOMAIN,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+
+from .const import DATA_MANAGERS, DATA_UPDATED_SIGNAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
