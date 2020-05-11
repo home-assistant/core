@@ -703,25 +703,28 @@ async def test_homekit_finds_linked_batteries(
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
+        sw_version="0.16.0",
+        model="Powerwall 2",
+        manufacturer="Tesla",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     binary_charging_sensor = entity_reg.async_get_or_create(
         "binary_sensor",
-        "light",
+        "powerwall",
         "battery_charging",
         device_id=device_entry.id,
         device_class=DEVICE_CLASS_BATTERY_CHARGING,
     )
     battery_sensor = entity_reg.async_get_or_create(
         "sensor",
-        "light",
+        "powerwall",
         "battery",
         device_id=device_entry.id,
         device_class=DEVICE_CLASS_BATTERY,
     )
     light = entity_reg.async_get_or_create(
-        "light", "light", "demo", device_id=device_entry.id
+        "light", "powerwall", "demo", device_id=device_entry.id
     )
 
     hass.states.async_set(
@@ -751,8 +754,11 @@ async def test_homekit_finds_linked_batteries(
         ANY,
         ANY,
         {
-            "linked_battery_charging_sensor": "binary_sensor.light_battery_charging",
-            "linked_battery_sensor": "sensor.light_battery",
+            "manufacturer": "Tesla",
+            "model": "Powerwall 2",
+            "sw_version": "0.16.0",
+            "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
+            "linked_battery_sensor": "sensor.powerwall_battery",
         },
     )
 

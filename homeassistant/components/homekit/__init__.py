@@ -34,6 +34,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_INCLUDE_ENTITIES,
     convert_filter,
 )
+from homeassistant.loader import async_get_integration
 from homeassistant.util import get_local_ip
 
 from .accessories import get_accessory
@@ -41,6 +42,10 @@ from .aidmanager import AccessoryAidStorage
 from .const import (
     AID_STORAGE,
     ATTR_DISPLAY_NAME,
+    ATTR_INTERGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_NAME,
     CONF_ADVERTISE_IP,
@@ -200,7 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     aid_storage = AccessoryAidStorage(hass, entry.entry_id)
 
     await aid_storage.async_initialize()
-    # These are yaml only
+    # ip_address and advertise_ip are yaml only
     ip_address = conf.get(CONF_IP_ADDRESS)
     advertise_ip = conf.get(CONF_ADVERTISE_IP)
 
@@ -494,6 +499,7 @@ class HomeKit:
         self.status = STATUS_WAIT
 
         ent_reg = await entity_registry.async_get_registry(self.hass)
+        dev_reg = await device_registry.async_get_registry(self.hass)
 
         device_lookup = ent_reg.async_get_device_class_lookup(
             {
@@ -507,16 +513,24 @@ class HomeKit:
             if not self._filter(state.entity_id):
                 continue
 
-            self._async_configure_linked_battery_sensors(ent_reg, device_lookup, state)
+            ent_reg_ent = ent_reg.async_get(state.entity_id)
+            if ent_reg_ent:
+                await self._async_set_device_info_attributes(
+                    ent_reg_ent, dev_reg, state.entity_id
+                )
+                self._async_configure_linked_battery_sensors(
+                    ent_reg_ent, device_lookup, state
+                )
+
             bridged_states.append(state)
 
+        self._async_register_bridge(dev_reg)
         await self.hass.async_add_executor_job(self._start, bridged_states)
-        await self._async_register_bridge()
 
-    async def _async_register_bridge(self):
+    @callback
+    def _async_register_bridge(self, dev_reg):
         """Register the bridge as a device so homekit_controller and exclude it from discovery."""
-        registry = await device_registry.async_get_registry(self.hass)
-        registry.async_get_or_create(
+        dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
             connections={
                 (device_registry.CONNECTION_NETWORK_MAC, self.driver.state.mac)
@@ -567,21 +581,21 @@ class HomeKit:
         self.hass.add_job(self.driver.stop)
 
     @callback
-    def _async_configure_linked_battery_sensors(self, ent_reg, device_lookup, state):
-        entry = ent_reg.async_get(state.entity_id)
-
+    def _async_configure_linked_battery_sensors(
+        self, ent_reg_ent, device_lookup, state
+    ):
         if (
-            entry is None
-            or entry.device_id is None
-            or entry.device_id not in device_lookup
-            or entry.device_class
+            ent_reg_ent is None
+            or ent_reg_ent.device_id is None
+            or ent_reg_ent.device_id not in device_lookup
+            or ent_reg_ent.device_class
             in (DEVICE_CLASS_BATTERY_CHARGING, DEVICE_CLASS_BATTERY)
         ):
             return
 
         if ATTR_BATTERY_CHARGING not in state.attributes:
             battery_charging_binary_sensor_entity_id = device_lookup[
-                entry.device_id
+                ent_reg_ent.device_id
             ].get(("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING))
             if battery_charging_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
@@ -590,13 +604,28 @@ class HomeKit:
                 )
 
         if ATTR_BATTERY_LEVEL not in state.attributes:
-            battery_sensor_entity_id = device_lookup[entry.device_id].get(
+            battery_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
                 ("sensor", DEVICE_CLASS_BATTERY)
             )
             if battery_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_BATTERY_SENSOR, battery_sensor_entity_id
                 )
+
+    async def _async_set_device_info_attributes(self, ent_reg_ent, dev_reg, entity_id):
+        """Set attributes that will be used for homekit device info."""
+        ent_cfg = self._config.setdefault(entity_id, {})
+        if ent_reg_ent.device_id:
+            dev_reg_ent = dev_reg.async_get(ent_reg_ent.device_id)
+            if dev_reg_ent.manufacturer:
+                ent_cfg[ATTR_MANUFACTURER] = dev_reg_ent.manufacturer
+            if dev_reg_ent.model:
+                ent_cfg[ATTR_MODEL] = dev_reg_ent.model
+            if dev_reg_ent.sw_version:
+                ent_cfg[ATTR_SOFTWARE_VERSION] = dev_reg_ent.sw_version
+        if ATTR_MANUFACTURER not in ent_cfg:
+            integration = await async_get_integration(self.hass, ent_reg_ent.platform)
+            ent_cfg[ATTR_INTERGRATION] = integration.name
 
 
 class HomeKitPairingQRView(HomeAssistantView):
