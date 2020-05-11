@@ -22,8 +22,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 class AfterShipTest:
-    """Placeholder class to make tests pass.
-    """
+    """Placeholder class to make tests pass."""
 
     def __init__(self, hass, session, api_key):
         """Initialize."""

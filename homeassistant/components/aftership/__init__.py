@@ -1,10 +1,7 @@
 """The aftership integration."""
-import asyncio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-
-from .const import DOMAIN
 
 
 async def async_setup(hass, config):
