@@ -5,7 +5,8 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
-from . import PY_XIAOMI_GATEWAY, XiaomiDevice
+from . import XiaomiDevice
+from .config_flow import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,83 +21,82 @@ ATTR_NO_MOTION_SINCE = "No motion since"
 DENSITY = "density"
 ATTR_DENSITY = "Density"
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
-    devices = []
-    for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
-        for device in gateway.devices["binary_sensor"]:
-            model = device["model"]
-            if model in ["motion", "sensor_motion", "sensor_motion.aq2"]:
-                devices.append(XiaomiMotionSensor(device, hass, gateway))
-            elif model in ["magnet", "sensor_magnet", "sensor_magnet.aq2"]:
-                devices.append(XiaomiDoorSensor(device, gateway))
-            elif model == "sensor_wleak.aq1":
-                devices.append(XiaomiWaterLeakSensor(device, gateway))
-            elif model in ["smoke", "sensor_smoke"]:
-                devices.append(XiaomiSmokeSensor(device, gateway))
-            elif model in ["natgas", "sensor_natgas"]:
-                devices.append(XiaomiNatgasSensor(device, gateway))
-            elif model in [
-                "switch",
-                "sensor_switch",
-                "sensor_switch.aq2",
-                "sensor_switch.aq3",
-                "remote.b1acn01",
-            ]:
-                if "proto" not in device or int(device["proto"][0:1]) == 1:
-                    data_key = "status"
-                else:
-                    data_key = "button_0"
-                devices.append(XiaomiButton(device, "Switch", data_key, hass, gateway))
-            elif model in [
-                "86sw1",
-                "sensor_86sw1",
-                "sensor_86sw1.aq1",
-                "remote.b186acn01",
-            ]:
-                if "proto" not in device or int(device["proto"][0:1]) == 1:
-                    data_key = "channel_0"
-                else:
-                    data_key = "button_0"
-                devices.append(
-                    XiaomiButton(device, "Wall Switch", data_key, hass, gateway)
-                )
-            elif model in [
-                "86sw2",
-                "sensor_86sw2",
-                "sensor_86sw2.aq1",
-                "remote.b286acn01",
-            ]:
-                if "proto" not in device or int(device["proto"][0:1]) == 1:
-                    data_key_left = "channel_0"
-                    data_key_right = "channel_1"
-                else:
-                    data_key_left = "button_0"
-                    data_key_right = "button_1"
-                devices.append(
-                    XiaomiButton(
-                        device, "Wall Switch (Left)", data_key_left, hass, gateway
-                    )
-                )
-                devices.append(
-                    XiaomiButton(
-                        device, "Wall Switch (Right)", data_key_right, hass, gateway
-                    )
-                )
-                devices.append(
-                    XiaomiButton(
-                        device, "Wall Switch (Both)", "dual_channel", hass, gateway
-                    )
-                )
-            elif model in ["cube", "sensor_cube", "sensor_cube.aqgl01"]:
-                devices.append(XiaomiCube(device, hass, gateway))
-            elif model in ["vibration", "vibration.aq1"]:
-                devices.append(XiaomiVibration(device, "Vibration", "status", gateway))
+    entities = []
+    gateway = hass.data[DOMAIN][config_entry.entry_id]
+    for entity in gateway.devices["binary_sensor"]:
+        model = entity["model"]
+        if model in ["motion", "sensor_motion", "sensor_motion.aq2"]:
+            entities.append(XiaomiMotionSensor(entity, hass, gateway))
+        elif model in ["magnet", "sensor_magnet", "sensor_magnet.aq2"]:
+            entities.append(XiaomiDoorSensor(entity, gateway))
+        elif model == "sensor_wleak.aq1":
+            entities.append(XiaomiWaterLeakSensor(entity, gateway))
+        elif model in ["smoke", "sensor_smoke"]:
+            entities.append(XiaomiSmokeSensor(entity, gateway))
+        elif model in ["natgas", "sensor_natgas"]:
+            entities.append(XiaomiNatgasSensor(entity, gateway))
+        elif model in [
+            "switch",
+            "sensor_switch",
+            "sensor_switch.aq2",
+            "sensor_switch.aq3",
+            "remote.b1acn01",
+        ]:
+            if "proto" not in entity or int(entity["proto"][0:1]) == 1:
+                data_key = "status"
             else:
-                _LOGGER.warning("Unmapped Device Model %s", model)
+                data_key = "button_0"
+            entities.append(XiaomiButton(entity, "Switch", data_key, hass, gateway))
+        elif model in [
+            "86sw1",
+            "sensor_86sw1",
+            "sensor_86sw1.aq1",
+            "remote.b186acn01",
+        ]:
+            if "proto" not in entity or int(entity["proto"][0:1]) == 1:
+                data_key = "channel_0"
+            else:
+                data_key = "button_0"
+            entities.append(
+                XiaomiButton(entity, "Wall Switch", data_key, hass, gateway)
+            )
+        elif model in [
+            "86sw2",
+            "sensor_86sw2",
+            "sensor_86sw2.aq1",
+            "remote.b286acn01",
+        ]:
+            if "proto" not in entity or int(entity["proto"][0:1]) == 1:
+                data_key_left = "channel_0"
+                data_key_right = "channel_1"
+            else:
+                data_key_left = "button_0"
+                data_key_right = "button_1"
+            entities.append(
+                XiaomiButton(
+                    entity, "Wall Switch (Left)", data_key_left, hass, gateway
+                )
+            )
+            entities.append(
+                XiaomiButton(
+                    entity, "Wall Switch (Right)", data_key_right, hass, gateway
+                )
+            )
+            entities.append(
+                XiaomiButton(
+                    entity, "Wall Switch (Both)", "dual_channel", hass, gateway
+                )
+            )
+        elif model in ["cube", "sensor_cube", "sensor_cube.aqgl01"]:
+            entities.append(XiaomiCube(entity, hass, gateway))
+        elif model in ["vibration", "vibration.aq1"]:
+            entities.append(XiaomiVibration(entity, "Vibration", "status", gateway))
+        else:
+            _LOGGER.warning("Unmapped Device Model %s", model)
 
-    add_entities(devices)
+    async_add_entities(entities)
 
 
 class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):

@@ -12,20 +12,21 @@ from homeassistant.components.light import (
 )
 import homeassistant.util.color as color_util
 
-from . import PY_XIAOMI_GATEWAY, XiaomiDevice
+from . import XiaomiDevice
+from .config_flow import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
-    devices = []
-    for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
-        for device in gateway.devices["light"]:
-            model = device["model"]
-            if model in ["gateway", "gateway.v3"]:
-                devices.append(XiaomiGatewayLight(device, "Gateway Light", gateway))
-    add_entities(devices)
+    entities = []
+    gateway = hass.data[DOMAIN][config_entry.entry_id]
+    for entity in gateway.devices["light"]:
+        model = entity["model"]
+        if model in ["gateway", "gateway.v3"]:
+            entities.append(XiaomiGatewayLight(entity, "Gateway Light", gateway))
+    async_add_entities(entities)
 
 
 class XiaomiGatewayLight(XiaomiDevice, LightEntity):
