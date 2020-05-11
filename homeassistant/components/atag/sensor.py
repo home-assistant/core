@@ -35,8 +35,7 @@ class AtagSensor(AtagEntity):
 
     def __init__(self, coordinator, sensor):
         """Initialize Atag sensor."""
-        self.coordinator = coordinator
-        self._id = sensor
+        super().__init__(coordinator, sensor)
         self._name = sensor
 
     @property
