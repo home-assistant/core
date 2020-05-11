@@ -18,7 +18,7 @@
         },
         "step": {
             "confirm": {
-                "description": "\u00d8nsker du \u00e5 konfigurere UPnP / IGD?",
+                "description": "\u00d8nsker du \u00e5 sette opp UPnP / IGD?",
                 "title": "UPnP / IGD"
             },
             "init": {

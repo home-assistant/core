@@ -5,7 +5,6 @@ import logging
 import os
 import threading
 
-from asynctest import Mock, patch
 import pytest
 import voluptuous as vol
 
@@ -20,6 +19,7 @@ from homeassistant.helpers.config_validation import (
 )
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "general_error": "Ett ok\u00e4nt fel intr\u00e4ffade."
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                }
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Enhets IP-adress / v\u00e4rdnamn",
+                    "password": "Enhetsl\u00f6senord"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "cloud_api": "Geografisk Plats",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "type": "Integrationstyp"
+                }
+            }
+        }
+    }
+}

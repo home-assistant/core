@@ -4,7 +4,6 @@ from copy import deepcopy
 from datetime import timedelta
 
 import aiounifi
-from asynctest import patch
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -35,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONTROLLER_HOST = {

@@ -1,14 +1,14 @@
 """Tests for the Device Registry."""
 import asyncio
-from unittest.mock import patch
 
-import asynctest
 import pytest
 
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, callback
+from homeassistant.helpers import device_registry, entity_registry
 
-from tests.common import flush_store, mock_device_registry
+from tests.async_mock import patch
+from tests.common import MockConfigEntry, flush_store, mock_device_registry
 
 
 @pytest.fixture
@@ -149,6 +149,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "model": "model",
                     "name": "name",
                     "sw_version": "version",
+                    "entry_type": "service",
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
                 }
@@ -168,6 +169,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.id == "abcdefghijklm"
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
+    assert entry.entry_type == "service"
     assert isinstance(entry.config_entries, set)
 
 
@@ -304,6 +306,9 @@ async def test_loading_saving_data(hass, registry):
         identifiers={("hue", "0123")},
         manufacturer="manufacturer",
         model="via",
+        name="Original Name",
+        sw_version="Orig SW 1",
+        entry_type="device",
     )
 
     orig_light = registry.async_get_or_create(
@@ -316,6 +321,10 @@ async def test_loading_saving_data(hass, registry):
     )
 
     assert len(registry.devices) == 2
+
+    orig_via = registry.async_update_device(
+        orig_via.id, area_id="mock-area-id", name_by_user="mock-name-by-user"
+    )
 
     # Now load written data in new registry
     registry2 = device_registry.DeviceRegistry(hass)
@@ -474,7 +483,7 @@ async def test_update_remove_config_entries(hass, registry, update_events):
 
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
-    with asynctest.patch(
+    with patch(
         "homeassistant.helpers.device_registry.DeviceRegistry.async_load"
     ) as mock_load:
         results = await asyncio.gather(
@@ -502,3 +511,76 @@ async def test_update_sw_version(registry):
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.sw_version == sw_version
+
+
+async def test_cleanup_device_registry(hass, registry):
+    """Test cleanup works."""
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
+
+    d1 = registry.async_get_or_create(
+        identifiers={("hue", "d1")}, config_entry_id=config_entry.entry_id
+    )
+    registry.async_get_or_create(
+        identifiers={("hue", "d2")}, config_entry_id=config_entry.entry_id
+    )
+    d3 = registry.async_get_or_create(
+        identifiers={("hue", "d3")}, config_entry_id=config_entry.entry_id
+    )
+    registry.async_get_or_create(
+        identifiers={("something", "d4")}, config_entry_id="non_existing"
+    )
+
+    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg.async_get_or_create("light", "hue", "e1", device_id=d1.id)
+    ent_reg.async_get_or_create("light", "hue", "e2", device_id=d1.id)
+    ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
+
+    device_registry.async_cleanup(hass, registry, ent_reg)
+
+    assert registry.async_get_device({("hue", "d1")}, set()) is not None
+    assert registry.async_get_device({("hue", "d2")}, set()) is None
+    assert registry.async_get_device({("hue", "d3")}, set()) is not None
+    assert registry.async_get_device({("something", "d4")}, set()) is None
+
+
+async def test_cleanup_startup(hass):
+    """Test we run a cleanup on startup."""
+    hass.state = CoreState.not_running
+    await device_registry.async_get_registry(hass)
+
+    with patch(
+        "homeassistant.helpers.device_registry.Debouncer.async_call"
+    ) as mock_call:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_call.mock_calls) == 1
+
+
+async def test_cleanup_entity_registry_change(hass):
+    """Test we run a cleanup when entity registry changes."""
+    await device_registry.async_get_registry(hass)
+    ent_reg = await entity_registry.async_get_registry(hass)
+
+    with patch(
+        "homeassistant.helpers.device_registry.Debouncer.async_call"
+    ) as mock_call:
+        entity = ent_reg.async_get_or_create("light", "hue", "e1")
+        await hass.async_block_till_done()
+        assert len(mock_call.mock_calls) == 0
+
+        # Normal update does not trigger
+        ent_reg.async_update_entity(entity.entity_id, name="updated")
+        await hass.async_block_till_done()
+        assert len(mock_call.mock_calls) == 0
+
+        # Device ID update triggers
+        ent_reg.async_get_or_create("light", "hue", "e1", device_id="bla")
+        await hass.async_block_till_done()
+        assert len(mock_call.mock_calls) == 1
+
+        # Removal also triggers
+        ent_reg.async_remove(entity.entity_id)
+        await hass.async_block_till_done()
+        assert len(mock_call.mock_calls) == 2

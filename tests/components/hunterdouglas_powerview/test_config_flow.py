@@ -2,12 +2,11 @@
 import asyncio
 import json
 
-from asynctest import CoroutineMock, MagicMock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 
-from tests.common import load_fixture
+from tests.async_mock import AsyncMock, MagicMock, patch
+from tests.common import MockConfigEntry, load_fixture
 
 
 def _get_mock_powerview_userdata(userdata=None, get_resources=None):
@@ -15,13 +14,11 @@ def _get_mock_powerview_userdata(userdata=None, get_resources=None):
     if not userdata:
         userdata = json.loads(load_fixture("hunterdouglas_powerview/userdata.json"))
     if get_resources:
-        type(mock_powerview_userdata).get_resources = CoroutineMock(
+        type(mock_powerview_userdata).get_resources = AsyncMock(
             side_effect=get_resources
         )
     else:
-        type(mock_powerview_userdata).get_resources = CoroutineMock(
-            return_value=userdata
-        )
+        type(mock_powerview_userdata).get_resources = AsyncMock(return_value=userdata)
     return mock_powerview_userdata
 
 
@@ -104,6 +101,9 @@ async def test_form_import(hass):
 async def test_form_homekit(hass):
     """Test we get the form with homekit source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
+
+    ignored_config_entry = MockConfigEntry(domain=DOMAIN, data={}, source="ignore")
+    ignored_config_entry.add_to_hass(hass)
 
     mock_powerview_userdata = _get_mock_powerview_userdata()
     with patch(

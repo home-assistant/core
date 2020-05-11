@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account reeds geconfigureerd"
+            "already_configured": "Account reeds geconfigureerd",
+            "no_device": "Op geen van uw apparaten is \"Find my iPhone\" geactiveerd"
         },
         "error": {
             "login": "Aanmeldingsfout: controleer uw e-mailadres en wachtwoord",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "E-mail"
+                    "username": "E-mail",
+                    "with_family": "Met gezin"
                 },
                 "description": "Voer uw gegevens in",
                 "title": "iCloud inloggegevens"

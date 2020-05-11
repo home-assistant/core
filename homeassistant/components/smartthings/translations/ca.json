@@ -19,7 +19,7 @@
                 "data": {
                     "access_token": "Token d'acc\u00e9s"
                 },
-                "description": "Introdueix un [token d'acc\u00e9s personal]({token_url}) d'SmartThings creat a partir de les [instruccions]({component_url}). S\u2019utilitzar\u00e0 per crear la integraci\u00f3 de Home Assistant dins el teu compte de SmartThings.",
+                "description": "Introdueix un [token d'acc\u00e9s personal]({token_url}) d'SmartThings creat a partir de les [instruccions]({component_url}). S'utilitzar\u00e0 per crear la integraci\u00f3 de Home Assistant dins el teu compte de SmartThings.",
                 "title": "Introdueix el token d'acc\u00e9s personal"
             },
             "select_location": {

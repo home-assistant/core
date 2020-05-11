@@ -3,7 +3,6 @@ import asyncio
 import logging
 from time import time
 
-from asynctest import CoroutineMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -11,6 +10,7 @@ from homeassistant.components.cloud import account_link
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
@@ -96,6 +96,18 @@ async def test_get_services_cached(hass):
         assert await account_link._get_services(hass) == 4
 
 
+async def test_get_services_error(hass):
+    """Test that we cache services."""
+    hass.data["cloud"] = None
+
+    with patch.object(account_link, "CACHE_TIMEOUT", 0), patch(
+        "hass_nabucasa.account_link.async_fetch_available_services",
+        side_effect=asyncio.TimeoutError,
+    ):
+        assert await account_link._get_services(hass) == []
+        assert account_link.DATA_SERVICES not in hass.data
+
+
 async def test_implementation(hass, flow_handler):
     """Test Cloud OAuth2 implementation."""
     hass.data["cloud"] = None
@@ -109,7 +121,7 @@ async def test_implementation(hass, flow_handler):
     flow_finished = asyncio.Future()
 
     helper = Mock(
-        async_get_authorize_url=CoroutineMock(return_value="http://example.com/auth"),
+        async_get_authorize_url=AsyncMock(return_value="http://example.com/auth"),
         async_get_tokens=Mock(return_value=flow_finished),
     )
 

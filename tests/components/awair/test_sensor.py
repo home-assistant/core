@@ -5,8 +5,6 @@ from datetime import timedelta
 import json
 import logging
 
-from asynctest import patch
-
 from homeassistant.components.awair.sensor import (
     ATTR_LAST_API_UPDATE,
     ATTR_TIMESTAMP,
@@ -29,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import parse_datetime, utcnow
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 
 DISCOVERY_CONFIG = {"sensor": {"platform": "awair", "access_token": "qwerty"}}

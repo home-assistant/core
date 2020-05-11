@@ -70,6 +70,12 @@ SSDP = {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
         }
     ],
+    "songpal": [
+        {
+            "manufacturer": "Sony Corporation",
+            "st": "urn:schemas-sony-com:service:ScalarWebAPI:1"
+        }
+    ],
     "sonos": [
         {
             "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
@@ -79,6 +85,14 @@ SSDP = {
         {
             "deviceType": "urn:schemas-upnp-org:device:Basic:1",
             "manufacturer": "Synology"
+        }
+    ],
+    "upnp": [
+        {
+            "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+        },
+        {
+            "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
         }
     ],
     "wemo": [
