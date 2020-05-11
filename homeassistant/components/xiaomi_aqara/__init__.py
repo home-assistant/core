@@ -31,8 +31,6 @@ ATTR_RINGTONE_ID = "ringtone_id"
 ATTR_RINGTONE_VOL = "ringtone_vol"
 ATTR_DEVICE_ID = "device_id"
 
-PY_XIAOMI_GATEWAY = "xiaomi_gw"
-
 TIME_TILL_UNAVAILABLE = timedelta(minutes=150)
 
 SERVICE_PLAY_RINGTONE = "play_ringtone"
@@ -92,13 +90,13 @@ def setup(hass, config):
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, remove_device=device_id)
 
-    gateway_only_schema = _add_gateway_to_schema(xiaomi, vol.Schema({}))
+    gateway_only_schema = _add_gateway_to_schema(vol.Schema({}))
 
     hass.services.register(
         DOMAIN,
         SERVICE_PLAY_RINGTONE,
         play_ringtone_service,
-        schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_PLAY_RINGTONE),
+        schema=_add_gateway_to_schema(SERVICE_SCHEMA_PLAY_RINGTONE),
     )
 
     hass.services.register(
@@ -113,7 +111,7 @@ def setup(hass, config):
         DOMAIN,
         SERVICE_REMOVE_DEVICE,
         remove_device_service,
-        schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_REMOVE_DEVICE),
+        schema=_add_gateway_to_schema(SERVICE_SCHEMA_REMOVE_DEVICE),
     )
 
     return True
@@ -271,20 +269,20 @@ class XiaomiDevice(Entity):
         raise NotImplementedError()
 
 
-def _add_gateway_to_schema(xiaomi, schema):
+def _add_gateway_to_schema(schema):
     """Extend a voluptuous schema with a gateway validator."""
 
     def gateway(sid):
         """Convert sid to a gateway."""
         sid = str(sid).replace(":", "").lower()
 
-        for gateway in xiaomi.gateways.values():
+        for gateway in hass.data[DOMAIN].values():
             if gateway.sid == sid:
                 return gateway
 
         raise vol.Invalid(f"Unknown gateway sid {sid}")
 
-    gateways = list(xiaomi.gateways.values())
+    gateways = list(hass.data[DOMAIN].values())
     kwargs = {}
 
     # If the user has only 1 gateway, make it the default for services.
