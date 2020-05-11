@@ -207,7 +207,7 @@ class TuyaDevice(Entity):
     def __init__(self, tuya, platform):
         """Init Tuya devices."""
         self._tuya = tuya
-        self._platform = platform
+        self._tuya_platform = platform
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -241,7 +241,9 @@ class TuyaDevice(Entity):
         """Return a device description for device registry."""
         _device_info = {
             "identifiers": {(DOMAIN, f"{self.unique_id}")},
-            "manufacturer": TUYA_PLATFORMS.get(self._platform, self._platform),
+            "manufacturer": TUYA_PLATFORMS.get(
+                self._tuya_platform, self._tuya_platform
+            ),
             "name": self.name,
             "model": self._tuya.object_type(),
         }
@@ -251,7 +253,6 @@ class TuyaDevice(Entity):
         """Refresh Tuya device data."""
         self._tuya.update()
 
-    @callback
     async def _delete_callback(self, dev_id):
         """Remove this entity."""
         if dev_id == self.object_id:
