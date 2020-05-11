@@ -203,7 +203,6 @@ class CastDevice(MediaPlayerEntity):
         self._add_remove_handler = None
         self._del_remove_handler = None
         self._cast_view_remove_handler = None
-        self._cast_function_remove_handler = None
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
