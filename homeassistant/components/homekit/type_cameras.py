@@ -29,9 +29,11 @@ from .const import (
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
 )
+from .img_util import scale_jpeg_camera_image
 from .util import CAMERA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
@@ -246,11 +248,11 @@ class Camera(HomeAccessory, PyhapCamera):
 
     def get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
-        return (
+        return scale_jpeg_camera_image(
             asyncio.run_coroutine_threadsafe(
                 self.hass.components.camera.async_get_image(self.entity_id),
                 self.hass.loop,
-            )
-            .result()
-            .content
+            ).result(),
+            image_size["image-width"],
+            image_size["image-height"],
         )
