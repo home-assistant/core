@@ -78,6 +78,9 @@ PySocks==1.7.1
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
 
+# homeassistant.components.homekit
+PyTurboJPEG==1.4.0
+
 # homeassistant.components.vicare
 PyViCare==0.1.10
 
@@ -535,7 +538,7 @@ env_canada==0.0.35
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.11.0
+envoy_reader==0.16.1
 
 # homeassistant.components.season
 ephem==3.7.7.0
@@ -993,6 +996,9 @@ onkyo-eiscp==1.2.7
 # homeassistant.components.onvif
 onvif-zeep-async==0.2.0
 
+# homeassistant.components.opengarage
+open-garage==0.1.2
+
 # homeassistant.components.opencv
 # opencv-python-headless==4.2.0.32
 
@@ -1209,7 +1215,7 @@ pyarlo==0.2.3
 pyatag==0.2.19
 
 # homeassistant.components.netatmo
-pyatmo==3.3.0
+pyatmo==3.3.1
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1856,7 +1862,7 @@ rjpl==0.3.5
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.3.2
+rokuecp==0.4.0
 
 # homeassistant.components.roomba
 roombapy==1.5.3

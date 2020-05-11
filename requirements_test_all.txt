@@ -23,6 +23,9 @@ PyRMVtransport==0.2.9
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
 
+# homeassistant.components.homekit
+PyTurboJPEG==1.4.0
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -515,7 +518,7 @@ pyarlo==0.2.3
 pyatag==0.2.19
 
 # homeassistant.components.netatmo
-pyatmo==3.3.0
+pyatmo==3.3.1
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
@@ -747,7 +750,7 @@ rflink==0.0.52
 ring_doorbell==0.6.0
 
 # homeassistant.components.roku
-rokuecp==0.3.2
+rokuecp==0.4.0
 
 # homeassistant.components.roomba
 roombapy==1.5.3
@@ -827,6 +830,9 @@ total_connect_client==0.54.1
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
+
+# homeassistant.components.tuya
+tuyaha==0.0.6
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0

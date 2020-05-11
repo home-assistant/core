@@ -3,5 +3,6 @@
   "name": "Tuya",
   "documentation": "https://www.home-assistant.io/integrations/tuya",
   "requirements": ["tuyaha==0.0.6"],
-  "codeowners": []
+  "codeowners": ["@ollo69"],
+  "config_flow": true
 }

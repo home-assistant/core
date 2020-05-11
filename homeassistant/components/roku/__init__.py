@@ -18,6 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import utcnow
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -100,14 +101,26 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize global Roku data updater."""
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
 
+        self.full_update_interval = timedelta(minutes=15)
+        self.last_full_update = None
+
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> Device:
         """Fetch data from Roku."""
+        full_update = self.last_full_update is None or utcnow() >= (
+            self.last_full_update + self.full_update_interval
+        )
+
         try:
-            return await self.roku.update()
+            data = await self.roku.update(full_update=full_update)
+
+            if full_update:
+                self.last_full_update = utcnow()
+
+            return data
         except RokuError as error:
             raise UpdateFailed(f"Invalid response from API: {error}")
 

@@ -313,7 +313,7 @@ class HomeAccessory(Accessory):
         Run inside the Home Assistant event loop.
         """
         state = self.hass.states.get(self.entity_id)
-        await self.async_update_state_callback(None, None, state)
+        self.async_update_state_callback(None, None, state)
         async_track_state_change(
             self.hass, self.entity_id, self.async_update_state_callback
         )
@@ -329,7 +329,9 @@ class HomeAccessory(Accessory):
                 ATTR_BATTERY_CHARGING
             )
             async_track_state_change(
-                self.hass, self.linked_battery_sensor, self.async_update_linked_battery
+                self.hass,
+                self.linked_battery_sensor,
+                self.async_update_linked_battery_callback,
             )
         else:
             battery_state = state.attributes.get(ATTR_BATTERY_LEVEL)
@@ -341,17 +343,16 @@ class HomeAccessory(Accessory):
             async_track_state_change(
                 self.hass,
                 self.linked_battery_charging_sensor,
-                self.async_update_linked_battery_charging,
+                self.async_update_linked_battery_charging_callback,
             )
         elif battery_charging_state is None:
             battery_charging_state = state.attributes.get(ATTR_BATTERY_CHARGING)
 
         if battery_state is not None or battery_charging_state is not None:
-            self.hass.async_add_executor_job(
-                self.update_battery, battery_state, battery_charging_state
-            )
+            self.async_update_battery(battery_state, battery_charging_state)
 
-    async def async_update_state_callback(
+    @ha_callback
+    def async_update_state_callback(
         self, entity_id=None, old_state=None, new_state=None
     ):
         """Handle state change listener callback."""
@@ -371,12 +372,11 @@ class HomeAccessory(Accessory):
         ):
             battery_charging_state = new_state.attributes.get(ATTR_BATTERY_CHARGING)
         if battery_state is not None or battery_charging_state is not None:
-            await self.hass.async_add_executor_job(
-                self.update_battery, battery_state, battery_charging_state
-            )
-        await self.hass.async_add_executor_job(self.update_state, new_state)
+            self.async_update_battery(battery_state, battery_charging_state)
+        self.async_update_state(new_state)
 
-    async def async_update_linked_battery(
+    @ha_callback
+    def async_update_linked_battery_callback(
         self, entity_id=None, old_state=None, new_state=None
     ):
         """Handle linked battery sensor state change listener callback."""
@@ -384,19 +384,17 @@ class HomeAccessory(Accessory):
             battery_charging_state = None
         else:
             battery_charging_state = new_state.attributes.get(ATTR_BATTERY_CHARGING)
-        await self.hass.async_add_executor_job(
-            self.update_battery, new_state.state, battery_charging_state,
-        )
+        self.async_update_battery(new_state.state, battery_charging_state)
 
-    async def async_update_linked_battery_charging(
+    @ha_callback
+    def async_update_linked_battery_charging_callback(
         self, entity_id=None, old_state=None, new_state=None
     ):
         """Handle linked battery charging sensor state change listener callback."""
-        await self.hass.async_add_executor_job(
-            self.update_battery, None, new_state.state == STATE_ON
-        )
+        self.async_update_battery(None, new_state.state == STATE_ON)
 
-    def update_battery(self, battery_level, battery_charging):
+    @ha_callback
+    def async_update_battery(self, battery_level, battery_charging):
         """Update battery service if available.
 
         Only call this function if self._support_battery_level is True.
@@ -427,7 +425,8 @@ class HomeAccessory(Accessory):
                 "%s: Updated battery charging to %d", self.entity_id, hk_charging
             )
 
-    def update_state(self, new_state):
+    @ha_callback
+    def async_update_state(self, new_state):
         """Handle state change to update HomeKit value.
 
         Overridden by accessory types.
