@@ -48,7 +48,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.network import async_get_url
+from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
 
 from .const import (
@@ -821,7 +821,7 @@ async def _async_fetch_image(hass, url):
     cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
     if urlparse(url).hostname is None:
-        url = f"{async_get_url(hass)}{url}"
+        url = f"{get_url(hass)}{url}"
 
     if url not in cache_images:
         cache_images[url] = {CACHE_LOCK: asyncio.Lock()}

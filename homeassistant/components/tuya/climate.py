@@ -1,5 +1,9 @@
 """Support for the Tuya climate devices."""
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
+from homeassistant.components.climate import (
+    DOMAIN as SENSOR_DOMAIN,
+    ENTITY_ID_FORMAT,
+    ClimateEntity,
+)
 from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
@@ -14,12 +18,15 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_PLATFORM,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_TUYA, TuyaDevice
+from . import TuyaDevice
+from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 
 DEVICE_TYPE = "climate"
 
@@ -37,34 +44,53 @@ TUYA_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_TUYA.items()}
 FAN_MODES = {FAN_LOW, FAN_MEDIUM, FAN_HIGH}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Tuya Climate devices."""
-    if discovery_info is None:
-        return
-    tuya = hass.data[DATA_TUYA]
-    dev_ids = discovery_info.get("dev_ids")
-    devices = []
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up tuya sensors dynamically through tuya discovery."""
+
+    platform = config_entry.data[CONF_PLATFORM]
+
+    async def async_discover_sensor(dev_ids):
+        """Discover and add a discovered tuya sensor."""
+        if not dev_ids:
+            return
+        entities = await hass.async_add_executor_job(
+            _setup_entities, hass, dev_ids, platform,
+        )
+        async_add_entities(entities)
+
+    async_dispatcher_connect(
+        hass, TUYA_DISCOVERY_NEW.format(SENSOR_DOMAIN), async_discover_sensor
+    )
+
+    devices_ids = hass.data[DOMAIN]["pending"].pop(SENSOR_DOMAIN)
+    await async_discover_sensor(devices_ids)
+
+
+def _setup_entities(hass, dev_ids, platform):
+    """Set up Tuya Climate device."""
+    tuya = hass.data[DOMAIN][TUYA_DATA]
+    entities = []
     for dev_id in dev_ids:
-        device = tuya.get_device_by_id(dev_id)
-        if device is None:
+        entity = tuya.get_device_by_id(dev_id)
+        if entity is None:
             continue
-        devices.append(TuyaClimateEntity(device))
-    add_entities(devices)
+        entities.append(TuyaClimateEntity(entity, platform))
+    return entities
 
 
 class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     """Tuya climate devices,include air conditioner,heater."""
 
-    def __init__(self, tuya):
+    def __init__(self, tuya, platform):
         """Init climate device."""
-        super().__init__(tuya)
+        super().__init__(tuya, platform)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
         self.operations = [HVAC_MODE_OFF]
 
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
         await super().async_added_to_hass()
-        modes = self.tuya.operation_list()
+        modes = self._tuya.operation_list()
         if modes is None:
             return
 
@@ -80,7 +106,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement used by the platform."""
-        unit = self.tuya.temperature_unit()
+        unit = self._tuya.temperature_unit()
         if unit == "FAHRENHEIT":
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
@@ -88,10 +114,10 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        if not self.tuya.state():
+        if not self._tuya.state():
             return HVAC_MODE_OFF
 
-        mode = self.tuya.current_operation()
+        mode = self._tuya.current_operation()
         if mode is None:
             return None
         return TUYA_STATE_TO_HA.get(mode)
@@ -104,63 +130,63 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.tuya.current_temperature()
+        return self._tuya.current_temperature()
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self.tuya.target_temperature()
+        return self._tuya.target_temperature()
 
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self.tuya.target_temperature_step()
+        return self._tuya.target_temperature_step()
 
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return self.tuya.current_fan_mode()
+        return self._tuya.current_fan_mode()
 
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
-        return self.tuya.fan_list()
+        return self._tuya.fan_list()
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
-            self.tuya.set_temperature(kwargs[ATTR_TEMPERATURE])
+            self._tuya.set_temperature(kwargs[ATTR_TEMPERATURE])
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        self.tuya.set_fan_mode(fan_mode)
+        self._tuya.set_fan_mode(fan_mode)
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         if hvac_mode == HVAC_MODE_OFF:
-            self.tuya.turn_off()
+            self._tuya.turn_off()
 
-        if not self.tuya.state():
-            self.tuya.turn_on()
+        if not self._tuya.state():
+            self._tuya.turn_on()
 
-        self.tuya.set_operation_mode(HA_STATE_TO_TUYA.get(hvac_mode))
+        self._tuya.set_operation_mode(HA_STATE_TO_TUYA.get(hvac_mode))
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         supports = 0
-        if self.tuya.support_target_temperature():
+        if self._tuya.support_target_temperature():
             supports = supports | SUPPORT_TARGET_TEMPERATURE
-        if self.tuya.support_wind_speed():
+        if self._tuya.support_wind_speed():
             supports = supports | SUPPORT_FAN_MODE
         return supports
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self.tuya.min_temp()
+        return self._tuya.min_temp()
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self.tuya.max_temp()
+        return self._tuya.max_temp()

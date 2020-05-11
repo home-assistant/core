@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import auth, config_entries, core
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import config_validation as cv, dispatcher
-from homeassistant.helpers.network import async_get_url
+from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
 
@@ -41,7 +41,7 @@ async def async_setup_ha_cast(
 
     async def handle_show_view(call: core.ServiceCall):
         """Handle a Show View service call."""
-        hass_url = async_get_url(hass, require_ssl=True)
+        hass_url = get_url(hass, require_ssl=True)
 
         controller = HomeAssistantController(
             # If you are developing Home Assistant Cast, uncomment and set to your dev app id.

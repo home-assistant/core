@@ -12,6 +12,7 @@ from pyhap.const import CATEGORY_CAMERA
 
 from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.core import callback
 from homeassistant.util import get_local_ip
 
 from .accessories import TYPES, HomeAccessory
@@ -29,9 +30,11 @@ from .const import (
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
 )
+from .img_util import scale_jpeg_camera_image
 from .util import CAMERA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
@@ -142,7 +145,8 @@ class Camera(HomeAccessory, PyhapCamera):
             options=options,
         )
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Handle state change to update HomeKit value."""
         pass  # pylint: disable=unnecessary-pass
 
@@ -246,11 +250,11 @@ class Camera(HomeAccessory, PyhapCamera):
 
     def get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
-        return (
+        return scale_jpeg_camera_image(
             asyncio.run_coroutine_threadsafe(
                 self.hass.components.camera.async_get_image(self.entity_id),
                 self.hass.loop,
-            )
-            .result()
-            .content
+            ).result(),
+            image_size["image-width"],
+            image_size["image-height"],
         )

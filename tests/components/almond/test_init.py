@@ -42,7 +42,7 @@ async def test_set_up_oauth_remote_url(hass, aioclient_mock):
 
     hass.config.components.add("cloud")
     with patch("homeassistant.components.almond.ALMOND_SETUP_DELAY", 0), patch(
-        "homeassistant.helpers.network.async_get_url",
+        "homeassistant.helpers.network.get_url",
         return_value="https://example.nabu.casa",
     ), patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)

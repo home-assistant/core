@@ -78,8 +78,9 @@ def create_blebox_entities(product, async_add, entity_klass, entity_type):
     """Create entities from a BleBox product's features."""
 
     entities = []
-    for feature in product.features[entity_type]:
-        entities.append(entity_klass(feature))
+    if entity_type in product.features:
+        for feature in product.features[entity_type]:
+            entities.append(entity_klass(feature))
 
     async_add(entities, True)
 

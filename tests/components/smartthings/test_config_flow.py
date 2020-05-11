@@ -15,6 +15,7 @@ from homeassistant.components.smartthings.const import (
     CONF_OAUTH_CLIENT_SECRET,
     DOMAIN,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     HTTP_FORBIDDEN,
@@ -417,9 +418,10 @@ async def test_entry_created_with_cloudhook(
 
 async def test_invalid_webhook_aborts(hass):
     """Test flow aborts if webhook is invalid."""
-    hass.config.api.base_url = "http://0.0.0.0"
-
     # Webhook confirmation shown
+    await async_process_ha_core_config(
+        hass, {"external_url": "http://example.local:8123"},
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )

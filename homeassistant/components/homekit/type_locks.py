@@ -5,6 +5,7 @@ from pyhap.const import CATEGORY_DOOR_LOCK
 
 from homeassistant.components.lock import DOMAIN, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
@@ -45,7 +46,7 @@ class Lock(HomeAccessory):
             value=HASS_TO_HOMEKIT[STATE_LOCKED],
             setter_callback=self.set_state,
         )
-        self.update_state(state)
+        self.async_update_state(state)
 
     def set_state(self, value):
         """Set lock state to value if call came from HomeKit."""
@@ -62,7 +63,8 @@ class Lock(HomeAccessory):
             params[ATTR_CODE] = self._code
         self.call_service(DOMAIN, service, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update lock after state changed."""
         hass_state = new_state.state
         if hass_state in HASS_TO_HOMEKIT:

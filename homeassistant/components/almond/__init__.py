@@ -151,11 +151,9 @@ async def _configure_almond_for_ha(
         if entry.data["type"] == TYPE_OAUTH2:
             # If we're connecting over OAuth2, we will only set up connection
             # with Home Assistant if we're remotely accessible.
-            hass_url = network.async_get_url(
-                hass, allow_internal=False, prefer_cloud=True
-            )
+            hass_url = network.get_url(hass, allow_internal=False, prefer_cloud=True)
         else:
-            hass_url = network.async_get_url(hass)
+            hass_url = network.get_url(hass)
     except network.NoURLAvailableError:
         # If no URL is available, we're not going to configure Almond to connect to HA.
         return

@@ -37,7 +37,6 @@ from .const import (
     CONF_DATABASE,
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
-    CONTROLLER,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_GATEWAY,
@@ -73,12 +72,12 @@ from .const import (
     ZHA_GW_MSG_LOG_ENTRY,
     ZHA_GW_MSG_LOG_OUTPUT,
     ZHA_GW_MSG_RAW_INIT,
-    ZHA_GW_RADIO_DESCRIPTION,
+    RadioType,
 )
 from .device import DeviceStatus, ZHADevice
 from .group import GroupMember, ZHAGroup
 from .patches import apply_application_controller_patch
-from .registries import GROUP_ENTITY_DOMAINS, RADIO_TYPES
+from .registries import GROUP_ENTITY_DOMAINS
 from .store import async_get_registry
 from .typing import ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
 
@@ -125,8 +124,8 @@ class ZHAGateway:
 
         radio_type = self._config_entry.data[CONF_RADIO_TYPE]
 
-        app_controller_cls = RADIO_TYPES[radio_type][CONTROLLER]
-        self.radio_description = RADIO_TYPES[radio_type][ZHA_GW_RADIO_DESCRIPTION]
+        app_controller_cls = RadioType[radio_type].controller
+        self.radio_description = RadioType[radio_type].description
 
         app_config = self._config.get(CONF_ZIGPY, {})
         database = self._config.get(

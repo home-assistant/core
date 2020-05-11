@@ -1219,3 +1219,23 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG, payload='{"state":"ON"}'
     )
+
+
+async def test_max_mireds(hass, mqtt_mock):
+    """Test setting min_mireds and max_mireds."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "schema": "json",
+            "name": "test",
+            "command_topic": "test_max_mireds/set",
+            "color_temp": True,
+            "max_mireds": 370,
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+
+    state = hass.states.get("light.test")
+    assert state.attributes.get("min_mireds") == 153
+    assert state.attributes.get("max_mireds") == 370
