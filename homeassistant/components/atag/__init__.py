@@ -66,6 +66,8 @@ class AtagDataUpdateCoordinator(DataUpdateCoordinator):
         with async_timeout.timeout(20):
             try:
                 await self.atag.update()
+                if not self.atag.report:
+                    raise UpdateFailed("No data")
             except AtagException as error:
                 raise UpdateFailed(error)
         return self.atag.report
