@@ -3,7 +3,7 @@ import asyncio
 import logging
 from uuid import uuid4
 
-from aiohttp import ClientError
+from aiohttp import ClientError, web_exceptions
 from async_timeout import timeout
 from pydaikin.daikin_base import Appliance
 import voluptuous as vol
@@ -14,6 +14,14 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from .const import CONF_KEY, CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_KEY): str,
+        vol.Optional(CONF_PASSWORD): str,
+    }
+)
 
 
 @config_entries.HANDLERS.register("daikin")
@@ -43,7 +51,6 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def _create_device(self, host, key=None, password=None):
         """Create device."""
-
         # BRP07Cxx devices needs uuid together with key
         if key:
             uuid = str(uuid4())
@@ -64,13 +71,25 @@ class FlowHandler(config_entries.ConfigFlow):
                     password=password,
                 )
         except asyncio.TimeoutError:
-            return self.async_abort(reason="device_timeout")
+            return self.async_show_form(
+                step_id="user",
+                data_schema=DATA_SCHEMA,
+                errors={"base": "device_timeout"},
+            )
+        except web_exceptions.HTTPForbidden:
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA, errors={"base": "forbidden"},
+            )
         except ClientError:
             _LOGGER.exception("ClientError")
-            return self.async_abort(reason="device_fail")
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA, errors={"base": "device_fail"},
+            )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
-            return self.async_abort(reason="device_fail")
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA, errors={"base": "device_fail"},
+            )
 
         mac = device.mac
         return self._create_entry(host, mac, key, uuid, password)
@@ -78,16 +97,7 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """User initiated config flow."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): str,
-                        vol.Optional(CONF_KEY): str,
-                        vol.Optional(CONF_PASSWORD): str,
-                    }
-                ),
-            )
+            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA,)
         return await self._create_device(
             user_input[CONF_HOST],
             user_input.get(CONF_KEY),

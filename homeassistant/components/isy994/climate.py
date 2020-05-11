@@ -55,6 +55,7 @@ from .const import (
 )
 from .entity import ISYNodeEntity
 from .helpers import migrate_old_unique_ids
+from .services import async_setup_device_services
 
 ISY_SUPPORTED_FEATURES = (
     SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
@@ -75,6 +76,7 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, CLIMATE, entities)
     async_add_entities(entities)
+    async_setup_device_services(hass)
 
 
 def convert_isy_temp_to_hass(

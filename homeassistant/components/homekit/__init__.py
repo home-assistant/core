@@ -440,11 +440,10 @@ class HomeKit:
             self.driver.safe_mode = True
 
     async def async_setup_zeroconf(self):
-        """Share a single zeroconf instance between homekit bridges."""
+        """Share the system zeroconf instance."""
         # Replace the existing zeroconf instance.
         await self.hass.async_add_executor_job(self.driver.advertiser.close)
         self.driver.advertiser = await zeroconf.async_get_instance(self.hass)
-        _LOGGER.error("Advertiser is : %s", self.driver.advertiser)
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""

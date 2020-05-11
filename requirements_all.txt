@@ -994,7 +994,7 @@ oemthermostat==1.1
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==0.2.0
+onvif-zeep-async==0.3.0
 
 # homeassistant.components.opengarage
 open-garage==0.1.2
@@ -1245,7 +1245,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==5.0.0
+pychromecast==5.1.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1263,7 +1263,7 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.0.0
+pydaikin==2.0.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0

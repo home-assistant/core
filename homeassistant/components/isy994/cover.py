@@ -17,6 +17,7 @@ from .const import (
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
+from .services import async_setup_device_services
 
 
 async def async_setup_entry(
@@ -35,6 +36,7 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, COVER, devices)
     async_add_entities(devices)
+    async_setup_device_services(hass)
 
 
 class ISYCoverEntity(ISYNodeEntity, CoverEntity):

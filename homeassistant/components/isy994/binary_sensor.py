@@ -50,6 +50,7 @@ from .const import (
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
+from .services import async_setup_device_services
 
 DEVICE_PARENT_REQUIRED = [
     DEVICE_CLASS_OPENING,
@@ -172,6 +173,7 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, BINARY_SENSOR, devices)
     async_add_entities(devices)
+    async_setup_device_services(hass)
 
 
 def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):
