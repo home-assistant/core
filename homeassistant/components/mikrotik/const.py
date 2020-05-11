@@ -41,9 +41,7 @@ MIKROTIK_SERVICES = {
     IS_CAPSMAN: "/caps-man/interface/print",
 }
 
-ATTR_DEVICE_TRACKER = [
-    "comment",
-    "mac-address",
+CLIENT_ATTRIBUTES = [
     "ssid",
     "interface",
     "signal-strength",

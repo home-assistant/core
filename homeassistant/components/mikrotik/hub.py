@@ -186,63 +186,63 @@ class MikrotikHub:
                 return
 
         _LOGGER.debug("updating network clients for host: %s", self.host)
-        wireless_clients = arp_clients = all_clients = {}
+        client_list = wireless_clients = arp_clients = dhcp_clients = {}
 
         try:
-            all_clients = self.get_list_from_interface(DHCP)
+            dhcp_clients = self.get_list_from_interface(DHCP)
+            if self.arp_enabled:
+                _LOGGER.debug("Getting ARP device list")
+                arp_clients = self.get_list_from_interface(ARP)
+
             if self._support_capsman:
                 _LOGGER.debug("Hub is a CAPSMAN Manager")
                 client_list = wireless_clients = self.get_list_from_interface(CAPSMAN)
             elif self._support_wireless:
                 _LOGGER.debug("Hub supports WIRELESS Interface")
                 client_list = wireless_clients = self.get_list_from_interface(WIRELESS)
-            else:
-                _LOGGER.debug("Hub doesn't support WIRELESS/CAPSMAN Interface")
-                client_list = all_clients
 
-            if self.force_dhcp:
-                client_list = all_clients
+            if not client_list or self.force_dhcp:
                 _LOGGER.debug("using DHCP for scanning devices")
-
-            if self.arp_enabled:
-                _LOGGER.debug("Getting ARP device list")
-                arp_clients = self.get_list_from_interface(ARP)
+                client_list = dhcp_clients
 
         except (CannotConnect, socket.timeout, OSError):
             self.available = False
             return
 
-        if not client_list:
+        if not client_list and not dhcp_clients:
             return
 
-        for mac, params in client_list.items():
-
+        # add new clients from client_list
+        for mac in client_list:
             if mac not in self.clients:
-                self.clients[mac] = MikrotikClient(
-                    mac, all_clients.get(mac, {}), self.serial_number
-                )
-            else:
-                self.clients[mac].update(
-                    params=all_clients.get(mac, {}), hub_id=self.serial_number
-                )
+                self.clients[mac] = MikrotikClient(mac, host=self.host)
 
+        # update all clients
+        for mac in self.clients:
+
+            if dhcp_clients and mac in dhcp_clients:
+                self.clients[mac].update(dhcp_params=dhcp_clients[mac])
+
+            # update device if connected through wireless
             if wireless_clients and mac in wireless_clients:
-                # if wireless is supported then wireless_params are params
                 self.clients[mac].update(
-                    wireless_params=wireless_clients[mac], active=True
+                    wireless_params=wireless_clients[mac], active=True, host=self.host,
                 )
                 continue
-            # for wired devices or when forcing dhcp check for active-address
-            if not params.get("active-address"):
-                self.clients[mac].update(active=False)
-                continue
-            # ping check the rest of active devices if arp ping is enabled
-            active = True
-            if self.arp_enabled and mac in arp_clients:
-                active = self.do_arp_ping(
-                    params.get("active-address"), arp_clients[mac].get("interface")
-                )
-            self.clients[mac].update(active=active)
+            # for devices not detected by the wireless interface ensure the device
+            # is updated by its detected host
+            if dhcp_clients and mac in dhcp_clients:
+                if self.clients[mac].dhcp_params.get("active-address"):
+                    self.clients[mac].update(host=self.host)
+                    active = True
+                    # ping the active devices if arp ping is enabled
+                    if self.arp_enabled and mac in arp_clients:
+                        active = self.do_arp_ping(
+                            self.clients[mac].dhcp_params.get("active-address"),
+                            arp_clients[mac].get("interface"),
+                        )
+                    _LOGGER.debug(active)
+                self.clients[mac].update(active=active, host=self.host)
 
     async def async_setup(self):
         """Set up the Mikrotik hub."""

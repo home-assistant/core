@@ -78,7 +78,7 @@ class Mikrotik:
         self.config_entry = config_entry
         self.hubs = {}
         self.clients = {}
-        self.unsub_timers = []
+        self.unsub_timer = None
         self.unsub_listener = None
 
     @property
@@ -87,9 +87,9 @@ class Mikrotik:
         return f"{DOMAIN}-{self.config_entry.entry_id}-data-updated"
 
     @property
-    def signal_update_clients(self):
+    def signal_new_clients(self):
         """Signal update clients."""
-        return f"{DOMAIN}-{self.config_entry.entry_id}-update-clients"
+        return f"{DOMAIN}-{self.config_entry.entry_id}-new-clients"
 
     @property
     def signal_options_update(self):
@@ -127,7 +127,7 @@ class Mikrotik:
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, hub.serial_number)},
+            identifiers={(DOMAIN, hub.host)},
             manufacturer=ATTR_MANUFACTURER,
             model=hub.model,
             name=hub.name,
@@ -142,10 +142,14 @@ class Mikrotik:
 
         if len_old_clients != len(self.clients):
             _LOGGER.debug("New clients detected")
-            async_dispatcher_send(self.hass, self.signal_data_update)
+            async_dispatcher_send(self.hass, self.signal_new_clients)
+
+        async_dispatcher_send(self.hass, self.signal_data_update)
 
     async def async_setup(self):
         """Set up a new Mikrotik integration."""
+
+        await self.async_get_clients_from_registry()
 
         for hub in self.config_entry.data[CONF_HUBS]:
             new_hub = MikrotikHub(self.hass, self.config_entry, hub, self.clients)
@@ -159,58 +163,50 @@ class Mikrotik:
         if not self.available:
             raise ConfigEntryNotReady
 
+        await self.async_set_update_interval()
+        # run update twice only during setup to update clients from all hubs
         await self.async_update()
-
-        await self.async_update_intervals()
         self.config_entry.add_update_listener(self.async_options_updated)
 
         return True
 
+    async def async_get_clients_from_registry(self):
+        """Get list of clients from entity registry."""
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entities = self.hass.helpers.entity_registry.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        )
+
+        if entities:
+            self.clients = {
+                entity.unique_id: MikrotikClient(entity.unique_id)
+                for entity in entities
+            }
+
     async def async_cleanup(self):
-        """Remove hub devices and update signals."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        for hub in self.hubs:
-            hub_device = device_registry.async_get_device(
-                {(DOMAIN, self.hubs[hub].serial_number)}, set()
-            )
-            if hub_device:
-                device_registry.async_remove_device(hub_device.id)
-
-        while self.unsub_timers:
-            self.unsub_timers.pop()()
-
+        """Remove update signals."""
         # pylint: disable=not-callable
+        if self.unsub_timer:
+            self.unsub_timer()
+
         if self.unsub_listener:
             self.unsub_listener()
 
-    async def async_update_intervals(self):
+    async def async_set_update_interval(self):
         """Update scan interval."""
 
-        async def async_update_data(event_time):
+        async def async_update_data(event_time=None):
             """Get the latest data from Mikrotik."""
             await self.async_update()
 
-        async def async_signal_update_clients(event_time):
-            """Get the latest data from Mikrotik."""
-            async_dispatcher_send(self.hass, self.signal_update_clients)
-
-        while self.unsub_timers:
-            self.unsub_timers.pop()()
-
-        for method, interval in (
-            (async_update_data, self.option_scan_interval),
-            (async_signal_update_clients, self.option_detection_time),
-        ):
-            self.unsub_timers.append(
-                async_track_time_interval(self.hass, method, interval)
-            )
+        if self.unsub_timer:
+            self.unsub_timer()
+        self.unsub_timer = async_track_time_interval(
+            self.hass, async_update_data, self.option_scan_interval
+        )
+        await async_update_data()
 
     @staticmethod
     async def async_options_updated(hass, entry):
         """Triggered by config entry options updates."""
-        await hass.data[DOMAIN][entry.entry_id].async_update_intervals()
-        # await hass.data[DOMAIN][entry.entry_id].async_set_signal_update_clients()
-
-    def restore_client(self, mac):
-        """Restore a missing device after restart."""
-        self.clients[mac] = MikrotikClient(mac, {}, None)
+        await hass.data[DOMAIN][entry.entry_id].async_set_update_interval()

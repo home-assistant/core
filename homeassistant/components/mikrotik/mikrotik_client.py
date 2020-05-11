@@ -1,26 +1,27 @@
 """Mikrotik Client class."""
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_DEVICE_TRACKER
+from .const import CLIENT_ATTRIBUTES
 
 
 class MikrotikClient:
     """Represents a network client."""
 
-    def __init__(self, mac, params, hub_id):
+    def __init__(self, mac, host=None):
         """Initialize the client."""
         self._mac = mac
-        self._params = params
+        self.host = host
+        self.dhcp_params = {}
+        self.wireless_params = {}
         self._last_seen = None
         self._attrs = {}
-        self._wireless_params = {}
-        self.hub_id = hub_id
 
     @property
     def name(self):
         """Return client name."""
-        return self._params.get("host-name", self.mac)
+        return self.dhcp_params.get("host-name", self.mac)
 
     @property
     def mac(self):
@@ -35,22 +36,27 @@ class MikrotikClient:
     @property
     def attrs(self):
         """Return client attributes."""
-        attr_data = self._wireless_params or self._params
-        for attr in ATTR_DEVICE_TRACKER:
-            if attr in attr_data:
-                self._attrs[slugify(attr)] = attr_data[attr]
-        self._attrs["ip_address"] = self._params.get(
-            "active-address", self._wireless_params.get("last-ip")
-        )
-        return self._attrs
+        attrs = {}
+        attrs[CONF_MAC] = self.mac
+        if self.wireless_params:
+            for attr in CLIENT_ATTRIBUTES:
+                if attr in self.wireless_params:
+                    attrs[slugify(attr)] = self.wireless_params[attr]
 
-    def update(self, wireless_params=None, params=None, active=False, hub_id=None):
+        ip_address = self.dhcp_params.get("active-address") or self.wireless_params.get(
+            "last-ip"
+        )
+        if ip_address:
+            attrs[CONF_IP_ADDRESS] = ip_address
+        return attrs
+
+    def update(self, wireless_params=None, dhcp_params=None, active=False, host=None):
         """Update client params."""
-        if hub_id:
-            self.hub_id = hub_id
+        if host:
+            self.host = host
         if wireless_params:
-            self._wireless_params = wireless_params
-        if params:
-            self._params = params
+            self.wireless_params = wireless_params
+        if dhcp_params:
+            self.dhcp_params = dhcp_params
         if active:
             self._last_seen = dt_util.utcnow()

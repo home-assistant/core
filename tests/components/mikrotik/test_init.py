@@ -4,6 +4,8 @@ from itertools import cycle
 
 from homeassistant import config_entries
 from homeassistant.components import mikrotik
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 from . import DEVICE_3_WIRELESS, ENTRY_DATA, HUB1_WIRELESS_DATA, OLD_ENTRY_CONFIG
@@ -77,8 +79,8 @@ async def test_successfull_integration_setup(hass, api):
             == f"{mikrotik.DOMAIN}-{mikrotik_mock.config_entry.entry_id}-data-updated"
         )
         assert (
-            mikrotik_mock.signal_update_clients
-            == f"{mikrotik.DOMAIN}-{mikrotik_mock.config_entry.entry_id}-update-clients"
+            mikrotik_mock.signal_new_clients
+            == f"{mikrotik.DOMAIN}-{mikrotik_mock.config_entry.entry_id}-new-clients"
         )
         assert (
             mikrotik_mock.signal_options_update
@@ -108,22 +110,62 @@ async def test_updating_clients(hass, api):
     ) as mock_disptacher:
 
         mikrotik_mock = await setup_mikrotik_integration(hass, support_wireless=True)
-        assert len(mock_disptacher.mock_calls) == 1
+        assert len(mock_disptacher.mock_calls) == 3
 
-        # no signal is sent if no new device is detected
+        # new data_update signal is sent if no new device is detected
         assert len(mikrotik_mock.clients) == 2
         await mikrotik_mock.async_update()
         await hass.async_block_till_done()
 
         assert len(mikrotik_mock.clients) == 2
-        assert len(mock_disptacher.mock_calls) == 1
+        assert len(mock_disptacher.mock_calls) == 4
 
-        # signal is sent if new device is detected
+        # new data_update and new_clients signal is sent if new devices are detected
         HUB1_WIRELESS_DATA.append(DEVICE_3_WIRELESS)
         await mikrotik_mock.async_update()
         await hass.async_block_till_done()
         assert len(mikrotik_mock.clients) == 3
-        assert len(mock_disptacher.mock_calls) == 2
+        assert len(mock_disptacher.mock_calls) == 6
 
     # revert the changes made for this test
     del HUB1_WIRELESS_DATA[1]
+
+
+async def test_restoring_devices(hass, api):
+    """Test restoring existing device_tracker from entity registry."""
+    config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    registry = await entity_registry.async_get_registry(hass)
+    registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        mikrotik.DOMAIN,
+        "00:00:00:00:00:01",
+        suggested_object_id="device_1",
+        config_entry=config_entry,
+    )
+    registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        mikrotik.DOMAIN,
+        "00:00:00:00:00:02",
+        suggested_object_id="device_2",
+        config_entry=config_entry,
+    )
+    registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        mikrotik.DOMAIN,
+        "00:00:00:00:00:04",
+        suggested_object_id="device_4",
+        config_entry=config_entry,
+    )
+
+    await setup_mikrotik_integration(hass, support_wireless=True)
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+    assert device_1.state == "home"
+
+    # test device_4 which is not in wireless list is restored
+    device_4 = hass.states.get("device_tracker.device_4")
+    assert device_4 is not None
+    assert device_4.state == "not_home"
