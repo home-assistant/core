@@ -47,7 +47,7 @@ class ISYSensorEntity(ISYNodeEntity):
     """Representation of an ISY994 sensor device."""
 
     @property
-    def get_raw_unit_of_measurement(self) -> Union[dict, str]:
+    def raw_unit_of_measurement(self) -> Union[dict, str]:
         """Get the raw unit of measurement for the ISY994 sensor device."""
         uom = self._node.uom
 
@@ -70,7 +70,7 @@ class ISYSensorEntity(ISYNodeEntity):
             return None
 
         # Get the translated ISY Unit of Measurement
-        uom = self.get_raw_unit_of_measurement
+        uom = self.raw_unit_of_measurement
 
         # Check if this is a known index pair UOM
         if isinstance(uom, dict):
@@ -88,7 +88,7 @@ class ISYSensorEntity(ISYNodeEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Get the Home Assistant unit of measurement for the device."""
-        raw_units = self.get_raw_unit_of_measurement
+        raw_units = self.raw_unit_of_measurement
         # Check if this is a known index pair UOM
         if isinstance(raw_units, dict):
             return None
