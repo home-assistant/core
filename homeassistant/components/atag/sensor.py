@@ -9,16 +9,16 @@ from homeassistant.const import (
 
 from . import DOMAIN, AtagEntity
 
-SENSORS = [
-    "Burning Hours",
-    "Outside Temperature",
-    "Flame",
-    "Average Outside Temperature",
-    "Weather Status",
-    "CH Return Temperature",
-    "CH Water Pressure",
-    "CH Water Temperature",
-]
+SENSORS = {
+    "Outside Temperature": "outside_temp",
+    "Average Outside Temperature": "tout_avg",
+    "Weather Status": "weather_status",
+    "CH Water Pressure": "ch_water_pres",
+    "CH Water Temperature": "ch_water_temp",
+    "CH Return Temperature": "ch_return_temp",
+    "Burning Hours": "burning_hours",
+    "Flame": "rel_mod_level",
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -35,7 +35,7 @@ class AtagSensor(AtagEntity):
 
     def __init__(self, coordinator, sensor):
         """Initialize Atag sensor."""
-        super().__init__(coordinator, sensor)
+        super().__init__(coordinator, SENSORS[sensor])
         self._name = sensor
 
     @property
