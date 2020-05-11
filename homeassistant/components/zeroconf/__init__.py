@@ -64,7 +64,6 @@ async def async_get_instance(hass):
 def _get_instance(hass, default_interface=False):
     """Create an instance."""
     args = [InterfaceChoice.Default] if default_interface else []
-    _LOGGER.error("ZeroConf Create with args: %s", args)
     zeroconf = HaZeroconf(*args)
 
     def stop_zeroconf(_):
