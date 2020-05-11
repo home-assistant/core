@@ -88,7 +88,9 @@ async def async_setup_entry(
 
     device: Device = hass.data[DOMAIN]["devices"][udn]
 
-    update_interval_sec = data.get(CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    update_interval_sec = config_entry.options.get(
+        CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+    )
     update_interval = timedelta(seconds=update_interval_sec)
     _LOGGER.debug("update_interval: %s", update_interval)
     _LOGGER.debug("Adding sensors")
@@ -100,6 +102,7 @@ async def async_setup_entry(
         update_interval=update_interval,
     )
     await coordinator.async_refresh()
+    hass.data[DOMAIN]["coordinators"][udn] = coordinator
 
     sensors = [
         RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),

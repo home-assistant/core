@@ -80,6 +80,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     hass.data[DOMAIN] = {
         "config": conf,
         "devices": {},
+        "coordinators": {},
         "local_ip": conf.get(CONF_LOCAL_IP, local_ip),
     }
 
@@ -139,5 +140,9 @@ async def async_unload_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
+    udn = config_entry.data.get(CONFIG_ENTRY_UDN)
+    del hass.data[DOMAIN]["devices"][udn]
+    del hass.data[DOMAIN]["coordinators"][udn]
+
     _LOGGER.debug("Deleting sensors")
     return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
