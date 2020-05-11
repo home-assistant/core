@@ -87,7 +87,7 @@ async def async_setup(hass, config):
         if pi_hole is None:
             LOGGER.error("Unknown Pi-hole name %s", name)
             return None
-        if pi_hole.api.api_token is None:
+        if not pi_hole.api.api_token:
             LOGGER.error(
                 "Pi-hole %s must have an api_key provided in configuration to be enabled",
                 name,
