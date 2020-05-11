@@ -48,25 +48,25 @@ ATTR_TO_HA_IMPERIAL = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the BMW sensors."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the BMW ConnectedDrive sensors from config entry."""
+
     if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         attribute_info = ATTR_TO_HA_IMPERIAL
     else:
         attribute_info = ATTR_TO_HA_METRIC
 
-    accounts = hass.data[BMW_DOMAIN]
-    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
+    account = hass.data[BMW_DOMAIN][config_entry.entry_id]
     devices = []
-    for account in accounts:
-        for vehicle in account.account.vehicles:
-            for attribute_name in vehicle.drive_train_attributes:
-                if attribute_name in vehicle.available_attributes:
-                    device = BMWConnectedDriveSensor(
-                        account, vehicle, attribute_name, attribute_info
-                    )
-                    devices.append(device)
-    add_entities(devices, True)
+
+    for vehicle in account.account.vehicles:
+        for attribute_name in vehicle.drive_train_attributes:
+            if attribute_name in vehicle.available_attributes:
+                device = BMWConnectedDriveSensor(
+                    account, vehicle, attribute_name, attribute_info
+                )
+                devices.append(device)
+    async_add_entities(devices, True)
 
 
 class BMWConnectedDriveSensor(Entity):
@@ -81,6 +81,17 @@ class BMWConnectedDriveSensor(Entity):
         self._name = f"{self._vehicle.name} {self._attribute}"
         self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
         self._attribute_info = attribute_info
+
+    @property
+    def device_info(self) -> dict:
+        """Return info for device registry."""
+        return {
+            "identifiers": {(BMW_DOMAIN, self._vehicle.vin)},
+            "sw_version": self._vehicle.vin,
+            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
+            "model": self._vehicle.name,
+            "manufacturer": self._vehicle.attributes.get("brand"),
+        }
 
     @property
     def should_poll(self) -> bool:

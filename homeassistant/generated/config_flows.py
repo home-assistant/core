@@ -29,6 +29,7 @@ FLOWS = [
     "azure_devops",
     "blebox",
     "blink",
+    "bmw_connected_drive",
     "bond",
     "braviatv",
     "broadlink",

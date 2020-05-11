@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_service(hass, config, discovery_info=None):
     """Get the BMW notification service."""
-    accounts = hass.data[BMW_DOMAIN]
+    accounts = list(hass.data[BMW_DOMAIN].values())
     _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
     svc = BMWNotificationService()
     svc.setup(accounts)

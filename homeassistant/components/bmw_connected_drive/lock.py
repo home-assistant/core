@@ -13,17 +13,16 @@ DOOR_LOCK_STATE = "door_lock_state"
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the BMW Connected Drive lock."""
-    accounts = hass.data[BMW_DOMAIN]
-    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the BMW ConnectedDrive binary sensors from config entry."""
+    account = hass.data[BMW_DOMAIN][config_entry.entry_id]
     devices = []
-    for account in accounts:
-        if not account.read_only:
-            for vehicle in account.account.vehicles:
-                device = BMWLock(account, vehicle, "lock", "BMW lock")
-                devices.append(device)
-    add_entities(devices, True)
+
+    if not account.read_only:
+        for vehicle in account.account.vehicles:
+            device = BMWLock(account, vehicle, "lock", "BMW lock")
+            devices.append(device)
+    async_add_entities(devices, True)
 
 
 class BMWLock(LockEntity):
@@ -41,6 +40,17 @@ class BMWLock(LockEntity):
         self.door_lock_state_available = (
             DOOR_LOCK_STATE in self._vehicle.available_attributes
         )
+
+    @property
+    def device_info(self) -> dict:
+        """Return info for device registry."""
+        return {
+            "identifiers": {(BMW_DOMAIN, self._vehicle.vin)},
+            "sw_version": self._vehicle.vin,
+            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
+            "model": self._vehicle.name,
+            "manufacturer": self._vehicle.attributes.get("brand"),
+        }
 
     @property
     def should_poll(self):
