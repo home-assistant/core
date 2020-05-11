@@ -278,8 +278,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             # required values
                             values,
                             list_value["Value"],
+                            item[NOTIFICATION_DEVICE_CLASS],
                             # optional values
-                            item.get(NOTIFICATION_DEVICE_CLASS),
                             item.get(NOTIFICATION_SENSOR_ENABLED, True),
                             item.get(NOTIFICATION_OFF_VALUE, NOTIFICATION_VALUE_CLEAR),
                         )
