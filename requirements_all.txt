@@ -1907,7 +1907,7 @@ sendgrid==6.2.1
 sense-hat==2.2.0
 
 # homeassistant.components.sense
-sense_energy==0.7.1
+sense_energy==0.7.2
 
 # homeassistant.components.sentry
 sentry-sdk==0.13.5
