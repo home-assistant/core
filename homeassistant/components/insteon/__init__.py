@@ -42,7 +42,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_id_unknown_devices(config_dir):
     """Send device ID commands to all unidentified devices."""
-    _LOGGER.info("Identifying Insteon devices")
     await devices.async_load(id_devices=1)
     for addr in devices:
         device = devices[addr]
@@ -56,17 +55,21 @@ async def async_id_unknown_devices(config_dir):
                 if not device.properties[name].is_loaded:
                     flags = False
                     break
+
+        # Cannot be done concurrently due to issues with the underlying protocol.
         if not device.aldb.is_loaded or not flags:
             await device.async_read_config()
+
     await devices.async_save(workdir=config_dir)
 
 
 async def async_setup_platforms(hass, config):
     """Initiate the connection and services."""
-    for component in INSTEON_COMPONENTS:
-        _LOGGER.info("Setting up insteon platform %s", component)
-        await hass.helpers.discovery.async_load_platform(component, DOMAIN, {}, config)
-        _LOGGER.info("Done setting up up insteon platform %s", component)
+    tasks = [
+        hass.helpers.discovery.async_load_platform(component, DOMAIN, {}, config)
+        for component in INSTEON_COMPONENTS
+    ]
+    await asyncio.gather(*tasks)
 
     for address in devices:
         device = devices[address]
@@ -74,10 +77,11 @@ async def async_setup_platforms(hass, config):
         if ON_OFF_EVENTS in platforms:
             add_on_off_event_device(hass, device)
 
-    _LOGGER.info("Insteon device count: %s", len(devices))
+    _LOGGER.debug("Insteon device count: %s", len(devices))
     register_new_device_callback(hass, config)
     async_register_services(hass)
 
+    # Cannot be done concurrently due to issues with the underlying protocol.
     for address in devices:
         await devices[address].async_status()
     await async_id_unknown_devices(hass.config.config_dir)
