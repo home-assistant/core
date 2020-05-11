@@ -3,7 +3,6 @@ import json
 import os
 import unittest.mock as mock
 
-from magichome import MagicHomeApi
 import pytest
 
 from homeassistant.components import magichome
