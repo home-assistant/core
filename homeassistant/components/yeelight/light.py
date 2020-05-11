@@ -473,13 +473,9 @@ class YeelightGenericLight(LightEntity):
 
     @property
     def unique_id(self) -> Optional[str]:
-        """Return a unique ID.
+        """Return a unique ID."""
 
-        Uses data returned from get_capabilities call ( https://yeelight.readthedocs.io/en/latest/yeelight.html#yeelight.Bulb.get_capabilities )
-
-        """
-
-        return self._bulb.capabilities.get("id")
+        return self.device.unique_id
 
     @property
     def available(self) -> bool:

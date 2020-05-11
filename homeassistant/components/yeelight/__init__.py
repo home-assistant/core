@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Optional
 
 import voluptuous as vol
 from yeelight import Bulb, BulbException
@@ -291,6 +292,15 @@ class YeelightDevice:
 
         return self._device_type
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID.
+
+        Uses data returned from get_capabilities call ( https://yeelight.readthedocs.io/en/latest/yeelight.html#yeelight.Bulb.get_capabilities )
+        """
+
+        return self.bulb.capabilities.get("id")
+
     def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None):
         """Turn on device."""
         try:
@@ -341,9 +351,7 @@ class YeelightDevice:
             )
 
     def _initialize_device(self):
-        if self._available:
-            self._get_capabilities()
-
+        self._get_capabilities()
         self._initialized = True
         dispatcher_send(self._hass, DEVICE_INITIALIZED, self.ipaddr)
 
@@ -354,8 +362,4 @@ class YeelightDevice:
 
     def setup(self):
         """Fetch initial device properties."""
-        initial_update = self._update_properties()
-
-        # We can build correct class anyway.
-        if not initial_update and self.model:
-            self._initialize_device()
+        self._update_properties()
