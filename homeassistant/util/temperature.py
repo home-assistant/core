@@ -10,15 +10,19 @@ from homeassistant.const import (
 def fahrenheit_to_celsius(fahrenheit: float, interval: bool = False) -> float:
     """Convert a temperature in Fahrenheit to Celsius."""
     if interval:
-        return fahrenheit / 1.8
-    return (fahrenheit - 32.0) / 1.8
+        result = fahrenheit / 1.8
+    else:
+        result = (fahrenheit - 32.0) / 1.8
+    return round(result, 1)
 
 
 def celsius_to_fahrenheit(celsius: float, interval: bool = False) -> float:
     """Convert a temperature in Celsius to Fahrenheit."""
     if interval:
-        return celsius * 1.8
-    return celsius * 1.8 + 32.0
+        result = celsius * 1.8
+    else:
+        result = celsius * 1.8 + 32.0
+    return round(result, 1)
 
 
 def convert(
