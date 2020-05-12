@@ -46,9 +46,8 @@ async def async_setup_entry(
 class ISYSensorEntity(ISYNodeEntity):
     """Representation of an ISY994 sensor device."""
 
-    def get_raw_unit_of_measurement(
-        self, allow_special: bool = False
-    ) -> Union[dict, str]:
+    @property
+    def get_raw_unit_of_measurement(self) -> Union[dict, str]:
         """Get the raw unit of measurement for the ISY994 sensor device."""
         uom = self._node.uom
 
@@ -59,7 +58,7 @@ class ISYSensorEntity(ISYNodeEntity):
         # Special cases for ISY UOM index units:
         isy_states = UOM_TO_STATES.get(uom)
         if isy_states:
-            return isy_states if allow_special else None
+            return isy_states
 
         return UOM_FRIENDLY_NAME.get(uom)
 
@@ -71,7 +70,7 @@ class ISYSensorEntity(ISYNodeEntity):
             return None
 
         # Get the translated ISY Unit of Measurement
-        uom = self.get_raw_unit_of_measurement(allow_special=True)
+        uom = self.get_raw_unit_of_measurement
 
         # Check if this is a known index pair UOM
         if isinstance(uom, dict):
@@ -89,7 +88,10 @@ class ISYSensorEntity(ISYNodeEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Get the Home Assistant unit of measurement for the device."""
-        raw_units = self.get_raw_unit_of_measurement()
+        raw_units = self.get_raw_unit_of_measurement
+        # Check if this is a known index pair UOM
+        if isinstance(raw_units, dict):
+            return None
         if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS, UOM_DOUBLE_TEMP):
             return self.hass.config.units.temperature_unit
         return raw_units
