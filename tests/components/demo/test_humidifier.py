@@ -8,12 +8,12 @@ from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
-    ATTR_PRESET_MODE,
+    ATTR_MODE,
     DOMAIN,
-    PRESET_AWAY,
-    PRESET_ECO,
+    MODE_AWAY,
+    MODE_ECO,
     SERVICE_SET_HUMIDITY,
-    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_MODE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -91,28 +91,28 @@ async def test_set_hold_mode_away(hass):
     """Test setting the hold mode away."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_PRESET_MODE: PRESET_AWAY, ATTR_ENTITY_ID: ENTITY_HYGROSTAT},
+        SERVICE_SET_MODE,
+        {ATTR_MODE: MODE_AWAY, ATTR_ENTITY_ID: ENTITY_HYGROSTAT},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_HYGROSTAT)
-    assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_AWAY
+    assert state.attributes.get(ATTR_MODE) == MODE_AWAY
 
 
 async def test_set_hold_mode_eco(hass):
     """Test setting the hold mode eco."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_PRESET_MODE: PRESET_ECO, ATTR_ENTITY_ID: ENTITY_HYGROSTAT},
+        SERVICE_SET_MODE,
+        {ATTR_MODE: MODE_ECO, ATTR_ENTITY_ID: ENTITY_HYGROSTAT},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_HYGROSTAT)
-    assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_ECO
+    assert state.attributes.get(ATTR_MODE) == MODE_ECO
 
 
 async def test_turn_on(hass):

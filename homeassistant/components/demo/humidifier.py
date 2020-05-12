@@ -1,6 +1,6 @@
 """Demo platform that offers a fake humidifier device."""
 from homeassistant.components.humidifier import HumidifierEntity
-from homeassistant.components.humidifier.const import SUPPORT_PRESET_MODE
+from homeassistant.components.humidifier.const import SUPPORT_MODES
 
 SUPPORT_FLAGS = 0
 
@@ -10,18 +10,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             DemoHumidifier(
-                name="Humidifier", preset=None, target_humidity=68, current_humidity=77,
+                name="Humidifier", mode=None, target_humidity=68, current_humidity=77,
             ),
             DemoHumidifier(
                 name="Dehumidifier",
-                preset=None,
+                mode=None,
                 target_humidity=54,
                 current_humidity=67,
             ),
             DemoHumidifier(
                 name="Hygrostat",
-                preset="home",
-                preset_modes=["home", "eco"],
+                mode="home",
+                available_modes=["home", "eco"],
                 target_humidity=50,
                 current_humidity=49,
             ),
@@ -35,21 +35,21 @@ class DemoHumidifier(HumidifierEntity):
     def __init__(
         self,
         name,
-        preset,
+        mode,
         target_humidity,
         current_humidity,
-        preset_modes=None,
+        available_modes=None,
         is_on=True,
     ):
         """Initialize the humidifier device."""
         self._name = name
         self._state = is_on
         self._support_flags = SUPPORT_FLAGS
-        if preset is not None:
-            self._support_flags = self._support_flags | SUPPORT_PRESET_MODE
+        if mode is not None:
+            self._support_flags = self._support_flags | SUPPORT_MODES
         self._target_humidity = target_humidity
-        self._preset = preset
-        self._preset_modes = preset_modes
+        self._mode = mode
+        self._available_modes = available_modes
         self._current_humidity = current_humidity
 
     @property
@@ -78,14 +78,14 @@ class DemoHumidifier(HumidifierEntity):
         return self._target_humidity
 
     @property
-    def preset_mode(self):
-        """Return preset mode."""
-        return self._preset
+    def mode(self):
+        """Return current mode."""
+        return self._mode
 
     @property
-    def preset_modes(self):
-        """Return preset modes."""
-        return self._preset_modes
+    def available_modes(self):
+        """Return current modes."""
+        return self._available_modes
 
     @property
     def is_on(self):
@@ -107,7 +107,7 @@ class DemoHumidifier(HumidifierEntity):
         self._target_humidity = humidity
         self.async_write_ha_state()
 
-    async def async_set_preset_mode(self, preset_mode):
-        """Update preset_mode on."""
-        self._preset = preset_mode
+    async def async_set_mode(self, mode):
+        """Update mode."""
+        self._mode = mode
         self.async_write_ha_state()
