@@ -14,8 +14,8 @@
       "manual_setup": {
         "title": "Manual Plex Configuration",
         "data": {
-          "host": "Host (Optional if Token provided)",
-          "port": "Port",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "ssl": "Use SSL",
           "verify_ssl": "Verify SSL certificate",
           "token": "Token (Optional)"
@@ -24,7 +24,9 @@
       "select_server": {
         "title": "Select Plex server",
         "description": "Multiple servers available, select one:",
-        "data": { "server": "Server" }
+        "data": {
+          "server": "Server"
+        }
       }
     },
     "error": {

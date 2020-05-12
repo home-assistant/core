@@ -4,13 +4,17 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 
-CONF_NETWORK = "network"
 DOMAIN = "upb"
 
+ATTR_ADDRESS = "address"
 ATTR_BLINK_RATE = "blink_rate"
 ATTR_BRIGHTNESS = "brightness"
 ATTR_BRIGHTNESS_PCT = "brightness_pct"
+ATTR_COMMAND = "command"
 ATTR_RATE = "rate"
+CONF_NETWORK = "network"
+EVENT_UPB_LINK_CHANGED = "upb.link_changed"
+
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 VALID_RATE = vol.All(vol.Coerce(float), vol.Clamp(min=-1, max=3600))

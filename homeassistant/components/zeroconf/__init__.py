@@ -5,6 +5,8 @@ import socket
 
 import voluptuous as vol
 from zeroconf import (
+    DNSPointer,
+    DNSRecord,
     InterfaceChoice,
     NonUniqueNameException,
     ServiceBrowser,
@@ -41,6 +43,10 @@ HOMEKIT_TYPE = "_hap._tcp.local."
 CONF_DEFAULT_INTERFACE = "default_interface"
 DEFAULT_DEFAULT_INTERFACE = False
 
+HOMEKIT_PROPERTIES = "properties"
+HOMEKIT_PAIRED_STATUS_FLAG = "sf"
+HOMEKIT_MODEL = "md"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -73,6 +79,27 @@ def _get_instance(hass, default_interface=False):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
 
     return zeroconf
+
+
+class HaServiceBrowser(ServiceBrowser):
+    """ServiceBrowser that only consumes DNSPointer records."""
+
+    def update_record(self, zc: "Zeroconf", now: float, record: DNSRecord) -> None:
+        """Pre-Filter update_record to DNSPointers for the configured type."""
+
+        #
+        # Each ServerBrowser currently runs in its own thread which
+        # processes every A or AAAA record update per instance.
+        #
+        # As the list of zeroconf names we watch for grows, each additional
+        # ServiceBrowser would process all the A and AAAA updates on the network.
+        #
+        # To avoid overwhemling the system we pre-filter here and only process
+        # DNSPointers for the configured record name (type)
+        #
+        if record.name != self.type or not isinstance(record, DNSPointer):
+            return
+        super().update_record(zc, now, record)
 
 
 class HaZeroconf(Zeroconf):
@@ -155,8 +182,26 @@ def setup(hass, config):
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
         # If we can handle it as a HomeKit discovery, we do that here.
-        if service_type == HOMEKIT_TYPE and handle_homekit(hass, info):
-            return
+        if service_type == HOMEKIT_TYPE:
+            handle_homekit(hass, info)
+            # Continue on here as homekit_controller
+            # still needs to get updates on devices
+            # so it can see when the 'c#' field is updated.
+            #
+            # We only send updates to homekit_controller
+            # if the device is already paired in order to avoid
+            # offering a second discovery for the same device
+            if (
+                HOMEKIT_PROPERTIES in info
+                and HOMEKIT_PAIRED_STATUS_FLAG in info[HOMEKIT_PROPERTIES]
+            ):
+                try:
+                    if not int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
+                        return
+                except ValueError:
+                    # HomeKit pairing status unknown
+                    # likely bad homekit data
+                    return
 
         for domain in ZEROCONF[service_type]:
             hass.add_job(
@@ -166,10 +211,10 @@ def setup(hass, config):
             )
 
     for service in ZEROCONF:
-        ServiceBrowser(zeroconf, service, handlers=[service_update])
+        HaServiceBrowser(zeroconf, service, handlers=[service_update])
 
     if HOMEKIT_TYPE not in ZEROCONF:
-        ServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
+        HaServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
 
     return True
 
@@ -180,10 +225,10 @@ def handle_homekit(hass, info) -> bool:
     Return if discovery was forwarded.
     """
     model = None
-    props = info.get("properties", {})
+    props = info.get(HOMEKIT_PROPERTIES, {})
 
     for key in props:
-        if key.lower() == "md":
+        if key.lower() == HOMEKIT_MODEL:
             model = props[key]
             break
 

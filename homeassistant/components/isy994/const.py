@@ -301,6 +301,8 @@ UOM_HVAC_ACTIONS = "66"
 UOM_HVAC_MODE_GENERIC = "67"
 UOM_HVAC_MODE_INSTEON = "98"
 UOM_FAN_MODES = "99"
+UOM_INDEX = "25"
+UOM_ON_OFF = "2"
 
 UOM_FRIENDLY_NAME = {
     "1": "A",
@@ -324,7 +326,7 @@ UOM_FRIENDLY_NAME = {
     "22": "%RH",
     "23": PRESSURE_INHG,
     "24": f"{LENGTH_INCHES}/{TIME_HOURS}",
-    "25": "index",
+    UOM_INDEX: "index",  # Index type. Use "node.formatted" for value
     "26": TEMP_KELVIN,
     "27": "keyword",
     "28": MASS_KILOGRAMS,
@@ -383,7 +385,7 @@ UOM_FRIENDLY_NAME = {
     "91": DEGREE,
     "92": f"{DEGREE} South",
     "100": "",  # Range 0-255, no unit.
-    "101": f"{DEGREE} (x2)",
+    UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
     "103": "$",
     "104": "¢",
@@ -398,7 +400,7 @@ UOM_FRIENDLY_NAME = {
     "113": "",  # raw 3-byte signed value
     "114": "",  # raw 4-byte signed value
     "116": LENGTH_MILES,
-    "117": "mb",
+    "117": "mbar",
     "118": "hPa",
     "119": f"{POWER_WATT}{TIME_HOURS}",
     "120": f"{LENGTH_INCHES}/{TIME_DAYS}",

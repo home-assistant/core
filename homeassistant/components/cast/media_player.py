@@ -1,11 +1,13 @@
 """Provide functionality to interact with Cast devices on the network."""
 import asyncio
+import json
 import logging
 from typing import Optional
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
 from pychromecast.controllers.multizone import MultizoneManager
+from pychromecast.quick_play import quick_play
 from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_DISCONNECTED,
@@ -477,7 +479,33 @@ class CastDevice(MediaPlayerEntity):
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
         # We do not want this to be forwarded to a group
-        self._chromecast.media_controller.play_media(media_id, media_type)
+        if media_type == CAST_DOMAIN:
+            try:
+                app_data = json.loads(media_id)
+            except json.JSONDecodeError:
+                _LOGGER.error("Invalid JSON in media_content_id")
+                raise
+
+            # Special handling for passed `app_id` parameter. This will only launch
+            # an arbitrary cast app, generally for UX.
+            if "app_id" in app_data:
+                app_id = app_data.pop("app_id")
+                _LOGGER.info("Starting Cast app by ID %s", app_id)
+                self._chromecast.start_app(app_id)
+                if app_data:
+                    _LOGGER.warning(
+                        "Extra keys %s were ignored. Please use app_name to cast media.",
+                        app_data.keys(),
+                    )
+                return
+
+            app_name = app_data.pop("app_name")
+            try:
+                quick_play(self._chromecast, app_name, app_data)
+            except NotImplementedError:
+                _LOGGER.error("App %s not supported", app_name)
+        else:
+            self._chromecast.media_controller.play_media(media_id, media_type)
 
     # ========== Properties ==========
     @property
