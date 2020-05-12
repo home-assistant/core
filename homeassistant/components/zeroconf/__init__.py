@@ -228,7 +228,7 @@ def handle_homekit(hass, info) -> bool:
     props = info.get(HOMEKIT_PROPERTIES, {})
 
     for key in props:
-        if key.lower() in HOMEKIT_MODEL:
+        if key.lower() == HOMEKIT_MODEL:
             model = props[key]
             break
 
