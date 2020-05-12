@@ -1,10 +1,9 @@
 """Support for Insteon Thermostats via ISY994 Platform."""
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Optional
 
 from pyisy.constants import (
     CMD_CLIMATE_FAN_SETTING,
     CMD_CLIMATE_MODE,
-    ISY_VALUE_UNKNOWN,
     PROP_HEAT_COOL_STATE,
     PROP_HUMIDITY,
     PROP_SETPOINT_COOL,
@@ -42,19 +41,17 @@ from .const import (
     HA_HVAC_TO_ISY,
     ISY994_NODES,
     ISY_HVAC_MODES,
-    UOM_DOUBLE_TEMP,
     UOM_FAN_MODES,
     UOM_HVAC_ACTIONS,
     UOM_HVAC_MODE_GENERIC,
     UOM_HVAC_MODE_INSTEON,
     UOM_ISY_CELSIUS,
     UOM_ISY_FAHRENHEIT,
-    UOM_ISYV4_DEGREES,
     UOM_ISYV4_NONE,
     UOM_TO_STATES,
 )
 from .entity import ISYNodeEntity
-from .helpers import migrate_old_unique_ids
+from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 from .services import async_setup_device_services
 
 ISY_SUPPORTED_FEATURES = (
@@ -77,26 +74,6 @@ async def async_setup_entry(
     await migrate_old_unique_ids(hass, CLIMATE, entities)
     async_add_entities(entities)
     async_setup_device_services(hass)
-
-
-def convert_isy_temp_to_hass(
-    temp: Union[int, float, None], uom: str, precision: str
-) -> float:
-    """Fix Insteon Thermostats' Reported Temperature.
-
-    Insteon Thermostats report temperature in 0.5-deg precision as an int
-    by sending a value of 2 times the Temp. Correct by dividing by 2 here.
-
-    Z-Wave Thermostats report temps in tenths as an integer and precision.
-    Correct by shifting the decimal place left by the value of precision.
-    """
-    if temp is None or temp == ISY_VALUE_UNKNOWN:
-        return None
-    if uom in [UOM_DOUBLE_TEMP, UOM_ISYV4_DEGREES]:
-        return round(float(temp) / 2.0, 1)
-    if precision != "0":
-        return round(float(temp) / 10 ** int(precision), int(precision))
-    return round(float(temp), 1)
 
 
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
@@ -180,7 +157,9 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        return convert_isy_temp_to_hass(self._node.status, self._uom, self._node.prec)
+        return convert_isy_value_to_hass(
+            self._node.status, self._uom, self._node.prec, 1
+        )
 
     @property
     def target_temperature_step(self) -> Optional[float]:
@@ -202,7 +181,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         target = self._node.aux_properties.get(PROP_SETPOINT_COOL)
         if not target:
             return None
-        return convert_isy_temp_to_hass(target.value, target.uom, target.prec)
+        return convert_isy_value_to_hass(target.value, target.uom, target.prec, 1)
 
     @property
     def target_temperature_low(self) -> Optional[float]:
@@ -210,7 +189,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         target = self._node.aux_properties.get(PROP_SETPOINT_HEAT)
         if not target:
             return None
-        return convert_isy_temp_to_hass(target.value, target.uom, target.prec)
+        return convert_isy_value_to_hass(target.value, target.uom, target.prec, 1)
 
     @property
     def fan_modes(self):
