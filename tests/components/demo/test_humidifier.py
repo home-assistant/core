@@ -30,6 +30,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.setup import async_setup_component
 
@@ -49,7 +51,7 @@ async def setup_demo_humidifier(hass):
 def test_setup_params(hass):
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.state == OPERATION_MODE_DRY
+    assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FAN_MODE) == "On High"
     assert state.attributes.get(ATTR_HUMIDITY) == 54
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 67
@@ -141,7 +143,7 @@ async def test_set_operation_bad_attr_and_state(hass):
     """
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == CURRENT_HUMIDIFIER_DRY
-    assert state.state == OPERATION_MODE_DRY
+    assert state.state == STATE_ON
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
@@ -154,13 +156,13 @@ async def test_set_operation_bad_attr_and_state(hass):
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == CURRENT_HUMIDIFIER_DRY
-    assert state.state == OPERATION_MODE_DRY
+    assert state.state == STATE_ON
 
 
 async def test_set_operation(hass):
     """Test setting of new operation mode."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.state == OPERATION_MODE_DRY
+    assert state.state == STATE_ON
 
     await hass.services.async_call(
         DOMAIN,
@@ -174,7 +176,7 @@ async def test_set_operation(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.state == OPERATION_MODE_HUMIDIFY
+    assert state.state == STATE_ON
 
 
 async def test_set_hold_mode_away(hass):
@@ -208,37 +210,28 @@ async def test_set_hold_mode_eco(hass):
 async def test_turn_on(hass):
     """Test turn on device."""
     await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF, ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER},
-        blocking=True,
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.state == OPERATION_MODE_OFF
+    assert state.state == STATE_OFF
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.state == OPERATION_MODE_DRY
+    assert state.state == STATE_ON
 
 
 async def test_turn_off(hass):
     """Test turn off device."""
     await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {
-            ATTR_OPERATION_MODE: OPERATION_MODE_HUMIDIFY,
-            ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER,
-        },
-        blocking=True,
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.state == OPERATION_MODE_HUMIDIFY
+    assert state.state == STATE_ON
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.state == OPERATION_MODE_OFF
+    assert state.state == STATE_OFF

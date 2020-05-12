@@ -77,9 +77,11 @@ class DemoHumidifier(HumidifierEntity):
         current_temperature=None,
         unit_of_measurement=TEMP_CELSIUS,
         preset_modes=None,
+        is_on=True,
     ):
         """Initialize the humidifier device."""
         self._name = name
+        self._state = is_on
         self._support_flags = SUPPORT_FLAGS
         if preset is not None:
             self._support_flags = self._support_flags | SUPPORT_PRESET_MODE
@@ -166,6 +168,21 @@ class DemoHumidifier(HumidifierEntity):
     def fan_modes(self):
         """Return the list of available fan modes."""
         return self._fan_modes
+
+    @property
+    def is_on(self):
+        """Return true if switch is on."""
+        return self._state
+
+    async def async_turn_on(self):
+        """Turn the device on."""
+        self._state = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self):
+        """Turn the device off."""
+        self._state = False
+        self.async_write_ha_state()
 
     async def async_set_humidity(self, humidity):
         """Set new humidity level."""

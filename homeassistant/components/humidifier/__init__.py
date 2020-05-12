@@ -20,10 +20,11 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_CURRENT_HUMIDITY,
@@ -57,6 +58,15 @@ from .const import (
 SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@bind_hass
+def is_on(hass, entity_id):
+    """Return if the humidifier is on based on the statemachine.
+
+    Async friendly.
+    """
+    return hass.states.is_state(entity_id, STATE_ON)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -106,13 +116,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class HumidifierEntity(Entity):
+class HumidifierEntity(ToggleEntity):
     """Representation of a humidifier device."""
-
-    @property
-    def state(self) -> str:
-        """Return the current state."""
-        return self.operation_mode
 
     @property
     def precision(self) -> float:
@@ -274,35 +279,6 @@ class HumidifierEntity(Entity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
-
-    async def async_turn_on(self) -> None:
-        """Turn the entity on."""
-        if hasattr(self, "turn_on"):
-            # pylint: disable=no-member
-            await self.hass.async_add_executor_job(self.turn_on)
-            return
-
-        # Fake turn on
-        for mode in (
-            OPERATION_MODE_HUMIDIFY_DRY,
-            OPERATION_MODE_HUMIDIFY,
-            OPERATION_MODE_DRY,
-        ):
-            if mode not in self.operation_modes:
-                continue
-            await self.async_set_operation_mode(mode)
-            break
-
-    async def async_turn_off(self) -> None:
-        """Turn the entity off."""
-        if hasattr(self, "turn_off"):
-            # pylint: disable=no-member
-            await self.hass.async_add_executor_job(self.turn_off)
-            return
-
-        # Fake turn off
-        if OPERATION_MODE_OFF in self.operation_modes:
-            await self.async_set_operation_mode(OPERATION_MODE_OFF)
 
     @property
     @abstractmethod
