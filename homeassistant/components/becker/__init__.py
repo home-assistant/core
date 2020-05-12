@@ -1,68 +1,116 @@
 """The becker component."""
-from itertools import chain
 import logging
 
-from homeassistant.const import MATCH_ALL
+from pybecker.becker import Becker
+import voluptuous as vol
 
-from .rf_device import PyBecker
+from homeassistant.config_entries import SOURCE_IMPORT
+
+from .const import (
+    CONF_CHANNEL,
+    CONF_COVERS,
+    CONF_DEVICE,
+    CONF_UNIT,
+    DEFAULT_CONF_USB_STICK_PATH,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def initialise_templates(hass, templates, attribute_templates=None):
-    """Initialise templates and attribute templates."""
-    if attribute_templates is None:
-        attribute_templates = dict()
-    for template in chain(templates.values(), attribute_templates.values()):
-        if template is None:
-            continue
-        template.hass = hass
+PAIR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CHANNEL): vol.All(int, vol.Range(min=1, max=7)),
+        vol.Optional(CONF_UNIT): vol.All(int, vol.Range(min=1, max=5)),
+    }
+)
 
 
-def extract_entities(
-    device_name, device_type, manual_entity_ids, templates, attribute_templates=None
-):
-    """Extract entity ids from templates and attribute templates."""
-    if attribute_templates is None:
-        attribute_templates = dict()
-    entity_ids = set()
-    if manual_entity_ids is None:
-        invalid_templates = []
-        for template_name, template in chain(
-            templates.items(), attribute_templates.items()
-        ):
-            if template is None:
-                continue
+async def async_setup_entry(hass, entry):
+    """Establish connection with Becker Centronic."""
+    conf = entry.data
 
-            template_entity_ids = template.extract_entities()
+    stick_path = conf[CONF_DEVICE]
+    # if stick_path is not set in integration try to get it from configuration
+    if not stick_path:
+        stick_path = hass.data[DOMAIN][CONF_DEVICE]
 
-            if template_entity_ids != MATCH_ALL:
-                entity_ids |= set(template_entity_ids)
-            else:
-                invalid_templates.append(template_name.replace("_template", ""))
+    _LOGGER.debug("SETTING CENTRONIC STICK ON PORT %s" % stick_path)
+    becker = BeckerConnection(stick_path)
 
-        if invalid_templates:
-            entity_ids = MATCH_ALL
-            _LOGGER.warning(
-                "Template %s '%s' has no entity ids configured to track nor"
-                " were we able to extract the entities to track from the %s "
-                "template(s). This entity will only be able to be updated "
-                "manually.",
-                device_type,
-                device_name,
-                ", ".join(invalid_templates),
-            )
-        else:
-            entity_ids = list(entity_ids)
-    else:
-        entity_ids = manual_entity_ids
+    if not becker:
+        return False
 
-    return entity_ids
+    for init_call_count in range(0, 2):
+        _LOGGER.debug("Init call to cover channel 1 #%d" % init_call_count)
+        await becker.connection.stop("1")
+
+    hass.data[DOMAIN]["connector"] = becker.connection
+
+    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: becker})
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "cover")
+    )
+
+    hass.services.async_register(DOMAIN, "pair", becker.handle_pair, PAIR_SCHEMA)
+    hass.services.async_register(DOMAIN, "log_units", becker.handle_log_units)
+    return True
 
 
 async def async_setup(hass, config):
-    """Initiate becker component for home assistant."""
+    """Set up the Becker platform."""
+    conf = config.get(DOMAIN)
+    if conf is None:
+        conf = {}
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][CONF_COVERS] = {}
 
-    await PyBecker.async_register_services(hass)
+    # User has configured covers
+    if CONF_COVERS not in conf:
+        return True
+    covers = conf[CONF_COVERS]
 
+    if CONF_DEVICE in conf:
+        hass.data[DOMAIN][CONF_DEVICE] = conf[CONF_DEVICE]
+
+    for cover_conf in covers:
+        channel = cover_conf[CONF_CHANNEL]
+        # Store config in hass.data so the config entry can find it
+        hass.data[DOMAIN][CONF_COVERS][channel] = cover_conf
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data={"cover": cover_conf}
+            )
+        )
     return True
+
+
+class BeckerConnection:
+    """Keep the Daikin instance in one place and centralize the update."""
+
+    def __init__(self, centronic_path=None):
+        """Create a new instance of Becker Connection."""
+        if not centronic_path:
+            centronic_path = DEFAULT_CONF_USB_STICK_PATH
+
+        self.connection = Becker(centronic_path, True)
+
+    async def handle_pair(self, call):
+        """Service to pair with a cover receiver."""
+
+        channel = call.data.get(CONF_CHANNEL)
+        unit = call.data.get(CONF_UNIT, 1)
+        await self.connection.pair(f"{unit}:{channel}")
+
+    async def handle_log_units(self, call):
+        """Service that logs all paired units."""
+        units = await self.connection.list_units()
+
+        unit_id = 1
+        _LOGGER.info("Configured Becker centronic units:")
+        for row in units:
+            unit_code, increment = row[0:2]
+            _LOGGER.info(
+                "Unit id %d, unit code %s, increment %d", unit_id, unit_code, increment
+            )
+            unit_id += 1
