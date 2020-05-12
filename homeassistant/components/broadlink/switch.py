@@ -65,15 +65,15 @@ MP1_SWITCH_SLOT_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_SWITCHES, default={}): cv.schema_with_slug_keys(
-            SWITCH_SCHEMA
-        ),
-        vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
         vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
         vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_TYPE, default=DEVICE_TYPES[0]): vol.In(DEVICE_TYPES),
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
+        vol.Optional(CONF_SWITCHES, default={}): cv.schema_with_slug_keys(
+            SWITCH_SCHEMA
+        ),
     }
 )
 
@@ -81,12 +81,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
 
-    devices = config.get(CONF_SWITCHES)
-    slots = config.get("slots", {})
-    host = config.get(CONF_HOST)
-    mac_addr = config.get(CONF_MAC)
-    friendly_name = config.get(CONF_FRIENDLY_NAME)
+    host = config[CONF_HOST]
+    mac_addr = config[CONF_MAC]
+    friendly_name = config[CONF_FRIENDLY_NAME]
     model = config[CONF_TYPE]
+    timeout = config[CONF_TIMEOUT]
+    slots = config[CONF_SLOTS]
+    devices = config[CONF_SWITCHES]
 
     def generate_rm_switches(switches, broadlink_device):
         """Generate RM switches."""
@@ -136,7 +137,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             for i in range(1, 5)
         ]
 
-    api.timeout = config.get(CONF_TIMEOUT)
+    api.timeout = timeout
     connected = await broadlink_device.async_connect()
     if not connected:
         raise PlatformNotReady
