@@ -7,7 +7,7 @@
         "description": "Grab your [AfterShip API key](https://admin.aftership.com/settings/api-keys) to authenticate with Home Assistant.",
         "data": {
           "name": "Integration name",
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },
