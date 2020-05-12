@@ -221,7 +221,7 @@ async def test_options(hass, api):
             mikrotik.const.CONF_DETECTION_TIME: 30,
             mikrotik.CONF_SCAN_INTERVAL: 10,
             mikrotik.const.CONF_ARP_PING: True,
-            mikrotik.const.CONF_FORCE_DHCP: False,
+            mikrotik.const.CONF_FORCE_DHCP: True,
         },
     )
 
@@ -230,11 +230,11 @@ async def test_options(hass, api):
         mikrotik.const.CONF_DETECTION_TIME: 30,
         mikrotik.CONF_SCAN_INTERVAL: 10,
         mikrotik.const.CONF_ARP_PING: True,
-        mikrotik.const.CONF_FORCE_DHCP: False,
+        mikrotik.const.CONF_FORCE_DHCP: True,
     }
 
 
-async def test_options_error(hass, api):
+async def test_options_scan_interval_error(hass, api):
     """Test updating options with not allowed value."""
     mikrotik_mock = await setup_mikrotik_integration(hass)
     result = await hass.config_entries.options.async_init(
@@ -244,10 +244,36 @@ async def test_options_error(hass, api):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
+    # scan_interval should be less than detection_time
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             mikrotik.const.CONF_DETECTION_TIME: 30,
+            mikrotik.CONF_SCAN_INTERVAL: 60,
+            mikrotik.const.CONF_ARP_PING: False,
+            mikrotik.const.CONF_FORCE_DHCP: False,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {mikrotik.CONF_SCAN_INTERVAL: "value_error"}
+
+
+async def test_options_arp_ping_error(hass, api):
+    """Test updating options with not allowed condition."""
+    mikrotik_mock = await setup_mikrotik_integration(hass)
+    result = await hass.config_entries.options.async_init(
+        mikrotik_mock.config_entry.entry_id
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    # arp_ping requires DHCP scanning
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mikrotik.const.CONF_DETECTION_TIME: 300,
             mikrotik.CONF_SCAN_INTERVAL: 60,
             mikrotik.const.CONF_ARP_PING: True,
             mikrotik.const.CONF_FORCE_DHCP: False,
@@ -255,4 +281,4 @@ async def test_options_error(hass, api):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {mikrotik.CONF_SCAN_INTERVAL: "value_error"}
+    assert result["errors"] == {mikrotik.const.CONF_ARP_PING: "not_allowed"}

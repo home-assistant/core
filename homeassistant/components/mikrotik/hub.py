@@ -223,25 +223,22 @@ class MikrotikHub:
             if dhcp_clients and mac in dhcp_clients:
                 self.clients[mac].update(dhcp_params=dhcp_clients[mac])
 
-            # update device if connected through wireless
+            # update clients if connected through wireless
             if wireless_clients and mac in wireless_clients:
                 self.clients[mac].update(
                     wireless_params=wireless_clients[mac], active=True, host=self.host,
                 )
                 continue
-            # for devices not detected by the wireless interface ensure the device
-            # is updated by its detected host
+            # update other clients last seen if detected in DHCP server
             if dhcp_clients and mac in dhcp_clients:
-                if self.clients[mac].dhcp_params.get("active-address"):
-                    self.clients[mac].update(host=self.host)
-                    active = True
-                    # ping the active devices if arp ping is enabled
-                    if self.arp_enabled and mac in arp_clients:
-                        active = self.do_arp_ping(
-                            self.clients[mac].dhcp_params.get("active-address"),
-                            arp_clients[mac].get("interface"),
-                        )
-                    _LOGGER.debug(active)
+                active = self.clients[mac].dhcp_params.get("active-address")
+                # ping the active devices if arp ping is enabled
+                if self.arp_enabled and mac in arp_clients:
+                    active = self.do_arp_ping(
+                        self.clients[mac].dhcp_params.get("active-address"),
+                        arp_clients[mac].get("interface"),
+                    )
+
                 self.clients[mac].update(active=active, host=self.host)
 
     async def async_setup(self):

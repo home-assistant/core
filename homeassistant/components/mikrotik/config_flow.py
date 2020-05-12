@@ -134,6 +134,9 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
             if user_input[CONF_SCAN_INTERVAL] >= user_input[CONF_DETECTION_TIME]:
                 errors[CONF_SCAN_INTERVAL] = "value_error"
 
+            if user_input[CONF_ARP_PING] and not user_input[CONF_FORCE_DHCP]:
+                errors[CONF_ARP_PING] = "not_allowed"
+
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
 

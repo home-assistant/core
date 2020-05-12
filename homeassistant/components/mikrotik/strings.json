@@ -41,7 +41,8 @@
       }
     },
     "error": {
-      "value_error": "Scan interval must be less than Consider home interval"
+      "value_error": "Scan interval must be less than Consider home interval",
+      "not_allowed": "ARP ping requires enabling DHCP scanning"
     }
   }
 }
