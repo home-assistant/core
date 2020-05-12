@@ -737,6 +737,9 @@ pyvizio==0.1.47
 # homeassistant.components.html5
 pywebpush==1.9.2
 
+# homeassistant.components.zerproc
+pyzerproc==0.2.4
+
 # homeassistant.components.rachio
 rachiopy==0.1.3
 
