@@ -13,7 +13,6 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
-    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -23,13 +22,11 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -95,13 +92,6 @@ class HumidifierEntity(ToggleEntity):
     """Representation of a humidifier device."""
 
     @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
-            return PRECISION_TENTHS
-        return PRECISION_WHOLE
-
-    @property
     def capability_attributes(self) -> Dict[str, Any]:
         """Return capability attributes."""
         supported_features = self.supported_features
@@ -127,14 +117,6 @@ class HumidifierEntity(ToggleEntity):
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
 
-        if self.current_temperature is not None:
-            data[ATTR_CURRENT_TEMPERATURE] = show_temp(
-                self.hass,
-                self.current_temperature,
-                self.temperature_unit,
-                self.precision,
-            )
-
         return data
 
     @property
@@ -148,18 +130,8 @@ class HumidifierEntity(ToggleEntity):
         return None
 
     @property
-    def current_temperature(self) -> Optional[float]:
-        """Return the current temperature."""
-        return None
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
-        raise NotImplementedError()
-
-    @property
     def preset_mode(self) -> Optional[str]:
-        """Return the current preset mode, e.g., home, away, temp.
+        """Return the current preset mode, e.g., home, away, sleep.
 
         Requires SUPPORT_PRESET_MODE.
         """

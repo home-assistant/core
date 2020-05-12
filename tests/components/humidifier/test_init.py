@@ -1,5 +1,4 @@
 """The tests for the humidifier component."""
-from typing import List
 from unittest.mock import MagicMock
 
 from homeassistant.components.humidifier import HumidifierEntity

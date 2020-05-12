@@ -1,7 +1,6 @@
 """Demo platform that offers a fake humidifier device."""
 from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import SUPPORT_PRESET_MODE
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 SUPPORT_FLAGS = 0
 
@@ -18,7 +17,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 preset=None,
                 target_humidity=54,
                 current_humidity=67,
-                current_temperature=25,
             ),
             DemoHumidifier(
                 name="Hygrostat",
@@ -26,8 +24,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 preset_modes=["home", "eco"],
                 target_humidity=50,
                 current_humidity=49,
-                current_temperature=73,
-                unit_of_measurement=TEMP_FAHRENHEIT,
             ),
         ]
     )
@@ -42,8 +38,6 @@ class DemoHumidifier(HumidifierEntity):
         preset,
         target_humidity,
         current_humidity,
-        current_temperature=None,
-        unit_of_measurement=TEMP_CELSIUS,
         preset_modes=None,
         is_on=True,
     ):
@@ -57,8 +51,6 @@ class DemoHumidifier(HumidifierEntity):
         self._preset = preset
         self._preset_modes = preset_modes
         self._current_humidity = current_humidity
-        self._current_temperature = current_temperature
-        self._unit_of_measurement = unit_of_measurement
 
     @property
     def supported_features(self):
@@ -84,16 +76,6 @@ class DemoHumidifier(HumidifierEntity):
     def target_humidity(self):
         """Return the humidity we try to reach."""
         return self._target_humidity
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
 
     @property
     def preset_mode(self):

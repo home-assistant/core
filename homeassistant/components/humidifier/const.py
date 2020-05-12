@@ -23,7 +23,6 @@ PRESET_SLEEP = "sleep"
 
 
 ATTR_CURRENT_HUMIDITY = "current_humidity"
-ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_PRESET_MODE = "preset_mode"
 ATTR_PRESET_MODES = "preset_modes"
 ATTR_HUMIDITY = "humidity"

@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant.components.humidifier.const import (
     ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -44,7 +43,6 @@ def test_setup_params(hass):
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_HUMIDITY) == 54
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 67
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
 
 
 def test_default_setup_params(hass):
