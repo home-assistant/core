@@ -39,7 +39,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 humidifier_action=CURRENT_HUMIDIFIER_DRY,
                 operation_modes=[OPERATION_MODE_DRY, OPERATION_MODE_OFF],
                 current_temperature=25,
-                water_level=30,
             ),
             DemoHumidifier(
                 name="Hygrostat",
@@ -78,7 +77,6 @@ class DemoHumidifier(HumidifierEntity):
         current_temperature=None,
         unit_of_measurement=TEMP_CELSIUS,
         preset_modes=None,
-        water_level=None,
     ):
         """Initialize the humidifier device."""
         self._name = name
@@ -98,7 +96,6 @@ class DemoHumidifier(HumidifierEntity):
         self._humidifier_action = humidifier_action
         self._operation_mode = operation_mode
         self._operation_modes = operation_modes
-        self._water_level = water_level
 
     @property
     def supported_features(self):
@@ -169,11 +166,6 @@ class DemoHumidifier(HumidifierEntity):
     def fan_modes(self):
         """Return the list of available fan modes."""
         return self._fan_modes
-
-    @property
-    def water_level(self):
-        """Return the current water level."""
-        return self._water_level
 
     async def async_set_humidity(self, humidity):
         """Set new humidity level."""

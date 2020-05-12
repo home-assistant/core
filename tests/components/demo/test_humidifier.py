@@ -30,8 +30,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.setup import async_setup_component
 

@@ -12,8 +12,6 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +23,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
     ATTR_CURRENT_HUMIDITY,
@@ -40,7 +38,6 @@ from .const import (
     ATTR_OPERATION_MODES,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    ATTR_WATER_LEVEL,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN,
@@ -168,9 +165,6 @@ class HumidifierEntity(Entity):
                 self.precision,
             )
 
-        if self.water_level is not None:
-            data[ATTR_WATER_LEVEL] = self.water_level
-
         return data
 
     @property
@@ -192,11 +186,6 @@ class HumidifierEntity(Entity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         raise NotImplementedError()
-
-    @property
-    def water_level(self) -> Optional[int]:
-        """Return the water level."""
-        return None
 
     @property
     def fan_mode(self) -> Optional[str]:
