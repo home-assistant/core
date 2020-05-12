@@ -63,9 +63,7 @@ MANIFEST_JSON = {
     "start_url": "/?homescreen=1",
     "theme_color": DEFAULT_THEME_COLOR,
     "prefer_related_applications": True,
-    "related_applications": [
-        {"platform": "play", "id": "io.homeassistant.companion.android"}
-    ],
+    "related_applications": [{"platform": "play", "id": "pl.sviete.dom"}],
 }
 
 DATA_PANELS = "frontend_panels"
