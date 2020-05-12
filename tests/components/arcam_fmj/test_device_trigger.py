@@ -56,11 +56,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_turn_on_request(hass, calls, player, state):
+async def test_if_fires_on_turn_on_request(hass, calls, player_setup, state):
     """Test for turn_on and turn_off triggers firing."""
     state.get_power.return_value = None
-    player.entity_id = "media_player.arcam_fmj_1"
-    player.hass = hass
 
     assert await async_setup_component(
         hass,
@@ -72,7 +70,7 @@ async def test_if_fires_on_turn_on_request(hass, calls, player, state):
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": "media_player.arcam_fmj_1",
+                        "entity_id": player_setup,
                         "type": "turn_on",
                     },
                     "action": {
@@ -84,8 +82,10 @@ async def test_if_fires_on_turn_on_request(hass, calls, player, state):
         },
     )
 
-    await player.async_turn_on()
+    await hass.services.async_call(
+        "media_player", "turn_on", {"entity_id": player_setup}, blocking=True,
+    )
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == f"{player.entity_id}"
+    assert calls[0].data["some"] == player_setup
