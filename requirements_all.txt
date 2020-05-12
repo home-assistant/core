@@ -44,31 +44,7 @@ Mastodon.py==1.5.1
 OPi.GPIO==0.4.0
 
 # homeassistant.components.plugwise
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 Plugwise_Smile==0.2.1
-=======
-Plugwise_Smile==0.1.2
->>>>>>> Update plugwise async, config_flow and multi entity
-=======
-Plugwise_Smile==0.1.5
->>>>>>> Bump module version
-=======
-Plugwise_Smile==0.1.6
->>>>>>> Bump module version, battery version and valve position
-=======
-Plugwise_Smile==0.1.23
->>>>>>> Catchup and version bump
-=======
-Plugwise_Smile==0.2.0
->>>>>>> Translations and config_flow, module version bump with required changes
-=======
-Plugwise_Smile==0.2.1
->>>>>>> Fix pylint
 
 # homeassistant.components.essent
 PyEssent==0.13
