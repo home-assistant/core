@@ -7,7 +7,6 @@ from homeassistant.components.humidifier.const import (
     OPERATION_MODE_HUMIDIFY,
     OPERATION_MODE_HUMIDIFY_DRY,
     OPERATION_MODE_OFF,
-    SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
 )
@@ -24,7 +23,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name="Humidifier",
                 preset=None,
                 fan_mode=None,
-                aux=None,
                 target_humidity=68,
                 current_humidity=77,
                 operation_mode=OPERATION_MODE_HUMIDIFY,
@@ -35,7 +33,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name="Dehumidifier",
                 preset=None,
                 fan_mode="On High",
-                aux=False,
                 target_humidity=54,
                 current_humidity=67,
                 operation_mode=OPERATION_MODE_DRY,
@@ -49,7 +46,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 preset="home",
                 preset_modes=["home", "eco"],
                 fan_mode="Auto Low",
-                aux=None,
                 target_humidity=50,
                 current_humidity=49,
                 current_temperature=73,
@@ -74,7 +70,6 @@ class DemoHumidifier(HumidifierEntity):
         name,
         preset,
         fan_mode,
-        aux,
         target_humidity,
         current_humidity,
         operation_mode,
@@ -92,8 +87,6 @@ class DemoHumidifier(HumidifierEntity):
             self._support_flags = self._support_flags | SUPPORT_PRESET_MODE
         if fan_mode is not None:
             self._support_flags = self._support_flags | SUPPORT_FAN_MODE
-        if aux is not None:
-            self._support_flags = self._support_flags | SUPPORT_AUX_HEAT
         self._target_humidity = target_humidity
         self._preset = preset
         self._preset_modes = preset_modes
@@ -102,7 +95,6 @@ class DemoHumidifier(HumidifierEntity):
         self._unit_of_measurement = unit_of_measurement
         self._current_fan_mode = fan_mode
         self._fan_modes = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
-        self._aux = aux
         self._humidifier_action = humidifier_action
         self._operation_mode = operation_mode
         self._operation_modes = operation_modes
@@ -145,7 +137,7 @@ class DemoHumidifier(HumidifierEntity):
 
     @property
     def humidifier_action(self):
-        """Return current operation ie. heat, cool, idle."""
+        """Return current operation ie. humidify, dry, idle."""
         return self._humidifier_action
 
     @property
@@ -179,11 +171,6 @@ class DemoHumidifier(HumidifierEntity):
         return self._fan_modes
 
     @property
-    def is_aux_heat(self):
-        """Return true if aux heat is on."""
-        return self._aux
-
-    @property
     def water_level(self):
         """Return the current water level."""
         return self._water_level
@@ -206,14 +193,4 @@ class DemoHumidifier(HumidifierEntity):
     async def async_set_preset_mode(self, preset_mode):
         """Update preset_mode on."""
         self._preset = preset_mode
-        self.async_write_ha_state()
-
-    async def async_turn_aux_heat_on(self):
-        """Turn auxiliary heater on."""
-        self._aux = True
-        self.async_write_ha_state()
-
-    async def async_turn_aux_heat_off(self):
-        """Turn auxiliary heater off."""
-        self._aux = False
         self.async_write_ha_state()

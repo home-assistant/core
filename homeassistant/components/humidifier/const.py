@@ -70,7 +70,6 @@ CURRENT_HUMIDIFIER_IDLE = "idle"
 CURRENT_HUMIDIFIER_FAN = "fan"
 
 
-ATTR_AUX_HEAT = "aux_heat"
 ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_FAN_MODES = "fan_modes"
@@ -90,7 +89,6 @@ DEFAULT_MAX_HUMIDITY = 100
 
 DOMAIN = "humidifier"
 
-SERVICE_SET_AUX_HEAT = "set_aux_heat"
 SERVICE_SET_PRESET_MODE = "set_preset_mode"
 SERVICE_SET_FAN_MODE = "set_fan_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
@@ -98,4 +96,3 @@ SERVICE_SET_OPERATION_MODE = "set_operation_mode"
 
 SUPPORT_FAN_MODE = 1
 SUPPORT_PRESET_MODE = 2
-SUPPORT_AUX_HEAT = 4
