@@ -1,9 +1,16 @@
 {
   "domain": "opengarage",
   "name": "OpenGarage",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opengarage",
+  "requirements": [
+    "open-garage==0.1.4"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
   "codeowners": [
     "@danielhiversen"
-  ],
-  "requirements": ["open-garage==0.1.4"]
+  ]
 }

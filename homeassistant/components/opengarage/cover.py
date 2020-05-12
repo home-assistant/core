@@ -1,94 +1,54 @@
 """Platform for the opengarage.io cover component."""
 import logging
 
-import opengarage
-import voluptuous as vol
-
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
-    PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     CoverEntity,
 )
 from homeassistant.const import (
     CONF_COVERS,
-    CONF_HOST,
     CONF_NAME,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.util import slugify
+
+from .const import ATTR_DISTANCE_SENSOR, ATTR_DOOR_STATE, ATTR_SIGNAL_STRENGTH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DISTANCE_SENSOR = "distance_sensor"
-ATTR_DOOR_STATE = "door_state"
-ATTR_SIGNAL_STRENGTH = "wifi_signal"
-
-CONF_DEVICE_KEY = "device_key"
-
-DEFAULT_NAME = "OpenGarage"
-DEFAULT_PORT = 80
 
 STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
 
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_KEY): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    }
-)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the OpenGarage covers."""
     covers = []
-    devices = config.get(CONF_COVERS)
+    open_garage = hass.data.get(DOMAIN)
+    devices = entry.data[CONF_COVERS]
 
     for device_config in devices.values():
-        opengarage_url = (
-            f"{'https' if device_config[CONF_SSL] else 'http'}://"
-            f"{device_config.get(CONF_HOST)}:{device_config.get(CONF_PORT)}"
-        )
-
-        open_garage = opengarage.OpenGarage(
-            opengarage_url,
-            device_config[CONF_DEVICE_KEY],
-            device_config[CONF_VERIFY_SSL],
-            async_get_clientsession(hass),
-        )
-
         covers.append(OpenGarageCover(device_config.get(CONF_NAME), open_garage))
 
-    add_entities(covers, True)
+    async_add_entities(covers, True)
 
 
 class OpenGarageCover(CoverEntity):
     """Representation of a OpenGarage cover."""
 
-    def __init__(self, name, open_garage):
+    def __init__(self, open_garage, mac):
         """Initialize the cover."""
-        self._name = name
         self._open_garage = open_garage
+        self._name = ""
         self._state = None
         self._state_before_move = None
         self._device_state_attributes = {}
         self._available = True
+        self._device_id = slugify(mac)
 
     @property
     def name(self):
@@ -149,6 +109,8 @@ class OpenGarageCover(CoverEntity):
         _LOGGER.debug("%s status: %s", self._name, self._state)
         if status.get("rssi") is not None:
             self._device_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
+        if status.get("name") is not None:
+            self._name = status.get("name")
         if status.get("dist") is not None:
             self._device_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
         if self._state is not None:
@@ -181,3 +143,24 @@ class OpenGarageCover(CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
+
+    @property
+    def device_id(self):
+        """Return the ID of the physical device this sensor is part of."""
+        return self._device_id
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self.device_id}_cover"
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        device_info = {
+            "name": self.name,
+            "manufacturer": "Open Garage",
+        }
+        if self.model is not None:
+            device_info["model"] = self.model
+        return device_info

@@ -422,6 +422,9 @@ oauth2client==4.0.0
 # homeassistant.components.onvif
 onvif-zeep-async==0.3.0
 
+# homeassistant.components.opengarage
+open-garage==0.1.2
+
 # homeassistant.components.openerz
 openerz-api==0.1.0
 
