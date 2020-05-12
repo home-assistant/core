@@ -104,7 +104,7 @@ aiopvpc==1.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.switcher_kis
-aioswitcher==1.1.0
+aioswitcher==1.2.0
 
 # homeassistant.components.unifi
 aiounifi==21
@@ -414,7 +414,7 @@ numpy==1.18.4
 oauth2client==4.0.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==0.2.0
+onvif-zeep-async==0.3.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
@@ -515,7 +515,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.atag
-pyatag==0.2.19
+pyatag==0.3.1.1
 
 # homeassistant.components.netatmo
 pyatmo==3.3.1
@@ -527,13 +527,13 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==5.0.0
+pychromecast==5.1.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.0.0
+pydaikin==2.0.1
 
 # homeassistant.components.deconz
 pydeconz==70
@@ -844,7 +844,7 @@ twentemilieu==0.3.0
 twilio==6.32.0
 
 # homeassistant.components.upb
-upb_lib==0.4.10
+upb_lib==0.4.11
 
 # homeassistant.components.huawei_lte
 url-normalize==1.4.1
@@ -906,4 +906,4 @@ zigpy-xbee==0.12.1
 zigpy-zigate==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.20.1
+zigpy==0.20.3

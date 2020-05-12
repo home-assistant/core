@@ -7,6 +7,7 @@ from aiohttp import web
 import voluptuous as vol
 from zeroconf import InterfaceChoice
 
+from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -242,6 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.entry_id,
     )
     await hass.async_add_executor_job(homekit.setup)
+    await homekit.async_setup_zeroconf()
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -420,6 +422,7 @@ class HomeKit:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         ip_addr = self._ip_address or get_local_ip()
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
+
         self.driver = HomeDriver(
             self.hass,
             self._entry_id,
@@ -430,10 +433,17 @@ class HomeKit:
             advertised_address=self._advertise_ip,
             interface_choice=self._interface_choice,
         )
+
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
             _LOGGER.debug("Safe_mode selected for %s", self._name)
             self.driver.safe_mode = True
+
+    async def async_setup_zeroconf(self):
+        """Share the system zeroconf instance."""
+        # Replace the existing zeroconf instance.
+        await self.hass.async_add_executor_job(self.driver.advertiser.close)
+        self.driver.advertiser = await zeroconf.async_get_instance(self.hass)
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""

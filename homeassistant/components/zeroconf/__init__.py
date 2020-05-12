@@ -5,6 +5,8 @@ import socket
 
 import voluptuous as vol
 from zeroconf import (
+    DNSPointer,
+    DNSRecord,
     InterfaceChoice,
     NonUniqueNameException,
     ServiceBrowser,
@@ -73,6 +75,27 @@ def _get_instance(hass, default_interface=False):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
 
     return zeroconf
+
+
+class HaServiceBrowser(ServiceBrowser):
+    """ServiceBrowser that only consumes DNSPointer records."""
+
+    def update_record(self, zc: "Zeroconf", now: float, record: DNSRecord) -> None:
+        """Pre-Filter update_record to DNSPointers for the configured type."""
+
+        #
+        # Each ServerBrowser currently runs in its own thread which
+        # processes every A or AAAA record update per instance.
+        #
+        # As the list of zeroconf names we watch for grows, each additional
+        # ServiceBrowser would process all the A and AAAA updates on the network.
+        #
+        # To avoid overwhemling the system we pre-filter here and only process
+        # DNSPointers for the configured record name (type)
+        #
+        if record.name != self.type or not isinstance(record, DNSPointer):
+            return
+        super().update_record(zc, now, record)
 
 
 class HaZeroconf(Zeroconf):
@@ -166,10 +189,10 @@ def setup(hass, config):
             )
 
     for service in ZEROCONF:
-        ServiceBrowser(zeroconf, service, handlers=[service_update])
+        HaServiceBrowser(zeroconf, service, handlers=[service_update])
 
     if HOMEKIT_TYPE not in ZEROCONF:
-        ServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
+        HaServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
 
     return True
 
