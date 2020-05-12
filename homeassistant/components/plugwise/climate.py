@@ -34,15 +34,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
-    devices = []
+    entities = []
     thermostat_classes = [
         "thermostat",
         "zone_thermostat",
         "thermostatic_radiator_valve",
     ]
-    all_devices = api.get_all_devices()
+    all_entities = api.get_all_devices()
 
-    for dev_id, device in all_devices.items():
+    for dev_id, device in all_entities.items():
 
         if device["class"] not in thermostat_classes:
             continue
@@ -61,10 +61,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not thermostat:
             continue
 
-        devices.append(thermostat)
+        entities.append(thermostat)
         _LOGGER.info("Added climate.%s", "{}".format(device["name"]))
 
-    async_add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class PwThermostat(SmileGateway, ClimateEntity):
