@@ -168,7 +168,7 @@ class _BaseVacuum(Entity):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 
-        if self.battery_level is not None:
+        if self.supported_features & SUPPORT_BATTERY:
             data[ATTR_BATTERY_LEVEL] = self.battery_level
             data[ATTR_BATTERY_ICON] = self.battery_icon
 
@@ -271,7 +271,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """Return the state attributes of the vacuum cleaner."""
         data = super().state_attributes
 
-        if self.status is not None:
+        if self.supported_features & SUPPORT_STATUS:
             data[ATTR_STATUS] = self.status
 
         return data
