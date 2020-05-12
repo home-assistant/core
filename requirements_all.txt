@@ -218,7 +218,7 @@ aiopvpc==1.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.switcher_kis
-aioswitcher==1.1.0
+aioswitcher==1.2.0
 
 # homeassistant.components.unifi
 aiounifi==21
@@ -994,7 +994,7 @@ oemthermostat==1.1
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==0.2.0
+onvif-zeep-async==0.3.0
 
 # homeassistant.components.opengarage
 open-garage==0.1.2
@@ -1212,7 +1212,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.atag
-pyatag==0.2.19
+pyatag==0.3.1.1
 
 # homeassistant.components.netatmo
 pyatmo==3.3.1
@@ -1245,7 +1245,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==5.0.0
+pychromecast==5.1.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1263,7 +1263,7 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.0.0
+pydaikin==2.0.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1940,7 +1940,7 @@ slackclient==2.5.0
 sleepyq==0.7
 
 # homeassistant.components.xmpp
-slixmpp==1.4.2
+slixmpp==1.5.1
 
 # homeassistant.components.smappee
 smappy==0.2.16
@@ -2114,7 +2114,7 @@ uEagle==0.0.1
 unifiled==0.11
 
 # homeassistant.components.upb
-upb_lib==0.4.10
+upb_lib==0.4.11
 
 # homeassistant.components.upcloud
 upcloud-api==0.4.5
@@ -2251,7 +2251,7 @@ zigpy-xbee==0.12.1
 zigpy-zigate==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.20.1
+zigpy==0.20.3
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
