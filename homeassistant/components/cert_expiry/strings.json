@@ -6,8 +6,8 @@
         "title": "Define the certificate to test",
         "data": {
           "name": "The name of the certificate",
-          "host": "The hostname of the certificate",
-          "port": "The port of the certificate"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },

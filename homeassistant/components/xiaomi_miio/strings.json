@@ -12,7 +12,7 @@
         "title": "Connect to a Xiaomi Gateway",
         "description": "You will need the API Token, see https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token for instructions.",
         "data": {
-          "host": "IP adress",
+          "host": "[%key:common::config_flow::data::ip%]",
           "token": "API Token",
           "name": "Name of the Gateway"
         }
