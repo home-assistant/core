@@ -1,8 +1,8 @@
 """Demo platform that offers a fake humidifier device."""
 from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import (
-    DEVICE_CLASS_HUMIDIFIER,
     DEVICE_CLASS_DEHUMIDIFIER,
+    DEVICE_CLASS_HUMIDIFIER,
     SUPPORT_MODES,
 )
 
