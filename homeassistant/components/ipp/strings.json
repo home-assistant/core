@@ -14,7 +14,7 @@
         }
       },
       "zeroconf_confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]",
+        "description": "Do you want to add the printer named `{name}` to Home Assistant?",
         "title": "Discovered printer"
       }
     },
