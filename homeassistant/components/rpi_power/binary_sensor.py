@@ -4,18 +4,16 @@ A sensor platform which detects underruns and capped status from the official Ra
 Minimal Kernel needed is 4.14+
 """
 import logging
+import os
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
-    PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SYSFILE = "/sys/devices/platform/soc/soc:firmware/get_throttled"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA
 
 DESCRIPTION_WORKING = "Everything is working as intended."
 DESCRIPTION_UNDER_VOLTAGE = "Under-voltage was detected, consider getting a uninterruptible power supply for your Raspberry Pi."
@@ -38,7 +36,6 @@ DESCRIPTIONS = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    import os
 
     exist = os.path.isfile(SYSFILE)
     if exist:
