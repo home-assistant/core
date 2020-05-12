@@ -886,6 +886,8 @@ omit =
     homeassistant/components/zamg/weather.py
     homeassistant/components/zengge/light.py
     homeassistant/components/zeroconf/*
+    homeassistant/components/zerproc/__init__.py
+    homeassistant/components/zerproc/const.py
     homeassistant/components/zestimate/sensor.py
     homeassistant/components/zha/api.py
     homeassistant/components/zha/core/channels/*
