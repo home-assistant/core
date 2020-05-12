@@ -8,7 +8,10 @@
     },
     "step": {
       "user": {
-        "data": { "username": "Email Address", "password": "Password" },
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "Password"
+        },
         "description": "Please enter your information.",
         "title": "Tesla - Configuration"
       }
