@@ -96,7 +96,6 @@ class AvriWasteUpcoming(Entity):
         if not self.enabled:
             return
 
-        """Update device state."""
         try:
             pickup_events = self._client.upcoming_of_each()
         except AvriException as ex:
