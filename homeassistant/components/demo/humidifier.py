@@ -7,7 +7,6 @@ from homeassistant.components.humidifier.const import (
     OPERATION_MODE_HUMIDIFY,
     OPERATION_MODE_HUMIDIFY_DRY,
     OPERATION_MODE_OFF,
-    SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
 )
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -22,7 +21,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             DemoHumidifier(
                 name="Humidifier",
                 preset=None,
-                fan_mode=None,
                 target_humidity=68,
                 current_humidity=77,
                 operation_mode=OPERATION_MODE_HUMIDIFY,
@@ -32,7 +30,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             DemoHumidifier(
                 name="Dehumidifier",
                 preset=None,
-                fan_mode="On High",
                 target_humidity=54,
                 current_humidity=67,
                 operation_mode=OPERATION_MODE_DRY,
@@ -44,7 +41,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name="Hygrostat",
                 preset="home",
                 preset_modes=["home", "eco"],
-                fan_mode="Auto Low",
                 target_humidity=50,
                 current_humidity=49,
                 current_temperature=73,
@@ -68,7 +64,6 @@ class DemoHumidifier(HumidifierEntity):
         self,
         name,
         preset,
-        fan_mode,
         target_humidity,
         current_humidity,
         operation_mode,
@@ -85,16 +80,12 @@ class DemoHumidifier(HumidifierEntity):
         self._support_flags = SUPPORT_FLAGS
         if preset is not None:
             self._support_flags = self._support_flags | SUPPORT_PRESET_MODE
-        if fan_mode is not None:
-            self._support_flags = self._support_flags | SUPPORT_FAN_MODE
         self._target_humidity = target_humidity
         self._preset = preset
         self._preset_modes = preset_modes
         self._current_humidity = current_humidity
         self._current_temperature = current_temperature
         self._unit_of_measurement = unit_of_measurement
-        self._current_fan_mode = fan_mode
-        self._fan_modes = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
         self._humidifier_action = humidifier_action
         self._operation_mode = operation_mode
         self._operation_modes = operation_modes
@@ -160,16 +151,6 @@ class DemoHumidifier(HumidifierEntity):
         return self._preset_modes
 
     @property
-    def fan_mode(self):
-        """Return the fan setting."""
-        return self._current_fan_mode
-
-    @property
-    def fan_modes(self):
-        """Return the list of available fan modes."""
-        return self._fan_modes
-
-    @property
     def is_on(self):
         """Return true if switch is on."""
         return self._state
@@ -187,11 +168,6 @@ class DemoHumidifier(HumidifierEntity):
     async def async_set_humidity(self, humidity):
         """Set new humidity level."""
         self._target_humidity = humidity
-        self.async_write_ha_state()
-
-    async def async_set_fan_mode(self, fan_mode):
-        """Set new fan mode."""
-        self._current_fan_mode = fan_mode
         self.async_write_ha_state()
 
     async def async_set_operation_mode(self, operation_mode):

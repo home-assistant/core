@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant.components.humidifier.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
     ATTR_HUMIDIFIER_ACTION,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -21,7 +20,6 @@ from homeassistant.components.humidifier.const import (
     OPERATION_MODE_OFF,
     PRESET_AWAY,
     PRESET_ECO,
-    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -52,7 +50,6 @@ def test_setup_params(hass):
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_FAN_MODE) == "On High"
     assert state.attributes.get(ATTR_HUMIDITY) == 54
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 67
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
@@ -99,41 +96,6 @@ async def test_set_target_humidity(hass):
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_HUMIDITY) == 64
-
-
-async def test_set_fan_mode_bad_attr(hass):
-    """Test setting fan mode without required attribute."""
-    state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.attributes.get(ATTR_FAN_MODE) == "On High"
-
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_FAN_MODE: None, ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER},
-            blocking=True,
-        )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.attributes.get(ATTR_FAN_MODE) == "On High"
-
-
-async def test_set_fan_mode(hass):
-    """Test setting of new fan mode."""
-    state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.attributes.get(ATTR_FAN_MODE) == "On High"
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_FAN_MODE: "On Low", ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.attributes.get(ATTR_FAN_MODE) == "On Low"
 
 
 async def test_set_operation_bad_attr_and_state(hass):

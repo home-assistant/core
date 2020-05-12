@@ -12,6 +12,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
@@ -29,8 +30,6 @@ from homeassistant.loader import bind_hass
 from .const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
-    ATTR_FAN_MODES,
     ATTR_HUMIDIFIER_ACTION,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -47,11 +46,9 @@ from .const import (
     OPERATION_MODE_HUMIDIFY_DRY,
     OPERATION_MODE_OFF,
     OPERATION_MODES,
-    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_PRESET_MODE,
-    SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
 )
 
@@ -78,12 +75,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(
-        SERVICE_SET_FAN_MODE,
-        make_entity_service_schema({vol.Required(ATTR_FAN_MODE): cv.string}),
-        "async_set_fan_mode",
-        [SUPPORT_FAN_MODE],
-    )
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
         make_entity_service_schema(
@@ -136,9 +127,6 @@ class HumidifierEntity(ToggleEntity):
             ATTR_OPERATION_MODES: self.operation_modes,
         }
 
-        if supported_features & SUPPORT_FAN_MODE:
-            data[ATTR_FAN_MODES] = self.fan_modes
-
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODES] = self.preset_modes
 
@@ -152,9 +140,6 @@ class HumidifierEntity(ToggleEntity):
             ATTR_HUMIDITY: self.target_humidity,
             ATTR_CURRENT_HUMIDITY: self.current_humidity,
         }
-
-        if supported_features & SUPPORT_FAN_MODE:
-            data[ATTR_FAN_MODE] = self.fan_mode
 
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
@@ -191,22 +176,6 @@ class HumidifierEntity(ToggleEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         raise NotImplementedError()
-
-    @property
-    def fan_mode(self) -> Optional[str]:
-        """Return the fan setting.
-
-        Requires SUPPORT_FAN_MODE.
-        """
-        raise NotImplementedError
-
-    @property
-    def fan_modes(self) -> Optional[List[str]]:
-        """Return the list of available fan modes.
-
-        Requires SUPPORT_FAN_MODE.
-        """
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -263,14 +232,6 @@ class HumidifierEntity(ToggleEntity):
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
-
-    def set_fan_mode(self, fan_mode: str) -> None:
-        """Set new target fan mode."""
-        raise NotImplementedError()
-
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set new target fan mode."""
-        await self.hass.async_add_executor_job(self.set_fan_mode, fan_mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
