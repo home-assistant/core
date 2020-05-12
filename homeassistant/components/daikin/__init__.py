@@ -28,11 +28,18 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 COMPONENT_TYPES = ["climate", "sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Optional(CONF_HOSTS, default=[]): vol.All(cv.ensure_list, [cv.string])}
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN, invalidation_version="0.113.0"),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Optional(CONF_HOSTS, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    )
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
