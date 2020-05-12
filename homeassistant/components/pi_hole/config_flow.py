@@ -27,10 +27,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 _LOGGER = logging.getLogger(__name__)
 
 
-class DuplicatedNameException(Exception):
-    """The name is already existed."""
-
-
 class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Pi-hole config flow."""
 
