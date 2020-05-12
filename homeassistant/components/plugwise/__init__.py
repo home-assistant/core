@@ -3,9 +3,9 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from Plugwise_Smile.Smile import Smile
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -58,13 +59,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         update_interval = timedelta(seconds=60)
 
+    async def async_update_data():
+        """Update data via API endpoint."""
+        try:
+            async with async_timeout.timeout(10):
+                await api.full_update_device()
+                return True
+        except Smile.XMLDataMissingError:
+            raise UpdateFailed("Smile update failed")
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="Smile",
+        update_method=async_update_data,
+        update_interval=update_interval,
+    )
+
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
     api.get_all_devices()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
-        "updater": SmileDataUpdater(
-            hass, "device", entry.entry_id, api, "full_update_device", update_interval
-        ),
+        "coordinator": coordinator,
     }
 
     device_registry = await dr.async_get_registry(hass)
@@ -87,13 +108,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    async def async_refresh_all(_):
-        """Refresh all Smile data."""
-        for info in hass.data[DOMAIN].values():
-            await info["updater"].async_refresh_all()
-
-    hass.services.async_register(DOMAIN, "update", async_refresh_all)
-
     return True
 
 
@@ -113,58 +127,44 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class SmileDataUpdater:
-    """Data storage for single Smile API endpoint."""
+class SmileGateway(Entity):
+    """Represent Smile Gateway."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        data_type: str,
-        config_entry_id: str,
-        api: Smile,
-        update_method: str,
-        update_interval: timedelta,
-    ):
-        """Initialize global data updater."""
-        self.hass = hass
-        self.data_type = data_type
-        self.config_entry_id = config_entry_id
-        self.api = api
-        self.update_method = update_method
-        self.update_interval = update_interval
-        self.listeners = []
-        self._unsub_interval = None
+    def __init__(self, api, coordinator):
+        """Initialise the sensor."""
+        self._api = api
+        self._coordinator = coordinator
 
-    @callback
-    def async_add_listener(self, update_callback):
-        """Listen for data updates."""
-        if not self.listeners:
-            self._unsub_interval = async_track_time_interval(
-                self.hass, self.async_refresh_all, self.update_interval
-            )
+    @property
+    def should_poll(self):
+        """Return False, updates are controlled via coordinator."""
+        return False
 
-        self.listeners.append(update_callback)
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._coordinator.last_update_success
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self._update_callback)
+        )
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
+        self._update_callback()
 
     @callback
-    def async_remove_listener(self, update_callback):
-        """Remove data update."""
-        self.listeners.remove(update_callback)
+    def _update_callback(self):
+        """Call update method."""
+        self.update()
+        self.async_write_ha_state()
 
-        if not self.listeners:
-            self._unsub_interval()
-            self._unsub_interval = None
+    def update(self):
+        """Update the entity."""
+        raise NotImplementedError
 
-    async def async_refresh_all(self, _now: Optional[int] = None) -> None:
-        """Time to update."""
-        if not self.listeners:
-            _LOGGER.error("Plugwise Smile has no listeners, not updating")
-            return
-
-        try:
-            await self.api.full_update_device()
-        except Smile.XMLDataMissingError:
-            _LOGGER.error("Smile update failed")
-            raise Smile.XMLDataMissingError
-
-        for update_callback in self.listeners:
-            update_callback()
+    async def async_update(self):
+        """Update the entity."""
+        await self._coordinator.async_request_refresh()
