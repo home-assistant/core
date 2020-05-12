@@ -55,6 +55,7 @@ async def async_setup_entry(
         [
             ArcamFmj(
                 State(client, zone),
+                config_entry.unique_id or config_entry.entry_id,
                 zone_config[CONF_NAME],
                 zone_config.get(SERVICE_TURN_ON),
             )
@@ -69,9 +70,12 @@ async def async_setup_entry(
 class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
-    def __init__(self, state: State, name: str, turn_on: Optional[ConfigType]):
+    def __init__(
+        self, state: State, uuid: str, name: str, turn_on: Optional[ConfigType]
+    ):
         """Initialize device."""
         self._state = state
+        self._uuid = uuid
         self._name = name
         self._turn_on = turn_on
         self._support = (
@@ -97,6 +101,11 @@ class ArcamFmj(MediaPlayerEntity):
                 None,
             )
         )
+
+    @property
+    def unique_id(self):
+        """Return unique identifier if known."""
+        return f"{self._uuid}-{self._state.zn}"
 
     @property
     def device_info(self):
