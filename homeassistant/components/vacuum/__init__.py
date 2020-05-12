@@ -157,6 +157,12 @@ class _BaseVacuum(Entity):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         raise NotImplementedError()
 
+    @property
+    def capability_attributes(self):
+        """Return capability attributes."""
+        if self.supported_features & SUPPORT_FAN_SPEED:
+            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
+
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
         raise NotImplementedError()
@@ -247,12 +253,6 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         )
 
     @property
-    def capability_attributes(self):
-        """Return capability attributes."""
-        if self.supported_features & SUPPORT_FAN_SPEED:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
-
-    @property
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
@@ -336,12 +336,6 @@ class StateVacuumEntity(_BaseVacuum):
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
         )
-
-    @property
-    def capability_attributes(self):
-        """Return capability attributes."""
-        if self.supported_features & SUPPORT_FAN_SPEED:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
     @property
     def state_attributes(self):
