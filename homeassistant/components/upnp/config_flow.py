@@ -227,7 +227,7 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
                 CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )
             update_interval = timedelta(seconds=update_interval_sec)
-            _LOGGER.debug("Updating, update_interval: %s", update_interval)
+            _LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
             coordinator.update_interval = update_interval
             return self.async_create_entry(title="", data=user_input)
 
