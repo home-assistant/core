@@ -117,7 +117,7 @@ class ZerprocLight(Light):
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        await self.hass.async_add_executor_job(self._light.disconnect())
+        await self.hass.async_add_executor_job(self._light.disconnect)
 
     def on_hass_shutdown(self, event):
         """Execute when Home Assistant is shutting down."""
