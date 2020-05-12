@@ -3,7 +3,10 @@
     "step": {
       "user": {
         "title": "Connect to your Sense Energy Monitor",
-        "data": { "email": "Email Address", "password": "Password" }
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "Password"
+        }
       }
     },
     "error": {
