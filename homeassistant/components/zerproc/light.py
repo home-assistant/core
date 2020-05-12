@@ -112,7 +112,9 @@ class ZerprocLight(Light):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_hass_shutdown)
+        self.async_on_remove(
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_hass_shutdown)
+        )
 
     def on_hass_shutdown(self, event):
         """Execute when Home Assistant is shutting down."""
