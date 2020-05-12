@@ -135,9 +135,11 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
 
         # Ensure complete discovery.
-        if ssdp.ATTR_UPNP_UDN not in discovery_info or \
-           ssdp.ATTR_SSDP_ST not in discovery_info or \
-           "friendlyName" not in discovery_info:
+        if (
+            ssdp.ATTR_UPNP_UDN not in discovery_info
+            or ssdp.ATTR_SSDP_ST not in discovery_info
+            or "friendlyName" not in discovery_info
+        ):
             _LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
