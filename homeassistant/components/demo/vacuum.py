@@ -279,9 +279,6 @@ class StateDemoVacuum(StateVacuumEntity):
     @property
     def battery_level(self):
         """Return the current battery level of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
-
         return max(0, min(100, self._battery_level))
 
     @property
