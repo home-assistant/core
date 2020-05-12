@@ -260,46 +260,51 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     @callback
     def async_add_binary_sensor(values):
-        """Add Z-Wave Binary Sensor."""
-        sensors_to_add = []
-
-        if values.primary.type == ValueType.LIST:
-            # we convert Notification values into binary sensors
-            # https://github.com/OpenZWave/open-zwave/blob/master/config/NotificationCCTypes.xml
-            for list_value in values.primary.value["List"]:
-                # check if we have a mapping for this value
-                for item in NOTIFICATION_SENSORS:
-                    if item[NOTIFICATION_TYPE] != values.primary.index:
-                        continue
-                    if list_value["Value"] not in item[NOTIFICATION_VALUES]:
-                        continue
-                    sensors_to_add.append(
-                        ZWaveListValueSensor(
-                            # required values
-                            values,
-                            list_value["Value"],
-                            item[NOTIFICATION_DEVICE_CLASS],
-                            # optional values
-                            item.get(NOTIFICATION_SENSOR_ENABLED, True),
-                            item.get(NOTIFICATION_OFF_VALUE, NOTIFICATION_VALUE_CLEAR),
-                        )
-                    )
-
-        elif values.primary.type == ValueType.BOOL:
-            # classic/legacy binary sensor
-            sensors_to_add.append(ZWaveBinarySensor(values))
-        else:
-            # should not happen but log it just in case
-            _LOGGER.warning("Sensor not implemented for value %s", values.primary.label)
-            return
-
-        async_add_entities(sensors_to_add)
+        """Add Z-Wave Binary Sensor(s)."""
+        async_add_entities(VALUE_TYPE_SENSORS[values.primary.type](values))
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
             hass, f"{DOMAIN}_new_{BINARY_SENSOR_DOMAIN}", async_add_binary_sensor
         )
     )
+
+
+@callback
+def async_get_legacy_binary_sensors(values):
+    """Add Legacy/classic Z-Wave Binary Sensor."""
+    return [ZWaveBinarySensor(values)]
+
+
+@callback
+def async_get_notification_sensors(values):
+    """Convert Notification values into binary sensors."""
+    sensors_to_add = []
+    for list_value in values.primary.value["List"]:
+        # check if we have a mapping for this value
+        for item in NOTIFICATION_SENSORS:
+            if item[NOTIFICATION_TYPE] != values.primary.index:
+                continue
+            if list_value["Value"] not in item[NOTIFICATION_VALUES]:
+                continue
+            sensors_to_add.append(
+                ZWaveListValueSensor(
+                    # required values
+                    values,
+                    list_value["Value"],
+                    item[NOTIFICATION_DEVICE_CLASS],
+                    # optional values
+                    item.get(NOTIFICATION_SENSOR_ENABLED, True),
+                    item.get(NOTIFICATION_OFF_VALUE, NOTIFICATION_VALUE_CLEAR),
+                )
+            )
+    return sensors_to_add
+
+
+VALUE_TYPE_SENSORS = {
+    ValueType.BOOL: async_get_legacy_binary_sensors,
+    ValueType.LIST: async_get_notification_sensors,
+}
 
 
 class ZWaveBinarySensor(ZWaveDeviceEntity, BinarySensorEntity):
