@@ -126,9 +126,6 @@ class DemoVacuum(VacuumEntity):
     @property
     def status(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_STATUS == 0:
-            return
-
         return self._status
 
     @property
@@ -144,9 +141,6 @@ class DemoVacuum(VacuumEntity):
     @property
     def battery_level(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
-
         return max(0, min(100, self._battery_level))
 
     @property
