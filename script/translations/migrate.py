@@ -392,14 +392,14 @@ def clean_wled():
 
 def run():
     """Migrate translations."""
-    clean_wled()
+    # clean_wled()
 
     # Rename existing keys to common keys,
     # Old keys have been updated with reference to the common key
     rename_keys(
         CORE_PROJECT_ID,
         {
-            "component::icloud::config::step::user::username": "common::config_flow::data::email",
+            "component::icloud::config::step::user::data::username": "common::config_flow::data::email",
         },
     )
 
