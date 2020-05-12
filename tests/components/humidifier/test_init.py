@@ -2,25 +2,11 @@
 from typing import List
 from unittest.mock import MagicMock
 
-from homeassistant.components.humidifier import (
-    OPERATION_MODE_HUMIDIFY,
-    OPERATION_MODE_OFF,
-    HumidifierEntity,
-)
+from homeassistant.components.humidifier import HumidifierEntity
 
 
 class MockHumidifierEntity(HumidifierEntity):
     """Mock Humidifier device to use in tests."""
-
-    @property
-    def operation_mode(self) -> str:
-        """Return humidifier operation ie. humidify, dry mode."""
-        return OPERATION_MODE_HUMIDIFY
-
-    @property
-    def operation_modes(self) -> List[str]:
-        """Return the list of available humidifier operation modes."""
-        return [OPERATION_MODE_OFF, OPERATION_MODE_HUMIDIFY]
 
     @property
     def supported_features(self) -> int:

@@ -30,24 +30,15 @@ from homeassistant.loader import bind_hass
 from .const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_HUMIDIFIER_ACTION,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
-    ATTR_OPERATION_MODE,
-    ATTR_OPERATION_MODES,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN,
-    OPERATION_MODE_DRY,
-    OPERATION_MODE_HUMIDIFY,
-    OPERATION_MODE_HUMIDIFY_DRY,
-    OPERATION_MODE_OFF,
-    OPERATION_MODES,
     SERVICE_SET_HUMIDITY,
-    SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_PRESET_MODE,
     SUPPORT_PRESET_MODE,
 )
@@ -75,13 +66,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(
-        SERVICE_SET_OPERATION_MODE,
-        make_entity_service_schema(
-            {vol.Required(ATTR_OPERATION_MODE): vol.In(OPERATION_MODES)}
-        ),
-        "async_set_operation_mode",
-    )
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
         make_entity_service_schema({vol.Required(ATTR_PRESET_MODE): cv.string}),
@@ -124,7 +108,6 @@ class HumidifierEntity(ToggleEntity):
         data = {
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
-            ATTR_OPERATION_MODES: self.operation_modes,
         }
 
         if supported_features & SUPPORT_PRESET_MODE:
@@ -143,9 +126,6 @@ class HumidifierEntity(ToggleEntity):
 
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
-
-        if self.humidifier_action is not None:
-            data[ATTR_HUMIDIFIER_ACTION] = self.humidifier_action
 
         if self.current_temperature is not None:
             data[ATTR_CURRENT_TEMPERATURE] = show_temp(
@@ -178,30 +158,6 @@ class HumidifierEntity(ToggleEntity):
         raise NotImplementedError()
 
     @property
-    @abstractmethod
-    def operation_mode(self) -> str:
-        """Return humidifier operation ie. humidify, dry mode.
-
-        Need to be one of OPERATION_MODE_*.
-        """
-
-    @property
-    @abstractmethod
-    def operation_modes(self) -> List[str]:
-        """Return the list of available humidifier operation modes.
-
-        Need to be a subset of OPERATION_MODES.
-        """
-
-    @property
-    def humidifier_action(self) -> Optional[str]:
-        """Return the current running humidifier operation if supported.
-
-        Need to be one of CURRENT_HUMIDIFIER_*.
-        """
-        return None
-
-    @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp.
 
@@ -224,14 +180,6 @@ class HumidifierEntity(ToggleEntity):
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self.hass.async_add_executor_job(self.set_humidity, humidity)
-
-    def set_operation_mode(self, operation_mode: str) -> None:
-        """Set new target operation mode."""
-        raise NotImplementedError()
-
-    async def async_set_operation_mode(self, operation_mode: str) -> None:
-        """Set new target operation mode."""
-        await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

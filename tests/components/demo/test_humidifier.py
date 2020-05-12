@@ -6,22 +6,14 @@ import voluptuous as vol
 from homeassistant.components.humidifier.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_HUMIDIFIER_ACTION,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
-    ATTR_OPERATION_MODE,
-    ATTR_OPERATION_MODES,
     ATTR_PRESET_MODE,
-    CURRENT_HUMIDIFIER_DRY,
     DOMAIN,
-    OPERATION_MODE_DRY,
-    OPERATION_MODE_HUMIDIFY,
-    OPERATION_MODE_OFF,
     PRESET_AWAY,
     PRESET_ECO,
     SERVICE_SET_HUMIDITY,
-    SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_PRESET_MODE,
 )
 from homeassistant.const import (
@@ -53,7 +45,6 @@ def test_setup_params(hass):
     assert state.attributes.get(ATTR_HUMIDITY) == 54
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 67
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
-    assert state.attributes.get(ATTR_OPERATION_MODES) == ["dry", "off"]
 
 
 def test_default_setup_params(hass):
@@ -96,49 +87,6 @@ async def test_set_target_humidity(hass):
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_HUMIDITY) == 64
-
-
-async def test_set_operation_bad_attr_and_state(hass):
-    """Test setting operation mode without required attribute.
-
-    Also check the state.
-    """
-    state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == CURRENT_HUMIDIFIER_DRY
-    assert state.state == STATE_ON
-
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
-            {ATTR_OPERATION_MODE: None, ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER},
-            blocking=True,
-        )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == CURRENT_HUMIDIFIER_DRY
-    assert state.state == STATE_ON
-
-
-async def test_set_operation(hass):
-    """Test setting of new operation mode."""
-    state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.state == STATE_ON
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {
-            ATTR_OPERATION_MODE: OPERATION_MODE_HUMIDIFY,
-            ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER,
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.state == STATE_ON
 
 
 async def test_set_hold_mode_away(hass):
