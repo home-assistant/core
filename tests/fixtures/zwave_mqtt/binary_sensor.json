@@ -13,8 +13,8 @@
                     "Label": "Motion Detected at Unknown Location"
                 }
             ],
-            "Selected": "Clear",
-            "Selected_id": 0
+            "Selected": "Motion Detected at Unknown Location",
+            "Selected_id": 8
         },
         "Units": "",
         "Min": 0,
