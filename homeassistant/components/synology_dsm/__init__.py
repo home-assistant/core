@@ -199,12 +199,14 @@ class SynoApi:
         entity_entries = entity_registry.async_entries_for_config_entry(
             entity_reg, self._entry.entry_id
         )
+        # Entities not added yet
         if not entity_entries:
             self._with_security = True
             self._with_storage = True
             self._with_utilisation = True
             return
 
+        # Determine which if at least one entity uses specific API
         self._with_security = False
         self._with_storage = False
         self._with_utilisation = False
@@ -216,28 +218,19 @@ class SynoApi:
                 continue
 
             # Check if we should fetch specific APIs
-            # for api_key in SECURITY_API_KEYS:
-            #     if api_key in entity_entry.unique_id:
-            #         print("#################################################")
-            #         print(entity_entry)
-            #         print("#################################################")
-            #         self._with_security = True
-
-            if "security" in entity_entry.unique_id:
+            if SynoCoreSecurity.API_KEY in entity_entry.unique_id:
                 self._with_security = True
+                continue
 
-            # for api_key in STORAGE_API_KEYS:
-            #     if api_key in entity_entry.unique_id:
-            #         self._with_storage = True
-            if "storage" in entity_entry.unique_id:
+            if SynoStorage.API_KEY in entity_entry.unique_id:
                 self._with_storage = True
+                continue
 
-            # for api_key in UTILISATION_API_KEYS:
-            #     if api_key in entity_entry.unique_id:
-            #         self._with_utilisation = True
-            if "utilisation" in entity_entry.unique_id:
+            if SynoCoreUtilization.API_KEY in entity_entry.unique_id:
                 self._with_utilisation = True
+                continue
 
+        # Reset not used API
         if not self._with_security:
             self.dsm._security = None  # pylint: disable=protected-access
             self.security = None

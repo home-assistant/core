@@ -27,8 +27,9 @@ async def async_setup_entry(
     if api.security:
         entities += [
             SynoDSMSecurityBinarySensor(
-                api, "security:status", SECURITY_BINARY_SENSORS["security:status"]
+                api, sensor_type, SECURITY_BINARY_SENSORS[sensor_type]
             )
+            for sensor_type in SECURITY_BINARY_SENSORS
         ]
 
     # Handle all disks
