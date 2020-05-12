@@ -2114,7 +2114,7 @@ uEagle==0.0.1
 unifiled==0.11
 
 # homeassistant.components.upb
-upb_lib==0.4.10
+upb_lib==0.4.11
 
 # homeassistant.components.upcloud
 upcloud-api==0.4.5
