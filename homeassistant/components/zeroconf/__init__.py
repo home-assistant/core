@@ -43,6 +43,10 @@ HOMEKIT_TYPE = "_hap._tcp.local."
 CONF_DEFAULT_INTERFACE = "default_interface"
 DEFAULT_DEFAULT_INTERFACE = False
 
+HOMEKIT_PROPERTIES = "properties"
+HOMEKIT_PAIRED_STATUS_FLAG = "sf"
+HOMEKIT_MODEL = "md"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -184,8 +188,25 @@ def setup(hass, config):
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
             #
-            # If the device already has homekit pairings
-            # homekit_controller will ignore it.
+            # We only send updates to homekit_controller
+            # if the device is already paired in order to avoid
+            # offering a second discovery for the same device
+            _LOGGER.debug("info: %s", info)
+            if (
+                HOMEKIT_PROPERTIES in info
+                and HOMEKIT_PAIRED_STATUS_FLAG in info[HOMEKIT_PROPERTIES]
+            ):
+                _LOGGER.debug(
+                    "status_flag: %s",
+                    info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG],
+                )
+                try:
+                    if not int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
+                        return
+                except ValueError:
+                    # HomeKit pairing status unknown
+                    # likely bad homekit data
+                    return
 
         for domain in ZEROCONF[service_type]:
             hass.add_job(
@@ -209,10 +230,10 @@ def handle_homekit(hass, info) -> bool:
     Return if discovery was forwarded.
     """
     model = None
-    props = info.get("properties", {})
+    props = info.get(HOMEKIT_PROPERTIES, {})
 
     for key in props:
-        if key.lower() == "md":
+        if key.lower() in HOMEKIT_MODEL:
             model = props[key]
             break
 
