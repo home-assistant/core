@@ -163,6 +163,20 @@ class _BaseVacuum(Entity):
         if self.supported_features & SUPPORT_FAN_SPEED:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the vacuum cleaner."""
+        data = {}
+
+        if self.battery_level is not None:
+            data[ATTR_BATTERY_LEVEL] = self.battery_level
+            data[ATTR_BATTERY_ICON] = self.battery_icon
+
+        if self.supported_features & SUPPORT_FAN_SPEED:
+            data[ATTR_FAN_SPEED] = self.fan_speed
+
+        return data
+
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
         raise NotImplementedError()
@@ -255,17 +269,10 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
     @property
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
-        data = {}
+        data = super().state_attributes
 
         if self.status is not None:
             data[ATTR_STATUS] = self.status
-
-        if self.battery_level is not None:
-            data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
-
-        if self.fan_speed is not None:
-            data[ATTR_FAN_SPEED] = self.fan_speed
 
         return data
 
@@ -336,20 +343,6 @@ class StateVacuumEntity(_BaseVacuum):
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
         )
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes of the vacuum cleaner."""
-        data = {}
-
-        if self.battery_level is not None:
-            data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
-
-        if self.fan_speed is not None:
-            data[ATTR_FAN_SPEED] = self.fan_speed
-
-        return data
 
     def start(self):
         """Start or resume the cleaning task."""
