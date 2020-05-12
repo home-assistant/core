@@ -997,7 +997,7 @@ onkyo-eiscp==1.2.7
 onvif-zeep-async==0.3.0
 
 # homeassistant.components.opengarage
-open-garage==0.1.2
+open-garage==0.1.3
 
 # homeassistant.components.opencv
 # opencv-python-headless==4.2.0.32
