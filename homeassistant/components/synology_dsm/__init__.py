@@ -211,8 +211,6 @@ class SynoApi:
         self._with_storage = False
         self._with_utilisation = False
         for entity_entry in entity_entries:
-            print("----------------------------------------------")
-            print(entity_entry)
             # Pass disabled entries
             if entity_entry.disabled_by:
                 continue
@@ -262,13 +260,7 @@ class SynoApi:
 
     async def async_update(self, now=None):
         """Update function for updating API information."""
-        print("secu ", self._with_security)
-        print("stor ", self._with_storage)
-        print("util ", self._with_utilisation)
         await self._should_fetch_api()
-        print("secuAPI ", self.security)
-        print("storAPI ", self.storage)
-        print("utilAPI ", self.utilisation)
         await self._hass.async_add_executor_job(self.dsm.update)
         async_dispatcher_send(self._hass, self.signal_sensor_update)
 
