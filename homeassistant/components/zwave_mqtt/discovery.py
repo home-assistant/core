@@ -5,6 +5,138 @@ from openzwavemqtt.const import CommandClass, ValueGenre, ValueIndex, ValueType
 from . import const
 
 DISCOVERY_SCHEMAS = (
+    {  # thermostat without COMMAND_CLASS_THERMOSTAT_MODE
+        const.DISC_COMPONENT: "climate",
+        const.DISC_GENERIC_DEVICE_CLASS: [
+            const_ozw.GENERIC_TYPE_THERMOSTAT,
+            const_ozw.GENERIC_TYPE_SENSOR_MULTILEVEL,
+        ],
+        const.DISC_SPECIFIC_DEVICE_CLASS: [
+            const_ozw.SPECIFIC_TYPE_THERMOSTAT_HEATING,
+            const_ozw.SPECIFIC_TYPE_SETPOINT_THERMOSTAT,
+            const_ozw.SPECIFIC_TYPE_NOT_USED,
+        ],
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT]
+            },
+            "temperature": {
+                const.DISC_COMMAND_CLASS: [CommandClass.SENSOR_MULTILEVEL],
+                const.DISC_INDEX: [ValueIndex.SENSOR_MULTILEVEL_AIR_TEMPERATURE],
+                const.DISC_OPTIONAL: True,
+            },
+            "mode": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_MODE],
+                const.DISC_OPTIONAL: True,
+            },
+            "fan_mode": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_FAN_MODE],
+                const.DISC_OPTIONAL: True,
+            },
+            "operating_state": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_OPERATING_STATE],
+                const.DISC_OPTIONAL: True,
+            },
+            "fan_action": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_FAN_STATE],
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    },
+    {  # # thermostat with COMMAND_CLASS_THERMOSTAT_MODE
+        const.DISC_COMPONENT: "climate",
+        const.DISC_GENERIC_DEVICE_CLASS: [
+            const_ozw.GENERIC_TYPE_THERMOSTAT,
+            const_ozw.GENERIC_TYPE_SENSOR_MULTILEVEL,
+        ],
+        const.DISC_SPECIFIC_DEVICE_CLASS: [
+            const_ozw.SPECIFIC_TYPE_THERMOSTAT_GENERAL,
+            const_ozw.SPECIFIC_TYPE_THERMOSTAT_GENERAL_V2,
+            const_ozw.SPECIFIC_TYPE_SETBACK_THERMOSTAT,
+        ],
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_MODE]
+            },
+            "setpoint_heating": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [1],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_cooling": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [2],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_furnace": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [7],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_dry_air": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [8],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_moist_air": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [9],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_auto_changeover": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [10],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_eco_heating": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [11],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_eco_cooling": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [12],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_away_heating": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [13],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_away_cooling": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [14],
+                const.DISC_OPTIONAL: True,
+            },
+            "setpoint_full_power": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_SETPOINT],
+                const.DISC_INDEX: [15],
+                const.DISC_OPTIONAL: True,
+            },
+            "temperature": {
+                const.DISC_COMMAND_CLASS: [CommandClass.SENSOR_MULTILEVEL],
+                const.DISC_INDEX: [1],
+                const.DISC_OPTIONAL: True,
+            },
+            "fan_mode": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_FAN_MODE],
+                const.DISC_OPTIONAL: True,
+            },
+            "operating_state": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_OPERATING_STATE],
+                const.DISC_OPTIONAL: True,
+            },
+            "fan_action": {
+                const.DISC_COMMAND_CLASS: [CommandClass.THERMOSTAT_FAN_STATE],
+                const.DISC_OPTIONAL: True,
+            },
+            "zxt_120_swing_mode": {
+                const.DISC_COMMAND_CLASS: [CommandClass.CONFIGURATION],
+                const.DISC_INDEX: [33],
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    },
     {  # Light
         const.DISC_COMPONENT: "light",
         const.DISC_GENERIC_DEVICE_CLASS: (
