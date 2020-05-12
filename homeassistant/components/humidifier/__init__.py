@@ -7,11 +7,7 @@ from typing import Any, Dict, List, Optional
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -24,23 +20,30 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import bind_hass
 
 from .const import (
+    ATTR_AVAILABLE_MODES,
     ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     ATTR_MODE,
-    ATTR_AVAILABLE_MODES,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
+    DEVICE_CLASS_DEHUMIDIFIER,
+    DEVICE_CLASS_HUMIDIFIER,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SUPPORT_MODES,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+
 SCAN_INTERVAL = timedelta(seconds=60)
 
-_LOGGER = logging.getLogger(__name__)
+DEVICE_CLASSES = [DEVICE_CLASS_HUMIDIFIER, DEVICE_CLASS_DEHUMIDIFIER]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 
 @bind_hass

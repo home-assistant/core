@@ -1,13 +1,13 @@
 # Describes the format for available humidifier services
 
-set_preset_mode:
-  description: Set preset mode for humidifier device.
+set_mode:
+  description: Set mode for humidifier device.
   fields:
     entity_id:
       description: Name(s) of entities to change.
       example: 'humidifier.bedroom'
-    preset_mode:
-      description: New value of preset mode
+    mode:
+      description: New mode
       example: 'away'
 
 set_humidity:
@@ -19,26 +19,6 @@ set_humidity:
     humidity:
       description: New target humidity for humidifier device.
       example: 50
-
-set_fan_mode:
-  description: Set fan operation for humidifier device.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'humidifier.bedroom'
-    fan_mode:
-      description: New value of fan mode.
-      example: On Low
-
-set_operation_mode:
-  description: Set operation mode for humidifier device.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'humidifier.bedroom'
-    operation_mode:
-      description: New value of operation mode.
-      example: humidify
 
 turn_on:
   description: Turn humidifier device on.

@@ -1,6 +1,10 @@
 """Demo platform that offers a fake humidifier device."""
 from homeassistant.components.humidifier import HumidifierEntity
-from homeassistant.components.humidifier.const import SUPPORT_MODES
+from homeassistant.components.humidifier.const import (
+    DEVICE_CLASS_HUMIDIFIER,
+    DEVICE_CLASS_DEHUMIDIFIER,
+    SUPPORT_MODES,
+)
 
 SUPPORT_FLAGS = 0
 
@@ -10,13 +14,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             DemoHumidifier(
-                name="Humidifier", mode=None, target_humidity=68, current_humidity=77,
+                name="Humidifier",
+                mode=None,
+                target_humidity=68,
+                current_humidity=77,
+                device_class=DEVICE_CLASS_HUMIDIFIER,
             ),
             DemoHumidifier(
                 name="Dehumidifier",
                 mode=None,
                 target_humidity=54,
                 current_humidity=67,
+                device_class=DEVICE_CLASS_DEHUMIDIFIER,
             ),
             DemoHumidifier(
                 name="Hygrostat",
@@ -40,6 +49,7 @@ class DemoHumidifier(HumidifierEntity):
         current_humidity,
         available_modes=None,
         is_on=True,
+        device_class=None,
     ):
         """Initialize the humidifier device."""
         self._name = name
@@ -51,6 +61,7 @@ class DemoHumidifier(HumidifierEntity):
         self._mode = mode
         self._available_modes = available_modes
         self._current_humidity = current_humidity
+        self._device_class = device_class
 
     @property
     def supported_features(self):
@@ -91,6 +102,11 @@ class DemoHumidifier(HumidifierEntity):
     def is_on(self):
         """Return true if switch is on."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the device class of the media player."""
+        return self._device_class
 
     async def async_turn_on(self):
         """Turn the device on."""

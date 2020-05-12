@@ -23,6 +23,9 @@ DEFAULT_MAX_HUMIDITY = 100
 
 DOMAIN = "humidifier"
 
+DEVICE_CLASS_HUMIDIFIER = "humidifier"
+DEVICE_CLASS_DEHUMIDIFIER = "dehumidifier"
+
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
 
