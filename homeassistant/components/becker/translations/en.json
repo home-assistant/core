@@ -1,0 +1,17 @@
+{
+	"config": {
+		"abort": {
+			"already_configured": "Becker Integration is already configured",
+			"one_instance_only": "Component only supports one Becker instance"
+		},
+		"step": {
+			"user": {
+				"data": {
+					"device": "path to centronic USB Stick"
+				},
+				"description": "",
+				"title": "Set up Becker Cover"
+			}
+		}
+	}
+}

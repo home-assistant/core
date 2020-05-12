@@ -11,12 +11,12 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_OPEN_TILT,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import (
     CONF_COVERS,
     CONF_DEVICE,
-    CONF_FRIENDLY_NAME,
+    CONF_NAME,
     CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
     STATE_OPEN,
@@ -25,9 +25,8 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import extract_entities, initialise_templates
-from .const import CONF_CHANNEL, DEVICE_CLASS
-from .rf_device import PyBecker
+from .const import CONF_CHANNEL, DEVICE_CLASS, DOMAIN
+from .utils import extract_entities, initialise_templates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ OPEN_POSITION = 100
 
 COVER_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_CHANNEL): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
@@ -57,20 +56,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the becker platform."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Load Becker Covers based on a config entry."""
     covers = []
 
-    stick_path = config.get(CONF_DEVICE)
-    PyBecker.setup(stick_path)
+    becker_config = hass.data[DOMAIN]
+    becker_connector = becker_config["connector"]
 
-    """ To be sure the connexion is well established send 3 commands """
-    for x in range(0, 2):
-        PyBecker.becker.stop("1")
+    for channel, device_config in becker_config[CONF_COVERS].items():
+        name = device_config[CONF_NAME]
+        _LOGGER.debug(f"SETUP cover on channel {channel} with name {name}")
 
-    for device, device_config in config[CONF_COVERS].items():
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-        channel = device_config.get(CONF_CHANNEL)
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
         if channel is None:
             _LOGGER.error("Must specify %s", CONF_CHANNEL)
@@ -79,17 +75,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_VALUE_TEMPLATE: state_template,
         }
         initialise_templates(hass, templates)
-        entity_ids = extract_entities(device, "cover", None, templates)
+        entity_ids = extract_entities(name, "cover", None, templates)
         covers.append(
             BeckerDevice(
-                PyBecker.becker, friendly_name, int(channel), state_template, entity_ids
+                becker_connector, name, int(channel), state_template, entity_ids
             )
         )
 
     async_add_entities(covers)
 
 
-class BeckerDevice(CoverDevice, RestoreEntity):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the becker platform."""
+
+
+class BeckerDevice(CoverEntity, RestoreEntity):
     """Representation of a Becker cover device."""
 
     def __init__(self, becker, name, channel, state_template, entity_ids, position=0):
