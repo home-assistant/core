@@ -165,7 +165,7 @@ broadlink==0.13.2
 brother==0.1.14
 
 # homeassistant.components.bsblan
-bsblan==0.3.6
+bsblan==0.3.7
 
 # homeassistant.components.buienradar
 buienradar==1.0.4
