@@ -93,17 +93,18 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_2fa(self, user_input=None):
         """Handle 2FA step."""
-        if user_input:
-            pin = user_input[CONF_PIN]
-            if not pin or pin.lower() == "none":
-                pin = None
+        if user_input is not None:
+            pin = user_input.get(CONF_PIN)
             if await self.hass.async_add_executor_job(
                 self.blink.login_handler.send_auth_key, self.blink, pin
             ):
                 return await self.async_step_user(user_input=self.data)
 
         return self.async_show_form(
-            step_id="2fa", data_schema=vol.Schema({vol.Required("pin"): str}),
+            step_id="2fa",
+            data_schema=vol.Schema(
+                {vol.Optional("pin"): vol.All(str, vol.Length(min=1))}
+            ),
         )
 
     async def async_step_import(self, import_data):

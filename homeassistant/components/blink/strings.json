@@ -11,7 +11,7 @@
       "2fa": {
         "title": "Two-factor authentication",
         "data": { "2fa": "Two-factor code" },
-        "description": "Enter the pin sent to your email. If the email does not contain a pin, enter 'None'"
+        "description": "Enter the pin sent to your email. If the email does not contain a pin, leave blank"
       }
     },
     "error": {
