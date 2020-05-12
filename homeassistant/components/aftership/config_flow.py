@@ -1,15 +1,14 @@
 """Config flow for aftership integration."""
 import logging
 
+from pyaftership.tracker import Tracking
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import HTTP_OK, CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN  # pylint:disable=unused-import
-from pyaftership.tracker import Tracking
-
 
 _LOGGER = logging.getLogger(__name__)
 
