@@ -4,7 +4,10 @@
       "user": {
         "title": "Linky",
         "description": "Enter your credentials",
-        "data": { "username": "Email", "password": "Password" }
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "Password"
+        }
       }
     },
     "error": {

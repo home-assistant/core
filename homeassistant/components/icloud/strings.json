@@ -5,7 +5,7 @@
         "title": "iCloud credentials",
         "description": "Enter your credentials",
         "data": {
-          "username": "Email",
+          "username": "[%key:common::config_flow::data::email%]",
           "password": "Password",
           "with_family": "With family"
         }
