@@ -6,7 +6,7 @@
         "description": "An [%key:common::config_flow::data::access_token%] is only needed for TVs. If you are configuring a TV and do not have an [%key:common::config_flow::data::access_token%] yet, leave it blank to go through a pairing process.",
         "data": {
           "name": "Name",
-          "host": "<Host/IP>:<Port>",
+          "host": "[%key:common::config_flow::data::host%]",
           "device_class": "Device Type",
           "access_token": "[%key:common::config_flow::data::access_token%]"
         }
@@ -14,7 +14,9 @@
       "pair_tv": {
         "title": "Complete Pairing Process",
         "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
-        "data": { "pin": "PIN" }
+        "data": {
+          "pin": "PIN"
+        }
       },
       "pairing_complete": {
         "title": "Pairing Complete",

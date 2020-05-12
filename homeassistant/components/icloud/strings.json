@@ -6,19 +6,23 @@
         "description": "Enter your credentials",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "Password",
+          "password": "[%key:common::config_flow::data::password%]",
           "with_family": "With family"
         }
       },
       "trusted_device": {
         "title": "iCloud trusted device",
         "description": "Select your trusted device",
-        "data": { "trusted_device": "Trusted device" }
+        "data": {
+          "trusted_device": "Trusted device"
+        }
       },
       "verification_code": {
         "title": "iCloud verification code",
         "description": "Please enter the verification code you just received from iCloud",
-        "data": { "verification_code": "Verification code" }
+        "data": {
+          "verification_code": "Verification code"
+        }
       }
     },
     "error": {

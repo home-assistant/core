@@ -324,84 +324,60 @@ def find_frontend_states():
     migrate_project_keys_translations(FRONTEND_PROJECT_ID, CORE_PROJECT_ID, to_migrate)
 
 
-def clean_wled():
-    """Clean WLED strings."""
-    offending_translation = "Wykryto urządzenie [%key:component::wled::title%]"
-    ignore_lang = ["pl"]
-    core_api = get_api(CORE_PROJECT_ID)
-    translations = core_api.keys_list(
-        {
-            "include_translations": 1,
-            "filter_keys": ",".join(
-                [
-                    "component::wled::config::flow_title",
-                    "component::wled::config::step::user::description",
-                    "component::wled::config::step::user::data::host",
-                    "component::wled::config::step::zeroconf_confirm::description",
-                    "component::wled::config::step::zeroconf_confirm::title",
-                    "component::wled::config::error::connection_error",
-                    "component::wled::config::abort::already_configured",
-                    "component::wled::config::abort::connection_error",
-                ]
-            ),
-        }
-    )
-    bad_data = {}
-    for translation in translations:
-        bad_key_data = []
+def apply_data_references(to_migrate):
+    """Apply references."""
+    for strings_file in INTEGRATIONS_DIR.glob("*/strings.json"):
+        strings = json.loads(strings_file.read_text())
+        steps = strings.get("config", {}).get("step")
 
-        for key_trans in translation["translations"]:
-            if (
-                key_trans["translation"] == offending_translation
-                and key_trans["language_iso"] not in ignore_lang
-            ):
-                bad_key_data.append(key_trans["translation_id"])
+        if not steps:
+            continue
 
-        if bad_key_data:
-            bad_data[translation["key_id"]] = bad_key_data
+        changed = False
 
-    pprint(
-        [
-            {
-                "key_id": key_id,
-                "translations": [
-                    {"translation_id": trans_id, "translation": ""}
-                    for trans_id in trans_ids
-                ],
-            }
-            for key_id, trans_ids in bad_data.items()
-        ]
-    )
-    print(sum(len(val) for val in bad_data.values()))
+        for step_data in steps.values():
+            step_data = step_data.get("data", {})
+            for key, value in step_data.items():
 
-    return
+                if key in to_migrate and value != to_migrate[key]:
+                    if key.split("_")[0].lower() in value.lower():
+                        step_data[key] = to_migrate[key]
+                        changed = True
+                    elif value.startswith("[%key"):
+                        pass
+                    else:
+                        print(
+                            f"{strings_file}: Skipped swapping '{key}': '{value}' does not contain '{key}'"
+                        )
 
-    core_api.keys_bulk_update(
-        [
-            {
-                "key_id": key_id,
-                "translations": [
-                    {"translation_id": trans_id, "translation": ""}
-                    for trans_id in trans_ids
-                ],
-            }
-            for key_id, trans_ids in bad_data.items()
-        ]
-    )
+        if not changed:
+            continue
+
+        strings_file.write_text(json.dumps(strings, indent=2))
 
 
 def run():
     """Migrate translations."""
-    # clean_wled()
+    apply_data_references(
+        {
+            "host": "[%key:common::config_flow::data::host%]",
+            "username": "[%key:common::config_flow::data::username%]",
+            "password": "[%key:common::config_flow::data::password%]",
+            "port": "[%key:common::config_flow::data::port%]",
+            "usb_path": "[%key:common::config_flow::data::usb_path%]",
+            "access_token": "[%key:common::config_flow::data::access_token%]",
+            "api_key": "[%key:common::config_flow::data::api_key%]",
+        }
+    )
 
     # Rename existing keys to common keys,
     # Old keys have been updated with reference to the common key
-    rename_keys(
-        CORE_PROJECT_ID,
-        {
-            "component::icloud::config::step::user::data::username": "common::config_flow::data::email",
-        },
-    )
+    # rename_keys(
+    #     CORE_PROJECT_ID,
+    #     {
+    #         "component::blebox::config::step::user::data::host": "common::config_flow::data::ip",
+    #     },
+    # )
 
     # find_frontend_states()
 

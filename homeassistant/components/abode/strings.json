@@ -5,7 +5,7 @@
         "title": "Fill in your Abode login information",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

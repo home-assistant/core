@@ -5,7 +5,7 @@
         "title": "Connect to your Sense Energy Monitor",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -14,6 +14,8 @@
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error"
     },
-    "abort": { "already_configured": "Device is already configured" }
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
   }
 }
