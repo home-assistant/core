@@ -2,12 +2,13 @@
 import asyncio
 
 import aiohttp
-from asynctest import patch
 import pytest
 
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 
 @pytest.fixture(name="camera_client")
@@ -100,14 +101,13 @@ async def test_get_clientsession_patched_close(hass):
         assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
         assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
 
-        await session.close()
+        with pytest.raises(RuntimeError):
+            await session.close()
 
         assert mock_close.call_count == 0
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await hass.async_block_till_done()
-
-        await session.close()
 
         assert mock_close.call_count == 1
 
