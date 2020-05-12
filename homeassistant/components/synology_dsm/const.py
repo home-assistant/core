@@ -21,14 +21,12 @@ SYNO_API = "syno_api"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Configuration
-CONF_SECURITY = "security"
 CONF_VOLUMES = "volumes"
 
 DEFAULT_SSL = True
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
-DEFAULT_SECURITY = True
 DEFAULT_SCAN_INTERVAL = 15  # min
 
 
