@@ -6,6 +6,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
+from .data_handler import NetatmoDataHandler
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -15,15 +17,15 @@ class NetatmoBase(Entity):
     DOMAIN = ""
     TYPE = ""
 
-    def __init__(self, data_handler) -> None:
+    def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
-        self._device_type = None
+        self._data_class = None
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         _LOGGER.debug("New client %s", self.entity_id)
-        self.data_handler.register_device_type(self._device_type)
+        await self.data_handler.register_data_class(self._data_class)
         self.data_handler.listeners.append(
             async_dispatcher_connect(
                 self.hass, self.signal_update, self.async_update_callback
@@ -76,8 +78,8 @@ class NetatmoBase(Entity):
     @property
     def signal_update(self):
         """Event specific per Netatmo entry to signal new data."""
-        return f"netatmo-update-{self._device_type}"
+        return f"netatmo-update-{self._data_class}"
 
     @property
     def _data(self):
-        return self.data_handler.data[self._device_type]
+        return self.data_handler.data[self._data_class]

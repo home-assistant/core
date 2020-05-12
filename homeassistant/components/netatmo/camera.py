@@ -44,14 +44,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    device_type = "CameraData"
+    data_class = "CameraData"
 
     def get_entities():
         """Retrieve Netatmo entities."""
         entities = []
         try:
             all_cameras = []
-            for home in data_handler.data[device_type].cameras.values():
+            for home in data_handler.data[data_class].cameras.values():
                 for camera in home.values():
                     all_cameras.append(camera)
 
@@ -60,7 +60,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 entities.append(
                     NetatmoCamera(
                         data_handler,
-                        device_type,
+                        data_class,
                         camera["id"],
                         camera["type"],
                         True,
@@ -68,9 +68,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     )
                 )
 
-            for person_id, person_data in data_handler.data[
-                device_type
-            ].persons.items():
+            for person_id, person_data in data_handler.data[data_class].persons.items():
                 hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(
                     ATTR_PSEUDO
                 )
@@ -90,13 +88,13 @@ class NetatmoCamera(Camera, NetatmoBase):
     """Representation of a Netatmo camera."""
 
     def __init__(
-        self, data_handler, device_type, camera_id, camera_type, verify_ssl, quality
+        self, data_handler, data_class, camera_id, camera_type, verify_ssl, quality
     ):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
         NetatmoBase.__init__(self, data_handler)
 
-        self._device_type = device_type
+        self._data_class = data_class
 
         self._camera_id = camera_id
         self._camera_name = self._data.get_camera(cid=camera_id).get("name")

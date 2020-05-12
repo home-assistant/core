@@ -1,7 +1,9 @@
 """The Netatmo data handler."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
+from typing import Dict, List
 
 import pyatmo
 
@@ -11,9 +13,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import AUTH, DOMAIN
-
-from typing import List, Set  # Any, Awaitable, Callable,; Optional,
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ class NetatmoDataHandler:
         self.hass = hass
         self._auth = hass.data[DOMAIN][entry.entry_id][AUTH]
         self.listeners: List[CALLBACK_TYPE] = []
-        self._data_classes: Set = set()
+        self._data_classes: Dict = {}
         self.data = {}
         self._intervals = {}
 
@@ -59,7 +58,6 @@ class NetatmoDataHandler:
             pyatmo.HomeCoachData,
             pyatmo.CameraData,
             pyatmo.HomeData,
-            pyatmo.HomeStatus,
         ]:
             try:
                 self.data[data_class.__name__] = await self.hass.async_add_executor_job(
@@ -74,7 +72,13 @@ class NetatmoDataHandler:
             try:
                 results = await asyncio.gather(
                     *[
-                        self.hass.async_add_executor_job(data_class, self._auth)
+                        self.hass.async_add_executor_job(
+                            partial(
+                                self._data_classes[data_class]["class"],
+                                **self._data_classes[data_class]["kwargs"],
+                            ),
+                            self._auth,
+                        )
                         for data_class in self._data_classes
                     ]
                 )
@@ -82,17 +86,43 @@ class NetatmoDataHandler:
                 _LOGGER.debug(err)
 
             for data_class, result in zip(self._data_classes, results):
-                self.data[data_class.__name__] = result
-                async_dispatcher_send(
-                    self.hass, f"netatmo-update-{data_class.__name__}"
-                )
+                self.data[data_class] = result
+                async_dispatcher_send(self.hass, f"netatmo-update-{data_class}")
 
         async_track_time_interval(self.hass, async_update, timedelta(seconds=180))
 
-    def register_device_type(self, device_type):
+    async def register_data_class(self, data_class_name, **kwargs):
         """Register data class."""
-        if device_type in DATA_CLASSES:
-            self._data_classes.add(DATA_CLASSES[device_type])
+        if "home_id" in kwargs:
+            data_class_entry = f"{data_class_name}-{kwargs['home_id']}"
+        else:
+            data_class_entry = data_class_name
+
+        if data_class_name in DATA_CLASSES:
+
+            if data_class_entry not in self._data_classes:
+                self._data_classes[data_class_entry] = {
+                    "class": DATA_CLASSES[data_class_name],
+                    "kwargs": kwargs,
+                    "registered": 1,
+                }
+                self.data[data_class_entry] = await self.hass.async_add_executor_job(
+                    partial(DATA_CLASSES[data_class_name], **kwargs), self._auth
+                )
+                _LOGGER.debug("Data class %s added", data_class_name)
+            else:
+                self._data_classes[data_class_entry].update(
+                    registered=self._data_classes[data_class_entry]["registered"] + 1
+                )
+
+    async def unregister_data_class(self, data_class_entry):
+        """Unregister data class."""
+        registered = self._data_classes[data_class_entry]["registered"]
+        if registered > 1:
+            self._data_classes[data_class_entry].update(registered=registered - 1)
+        else:
+            self._data_classes.pop(data_class_entry)
+            _LOGGER.debug("Data class %s removed", data_class_entry)
 
 
 @callback

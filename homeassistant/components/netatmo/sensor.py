@@ -127,17 +127,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
     device_registry = await hass.helpers.device_registry.async_get_registry()
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    def find_entities(device_type):
+    def find_entities(data_class):
         """Find all entities."""
-        all_module_infos = data_handler.data.get(device_type).getModules()
+        all_module_infos = data_handler.data.get(data_class).getModules()
         entities = []
         for module in all_module_infos.values():
             _LOGGER.debug("Adding module %s %s", module["module_name"], module["id"])
-            for condition in data_handler.data[device_type].monitoredConditions(
+            for condition in data_handler.data[data_class].monitoredConditions(
                 moduleId=module["id"]
             ):
                 entities.append(
-                    NetatmoSensor(data_handler, device_type, module, condition.lower())
+                    NetatmoSensor(data_handler, data_class, module, condition.lower())
                 )
         return entities
 
@@ -196,11 +196,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class NetatmoSensor(NetatmoBase):
     """Implementation of a Netatmo sensor."""
 
-    def __init__(self, data_handler, device_type, module_info, sensor_type):
+    def __init__(self, data_handler, data_class, module_info, sensor_type):
         """Initialize the sensor."""
         super().__init__(data_handler)
 
-        self._device_type = device_type
+        self._data_class = data_class
 
         device = self._data.moduleById(mid=module_info["id"])
         if not device:
