@@ -348,7 +348,6 @@ class StateVacuumEntity(_BaseVacuum):
 
         if self.fan_speed is not None:
             data[ATTR_FAN_SPEED] = self.fan_speed
-            data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
 
         return data
 
