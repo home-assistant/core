@@ -178,8 +178,14 @@ def setup(hass, config):
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
         # If we can handle it as a HomeKit discovery, we do that here.
-        if service_type == HOMEKIT_TYPE and handle_homekit(hass, info):
-            return
+        if service_type == HOMEKIT_TYPE:
+            handle_homekit(hass, info)
+            # Continue on here as homekit_controller
+            # still needs to get updates on devices
+            # so it can see when the 'c#' field is updated.
+            #
+            # If the device already has homekit pairings
+            # homekit_controller will ignore it.
 
         for domain in ZEROCONF[service_type]:
             hass.add_job(

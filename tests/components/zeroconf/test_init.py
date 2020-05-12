@@ -123,7 +123,8 @@ async def test_homekit_match_partial_space(hass, mock_zeroconf):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 1
+    # One call to `lifx`, one call to `homekit_controller`
+    assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "lifx"
 
 
@@ -142,7 +143,8 @@ async def test_homekit_match_partial_dash(hass, mock_zeroconf):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 1
+    # One call to `rachio`, one call to `homekit_controller`
+    assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "rachio"
 
 
@@ -159,7 +161,8 @@ async def test_homekit_match_full(hass, mock_zeroconf):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 1
+    # One call to `hue`, one call to `homekit_controller`
+    assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "hue"
 
 
