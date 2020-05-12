@@ -279,7 +279,6 @@ class SynologyDSMEntity(Entity):
         self._api = api
         self.entity_type = entity_type.split(":")[-1]
         self._name = BASE_NAME
-        # self._api_key = entity_info[ENTITY_API]
         self._class = entity_info[ENTITY_CLASS]
         self._enable_default = entity_info[ENTITY_ENABLE]
         self._icon = entity_info[ENTITY_ICON]
@@ -362,11 +361,6 @@ class SynologyDSMEntity(Entity):
             "model": self._api.information.model,
             "sw_version": self._api.information.version_string,
         }
-
-    # @property
-    # def api_key(self) -> str:
-    #     """Return the api key."""
-    #     return self._api_key
 
     @property
     def entity_registry_enabled_default(self) -> bool:
