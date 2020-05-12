@@ -12,8 +12,6 @@ import os.path
 from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
 
-aisCloud = ais_cloud.AisCloudWS()
-
 DOMAIN = "ais_gm_service"
 PERSISTENCE_GM_SONGS = "/.dom/gm_songs.json"
 _LOGGER = logging.getLogger(__name__)
@@ -58,6 +56,7 @@ async def async_setup(hass, config):
 
 async def async_get_keys(hass):
     global GM_DEV_KEY, GM_USER, GM_PASS
+    aisCloud = ais_cloud.AisCloudWS(hass)
     try:
         json_ws_resp = await aisCloud.async_key("gm_user_key")
         GM_USER = json_ws_resp["key"]
