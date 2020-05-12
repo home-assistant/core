@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "PoolSense Config Error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "title": "PoolSense  Login Credentials"
+            }
+        }
+    }
+}

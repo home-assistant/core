@@ -1,0 +1,10 @@
+{
+  "domain": "poolsense",
+  "name": "PoolSense",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/coronavirus",
+  "requirements": [
+    "poolsense==0.0.3"
+  ],
+  "codeowners": ["@haemishkyd"]
+}

@@ -122,6 +122,7 @@ FLOWS = [
     "plex",
     "plugwise",
     "point",
+    "poolsense",
     "powerwall",
     "ps4",
     "pvpc_hourly_pricing",

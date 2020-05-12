@@ -1103,6 +1103,9 @@ pmsensor==0.4
 # homeassistant.components.pocketcasts
 pocketcasts==0.1
 
+# homeassistant.components.poolsense
+poolsense==0.0.3
+
 # homeassistant.components.reddit
 praw==6.5.1
 
