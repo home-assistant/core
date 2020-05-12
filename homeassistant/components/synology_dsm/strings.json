@@ -44,8 +44,7 @@
     "step": {
       "init": {
         "data": {
-          "scan_interval": "Minutes between scans",
-          "security": "Add security sensors"
+          "scan_interval": "Minutes between scans"
         }
       }
     }
