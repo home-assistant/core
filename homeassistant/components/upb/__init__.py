@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry):
         if change.get("command") is None:
             return
 
-        hass.bus.fire(
+        hass.bus.async_fire(
             EVENT_UPB_LINK_CHANGED,
             {
                 ATTR_COMMAND: change["command"],
