@@ -3,6 +3,6 @@
   "name": "BSB-Lan",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bsblan",
-  "requirements": ["bsblan==0.3.6"],
+  "requirements": ["bsblan==0.3.7"],
   "codeowners": ["@liudger"]
 }
