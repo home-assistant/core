@@ -53,4 +53,4 @@ async def test_extract_frame_no_integration(caplog):
             ),
         ],
     ), pytest.raises(frame.MissingIntegrationFrame):
-        found_frame, integration, path = frame.get_integration_frame()
+        frame.get_integration_frame()
