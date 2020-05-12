@@ -17,14 +17,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name="Humidifier",
                 mode=None,
                 target_humidity=68,
-                current_humidity=77,
                 device_class=DEVICE_CLASS_HUMIDIFIER,
             ),
             DemoHumidifier(
                 name="Dehumidifier",
                 mode=None,
                 target_humidity=54,
-                current_humidity=67,
                 device_class=DEVICE_CLASS_DEHUMIDIFIER,
             ),
             DemoHumidifier(
@@ -32,7 +30,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 mode="home",
                 available_modes=["home", "eco"],
                 target_humidity=50,
-                current_humidity=49,
             ),
         ]
     )
@@ -46,7 +43,6 @@ class DemoHumidifier(HumidifierEntity):
         name,
         mode,
         target_humidity,
-        current_humidity,
         available_modes=None,
         is_on=True,
         device_class=None,
@@ -60,7 +56,6 @@ class DemoHumidifier(HumidifierEntity):
         self._target_humidity = target_humidity
         self._mode = mode
         self._available_modes = available_modes
-        self._current_humidity = current_humidity
         self._device_class = device_class
 
     @property
@@ -79,11 +74,6 @@ class DemoHumidifier(HumidifierEntity):
         return self._name
 
     @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        return self._current_humidity
-
-    @property
     def target_humidity(self):
         """Return the humidity we try to reach."""
         return self._target_humidity
@@ -95,7 +85,7 @@ class DemoHumidifier(HumidifierEntity):
 
     @property
     def available_modes(self):
-        """Return current modes."""
+        """Return available modes."""
         return self._available_modes
 
     @property

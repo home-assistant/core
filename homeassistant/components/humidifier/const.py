@@ -11,7 +11,6 @@ MODE_AUTO = "auto"
 MODE_BABY = "baby"
 MODE_EASY = "easy"
 
-ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_MODE = "mode"
 ATTR_AVAILABLE_MODES = "available_modes"
 ATTR_HUMIDITY = "humidity"

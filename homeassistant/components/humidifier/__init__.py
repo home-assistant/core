@@ -21,7 +21,6 @@ from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_AVAILABLE_MODES,
-    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -112,18 +111,12 @@ class HumidifierEntity(ToggleEntity):
         supported_features = self.supported_features
         data = {
             ATTR_HUMIDITY: self.target_humidity,
-            ATTR_CURRENT_HUMIDITY: self.current_humidity,
         }
 
         if supported_features & SUPPORT_MODES:
             data[ATTR_MODE] = self.mode
 
         return data
-
-    @property
-    def current_humidity(self) -> Optional[int]:
-        """Return the current humidity."""
-        return None
 
     @property
     def target_humidity(self) -> Optional[int]:
