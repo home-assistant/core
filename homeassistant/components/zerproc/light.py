@@ -59,9 +59,9 @@ def discover_entities(hass: HomeAssistant) -> List[Entity]:
     for light in connect_lights(new_lights):
         # Double-check the light hasn't been added in another thread
         if light.address not in hass.data[DOMAIN]["light_entities"]:
-            entity = ZerprocLight(hass, light)
+            entity = ZerprocLight(light)
             hass.data[DOMAIN]["light_entities"][light.address] = entity
-            entities.append(ZerprocLight(hass, light))
+            entities.append(ZerprocLight(light))
 
     return entities
 
@@ -101,7 +101,7 @@ async def async_setup_entry(
 class ZerprocLight(Light):
     """Representation of an Zerproc Light."""
 
-    def __init__(self, hass, light):
+    def __init__(self, light):
         """Initialize a Zerproc light."""
         self._light = light
         self._name = None
@@ -113,7 +113,9 @@ class ZerprocLight(Light):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.async_on_remove(
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_hass_shutdown)
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self.on_hass_shutdown
+            )
         )
 
     def on_hass_shutdown(self, event):
