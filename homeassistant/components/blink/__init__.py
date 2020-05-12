@@ -1,7 +1,8 @@
 """Support for Blink Home Camera System."""
+import asyncio
 import logging
 
-from blinkpy import blinkpy
+from blinkpy.blinkpy import Blink
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -18,6 +19,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import (
     DEFAULT_OFFSET,
     DEFAULT_SCAN_INTERVAL,
+    DEVICE_ID,
     DOMAIN,
     PLATFORMS,
     SERVICE_REFRESH,
@@ -48,8 +50,32 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _blink_startup_wrapper(entry):
+    """Startup wrapper for blink."""
+    blink = Blink(
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
+        motion_interval=DEFAULT_OFFSET,
+        legacy_subdomain=False,
+        no_prompt=True,
+        device_id=DEVICE_ID,
+    )
+    blink.refresh_rate = entry.data[CONF_SCAN_INTERVAL]
+
+    try:
+        blink.login_response = entry.data["login_response"]
+        blink.setup_params(entry.data["login_response"])
+    except KeyError:
+        blink.get_auth_token()
+
+    blink.setup_params(entry.data["login_response"])
+    blink.setup_post_verify()
+    return blink
+
+
 async def async_setup(hass, config):
     """Set up a config entry."""
+    hass.data[DOMAIN] = {}
     if DOMAIN not in config:
         return True
 
@@ -67,82 +93,79 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Blink via config entry."""
-    if DOMAIN not in hass.data:
-        username = entry.data[CONF_USERNAME]
-        password = entry.data[CONF_PASSWORD]
-        scan_interval = entry.data[CONF_SCAN_INTERVAL]
-        blink = blinkpy.Blink(
-            username=username,
-            password=password,
-            motion_interval=DEFAULT_OFFSET,
-            legacy_subdomain=False,
-            no_prompt=True,
-            device_id="Home Assistant",
-        )
-        blink.refresh_rate = scan_interval
-        await hass.async_add_executor_job(blink.start)
-        hass.data[DOMAIN] = {entry.unique_id: blink}
+    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
+        _blink_startup_wrapper, entry
+    )
+
+    if not hass.data[DOMAIN][entry.entry_id].available:
+        _LOGGER.error("Blink unavailable for setup.")
+        return False
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    def force_refresh():
-        """Force a blink refresh."""
-        return hass.data[DOMAIN][entry.unique_id].refresh(force_cache=True)
-
-    async def async_trigger_camera(call):
+    def trigger_camera(call):
         """Trigger a camera."""
-        cameras = hass.data[DOMAIN][entry.unique_id].cameras
+        cameras = hass.data[DOMAIN][entry.entry_id].cameras
         name = call.data[CONF_NAME]
         if name in cameras:
-            await hass.async_add_executor_job(cameras[name].snap_picture)
-        await hass.async_add_executor_job(force_refresh)
+            cameras[name].snap_picture()
+        blink_refresh()
 
-    async def async_blink_refresh(event_time):
+    def blink_refresh(event_time=None):
         """Call blink to refresh info."""
-        await hass.async_add_executor_job(force_refresh)
+        hass.data[DOMAIN][entry.entry_id].refresh(force_cache=True)
 
     async def async_save_video(call):
         """Call save video service handler."""
         await async_handle_save_video_service(hass, entry, call)
 
-    async def async_send_pin(call):
+    def send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
-        await hass.async_add_executor_job(
-            hass.data[DOMAIN][entry.unique_id].login_handler.send_auth_key,
-            hass.data[DOMAIN][entry.unique_id],
-            pin,
+        hass.data[DOMAIN][entry.entry_id].login_handler.send_auth_key(
+            hass.data[DOMAIN][entry.entry_id], pin,
         )
 
-    hass.services.async_register(DOMAIN, SERVICE_REFRESH, async_blink_refresh)
+    hass.services.async_register(DOMAIN, SERVICE_REFRESH, blink_refresh)
     hass.services.async_register(
-        DOMAIN, SERVICE_TRIGGER, async_trigger_camera, schema=SERVICE_TRIGGER_SCHEMA
+        DOMAIN, SERVICE_TRIGGER, trigger_camera, schema=SERVICE_TRIGGER_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SERVICE_SAVE_VIDEO, async_save_video, schema=SERVICE_SAVE_VIDEO_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_SEND_PIN, async_send_pin, schema=SERVICE_SEND_PIN_SCHEMA
+        DOMAIN, SERVICE_SEND_PIN, send_pin, schema=SERVICE_SEND_PIN_SCHEMA
     )
-
-    await hass.async_add_executor_job(force_refresh)
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload Blink entry."""
-    hass.data.pop(DOMAIN)
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
 
-    for platform in PLATFORMS:
-        hass.config_entries.async_forward_entry_unload(config_entry, platform)
+    if not unload_ok:
+        return False
+
+    hass.data[DOMAIN].pop(entry.entry_id)
+
+    if len(hass.data[DOMAIN]) != 0:
+        return True
 
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
     hass.services.async_remove(DOMAIN, SERVICE_TRIGGER)
     hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO_SCHEMA)
+    hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
 
     return True
 
@@ -157,7 +180,7 @@ async def async_handle_save_video_service(hass, entry, call):
 
     def _write_video(camera_name, video_path):
         """Call video write."""
-        all_cameras = hass.data[DOMAIN][entry.unique_id].cameras
+        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
         if camera_name in all_cameras:
             all_cameras[camera_name].video_to_file(video_path)
 

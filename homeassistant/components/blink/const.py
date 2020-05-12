@@ -1,6 +1,6 @@
 """Constants for Blink."""
 DOMAIN = "blink"
-BLINK_CONFIG = "blink_config"
+DEVICE_ID = "Home Assistant"
 
 CONF_CAMERA = "camera"
 CONF_ALARM_CONTROL_PANEL = "alarm_control_panel"

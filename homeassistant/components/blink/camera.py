@@ -13,7 +13,7 @@ ATTR_IMAGE = "image"
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up a Blink Camera."""
-    data = hass.data[DOMAIN][config.unique_id]
+    data = hass.data[DOMAIN][config.entry_id]
     devs = []
     for name, camera in data.cameras.items():
         devs.append(BlinkCamera(data, name, camera))
