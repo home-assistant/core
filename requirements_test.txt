@@ -8,7 +8,7 @@ codecov==2.0.22
 coverage==5.1
 mock-open==1.4.0
 mypy==0.770
-pre-commit==2.3.0
+pre-commit==2.4.0
 pylint==2.4.4
 astroid==2.3.3
 pylint-strict-informational==0.1
