@@ -5,6 +5,31 @@ from openzwavemqtt.const import CommandClass, ValueGenre, ValueIndex, ValueType
 from . import const
 
 DISCOVERY_SCHEMAS = (
+    {  # Binary sensors
+        const.DISC_COMPONENT: "binary_sensor",
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: CommandClass.SENSOR_BINARY,
+                const.DISC_TYPE: ValueType.BOOL,
+                const.DISC_GENRE: ValueGenre.USER,
+            },
+            "off_delay": {
+                const.DISC_COMMAND_CLASS: CommandClass.CONFIGURATION,
+                const.DISC_INDEX: 9,
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    },
+    {  # Notification CommandClass translates to binary_sensor
+        const.DISC_COMPONENT: "binary_sensor",
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: CommandClass.NOTIFICATION,
+                const.DISC_GENRE: ValueGenre.USER,
+                const.DISC_TYPE: (ValueType.BOOL, ValueType.LIST),
+            }
+        },
+    },
     {  # Light
         const.DISC_COMPONENT: "light",
         const.DISC_GENERIC_DEVICE_CLASS: (
@@ -93,9 +118,8 @@ def check_node_schema(node, schema):
 
 def check_value_schema(value, schema):
     """Check if the value matches the passed value schema."""
-    if (
-        const.DISC_COMMAND_CLASS in schema
-        and value.parent.command_class_id not in schema[const.DISC_COMMAND_CLASS]
+    if const.DISC_COMMAND_CLASS in schema and not eq_or_in(
+        value.parent.command_class_id, schema[const.DISC_COMMAND_CLASS]
     ):
         return False
     if const.DISC_TYPE in schema and not eq_or_in(value.type, schema[const.DISC_TYPE]):
