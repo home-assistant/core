@@ -222,52 +222,6 @@ async def test_flow_fails_site_already_configured(hass, aioclient_mock):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_fails_site_has_no_local_user(hass, aioclient_mock):
-    """Test config flow."""
-    entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN, data={"controller": {"host": "1.2.3.4", "site": "site_id"}}
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    aioclient_mock.get("https://1.2.3.4:1234", status=302)
-
-    aioclient_mock.post(
-        "https://1.2.3.4:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": "application/json"},
-    )
-
-    aioclient_mock.get(
-        "https://1.2.3.4:1234/api/self/sites",
-        json={
-            "data": [{"desc": "Site name", "name": "site_id"}],
-            "meta": {"rc": "ok"},
-        },
-        headers={"content-type": "application/json"},
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 1234,
-            CONF_VERIFY_SSL: True,
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "no_local_user"
-
-
 async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(

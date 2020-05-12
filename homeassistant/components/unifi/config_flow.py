@@ -134,8 +134,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 for site in self.sites.values():
                     if desc == site["desc"]:
-                        if "role" not in site:
-                            raise NoLocalUser
                         self.config[CONF_SITE_ID] = site["name"]
                         break
 
