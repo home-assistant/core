@@ -54,30 +54,8 @@ async def test_powered_on(player, state):
     assert data.state == "on"
 
 
-async def test_supported_features_no_service(player, state):
+async def test_supported_features(player, state):
     """Test support when turn on service exist."""
-    state.get_power.return_value = None
-    data = await update(player)
-    assert data.attributes["supported_features"] == 68876
-
-    state.get_power.return_value = False
-    data = await update(player)
-    assert data.attributes["supported_features"] == 69004
-
-
-async def test_supported_features_service(hass, state):
-    """Test support when turn on service exist."""
-    from homeassistant.components.arcam_fmj.media_player import ArcamFmj
-
-    player = ArcamFmj(state, MOCK_UUID, "dummy", MOCK_TURN_ON)
-    player.hass = hass
-    player.entity_id = MOCK_ENTITY_ID
-
-    state.get_power.return_value = None
-    data = await update(player)
-    assert data.attributes["supported_features"] == 69004
-
-    state.get_power.return_value = False
     data = await update(player)
     assert data.attributes["supported_features"] == 69004
 
