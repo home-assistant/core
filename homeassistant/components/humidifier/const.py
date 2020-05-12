@@ -9,7 +9,6 @@ MODE_HOME = "home"
 MODE_SLEEP = "sleep"
 MODE_AUTO = "auto"
 MODE_BABY = "baby"
-MODE_EASY = "easy"
 
 ATTR_MODE = "mode"
 ATTR_AVAILABLE_MODES = "available_modes"
