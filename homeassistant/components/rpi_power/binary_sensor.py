@@ -13,67 +13,52 @@ from homeassistant.components.binary_sensor import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SYSFILE = "/sys/devices/platform/soc/soc:firmware/get_throttled"
+SYSFILE = "/sys/class/hwmon/hwmon0/in0_lcrit_alarm"
+SYSFILE_LEGACY = "/sys/devices/platform/soc/soc:firmware/get_throttled"
 
-DESCRIPTION_WORKING = "Everything is working as intended."
-DESCRIPTION_UNDER_VOLTAGE = "Under-voltage was detected, consider getting a uninterruptible power supply for your Raspberry Pi."
-DESCRIPTION_LIMITED = "Your Raspberry Pi is limited due to a bad powersupply, replace the power supply cable or power supply itself."
-DESCRIPTION_THROTTLED = "The Raspberry Pi is throttled due to a bad power supply this can lead to corruption and instability, please replace your changer and cables."
-DESCRIPTION_OVERHEATING = (
-    "Your Raspberry Pi is overheating, consider getting a fan or heat sinks."
-)
-DESCRIPTION_UNKNOWN = "There is a problem with your power supply or system."
-DESCRIPTIONS = {
-    "0": DESCRIPTION_WORKING,
-    "1000": DESCRIPTION_UNDER_VOLTAGE,
-    "2000": DESCRIPTION_LIMITED,
-    "3000": DESCRIPTION_LIMITED,
-    "4000": DESCRIPTION_THROTTLED,
-    "5000": DESCRIPTION_THROTTLED,
-    "8000": DESCRIPTION_OVERHEATING,
-}
+UNDERVOLTAGE_STICKY_BIT = 1 << 16
+
+DESCRIPTION_NORMALIZED = "Voltage normalized. Everything is working as intended."
+DESCRIPTION_UNDER_VOLTAGE = "Under-voltage was detected. Consider getting a uninterruptible power supply for your Raspberry Pi."
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     if discovery_info is None:
         return
-    exist = os.path.isfile(SYSFILE)
-    if exist:
-        add_entities([RaspberryChargerBinarySensor()], True)
+
+    if os.path.isfile(SYSFILE):
+        under_voltage = UnderVoltage()
+    elif os.path.isfile(SYSFILE_LEGACY):  # support older kernel
+        under_voltage = UnderVoltageLegacy()
     else:
         _LOGGER.critical(
             "Can't find the system class needed for this component, make sure that your kernel is recent and the hardware is supported."
         )
+        return
+
+    add_entities([RaspberryChargerBinarySensor(under_voltage)])
 
 
 class RaspberryChargerBinarySensor(BinarySensorEntity):
     """Binary sensor representing the rpi power status."""
 
-    def __init__(self):
+    def __init__(self, under_voltage):
         """Initialize the binary sensor."""
-        self._state = None
-        self._last_state = (
-            "0"  # Assume no problem to avoid log at startup without problem
-        )
+        self._under_voltage = under_voltage
         self._is_on = None
+        self._last_is_on = False
         self._description = None
 
     def update(self):
         """Update the state."""
-        throttled = open(SYSFILE).read()[:-1]
-        throttled = throttled[:4]
-        self._state = throttled
-        self._is_on = self._state != "0"
-        try:
-            self._description = DESCRIPTIONS[self._state]
-        except KeyError:
-            self._description = DESCRIPTION_UNKNOWN
-
-        # Log the problem when state changed
-        if self._state != self._last_state:
-            _LOGGER.warning(self._description)
-            self._last_state = self._state
+        self._is_on = self._under_voltage.get()
+        if self._is_on != self._last_is_on:
+            if self._is_on:
+                _LOGGER.warning(DESCRIPTION_UNDER_VOLTAGE)
+            else:
+                _LOGGER.warning(DESCRIPTION_NORMALIZED)
+            self._last_is_on = self._is_on
 
     @property
     def name(self):
@@ -91,14 +76,26 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
         return "mdi:raspberry-pi"
 
     @property
-    def device_state_attributes(self):
-        """Return the attribute(s) of the sensor."""
-        return {
-            "state": self._state,
-            "description": self._description,
-        }
-
-    @property
     def device_class(self):
         """Return the class of this device."""
         return DEVICE_CLASS_PROBLEM
+
+
+class UnderVoltage:
+    """Read under voltage status using new in0_lcrit_alarm entry."""
+
+    def get(self):
+        """Get under voltage status."""
+        bit = open(SYSFILE).read()[:-1]
+        _LOGGER.debug("Get under voltage status: %s", bit)
+        return bit == "1"
+
+
+class UnderVoltageLegacy:
+    """Read under voltage status with using legacy get_throttled entry."""
+
+    def get(self):
+        """Get under voltage status."""
+        throttled = open(SYSFILE_LEGACY).read()[:-1]
+        _LOGGER.debug("Get throttled value: %s", throttled)
+        return int(throttled) & UNDERVOLTAGE_STICKY_BIT == UNDERVOLTAGE_STICKY_BIT
