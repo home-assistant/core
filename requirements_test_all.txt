@@ -844,7 +844,7 @@ twentemilieu==0.3.0
 twilio==6.32.0
 
 # homeassistant.components.upb
-upb_lib==0.4.10
+upb_lib==0.4.11
 
 # homeassistant.components.huawei_lte
 url-normalize==1.4.1
