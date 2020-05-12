@@ -1813,6 +1813,9 @@ pyzabbix==0.7.4
 # homeassistant.components.qrcode
 pyzbar==0.1.7
 
+# homeassistant.components.zerproc
+pyzerproc==0.2.4
+
 # homeassistant.components.qnap
 qnapstats==0.3.0
 
