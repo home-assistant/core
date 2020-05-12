@@ -98,7 +98,7 @@ async def async_setup_entry(hass, entry):
     )
 
     if not hass.data[DOMAIN][entry.entry_id].available:
-        _LOGGER.error("Blink unavailable for setup.")
+        _LOGGER.error("Blink unavailable for setup")
         return False
 
     for component in PLATFORMS:

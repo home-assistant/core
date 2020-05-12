@@ -17,7 +17,7 @@ from .const import DEFAULT_OFFSET, DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: core.HomeAssistant, blink, data):
+async def validate_input(hass: core.HomeAssistant, blink):
     """Validate the user input allows us to connect."""
     response = await hass.async_add_executor_job(blink.get_auth_token)
     if not response:
@@ -66,7 +66,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                response = await validate_input(self.hass, self.blink, self.data)
+                response = await validate_input(self.hass, self.blink)
                 self.data["login_response"] = response
                 return self.async_create_entry(title=DOMAIN, data=self.data,)
             except Require2FA:

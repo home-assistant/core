@@ -13,11 +13,11 @@ async def async_setup_entry(hass, config, async_add_entities):
     """Set up the blink binary sensors."""
     data = hass.data[DOMAIN][config.entry_id]
 
-    devs = []
+    entities = []
     for camera in data.cameras:
         for sensor_type in BINARY_SENSORS:
-            devs.append(BlinkBinarySensor(data, camera, sensor_type))
-    async_add_entities(devs)
+            entities.append(BlinkBinarySensor(data, camera, sensor_type))
+    async_add_entities(entities)
 
 
 class BlinkBinarySensor(BinarySensorEntity):
