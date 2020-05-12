@@ -50,17 +50,14 @@ def discover_entities(hass: HomeAssistant) -> List[Entity]:
 
     # Filter out already discovered lights
     new_lights = [
-        light
-        for light in lights
-        if light.address not in hass.data[DOMAIN]["light_entities"]
+        light for light in lights if light.address not in hass.data[DOMAIN]["addresses"]
     ]
 
     entities = []
     for light in connect_lights(new_lights):
         # Double-check the light hasn't been added in another thread
-        if light.address not in hass.data[DOMAIN]["light_entities"]:
-            entity = ZerprocLight(light)
-            hass.data[DOMAIN]["light_entities"][light.address] = entity
+        if light.address not in hass.data[DOMAIN]["addresses"]:
+            hass.data[DOMAIN]["addresses"].add(light.address)
             entities.append(ZerprocLight(light))
 
     return entities
@@ -74,8 +71,8 @@ async def async_setup_entry(
     """Set up Abode light devices."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
-    if "light_entities" not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]["light_entities"] = {}
+    if "addresses" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["addresses"] = set()
 
     warned = False
 
@@ -92,7 +89,7 @@ async def async_setup_entry(
                 warned = True
 
     # Initial discovery
-    hass.async_add_job(discover)
+    hass.async_create_task(discover())
 
     # Perform recurring discovery of new devices
     async_track_time_interval(hass, discover, DISCOVERY_INTERVAL)
@@ -117,6 +114,10 @@ class ZerprocLight(Light):
                 EVENT_HOMEASSISTANT_STOP, self.on_hass_shutdown
             )
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        await self.hass.async_add_executor_job(self._light.disconnect())
 
     def on_hass_shutdown(self, event):
         """Execute when Home Assistant is shutting down."""

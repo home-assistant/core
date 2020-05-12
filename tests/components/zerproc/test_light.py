@@ -106,6 +106,46 @@ async def test_init(hass):
     assert mock_disconnect_2.called
 
 
+async def test_discovery_exception(hass):
+    """Test platform setup."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mock_entry = MockConfigEntry(domain=DOMAIN)
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.zerproc.light.pyzerproc.discover",
+        side_effect=pyzerproc.ZerprocException("TEST"),
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The exception should be captured and no entities should be added
+    assert len(hass.data[DOMAIN]["addresses"]) == 0
+
+
+async def test_connect_exception(hass):
+    """Test platform setup."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mock_entry = MockConfigEntry(domain=DOMAIN)
+    mock_entry.add_to_hass(hass)
+
+    mock_light = pyzerproc.Light("AA:BB:CC:DD:EE:FF", "LEDBlue-CCDDEEFF")
+
+    with patch(
+        "homeassistant.components.zerproc.light.pyzerproc.discover",
+        return_value=[mock_light],
+    ), patch.object(
+        mock_light, "connect", side_effect=pyzerproc.ZerprocException("TEST")
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The exception should be captured and no entities should be added
+    assert len(hass.data[DOMAIN]["addresses"]) == 0
+
+
 async def test_light_turn_on(hass, mock_light):
     """Test ZerprocLight turn_on."""
     utcnow = dt_util.utcnow()
