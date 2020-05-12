@@ -397,6 +397,7 @@ PRESSURE_BAR: str = "bar"
 PRESSURE_MBAR: str = "mbar"
 PRESSURE_INHG: str = "inHg"
 PRESSURE_PSI: str = "psi"
+PRESSURE_MMHG: str = "mmHg"
 
 # Volume units
 VOLUME_LITERS: str = "L"
