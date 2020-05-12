@@ -32,7 +32,7 @@ from .const import (
     NAME,
     WIRELESS,
 )
-from .errors import CannotConnect, LoginError
+from .errors import CannotConnect, LoginError, MikrotikError
 from .mikrotik_client import MikrotikClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +51,7 @@ class MikrotikHub:
         self.available = True
         self._support_capsman = False
         self._support_wireless = False
+        self._support_wired = False
         self._hostname = None
         self._hub_info = {}
 
@@ -115,15 +116,16 @@ class MikrotikHub:
         """Get hub info."""
         self._hostname = self.get_info(IDENTITY).get(NAME)
         self._hub_info = self.get_info(INFO)
-        self._support_capsman = self.command(MIKROTIK_SERVICES[IS_CAPSMAN])
-        self._support_wireless = self.command(MIKROTIK_SERVICES[IS_WIRELESS])
+        self._support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
+        self._support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
+        self._support_wired = not (self._support_wireless or self._support_capsman)
 
     def connect_to_hub(self):
         """Connect to hub."""
         try:
             self.api = get_api(self.hass, self.data)
             self.available = True
-        except (CannotConnect, LoginError) as err:
+        except MikrotikError as err:
             self.available = False
             raise err
 
@@ -182,7 +184,7 @@ class MikrotikHub:
         if not self.available or not self.api:
             try:
                 self.connect_to_hub()
-            except (CannotConnect, LoginError):
+            except MikrotikError:
                 return
 
         _LOGGER.debug("updating network clients for host: %s", self.host)
@@ -220,6 +222,7 @@ class MikrotikHub:
         # update all clients
         for mac in self.clients:
 
+            # update dhcp_params if client is in DHCP server
             if dhcp_clients and mac in dhcp_clients:
                 self.clients[mac].update(dhcp_params=dhcp_clients[mac])
 
@@ -229,8 +232,12 @@ class MikrotikHub:
                     wireless_params=wireless_clients[mac], active=True, host=self.host,
                 )
                 continue
-            # update other clients last seen if detected in DHCP server
-            if dhcp_clients and mac in dhcp_clients:
+            # update other clients last_seen if force_dhcp is enabled
+            if (
+                (self._support_wired or self.force_dhcp)
+                and dhcp_clients
+                and mac in dhcp_clients
+            ):
                 active = self.clients[mac].dhcp_params.get("active-address")
                 # ping the active devices if arp ping is enabled
                 if self.arp_enabled and mac in arp_clients:

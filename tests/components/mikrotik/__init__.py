@@ -65,7 +65,7 @@ DEVICE_1_DHCP = {
     "mac-address": "00:00:00:00:00:01",
     "active-address": "0.0.0.1",
     "host-name": "Device_1",
-    "comment": "Mobile",
+    "comment": "Mobile1",
 }
 
 DEVICE_2_DHCP = {
@@ -74,16 +74,24 @@ DEVICE_2_DHCP = {
     "mac-address": "00:00:00:00:00:02",
     "active-address": "0.0.0.2",
     "host-name": "Device_2",
-    "comment": "PC1",
+    "comment": "Mobile2",
 }
 
 DEVICE_3_DHCP = {
     ".id": "*1C",
     "address": "0.0.0.3",
     "mac-address": "00:00:00:00:00:03",
-    "active-address": "0.0.0.3",
     "host-name": "Device_3",
-    "comment": "PC2",
+    "comment": "Mobile3",
+}
+
+DEVICE_4_DHCP = {
+    ".id": "*1D",
+    "address": "0.0.0.4",
+    "mac-address": "00:00:00:00:00:04",
+    "active-address": "0.0.0.4",
+    "host-name": "Device_4",
+    "comment": "PC4",
 }
 
 DEVICE_1_WIRELESS = {
@@ -119,7 +127,7 @@ DEVICE_3_WIRELESS = {
     "tx-rate": "72.2Mbps-20MHz/1S/SGI",
 }
 
-HUB1_DHCP_DATA = [DEVICE_1_DHCP, DEVICE_3_DHCP]
+HUB1_DHCP_DATA = [DEVICE_1_DHCP, DEVICE_3_DHCP, DEVICE_4_DHCP]
 HUB2_DHCP_DATA = [DEVICE_2_DHCP]
 
 HUB1_WIRELESS_DATA = [DEVICE_1_WIRELESS]

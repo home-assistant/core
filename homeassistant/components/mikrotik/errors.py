@@ -2,9 +2,13 @@
 from homeassistant.exceptions import HomeAssistantError
 
 
-class CannotConnect(HomeAssistantError):
+class MikrotikError(HomeAssistantError):
+    """Base class for Mikrotik errors."""
+
+
+class CannotConnect(MikrotikError):
     """Unable to connect to the hub."""
 
 
-class LoginError(HomeAssistantError):
+class LoginError(MikrotikError):
     """Component got logged out."""
