@@ -188,7 +188,6 @@ class SynoNasStorageSensor(SynoNasSensor):
 
         # Temperature
         if self.sensor_type in TEMP_SENSORS_KEYS:
-            # Fahrenheit
             return display_temp(self.hass, attr, TEMP_CELSIUS, PRECISION_TENTHS)
 
         return attr
