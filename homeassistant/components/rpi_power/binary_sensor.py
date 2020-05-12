@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if os.path.isfile(SYSFILE):
         under_voltage = UnderVoltage()
     elif os.path.isfile(SYSFILE_LEGACY):  # support older kernel
-        under_voltage = UnderVoltageLegacy()
+        under_voltage = UnderVoltage(legacy=True)
     else:
         _LOGGER.critical(
             "Can't find the system class needed for this component, make sure that your kernel is recent and the hardware is supported."
@@ -81,22 +81,24 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
 
 
 class UnderVoltage:
-    """Read under voltage status using new in0_lcrit_alarm entry."""
+    """Read under voltage status."""
+
+    def __init__(self, legacy=False):
+        """Initialize the under voltage bit reader."""
+        self._legacy = legacy
 
     def get(self):
         """Get under voltage status."""
+        # Using legacy get_throttled entry
+        if self._legacy:
+            throttled = open(SYSFILE_LEGACY).read()[:-1]
+            _LOGGER.debug("Get throttled value: %s", throttled)
+            return (
+                int(throttled, base=16) & UNDERVOLTAGE_STICKY_BIT
+                == UNDERVOLTAGE_STICKY_BIT
+            )
+
+        # Use new hwmon entry
         bit = open(SYSFILE).read()[:-1]
         _LOGGER.debug("Get under voltage status: %s", bit)
         return bit == "1"
-
-
-class UnderVoltageLegacy:
-    """Read under voltage status with using legacy get_throttled entry."""
-
-    def get(self):
-        """Get under voltage status."""
-        throttled = open(SYSFILE_LEGACY).read()[:-1]
-        _LOGGER.debug("Get throttled value: %s", throttled)
-        return (
-            int(throttled, base=16) & UNDERVOLTAGE_STICKY_BIT == UNDERVOLTAGE_STICKY_BIT
-        )
