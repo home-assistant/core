@@ -148,6 +148,11 @@ class _BaseVacuum(Entity):
         return None
 
     @property
+    def battery_icon(self):
+        """Return the battery icon for the vacuum cleaner."""
+        raise NotImplementedError()
+
+    @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
         return None
