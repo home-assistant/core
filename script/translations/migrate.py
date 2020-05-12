@@ -338,9 +338,17 @@ def apply_data_references(to_migrate):
         for step_data in steps.values():
             step_data = step_data.get("data", {})
             for key, value in step_data.items():
+
                 if key in to_migrate and value != to_migrate[key]:
-                    step_data[key] = to_migrate[key]
-                    changed = True
+                    if key.split("_")[0].lower() in value.lower():
+                        step_data[key] = to_migrate[key]
+                        changed = True
+                    elif value.startswith("[%key"):
+                        pass
+                    else:
+                        print(
+                            f"{strings_file}: Skipped swapping '{key}': '{value}' does not contain '{key}'"
+                        )
 
         if not changed:
             continue
@@ -367,7 +375,7 @@ def run():
     # rename_keys(
     #     CORE_PROJECT_ID,
     #     {
-    #         "component::icloud::config::step::user::data::username": "common::config_flow::data::email",
+    #         "component::blebox::config::step::user::data::host": "common::config_flow::data::ip",
     #     },
     # )
 
