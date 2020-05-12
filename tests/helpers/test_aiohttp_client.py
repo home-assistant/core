@@ -10,8 +10,8 @@ import homeassistant.helpers.aiohttp_client as client
 from homeassistant.setup import async_setup_component
 
 
-@pytest.fixture
-def camera_client(hass, hass_client):
+@pytest.fixture(name="camera_client")
+def camera_client_fixture(hass, hass_client):
     """Fixture to fetch camera streams."""
     assert hass.loop.run_until_complete(
         async_setup_component(
