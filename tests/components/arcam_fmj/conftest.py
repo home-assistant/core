@@ -17,6 +17,7 @@ MOCK_TURN_ON = {
     "data": {"entity_id": "switch.test"},
 }
 MOCK_NAME = "dummy"
+MOCK_UUID = "1234"
 MOCK_ENTITY_ID = "media_player.arcam_fmj_1"
 MOCK_CONFIG = DEVICE_SCHEMA({CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT})
 
@@ -53,7 +54,7 @@ def state_fixture(client):
 @pytest.fixture(name="player")
 def player_fixture(hass, state):
     """Get standard player."""
-    player = ArcamFmj(state, MOCK_NAME, None)
+    player = ArcamFmj(state, MOCK_UUID, MOCK_NAME, None)
     player.entity_id = MOCK_ENTITY_ID
     player.hass = hass
     player.async_write_ha_state = Mock()
