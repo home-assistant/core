@@ -8,7 +8,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import (
+    ATTR_ADDRESS,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_COMMAND,
+    ATTR_RATE,
+    DOMAIN,
+    EVENT_UPB_LINK_CHANGED,
+)
 
 UPB_PLATFORMS = ["light", "scene"]
 
@@ -33,6 +40,27 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
+
+    def _element_changed(element, changeset):
+        change = changeset.get("last_change")
+        if change is None:
+            return
+        if change.get("command") is None:
+            return
+
+        hass.bus.async_fire(
+            EVENT_UPB_LINK_CHANGED,
+            {
+                ATTR_COMMAND: change["command"],
+                ATTR_ADDRESS: element.addr.index,
+                ATTR_BRIGHTNESS_PCT: change.get("level", -1),
+                ATTR_RATE: change.get("rate", -1),
+            },
+        )
+
+    for link in upb.links:
+        element = upb.links[link]
+        element.add_callback(_element_changed)
 
     return True
 
