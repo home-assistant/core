@@ -6,7 +6,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 
 def get_integration_frame() -> Tuple[FrameSummary, str, str]:
-    """Return the integration, integration path and frame of the current stack frame."""
+    """Return the frame, integration and integration path of the current stack frame."""
     found_frame = None
 
     for frame in reversed(extract_stack()):
