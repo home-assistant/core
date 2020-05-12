@@ -12,15 +12,14 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import DOMAIN, PRODUCT
 
 
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox climate entity."""
 
-    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    create_blebox_entities(product, async_add, BleBoxClimateEntity, "climates")
-    return True
+    create_blebox_entities(
+        hass, config_entry, async_add, BleBoxClimateEntity, "climates"
+    )
 
 
 class BleBoxClimateEntity(BleBoxEntity, ClimateDevice):
