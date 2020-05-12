@@ -95,7 +95,7 @@ class DemoHumidifier(HumidifierEntity):
 
     @property
     def device_class(self):
-        """Return the device class of the media player."""
+        """Return the device class of the humidifier."""
         return self._device_class
 
     async def async_turn_on(self, **kwargs):
