@@ -5,7 +5,6 @@ from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_GROUP
 
 from homeassistant.components.switch import DOMAIN as SWITCH, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
@@ -39,9 +38,9 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 device is in the on state."""
-        if self.value == ISY_VALUE_UNKNOWN:
-            return STATE_UNKNOWN
-        return bool(self.value)
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return bool(self._node.status)
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 switch."""
@@ -67,7 +66,7 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 switch program is on."""
-        return bool(self.value)
+        return bool(self._node.status)
 
     def turn_on(self, **kwargs) -> None:
         """Send the turn on command to the ISY994 switch program."""
