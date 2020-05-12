@@ -98,12 +98,12 @@ class DemoHumidifier(HumidifierEntity):
         """Return the device class of the media player."""
         return self._device_class
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         self._state = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         self._state = False
         self.async_write_ha_state()
