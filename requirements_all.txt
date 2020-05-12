@@ -2135,7 +2135,7 @@ vallox-websocket-api==2.4.0
 venstarcolortouch==0.12
 
 # homeassistant.components.meteo_france
-vigilancemeteo==3.0.0
+vigilancemeteo==3.0.1
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
