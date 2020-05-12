@@ -38,8 +38,10 @@ MIN_SEEN_NEW = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_TRACK_BATTERY): cv.boolean,
-        vol.Optional(CONF_TRACK_BATTERY_INTERVAL): cv.time_period,
+        vol.Optional(CONF_TRACK_BATTERY, default=False): cv.boolean,
+        vol.Optional(
+            CONF_TRACK_BATTERY_INTERVAL, default=DEFAULT_TRACK_BATTERY_INTERVAL
+        ): cv.time_period,
     }
 )
 
@@ -60,10 +62,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
-    if config.get(CONF_TRACK_BATTERY, False):
-        battery_track_interval = config.get(
-            CONF_TRACK_BATTERY_INTERVAL, DEFAULT_TRACK_BATTERY_INTERVAL
-        )
+    if config[CONF_TRACK_BATTERY]:
+        battery_track_interval = config[CONF_TRACK_BATTERY_INTERVAL]
     else:
         battery_track_interval = timedelta(0)
 
