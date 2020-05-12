@@ -853,7 +853,7 @@ url-normalize==1.4.1
 uvcclient==0.11.0
 
 # homeassistant.components.meteo_france
-vigilancemeteo==3.0.0
+vigilancemeteo==3.0.1
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
