@@ -7,8 +7,8 @@
         "title": "Connect to the BSB-Lan device",
         "description": "Set up you BSB-Lan device to integrate with Home Assistant.",
         "data": {
-          "host": "Host or IP address",
-          "port": "Port number",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "passkey": "Passkey string"
         }
       }

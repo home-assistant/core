@@ -29,6 +29,7 @@
         "username": "Username",
         "password": "Password",
         "host": "Host",
+        "ip": "IP address",
         "port": "Port",
         "usb_path": "USB Device Path",
         "access_token": "Access Token",

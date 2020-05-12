@@ -5,13 +5,13 @@
       "user": {
         "title": "Connect to the PowerView Hub",
         "data": {
-          "host": "IP Address"
+          "host": "[%key:common::config_flow::data::ip%]"
         }
       },
       "link": {
         "title": "Connect to the PowerView Hub",
         "description": "Do you want to setup {name} ({host})?"
-      } 
+      }
     },
     "error": {
       "cannot_connect": "Failed to connect, please try again",
