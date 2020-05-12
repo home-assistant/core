@@ -2,7 +2,5 @@
   "domain": "humidifier",
   "name": "Humidifier",
   "documentation": "https://www.home-assistant.io/integrations/humidifier",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@home-assistant/core", "@Shulyaka"]
 }
