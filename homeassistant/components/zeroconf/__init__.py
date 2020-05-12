@@ -191,15 +191,10 @@ def setup(hass, config):
             # We only send updates to homekit_controller
             # if the device is already paired in order to avoid
             # offering a second discovery for the same device
-            _LOGGER.debug("info: %s", info)
             if (
                 HOMEKIT_PROPERTIES in info
                 and HOMEKIT_PAIRED_STATUS_FLAG in info[HOMEKIT_PROPERTIES]
             ):
-                _LOGGER.debug(
-                    "status_flag: %s",
-                    info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG],
-                )
                 try:
                     if not int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
                         return
