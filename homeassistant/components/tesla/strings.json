@@ -10,7 +10,7 @@
       "user": {
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "description": "Please enter your information.",
         "title": "Tesla - Configuration"

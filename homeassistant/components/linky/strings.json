@@ -6,7 +6,7 @@
         "description": "Enter your credentials",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -16,6 +16,8 @@
       "wrong_login": "Login error: please check your email & password",
       "unknown": "Unknown error: please retry later (usually not between 11PM and 2AM)"
     },
-    "abort": { "already_configured": "Account already configured" }
+    "abort": {
+      "already_configured": "Account already configured"
+    }
   }
 }
