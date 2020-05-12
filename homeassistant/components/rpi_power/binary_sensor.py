@@ -48,7 +48,6 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
         self._under_voltage = under_voltage
         self._is_on = None
         self._last_is_on = False
-        self._description = None
 
     def update(self):
         """Update the state."""
@@ -98,4 +97,6 @@ class UnderVoltageLegacy:
         """Get under voltage status."""
         throttled = open(SYSFILE_LEGACY).read()[:-1]
         _LOGGER.debug("Get throttled value: %s", throttled)
-        return int(throttled) & UNDERVOLTAGE_STICKY_BIT == UNDERVOLTAGE_STICKY_BIT
+        return (
+            int(throttled, base=16) & UNDERVOLTAGE_STICKY_BIT == UNDERVOLTAGE_STICKY_BIT
+        )
