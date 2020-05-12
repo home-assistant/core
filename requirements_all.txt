@@ -35,7 +35,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==2.8.3
+HAP-python==2.8.4
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -1907,7 +1907,7 @@ sendgrid==6.2.1
 sense-hat==2.2.0
 
 # homeassistant.components.sense
-sense_energy==0.7.1
+sense_energy==0.7.2
 
 # homeassistant.components.sentry
 sentry-sdk==0.13.5
@@ -2135,7 +2135,7 @@ vallox-websocket-api==2.4.0
 venstarcolortouch==0.12
 
 # homeassistant.components.meteo_france
-vigilancemeteo==3.0.0
+vigilancemeteo==3.0.1
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2

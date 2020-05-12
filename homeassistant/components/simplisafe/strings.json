@@ -4,7 +4,7 @@
       "user": {
         "title": "Fill in your information.",
         "data": {
-          "username": "Email Address",
+          "username": "[%key:common::config_flow::data::email%]",
           "password": "Password",
           "code": "Code (used in Home Assistant UI)"
         }

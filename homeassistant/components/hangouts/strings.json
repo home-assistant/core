@@ -12,7 +12,7 @@
     "step": {
       "user": {
         "data": {
-          "email": "E-Mail Address",
+          "email": "[%key:common::config_flow::data::email%]",
           "password": "Password",
           "authorization_code": "Authorization Code (required for manual authentication)"
         },
