@@ -46,14 +46,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class PoolSenseSensor(Entity):
     """Sensor representing poolsense data."""
 
-    name = None
     unique_id = None
 
     def __init__(self, coordinator, email, password, info_type):
         """Initialize poolsense sensor."""
+
         self._email = email
         self._password = password
-        # self.name = f"Pool Sense {info_type}"
         self.unique_id = f"{email}-{info_type}"
         self.coordinator = coordinator
         self.info_type = info_type
@@ -74,13 +73,11 @@ class PoolSenseSensor(Entity):
         if self.info_type == "pH Status":
             if self.coordinator.data[self.info_type] == "red":
                 return "!"
-            else:
-                return "✅"
+            return "✅"
         if self.info_type == "Chlorine Status":
             if self.coordinator.data[self.info_type] == "red":
                 return "!"
-            else:
-                return "✅"
+            return "✅"
         return self.coordinator.data[self.info_type]
 
     @property
@@ -89,13 +86,11 @@ class PoolSenseSensor(Entity):
         if self.info_type == "pH Status":
             if self.coordinator.data[self.info_type] == "red":
                 return "mda: thumb-down"
-            else:
-                return "mda: thumb-up"
+            return "mda: thumb-up"
         if self.info_type == "Chlorine Status":
             if self.coordinator.data[self.info_type] == "red":
                 return "mda: thumb-down"
-            else:
-                return "mda: thumb-up"
+            return "mda: thumb-up"
         return SENSORS[self.info_type]["icon"]
 
     @property

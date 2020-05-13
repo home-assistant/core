@@ -7,8 +7,8 @@ import async_timeout
 import poolsense
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, entity_registry, update_coordinator
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client, update_coordinator
 
 from .const import DOMAIN
 
@@ -25,23 +25,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up PoolSense from a config entry."""
-    if isinstance(entry.data["email"], str):
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, "email": entry.title}
-        )
-
-        @callback
-        def _async_migrator(entity_entry: entity_registry.RegistryEntry):
-            """Migrate away from unstable ID."""
-            email, info_type = entity_entry.unique_id.rsplit("-", 1)
-            if len(email) > 0:
-                return None
-            else:
-                return {"new_unique_id": f"{entry.title}-{info_type}"}
-
-        await entity_registry.async_migrate_entries(
-            hass, entry.entry_id, _async_migrator
-        )
 
     await get_coordinator(hass, entry)
 

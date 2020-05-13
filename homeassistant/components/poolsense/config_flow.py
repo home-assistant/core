@@ -32,7 +32,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._email = user_input[CONF_EMAIL]
             self._password = user_input[CONF_PASSWORD]
-            _LOGGER.info("*******HAEMISH*******: " + self._email + ":" + self._password)
+            _LOGGER.info("Configuring user: " + self._email + " Password hidden.")
 
             return self.async_create_entry(
                 title=self._email,
@@ -42,8 +42,8 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "TOKEN": self.token,
                 },
             )
-        else:
-            return await self._show_setup_form(user_input, errors)
+
+        return await self._show_setup_form(user_input, errors)
 
     async def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
