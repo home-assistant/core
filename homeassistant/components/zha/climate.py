@@ -279,11 +279,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, (HVAC_MODE_OFF,))
 
     @property
-    def is_aux_heat(self) -> Optional[bool]:
-        """Return True if aux heat is on."""
-        return self._thrm.system_mode == SystemMode.AUX_HEAT
-
-    @property
     def precision(self):
         """Return the precision of the system."""
         return PRECISION_HALVES
@@ -506,16 +501,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
                 "not setting temperature %s for '%s' mode", kwargs, self.hvac_mode
             )
         if success:
-            self.async_schedule_update_ha_state()
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn off aux heater."""
-        if await self._thrm.async_set_operation_mode(SystemMode.HEAT):
-            self.async_schedule_update_ha_state()
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn on aux heater."""
-        if await self._thrm.async_set_operation_mode(SystemMode.AUX_HEAT):
             self.async_schedule_update_ha_state()
 
     async def async_update_outdoor_temperature(self, temperature):
