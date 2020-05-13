@@ -1,5 +1,4 @@
 """Config flow to configure forked-daapd devices."""
-import asyncio
 import logging
 
 from pyforked_daapd import ForkedDaapdAPI
@@ -132,22 +131,17 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         Manage device specific parameters.
         """
         if user_input is not None:
+            # check for any entries with same host, abort if found
+            same_host_entries = [
+                entry.entry_id
+                for entry in self._async_current_entries()
+                if entry.data[CONF_HOST] == user_input[CONF_HOST]
+            ]
+            if same_host_entries:
+                return self.async_abort(reason="already_configured")
             validate_result = await self.validate_input(user_input)
             if validate_result[0] == "ok":  # success
                 _LOGGER.debug("Connected successfully. Creating entry")
-                # before creating entry, remove any old entries with the same host
-                same_host_entries = [
-                    entry.entry_id
-                    for entry in self._async_current_entries()
-                    if entry.data[CONF_HOST] == user_input[CONF_HOST]
-                ]
-                if same_host_entries:
-                    await asyncio.wait(
-                        [
-                            self.hass.config_entries.async_remove(entry_id)
-                            for entry_id in same_host_entries
-                        ]
-                    )
                 return self.async_create_entry(
                     title=validate_result[1], data=user_input
                 )

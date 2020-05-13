@@ -40,13 +40,13 @@ PIPE_FUNCTION_MAP = {
         "async_media_next_track": "player_next",
     }
 }
-SIGNAL_ADD_ZONES = "forked-daapd_add_zones"
-SIGNAL_CONFIG_OPTIONS_UPDATE = "forked-daapd_config_options_update"
-SIGNAL_UPDATE_DATABASE = "forked-daapd_update_database"
-SIGNAL_UPDATE_MASTER = "forked-daapd_update_master"
-SIGNAL_UPDATE_OUTPUTS = "forked-daapd_update_outputs"
-SIGNAL_UPDATE_PLAYER = "forked-daapd_update_player"
-SIGNAL_UPDATE_QUEUE = "forked-daapd_update_queue"
+SIGNAL_ADD_ZONES = "forked-daapd_add_zones {}"
+SIGNAL_CONFIG_OPTIONS_UPDATE = "forked-daapd_config_options_update {}"
+SIGNAL_UPDATE_DATABASE = "forked-daapd_update_database {}"
+SIGNAL_UPDATE_MASTER = "forked-daapd_update_master {}"
+SIGNAL_UPDATE_OUTPUTS = "forked-daapd_update_outputs {}"
+SIGNAL_UPDATE_PLAYER = "forked-daapd_update_player {}"
+SIGNAL_UPDATE_QUEUE = "forked-daapd_update_queue {}"
 SOURCE_NAME_CLEAR = "Clear queue"
 SOURCE_NAME_DEFAULT = "Default (no pipe)"
 STARTUP_DATA = {

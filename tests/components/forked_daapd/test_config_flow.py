@@ -87,17 +87,12 @@ async def test_config_flow(hass, config_entry):
         assert result["data"][CONF_PORT] == config_data[CONF_PORT]
         assert result["data"][CONF_PASSWORD] == config_data[CONF_PASSWORD]
 
-        # Also test that creating a new entry with the same host replaces the old one
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+        # Also test that creating a new entry with the same host aborts
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={**config_entry.data, CONF_PASSWORD: "new_pw"},
+            DOMAIN, context={"source": SOURCE_USER}, data=config_entry.data,
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][CONF_PASSWORD] == "new_pw"
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
 async def test_zeroconf_updates_title(hass, config_entry):
