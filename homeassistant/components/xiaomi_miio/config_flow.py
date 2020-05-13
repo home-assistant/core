@@ -56,9 +56,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_abort(reason="not_xiaomi_miio")
 
-        name = user_input.get("name")
-        self.host = user_input.get("host")
-        mac_address = user_input.get("properties", {}).get("mac")
+        name = discovery_info.get("name")
+        self.host = discovery_info.get("host")
+        mac_address = discovery_info.get("properties", {}).get("mac")
 
         if not name or not self.host or not mac_address:
             return self.async_abort(reason="not_xiaomi_miio")
