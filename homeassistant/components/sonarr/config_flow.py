@@ -46,7 +46,7 @@ async def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
         api_key=data[CONF_API_KEY],
         base_path=data[CONF_BASE_PATH],
         tls=data[CONF_SSL],
-        verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        verify_ssl=data[CONF_VERIFY_SSL],
         session=session,
     )
 
@@ -79,6 +79,9 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
+
+        if CONF_VERIFY_SSL not in user_input:
+            user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
 
         try:
             await validate_input(self.hass, user_input)
