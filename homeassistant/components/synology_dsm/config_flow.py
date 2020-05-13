@@ -250,7 +250,7 @@ class SynologyDSMOptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                ): cv.positive_int,
+                ): cv.positive_int
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
