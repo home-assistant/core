@@ -8,7 +8,10 @@ from gogogate2_api.common import Door, DoorMode, DoorStatus, Network, Outputs, W
 from homeassistant.components import persistent_notification
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.gogogate2 import async_unload_entry
-from homeassistant.components.gogogate2.common import DataManager, get_data_manager
+from homeassistant.components.gogogate2.common import (
+    GogoGateDataUpdateCoordinator,
+    get_data_update_coordinator,
+)
 import homeassistant.components.gogogate2.const as const
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.config import async_process_ha_core_config
@@ -73,7 +76,7 @@ class ComponentData(NamedTuple):
     """Test data for a mocked component."""
 
     api: GogoGate2Api
-    data_manager: DataManager
+    data_update_coordinator: GogoGateDataUpdateCoordinator
 
 
 class ComponentFactory:
@@ -143,7 +146,10 @@ class ComponentFactory:
         )
 
         return ComponentData(
-            api=api_mock, data_manager=get_data_manager(self._hass, config_entry)
+            api=api_mock,
+            data_update_coordinator=get_data_update_coordinator(
+                self._hass, config_entry
+            ),
         )
 
     async def unload(self) -> None:

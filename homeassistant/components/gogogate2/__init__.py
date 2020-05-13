@@ -4,12 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .common import (
-    async_api_info_or_none,
-    create_data_manager,
-    get_api,
-    get_data_manager,
-)
+from .common import get_data_update_coordinator
 
 
 async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
@@ -19,12 +14,11 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Do setup of Gogogate2."""
-    api = get_api(config_entry.data)
-    if await async_api_info_or_none(hass, api) is None:
-        raise ConfigEntryNotReady()
+    data_update_coordinator = get_data_update_coordinator(hass, config_entry)
+    await data_update_coordinator.async_refresh()
 
-    data_manager = create_data_manager(hass, config_entry, api)
-    data_manager.start_polling()
+    if not data_update_coordinator.last_update_success:
+        raise ConfigEntryNotReady()
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, COVER_DOMAIN)
@@ -35,9 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Gogogate2 config entry."""
-    data_manager = get_data_manager(hass, config_entry)
-    data_manager.stop_polling()
-
     hass.async_create_task(
         hass.config_entries.async_forward_entry_unload(config_entry, COVER_DOMAIN)
     )

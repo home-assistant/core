@@ -221,8 +221,16 @@ async def test_cover_update(
     assert state.attributes["supported_features"] == 3
     assert state.attributes["device_class"] == "garage"
 
-    component_data.data_manager.async_update_door(
-        Door(
+    component_data.data_update_coordinator.api.info.return_value = InfoResponse(
+        user="user1",
+        gogogatename="gogogatename0",
+        model="",
+        apiversion="",
+        remoteaccessenabled=False,
+        remoteaccess="abc123.blah.blah",
+        firmwareversion="",
+        apicode="",
+        door1=Door(
             door_id=1,
             permission=True,
             name="Door1",
@@ -233,15 +241,51 @@ async def test_cover_update(
             camera=False,
             events=2,
             temperature=None,
-        )
+        ),
+        door2=Door(
+            door_id=2,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        door3=Door(
+            door_id=3,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        outputs=Outputs(output1=True, output2=False, output3=True),
+        network=Network(ip=""),
+        wifi=Wifi(SSID="", linkquality="", signal=""),
     )
+    await component_data.data_update_coordinator.async_refresh()
     await hass.async_block_till_done()
     state = hass.states.get("cover.door1")
     assert state
     assert state.state == STATE_OPEN
 
-    component_data.data_manager.async_update_door(
-        Door(
+    component_data.data_update_coordinator.api.info.return_value = InfoResponse(
+        user="user1",
+        gogogatename="gogogatename0",
+        model="",
+        apiversion="",
+        remoteaccessenabled=False,
+        remoteaccess="abc123.blah.blah",
+        firmwareversion="",
+        apicode="",
+        door1=Door(
             door_id=1,
             permission=True,
             name="Door1",
@@ -252,8 +296,36 @@ async def test_cover_update(
             camera=False,
             events=2,
             temperature=None,
-        )
+        ),
+        door2=Door(
+            door_id=2,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        door3=Door(
+            door_id=3,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        outputs=Outputs(output1=True, output2=False, output3=True),
+        network=Network(ip=""),
+        wifi=Wifi(SSID="", linkquality="", signal=""),
     )
+    await component_data.data_update_coordinator.async_refresh()
     await hass.async_block_till_done()
     state = hass.states.get("cover.door1")
     assert state
@@ -264,17 +336,54 @@ async def test_open_close(
     hass: HomeAssistant, component_factory: ComponentFactory
 ) -> None:
     """Test open and close."""
-    closed_door = Door(
-        door_id=1,
-        permission=True,
-        name="Door1",
-        mode=DoorMode.GARAGE,
-        status=DoorStatus.CLOSED,
-        sensor=True,
-        sensorid=None,
-        camera=False,
-        events=2,
-        temperature=None,
+    closed_door_response = InfoResponse(
+        user="user1",
+        gogogatename="gogogatename0",
+        model="",
+        apiversion="",
+        remoteaccessenabled=False,
+        remoteaccess="abc123.blah.blah",
+        firmwareversion="",
+        apicode="",
+        door1=Door(
+            door_id=1,
+            permission=True,
+            name="Door1",
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.CLOSED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=2,
+            temperature=None,
+        ),
+        door2=Door(
+            door_id=2,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        door3=Door(
+            door_id=3,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        outputs=Outputs(output1=True, output2=False, output3=True),
+        network=Network(ip=""),
+        wifi=Wifi(SSID="", linkquality="", signal=""),
     )
 
     await component_factory.configure_component()
@@ -302,7 +411,8 @@ async def test_open_close(
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSING
 
-    component_data.data_manager.async_update_door(closed_door)
+    component_data.data_update_coordinator.api.info.return_value = closed_door_response
+    await component_data.data_update_coordinator.async_refresh()
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSED
 
@@ -319,8 +429,10 @@ async def test_open_close(
     assert hass.states.get("cover.door1").state == STATE_OPENING
 
     # Assert the mid state does not change when the same status is returned.
-    component_data.data_manager.async_update_door(closed_door)
-    component_data.data_manager.async_update_door(closed_door)
+    component_data.data_update_coordinator.api.info.return_value = closed_door_response
+    await component_data.data_update_coordinator.async_refresh()
+    component_data.data_update_coordinator.api.info.return_value = closed_door_response
+    await component_data.data_update_coordinator.async_refresh()
     await hass.services.async_call(
         HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
     )
@@ -330,7 +442,10 @@ async def test_open_close(
     # Assert the mid state times out.
     with patch("homeassistant.components.gogogate2.cover.datetime") as datetime_mock:
         datetime_mock.now.return_value = datetime.now() + timedelta(seconds=60.1)
-        component_data.data_manager.async_update_door(closed_door)
+        component_data.data_update_coordinator.api.info.return_value = (
+            closed_door_response
+        )
+        await component_data.data_update_coordinator.async_refresh()
         await hass.services.async_call(
             HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
         )
@@ -342,17 +457,54 @@ async def test_availability(
     hass: HomeAssistant, component_factory: ComponentFactory
 ) -> None:
     """Test open and close."""
-    closed_door = Door(
-        door_id=1,
-        permission=True,
-        name="Door1",
-        mode=DoorMode.GARAGE,
-        status=DoorStatus.CLOSED,
-        sensor=True,
-        sensorid=None,
-        camera=False,
-        events=2,
-        temperature=None,
+    closed_door_response = InfoResponse(
+        user="user1",
+        gogogatename="gogogatename0",
+        model="",
+        apiversion="",
+        remoteaccessenabled=False,
+        remoteaccess="abc123.blah.blah",
+        firmwareversion="",
+        apicode="",
+        door1=Door(
+            door_id=1,
+            permission=True,
+            name="Door1",
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.CLOSED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=2,
+            temperature=None,
+        ),
+        door2=Door(
+            door_id=2,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        door3=Door(
+            door_id=3,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        outputs=Outputs(output1=True, output2=False, output3=True),
+        network=Network(ip=""),
+        wifi=Wifi(SSID="", linkquality="", signal=""),
     )
 
     await component_factory.configure_component()
@@ -368,10 +520,12 @@ async def test_availability(
     assert hass.states.get("cover.door1").state == STATE_OPEN
 
     component_data.api.info.side_effect = Exception("Error")
-    await component_data.data_manager.async_update()
+    await component_data.data_update_coordinator.async_refresh()
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_UNAVAILABLE
 
-    component_data.data_manager.async_update_door(closed_door)
+    component_data.api.info.side_effect = None
+    component_data.api.info.return_value = closed_door_response
+    await component_data.data_update_coordinator.async_refresh()
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSED

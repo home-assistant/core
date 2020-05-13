@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Callable, List, Optional
 
-from gogogate2_api.common import Door, DoorStatus, get_configured_doors
+from gogogate2_api.common import Door, DoorStatus, get_configured_doors, get_door_by_id
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -22,11 +22,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .common import DataManager, StateData, cover_unique_id, get_data_manager
-from .const import DATA_UPDATED_SIGNAL, DOMAIN
+from .common import (
+    GogoGateDataUpdateCoordinator,
+    cover_unique_id,
+    get_data_update_coordinator,
+)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,13 +60,12 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], Optional[bool]], None],
 ) -> None:
     """Set up the config entry."""
-    data_manager = get_data_manager(hass, config_entry)
-    info = await hass.async_add_executor_job(data_manager.api.info)
+    data_update_coordinator = get_data_update_coordinator(hass, config_entry)
 
     async_add_entities(
         [
-            Gogogate2Cover(config_entry, data_manager, door)
-            for door in get_configured_doors(info)
+            Gogogate2Cover(config_entry, data_update_coordinator, door)
+            for door in get_configured_doors(data_update_coordinator.data)
         ]
     )
 
@@ -72,13 +74,16 @@ class Gogogate2Cover(CoverEntity):
     """Cover entity for goggate2."""
 
     def __init__(
-        self, config_entry: ConfigEntry, data_manager: DataManager, door: Door
+        self,
+        config_entry: ConfigEntry,
+        data_update_coordinator: GogoGateDataUpdateCoordinator,
+        door: Door,
     ) -> None:
         """Initialize the object."""
         self._config_entry = config_entry
-        self._data_manager = data_manager
-        self._api = data_manager.api
+        self._data_update_coordinator = data_update_coordinator
         self._door = door
+        self._api = data_update_coordinator.api
         self._unique_id = cover_unique_id(config_entry, door)
         self._is_available = True
         self._transition_state: Optional[str] = None
@@ -154,23 +159,14 @@ class Gogogate2Cover(CoverEntity):
         return attrs
 
     @callback
-    def receive_data(self, state_data: StateData) -> None:
+    def async_on_data_updated(self) -> None:
         """Receive data from data dispatcher."""
-        # Check if door is controlled by a different device.
-        if self._config_entry.unique_id != state_data.config_unique_id:
-            return
-
-        # Set the availability of the entity.
-        if state_data.door is None:
+        if not self._data_update_coordinator.last_update_success:
             self._is_available = False
             self.async_write_ha_state()
             return
 
-        self._is_available = True
-
-        # Check the state applies tp this entity.
-        if self._unique_id != state_data.unique_id:
-            return
+        door = get_door_by_id(self._door.door_id, self._data_update_coordinator.data)
 
         # Check if the transition state should expire.
         if self._transition_state:
@@ -178,19 +174,17 @@ class Gogogate2Cover(CoverEntity):
                 datetime.now() - self._transition_state_start
             ) > timedelta(seconds=60)
 
-            if (
-                is_transition_state_expired
-                or self._door.status != state_data.door.status
-            ):
+            if is_transition_state_expired or self._door.status != door.status:
                 self._transition_state = None
                 self._transition_state_start = None
 
         # Set the state.
-        self._door = state_data.door
+        self._door = door
+        self._is_available = True
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register update dispatcher."""
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, DATA_UPDATED_SIGNAL, self.receive_data)
+            self._data_update_coordinator.async_add_listener(self.async_on_data_updated)
         )
