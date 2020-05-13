@@ -158,10 +158,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
     @property
     def hvac_mode(self):
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
+        """Return hvac operation ie. heat, cool mode."""
         if not self.values.mode:
             return None
         return ZW_HVAC_MODE_MAPPINGS.get(
@@ -170,10 +167,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
     @property
     def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
+        """Return the list of available hvac operation modes."""
         if not self.values.mode:
             return []
         # Z-Wave uses one list for both modes and presets. Extract the unique modes
@@ -214,10 +208,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
     @property
     def hvac_action(self):
-        """Return the current running hvac operation if supported.
-
-        Needs to be one of CURRENT_HVAC_*.
-        """
+        """Return the current running hvac operation if supported."""
         if not self.values.operating_state:
             return None
         cur_state = self.values.operating_state.value.lower()
@@ -306,34 +297,33 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         if not self.values.fan_mode:
             return
         # get id for this fan_mode
-        fan_mode_value = None
-        for val in self.values.fan_mode.value[VALUE_LIST]:
-            if val[VALUE_LABEL] == fan_mode:
-                fan_mode_value = val[VALUE_ID]
+        fan_mode_value = _get_list_id(self.values.fan_mode.value[VALUE_LIST], fan_mode)
         if fan_mode_value is None:
             _LOGGER.warning("%s is an invalid fan_mode!", fan_mode)
-        else:
-            self.values.fan_mode.send_value(fan_mode_value)
+            return
+        self.values.fan_mode.send_value(fan_mode_value)
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
         if not self.values.swing_mode:
             return
         # get id for this swing_mode
-        swing_mode_value = None
-        for val in self.values.swing_mode.value[VALUE_LIST]:
-            if val[VALUE_LABEL] == swing_mode:
-                swing_mode_value = val[VALUE_ID]
+        swing_mode_value = _get_list_id(
+            self.values.swing_mode.value[VALUE_LIST], swing_mode
+        )
         if swing_mode_value is None:
             _LOGGER.warning("%s is an invalid swing_mode!", swing_mode)
-        else:
-            self.values.swing_mode.send_value(swing_mode_value)
+            return
+        self.values.swing_mode.send_value(swing_mode_value)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if not self.values.mode:
             return
-        hvac_mode_value = HVAC_MODE_ZW_MAPPINGS[hvac_mode]
+        hvac_mode_value = HVAC_MODE_ZW_MAPPINGS.get(hvac_mode)
+        if hvac_mode_value is None:
+            _LOGGER.warning("%s is an invalid hvac_mode_value!", hvac_mode)
+            return
         self.values.mode.send_value(hvac_mode_value)
 
     async def async_set_preset_mode(self, preset_mode):
@@ -342,15 +332,14 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             return
         if preset_mode == PRESET_NONE:
             await self.async_set_hvac_mode(self.hvac_mode)
-        else:
-            preset_mode_value = None
-            for val in self.values.mode.value[VALUE_LIST]:
-                if val[VALUE_LABEL] == preset_mode:
-                    preset_mode_value = val[VALUE_ID]
-            if preset_mode_value is None:
-                _LOGGER.warning("%s is an invalid preset_mode!", preset_mode)
-            else:
-                self.values.mode.send_value(preset_mode_value)
+            return
+        preset_mode_value = _get_list_id(
+            self.values.mode.value[VALUE_LIST], preset_mode
+        )
+        if preset_mode_value is None:
+            _LOGGER.warning("%s is an invalid preset_mode!", preset_mode)
+            return
+        self.values.mode.send_value(preset_mode_value)
 
     @property
     def device_state_attributes(self):
@@ -388,3 +377,11 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             for value_name in setpoint_names
             if getattr(self.values, value_name, None)
         )
+
+
+def _get_list_id(value_lst, value_lbl):
+    """Return the id for the value in the list."""
+    for val in value_lst:
+        if val[VALUE_LABEL] == value_lbl:
+            return val[VALUE_ID]
+    return None
