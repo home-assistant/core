@@ -77,6 +77,10 @@ class KNXSensor(Entity):
         """Store register state change callback."""
         self.async_register_callbacks()
 
+    async def async_update(self):
+        """Update the state from KNX."""
+        await self.device.sync()
+
     @property
     def name(self):
         """Return the name of the KNX device."""
