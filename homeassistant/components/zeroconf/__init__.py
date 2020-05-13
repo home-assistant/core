@@ -178,6 +178,9 @@ def setup(hass, config):
             return
 
         service_info = zeroconf.get_service_info(service_type, name)
+        if not service_info:
+            return
+
         info = info_from_service(service_info)
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
