@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_setup": "You can only configure a Point account.",
+            "already_setup": "Already configured. Only a single configuration possible.",
             "authorize_url_fail": "Unknown error generating an authorize url.",
             "authorize_url_timeout": "Timeout generating authorize url.",
             "external_setup": "Point successfully configured from another flow.",
-            "no_flows": "You need to configure Point before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/point/)."
+            "no_flows": "The component is not configured. Please follow the documentation."
         },
         "create_entry": {
-            "default": "Successfully authenticated with Minut for your Point device(s)"
+            "default": "Successfully authenticated"
         },
         "error": {
             "follow_link": "Please follow the link and authenticate before pressing Submit",
-            "no_token": "Not authenticated with Minut"
+            "no_token": "Invalid access token"
         },
         "step": {
             "auth": {
@@ -23,8 +23,8 @@
                 "data": {
                     "flow_impl": "Provider"
                 },
-                "description": "Pick via which authentication provider you want to authenticate with Point.",
-                "title": "Authentication Provider"
+                "description": "Do you want to start set up?",
+                "title": "Pick Authentication Method"
             }
         }
     }

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El receptor DirecTV ya est\u00e1 configurado",
+            "already_configured": "Dispositivo ya configurado",
             "unknown": "Error inesperado"
         },
         "error": {
-            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo."
+            "cannot_connect": "Error al conectar"
         },
         "flow_title": "DirecTV: {name}",
         "step": {

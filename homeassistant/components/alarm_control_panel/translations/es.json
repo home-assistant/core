@@ -8,16 +8,16 @@
             "trigger": "Lanzar {entity_name}"
         },
         "condition_type": {
-            "is_armed_away": "{entity_name} est\u00e1 armada fuera",
+            "is_armed_away": "{entity_name} est\u00e1 armada ausente",
             "is_armed_home": "{entity_name} est\u00e1 armada en casa",
             "is_armed_night": "{entity_name} est\u00e1 armada noche",
             "is_disarmed": "{entity_name} est\u00e1 desarmada",
             "is_triggered": "{entity_name} est\u00e1 disparada"
         },
         "trigger_type": {
-            "armed_away": "{entity_name} armado fuera",
-            "armed_home": "{entity_name} armado en casa",
-            "armed_night": "{entity_name} armado modo noche",
+            "armed_away": "{entity_name} armada ausente",
+            "armed_home": "{entity_name} armada en casa",
+            "armed_night": "{entity_name} armada noche",
             "disarmed": "{entity_name} desarmado",
             "triggered": "{entity_name} activado"
         }
@@ -25,10 +25,10 @@
     "state": {
         "_": {
             "armed": "Armado",
-            "armed_away": "Armado fuera de casa",
-            "armed_custom_bypass": "Armada Zona Espec\u00edfica",
-            "armed_home": "Armado en casa",
-            "armed_night": "Armado noche",
+            "armed_away": "Armada ausente",
+            "armed_custom_bypass": "Armada personalizada",
+            "armed_home": "Armada en casa",
+            "armed_night": "Armada noche",
             "arming": "Armando",
             "disarmed": "Desarmado",
             "disarming": "Desarmando",

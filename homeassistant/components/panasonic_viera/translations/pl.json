@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ten telewizor Panasonic Viera jest ju\u017c skonfigurowany.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
             "not_connected": "Zdalne po\u0142\u0105czenie z telewizorem Panasonic Viera zosta\u0142o utracone. Sprawd\u017a logi, aby uzyska\u0107 wi\u0119cej informacji.",
             "unknown": "Nieznany b\u0142\u0105d, sprawd\u017a logi, aby uzyska\u0107 wi\u0119cej szczeg\u00f3\u0142\u00f3w"
         },

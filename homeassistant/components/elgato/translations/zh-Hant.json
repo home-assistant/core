@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u4e3b\u6a5f\u6216 IP \u4f4d\u5740",
+                    "host": "\u4e3b\u6a5f\u7aef",
                     "port": "\u901a\u8a0a\u57e0"
                 },
                 "description": "\u8a2d\u5b9a Elgato Key \u7167\u660e\u4ee5\u6574\u5408\u81f3 Home Assistant\u3002",

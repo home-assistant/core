@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Home Assistant-u lahko dodate samo eno napravo Atag"
+        },
+        "error": {
+            "connection_error": "Povezava ni uspela, poskusite znova"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata (10000)"
+                },
+                "title": "Pove\u017eite se z napravo"
+            }
+        }
+    },
+    "title": "Atag"
+}
