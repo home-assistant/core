@@ -51,7 +51,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_zeroconf(self, user_input=None):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
         if user_input is None:
             return self.async_abort(reason="not_xiaomi_miio")
