@@ -292,10 +292,7 @@ class YeelightDevice:
 
     @property
     def unique_id(self) -> Optional[str]:
-        """Return a unique ID.
-
-        Uses data returned from get_capabilities call ( https://yeelight.readthedocs.io/en/latest/yeelight.html#yeelight.Bulb.get_capabilities )
-        """
+        """Return a unique ID."""
 
         return self.bulb.capabilities.get("id")
 
