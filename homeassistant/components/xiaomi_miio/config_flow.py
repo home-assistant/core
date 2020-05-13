@@ -69,7 +69,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check which device is discovered.
         if name.startswith(ZEROCONF_GATEWAY):
-            unique_id = f"{mac_address}"
+            unique_id = mac_address
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured({CONF_HOST: host})
 
