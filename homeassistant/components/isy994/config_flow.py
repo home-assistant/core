@@ -22,13 +22,12 @@ from .const import (
     DEFAULT_SENSOR_STRING,
     DEFAULT_TLS_VERSION,
     DEFAULT_VAR_SENSOR_STRING,
+    ISY_URL_POSTFIX,
+    UDN_UUID_PREFIX,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-
-UDN_UUID_PREFIX = "uuid:"
-ISY_URL_POSTFIX = "/desc"
 
 
 def _data_schema(schema_input):
