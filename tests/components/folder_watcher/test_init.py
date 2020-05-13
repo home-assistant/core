@@ -1,11 +1,10 @@
 """The tests for the folder_watcher component."""
 import os
-from unittest.mock import Mock, patch
 
 from homeassistant.components import folder_watcher
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockDependency
+from tests.async_mock import Mock, patch
 
 
 async def test_invalid_path_setup(hass):
@@ -29,8 +28,7 @@ async def test_valid_path_setup(hass):
         )
 
 
-@MockDependency("watchdog", "events")
-def test_event(mock_watchdog):
+def test_event():
     """Check that Home Assistant events are fired correctly on watchdog event."""
 
     class MockPatternMatchingEventHandler:
@@ -39,17 +37,20 @@ def test_event(mock_watchdog):
         def __init__(self, patterns):
             pass
 
-    mock_watchdog.events.PatternMatchingEventHandler = MockPatternMatchingEventHandler
-    hass = Mock()
-    handler = folder_watcher.create_event_handler(["*"], hass)
-    handler.on_created(
-        Mock(is_directory=False, src_path="/hello/world.txt", event_type="created")
-    )
-    assert hass.bus.fire.called
-    assert hass.bus.fire.mock_calls[0][1][0] == folder_watcher.DOMAIN
-    assert hass.bus.fire.mock_calls[0][1][1] == {
-        "event_type": "created",
-        "path": "/hello/world.txt",
-        "file": "world.txt",
-        "folder": "/hello",
-    }
+    with patch(
+        "homeassistant.components.folder_watcher.PatternMatchingEventHandler",
+        MockPatternMatchingEventHandler,
+    ):
+        hass = Mock()
+        handler = folder_watcher.create_event_handler(["*"], hass)
+        handler.on_created(
+            Mock(is_directory=False, src_path="/hello/world.txt", event_type="created")
+        )
+        assert hass.bus.fire.called
+        assert hass.bus.fire.mock_calls[0][1][0] == folder_watcher.DOMAIN
+        assert hass.bus.fire.mock_calls[0][1][1] == {
+            "event_type": "created",
+            "path": "/hello/world.txt",
+            "file": "world.txt",
+            "folder": "/hello",
+        }

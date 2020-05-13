@@ -5,7 +5,6 @@ from functools import partial
 import logging
 import unittest
 
-from asynctest import patch
 import pytest
 import voluptuous as vol
 
@@ -28,6 +27,7 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 from tests.components.recorder.common import trigger_db_commit
 

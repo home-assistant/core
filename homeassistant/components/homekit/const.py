@@ -1,20 +1,38 @@
 """Constants used be the HomeKit component."""
+
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
-HOMEKIT_NOTIFY_ID = 4663548
 AID_STORAGE = "homekit-aid-allocations"
 HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
 HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
+HOMEKIT = "homekit"
+UNDO_UPDATE_LISTENER = "undo_update_listener"
+SHUTDOWN_TIMEOUT = 30
+CONF_ENTRY_INDEX = "index"
+
+# ### Codecs ####
+VIDEO_CODEC_COPY = "copy"
+VIDEO_CODEC_LIBX264 = "libx264"
+AUDIO_CODEC_OPUS = "libopus"
+VIDEO_CODEC_H264_OMX = "h264_omx"
+AUDIO_CODEC_COPY = "copy"
 
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
+ATTR_INTERGRATION = "platform"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL = "model"
+ATTR_SOFTWARE_VERSION = "sw_version"
 
 # #### Config ####
 CONF_ADVERTISE_IP = "advertise_ip"
+CONF_AUDIO_CODEC = "audio_codec"
+CONF_AUDIO_MAP = "audio_map"
+CONF_AUDIO_PACKET_SIZE = "audio_packet_size"
 CONF_AUTO_START = "auto_start"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
@@ -23,15 +41,35 @@ CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
+CONF_MAX_FPS = "max_fps"
+CONF_MAX_HEIGHT = "max_height"
+CONF_MAX_WIDTH = "max_width"
 CONF_SAFE_MODE = "safe_mode"
 CONF_ZEROCONF_DEFAULT_INTERFACE = "zeroconf_default_interface"
+CONF_STREAM_ADDRESS = "stream_address"
+CONF_STREAM_SOURCE = "stream_source"
+CONF_SUPPORT_AUDIO = "support_audio"
+CONF_VIDEO_CODEC = "video_codec"
+CONF_VIDEO_MAP = "video_map"
+CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 
 # #### Config Defaults ####
+DEFAULT_SUPPORT_AUDIO = False
+DEFAULT_AUDIO_CODEC = AUDIO_CODEC_OPUS
+DEFAULT_AUDIO_MAP = "0:a:0"
+DEFAULT_AUDIO_PACKET_SIZE = 188
 DEFAULT_AUTO_START = True
 DEFAULT_LOW_BATTERY_THRESHOLD = 20
+DEFAULT_MAX_FPS = 30
+DEFAULT_MAX_HEIGHT = 1080
+DEFAULT_MAX_WIDTH = 1920
 DEFAULT_PORT = 51827
+DEFAULT_CONFIG_FLOW_PORT = 51828
 DEFAULT_SAFE_MODE = False
 DEFAULT_ZEROCONF_DEFAULT_INTERFACE = False
+DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
+DEFAULT_VIDEO_MAP = "0:v:0"
+DEFAULT_VIDEO_PACKET_SIZE = 1316
 
 # #### Features ####
 FEATURE_ON_OFF = "on_off"
@@ -49,6 +87,7 @@ SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
 # #### String Constants ####
 BRIDGE_MODEL = "Bridge"
 BRIDGE_NAME = "Home Assistant Bridge"
+SHORT_BRIDGE_NAME = "HASS Bridge"
 BRIDGE_SERIAL_NUMBER = "homekit.bridge"
 MANUFACTURER = "Home Assistant"
 
@@ -64,6 +103,7 @@ TYPE_VALVE = "valve"
 SERV_ACCESSORY_INFO = "AccessoryInformation"
 SERV_AIR_QUALITY_SENSOR = "AirQualitySensor"
 SERV_BATTERY_SERVICE = "BatteryService"
+SERV_CAMERA_RTP_STREAM_MANAGEMENT = "CameraRTPStreamManagement"
 SERV_CARBON_DIOXIDE_SENSOR = "CarbonDioxideSensor"
 SERV_CARBON_MONOXIDE_SENSOR = "CarbonMonoxideSensor"
 SERV_CONTACT_SENSOR = "ContactSensor"
@@ -143,6 +183,7 @@ CHAR_SERIAL_NUMBER = "SerialNumber"
 CHAR_SLEEP_DISCOVER_MODE = "SleepDiscoveryMode"
 CHAR_SMOKE_DETECTED = "SmokeDetected"
 CHAR_STATUS_LOW_BATTERY = "StatusLowBattery"
+CHAR_STREAMING_STRATUS = "StreamingStatus"
 CHAR_SWING_MODE = "SwingMode"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
@@ -203,3 +244,12 @@ HK_POSITION_STOPPED = 2
 HK_NOT_CHARGING = 0
 HK_CHARGING = 1
 HK_NOT_CHARGABLE = 2
+
+# ### Config Options ###
+CONFIG_OPTIONS = [
+    CONF_FILTER,
+    CONF_AUTO_START,
+    CONF_ZEROCONF_DEFAULT_INTERFACE,
+    CONF_SAFE_MODE,
+    CONF_ENTITY_CONFIG,
+]

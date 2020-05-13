@@ -11,7 +11,7 @@ from pymelcloud.device import PROPERTY_POWER
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
@@ -35,7 +35,7 @@ async def async_setup_entry(
     )
 
 
-class AtwWaterHeater(WaterHeaterDevice):
+class AtwWaterHeater(WaterHeaterEntity):
     """Air-to-Water water heater."""
 
     def __init__(self, api: MelCloudDevice, device: AtwDevice) -> None:

@@ -65,7 +65,23 @@ ATW_ZONE_SENSORS = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_VALUE_FN: lambda zone: zone.room_temperature,
         ATTR_ENABLED_FN: lambda x: True,
-    }
+    },
+    "flow_temperature": {
+        ATTR_MEASUREMENT_NAME: "Flow Temperature",
+        ATTR_ICON: "mdi:thermometer",
+        ATTR_UNIT: TEMP_CELSIUS,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_VALUE_FN: lambda zone: zone.flow_temperature,
+        ATTR_ENABLED_FN: lambda x: True,
+    },
+    "return_temperature": {
+        ATTR_MEASUREMENT_NAME: "Flow Return Temperature",
+        ATTR_ICON: "mdi:thermometer",
+        ATTR_UNIT: TEMP_CELSIUS,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_VALUE_FN: lambda zone: zone.return_temperature,
+        ATTR_ENABLED_FN: lambda x: True,
+    },
 }
 
 _LOGGER = logging.getLogger(__name__)

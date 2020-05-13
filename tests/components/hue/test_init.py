@@ -1,11 +1,10 @@
 """Test Hue setup process."""
 from unittest.mock import Mock
 
-from asynctest import CoroutineMock, patch
-
 from homeassistant.components import hue
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry, mock_coro
 
 
@@ -102,9 +101,9 @@ async def test_config_passed_to_config_entry(hass):
     mock_registry = Mock()
     with patch.object(hue, "HueBridge") as mock_bridge, patch(
         "homeassistant.helpers.device_registry.async_get_registry",
-        return_value=mock_coro(mock_registry),
+        return_value=mock_registry,
     ):
-        mock_bridge.return_value.async_setup.return_value = mock_coro(True)
+        mock_bridge.return_value.async_setup = AsyncMock(return_value=True)
         mock_bridge.return_value.api.config = Mock(
             mac="mock-mac",
             bridgeid="mock-bridgeid",
@@ -159,13 +158,13 @@ async def test_unload_entry(hass):
         "homeassistant.helpers.device_registry.async_get_registry",
         return_value=mock_coro(Mock()),
     ):
-        mock_bridge.return_value.async_setup.return_value = mock_coro(True)
+        mock_bridge.return_value.async_setup = AsyncMock(return_value=True)
         mock_bridge.return_value.api.config = Mock(bridgeid="aabbccddeeff")
         assert await async_setup_component(hass, hue.DOMAIN, {}) is True
 
     assert len(mock_bridge.return_value.mock_calls) == 1
 
-    mock_bridge.return_value.async_reset.return_value = mock_coro(True)
+    mock_bridge.return_value.async_reset = AsyncMock(return_value=True)
     assert await hue.async_unload_entry(hass, entry)
     assert len(mock_bridge.return_value.async_reset.mock_calls) == 1
     assert hass.data[hue.DOMAIN] == {}
@@ -180,7 +179,7 @@ async def test_setting_unique_id(hass):
         "homeassistant.helpers.device_registry.async_get_registry",
         return_value=mock_coro(Mock()),
     ):
-        mock_bridge.return_value.async_setup.return_value = mock_coro(True)
+        mock_bridge.return_value.async_setup = AsyncMock(return_value=True)
         mock_bridge.return_value.api.config = Mock(bridgeid="mock-id")
         assert await async_setup_component(hass, hue.DOMAIN, {}) is True
 
@@ -201,7 +200,7 @@ async def test_security_vuln_check(hass):
         "HueBridge",
         Mock(
             return_value=Mock(
-                async_setup=CoroutineMock(return_value=True), api=Mock(config=config)
+                async_setup=AsyncMock(return_value=True), api=Mock(config=config)
             )
         ),
     ):

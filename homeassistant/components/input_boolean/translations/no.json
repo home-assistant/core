@@ -1,3 +1,9 @@
 {
-    "title": "Valgt boolsk"
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        }
+    },
+    "title": "Inndata boolsk"
 }

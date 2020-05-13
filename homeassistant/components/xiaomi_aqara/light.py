@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 import homeassistant.util.color as color_util
 
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class XiaomiGatewayLight(XiaomiDevice, Light):
+class XiaomiGatewayLight(XiaomiDevice, LightEntity):
     """Representation of a XiaomiGatewayLight."""
 
     def __init__(self, device, name, xiaomi_hub):

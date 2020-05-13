@@ -16,11 +16,11 @@
             },
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3",
-                    "password": "Contrasenya",
-                    "port": "Port",
+                    "host": "[%key::common::config_flow::data::host%]",
+                    "password": "[%key::common::config_flow::data::password%]",
+                    "port": "[%key::common::config_flow::data::port%]",
                     "ssl": "AdGuard Home utilitza un certificat SSL",
-                    "username": "Nom d'usuari",
+                    "username": "[%key::common::config_flow::data::username%]",
                     "verify_ssl": "AdGuard Home utilitza un certificat adequat"
                 },
                 "description": "Configuraci\u00f3 de la inst\u00e0ncia d'AdGuard Home, permet el control i la monitoritzaci\u00f3.",

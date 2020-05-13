@@ -15,6 +15,7 @@
                 "data": {
                     "pin": "PIN"
                 },
+                "description": "Votre t\u00e9l\u00e9viseur devrait afficher un code. Saisissez ce code dans le formulaire, puis passez \u00e0 l'\u00e9tape suivante pour terminer le couplage.",
                 "title": "Processus de couplage complet"
             },
             "pairing_complete": {

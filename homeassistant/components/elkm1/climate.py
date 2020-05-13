@@ -1,7 +1,7 @@
 """Support for control of Elk-M1 connected thermostats."""
 from elkm1_lib.const import ThermostatFan, ThermostatMode, ThermostatSetting
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class ElkThermostat(ElkEntity, ClimateDevice):
+class ElkThermostat(ElkEntity, ClimateEntity):
     """Representation of an Elk-M1 Thermostat."""
 
     def __init__(self, element, elk, elk_data):

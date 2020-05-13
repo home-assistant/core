@@ -4,13 +4,20 @@
       "user": {
         "title": "Configure Daikin AC",
         "description": "Enter IP address of your Daikin AC.",
-        "data": { "host": "Host" }
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "key": "[%key:common::config_flow::data::api_key%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "abort": {
-      "device_timeout": "Timeout connecting to the device.",
-      "device_fail": "Unexpected error creating device.",
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "device_fail": "[%key:common::config_flow::error::unknown%]",
+      "forbidden": "[%key:common::config_flow::error::invalid_auth%]",
+      "device_timeout": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }

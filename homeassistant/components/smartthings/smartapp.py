@@ -30,6 +30,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -111,7 +112,11 @@ def get_webhook_url(hass: HomeAssistantType) -> str:
 
 
 def _get_app_template(hass: HomeAssistantType):
-    endpoint = f"at {hass.config.api.base_url}"
+    try:
+        endpoint = f"at {get_url(hass, allow_cloud=False, prefer_external=True)}"
+    except NoURLAvailableError:
+        endpoint = ""
+
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
     if cloudhook_url is not None:
         endpoint = "via Nabu Casa"

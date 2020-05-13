@@ -6,7 +6,7 @@ import logging
 import denonavr
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MUSIC,
@@ -159,7 +159,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(receivers)
 
 
-class DenonDevice(MediaPlayerDevice):
+class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
     def __init__(self, receiver):

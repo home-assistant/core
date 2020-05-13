@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([RestBinarySensor(hass, rest, name, device_class, value_template)])
 
 
-class RestBinarySensor(BinarySensorDevice):
+class RestBinarySensor(BinarySensorEntity):
     """Representation of a REST binary sensor."""
 
     def __init__(self, hass, rest, name, device_class, value_template):

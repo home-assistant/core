@@ -5,6 +5,9 @@ import socket
 
 import voluptuous as vol
 from zeroconf import (
+    DNSPointer,
+    DNSRecord,
+    InterfaceChoice,
     NonUniqueNameException,
     ServiceBrowser,
     ServiceInfo,
@@ -20,6 +23,9 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.singleton import singleton
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,20 +40,106 @@ ATTR_PROPERTIES = "properties"
 ZEROCONF_TYPE = "_home-assistant._tcp.local."
 HOMEKIT_TYPE = "_hap._tcp.local."
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+CONF_DEFAULT_INTERFACE = "default_interface"
+DEFAULT_DEFAULT_INTERFACE = False
+
+HOMEKIT_PROPERTIES = "properties"
+HOMEKIT_PAIRED_STATUS_FLAG = "sf"
+HOMEKIT_MODEL = "md"
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(
+                    CONF_DEFAULT_INTERFACE, default=DEFAULT_DEFAULT_INTERFACE
+                ): cv.boolean
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+@singleton(DOMAIN)
+async def async_get_instance(hass):
+    """Zeroconf instance to be shared with other integrations that use it."""
+    return await hass.async_add_executor_job(_get_instance, hass)
+
+
+def _get_instance(hass, default_interface=False):
+    """Create an instance."""
+    args = [InterfaceChoice.Default] if default_interface else []
+    zeroconf = HaZeroconf(*args)
+
+    def stop_zeroconf(_):
+        """Stop Zeroconf."""
+        zeroconf.ha_close()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
+
+    return zeroconf
+
+
+class HaServiceBrowser(ServiceBrowser):
+    """ServiceBrowser that only consumes DNSPointer records."""
+
+    def update_record(self, zc: "Zeroconf", now: float, record: DNSRecord) -> None:
+        """Pre-Filter update_record to DNSPointers for the configured type."""
+
+        #
+        # Each ServerBrowser currently runs in its own thread which
+        # processes every A or AAAA record update per instance.
+        #
+        # As the list of zeroconf names we watch for grows, each additional
+        # ServiceBrowser would process all the A and AAAA updates on the network.
+        #
+        # To avoid overwhemling the system we pre-filter here and only process
+        # DNSPointers for the configured record name (type)
+        #
+        if record.name != self.type or not isinstance(record, DNSPointer):
+            return
+        super().update_record(zc, now, record)
+
+
+class HaZeroconf(Zeroconf):
+    """Zeroconf that cannot be closed."""
+
+    def close(self):
+        """Fake method to avoid integrations closing it."""
+
+    ha_close = Zeroconf.close
 
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    zeroconf = Zeroconf()
+    zeroconf = hass.data[DOMAIN] = _get_instance(
+        hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
+    )
     zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
 
     params = {
         "version": __version__,
-        "base_url": hass.config.api.base_url,
+        "external_url": None,
+        "internal_url": None,
+        # Old base URL, for backward compatibility
+        "base_url": None,
         # Always needs authentication
         "requires_api_password": True,
     }
+
+    try:
+        params["external_url"] = get_url(hass, allow_internal=False)
+    except NoURLAvailableError:
+        pass
+
+    try:
+        params["internal_url"] = get_url(hass, allow_external=False)
+    except NoURLAvailableError:
+        pass
+
+    # Set old base URL based on external or internal
+    params["base_url"] = params["external_url"] or params["internal_url"]
 
     host_ip = util.get_local_ip()
 
@@ -90,8 +182,26 @@ def setup(hass, config):
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
         # If we can handle it as a HomeKit discovery, we do that here.
-        if service_type == HOMEKIT_TYPE and handle_homekit(hass, info):
-            return
+        if service_type == HOMEKIT_TYPE:
+            handle_homekit(hass, info)
+            # Continue on here as homekit_controller
+            # still needs to get updates on devices
+            # so it can see when the 'c#' field is updated.
+            #
+            # We only send updates to homekit_controller
+            # if the device is already paired in order to avoid
+            # offering a second discovery for the same device
+            if (
+                HOMEKIT_PROPERTIES in info
+                and HOMEKIT_PAIRED_STATUS_FLAG in info[HOMEKIT_PROPERTIES]
+            ):
+                try:
+                    if not int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
+                        return
+                except ValueError:
+                    # HomeKit pairing status unknown
+                    # likely bad homekit data
+                    return
 
         for domain in ZEROCONF[service_type]:
             hass.add_job(
@@ -101,16 +211,10 @@ def setup(hass, config):
             )
 
     for service in ZEROCONF:
-        ServiceBrowser(zeroconf, service, handlers=[service_update])
+        HaServiceBrowser(zeroconf, service, handlers=[service_update])
 
     if HOMEKIT_TYPE not in ZEROCONF:
-        ServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
-
-    def stop_zeroconf(_):
-        """Stop Zeroconf."""
-        zeroconf.close()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
+        HaServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
 
     return True
 
@@ -121,10 +225,10 @@ def handle_homekit(hass, info) -> bool:
     Return if discovery was forwarded.
     """
     model = None
-    props = info.get("properties", {})
+    props = info.get(HOMEKIT_PROPERTIES, {})
 
     for key in props:
-        if key.lower() == "md":
+        if key.lower() == HOMEKIT_MODEL:
             model = props[key]
             break
 

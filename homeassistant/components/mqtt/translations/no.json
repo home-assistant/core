@@ -12,11 +12,11 @@
                     "broker": "Megler",
                     "discovery": "Aktiver oppdagelse",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "username": "Brukernavn"
                 },
-                "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler.",
-                "title": "MQTT"
+                "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler.",
+                "title": ""
             },
             "hassio_confirm": {
                 "data": {

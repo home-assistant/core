@@ -1,12 +1,11 @@
 """Test the Network UPS Tools (NUT) config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import CONF_RESOURCES, CONF_SCAN_INTERVAL
 
 from .util import _get_mock_pynutclient
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 VALID_CONFIG = {

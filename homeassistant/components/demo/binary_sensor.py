@@ -1,5 +1,5 @@
 """Demo platform that has two fake binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import DOMAIN
 
@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoBinarySensor(BinarySensorDevice):
+class DemoBinarySensor(BinarySensorEntity):
     """representation of a Demo binary sensor."""
 
     def __init__(self, unique_id, name, state, device_class):

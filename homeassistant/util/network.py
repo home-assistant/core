@@ -1,6 +1,8 @@
 """Network utilities."""
-from ipaddress import IPv4Address, IPv6Address, ip_network
+from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
 from typing import Union
+
+import yarl
 
 # RFC6890 - IP addresses of loopback interfaces
 LOOPBACK_NETWORKS = (
@@ -39,3 +41,21 @@ def is_link_local(address: Union[IPv4Address, IPv6Address]) -> bool:
 def is_local(address: Union[IPv4Address, IPv6Address]) -> bool:
     """Check if an address is loopback or private."""
     return is_loopback(address) or is_private(address)
+
+
+def is_ip_address(address: str) -> bool:
+    """Check if a given string is an IP address."""
+    try:
+        ip_address(address)
+    except ValueError:
+        return False
+
+    return True
+
+
+def normalize_url(address: str) -> str:
+    """Normalize a given URL."""
+    url = yarl.URL(address.rstrip("/"))
+    if url.is_default_port():
+        return str(url.with_port(None))
+    return str(url)

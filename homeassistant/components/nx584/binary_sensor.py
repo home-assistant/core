@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class NX584ZoneSensor(BinarySensorDevice):
+class NX584ZoneSensor(BinarySensorEntity):
     """Representation of a NX584 zone as a sensor."""
 
     def __init__(self, zone, zone_type):

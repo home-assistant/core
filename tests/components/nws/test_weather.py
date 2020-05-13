@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import nws
 from homeassistant.components.weather import ATTR_FORECAST
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
@@ -123,6 +124,32 @@ async def test_error_station(hass, mock_simple_nws):
 
     assert hass.states.get("weather.abc_hourly") is None
     assert hass.states.get("weather.abc_daynight") is None
+
+
+async def test_entity_refresh(hass, mock_simple_nws):
+    """Test manual refresh."""
+    instance = mock_simple_nws.return_value
+
+    await async_setup_component(hass, "homeassistant", {})
+
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    instance.update_observation.assert_called_once()
+    instance.update_forecast.assert_called_once()
+    instance.update_forecast_hourly.assert_called_once()
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "weather.abc_daynight"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert instance.update_observation.call_count == 2
+    assert instance.update_forecast.call_count == 2
+    instance.update_forecast_hourly.assert_called_once()
 
 
 async def test_error_observation(hass, mock_simple_nws):

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "auth_failed": "Anv\u00e4ndarnamn och/eller l\u00f6senord \u00e4r fel."
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Do vill du konfigurera {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd eller IP-adress",
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

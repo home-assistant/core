@@ -1,5 +1,5 @@
 """Support for Android IP Webcam binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import CONF_HOST, CONF_NAME, DATA_IP_WEBCAM, KEY_MAP, AndroidIPCamEntity
 
@@ -16,7 +16,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([IPWebcamBinarySensor(name, host, ipcam, "motion_active")], True)
 
 
-class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
+class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorEntity):
     """Representation of an IP Webcam binary sensor."""
 
     def __init__(self, name, host, ipcam, sensor):

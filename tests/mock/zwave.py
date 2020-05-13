@@ -1,7 +1,7 @@
 """Mock helpers for Z-Wave component."""
-from unittest.mock import MagicMock
-
 from pydispatch import dispatcher
+
+from tests.async_mock import MagicMock
 
 
 def value_changed(value):

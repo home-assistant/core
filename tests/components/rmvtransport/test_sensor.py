@@ -1,10 +1,9 @@
 """The tests for the rmvtransport platform."""
 import datetime
-from unittest.mock import patch
 
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 VALID_CONFIG_MINIMAL = {
     "sensor": {"platform": "rmvtransport", "next_departure": [{"station": "3000010"}]}
@@ -163,8 +162,7 @@ def get_no_departures_mock():
 async def test_rmvtransport_min_config(hass):
     """Test minimal rmvtransport configuration."""
     with patch(
-        "RMVtransport.RMVtransport.get_departures",
-        return_value=mock_coro(get_departures_mock()),
+        "RMVtransport.RMVtransport.get_departures", return_value=get_departures_mock(),
     ):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL) is True
 
@@ -183,8 +181,7 @@ async def test_rmvtransport_min_config(hass):
 async def test_rmvtransport_name_config(hass):
     """Test custom name configuration."""
     with patch(
-        "RMVtransport.RMVtransport.get_departures",
-        return_value=mock_coro(get_departures_mock()),
+        "RMVtransport.RMVtransport.get_departures", return_value=get_departures_mock(),
     ):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_NAME)
 
@@ -195,8 +192,7 @@ async def test_rmvtransport_name_config(hass):
 async def test_rmvtransport_misc_config(hass):
     """Test misc configuration."""
     with patch(
-        "RMVtransport.RMVtransport.get_departures",
-        return_value=mock_coro(get_departures_mock()),
+        "RMVtransport.RMVtransport.get_departures", return_value=get_departures_mock(),
     ):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_MISC)
 
@@ -208,8 +204,7 @@ async def test_rmvtransport_misc_config(hass):
 async def test_rmvtransport_dest_config(hass):
     """Test destination configuration."""
     with patch(
-        "RMVtransport.RMVtransport.get_departures",
-        return_value=mock_coro(get_departures_mock()),
+        "RMVtransport.RMVtransport.get_departures", return_value=get_departures_mock(),
     ):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_DEST)
 
@@ -227,7 +222,7 @@ async def test_rmvtransport_no_departures(hass):
     """Test for no departures."""
     with patch(
         "RMVtransport.RMVtransport.get_departures",
-        return_value=mock_coro(get_no_departures_mock()),
+        return_value=get_no_departures_mock(),
     ):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL)
 

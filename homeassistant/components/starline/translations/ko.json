@@ -25,7 +25,7 @@
                 "data": {
                     "mfa_code": "SMS \ucf54\ub4dc"
                 },
-                "description": "{phone_number} \uc804\ud654\ub85c \uc804\uc1a1\ub41c \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694",
+                "description": "{phone_number} \ubc88\ud638\ub85c \ubcf4\ub0b4\ub4dc\ub9b0 \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694",
                 "title": "2\ub2e8\uacc4 \uc778\uc99d"
             },
             "auth_user": {

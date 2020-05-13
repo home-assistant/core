@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "not_songpal_device": "Non \u00e8 un dispositivo Songpal"
+        },
+        "error": {
+            "connection": "Errore di connessione: controlla il tuo endpoint"
+        },
+        "flow_title": "Sony Songpal {name} ({host})",
+        "step": {
+            "init": {
+                "description": "Vuoi impostare {name} ({host})?",
+                "title": "Sony Songpal"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Endpoint"
+                },
+                "title": "Sony Songpal"
+            }
+        }
+    }
+}
