@@ -9,6 +9,7 @@ from homeassistant.helpers.entity import Entity
 from . import DATA_ASUSWRT
 
 _LOGGER = logging.getLogger(__name__)
+
 _UPLOAD_ICON = "mdi:upload-network"
 _DOWNLOAD_ICON = "mdi:download-network"
 
