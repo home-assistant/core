@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         config_entry.unique_id,
     )
     entities.append(entity)
-    async_add_entities(entities)
+    async_add_entities(entities, update_before_add=True)
 
 
 class XiaomiGatewayAlarm(AlarmControlPanelEntity):
@@ -148,7 +148,3 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
             self._state = None
 
         _LOGGER.debug("State value: %s", self._state)
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        await self.async_update()
