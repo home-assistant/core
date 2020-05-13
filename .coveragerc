@@ -849,6 +849,7 @@ omit =
     homeassistant/components/webostv/*
     homeassistant/components/wemo/*
     homeassistant/components/whois/sensor.py
+    homeassistant/components/wiffi/*
     homeassistant/components/wink/*
     homeassistant/components/wirelesstag/*
     homeassistant/components/worldtidesinfo/sensor.py
