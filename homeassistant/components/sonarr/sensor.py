@@ -126,9 +126,7 @@ async def async_setup_entry(
         SonarrDiskspaceSensor(sonarr, entry.entry_id),
         SonarrQueueSensor(sonarr, entry.entry_id),
         SonarrSeriesSensor(sonarr, entry.entry_id),
-        SonarrUpcomingSensor(
-            sonarr, entry.entry_id, days=options[CONF_UPCOMING_DAYS]
-        ),
+        SonarrUpcomingSensor(sonarr, entry.entry_id, days=options[CONF_UPCOMING_DAYS]),
         SonarrWantedSensor(
             sonarr, entry.entry_id, max_items=options[CONF_WANTED_MAX_ITEMS]
         ),
@@ -377,9 +375,7 @@ class SonarrSeriesSensor(SonarrSensor):
 class SonarrUpcomingSensor(SonarrSensor):
     """Defines a Sonarr Upcoming sensor."""
 
-    def __init__(
-        self, sonarr: Sonarr, entry_id: str, days: int,
-    ) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str, days: int = 1) -> None:
         """Initialize Sonarr Upcoming sensor."""
         self._days = days
         self._upcoming = []
@@ -438,9 +434,7 @@ class SonarrUpcomingSensor(SonarrSensor):
 class SonarrWantedSensor(SonarrSensor):
     """Defines a Sonarr Wanted sensor."""
 
-    def __init__(
-        self, sonarr: Sonarr, entry_id: str, max_items: int = 10,
-    ) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str, max_items: int = 10) -> None:
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
         self._results = None
