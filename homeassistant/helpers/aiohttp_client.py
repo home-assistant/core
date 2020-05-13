@@ -102,7 +102,7 @@ def async_create_clientsession(
     clientsession.close = patched_close  # type: ignore
 
     if auto_cleanup:
-        _async_register_clientsession_shutdown(hass, orig_session_close)
+        _async_register_clientsession_shutdown(hass, clientsession)
 
     return clientsession
 
@@ -172,16 +172,17 @@ async def async_aiohttp_proxy_stream(
 
 @callback
 def _async_register_clientsession_shutdown(
-    hass: HomeAssistantType, clientsession_close: Callable
+    hass: HomeAssistantType, clientsession: aiohttp.ClientSession
 ) -> None:
     """Register ClientSession close on Home Assistant shutdown.
 
     This method must be run in the event loop.
     """
 
-    async def _async_close_websession(event: Event) -> None:
+    @callback
+    def _async_close_websession(event: Event) -> None:
         """Close websession."""
-        await clientsession_close()
+        clientsession.detach()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
 
