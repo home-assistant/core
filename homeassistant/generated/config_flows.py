@@ -154,6 +154,7 @@ FLOWS = [
     "vilfo",
     "vizio",
     "wemo",
+    "wiffi",
     "withings",
     "wled",
     "wwlln",
