@@ -6,7 +6,7 @@ import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -609,6 +609,14 @@ class DarkSkySensor(Entity):
             return CONDITION_PICTURES[self._icon][1]
 
         return SENSOR_TYPES[self.type][6]
+
+    @property
+    def device_class(self):
+        """Device class of the entity."""
+        if SENSOR_TYPES[self.type][1] == TEMP_CELSIUS:
+            return DEVICE_CLASS_TEMPERATURE
+
+        return None
 
     @property
     def device_state_attributes(self):

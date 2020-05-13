@@ -81,6 +81,7 @@ FLOWS = [
     "locative",
     "logi_circle",
     "luftdaten",
+    "lutron_caseta",
     "mailgun",
     "melcloud",
     "met",
@@ -157,6 +158,7 @@ FLOWS = [
     "wled",
     "wwlln",
     "xiaomi_miio",
+    "zerproc",
     "zha",
     "zwave",
     "zwave_mqtt"

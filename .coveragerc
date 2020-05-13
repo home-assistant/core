@@ -527,8 +527,12 @@ omit =
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/base.py
+    homeassistant/components/onvif/binary_sensor.py
     homeassistant/components/onvif/camera.py
     homeassistant/components/onvif/device.py
+    homeassistant/components/onvif/event.py
+    homeassistant/components/onvif/parsers.py
+    homeassistant/components/onvif/sensor.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
@@ -880,6 +884,8 @@ omit =
     homeassistant/components/zamg/weather.py
     homeassistant/components/zengge/light.py
     homeassistant/components/zeroconf/*
+    homeassistant/components/zerproc/__init__.py
+    homeassistant/components/zerproc/const.py
     homeassistant/components/zestimate/sensor.py
     homeassistant/components/zha/api.py
     homeassistant/components/zha/core/channels/*

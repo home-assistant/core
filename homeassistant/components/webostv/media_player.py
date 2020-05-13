@@ -116,7 +116,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Initialize the webos device."""
         self._client = client
         self._name = name
-        self._unique_id = client.software_info["device_id"]
+        self._unique_id = client.client_key
         self._customize = customize
         self._on_script = on_script
 

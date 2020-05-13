@@ -4,17 +4,16 @@ from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
     EMPTY_TIME,
     EVENT_PROPS_IGNORED,
-    ISY_VALUE_UNKNOWN,
     PROTO_GROUP,
     PROTO_ZWAVE,
 )
 from pyisy.helpers import NodeProperty
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import Dict
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 
 
 class ISYEntity(Entity):
@@ -51,7 +50,7 @@ class ISYEntity(Entity):
             "precision": event.prec,
         }
 
-        if event.value is None or event.control not in EVENT_PROPS_IGNORED:
+        if event.control not in EVENT_PROPS_IGNORED:
             # New state attributes may be available, update the state.
             self.schedule_update_ha_state()
 
@@ -128,18 +127,6 @@ class ISYEntity(Entity):
         """No polling required since we're using the subscription."""
         return False
 
-    @property
-    def value(self) -> int:
-        """Get the current value of the device."""
-        return self._node.status
-
-    @property
-    def state(self):
-        """Return the state of the ISY device."""
-        if self.value == ISY_VALUE_UNKNOWN:
-            return STATE_UNKNOWN
-        return super().state
-
 
 class ISYNodeEntity(ISYEntity):
     """Representation of a ISY Nodebase (Node/Group) entity."""
@@ -165,6 +152,26 @@ class ISYNodeEntity(ISYEntity):
 
         self._attrs.update(attr)
         return self._attrs
+
+    def send_node_command(self, command):
+        """Respond to an entity service command call."""
+        if not hasattr(self._node, command):
+            _LOGGER.error(
+                "Invalid Service Call %s for device %s.", command, self.entity_id
+            )
+            return
+        getattr(self._node, command)()
+
+    def send_raw_node_command(
+        self, command, value=None, unit_of_measurement=None, parameters=None
+    ):
+        """Respond to an entity service raw command call."""
+        if not hasattr(self._node, "send_cmd"):
+            _LOGGER.error(
+                "Invalid Service Call %s for device %s.", command, self.entity_id
+            )
+            return
+        self._node.send_cmd(command, value, unit_of_measurement, parameters)
 
 
 class ISYProgramEntity(ISYEntity):

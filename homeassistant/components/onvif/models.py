@@ -1,6 +1,6 @@
 """ONVIF models."""
 from dataclasses import dataclass
-from typing import List
+from typing import Any, List
 
 
 @dataclass
@@ -55,4 +55,18 @@ class Capabilities:
     """Represents Service capabilities."""
 
     snapshot: bool = False
+    events: bool = False
     ptz: bool = False
+
+
+@dataclass
+class Event:
+    """Represents a ONVIF event."""
+
+    uid: str
+    name: str
+    platform: str
+    device_class: str = None
+    unit_of_measurement: str = None
+    value: Any = None
+    entity_enabled: bool = True
