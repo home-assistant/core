@@ -63,7 +63,6 @@ async def test_sensors(
         "diskspace": "sonarr_disk_space",
         "queue": "sonarr_queue",
         "series": "sonarr_shows",
-        "status": "sonarr_status",
         "wanted": "sonarr_wanted",
     }
 
@@ -108,12 +107,6 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Series"
     assert state.state == "1"
 
-    state = hass.states.get("sensor.sonarr_status")
-    assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:information"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "2.0.0.1121"
-
     state = hass.states.get("sensor.sonarr_upcoming")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
@@ -134,7 +127,6 @@ async def test_sensors(
         "sensor.sonarr_disk_space",
         "sensor.sonarr_queue",
         "sensor.sonarr_shows",
-        "sensor.sonarr_status",
         "sensor.sonarr_wanted",
     ),
 )
