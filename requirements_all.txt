@@ -345,7 +345,7 @@ bizkaibus==0.1.1
 blebox_uniapi==1.3.2
 
 # homeassistant.components.blink
-blinkpy==0.14.3
+blinkpy==0.15.0
 
 # homeassistant.components.blinksticklight
 blinkstick==1.1.8

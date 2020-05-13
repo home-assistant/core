@@ -18,6 +18,7 @@ FLOWS = [
     "august",
     "axis",
     "blebox",
+    "blink",
     "braviatv",
     "brother",
     "bsblan",
