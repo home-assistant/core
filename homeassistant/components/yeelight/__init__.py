@@ -293,7 +293,6 @@ class YeelightDevice:
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-
         return self.bulb.capabilities.get("id")
 
     def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None):
