@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No Zerproc lights found nearby.",
+            "single_instance_allowed": "Only a single configuration of Zerproc lights is necessary."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up Zerproc lights?"
+            }
+        }
+    },
+    "title": "Zerproc"
+}

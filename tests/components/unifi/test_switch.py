@@ -19,8 +19,8 @@ from homeassistant.setup import async_setup_component
 
 from .test_controller import (
     CONTROLLER_HOST,
+    DESCRIPTION,
     ENTRY_CONFIG,
-    SITES,
     setup_unifi_integration,
 )
 
@@ -289,12 +289,12 @@ async def test_controller_not_client(hass):
 
 async def test_not_admin(hass):
     """Test that switch platform only work on an admin account."""
-    sites = deepcopy(SITES)
-    sites["Site name"]["role"] = "not admin"
+    description = deepcopy(DESCRIPTION)
+    description[0]["site_role"] = "not admin"
     controller = await setup_unifi_integration(
         hass,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
-        sites=sites,
+        site_description=description,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )

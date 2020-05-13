@@ -19,8 +19,7 @@
       "unknown_client_mac": "No client available on that MAC address"
     },
     "abort": {
-      "already_configured": "Controller site is already configured",
-      "no_local_user": "No local user found, configure a local account on controller and try again"
+      "already_configured": "Controller site is already configured"
     }
   },
   "options": {

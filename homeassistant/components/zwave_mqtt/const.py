@@ -1,11 +1,12 @@
 """Constants for the zwave_mqtt integration."""
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
 DOMAIN = "zwave_mqtt"
 DATA_UNSUBSCRIBE = "unsubscribe"
-PLATFORMS = [LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [BINARY_SENSOR_DOMAIN, LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 # MQTT Topics
 TOPIC_OPENZWAVE = "OpenZWave"

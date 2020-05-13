@@ -94,6 +94,7 @@ omit =
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/broadlink/const.py
+    homeassistant/components/broadlink/device.py
     homeassistant/components/broadlink/remote.py
     homeassistant/components/broadlink/sensor.py
     homeassistant/components/broadlink/switch.py
@@ -848,6 +849,7 @@ omit =
     homeassistant/components/webostv/*
     homeassistant/components/wemo/*
     homeassistant/components/whois/sensor.py
+    homeassistant/components/wiffi/*
     homeassistant/components/wink/*
     homeassistant/components/wirelesstag/*
     homeassistant/components/worldtidesinfo/sensor.py
@@ -886,6 +888,8 @@ omit =
     homeassistant/components/zamg/weather.py
     homeassistant/components/zengge/light.py
     homeassistant/components/zeroconf/*
+    homeassistant/components/zerproc/__init__.py
+    homeassistant/components/zerproc/const.py
     homeassistant/components/zestimate/sensor.py
     homeassistant/components/zha/api.py
     homeassistant/components/zha/core/channels/*

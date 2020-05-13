@@ -8,12 +8,13 @@ from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
+    PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 from . import SynoApi
 from .const import (
@@ -109,7 +110,7 @@ class SynoNasSensor(Entity):
     def unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
         if self.sensor_type in TEMP_SENSORS_KEYS:
-            return self._api.temp_unit
+            return self.hass.config.units.temperature_unit
         return self._unit
 
     @property
@@ -186,12 +187,8 @@ class SynoNasStorageSensor(SynoNasSensor):
             return round(attr / 1024.0 ** 4, 2)
 
         # Temperature
-        if self._api.temp_unit == TEMP_CELSIUS:
-            # Celsius
-            return attr
         if self.sensor_type in TEMP_SENSORS_KEYS:
-            # Fahrenheit
-            return celsius_to_fahrenheit(attr)
+            return display_temp(self.hass, attr, TEMP_CELSIUS, PRECISION_TENTHS)
 
         return attr
 

@@ -154,10 +154,12 @@ FLOWS = [
     "vilfo",
     "vizio",
     "wemo",
+    "wiffi",
     "withings",
     "wled",
     "wwlln",
     "xiaomi_miio",
+    "zerproc",
     "zha",
     "zwave",
     "zwave_mqtt"
