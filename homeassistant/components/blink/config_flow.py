@@ -82,11 +82,6 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required("password"): str,
         }
 
-        if self.show_advanced_options:
-            data_schema[
-                vol.Required("scan_interval", default=DEFAULT_SCAN_INTERVAL)
-            ] = int
-
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(data_schema), errors=errors,
         )
