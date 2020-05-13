@@ -700,8 +700,6 @@ omit =
     homeassistant/components/soma/__init__.py
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
-    homeassistant/components/songpal/__init__.py
-    homeassistant/components/songpal/media_player.py
     homeassistant/components/sonos/*
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*
