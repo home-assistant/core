@@ -59,7 +59,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         """Subscribe camera events."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.device.event_new_address, self._new_address
+                self.hass, self.device.signal_new_address, self._new_address
             )
         )
 
