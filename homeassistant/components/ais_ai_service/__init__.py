@@ -2515,6 +2515,10 @@ async def async_setup(hass, config):
             data["priority"] = service.data["priority"]
         else:
             data["priority"] = "normal"
+        if "notification_id" in service.data:
+            data["notification_id"] = service.data["notification_id"]
+        else:
+            data["notification_id"] = 0
         if "data" in service.data:
             data["data"] = service.data["data"]
         else:
