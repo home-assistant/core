@@ -94,7 +94,7 @@ async def test_get_clientsession_cleanup_without_ssl(hass):
 
 
 async def test_get_clientsession_patched_close(hass):
-    """Test closing clientsession does not work until Home Assistant closes."""
+    """Test closing clientsession does not work."""
     with patch("aiohttp.ClientSession.close") as mock_close:
         session = client.async_get_clientsession(hass)
 
@@ -105,11 +105,6 @@ async def test_get_clientsession_patched_close(hass):
             await session.close()
 
         assert mock_close.call_count == 0
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-        await hass.async_block_till_done()
-
-        assert mock_close.call_count == 1
 
 
 async def test_warning_close_session_integration(hass, caplog):

@@ -3,7 +3,7 @@ import asyncio
 import logging
 from ssl import SSLContext
 import sys
-from typing import Any, Awaitable, Callable, Optional, Union, cast
+from typing import Any, Awaitable, Optional, Union, cast
 
 import aiohttp
 from aiohttp import web
@@ -98,7 +98,6 @@ def async_create_clientsession(
             found_frame.line.strip(),
         )
 
-    orig_session_close = clientsession.close
     clientsession.close = patched_close  # type: ignore
 
     if auto_cleanup:
