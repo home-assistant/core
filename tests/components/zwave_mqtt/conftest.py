@@ -66,3 +66,27 @@ async def sensor_msg_fixture(hass):
     message = MQTTMessage(topic=sensor_json["topic"], payload=sensor_json["payload"])
     message.encode()
     return message
+
+
+@pytest.fixture(name="binary_sensor_msg")
+async def binary_sensor_msg_fixture(hass):
+    """Return a mock MQTT msg with a binary_sensor change message."""
+    sensor_json = json.loads(
+        await hass.async_add_executor_job(load_fixture, "zwave_mqtt/binary_sensor.json")
+    )
+    message = MQTTMessage(topic=sensor_json["topic"], payload=sensor_json["payload"])
+    message.encode()
+    return message
+
+
+@pytest.fixture(name="binary_sensor_alt_msg")
+async def binary_sensor_alt_msg_fixture(hass):
+    """Return a mock MQTT msg with a binary_sensor change message."""
+    sensor_json = json.loads(
+        await hass.async_add_executor_job(
+            load_fixture, "zwave_mqtt/binary_sensor_alt.json"
+        )
+    )
+    message = MQTTMessage(topic=sensor_json["topic"], payload=sensor_json["payload"])
+    message.encode()
+    return message

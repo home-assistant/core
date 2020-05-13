@@ -3,13 +3,18 @@
     "step": {
       "user": {
         "title": "Fill in your information",
-        "data": { "api_key": "API Key", "app_key": "Application Key" }
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "app_key": "Application Key"
+        }
       }
     },
     "error": {
       "invalid_key": "Invalid API Key and/or Application Key",
       "no_devices": "No devices found in account"
     },
-    "abort": { "already_configured": "This app key is already in use." }
+    "abort": {
+      "already_configured": "This app key is already in use."
+    }
   }
 }
