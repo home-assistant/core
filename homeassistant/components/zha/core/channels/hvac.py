@@ -144,8 +144,6 @@ class ThermostatChannel(ZigbeeChannel):
         self._pi_cooling_demand = None
         self._pi_heating_demand = None
         self._running_state = None
-        self._setpoint_change_source = None
-        self._setpoint_change_amount = None
         self._system_mode = None
         self._unoccupied_cooling_setpoint = None
         self._unoccupied_heating_setpoint = None
@@ -255,16 +253,6 @@ class ThermostatChannel(ZigbeeChannel):
     def running_state(self) -> Optional[int]:
         """Thermostat running state, state of heat, cool, fan relays."""
         return self._running_state
-
-    @property
-    def setpoint_change_amount(self) -> Optional[int]:
-        """Change amount."""
-        return self._setpoint_change_amount
-
-    @property
-    def setpoint_change_source(self) -> Optional[int]:
-        """Change source."""
-        return self._setpoint_change_source
 
     @property
     def system_mode(self) -> Optional[int]:

@@ -196,10 +196,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
                 self._thrm.system_mode,
                 SYSTEM_MODE_2_HVAC.get(self._thrm.system_mode, "unknown"),
             )
-        if self._thrm.setpoint_change_source:
-            data[ATTR_SETPT_CHANGE_SRC] = self._thrm.setpoint_change_source
-        if self._thrm.setpoint_change_amount:
-            data[ATTR_SETPT_CHANGE_AMT] = self._thrm.setpoint_change_amount
         if self._thrm.occupancy:
             data[ATTR_OCCUPANCY] = self._thrm.occupancy
         if self._thrm.occupied_cooling_setpoint:
