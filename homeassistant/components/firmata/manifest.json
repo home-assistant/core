@@ -2,9 +2,9 @@
   "domain": "firmata",
   "name": "Firmata",
   "config_flow": false,
-  "documentation": "https://www.home-assistant.io/components/firmata",
+  "documentation": "https://www.home-assistant.io/integrations/firmata",
   "requirements": [
-    "pymata-aio==2.30"
+    "git+https://github.com/DaAwesomeP/pymata-express.git@master#pymata-express"
   ],
   "dependencies": [],
   "codeowners": [

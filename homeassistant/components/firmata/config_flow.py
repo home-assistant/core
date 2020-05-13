@@ -1,17 +1,19 @@
 """Config flow to configure firmata component."""
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_SERIAL_PORT, CONF_PORT
+from .const import DOMAIN, CONF_SERIAL_PORT
 
 
 @callback
 def configured_boards(hass):
     """Return a set of all configured boards."""
-    return {entry.data[CONF_NAME]: entry for entry
-            in hass.config_entries.async_entries(DOMAIN)}
+    return {
+        entry.data[CONF_NAME]: entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    }
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -29,18 +31,11 @@ class FirmataFlowHandler(config_entries.ConfigFlow):
 
     async def _create_entry(self):
         """Create entry for board."""
-        if CONF_SERIAL_PORT in self.firmata_config:
-            name = f"serial-{self.firmata_config[CONF_SERIAL_PORT]}"
-        elif CONF_PORT in self.firmata_config:
-            name = (f"remote-{self.firmata_config[CONF_HOST]}:"
-                    f"{self.firmata_config[CONF_PORT]}")
-        else:
-            name = self.firmata_config[CONF_HOST]
+        name = f"serial-{self.firmata_config[CONF_SERIAL_PORT]}"
         self.firmata_config[CONF_NAME] = name
 
         return self.async_create_entry(
-            title=self.firmata_config[CONF_NAME],
-            data=self.firmata_config
+            title=self.firmata_config[CONF_NAME], data=self.firmata_config
         )
 
     async def async_step_import(self, import_config):

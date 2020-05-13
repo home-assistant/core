@@ -232,6 +232,7 @@ omit =
     homeassistant/components/fibaro/*
     homeassistant/components/filesize/sensor.py
     homeassistant/components/fints/sensor.py
+    homeassistant/components/firmata/*
     homeassistant/components/fitbit/sensor.py
     homeassistant/components/fixer/sensor.py
     homeassistant/components/fleetgo/device_tracker.py

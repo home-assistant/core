@@ -1,15 +1,24 @@
 """Code to handle a Firmata board."""
 import logging
 
-from pymata_aio.pymata_core import PymataCore
+from pymata_express.pymata_express import PymataExpress
 
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-from .const import (CONF_ARDUINO_WAIT, CONF_HANDSHAKE, CONF_PORT, CONF_REMOTE,
-                    CONF_SERIAL_PORT, CONF_SLEEP_TUNE, CONF_SWITCHES, DOMAIN,
-                    CONF_PIN, CONF_PIN_MODE, CONF_BINARY_SENSORS,
-                    CONF_SAMPLING_INTERVAL)
+from .const import (
+    CONF_ARDUINO_WAIT,
+    CONF_SERIAL_PORT,
+    CONF_SERIAL_BAUD_RATE,
+    CONF_SLEEP_TUNE,
+    CONF_SWITCHES,
+    DOMAIN,
+    CONF_ARDUINO_INSTANCE_ID,
+    CONF_PIN,
+    CONF_PIN_MODE,
+    CONF_BINARY_SENSORS,
+    CONF_SAMPLING_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,22 +43,23 @@ class FirmataBoard:
     async def async_setup(self, tries=0):
         """Set up a Firmata instance."""
         try:
-            _LOGGER.info('Connecting to Firmata %s', self.name)
+            _LOGGER.info("Connecting to Firmata %s", self.name)
             self.api = await get_board(self.config)
             self.firmware_version = await self.api.get_firmware_version()
         except RuntimeError as err:
-            _LOGGER.error('Error connecting to PyMata board %s: %s',
-                          self.name, err)
+            _LOGGER.error("Error connecting to PyMata board %s: %s", self.name, err)
             return False
 
         if CONF_SAMPLING_INTERVAL in self.config:
             try:
-                self.api.set_sampling_interval(
-                    self.config[CONF_SAMPLING_INTERVAL])
+                self.api.set_sampling_interval(self.config[CONF_SAMPLING_INTERVAL])
             except RuntimeError as err:
-                _LOGGER.error('Error setting sampling interval for PyMata \
-board %s: %s',
-                              self.name, err)
+                _LOGGER.error(
+                    "Error setting sampling interval for PyMata \
+board %s: %s",
+                    self.name,
+                    err,
+                )
                 return False
 
         if CONF_SWITCHES in self.config:
@@ -57,7 +67,7 @@ board %s: %s',
         if CONF_BINARY_SENSORS in self.config:
             self.binary_sensors = self.config[CONF_BINARY_SENSORS]
 
-        _LOGGER.info('Firmata connection successful for %s', self.name)
+        _LOGGER.info("Firmata connection successful for %s", self.name)
         return True
 
     async def async_reset(self):
@@ -72,15 +82,14 @@ board %s: %s',
 
     async def async_update_device_registry(self):
         """Update board registry."""
-        device_registry = await \
-            self.hass.helpers.device_registry.async_get_registry()
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={},
             identifiers={(DOMAIN, self.name)},
-            manufacturer='Firmata',
+            manufacturer="Firmata",
             name=self.name,
-            sw_version=self.firmware_version
+            sw_version=self.firmware_version,
         )
 
 
@@ -88,23 +97,22 @@ async def get_board(data: dict):
     """Create a Pymata board object."""
     board_data = {}
 
-    if CONF_REMOTE in data:
-        board_data['ip_address'] = data[CONF_HOST]
-        if CONF_PORT in data[CONF_REMOTE]:
-            board_data['ip_port'] = data[CONF_REMOTE][CONF_PORT]
-        if CONF_HANDSHAKE in data[CONF_REMOTE]:
-            board_data['ip_handshake'] = data[CONF_REMOTE][CONF_HANDSHAKE]
-    else:
-        board_data['com_port'] = data[CONF_SERIAL_PORT]
+    if CONF_SERIAL_PORT in data:
+        board_data["com_port"] = data[CONF_SERIAL_PORT]
+    if CONF_SERIAL_BAUD_RATE in data:
+        board_data["baud_rate"] = data[CONF_SERIAL_BAUD_RATE]
+    if CONF_ARDUINO_INSTANCE_ID in data:
+        board_data["arduino_instance_id"] = data[CONF_ARDUINO_INSTANCE_ID]
 
     if CONF_ARDUINO_WAIT in data:
-        board_data['arduino_wait'] = data[CONF_ARDUINO_WAIT]
+        board_data["arduino_wait"] = data[CONF_ARDUINO_WAIT]
     if CONF_SLEEP_TUNE in data:
-        board_data['sleep_tune'] = data[CONF_SLEEP_TUNE]
+        board_data["sleep_tune"] = data[CONF_SLEEP_TUNE]
 
-    board_data['port_discovery_exceptions'] = True
+    board_data["shutdown_on_exception"] = True
+    board_data["close_loop_on_shutdown"] = False
 
-    board = PymataCore(**board_data)
+    board = PymataExpress(**board_data)
 
     await board.start_aio()
     return board
@@ -126,30 +134,25 @@ class FirmataBoardPin(Entity):
         self._firmata_pin_mode = None
         self._firmata_pin = self._pin
         if isinstance(self._pin, str):
-            self._pin_type = 'analog'
+            self._pin_type = "analog"
             self._firmata_pin = int(self._firmata_pin[1:])
             self._firmata_pin += self._board.api.first_analog_pin
         else:
-            self._pin_type = 'digital'
-        self._location = (DOMAIN, self._board_name, 'pin', self._pin)
-        self._unique_id = '_'.join(str(i) for i in self._location)
-        self._identifiers = {
-            (DOMAIN, self._unique_id)
-        }
-        self._device_info = {}
-
-    def _set_device_info(self):
-        """Set the entity's attributes."""
-        self._device_info = {
-            'config_entry_id': self._board.config_entry.entry_id,
-            'via_hub': (DOMAIN, self._board_name),
-            'pin_type': self._pin_type,
-            'firmata_pin': self._firmata_pin,
-            'firmata_pin_mode': self._firmata_pin_mode,
-            'identifiers': self._identifiers,
-            'manufacturer': 'Firmata'
-        }
-        self._device_info.update(self._conf)
+            self._pin_type = "digital"
+        self._location = (DOMAIN, self._board_name, "pin", self._pin)
+        self._unique_id = "_".join(str(i) for i in self._location)
+        self._device_info = self._conf
+        self._device_info.update(
+            {
+                "config_entry_id": self._board.config_entry.entry_id,
+                "pin_type": self._pin_type,
+                "firmata_pin": self._firmata_pin,
+                "firmata_pin_mode": self._firmata_pin_mode,
+                "identifiers": {(DOMAIN, self._board_name)},
+                "name": self._board_name,
+                "manufacturer": "Firmata",
+            }
+        )
 
     def _mark_pin_used(self):
         """Test if a pin is used already on the board or mark as used."""

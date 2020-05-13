@@ -2,14 +2,11 @@
 
 import logging
 
-from pymata_aio.constants import Constants as PymataConstants
-
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 
 from .board import FirmataBoardPin
-from .const import (CONF_INITIAL_STATE, CONF_NEGATE_STATE,
-                    PIN_MODE_OUTPUT, DOMAIN)
+from .const import CONF_INITIAL_STATE, CONF_NEGATE_STATE, PIN_MODE_OUTPUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,30 +27,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(new_entities)
 
 
-class FirmataDigitalOut(FirmataBoardPin, SwitchDevice):
+class FirmataDigitalOut(FirmataBoardPin, SwitchEntity):
     """Representation of a Firmata Digital Output Pin."""
 
     async def setup_pin(self):
         """Set up a digital output pin."""
-        _LOGGER.debug("Setting up switch pin %s for board %s", self._name,
-                      self._board_name)
+        _LOGGER.debug(
+            "Setting up switch pin %s for board %s", self._name, self._board_name
+        )
         if not self._mark_pin_used():
-            _LOGGER.warning('Pin %s already used! Cannot use for switch %s',
-                            str(self._pin), self._name)
+            _LOGGER.warning(
+                "Pin %s already used! Cannot use for switch %s",
+                str(self._pin),
+                self._name,
+            )
             return False
+        api = self._board.api
         if self._pin_mode == PIN_MODE_OUTPUT:
-            self._firmata_pin_mode = PymataConstants.OUTPUT
-        self._set_device_info()
-        await self._board.api.set_pin_mode(self._firmata_pin,
-                                           self._firmata_pin_mode)
+            await api.set_pin_mode_digital_output(self._firmata_pin)
 
         self._state = self._conf[CONF_INITIAL_STATE]
         if self._conf[CONF_INITIAL_STATE]:
             new_pin_state = not self._conf[CONF_NEGATE_STATE]
         else:
             new_pin_state = self._conf[CONF_NEGATE_STATE]
-        await self._board.api.digital_pin_write(self._firmata_pin,
-                                                new_pin_state)
+        await api.digital_pin_write(self._firmata_pin, int(new_pin_state))
         return True
 
     @property
@@ -65,8 +63,7 @@ class FirmataDigitalOut(FirmataBoardPin, SwitchDevice):
         """Turn on switch."""
         _LOGGER.debug("Turning switch %s on", self._name)
         new_pin_state = not self._conf[CONF_NEGATE_STATE]
-        await self._board.api.digital_pin_write(self._firmata_pin,
-                                                new_pin_state)
+        await self._board.api.digital_pin_write(self._firmata_pin, int(new_pin_state))
         self._state = True
         self.async_write_ha_state()
 
@@ -74,7 +71,6 @@ class FirmataDigitalOut(FirmataBoardPin, SwitchDevice):
         """Turn off switch."""
         _LOGGER.debug("Turning switch %s off", self._name)
         new_pin_state = self._conf[CONF_NEGATE_STATE]
-        await self._board.api.digital_pin_write(self._firmata_pin,
-                                                new_pin_state)
+        await self._board.api.digital_pin_write(self._firmata_pin, int(new_pin_state))
         self._state = False
         self.async_write_ha_state()
