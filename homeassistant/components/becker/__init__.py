@@ -35,14 +35,14 @@ async def async_setup_entry(hass, entry):
     if not stick_path:
         stick_path = hass.data[DOMAIN][CONF_DEVICE]
 
-    _LOGGER.debug("SETTING CENTRONIC STICK ON PORT %s" % stick_path)
+    _LOGGER.debug("SETTING CENTRONIC STICK ON PORT {stick_path}")
     becker = BeckerConnection(stick_path)
 
     if not becker:
         return False
 
     for init_call_count in range(0, 2):
-        _LOGGER.debug("Init call to cover channel 1 #%d" % init_call_count)
+        _LOGGER.debug("Init call to cover channel 1 #{init_call_count}")
         await becker.connection.stop("1")
 
     hass.data[DOMAIN]["connector"] = becker.connection
