@@ -65,11 +65,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for channel, device_config in becker_config[CONF_COVERS].items():
         name = device_config[CONF_NAME]
-        _LOGGER.debug(f"SETUP cover on channel {channel} with name {name}")
+        _LOGGER.debug("SETUP cover on channel {channel} with name {name}")
 
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
         if channel is None:
-            _LOGGER.error("Must specify %s", CONF_CHANNEL)
+            _LOGGER.error("Must specify {CONF_CHANNEL}")
             continue
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
