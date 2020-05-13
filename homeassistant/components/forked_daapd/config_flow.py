@@ -135,8 +135,6 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             validate_result = await self.validate_input(user_input)
             if validate_result[0] == "ok":  # success
                 _LOGGER.debug("Connected successfully. Creating entry")
-                await self.async_set_unique_id(validate_result[1])
-                self._abort_if_unique_id_configured()
                 # before creating entry, remove any old entries with the same host
                 same_host_entries = [
                     entry.entry_id
@@ -151,12 +149,12 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ]
                     )
                 return self.async_create_entry(
-                    title=f"{self.unique_id} @ {user_input[CONF_HOST]}", data=user_input
+                    title=validate_result[1], data=user_input
                 )
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(fill_in_schema_dict(user_input)),
-                errors={"base": validate_result},
+                errors={"base": validate_result[0]},
             )
         if self.discovery_schema:  # stop at form to allow user to set up manually
             return self.async_show_form(
@@ -171,22 +169,21 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not (
             discovery_info.get("properties")
             and discovery_info["properties"].get("mtd-version")
-            and discovery_info["properties"].get("Machine ID")
+            and discovery_info["properties"].get("Machine Name")
         ):
             return self.async_abort(reason="not_forked_daapd")
 
-        # If we already have an entry for this host with no unique_id, add unique_id
+        # Update title and abort if we already have an entry for this host
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] != discovery_info["host"]:
                 continue
-            if not entry.unique_id:
-                self.hass.config_entries.async_update_entry(
-                    entry, unique_id=discovery_info["properties"]["Machine ID"]
-                )
+            self.hass.config_entries.async_update_entry(
+                entry, title=discovery_info["properties"]["Machine Name"],
+            )
             return self.async_abort(reason="already_configured")
 
-        await self.async_set_unique_id(discovery_info["properties"]["Machine ID"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
+        await self.async_set_unique_id(discovery_info["properties"]["Machine Name"])
+        self._abort_if_unique_id_configured()
 
         zeroconf_data = {
             CONF_HOST: discovery_info["host"],

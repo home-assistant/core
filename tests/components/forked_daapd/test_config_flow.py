@@ -52,7 +52,6 @@ def config_entry_fixture():
         system_options={},
         source=SOURCE_USER,
         connection_class=CONN_CLASS_LOCAL_PUSH,
-        unique_id=None,
         entry_id=1,
     )
 
@@ -76,20 +75,19 @@ async def test_config_flow(hass, config_entry):
         autospec=True,
     ) as mock_get_request:
         mock_get_request.return_value = SAMPLE_CONFIG
-        mock_test_connection.return_value = ["ok", "EFEFEFEF"]
+        mock_test_connection.return_value = ["ok", "My Music on myhost"]
         config_data = config_entry.data
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=config_data
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "EFEFEFEF @ 192.168.1.1"
+        assert result["title"] == "My Music on myhost"
         assert result["data"][CONF_HOST] == config_data[CONF_HOST]
         assert result["data"][CONF_PORT] == config_data[CONF_PORT]
         assert result["data"][CONF_PASSWORD] == config_data[CONF_PASSWORD]
 
         # Also test that creating a new entry with the same host replaces the old one
-        mock_test_connection.return_value = ["ok", "ABABABAB"]
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -102,27 +100,22 @@ async def test_config_flow(hass, config_entry):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_zeroconf_updates_unique_id(hass, config_entry):
-    """Test that zeroconf updates the unique_id."""
+async def test_zeroconf_updates_title(hass, config_entry):
+    """Test that zeroconf updates title and aborts with same host."""
     MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "different host"}).add_to_hass(hass)
     config_entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert config_entry.unique_id is None
     discovery_info = {
         "host": "192.168.1.1",
         "port": 23,
-        "properties": {
-            "mtd-version": 1,
-            "Machine Name": "zeroconf_test",
-            "Machine ID": "5E55EEFF",
-        },
+        "properties": {"mtd-version": 1, "Machine Name": "zeroconf_test"},
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
     await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert config_entry.unique_id == "5E55EEFF"
+    assert config_entry.title == "zeroconf_test"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
