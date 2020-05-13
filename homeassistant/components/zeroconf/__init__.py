@@ -97,7 +97,7 @@ class HaServiceBrowser(ServiceBrowser):
         # To avoid overwhemling the system we pre-filter here and only process
         # DNSPointers for the configured record name (type)
         #
-        if record.name != self.type or not isinstance(record, DNSPointer):
+        if record.name not in self.types or not isinstance(record, DNSPointer):
             return
         super().update_record(zc, now, record)
 
