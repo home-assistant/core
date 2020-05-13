@@ -192,23 +192,21 @@ class Thermostat(ZhaEntity, ClimateEntity):
         """Return device specific state attributes."""
         data = {}
         if self.hvac_mode:
-            data[ATTR_SYS_MODE] = "[{}]/{}".format(
-                self._thrm.system_mode,
-                SYSTEM_MODE_2_HVAC.get(self._thrm.system_mode, "unknown"),
-            )
-        if self._thrm.occupancy:
+            mode = SYSTEM_MODE_2_HVAC.get(self._thrm.system_mode, "unknown")
+            data[ATTR_SYS_MODE] = f"[{self._thrm.system_mode}]/{mode}"
+        if self._thrm.occupancy is not None:
             data[ATTR_OCCUPANCY] = self._thrm.occupancy
-        if self._thrm.occupied_cooling_setpoint:
+        if self._thrm.occupied_cooling_setpoint is not None:
             data[ATTR_OCCP_COOL_SETPT] = self._thrm.occupied_cooling_setpoint
-        if self._thrm.occupied_heating_setpoint:
+        if self._thrm.occupied_heating_setpoint is not None:
             data[ATTR_OCCP_HEAT_SETPT] = self._thrm.occupied_heating_setpoint
 
         unoccupied_cooling_setpoint = self._thrm.unoccupied_cooling_setpoint
-        if unoccupied_cooling_setpoint:
+        if unoccupied_cooling_setpoint is not None:
             data[ATTR_UNOCCP_HEAT_SETPT] = unoccupied_cooling_setpoint
 
         unoccupied_heating_setpoint = self._thrm.unoccupied_heating_setpoint
-        if unoccupied_heating_setpoint:
+        if unoccupied_heating_setpoint is not None:
             data[ATTR_UNOCCP_COOL_SETPT] = unoccupied_heating_setpoint
         return data
 
