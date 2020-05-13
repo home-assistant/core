@@ -310,9 +310,9 @@ class PwThermostat(SmileGateway, ClimateEntity):
         if self._schema_status:
             self._hvac_mode = HVAC_MODE_AUTO
         elif self._heating_state is not None or self._boiler_state is not None:
+            self._hvac_mode = HVAC_MODE_HEAT
             if self._cooling_state is not None:
                 self._hvac_mode = HVAC_MODE_HEAT_COOL
-            self._hvac_mode = HVAC_MODE_HEAT
         elif self._cooling_state is not None:
             if self._heating_state is not None or self._boiler_state is not None:
                 self._hvac_mode = HVAC_MODE_HEAT_COOL
