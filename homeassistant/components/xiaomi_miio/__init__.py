@@ -42,7 +42,7 @@ async def async_setup_gateway_entry(
 
     # For backwards compat
     if entry.unique_id.endswith("-gateway"):
-        hass.config_entries.async_update_entry(entry, unique_id=entry.data['mac'])
+        hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass)
