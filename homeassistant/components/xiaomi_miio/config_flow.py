@@ -53,9 +53,6 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
-        if user_input is None:
-            return self.async_abort(reason="not_xiaomi_miio")
-
         name = discovery_info.get("name")
         self.host = discovery_info.get("host")
         mac_address = discovery_info.get("properties", {}).get("mac")
