@@ -12,7 +12,7 @@ from homeassistant.components.isy994.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TLS_VER, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.async_mock import patch
