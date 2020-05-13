@@ -11,7 +11,7 @@ from homeassistant.const import (
     PRESSURE_PA,
     PRESSURE_PSI,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    PRESSURE_MMHG
+    PRESSURE_MMHG,
 )
 
 _LOGGER = logging.getLogger(__name__)

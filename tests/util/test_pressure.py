@@ -7,6 +7,7 @@ from homeassistant.const import (
     PRESSURE_MBAR,
     PRESSURE_PA,
     PRESSURE_PSI,
+    PRESSURE_MMHG,
 )
 import homeassistant.util.pressure as pressure_util
 
@@ -20,6 +21,7 @@ def test_convert_same_unit():
     assert pressure_util.convert(3, PRESSURE_HPA, PRESSURE_HPA) == 3
     assert pressure_util.convert(4, PRESSURE_MBAR, PRESSURE_MBAR) == 4
     assert pressure_util.convert(5, PRESSURE_INHG, PRESSURE_INHG) == 5
+    assert pressure_util.convert(6, PRESSURE_MMHG, PRESSURE_MMHG) == 6
 
 
 def test_convert_invalid_unit():
@@ -68,4 +70,24 @@ def test_convert_from_inhg():
     )
     assert pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_MBAR) == pytest.approx(
         1015.9167
+    )
+
+
+def test_convert_from_mmhg():
+    """Test conversion from mmHg to other units."""
+    mmhg = 745
+    assert pressure_util.convert(mmhg, PRESSURE_MMHG, PRESSURE_PSI) == pytest.approx(
+        14.40585734588
+    )
+    assert pressure_util.convert(mmhg, PRESSURE_MMHG, PRESSURE_HPA) == pytest.approx(
+        993.25188
+    )
+    assert pressure_util.convert(mmhg, PRESSURE_MMHG, PRESSURE_PA) == pytest.approx(
+        99325.188
+    )
+    assert pressure_util.convert(mmhg, PRESSURE_MMHG, PRESSURE_MBAR) == pytest.approx(
+        993.25188
+    )
+    assert pressure_util.convert(mmhg, PRESSURE_MMHG, PRESSURE_INHG) == pytest.approx(
+        29.33069826777
     )
