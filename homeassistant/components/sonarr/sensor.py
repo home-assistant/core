@@ -120,21 +120,17 @@ async def async_setup_entry(
     """Set up Sonarr sensors based on a config entry."""
     options = entry.options
     sonarr = hass.data[DOMAIN][entry.entry_id][DATA_SONARR]
-    unique_id = entry.unique_id
-
-    if unique_id is None:
-        unique_id = entry.entry_id
 
     entities = [
-        SonarrCommandsSensor(sonarr, entry.entry_id, unique_id),
-        SonarrDiskspaceSensor(sonarr, entry.entry_id, unique_id),
-        SonarrQueueSensor(sonarr, entry.entry_id, unique_id),
-        SonarrSeriesSensor(sonarr, entry.entry_id, unique_id),
+        SonarrCommandsSensor(sonarr, entry.entry_id),
+        SonarrDiskspaceSensor(sonarr, entry.entry_id),
+        SonarrQueueSensor(sonarr, entry.entry_id),
+        SonarrSeriesSensor(sonarr, entry.entry_id),
         SonarrUpcomingSensor(
-            sonarr, entry.entry_id, unique_id, days=options[CONF_UPCOMING_DAYS]
+            sonarr, entry.entry_id, days=options[CONF_UPCOMING_DAYS]
         ),
         SonarrWantedSensor(
-            sonarr, entry.entry_id, unique_id, max_items=options[CONF_WANTED_MAX_ITEMS]
+            sonarr, entry.entry_id, max_items=options[CONF_WANTED_MAX_ITEMS]
         ),
     ]
 
@@ -172,7 +168,6 @@ class SonarrSensor(SonarrEntity):
         *,
         sonarr: Sonarr,
         entry_id: str,
-        unique_id: str,
         enabled_default: bool = True,
         icon: str,
         key: str,
@@ -182,13 +177,13 @@ class SonarrSensor(SonarrEntity):
         """Initialize Sonarr sensor."""
         self._unit_of_measurement = unit_of_measurement
         self._key = key
-        self._unique_id = f"{unique_id}_{key}"
+        self._unique_id = f"{entry_id}_{key}"
         self.last_update_success = False
 
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
-            device_id=unique_id,
+            device_id=entry_id,
             name=name,
             icon=icon,
             enabled_default=enabled_default,
@@ -213,14 +208,13 @@ class SonarrSensor(SonarrEntity):
 class SonarrCommandsSensor(SonarrSensor):
     """Defines a Sonarr Commands sensor."""
 
-    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Commands sensor."""
         self._commands = []
 
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
-            unique_id=unique_id,
             icon="mdi:code-braces",
             key="commands",
             name=f"{sonarr.app.info.app_name} Commands",
@@ -252,7 +246,7 @@ class SonarrCommandsSensor(SonarrSensor):
 class SonarrDiskspaceSensor(SonarrSensor):
     """Defines a Sonarr Disk Space sensor."""
 
-    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Disk Space sensor."""
         self._disks = []
         self._total_free = 0
@@ -260,7 +254,6 @@ class SonarrDiskspaceSensor(SonarrSensor):
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
-            unique_id=unique_id,
             icon="mdi:harddisk",
             key="diskspace",
             name=f"{sonarr.app.info.app_name} Disk Space",
@@ -305,14 +298,13 @@ class SonarrDiskspaceSensor(SonarrSensor):
 class SonarrQueueSensor(SonarrSensor):
     """Defines a Sonarr Queue sensor."""
 
-    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Queue sensor."""
         self._queue = []
 
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
-            unique_id=unique_id,
             icon="mdi:download",
             key="queue",
             name=f"{sonarr.app.info.app_name} Queue",
@@ -347,14 +339,13 @@ class SonarrQueueSensor(SonarrSensor):
 class SonarrSeriesSensor(SonarrSensor):
     """Defines a Sonarr Series sensor."""
 
-    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Series sensor."""
         self._items = []
 
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
-            unique_id=unique_id,
             icon="mdi:television",
             key="series",
             name=f"{sonarr.app.info.app_name} Shows",
@@ -387,7 +378,7 @@ class SonarrUpcomingSensor(SonarrSensor):
     """Defines a Sonarr Upcoming sensor."""
 
     def __init__(
-        self, sonarr: Sonarr, entry_id: str, unique_id: str, days: int,
+        self, sonarr: Sonarr, entry_id: str, days: int,
     ) -> None:
         """Initialize Sonarr Upcoming sensor."""
         self._days = days
@@ -396,7 +387,6 @@ class SonarrUpcomingSensor(SonarrSensor):
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
-            unique_id=unique_id,
             icon="mdi:television",
             key="upcoming",
             name=f"{sonarr.app.info.app_name} Upcoming",
@@ -449,7 +439,7 @@ class SonarrWantedSensor(SonarrSensor):
     """Defines a Sonarr Wanted sensor."""
 
     def __init__(
-        self, sonarr: Sonarr, entry_id: str, unique_id: str, max_items: int = 10,
+        self, sonarr: Sonarr, entry_id: str, max_items: int = 10,
     ) -> None:
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
@@ -459,7 +449,6 @@ class SonarrWantedSensor(SonarrSensor):
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
-            unique_id=unique_id,
             icon="mdi:television",
             key="wanted",
             name=f"{sonarr.app.info.app_name} Wanted",
