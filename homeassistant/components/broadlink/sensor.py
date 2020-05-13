@@ -153,7 +153,7 @@ class BroadlinkData:
 
     async def _async_fetch_data(self):
         """Fetch sensor data."""
-        for attempt in range(DEFAULT_RETRY):
+        for _ in range(DEFAULT_RETRY):
             try:
                 data = await self.device.async_request(self.check_sensors)
             except BroadlinkException:
