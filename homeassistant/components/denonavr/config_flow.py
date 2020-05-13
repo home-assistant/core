@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT
+from homeassistant.helpers.device_registry import format_mac
 
 from .receiver import ConnectDenonAVR
 
@@ -196,7 +197,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         unique_id = self.construct_unique_id(self.model_name, self.serial_number)
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
         return await self.async_step_settings()
 
@@ -214,4 +215,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mac_address = await self.hass.async_add_executor_job(
                 partial(get_mac_address, **{"hostname": host})
             )
+        if mac_address is not None:
+            mac_address = format_mac(mac_address)
         return mac_address
