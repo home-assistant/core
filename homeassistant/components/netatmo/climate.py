@@ -451,6 +451,8 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
         self._hg_temperature = self._home_status.getHgtemp(home_id=self._home_id)
         self._setpoint_duration = self._data.setpoint_duration[self._home_id]
 
+        print("roomstatus", self._room_name, self._room_id, roomstatus)
+
         try:
             if self._module_type is None:
                 self._module_type = roomstatus["module_type"]
@@ -470,7 +472,6 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
             self._connected = False
 
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
-        return
 
 
 def interpolate(batterylevel, module_type):
