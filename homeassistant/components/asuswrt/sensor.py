@@ -9,7 +9,8 @@ from homeassistant.helpers.entity import Entity
 from . import DATA_ASUSWRT
 
 _LOGGER = logging.getLogger(__name__)
-
+_UPLOAD_ICON = 'mdi:upload-network'
+_DOWNLOAD_ICON = 'mdi:download-network'
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the asuswrt sensors."""
@@ -81,6 +82,12 @@ class AsuswrtRXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Download Speed"
     _unit = DATA_RATE_MEGABITS_PER_SECOND
+    _icon = _DOWNLOAD_ICON
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
 
     @property
     def unit_of_measurement(self):
@@ -99,6 +106,12 @@ class AsuswrtTXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Upload Speed"
     _unit = DATA_RATE_MEGABITS_PER_SECOND
+    _icon = _UPLOAD_ICON
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
 
     @property
     def unit_of_measurement(self):
@@ -117,6 +130,12 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Download"
     _unit = DATA_GIGABYTES
+    _icon = _DOWNLOAD_ICON
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
 
     @property
     def unit_of_measurement(self):
@@ -135,6 +154,12 @@ class AsuswrtTotalTXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Upload"
     _unit = DATA_GIGABYTES
+    _icon = _UPLOAD_ICON
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
 
     @property
     def unit_of_measurement(self):
