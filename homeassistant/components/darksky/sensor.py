@@ -42,7 +42,7 @@ CONF_UNITS = "units"
 
 DEFAULT_LANGUAGE = "en"
 DEFAULT_NAME = "Dark Sky"
-SCAN_INTERVAL = timedelta(seconds=300)
+SCAN_INTERVAL = timedelta(seconds=360)
 
 DEPRECATED_SENSOR_TYPES = {
     "apparent_temperature_max",

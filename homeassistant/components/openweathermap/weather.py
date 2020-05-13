@@ -40,8 +40,8 @@ FORECAST_MODE = ["hourly", "daily", "freedaily"]
 
 DEFAULT_NAME = "OpenWeatherMap"
 
-MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=120)
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=120)
+MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=180)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=180)
 
 CONDITION_CLASSES = {
     "cloudy": [803, 804],
