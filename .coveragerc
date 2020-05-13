@@ -727,6 +727,7 @@ omit =
     homeassistant/components/slide/*
     homeassistant/components/sma/sensor.py
     homeassistant/components/smappee/*
+    homeassistant/components/smappee_official/*
     homeassistant/components/smarty/*
     homeassistant/components/smarthab/*
     homeassistant/components/sms/*

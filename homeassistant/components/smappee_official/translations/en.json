@@ -1,0 +1,25 @@
+{
+    "config": {
+        "title": "Smappee Official",
+        "step": {
+            "user": {
+                "title": "Configure Smappee",
+                "description": "Enter username, password and API credentials",
+                "data": {
+                    "username": "Smappee username",
+                    "password": "Password",
+                    "client_id": "Smappee API client id",
+                    "client_secret": "Smappee API client secret"
+                }
+            }
+        },
+        "error": {
+            "identifier_exists": "This user is already configured",
+            "invalid_credentials": "Invalid credentials"
+        },
+        "abort": {
+            "identifier_exists": "This user is already configured",
+            "invalid_credentials": "Invalid credentials"
+        }
+    }
+}

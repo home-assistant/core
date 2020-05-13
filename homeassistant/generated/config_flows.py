@@ -134,6 +134,7 @@ FLOWS = [
     "sentry",
     "shopping_list",
     "simplisafe",
+    "smappee_official",
     "smartthings",
     "smhi",
     "solaredge",
