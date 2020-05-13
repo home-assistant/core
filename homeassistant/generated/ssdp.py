@@ -53,6 +53,12 @@ SSDP = {
             "modelName": "Philips hue bridge 2015"
         }
     ],
+    "isy994": [
+        {
+            "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
+            "manufacturer": "Universal Devices Inc."
+        }
+    ],
     "konnected": [
         {
             "manufacturer": "konnected.io"

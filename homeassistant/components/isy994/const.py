@@ -164,6 +164,10 @@ TYPE_INSTEON_MOTION = ("16.1.", "16.22.")
 
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
+# Used for discovery
+UDN_UUID_PREFIX = "uuid:"
+ISY_URL_POSTFIX = "/desc"
+
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml

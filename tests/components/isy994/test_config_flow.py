@@ -1,6 +1,7 @@
 """Test the Universal Devices ISY994 config flow."""
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components import ssdp
 from homeassistant.components.isy994.config_flow import CannotConnect
 from homeassistant.components.isy994.const import (
     CONF_IGNORE_STRING,
@@ -9,8 +10,10 @@ from homeassistant.components.isy994.const import (
     CONF_TLS_VER,
     CONF_VAR_SENSOR_STRING,
     DOMAIN,
+    ISY_URL_POSTFIX,
+    UDN_UUID_PREFIX,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -29,10 +32,16 @@ MOCK_SENSOR_STRING = "IMASENSOR"
 MOCK_VARIABLE_SENSOR_STRING = "HomeAssistant."
 
 MOCK_USER_INPUT = {
-    "host": f"http://{MOCK_HOSTNAME}",
-    "username": MOCK_USERNAME,
-    "password": MOCK_PASSWORD,
-    "tls": MOCK_TLS_VERSION,
+    CONF_HOST: f"http://{MOCK_HOSTNAME}",
+    CONF_USERNAME: MOCK_USERNAME,
+    CONF_PASSWORD: MOCK_PASSWORD,
+    CONF_TLS_VER: MOCK_TLS_VERSION,
+}
+MOCK_IMPORT_WITH_SSL = {
+    CONF_HOST: f"https://{MOCK_HOSTNAME}",
+    CONF_USERNAME: MOCK_USERNAME,
+    CONF_PASSWORD: MOCK_PASSWORD,
+    CONF_TLS_VER: MOCK_TLS_VERSION,
 }
 MOCK_IMPORT_BASIC_CONFIG = {
     CONF_HOST: f"http://{MOCK_HOSTNAME}",
@@ -185,6 +194,27 @@ async def test_import_flow_some_fields(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
+async def test_import_flow_with_https(hass: HomeAssistantType) -> None:
+    """Test import config with https."""
+
+    with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
+        PATCH_CONNECTION
+    ) as mock_connection_class, patch(PATCH_ASYNC_SETUP, return_value=True), patch(
+        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+    ):
+        isy_conn = mock_connection_class.return_value
+        isy_conn.get_config.return_value = None
+        mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_WITH_SSL,
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_HOST] == f"https://{MOCK_HOSTNAME}"
+    assert result["data"][CONF_USERNAME] == MOCK_USERNAME
+    assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+
+
 async def test_import_flow_all_fields(hass: HomeAssistantType) -> None:
     """Test import config flow with all fields."""
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
@@ -208,3 +238,65 @@ async def test_import_flow_all_fields(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_SENSOR_STRING] == MOCK_SENSOR_STRING
     assert result["data"][CONF_VAR_SENSOR_STRING] == MOCK_VARIABLE_SENSOR_STRING
     assert result["data"][CONF_TLS_VER] == MOCK_TLS_VERSION
+
+
+async def test_form_ssdp_already_configured(hass: HomeAssistantType) -> None:
+    """Test ssdp abort when the serial number is already configured."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}"},
+        unique_id=MOCK_UUID,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
+            ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+async def test_form_ssdp(hass: HomeAssistantType):
+    """Test we can setup from ssdp."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
+            ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
+        PATCH_CONNECTION
+    ) as mock_connection_class, patch(
+        PATCH_ASYNC_SETUP, return_value=True
+    ) as mock_setup, patch(
+        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+    ) as mock_setup_entry:
+        isy_conn = mock_connection_class.return_value
+        isy_conn.get_config.return_value = None
+        mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT,
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
+    assert result2["result"].unique_id == MOCK_UUID
+    assert result2["data"] == MOCK_USER_INPUT
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
