@@ -374,7 +374,7 @@ boto3==1.9.252
 bravia-tv==1.0.4
 
 # homeassistant.components.broadlink
-broadlink==0.13.2
+broadlink==0.14.0
 
 # homeassistant.components.brother
 brother==0.1.14
