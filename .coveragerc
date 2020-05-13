@@ -363,7 +363,18 @@ omit =
     homeassistant/components/iqvia/*
     homeassistant/components/irish_rail_transport/sensor.py
     homeassistant/components/iss/binary_sensor.py
-    homeassistant/components/isy994/*
+    homeassistant/components/isy994/__init__.py
+    homeassistant/components/isy994/binary_sensor.py
+    homeassistant/components/isy994/climate.py
+    homeassistant/components/isy994/cover.py
+    homeassistant/components/isy994/entity.py
+    homeassistant/components/isy994/fan.py
+    homeassistant/components/isy994/helpers.py
+    homeassistant/components/isy994/light.py
+    homeassistant/components/isy994/lock.py
+    homeassistant/components/isy994/sensor.py
+    homeassistant/components/isy994/services.py
+    homeassistant/components/isy994/switch.py
     homeassistant/components/itach/remote.py
     homeassistant/components/itunes/media_player.py
     homeassistant/components/joaoapps_join/*
