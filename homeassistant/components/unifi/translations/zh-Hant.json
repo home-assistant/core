@@ -2,11 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "\u63a7\u5236\u5668\u4f4d\u5740\u5df2\u7d93\u8a2d\u5b9a",
+            "no_local_user": "\u627e\u4e0d\u5230\u672c\u5730\u4f7f\u7528\u8005\u3001\u65bc\u63a7\u5236\u5668\u4e0a\u8a2d\u5b9a\u4e00\u7d44\u672c\u5730\u5e33\u865f\u4e26\u518d\u8a66\u4e00\u6b21",
             "user_privilege": "\u4f7f\u7528\u8005\u5fc5\u9808\u70ba\u7ba1\u7406\u54e1\u8eab\u4efd"
         },
         "error": {
-            "faulty_credentials": "\u4f7f\u7528\u8005\u6191\u8b49\u7121\u6548",
-            "service_unavailable": "\u7121\u670d\u52d9\u53ef\u7528",
+            "faulty_credentials": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "service_unavailable": "\u9023\u7dda\u5931\u6557",
             "unknown_client_mac": "\u8a72 Mac \u4f4d\u5740\u7121\u53ef\u7528\u5ba2\u6236\u7aef"
         },
         "step": {

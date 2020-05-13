@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie ONVIF jest ju\u017c skonfigurowane.",
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
             "already_in_progress": "Proces konfiguracji dla urz\u0105dzenia ONVIF jest ju\u017c w toku.",
             "no_h264": "Nie by\u0142o dost\u0119pnych \u017cadnych strumieni H264.  Sprawd\u017a konfiguracj\u0119 profilu w swoim urz\u0105dzeniu.",
             "no_mac": "Nie mo\u017cna utworzy\u0107 unikalnego identyfikatora urz\u0105dzenia ONVIF.",
@@ -13,8 +13,8 @@
         "step": {
             "auth": {
                 "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
                 },
                 "title": "Konfigurowanie uwierzytelniania"
             },
@@ -33,8 +33,8 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Host",
-                    "port": "Port"
+                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "port": "[%key_id:common::config_flow::data::port%]"
                 },
                 "title": "Konfigurowanie urz\u0105dzenia ONVIF"
             },

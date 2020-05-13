@@ -14,7 +14,7 @@
                     "host": "Vert",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "username": "Brukernavn",
                     "verify_ssl": "Bruk ssl"
                 },

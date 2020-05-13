@@ -2,21 +2,22 @@
     "config": {
         "abort": {
             "already_configured": "El lloc del controlador ja est\u00e0 configurat",
+            "no_local_user": "No s'ha trobat cap usuari local, configura un compte local al controlador i torna-ho a provar",
             "user_privilege": "L'usuari ha de ser administrador"
         },
         "error": {
-            "faulty_credentials": "Credencials d'usuari incorrectes",
-            "service_unavailable": "Servei no disponible",
+            "faulty_credentials": "[%key::common::config_flow::error::invalid_auth%]",
+            "service_unavailable": "[%key::common::config_flow::error::cannot_connect%]",
             "unknown_client_mac": "No hi ha cap client disponible en aquesta adre\u00e7a MAC"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3",
-                    "password": "Contrasenya",
-                    "port": "Port",
+                    "host": "[%key::common::config_flow::data::host%]",
+                    "password": "[%key::common::config_flow::data::password%]",
+                    "port": "[%key::common::config_flow::data::port%]",
                     "site": "ID del lloc",
-                    "username": "Nom d'usuari",
+                    "username": "[%key::common::config_flow::data::username%]",
                     "verify_ssl": "El controlador est\u00e0 utilitzant un certificat adequat"
                 },
                 "title": "Configuraci\u00f3 del controlador UniFi"

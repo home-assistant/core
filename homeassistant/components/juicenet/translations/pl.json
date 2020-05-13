@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_account%]"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "invalid_auth": "[%key_id:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "Token API JuiceNet"
+                },
+                "description": "B\u0119dziesz potrzebowa\u0142 klucza API ze strony https://home.juice.net/Manage.",
+                "title": "Po\u0142\u0105czenie z JuiceNet"
+            }
+        }
+    }
+}
