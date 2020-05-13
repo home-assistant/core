@@ -12,13 +12,13 @@ from tests.common import load_fixture
 @pytest.fixture(name="generic_data", scope="session")
 def generic_data_fixture():
     """Load generic MQTT data and return it."""
-    return load_fixture(f"zwave_mqtt/generic_network_dump.csv")
+    return load_fixture("zwave_mqtt/generic_network_dump.csv")
 
 
 @pytest.fixture(name="light_data", scope="session")
 def light_data_fixture():
     """Load light dimmer MQTT data and return it."""
-    return load_fixture(f"zwave_mqtt/light_network_dump.csv")
+    return load_fixture("zwave_mqtt/light_network_dump.csv")
 
 
 @pytest.fixture(name="sent_messages")

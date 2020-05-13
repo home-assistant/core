@@ -124,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         async with async_timeout.timeout(10):
             shade_entries = await shades.get_resources()
         if not shade_entries:
-            raise UpdateFailed(f"Failed to fetch new shade data.")
+            raise UpdateFailed("Failed to fetch new shade data.")
         return _async_map_data_by_id(shade_entries[SHADE_DATA])
 
     coordinator = DataUpdateCoordinator(
