@@ -1,25 +1,29 @@
 """Support for Blink system camera sensors."""
 import logging
 
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
-from . import BLINK_DATA, SENSORS
+from .const import DOMAIN, TYPE_BATTERY, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSORS = {
+    TYPE_TEMPERATURE: ["Temperature", TEMP_FAHRENHEIT, "mdi:thermometer"],
+    TYPE_BATTERY: ["Battery", "", "mdi:battery-80"],
+    TYPE_WIFI_STRENGTH: ["Wifi Signal", "dBm", "mdi:wifi-strength-2"],
+}
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a Blink sensor."""
-    if discovery_info is None:
-        return
-    data = hass.data[BLINK_DATA]
-    devs = []
+
+async def async_setup_entry(hass, config, async_add_entities):
+    """Initialize a Blink sensor."""
+    data = hass.data[DOMAIN][config.entry_id]
+    entities = []
     for camera in data.cameras:
-        for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
-            devs.append(BlinkSensor(data, camera, sensor_type))
+        for sensor_type in SENSORS:
+            entities.append(BlinkSensor(data, camera, sensor_type))
 
-    add_entities(devs, True)
+    async_add_entities(entities)
 
 
 class BlinkSensor(Entity):
@@ -28,7 +32,7 @@ class BlinkSensor(Entity):
     def __init__(self, data, camera, sensor_type):
         """Initialize sensors from Blink camera."""
         name, units, icon = SENSORS[sensor_type]
-        self._name = f"{BLINK_DATA} {camera} {name}"
+        self._name = f"{DOMAIN} {camera} {name}"
         self._camera_name = name
         self._type = sensor_type
         self.data = data
