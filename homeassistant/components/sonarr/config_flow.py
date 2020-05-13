@@ -32,17 +32,6 @@ from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_BASE_PATH, default=DEFAULT_BASE_PATH): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-    }
-)
-
 
 async def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     """Validate the user input allows us to connect.
@@ -105,8 +94,19 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
+        data_schema = {
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_API_KEY): str,
+            vol.Optional(CONF_BASE_PATH, default=DEFAULT_BASE_PATH): str,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+        }
+
+        if self.show_advanced_options:
+            data_schema[vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = bool
+
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {},
+            step_id="user", data_schema=vol.Schema(data_schema), errors=errors or {},
         )
 
 
