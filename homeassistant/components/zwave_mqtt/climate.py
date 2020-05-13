@@ -299,7 +299,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         # get id for this fan_mode
         fan_mode_value = _get_list_id(self.values.fan_mode.value[VALUE_LIST], fan_mode)
         if fan_mode_value is None:
-            _LOGGER.warning("%s is an invalid fan_mode!", fan_mode)
+            _LOGGER.warning("Received an invalid fan mode: %s", fan_mode)
             return
         self.values.fan_mode.send_value(fan_mode_value)
 
@@ -312,7 +312,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             self.values.swing_mode.value[VALUE_LIST], swing_mode
         )
         if swing_mode_value is None:
-            _LOGGER.warning("%s is an invalid swing_mode!", swing_mode)
+            _LOGGER.warning("Received an invalid swing mode: %s", swing_mode)
             return
         self.values.swing_mode.send_value(swing_mode_value)
 
@@ -322,7 +322,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             return
         hvac_mode_value = HVAC_MODE_ZW_MAPPINGS.get(hvac_mode)
         if hvac_mode_value is None:
-            _LOGGER.warning("%s is an invalid hvac_mode_value!", hvac_mode)
+            _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
             return
         self.values.mode.send_value(hvac_mode_value)
 
@@ -331,13 +331,14 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         if not self.values.mode:
             return
         if preset_mode == PRESET_NONE:
+            # try to restore to the (translated) main hvac mode
             await self.async_set_hvac_mode(self.hvac_mode)
             return
         preset_mode_value = _get_list_id(
             self.values.mode.value[VALUE_LIST], preset_mode
         )
         if preset_mode_value is None:
-            _LOGGER.warning("%s is an invalid preset_mode!", preset_mode)
+            _LOGGER.warning("Received an invalid preset mode: %s", preset_mode)
             return
         self.values.mode.send_value(preset_mode_value)
 
