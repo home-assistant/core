@@ -269,50 +269,43 @@ class PwThermostat(SmileGateway, ClimateEntity):
         except Smile.PlugwiseError:
             _LOGGER.error("Error while communicating to device")
 
-    def update(self):
+    def _process_data(self):
         """Update the data for this climate device."""
-        _LOGGER.info("Updating climate...")
         climate_data = self._api.get_device_data(self._dev_id)
         heater_central_data = self._api.get_device_data(self._api.heater_id)
 
-        if not climate_data:
-            _LOGGER.error("Received no climate_data for device %s.", self._name)
-        else:
-            if "setpoint" in climate_data:
-                self._setpoint = climate_data["setpoint"]
-            if "temperature" in climate_data:
-                self._temperature = climate_data["temperature"]
-            if "schedule_temperature" in climate_data:
-                self._schedule_temp = climate_data["schedule_temperature"]
-            if "available_schedules" in climate_data:
-                self._schema_names = climate_data["available_schedules"]
-            if "selected_schedule" in climate_data:
-                self._selected_schema = climate_data["selected_schedule"]
-                if self._selected_schema is not None:
-                    self._schema_status = True
-                else:
-                    self._schema_status = False
-            if "last_used" in climate_data:
-                self._last_active_schema = climate_data["last_used"]
-            if "presets" in climate_data:
-                self._presets = climate_data["presets"]
-                if self._presets:
-                    self._presets_list = list(self._presets)
-            if "active_preset" in climate_data:
-                self._preset_mode = climate_data["active_preset"]
+        if "setpoint" in climate_data:
+            self._setpoint = climate_data["setpoint"]
+        if "temperature" in climate_data:
+            self._temperature = climate_data["temperature"]
+        if "schedule_temperature" in climate_data:
+            self._schedule_temp = climate_data["schedule_temperature"]
+        if "available_schedules" in climate_data:
+            self._schema_names = climate_data["available_schedules"]
+        if "selected_schedule" in climate_data:
+            self._selected_schema = climate_data["selected_schedule"]
+            if self._selected_schema is not None:
+                self._schema_status = True
+            else:
+                self._schema_status = False
+        if "last_used" in climate_data:
+            self._last_active_schema = climate_data["last_used"]
+        if "presets" in climate_data:
+            self._presets = climate_data["presets"]
+            if self._presets:
+                self._presets_list = list(self._presets)
+        if "active_preset" in climate_data:
+            self._preset_mode = climate_data["active_preset"]
 
-        if not heater_central_data:
-            _LOGGER.error("Received no heater_central_data for device %s.", self._name)
-        else:
-            if "boiler_state" in heater_central_data:
-                if heater_central_data["boiler_state"] is not None:
-                    self._boiler_state = heater_central_data["boiler_state"]
-            if "heating_state" in heater_central_data:
-                if heater_central_data["heating_state"] is not None:
-                    self._heating_state = heater_central_data["heating_state"]
-            if "cooling_state" in heater_central_data:
-                if heater_central_data["cooling_state"] is not None:
-                    self._cooling_state = heater_central_data["cooling_state"]
+        if "boiler_state" in heater_central_data:
+            if heater_central_data["boiler_state"] is not None:
+                self._boiler_state = heater_central_data["boiler_state"]
+        if "heating_state" in heater_central_data:
+            if heater_central_data["heating_state"] is not None:
+                self._heating_state = heater_central_data["heating_state"]
+        if "cooling_state" in heater_central_data:
+            if heater_central_data["cooling_state"] is not None:
+                self._cooling_state = heater_central_data["cooling_state"]
 
         if self._schema_status:
             self._hvac_mode = HVAC_MODE_AUTO
@@ -323,3 +316,5 @@ class PwThermostat(SmileGateway, ClimateEntity):
         elif self._cooling_state is not None:
             if self._heating_state is not None or self._boiler_state is not None:
                 self._hvac_mode = HVAC_MODE_HEAT_COOL
+
+        self.async_write_ha_state()
