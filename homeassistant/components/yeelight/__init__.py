@@ -337,7 +337,7 @@ class YeelightDevice:
         return self._available
 
     def _get_capabilities(self):
-        """Read new capabilities from the device."""
+        """Request device capabilities."""
         try:
             self.bulb.get_capabilities()
         except BulbException as ex:
