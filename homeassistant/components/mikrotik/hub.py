@@ -51,7 +51,7 @@ class MikrotikHub:
         self.available = True
         self._support_capsman = False
         self._support_wireless = False
-        self._support_wired = False
+        self._support_wired_only = False
         self._hostname = None
         self._hub_info = {}
 
@@ -118,7 +118,7 @@ class MikrotikHub:
         self._hub_info = self.get_info(INFO)
         self._support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
         self._support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
-        self._support_wired = not (self._support_wireless or self._support_capsman)
+        self._support_wired_only = not (self._support_wireless or self._support_capsman)
 
     def connect_to_hub(self):
         """Connect to hub."""
@@ -234,7 +234,7 @@ class MikrotikHub:
                 continue
             # update other clients last_seen if force_dhcp is enabled
             if (
-                (self._support_wired or self.force_dhcp)
+                (self._support_wired_only or self.force_dhcp)
                 and dhcp_clients
                 and mac in dhcp_clients
             ):
