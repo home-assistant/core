@@ -32,10 +32,6 @@ from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-ERROR_CANNOT_CONNECT = "cannot_connect"
-ERROR_INVALID_AUTH = "invalid_auth"
-ERROR_UNKNOWN = "unknown"
-
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
@@ -98,12 +94,12 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await validate_input(self.hass, user_input)
         except SonarrAccessRestricted:
-            return self._show_setup_form({"base": ERROR_INVALID_AUTH})
+            return self._show_setup_form({"base": "invalid_auth"})
         except SonarrError:
-            return self._show_setup_form({"base": ERROR_CANNOT_CONNECT})
+            return self._show_setup_form({"base": "cannot_connect"})
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason=ERROR_UNKNOWN)
+            return self.async_abort(reason="unknown")
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
