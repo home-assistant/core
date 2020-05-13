@@ -130,7 +130,6 @@ async def async_setup_entry(
         SonarrDiskspaceSensor(sonarr, entry.entry_id, unique_id),
         SonarrQueueSensor(sonarr, entry.entry_id, unique_id),
         SonarrSeriesSensor(sonarr, entry.entry_id, unique_id),
-        SonarrStatusSensor(sonarr, entry.entry_id, unique_id),
         SonarrUpcomingSensor(
             sonarr, entry.entry_id, unique_id, days=options[CONF_UPCOMING_DAYS]
         ),
@@ -382,36 +381,6 @@ class SonarrSeriesSensor(SonarrSensor):
     def state(self) -> Union[None, str, int, float]:
         """Return the state of the sensor."""
         return len(self._items)
-
-
-class SonarrStatusSensor(SonarrSensor):
-    """Defines a Sonarr Status sensor."""
-
-    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
-        """Initialize Sonarr Status sensor."""
-        self._version = None
-
-        super().__init__(
-            sonarr=sonarr,
-            entry_id=entry_id,
-            unique_id=unique_id,
-            icon="mdi:information",
-            key="status",
-            name=f"{sonarr.app.info.app_name} Status",
-            unit_of_measurement=None,
-            enabled_default=False,
-        )
-
-    @sonarr_exception_handler
-    async def async_update(self) -> None:
-        """Update entity."""
-        app = await self.sonarr.update()
-        self._version = app.info.version
-
-    @property
-    def state(self) -> Union[None, str, int, float]:
-        """Return the state of the sensor."""
-        return self._version
 
 
 class SonarrUpcomingSensor(SonarrSensor):
