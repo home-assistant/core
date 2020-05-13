@@ -317,8 +317,6 @@ class SynologyDSMEntity(Entity):
 
         self._name += f" {entity_info[ENTITY_NAME]}"
 
-        self._unsub_dispatcher = None
-
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
@@ -381,10 +379,8 @@ class SynologyDSMEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, self._api.signal_sensor_update, self.async_write_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._api.signal_sensor_update, self.async_write_ha_state
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Clean up after entity before removal."""
-        self._unsub_dispatcher()
