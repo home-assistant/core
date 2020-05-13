@@ -3,22 +3,31 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
-from xiaomi_gateway import XiaomiGateway
+from xiaomi_gateway import XiaomiGateway, XiaomiGatewayDiscovery
 
+from homeassistant import config_entries, core
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_VOLTAGE,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant import config_entries, core
 from homeassistant.core import callback
-from homeassistant.helpers import discovery, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 from .config_flow import (
+    CONF_DISCOVERY_RETRY,
+    CONF_INTERFACE,
+    CONF_KEY,
+    CONF_PROTOCOL,
+    CONF_SID,
     DOMAIN,
 )
 
@@ -52,6 +61,7 @@ SERVICE_SCHEMA_PLAY_RINGTONE = vol.Schema(
 SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
     {vol.Required(ATTR_DEVICE_ID): vol.All(cv.string, vol.Length(min=14, max=14))}
 )
+
 
 def setup(hass, config):
     """Set up the Xiaomi component."""
@@ -90,13 +100,13 @@ def setup(hass, config):
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, remove_device=device_id)
 
-    gateway_only_schema = _add_gateway_to_schema(vol.Schema({}))
+    gateway_only_schema = _add_gateway_to_schema(hass, vol.Schema({}))
 
     hass.services.register(
         DOMAIN,
         SERVICE_PLAY_RINGTONE,
         play_ringtone_service,
-        schema=_add_gateway_to_schema(SERVICE_SCHEMA_PLAY_RINGTONE),
+        schema=_add_gateway_to_schema(hass, SERVICE_SCHEMA_PLAY_RINGTONE),
     )
 
     hass.services.register(
@@ -111,7 +121,7 @@ def setup(hass, config):
         DOMAIN,
         SERVICE_REMOVE_DEVICE,
         remove_device_service,
-        schema=_add_gateway_to_schema(SERVICE_SCHEMA_REMOVE_DEVICE),
+        schema=_add_gateway_to_schema(hass, SERVICE_SCHEMA_REMOVE_DEVICE),
     )
 
     return True
@@ -121,25 +131,43 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the xiaomi aqara components from a config entry."""
-    if hass.data[DOMAIN] is None:
+    if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {}
 
     # Connect to Xiaomi Aqara Gateway
-    xiaomi_gateway = XiaomiGateway(entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_SID], entry.data[CONF_KEY], entry.data[CONF_DISCOVERY_RETRY], entry.data[CONF_INTERFACE], proto=entry.data[CONF_PROTOCOL])
+    xiaomi_gateway = XiaomiGateway(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_SID],
+        entry.data[CONF_KEY],
+        entry.data[CONF_DISCOVERY_RETRY],
+        entry.data[CONF_INTERFACE],
+        proto=entry.data[CONF_PROTOCOL],
+    )
     hass.data[DOMAIN][entry.entry_id] = xiaomi_gateway
 
-    # start listining for local pushes
-    xiaomi_gateway.listen()
-    _LOGGER.debug("Gateway with host '%s' connected, listening for broadcasts", entry.data[CONF_HOST])
+    if hass.data[DOMAIN].get("Listener") is None:
+        hass.data[DOMAIN]["Listener"] = XiaomiGatewayDiscovery(
+            hass.add_job, [], entry.data[CONF_INTERFACE]
+        )
 
-    # register stop callback to shutdown listining for local pushes
-    def stop_xiaomi(event):
-        """Stop Xiaomi Socket."""
-        _LOGGER.info("Shutting down Xiaomi Gateway")
-        xiaomi_gateway.stop_listen()
+        # start listining for local pushes
+        await hass.async_add_executor_job(hass.data[DOMAIN]["Listener"].listen)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
-    
+        # register stop callback to shutdown listining for local pushes
+        def stop_xiaomi(event):
+            """Stop Xiaomi Socket."""
+            _LOGGER.info("Shutting down Xiaomi Gateway")
+            hass.data[DOMAIN]["Listener"].stop_listen()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
+
+    hass.data[DOMAIN]["Listener"].gateways[entry.data[CONF_HOST]] = xiaomi_gateway
+    _LOGGER.info(
+        "Gateway with host '%s' connected, listening for broadcasts",
+        entry.data[CONF_HOST],
+    )
+
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -161,12 +189,15 @@ async def async_setup_entry(
 class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
-    def __init__(self, device, device_type, xiaomi_hub):
+    def __init__(self, device, device_type, xiaomi_hub, config_entry):
         """Initialize the Xiaomi device."""
         self._state = None
         self._is_available = True
         self._sid = device["sid"]
+        self._model = device["model"]
+        self._protecol = device["proto"]
         self._name = f"{device_type}_{self._sid}"
+        self._device_name = f"{self._model}_{self._sid}"
         self._type = device_type
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
@@ -182,6 +213,16 @@ class XiaomiDevice(Entity):
             )
         else:
             self._unique_id = f"{self._type}{self._sid}"
+
+        self._gateway_id = config_entry.unique_id
+        if config_entry.data[CONF_MAC] == format_mac(self._sid):
+            # this entity belongs to the gateway itself
+            self._is_gateway = True
+            self._device_id = config_entry.unique_id
+        else:
+            # this entity is connected through zigbee
+            self._is_gateway = False
+            self._device_id = self._sid
 
     def _add_push_data_job(self, *args):
         self.hass.add_job(self.push_data, *args)
@@ -200,6 +241,32 @@ class XiaomiDevice(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def device_id(self):
+        """Return the device id of the Xiaomi Aqara device."""
+        return self._device_id
+
+    @property
+    def device_info(self):
+        """Return the device info of the Xiaomi Aqara device."""
+        if self._is_gateway:
+            device_info = {
+                "identifiers": {(DOMAIN, self._device_id)},
+                "model": self._model,
+            }
+        else:
+            device_info = {
+                "connections": {(dr.CONNECTION_ZIGBEE, self._device_id)},
+                "identifiers": {(DOMAIN, self._device_id)},
+                "manufacturer": "Xiaomi Aqara",
+                "model": self._model,
+                "name": self._device_name,
+                "sw_version": self._protecol,
+                "via_device": (DOMAIN, self._gateway_id),
+            }
+
+        return device_info
 
     @property
     def available(self):
@@ -269,7 +336,7 @@ class XiaomiDevice(Entity):
         raise NotImplementedError()
 
 
-def _add_gateway_to_schema(schema):
+def _add_gateway_to_schema(hass, schema):
     """Extend a voluptuous schema with a gateway validator."""
 
     def gateway(sid):
@@ -282,11 +349,13 @@ def _add_gateway_to_schema(schema):
 
         raise vol.Invalid(f"Unknown gateway sid {sid}")
 
-    gateways = list(hass.data[DOMAIN].values())
     kwargs = {}
+    xiaomi_data = hass.data.get(DOMAIN)
+    if xiaomi_data is not None:
+        gateways = list(xiaomi_data.values())
 
-    # If the user has only 1 gateway, make it the default for services.
-    if len(gateways) == 1:
-        kwargs["default"] = gateways[0].sid
+        # If the user has only 1 gateway, make it the default for services.
+        if len(gateways) == 1:
+            kwargs["default"] = gateways[0].sid
 
     return schema.extend({vol.Required(ATTR_GW_MAC, **kwargs): gateway})

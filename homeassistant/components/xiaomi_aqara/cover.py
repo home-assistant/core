@@ -25,18 +25,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 data_key = DATA_KEY_PROTO_V1
             else:
                 data_key = DATA_KEY_PROTO_V2
-            entities.append(XiaomiGenericCover(entity, "Curtain", data_key, gateway))
+            entities.append(
+                XiaomiGenericCover(entity, "Curtain", data_key, gateway, config_entry)
+            )
     async_add_entities(entities)
 
 
 class XiaomiGenericCover(XiaomiDevice, CoverEntity):
     """Representation of a XiaomiGenericCover."""
 
-    def __init__(self, device, name, data_key, xiaomi_hub):
+    def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
         """Initialize the XiaomiGenericCover."""
         self._data_key = data_key
         self._pos = 0
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+        XiaomiDevice.__init__(self, device, name, xiaomi_hub, config_entry)
 
     @property
     def current_cover_position(self):

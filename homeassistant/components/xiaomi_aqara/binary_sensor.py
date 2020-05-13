@@ -21,6 +21,7 @@ ATTR_NO_MOTION_SINCE = "No motion since"
 DENSITY = "density"
 ATTR_DENSITY = "Density"
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
     entities = []
@@ -28,15 +29,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for entity in gateway.devices["binary_sensor"]:
         model = entity["model"]
         if model in ["motion", "sensor_motion", "sensor_motion.aq2"]:
-            entities.append(XiaomiMotionSensor(entity, hass, gateway))
+            entities.append(XiaomiMotionSensor(entity, hass, gateway, config_entry))
         elif model in ["magnet", "sensor_magnet", "sensor_magnet.aq2"]:
-            entities.append(XiaomiDoorSensor(entity, gateway))
+            entities.append(XiaomiDoorSensor(entity, gateway, config_entry))
         elif model == "sensor_wleak.aq1":
-            entities.append(XiaomiWaterLeakSensor(entity, gateway))
+            entities.append(XiaomiWaterLeakSensor(entity, gateway, config_entry))
         elif model in ["smoke", "sensor_smoke"]:
-            entities.append(XiaomiSmokeSensor(entity, gateway))
+            entities.append(XiaomiSmokeSensor(entity, gateway, config_entry))
         elif model in ["natgas", "sensor_natgas"]:
-            entities.append(XiaomiNatgasSensor(entity, gateway))
+            entities.append(XiaomiNatgasSensor(entity, gateway, config_entry))
         elif model in [
             "switch",
             "sensor_switch",
@@ -48,7 +49,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 data_key = "status"
             else:
                 data_key = "button_0"
-            entities.append(XiaomiButton(entity, "Switch", data_key, hass, gateway))
+            entities.append(
+                XiaomiButton(entity, "Switch", data_key, hass, gateway, config_entry)
+            )
         elif model in [
             "86sw1",
             "sensor_86sw1",
@@ -60,7 +63,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             else:
                 data_key = "button_0"
             entities.append(
-                XiaomiButton(entity, "Wall Switch", data_key, hass, gateway)
+                XiaomiButton(
+                    entity, "Wall Switch", data_key, hass, gateway, config_entry
+                )
             )
         elif model in [
             "86sw2",
@@ -76,23 +81,40 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 data_key_right = "button_1"
             entities.append(
                 XiaomiButton(
-                    entity, "Wall Switch (Left)", data_key_left, hass, gateway
+                    entity,
+                    "Wall Switch (Left)",
+                    data_key_left,
+                    hass,
+                    gateway,
+                    config_entry,
                 )
             )
             entities.append(
                 XiaomiButton(
-                    entity, "Wall Switch (Right)", data_key_right, hass, gateway
+                    entity,
+                    "Wall Switch (Right)",
+                    data_key_right,
+                    hass,
+                    gateway,
+                    config_entry,
                 )
             )
             entities.append(
                 XiaomiButton(
-                    entity, "Wall Switch (Both)", "dual_channel", hass, gateway
+                    entity,
+                    "Wall Switch (Both)",
+                    "dual_channel",
+                    hass,
+                    gateway,
+                    config_entry,
                 )
             )
         elif model in ["cube", "sensor_cube", "sensor_cube.aqgl01"]:
-            entities.append(XiaomiCube(entity, hass, gateway))
+            entities.append(XiaomiCube(entity, hass, gateway, config_entry))
         elif model in ["vibration", "vibration.aq1"]:
-            entities.append(XiaomiVibration(entity, "Vibration", "status", gateway))
+            entities.append(
+                XiaomiVibration(entity, "Vibration", "status", gateway, config_entry)
+            )
         else:
             _LOGGER.warning("Unmapped Device Model %s", model)
 
@@ -102,13 +124,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
     """Representation of a base XiaomiBinarySensor."""
 
-    def __init__(self, device, name, xiaomi_hub, data_key, device_class):
+    def __init__(self, device, name, xiaomi_hub, data_key, device_class, config_entry):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
         self._device_class = device_class
         self._should_poll = False
         self._density = 0
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+        XiaomiDevice.__init__(self, device, name, xiaomi_hub, config_entry)
 
     @property
     def should_poll(self):
@@ -134,11 +156,11 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
 class XiaomiNatgasSensor(XiaomiBinarySensor):
     """Representation of a XiaomiNatgasSensor."""
 
-    def __init__(self, device, xiaomi_hub):
+    def __init__(self, device, xiaomi_hub, config_entry):
         """Initialize the XiaomiSmokeSensor."""
         self._density = None
         XiaomiBinarySensor.__init__(
-            self, device, "Natgas Sensor", xiaomi_hub, "alarm", "gas"
+            self, device, "Natgas Sensor", xiaomi_hub, "alarm", "gas", config_entry
         )
 
     @property
@@ -172,7 +194,7 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
 class XiaomiMotionSensor(XiaomiBinarySensor):
     """Representation of a XiaomiMotionSensor."""
 
-    def __init__(self, device, hass, xiaomi_hub):
+    def __init__(self, device, hass, xiaomi_hub, config_entry):
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
@@ -182,7 +204,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         else:
             data_key = "motion_status"
         XiaomiBinarySensor.__init__(
-            self, device, "Motion Sensor", xiaomi_hub, data_key, "motion"
+            self, device, "Motion Sensor", xiaomi_hub, data_key, "motion", config_entry
         )
 
     @property
@@ -263,7 +285,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
 class XiaomiDoorSensor(XiaomiBinarySensor):
     """Representation of a XiaomiDoorSensor."""
 
-    def __init__(self, device, xiaomi_hub):
+    def __init__(self, device, xiaomi_hub, config_entry):
         """Initialize the XiaomiDoorSensor."""
         self._open_since = 0
         if "proto" not in device or int(device["proto"][0:1]) == 1:
@@ -271,7 +293,13 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
         else:
             data_key = "window_status"
         XiaomiBinarySensor.__init__(
-            self, device, "Door Window Sensor", xiaomi_hub, data_key, "opening"
+            self,
+            device,
+            "Door Window Sensor",
+            xiaomi_hub,
+            data_key,
+            "opening",
+            config_entry,
         )
 
     @property
@@ -309,14 +337,20 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
 class XiaomiWaterLeakSensor(XiaomiBinarySensor):
     """Representation of a XiaomiWaterLeakSensor."""
 
-    def __init__(self, device, xiaomi_hub):
+    def __init__(self, device, xiaomi_hub, config_entry):
         """Initialize the XiaomiWaterLeakSensor."""
         if "proto" not in device or int(device["proto"][0:1]) == 1:
             data_key = "status"
         else:
             data_key = "wleak_status"
         XiaomiBinarySensor.__init__(
-            self, device, "Water Leak Sensor", xiaomi_hub, data_key, "moisture"
+            self,
+            device,
+            "Water Leak Sensor",
+            xiaomi_hub,
+            data_key,
+            "moisture",
+            config_entry,
         )
 
     def parse_data(self, data, raw_data):
@@ -343,11 +377,11 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
 class XiaomiSmokeSensor(XiaomiBinarySensor):
     """Representation of a XiaomiSmokeSensor."""
 
-    def __init__(self, device, xiaomi_hub):
+    def __init__(self, device, xiaomi_hub, config_entry):
         """Initialize the XiaomiSmokeSensor."""
         self._density = 0
         XiaomiBinarySensor.__init__(
-            self, device, "Smoke Sensor", xiaomi_hub, "alarm", "smoke"
+            self, device, "Smoke Sensor", xiaomi_hub, "alarm", "smoke", config_entry
         )
 
     @property
@@ -380,10 +414,10 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
 class XiaomiVibration(XiaomiBinarySensor):
     """Representation of a Xiaomi Vibration Sensor."""
 
-    def __init__(self, device, name, data_key, xiaomi_hub):
+    def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
         """Initialize the XiaomiVibration."""
         self._last_action = None
-        super().__init__(device, name, xiaomi_hub, data_key, None)
+        super().__init__(device, name, xiaomi_hub, data_key, None, config_entry)
 
     @property
     def device_state_attributes(self):
@@ -414,11 +448,13 @@ class XiaomiVibration(XiaomiBinarySensor):
 class XiaomiButton(XiaomiBinarySensor):
     """Representation of a Xiaomi Button."""
 
-    def __init__(self, device, name, data_key, hass, xiaomi_hub):
+    def __init__(self, device, name, data_key, hass, xiaomi_hub, config_entry):
         """Initialize the XiaomiButton."""
         self._hass = hass
         self._last_action = None
-        XiaomiBinarySensor.__init__(self, device, name, xiaomi_hub, data_key, None)
+        XiaomiBinarySensor.__init__(
+            self, device, name, xiaomi_hub, data_key, None, config_entry
+        )
 
     @property
     def device_state_attributes(self):
@@ -469,7 +505,7 @@ class XiaomiButton(XiaomiBinarySensor):
 class XiaomiCube(XiaomiBinarySensor):
     """Representation of a Xiaomi Cube."""
 
-    def __init__(self, device, hass, xiaomi_hub):
+    def __init__(self, device, hass, xiaomi_hub, config_entry):
         """Initialize the Xiaomi Cube."""
         self._hass = hass
         self._last_action = None
@@ -478,7 +514,9 @@ class XiaomiCube(XiaomiBinarySensor):
             data_key = "status"
         else:
             data_key = "cube_status"
-        XiaomiBinarySensor.__init__(self, device, "Cube", xiaomi_hub, data_key, None)
+        XiaomiBinarySensor.__init__(
+            self, device, "Cube", xiaomi_hub, data_key, None, config_entry
+        )
 
     @property
     def device_state_attributes(self):

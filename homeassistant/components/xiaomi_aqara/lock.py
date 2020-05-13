@@ -28,19 +28,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for entity in gateway.devices["lock"]:
         model = entity["model"]
         if model == "lock.aq1":
-            entities.append(XiaomiAqaraLock(entity, "Lock", gateway))
+            entities.append(XiaomiAqaraLock(entity, "Lock", gateway, config_entry))
     async_add_entities(entities)
 
 
 class XiaomiAqaraLock(LockEntity, XiaomiDevice):
     """Representation of a XiaomiAqaraLock."""
 
-    def __init__(self, device, name, xiaomi_hub):
+    def __init__(self, device, name, xiaomi_hub, config_entry):
         """Initialize the XiaomiAqaraLock."""
         self._changed_by = 0
         self._verified_wrong_times = 0
 
-        super().__init__(device, name, xiaomi_hub)
+        super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
     def is_locked(self) -> bool:

@@ -33,40 +33,62 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             else:
                 data_key = "channel_0"
             entities.append(
-                XiaomiGenericSwitch(entity, "Plug", data_key, True, gateway)
+                XiaomiGenericSwitch(
+                    entity, "Plug", data_key, True, gateway, config_entry
+                )
             )
         elif model in ["ctrl_neutral1", "ctrl_neutral1.aq1"]:
             entities.append(
                 XiaomiGenericSwitch(
-                    entity, "Wall Switch", "channel_0", False, gateway
+                    entity, "Wall Switch", "channel_0", False, gateway, config_entry
                 )
             )
         elif model in ["ctrl_ln1", "ctrl_ln1.aq1"]:
             entities.append(
                 XiaomiGenericSwitch(
-                    entity, "Wall Switch LN", "channel_0", False, gateway
+                    entity, "Wall Switch LN", "channel_0", False, gateway, config_entry
                 )
             )
         elif model in ["ctrl_neutral2", "ctrl_neutral2.aq1"]:
             entities.append(
                 XiaomiGenericSwitch(
-                    entity, "Wall Switch Left", "channel_0", False, gateway
+                    entity,
+                    "Wall Switch Left",
+                    "channel_0",
+                    False,
+                    gateway,
+                    config_entry,
                 )
             )
             entities.append(
                 XiaomiGenericSwitch(
-                    entity, "Wall Switch Right", "channel_1", False, gateway
+                    entity,
+                    "Wall Switch Right",
+                    "channel_1",
+                    False,
+                    gateway,
+                    config_entry,
                 )
             )
         elif model in ["ctrl_ln2", "ctrl_ln2.aq1"]:
             entities.append(
                 XiaomiGenericSwitch(
-                    entity, "Wall Switch LN Left", "channel_0", False, gateway
+                    entity,
+                    "Wall Switch LN Left",
+                    "channel_0",
+                    False,
+                    gateway,
+                    config_entry,
                 )
             )
             entities.append(
                 XiaomiGenericSwitch(
-                    entity, "Wall Switch LN Right", "channel_1", False, gateway
+                    entity,
+                    "Wall Switch LN Right",
+                    "channel_1",
+                    False,
+                    gateway,
+                    config_entry,
                 )
             )
         elif model in ["86plug", "ctrl_86plug", "ctrl_86plug.aq1"]:
@@ -75,7 +97,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             else:
                 data_key = "channel_0"
             entities.append(
-                XiaomiGenericSwitch(entity, "Wall Plug", data_key, True, gateway)
+                XiaomiGenericSwitch(
+                    entity, "Wall Plug", data_key, True, gateway, config_entry
+                )
             )
     async_add_entities(entities)
 
@@ -83,14 +107,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
     """Representation of a XiaomiPlug."""
 
-    def __init__(self, device, name, data_key, supports_power_consumption, xiaomi_hub):
+    def __init__(
+        self,
+        device,
+        name,
+        data_key,
+        supports_power_consumption,
+        xiaomi_hub,
+        config_entry,
+    ):
         """Initialize the XiaomiPlug."""
         self._data_key = data_key
         self._in_use = None
         self._load_power = None
         self._power_consumed = None
         self._supports_power_consumption = supports_power_consumption
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+        XiaomiDevice.__init__(self, device, name, xiaomi_hub, config_entry)
 
     @property
     def icon(self):
