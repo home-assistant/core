@@ -336,7 +336,7 @@ class SynologyDSMEntity(Entity):
     def unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
         if self.entity_type in TEMP_SENSORS_KEYS:
-            return self._api.temp_unit
+            return self.hass.config.units.temperature_unit
         return self._unit
 
     @property

@@ -98,7 +98,7 @@ class SynoDSMStorageSensor(SynologyDSMEntity):
             return round(attr / 1024.0 ** 4, 2)
 
         # Temperature
-        if self.sensor_type in TEMP_SENSORS_KEYS:
+        if self.entity_type in TEMP_SENSORS_KEYS:
             return display_temp(self.hass, attr, TEMP_CELSIUS, PRECISION_TENTHS)
 
         return attr
