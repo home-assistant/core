@@ -10,6 +10,8 @@ from homeassistant.components.isy994.const import (
     CONF_TLS_VER,
     CONF_VAR_SENSOR_STRING,
     DOMAIN,
+    ISY_URL_POSTFIX,
+    UDN_UUID_PREFIX,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -244,7 +246,7 @@ async def test_form_ssdp_already_configured(hass: HomeAssistantType) -> None:
 
     MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: f"http://{MOCK_HOSTNAME}/desc"},
+        data={CONF_HOST: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}"},
         unique_id=MOCK_UUID,
     ).add_to_hass(hass)
 
@@ -252,9 +254,9 @@ async def test_form_ssdp_already_configured(hass: HomeAssistantType) -> None:
         DOMAIN,
         context={"source": SOURCE_SSDP},
         data={
-            ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOSTNAME}/desc",
+            ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
-            ssdp.ATTR_UPNP_UDN: f"uuid:{MOCK_UUID}",
+            ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -268,9 +270,9 @@ async def test_form_ssdp(hass: HomeAssistantType):
         DOMAIN,
         context={"source": SOURCE_SSDP},
         data={
-            ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOSTNAME}/desc",
+            ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
-            ssdp.ATTR_UPNP_UDN: f"uuid:{MOCK_UUID}",
+            ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
