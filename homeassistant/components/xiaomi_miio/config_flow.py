@@ -67,7 +67,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if name.startswith(ZEROCONF_GATEWAY):
             unique_id = format_mac(mac_address)
             await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured({CONF_HOST: host})
+            self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
             return await self.async_step_gateway()
 
