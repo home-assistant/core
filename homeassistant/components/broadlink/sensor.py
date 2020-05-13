@@ -29,6 +29,7 @@ from .const import (
     A1_TYPES,
     DEFAULT_NAME,
     DEFAULT_PORT,
+    DEFAULT_RETRY,
     DEFAULT_TIMEOUT,
     RM4_TYPES,
     RM_TYPES,
@@ -128,10 +129,7 @@ class BroadlinkSensor(Entity):
     async def async_update(self):
         """Get the latest data from the sensor."""
         await self._broadlink_data.async_update()
-        try:
-            self._state = self._broadlink_data.data[self._type]
-        except TypeError:
-            pass
+        self._state = self._broadlink_data.data.get(self._type)
 
 
 class BroadlinkData:
@@ -141,7 +139,7 @@ class BroadlinkData:
         """Initialize the data object."""
         self.device = device
         self.check_sensors = check_sensors
-        self.data = None
+        self.data = {}
         self._schema = vol.Schema(
             {
                 vol.Optional("temperature"): vol.Range(min=-50, max=150),
@@ -155,12 +153,17 @@ class BroadlinkData:
 
     async def _async_fetch_data(self):
         """Fetch sensor data."""
-        try:
-            data = await self.device.async_request(self.check_sensors)
-        except BroadlinkException:
-            return
-        try:
-            data = self._schema(data)
-        except (vol.Invalid, vol.MultipleInvalid):
-            return
-        self.data = data
+        for attempt in range(DEFAULT_RETRY):
+            try:
+                data = await self.device.async_request(self.check_sensors)
+            except BroadlinkException:
+                return
+            try:
+                data = self._schema(data)
+            except (vol.Invalid, vol.MultipleInvalid):
+                continue
+            else:
+                self.data = data
+                return
+
+        _LOGGER.debug("Failed to update sensors: Device returned malformed data.")

@@ -65,15 +65,15 @@ MP1_SWITCH_SLOT_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_SWITCHES, default={}): cv.schema_with_slug_keys(
+            SWITCH_SCHEMA
+        ),
+        vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
         vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
         vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_TYPE, default=DEVICE_TYPES[0]): vol.In(DEVICE_TYPES),
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
-        vol.Optional(CONF_SWITCHES, default={}): cv.schema_with_slug_keys(
-            SWITCH_SCHEMA
-        ),
     }
 )
 
@@ -111,12 +111,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if model in RM_TYPES:
         api = blk.rm((host, DEFAULT_PORT), mac_addr, None)
         broadlink_device = BroadlinkDevice(hass, api)
-        hass.async_create_task(async_setup_service(hass, host, broadlink_device))
         switches = generate_rm_switches(devices, broadlink_device)
     elif model in RM4_TYPES:
         api = blk.rm4((host, DEFAULT_PORT), mac_addr, None)
         broadlink_device = BroadlinkDevice(hass, api)
-        hass.async_create_task(async_setup_service(hass, host, broadlink_device))
         switches = generate_rm_switches(devices, broadlink_device)
     elif model in SP1_TYPES:
         api = blk.sp1((host, DEFAULT_PORT), mac_addr, None)
@@ -141,6 +139,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     connected = await broadlink_device.async_connect()
     if not connected:
         raise PlatformNotReady
+
+    if model in RM_TYPES or model in RM4_TYPES:
+        hass.async_create_task(async_setup_service(hass, host, broadlink_device))
 
     async_add_entities(switches)
 
@@ -198,13 +199,13 @@ class BroadlinkRMSwitch(SwitchEntity, RestoreEntity):
         """Turn the device on."""
         if await self._async_send_packet(self._command_on):
             self._state = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if await self._async_send_packet(self._command_off):
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def _async_send_packet(self, packet):
         """Send packet to device."""
