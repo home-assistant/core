@@ -553,6 +553,9 @@ pyflume==0.4.0
 # homeassistant.components.flunearyou
 pyflunearyou==1.0.7
 
+# homeassistant.components.forked_daapd
+pyforked-daapd==0.1.8
+
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
 
@@ -592,6 +595,9 @@ pykira==0.1.1
 
 # homeassistant.components.lastfm
 pylast==3.2.1
+
+# homeassistant.components.forked_daapd
+pylibrespot-java==0.1.0
 
 # homeassistant.components.linky
 pylinky==0.4.0
