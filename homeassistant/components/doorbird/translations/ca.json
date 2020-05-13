@@ -6,9 +6,9 @@
             "not_doorbird_device": "Aquest dispositiu no \u00e9s DoorBird"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "unknown": "Error inesperat"
+            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "[%key::common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key::common::config_flow::error::unknown%]"
         },
         "flow_title": "DoorBird {name} ({host})",
         "step": {
@@ -16,8 +16,8 @@
                 "data": {
                     "host": "Amfitri\u00f3 (adre\u00e7a IP)",
                     "name": "Nom del dispositiu",
-                    "password": "Contrasenya",
-                    "username": "Nom d'usuari"
+                    "password": "[%key::common::config_flow::data::password%]",
+                    "username": "[%key::common::config_flow::data::username%]"
                 },
                 "title": "Connexi\u00f3 amb DoorBird"
             }

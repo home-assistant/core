@@ -5,7 +5,7 @@
             "client_secret": "Tajny klucz klienta z konfiguracji jest nieprawid\u0142owy.",
             "no_agreements": "To konto nie posiada wy\u015bwietlaczy Toon.",
             "no_app": "Musisz skonfigurowa\u0107 Toon, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Wyst\u0105pi\u0142 nieoczekiwany b\u0142\u0105d podczas uwierzytelniania."
+            "unknown_auth_fail": "Nieoczekiwany b\u0142\u0105d podczas uwierzytelniania."
         },
         "error": {
             "credentials": "Wprowadzone dane logowania s\u0105 nieprawid\u0142owe.",
@@ -14,9 +14,9 @@
         "step": {
             "authenticate": {
                 "data": {
-                    "password": "Has\u0142o",
+                    "password": "[%key_id:common::config_flow::data::password%]",
                     "tenant": "Najemca",
-                    "username": "Nazwa u\u017cytkownika"
+                    "username": "[%key_id:common::config_flow::data::username%]"
                 },
                 "description": "Uwierzytelnij konto Eneco Toon (nie konto programisty).",
                 "title": "Po\u0142\u0105cz konto Toon"

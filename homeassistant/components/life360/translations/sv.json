@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "invalid_credentials": "Ogiltiga autentiseringsuppgifter",
-            "user_already_configured": "Konto har redan konfigurerats"
+            "invalid_credentials": "Ogiltiga autentiseringsuppgifter"
         },
         "create_entry": {
             "default": "F\u00f6r att st\u00e4lla in avancerade alternativ, se [Life360 documentation]({docs_url})."

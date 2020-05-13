@@ -5,8 +5,9 @@
             "updated_entry": "Questa voce \u00e8 gi\u00e0 stata configurata, ma il nome, le app e/o le opzioni definite nella configurazione non corrispondono alla configurazione importata in precedenza, pertanto la voce di configurazione \u00e8 stata aggiornata di conseguenza."
         },
         "error": {
-            "cant_connect": "Impossibile connettersi al dispositivo. [Esamina i documenti] (https://www.home-assistant.io/integrations/vizio/) e verifica nuovamente che: \n - Il dispositivo sia acceso \n - Il dispositivo sia collegato alla rete \n - I valori inseriti siano corretti \n prima di ritentare.",
+            "cant_connect": "Impossibile connettersi",
             "complete_pairing failed": "Impossibile completare l'associazione. Assicurarsi che il PIN fornito sia corretto e che il televisore sia ancora alimentato e connesso alla rete prima di inviarlo di nuovo.",
+            "complete_pairing_failed": "Impossibile completare l'associazione. Assicurarsi che il PIN fornito sia corretto e che la TV sia ancora accesa e collegata alla rete prima di inviare nuovamente.",
             "host_exists": "Dispositivo VIZIO con host specificato gi\u00e0 configurato.",
             "name_exists": "Dispositivo VIZIO con il nome specificato gi\u00e0 configurato."
         },
@@ -23,7 +24,7 @@
                 "title": "Associazione completata"
             },
             "pairing_complete_import": {
-                "description": "Il dispositivo VIZIO SmartCast TV \u00e8 ora connesso a Home Assistant. \n\nIl tuo Token di Accesso \u00e8 '**{access_token}**'.",
+                "description": "Il dispositivo VIZIO SmartCast TV \u00e8 ora connesso a Home Assistant. \n\nIl tuo Token di accesso \u00e8 '**{access_token}**'.",
                 "title": "Associazione completata"
             },
             "user": {
@@ -33,7 +34,7 @@
                     "host": "< Host / IP >: <Port>",
                     "name": "Nome"
                 },
-                "description": "Un Token di Accesso \u00e8 necessario solo per i televisori. Se si sta configurando un televisore e non si dispone ancora di un Token di Accesso, lasciarlo vuoto per passare attraverso un processo di associazione.",
+                "description": "Un Token di accesso \u00e8 necessario solo per i televisori. Se si sta configurando un televisore e non si dispone ancora di un Token di accesso, lasciarlo vuoto per passare attraverso un processo di associazione.",
                 "title": "Configurazione del dispositivo SmartCast VIZIO"
             }
         }

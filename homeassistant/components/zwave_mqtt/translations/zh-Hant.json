@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "MQTT \u6574\u5408\u5c1a\u672a\u8a2d\u5b9a",
+            "one_instance_allowed": "\u6574\u5408\u50c5\u652f\u63f4\u4e00\u7d44 Z-Wave \u5be6\u4f8b"
+        },
+        "step": {
+            "user": {
+                "title": "\u78ba\u8a8d\u8a2d\u5b9a"
+            }
+        }
+    },
+    "title": "Z-Wave over MQTT"
+}

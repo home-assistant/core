@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "MQTT-integrasjonen er ikke satt opp",
+            "one_instance_allowed": "Integrasjonen st\u00f8tter bare \u00e9n Z-Wave-forekomst"
+        },
+        "step": {
+            "user": {
+                "title": "Bekreft oppsett"
+            }
+        }
+    },
+    "title": ""
+}

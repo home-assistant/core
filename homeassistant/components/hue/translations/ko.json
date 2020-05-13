@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "all_configured": "\ubaa8\ub4e0 \ud544\ub9bd\uc2a4 Hue \ube0c\ub9bf\uc9c0\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "already_configured": "\ube0c\ub9bf\uc9c0\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "already_in_progress": "\ube0c\ub9bf\uc9c0 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4.",
+            "all_configured": "\ubaa8\ub4e0 \ud544\ub9bd\uc2a4 Hue \ube0c\ub9ac\uc9c0\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_configured": "\ube0c\ub9ac\uc9c0\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "\ube0c\ub9ac\uc9c0 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4.",
             "cannot_connect": "\ube0c\ub9ac\uc9c0\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
-            "discover_timeout": "Hue \ube0c\ub9bf\uc9c0\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
-            "no_bridges": "\ubc1c\uacac\ub41c \ud544\ub9bd\uc2a4 Hue \ube0c\ub9bf\uc9c0\uac00 \uc5c6\uc2b5\ub2c8\ub2e4",
-            "not_hue_bridge": "Hue \ube0c\ub9bf\uc9c0\uac00 \uc544\ub2d9\ub2c8\ub2e4",
+            "discover_timeout": "Hue \ube0c\ub9ac\uc9c0\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
+            "no_bridges": "\ubc1c\uacac\ub41c \ud544\ub9bd\uc2a4 Hue \ube0c\ub9ac\uc9c0\uac00 \uc5c6\uc2b5\ub2c8\ub2e4",
+            "not_hue_bridge": "Hue \ube0c\ub9ac\uc9c0\uac00 \uc544\ub2d9\ub2c8\ub2e4",
             "unknown": "\uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {
@@ -19,10 +19,10 @@
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8"
                 },
-                "title": "Hue \ube0c\ub9bf\uc9c0 \uc120\ud0dd\ud558\uae30"
+                "title": "Hue \ube0c\ub9ac\uc9c0 \uc120\ud0dd\ud558\uae30"
             },
             "link": {
-                "description": "\ube0c\ub9bf\uc9c0\uc758 \ubc84\ud2bc\uc744 \ub20c\ub7ec \ud544\ub9bd\uc2a4 Hue\ub97c Home Assistant\uc5d0 \ub4f1\ub85d\ud558\uc138\uc694.\n\n![\ube0c\ub9bf\uc9c0 \ubc84\ud2bc \uc704\uce58](/static/images/config_philips_hue.jpg)",
+                "description": "\ube0c\ub9ac\uc9c0\uc758 \ubc84\ud2bc\uc744 \ub20c\ub7ec \ud544\ub9bd\uc2a4 Hue\ub97c Home Assistant\uc5d0 \ub4f1\ub85d\ud558\uc138\uc694.\n\n![\ube0c\ub9ac\uc9c0 \ubc84\ud2bc \uc704\uce58](/static/images/config_philips_hue.jpg)",
                 "title": "\ud5c8\ube0c \uc5f0\uacb0\ud558\uae30"
             }
         }

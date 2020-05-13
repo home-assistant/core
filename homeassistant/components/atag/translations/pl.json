@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Do Home Assistant mo\u017cna doda\u0107 tylko jedno urz\u0105dzenie Atag"
+            "already_configured": "Do Home Assistant mo\u017cna doda\u0107 tylko jedno urz\u0105dzenie Atag."
         },
         "error": {
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie."
@@ -9,8 +9,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "port": "Port (10000)"
+                    "email": "[%key_id:common::config_flow::data::email%] (opcjonalnie)",
+                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "port": "[%key_id:common::config_flow::data::port%] (10000)"
                 },
                 "title": "Po\u0142\u0105cz z urz\u0105dzeniem"
             }
