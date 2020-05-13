@@ -6,22 +6,22 @@
       "user": {
         "title": "Connect to Sonarr",
         "data": {
-          "host": "Host or IP address",
-          "api_key": "API Key",
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "base_path": "Path to API",
-          "port": "Port",
+          "port": "[%key:common::config_flow::data::port%]",
           "ssl": "Sonarr uses a SSL certificate",
           "verify_ssl": "Sonarr uses a proper certificate"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_configured": "Sonarr is already configured",
-      "unknown": "Unexpected error"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "unknown": "[%key:common::config_flow::abort::unknown%]"
     }
   },
   "options": {
