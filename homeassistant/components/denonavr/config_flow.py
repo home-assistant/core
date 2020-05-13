@@ -139,7 +139,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.serial_number:
             self.serial_number = receiver.serial_number
         if not self.model_name:
-            self.model_name = receiver.model_name
+            self.model_name = (receiver.model_name).replace("*", "")
 
         if not self.serial_number:
             _LOGGER.error(
@@ -190,7 +190,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="not_denonavr_missing")
 
-        self.model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
+        self.model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME].replace("*", "")
         self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         self.host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
 
