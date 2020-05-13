@@ -168,8 +168,8 @@ async def test_full_user_flow_advanced_options(
     assert result["step_id"] == "user"
 
     user_input = {
-         **MOCK_USER_INPUT,
-         CONF_VERIFY_SSL: True,
+        **MOCK_USER_INPUT,
+        CONF_VERIFY_SSL: True,
     }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input,
