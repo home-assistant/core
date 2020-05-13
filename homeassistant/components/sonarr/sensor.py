@@ -183,11 +183,8 @@ class SonarrSensor(SonarrEntity):
         """Initialize Sonarr sensor."""
         self._unit_of_measurement = unit_of_measurement
         self._key = key
-        self._unique_id = None
+        self._unique_id = f"{unique_id}_{key}"
         self.last_update_success = False
-
-        if unique_id is not None:
-            self._unique_id = f"{unique_id}_{key}"
 
         super().__init__(
             sonarr=sonarr,
