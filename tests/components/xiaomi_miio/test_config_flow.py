@@ -188,7 +188,7 @@ async def test_zeroconf_unknown_device(hass):
 async def test_zeroconf_no_data(hass):
     """Test a failed zeroconf discovery because of no data."""
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+        const.DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data={}
     )
 
     assert result["type"] == "abort"
