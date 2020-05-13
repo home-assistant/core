@@ -152,7 +152,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(project_devices)
 
     def handle_new_task(call):
-        """Call when a user creates a new Todoist Task from HASS."""
+        """Call when a user creates a new Todoist Task from Home Assistant."""
         project_name = call.data[PROJECT_NAME]
         project_id = project_id_lookup[project_name]
 
@@ -571,7 +571,7 @@ class TodoistProjectData:
             if self.event[END] is not None:
                 self.event[END] = {DATETIME: self.event[END].strftime(DATE_STR_FORMAT)}
             else:
-                # HASS gets cranky if a calendar event never ends
+                # Home Assistant gets cranky if a calendar event never ends
                 # Let's set our "due date" to tomorrow
                 self.event[END] = {
                     DATETIME: (datetime.utcnow() + timedelta(days=1)).strftime(

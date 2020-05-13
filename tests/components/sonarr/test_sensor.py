@@ -6,7 +6,9 @@ import unittest
 import pytest
 
 import homeassistant.components.sonarr.sensor as sonarr
+from homeassistant.const import DATA_GIGABYTES, UNIT_PERCENTAGE
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -490,14 +492,14 @@ class TestSonarrSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_diskspace_no_paths(self, req_mock):
         """Test getting all disk space."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": [],
             "monitored_conditions": ["diskspace"],
         }
@@ -506,18 +508,18 @@ class TestSonarrSetup(unittest.TestCase):
             device.update()
             assert "263.10" == device.state
             assert "mdi:harddisk" == device.icon
-            assert "GB" == device.unit_of_measurement
+            assert DATA_GIGABYTES == device.unit_of_measurement
             assert "Sonarr Disk Space" == device.name
             assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_diskspace_paths(self, req_mock):
         """Test getting diskspace for included paths."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["diskspace"],
         }
@@ -526,18 +528,18 @@ class TestSonarrSetup(unittest.TestCase):
             device.update()
             assert "263.10" == device.state
             assert "mdi:harddisk" == device.icon
-            assert "GB" == device.unit_of_measurement
+            assert DATA_GIGABYTES == device.unit_of_measurement
             assert "Sonarr Disk Space" == device.name
             assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_commands(self, req_mock):
         """Test getting running commands."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["commands"],
         }
@@ -550,14 +552,14 @@ class TestSonarrSetup(unittest.TestCase):
             assert "Sonarr Commands" == device.name
             assert "pending" == device.device_state_attributes["RescanSeries"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_queue(self, req_mock):
         """Test getting downloads in the queue."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["queue"],
         }
@@ -568,16 +570,19 @@ class TestSonarrSetup(unittest.TestCase):
             assert "mdi:download" == device.icon
             assert "Episodes" == device.unit_of_measurement
             assert "Sonarr Queue" == device.name
-            assert "100.00%" == device.device_state_attributes["Game of Thrones S03E08"]
+            assert (
+                f"100.00{UNIT_PERCENTAGE}"
+                == device.device_state_attributes["Game of Thrones S03E08"]
+            )
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_series(self, req_mock):
         """Test getting the number of series."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["series"],
         }
@@ -592,14 +597,14 @@ class TestSonarrSetup(unittest.TestCase):
                 "26/26 Episodes" == device.device_state_attributes["Marvel's Daredevil"]
             )
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_wanted(self, req_mock):
         """Test getting wanted episodes."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["wanted"],
         }
@@ -614,14 +619,14 @@ class TestSonarrSetup(unittest.TestCase):
                 "2014-02-03" == device.device_state_attributes["Archer (2009) S05E04"]
             )
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_upcoming_multiple_days(self, req_mock):
         """Test the upcoming episodes for multiple days."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
@@ -635,7 +640,7 @@ class TestSonarrSetup(unittest.TestCase):
             assert "S04E11" == device.device_state_attributes["Bob's Burgers"]
 
     @pytest.mark.skip
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_upcoming_today(self, req_mock):
         """Test filtering for a single day.
 
@@ -645,7 +650,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
@@ -658,14 +663,14 @@ class TestSonarrSetup(unittest.TestCase):
             assert "Sonarr Upcoming" == device.name
             assert "S04E11" == device.device_state_attributes["Bob's Burgers"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_system_status(self, req_mock):
         """Test getting system status."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["status"],
         }
@@ -678,14 +683,14 @@ class TestSonarrSetup(unittest.TestCase):
             assert "6.2.9200.0" == device.device_state_attributes["osVersion"]
 
     @pytest.mark.skip
-    @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
+    @patch("requests.get", side_effect=mocked_requests_get)
     def test_ssl(self, req_mock):
         """Test SSL being enabled."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
             "ssl": "true",
@@ -700,14 +705,14 @@ class TestSonarrSetup(unittest.TestCase):
             assert "Sonarr Upcoming" == device.name
             assert "S04E11" == device.device_state_attributes["Bob's Burgers"]
 
-    @unittest.mock.patch("requests.get", side_effect=mocked_exception)
+    @patch("requests.get", side_effect=mocked_exception)
     def test_exception_handling(self, req_mock):
         """Test exception being handled."""
         config = {
             "platform": "sonarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }

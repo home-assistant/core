@@ -8,6 +8,7 @@ from homeassistant.components import mqtt
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
@@ -17,9 +18,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_VALUE_TEMPLATE,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
@@ -41,6 +45,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,12 +56,14 @@ CONF_PAYLOAD_DISARM = "payload_disarm"
 CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
+CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 CONF_COMMAND_TEMPLATE = "command_template"
 
 DEFAULT_COMMAND_TEMPLATE = "{{action}}"
 DEFAULT_ARM_NIGHT = "ARM_NIGHT"
 DEFAULT_ARM_AWAY = "ARM_AWAY"
 DEFAULT_ARM_HOME = "ARM_HOME"
+DEFAULT_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
 DEFAULT_DISARM = "DISARM"
 DEFAULT_NAME = "MQTT Alarm"
 PLATFORM_SCHEMA = (
@@ -74,6 +81,9 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
             vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
             vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT): cv.string,
+            vol.Optional(
+                CONF_PAYLOAD_ARM_CUSTOM_BYPASS, default=DEFAULT_ARM_CUSTOM_BYPASS
+            ): cv.string,
             vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
             vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
             vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -98,15 +108,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT alarm control panel."""
+        discovery_data = discovery_payload.discovery_data
         try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_hash
+                config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
+            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
             raise
 
     async_dispatcher_connect(
@@ -115,10 +124,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_hash=None
+    config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Alarm Control Panel platform."""
-    async_add_entities([MqttAlarm(config, config_entry, discovery_hash)])
+    async_add_entities([MqttAlarm(config, config_entry, discovery_data)])
 
 
 class MqttAlarm(
@@ -126,11 +135,11 @@ class MqttAlarm(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    alarm.AlarmControlPanel,
+    alarm.AlarmControlPanelEntity,
 ):
     """Representation of a MQTT alarm status."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Init the MQTT Alarm Control Panel."""
         self._state = None
         self._config = config
@@ -141,7 +150,7 @@ class MqttAlarm(
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
@@ -168,6 +177,7 @@ class MqttAlarm(
         command_template.hass = self.hass
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Run when new MQTT message has been received."""
             payload = msg.payload
@@ -180,7 +190,10 @@ class MqttAlarm(
                 STATE_ALARM_ARMED_HOME,
                 STATE_ALARM_ARMED_AWAY,
                 STATE_ALARM_ARMED_NIGHT,
+                STATE_ALARM_ARMED_CUSTOM_BYPASS,
                 STATE_ALARM_PENDING,
+                STATE_ALARM_ARMING,
+                STATE_ALARM_DISARMING,
                 STATE_ALARM_TRIGGERED,
             ):
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
@@ -207,6 +220,7 @@ class MqttAlarm(
         )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def should_poll(self):
@@ -231,7 +245,12 @@ class MqttAlarm(
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+        return (
+            SUPPORT_ALARM_ARM_HOME
+            | SUPPORT_ALARM_ARM_AWAY
+            | SUPPORT_ALARM_ARM_NIGHT
+            | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+        )
 
     @property
     def code_format(self):
@@ -291,6 +310,17 @@ class MqttAlarm(
         if code_required and not self._validate_code(code, "arming night"):
             return
         action = self._config[CONF_PAYLOAD_ARM_NIGHT]
+        self._publish(code, action)
+
+    async def async_alarm_arm_custom_bypass(self, code=None):
+        """Send arm custom bypass command.
+
+        This method is a coroutine.
+        """
+        code_required = self._config[CONF_CODE_ARM_REQUIRED]
+        if code_required and not self._validate_code(code, "arming custom bypass"):
+            return
+        action = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
         self._publish(code, action)
 
     def _publish(self, code, action):

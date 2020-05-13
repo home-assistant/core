@@ -1,7 +1,6 @@
 """The tests for the MQTT room presence sensor."""
 import datetime
 import json
-from unittest.mock import patch
 
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
 import homeassistant.components.sensor as sensor
@@ -9,6 +8,7 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
+from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
 
 DEVICE_ID = "123TESTMAC"
@@ -16,10 +16,10 @@ NAME = "test_device"
 BEDROOM = "bedroom"
 LIVING_ROOM = "living_room"
 
-BEDROOM_TOPIC = "room_presence/{}".format(BEDROOM)
-LIVING_ROOM_TOPIC = "room_presence/{}".format(LIVING_ROOM)
+BEDROOM_TOPIC = f"room_presence/{BEDROOM}"
+LIVING_ROOM_TOPIC = f"room_presence/{LIVING_ROOM}"
 
-SENSOR_STATE = "sensor.{}".format(NAME)
+SENSOR_STATE = f"sensor.{NAME}"
 
 CONF_DEVICE_ID = "device_id"
 CONF_TIMEOUT = "timeout"

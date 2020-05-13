@@ -6,7 +6,12 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
+from homeassistant.const import (
+    CONF_ID,
+    EVENT_COMPONENT_LOADED,
+    HTTP_BAD_REQUEST,
+    HTTP_NOT_FOUND,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import ATTR_COMPONENT
@@ -28,6 +33,8 @@ SECTIONS = (
     "scene",
 )
 ON_DEMAND = ("zwave",)
+ACTION_CREATE_UPDATE = "create_update"
+ACTION_DELETE = "delete"
 
 
 async def async_setup(hass, config):
@@ -92,6 +99,7 @@ class BaseEditConfigView(HomeAssistantView):
         self.data_schema = data_schema
         self.post_write_hook = post_write_hook
         self.data_validator = data_validator
+        self.mutation_lock = asyncio.Lock()
 
     def _empty_config(self):
         """Empty config if file not found."""
@@ -112,11 +120,12 @@ class BaseEditConfigView(HomeAssistantView):
     async def get(self, request, config_key):
         """Fetch device specific config."""
         hass = request.app["hass"]
-        current = await self.read_config(hass)
-        value = self._get_value(hass, current, config_key)
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            value = self._get_value(hass, current, config_key)
 
         if value is None:
-            return self.json_message("Resource not found", 404)
+            return self.json_message("Resource not found", HTTP_NOT_FOUND)
 
         return self.json(value)
 
@@ -125,12 +134,12 @@ class BaseEditConfigView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON specified", 400)
+            return self.json_message("Invalid JSON specified", HTTP_BAD_REQUEST)
 
         try:
             self.key_schema(config_key)
         except vol.Invalid as err:
-            return self.json_message(f"Key malformed: {err}", 400)
+            return self.json_message(f"Key malformed: {err}", HTTP_BAD_REQUEST)
 
         hass = request.app["hass"]
 
@@ -142,35 +151,39 @@ class BaseEditConfigView(HomeAssistantView):
             else:
                 self.data_schema(data)
         except (vol.Invalid, HomeAssistantError) as err:
-            return self.json_message(f"Message malformed: {err}", 400)
+            return self.json_message(f"Message malformed: {err}", HTTP_BAD_REQUEST)
 
         path = hass.config.path(self.path)
 
-        current = await self.read_config(hass)
-        self._write_value(hass, current, config_key, data)
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            self._write_value(hass, current, config_key, data)
 
-        await hass.async_add_executor_job(_write, path, current)
+            await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(self.post_write_hook(hass))
+            hass.async_create_task(
+                self.post_write_hook(ACTION_CREATE_UPDATE, config_key)
+            )
 
         return self.json({"result": "ok"})
 
     async def delete(self, request, config_key):
         """Remove an entry."""
         hass = request.app["hass"]
-        current = await self.read_config(hass)
-        value = self._get_value(hass, current, config_key)
-        path = hass.config.path(self.path)
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            value = self._get_value(hass, current, config_key)
+            path = hass.config.path(self.path)
 
-        if value is None:
-            return self.json_message("Resource not found", 404)
+            if value is None:
+                return self.json_message("Resource not found", HTTP_NOT_FOUND)
 
-        self._delete_value(hass, current, config_key)
-        await hass.async_add_executor_job(_write, path, current)
+            self._delete_value(hass, current, config_key)
+            await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(self.post_write_hook(hass))
+            hass.async_create_task(self.post_write_hook(ACTION_DELETE, config_key))
 
         return self.json({"result": "ok"})
 

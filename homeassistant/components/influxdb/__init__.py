@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_INCLUDE,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
@@ -83,6 +84,7 @@ CONFIG_SCHEMA = vol.Schema(
                         }
                     ),
                     vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+                    vol.Optional(CONF_PATH): cv.string,
                     vol.Optional(CONF_PORT): cv.port,
                     vol.Optional(CONF_SSL): cv.boolean,
                     vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
@@ -130,6 +132,9 @@ def setup(hass, config):
 
     if CONF_HOST in conf:
         kwargs["host"] = conf[CONF_HOST]
+
+    if CONF_PATH in conf:
+        kwargs["path"] = conf[CONF_PATH]
 
     if CONF_PORT in conf:
         kwargs["port"] = conf[CONF_PORT]
@@ -239,7 +244,7 @@ def setup(hass, config):
             elif key != "unit_of_measurement" or include_uom:
                 # If the key is already in fields
                 if key in json["fields"]:
-                    key = key + "_"
+                    key = f"{key}_"
                 # Prevent column data errors in influxDB.
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
@@ -355,7 +360,7 @@ class InfluxThread(threading.Thread):
             except (
                 exceptions.InfluxDBClientError,
                 exceptions.InfluxDBServerError,
-                IOError,
+                OSError,
             ) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)

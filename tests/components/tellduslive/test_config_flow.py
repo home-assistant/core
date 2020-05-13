@@ -239,7 +239,7 @@ async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):
 
 
 async def test_discovery_already_configured(hass, mock_tellduslive):
-    """Test abort if alredy configured fires from discovery."""
+    """Test abort if already configured fires from discovery."""
     MockConfigEntry(domain="tellduslive", data={"host": "some-host"}).add_to_hass(hass)
     flow = init_config_flow(hass)
 

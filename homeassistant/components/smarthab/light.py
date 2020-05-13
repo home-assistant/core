@@ -1,16 +1,11 @@
-"""
-Support for SmartHab device integration.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/smarthab/
-"""
+"""Support for SmartHab device integration."""
 from datetime import timedelta
 import logging
 
 import pysmarthab
 from requests.exceptions import Timeout
 
-from homeassistant.components.light import Light
+from homeassistant.components.light import LightEntity
 
 from . import DATA_HUB, DOMAIN
 
@@ -34,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class SmartHabLight(Light):
+class SmartHabLight(LightEntity):
     """Representation of a SmartHab Light."""
 
     def __init__(self, light):

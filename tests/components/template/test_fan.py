@@ -38,7 +38,7 @@ _DIRECTION_INPUT_SELECT = "input_select.direction"
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -594,9 +594,9 @@ def _verify(
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
     assert state.state == expected_state
-    assert attributes.get(ATTR_SPEED, None) == expected_speed
-    assert attributes.get(ATTR_OSCILLATING, None) == expected_oscillating
-    assert attributes.get(ATTR_DIRECTION, None) == expected_direction
+    assert attributes.get(ATTR_SPEED) == expected_speed
+    assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
+    assert attributes.get(ATTR_DIRECTION) == expected_direction
 
 
 async def _register_components(hass, speed_list=None):

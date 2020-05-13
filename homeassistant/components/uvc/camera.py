@@ -1,12 +1,12 @@
 """Support for Ubiquiti's UVC cameras."""
 import logging
-import socket
+import re
 
 import requests
 from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -67,7 +67,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         [
             UnifiVideoCamera(nvrconn, camera[identifier], camera["name"], password)
             for camera in cameras
-        ]
+        ],
+        True,
     )
     return True
 
@@ -86,6 +87,7 @@ class UnifiVideoCamera(Camera):
         self._connect_addr = None
         self._camera = None
         self._motion_status = False
+        self._caminfo = None
 
     @property
     def name(self):
@@ -93,16 +95,29 @@ class UnifiVideoCamera(Camera):
         return self._name
 
     @property
+    def should_poll(self):
+        """If this entity should be polled."""
+        return True
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        channels = self._caminfo["channels"]
+        for channel in channels:
+            if channel["isRtspEnabled"]:
+                return SUPPORT_STREAM
+
+        return 0
+
+    @property
     def is_recording(self):
         """Return true if the camera is recording."""
-        caminfo = self._nvr.get_camera(self._uuid)
-        return caminfo["recordingSettings"]["fullTimeRecordEnabled"]
+        return self._caminfo["recordingSettings"]["fullTimeRecordEnabled"]
 
     @property
     def motion_detection_enabled(self):
         """Camera Motion Detection Status."""
-        caminfo = self._nvr.get_camera(self._uuid)
-        return caminfo["recordingSettings"]["motionRecordEnabled"]
+        return self._caminfo["recordingSettings"]["motionRecordEnabled"]
 
     @property
     def brand(self):
@@ -112,13 +127,11 @@ class UnifiVideoCamera(Camera):
     @property
     def model(self):
         """Return the model of this camera."""
-        caminfo = self._nvr.get_camera(self._uuid)
-        return caminfo["model"]
+        return self._caminfo["model"]
 
     def _login(self):
         """Login to the camera."""
-
-        caminfo = self._nvr.get_camera(self._uuid)
+        caminfo = self._caminfo
         if self._connect_addr:
             addrs = [self._connect_addr]
         else:
@@ -143,7 +156,7 @@ class UnifiVideoCamera(Camera):
                 )
                 self._connect_addr = addr
                 break
-            except socket.error:
+            except OSError:
                 pass
             except uvc_camera.CameraConnectError:
                 pass
@@ -154,6 +167,7 @@ class UnifiVideoCamera(Camera):
             return None
 
         self._camera = camera
+        self._caminfo = caminfo
         return True
 
     def camera_image(self):
@@ -179,11 +193,7 @@ class UnifiVideoCamera(Camera):
 
     def set_motion_detection(self, mode):
         """Set motion detection on or off."""
-
-        if mode is True:
-            set_mode = "motion"
-        else:
-            set_mode = "none"
+        set_mode = "motion" if mode is True else "none"
 
         try:
             self._nvr.set_recordmode(self._uuid, set_mode)
@@ -199,3 +209,24 @@ class UnifiVideoCamera(Camera):
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
         self.set_motion_detection(False)
+
+    async def stream_source(self):
+        """Return the source of the stream."""
+        for channel in self._caminfo["channels"]:
+            if channel["isRtspEnabled"]:
+                uri = next(
+                    (
+                        uri
+                        for i, uri in enumerate(channel["rtspUris"])
+                        # pylint: disable=protected-access
+                        if re.search(self._nvr._host, uri)
+                        # pylint: enable=protected-access
+                    )
+                )
+                return uri
+
+        return None
+
+    def update(self):
+        """Update the info."""
+        self._caminfo = self._nvr.get_camera(self._uuid)

@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_RESOURCES,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -78,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         try:
             resource_data = netdata.api.metrics[sensor]
             unit = (
-                "%"
+                UNIT_PERCENTAGE
                 if resource_data["units"] == "percentage"
                 else resource_data["units"]
             )

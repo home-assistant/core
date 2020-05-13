@@ -5,7 +5,7 @@ import re
 import serial
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_FILENAME,
     CONF_NAME,
@@ -61,15 +61,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Connect with serial port and return Acer Projector."""
-    serial_port = config.get(CONF_FILENAME)
-    name = config.get(CONF_NAME)
-    timeout = config.get(CONF_TIMEOUT)
-    write_timeout = config.get(CONF_WRITE_TIMEOUT)
+    serial_port = config[CONF_FILENAME]
+    name = config[CONF_NAME]
+    timeout = config[CONF_TIMEOUT]
+    write_timeout = config[CONF_WRITE_TIMEOUT]
 
     add_entities([AcerSwitch(serial_port, name, timeout, write_timeout)], True)
 
 
-class AcerSwitch(SwitchDevice):
+class AcerSwitch(SwitchEntity):
     """Represents an Acer Projector as a switch."""
 
     def __init__(self, serial_port, name, timeout, write_timeout, **kwargs):
@@ -152,7 +152,7 @@ class AcerSwitch(SwitchDevice):
             self._available = False
 
         for key in self._attributes:
-            msg = CMD_DICT.get(key, None)
+            msg = CMD_DICT.get(key)
             if msg:
                 awns = self._write_read_format(msg)
                 self._attributes[key] = awns

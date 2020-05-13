@@ -7,9 +7,15 @@ from PyViCare.PyViCareGazBoiler import GazBoiler
 from PyViCare.PyViCareHeatPump import HeatPump
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import STORAGE_DIR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +45,9 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=60): vol.All(
+                    cv.time_period, lambda value: value.total_seconds()
+                ),
                 vol.Optional(CONF_CIRCUIT): int,
                 vol.Optional(CONF_NAME, default="ViCare"): cv.string,
                 vol.Optional(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE): cv.enum(
@@ -54,9 +63,11 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Create the ViCare component."""
     conf = config[DOMAIN]
-    params = {"token_file": "/tmp/vicare_token.save"}
+    params = {"token_file": hass.config.path(STORAGE_DIR, "vicare_token.save")}
     if conf.get(CONF_CIRCUIT) is not None:
         params["circuit"] = conf[CONF_CIRCUIT]
+
+    params["cacheDuration"] = conf.get(CONF_SCAN_INTERVAL)
 
     heating_type = conf[CONF_HEATING_TYPE]
 

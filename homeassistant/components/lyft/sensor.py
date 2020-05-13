@@ -8,6 +8,7 @@ from lyft_rides.errors import APIError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -84,11 +85,11 @@ class LyftSensor(Entity):
         self._product_id = product_id
         self._product = product
         self._sensortype = sensorType
-        self._name = "{} {}".format(self._product["display_name"], self._sensortype)
+        self._name = f"{self._product['display_name']} {self._sensortype}"
         if "lyft" not in self._name.lower():
             self._name = f"Lyft{self._name}"
         if self._sensortype == "time":
-            self._unit_of_measurement = "min"
+            self._unit_of_measurement = TIME_MINUTES
         elif self._sensortype == "price":
             estimate = self._product["estimate"]
             if estimate is not None:

@@ -8,6 +8,7 @@ This module exists of the following parts:
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 import logging
+import secrets
 import time
 from typing import Any, Awaitable, Callable, Dict, Optional, cast
 
@@ -18,9 +19,9 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.auth.util import generate_secret
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.network import get_url
 
 from .aiohttp_client import async_get_clientsession
 
@@ -58,11 +59,10 @@ class AbstractOAuth2Implementation(ABC):
 
         Pass external data in with:
 
-        ```python
         await hass.config_entries.flow.async_configure(
             flow_id=flow_id, user_input=external_data
         )
-        ```
+
         """
 
     @abstractmethod
@@ -118,7 +118,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}"  # type: ignore
+        return f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}"
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
@@ -196,7 +196,9 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """Extra data that needs to be appended to the authorize url."""
         return {}
 
-    async def async_step_pick_implementation(self, user_input: dict = None) -> dict:
+    async def async_step_pick_implementation(
+        self, user_input: Optional[dict] = None
+    ) -> dict:
         """Handle a flow start."""
         assert self.hass
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
@@ -224,7 +226,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             ),
         )
 
-    async def async_step_auth(self, user_input: dict = None) -> dict:
+    async def async_step_auth(self, user_input: Optional[dict] = None) -> dict:
         """Create an entry for auth."""
         # Flow has been triggered by external data
         if user_input:
@@ -241,7 +243,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
         return self.async_external_step(step_id="auth", url=url)
 
-    async def async_step_creation(self, user_input: dict = None) -> dict:
+    async def async_step_creation(self, user_input: Optional[dict] = None) -> dict:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
         token["expires_at"] = time.time() + token["expires_in"]
@@ -259,10 +261,20 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
+    async def async_step_discovery(self, user_input: Optional[dict] = None) -> dict:
+        """Handle a flow initialized by discovery."""
+        await self.async_set_unique_id(self.DOMAIN)
+
+        assert self.hass is not None
+        if self.hass.config_entries.async_entries(self.DOMAIN):
+            return self.async_abort(reason="already_configured")
+
+        return await self.async_step_pick_implementation()
+
     async_step_user = async_step_pick_implementation
-    async_step_ssdp = async_step_pick_implementation
-    async_step_zeroconf = async_step_pick_implementation
-    async_step_homekit = async_step_pick_implementation
+    async_step_ssdp = async_step_discovery
+    async_step_zeroconf = async_step_discovery
+    async_step_homekit = async_step_discovery
 
     @classmethod
     def async_register_implementation(
@@ -358,7 +370,7 @@ class OAuth2AuthorizeCallbackView(HomeAssistantView):
         state = _decode_jwt(hass, request.query["state"])
 
         if state is None:
-            return web.Response(text=f"Invalid state")
+            return web.Response(text="Invalid state")
 
         await hass.config_entries.flow.async_configure(
             flow_id=state["flow_id"], user_input=request.query["code"]
@@ -441,7 +453,7 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
     secret = hass.data.get(DATA_JWT_SECRET)
 
     if secret is None:
-        secret = hass.data[DATA_JWT_SECRET] = generate_secret()
+        secret = hass.data[DATA_JWT_SECRET] = secrets.token_hex()
 
     return jwt.encode(data, secret, algorithm="HS256").decode()
 

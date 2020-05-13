@@ -1,20 +1,22 @@
 """The tests for the emulated Hue component."""
 import json
 import unittest
-from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
+import defusedxml.ElementTree as ET
 import requests
 
 from homeassistant import const, setup
-from homeassistant.components import emulated_hue, http
+from homeassistant.components import emulated_hue
+from homeassistant.const import HTTP_OK
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
-BRIDGE_URL_BASE = "http://127.0.0.1:{}".format(BRIDGE_SERVER_PORT) + "{}"
+BRIDGE_URL_BASE = f"http://127.0.0.1:{BRIDGE_SERVER_PORT}" + "{}"
 JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 
@@ -28,11 +30,7 @@ class TestEmulatedHue(unittest.TestCase):
         """Set up the class."""
         cls.hass = hass = get_test_home_assistant()
 
-        setup.setup_component(
-            hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
-        )
-
-        with patch("homeassistant.components" ".emulated_hue.UPNPResponderThread"):
+        with patch("homeassistant.components.emulated_hue.UPNPResponderThread"):
             setup.setup_component(
                 hass,
                 emulated_hue.DOMAIN,
@@ -52,16 +50,16 @@ class TestEmulatedHue(unittest.TestCase):
 
     def test_description_xml(self):
         """Test the description."""
-        import defusedxml.ElementTree as ET
-
         result = requests.get(BRIDGE_URL_BASE.format("/description.xml"), timeout=5)
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "text/xml" in result.headers["content-type"]
 
         # Make sure the XML is parsable
         try:
-            ET.fromstring(result.text)
+            root = ET.fromstring(result.text)
+            ns = {"s": "urn:schemas-upnp-org:device-1-0"}
+            assert root.find("./s:device/s:serialNumber", ns).text == "001788FFFE23BFC2"
         except:  # noqa: E722 pylint: disable=bare-except
             self.fail("description.xml is not valid XML!")
 
@@ -73,7 +71,7 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format("/api"), data=json.dumps(request_json), timeout=5
         )
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "application/json" in result.headers["content-type"]
 
         resp_json = result.json()
@@ -92,7 +90,7 @@ class TestEmulatedHue(unittest.TestCase):
             timeout=5,
         )
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "application/json" in result.headers["content-type"]
 
         resp_json = result.json()

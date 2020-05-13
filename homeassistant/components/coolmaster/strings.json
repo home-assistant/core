@@ -1,11 +1,10 @@
 {
   "config": {
-    "title": "CoolMasterNet",
     "step": {
       "user": {
         "title": "Setup your CoolMasterNet connection details.",
         "data": {
-          "host": "Host",
+          "host": "[%key:common::config_flow::data::host%]",
           "off": "Can be turned off",
           "heat": "Support heat mode",
           "cool": "Support cool mode",

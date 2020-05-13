@@ -2,7 +2,6 @@
 from datetime import timedelta
 import re
 import unittest
-from unittest.mock import MagicMock, patch
 
 import forecastio
 from requests.exceptions import HTTPError
@@ -11,7 +10,8 @@ import requests_mock
 from homeassistant.components.darksky import sensor as darksky
 from homeassistant.setup import setup_component
 
-from tests.common import MockDependency, get_test_home_assistant, load_fixture
+from tests.async_mock import MagicMock, patch
+from tests.common import get_test_home_assistant, load_fixture
 
 VALID_CONFIG_MINIMAL = {
     "sensor": {
@@ -30,7 +30,7 @@ INVALID_CONFIG_MINIMAL = {
         "api_key": "foo",
         "forecast": [1, 2],
         "hourly_forecast": [1, 2],
-        "monitored_conditions": ["sumary", "iocn", "temperature_high"],
+        "monitored_conditions": ["summary", "iocn", "temperature_high"],
         "scan_interval": timedelta(seconds=120),
     }
 }
@@ -110,12 +110,11 @@ class TestDarkSkySetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @MockDependency("forecastio")
     @patch(
         "homeassistant.components.darksky.sensor.forecastio.load_forecast",
         new=load_forecastMock,
     )
-    def test_setup_with_config(self, mock_forecastio):
+    def test_setup_with_config(self):
         """Test the platform setup with configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_MINIMAL)
 
@@ -129,12 +128,11 @@ class TestDarkSkySetup(unittest.TestCase):
         state = self.hass.states.get("sensor.dark_sky_summary")
         assert state is None
 
-    @MockDependency("forecastio")
     @patch(
         "homeassistant.components.darksky.sensor.forecastio.load_forecast",
         new=load_forecastMock,
     )
-    def test_setup_with_language_config(self, mock_forecastio):
+    def test_setup_with_language_config(self):
         """Test the platform setup with language configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_LANG_DE)
 
@@ -156,7 +154,7 @@ class TestDarkSkySetup(unittest.TestCase):
         url = "https://api.darksky.net/forecast/{}/{},{}?units=auto".format(
             self.key, str(self.lat), str(self.lon)
         )
-        msg = "400 Client Error: Bad Request for url: {}".format(url)
+        msg = f"400 Client Error: Bad Request for url: {url}"
         mock_get_forecast.side_effect = HTTPError(msg)
 
         response = darksky.setup_platform(
@@ -164,12 +162,11 @@ class TestDarkSkySetup(unittest.TestCase):
         )
         assert not response
 
-    @MockDependency("forecastio")
     @patch(
         "homeassistant.components.darksky.sensor.forecastio.load_forecast",
         new=load_forecastMock,
     )
-    def test_setup_with_alerts_config(self, mock_forecastio):
+    def test_setup_with_alerts_config(self):
         """Test the platform setup with alert configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_ALERTS)
 
@@ -198,3 +195,7 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state.attributes.get("friendly_name") == "Dark Sky Summary"
         state = self.hass.states.get("sensor.dark_sky_alerts")
         assert state.state == "2"
+
+        state = self.hass.states.get("sensor.dark_sky_daytime_high_temperature_1d")
+        assert state is not None
+        assert state.attributes.get("device_class") == "temperature"

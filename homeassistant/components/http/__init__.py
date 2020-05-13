@@ -3,7 +3,8 @@ from ipaddress import ip_network
 import logging
 import os
 import ssl
-from typing import Optional
+from traceback import extract_stack
+from typing import Optional, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
@@ -14,7 +15,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVER_PORT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
 import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
 
@@ -54,56 +58,128 @@ DEFAULT_DEVELOPMENT = "0"
 DEFAULT_CORS = "https://cast.home-assistant.io"
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
+MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
 
-HTTP_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
-        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
-        vol.Optional(CONF_BASE_URL): cv.string,
-        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
-        vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
-            cv.ensure_list, [ip_network]
-        ),
-        vol.Optional(
-            CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
-        ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
-        vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
-            [SSL_INTERMEDIATE, SSL_MODERN]
-        ),
-    }
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+
+
+HTTP_SCHEMA = vol.All(
+    cv.deprecated(CONF_BASE_URL),
+    vol.Schema(
+        {
+            vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
+            vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
+            vol.Optional(CONF_BASE_URL): cv.string,
+            vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+            vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
+            vol.Optional(CONF_SSL_KEY): cv.isfile,
+            vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
+            vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
+                cv.ensure_list, [ip_network]
+            ),
+            vol.Optional(
+                CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
+            ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
+            vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+            vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
+                [SSL_INTERMEDIATE, SSL_MODERN]
+            ),
+        }
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+
+
+@bind_hass
+async def async_get_last_config(hass: HomeAssistant) -> Optional[dict]:
+    """Return the last known working config."""
+    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    return cast(Optional[dict], await store.async_load())
 
 
 class ApiConfig:
     """Configuration settings for API server."""
 
     def __init__(
-        self, host: str, port: Optional[int] = SERVER_PORT, use_ssl: bool = False
+        self,
+        local_ip: str,
+        host: str,
+        port: Optional[int] = SERVER_PORT,
+        use_ssl: bool = False,
     ) -> None:
         """Initialize a new API config object."""
+        self.local_ip = local_ip
         self.host = host
         self.port = port
         self.use_ssl = use_ssl
 
         host = host.rstrip("/")
         if host.startswith(("http://", "https://")):
-            self.base_url = host
+            self.deprecated_base_url = host
         elif use_ssl:
-            self.base_url = f"https://{host}"
+            self.deprecated_base_url = f"https://{host}"
         else:
-            self.base_url = f"http://{host}"
+            self.deprecated_base_url = f"http://{host}"
 
         if port is not None:
-            self.base_url += f":{port}"
+            self.deprecated_base_url += f":{port}"
+
+    @property
+    def base_url(self) -> str:
+        """Proxy property to find caller of this deprecated property."""
+        found_frame = None
+        for frame in reversed(extract_stack()):
+            for path in ("custom_components/", "homeassistant/components/"):
+                try:
+                    index = frame.filename.index(path)
+
+                    # Skip webhook from the stack
+                    if frame.filename[index:].startswith(
+                        "homeassistant/components/webhook/"
+                    ):
+                        continue
+
+                    found_frame = frame
+                    break
+                except ValueError:
+                    continue
+
+            if found_frame is not None:
+                break
+
+        # Did not source from an integration? Hard error.
+        if found_frame is None:
+            raise RuntimeError(
+                "Detected use of deprecated `base_url` property in the Home Assistant core. Please report this issue."
+            )
+
+        # If a frame was found, it originated from an integration
+        if found_frame:
+            start = index + len(path)
+            end = found_frame.filename.index("/", start)
+
+            integration = found_frame.filename[start:end]
+
+            if path == "custom_components/":
+                extra = " to the custom component author"
+            else:
+                extra = ""
+
+            _LOGGER.warning(
+                "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.get_url` method instead. Please report issue%s for %s using this method at %s, line %s: %s",
+                extra,
+                integration,
+                found_frame.filename[index:],
+                found_frame.lineno,
+                found_frame.line.strip(),
+            )
+
+        return self.deprecated_base_url
 
 
 async def async_setup(hass, config):
@@ -149,11 +225,25 @@ async def async_setup(hass, config):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
         await server.start()
 
+        # If we are set up successful, we store the HTTP settings for safe mode.
+        store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+
+        if CONF_TRUSTED_PROXIES in conf:
+            conf_to_save = dict(conf)
+            conf_to_save[CONF_TRUSTED_PROXIES] = [
+                str(ip.network_address) for ip in conf_to_save[CONF_TRUSTED_PROXIES]
+            ]
+        else:
+            conf_to_save = conf
+
+        await store.async_save(conf_to_save)
+
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
     hass.http = server
 
     host = conf.get(CONF_BASE_URL)
+    local_ip = await hass.async_add_executor_job(hass_util.get_local_ip)
 
     if host:
         port = None
@@ -161,10 +251,10 @@ async def async_setup(hass, config):
         host = server_host
         port = server_port
     else:
-        host = hass_util.get_local_ip()
+        host = local_ip
         port = server_port
 
-    hass.config.api = ApiConfig(host, port, ssl_certificate is not None)
+    hass.config.api = ApiConfig(local_ip, host, port, ssl_certificate is not None)
 
     return True
 
@@ -188,7 +278,9 @@ class HomeAssistantHTTP:
         ssl_profile,
     ):
         """Initialize the HTTP Home Assistant server."""
-        app = self.app = web.Application(middlewares=[])
+        app = self.app = web.Application(
+            middlewares=[], client_max_size=MAX_CLIENT_SIZE
+        )
         app[KEY_HASS] = hass
 
         # This order matters

@@ -1,13 +1,14 @@
 """Tests for the arcam_fmj component."""
 from arcam.fmj.client import Client
 from arcam.fmj.state import State
-from asynctest import Mock
 import pytest
 
 from homeassistant.components.arcam_fmj import DEVICE_SCHEMA
 from homeassistant.components.arcam_fmj.const import DOMAIN
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
+
+from tests.async_mock import Mock
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 1234
@@ -16,6 +17,7 @@ MOCK_TURN_ON = {
     "data": {"entity_id": "switch.test"},
 }
 MOCK_NAME = "dummy"
+MOCK_ENTITY_ID = "media_player.arcam_fmj_1"
 MOCK_CONFIG = DEVICE_SCHEMA({CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT})
 
 
@@ -41,6 +43,10 @@ def state_fixture(client):
     state.client = client
     state.zn = 1
     state.get_power.return_value = True
+    state.get_volume.return_value = 0.0
+    state.get_source_list.return_value = []
+    state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_mute.return_value = None
     return state
 
 
@@ -48,5 +54,7 @@ def state_fixture(client):
 def player_fixture(hass, state):
     """Get standard player."""
     player = ArcamFmj(state, MOCK_NAME, None)
-    player.async_schedule_update_ha_state = Mock()
+    player.entity_id = MOCK_ENTITY_ID
+    player.hass = hass
+    player.async_write_ha_state = Mock()
     return player

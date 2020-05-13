@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "homeworks"
 
 HOMEWORKS_CONTROLLER = "homeworks"
-ENTITY_SIGNAL = "homeworks_entity_{}"
 EVENT_BUTTON_PRESS = "homeworks_button_press"
 EVENT_BUTTON_RELEASE = "homeworks_button_release"
 
@@ -71,7 +70,7 @@ def setup(hass, base_config):
         """Dispatch state changes."""
         _LOGGER.debug("callback: %s, %s", msg_type, values)
         addr = values[0]
-        signal = ENTITY_SIGNAL.format(addr)
+        signal = f"homeworks_entity_{addr}"
         dispatcher_send(hass, signal, msg_type, values)
 
     config = base_config.get(DOMAIN)
@@ -98,7 +97,7 @@ class HomeworksDevice:
     """Base class of a Homeworks device."""
 
     def __init__(self, controller, addr, name):
-        """Controller, address, and name of the device."""
+        """Initialize Homeworks device."""
         self._addr = addr
         self._name = name
         self._controller = controller
@@ -132,7 +131,7 @@ class HomeworksKeypadEvent:
         self._addr = addr
         self._name = name
         self._id = slugify(self._name)
-        signal = ENTITY_SIGNAL.format(self._addr)
+        signal = f"homeworks_entity_{self._addr}"
         async_dispatcher_connect(self._hass, signal, self._update_callback)
 
     @callback

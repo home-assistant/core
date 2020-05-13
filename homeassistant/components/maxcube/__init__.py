@@ -65,9 +65,7 @@ def setup(hass, config):
         except timeout as ex:
             _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
             hass.components.persistent_notification.create(
-                "Error: {}<br />"
-                "You will need to restart Home Assistant after fixing."
-                "".format(ex),
+                f"Error: {ex}<br />You will need to restart Home Assistant after fixing.",
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
             )
@@ -90,14 +88,14 @@ class MaxCubeHandle:
         self.cube = cube
         self.scan_interval = scan_interval
         self.mutex = Lock()
-        self._updatets = time.time()
+        self._updatets = time.monotonic()
 
     def update(self):
         """Pull the latest data from the MAX! Cube."""
         # Acquire mutex to prevent simultaneous update from multiple threads
         with self.mutex:
             # Only update every update_interval
-            if (time.time() - self._updatets) >= self.scan_interval:
+            if (time.monotonic() - self._updatets) >= self.scan_interval:
                 _LOGGER.debug("Updating")
 
                 try:
@@ -106,6 +104,6 @@ class MaxCubeHandle:
                     _LOGGER.error("Max!Cube connection failed")
                     return False
 
-                self._updatets = time.time()
+                self._updatets = time.monotonic()
             else:
                 _LOGGER.debug("Skipping update")

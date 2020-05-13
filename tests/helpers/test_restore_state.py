@@ -1,8 +1,6 @@
 """The tests for the Restore component."""
 from datetime import datetime
 
-from asynctest import patch
-
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, State
 from homeassistant.exceptions import HomeAssistantError
@@ -16,7 +14,7 @@ from homeassistant.helpers.restore_state import (
 )
 from homeassistant.util import dt as dt_util
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 async def test_caching_data(hass):
@@ -103,6 +101,7 @@ async def test_dump_data(hass):
         State("input_boolean.b0", "on"),
         State("input_boolean.b1", "on"),
         State("input_boolean.b2", "on"),
+        State("input_boolean.b5", "unavailable", {"restored": True}),
     ]
 
     entity = Entity()
@@ -126,6 +125,7 @@ async def test_dump_data(hass):
             State("input_boolean.b4", "off"),
             datetime(1985, 10, 26, 1, 22, tzinfo=dt_util.UTC),
         ),
+        "input_boolean.b5": StoredState(State("input_boolean.b5", "off"), now),
     }
 
     with patch(
@@ -142,11 +142,14 @@ async def test_dump_data(hass):
     # b2 should not be written, since it is not registered with the helper
     # b3 should be written, since it is still not expired
     # b4 should not be written, since it is now expired
-    assert len(written_states) == 2
+    # b5 should be written, since current state is restored by entity registry
+    assert len(written_states) == 3
     assert written_states[0]["state"]["entity_id"] == "input_boolean.b1"
     assert written_states[0]["state"]["state"] == "on"
     assert written_states[1]["state"]["entity_id"] == "input_boolean.b3"
     assert written_states[1]["state"]["state"] == "off"
+    assert written_states[2]["state"]["entity_id"] == "input_boolean.b5"
+    assert written_states[2]["state"]["state"] == "off"
 
     # Test that removed entities are not persisted
     await entity.async_remove()
@@ -159,9 +162,11 @@ async def test_dump_data(hass):
     assert mock_write_data.called
     args = mock_write_data.mock_calls[0][1]
     written_states = args[0]
-    assert len(written_states) == 1
+    assert len(written_states) == 2
     assert written_states[0]["state"]["entity_id"] == "input_boolean.b3"
     assert written_states[0]["state"]["state"] == "off"
+    assert written_states[1]["state"]["entity_id"] == "input_boolean.b5"
+    assert written_states[1]["state"]["state"] == "off"
 
 
 async def test_dump_error(hass):
@@ -186,7 +191,7 @@ async def test_dump_error(hass):
 
     with patch(
         "homeassistant.helpers.restore_state.Store.async_save",
-        return_value=mock_coro(exception=HomeAssistantError),
+        side_effect=HomeAssistantError,
     ) as mock_write_data, patch.object(hass.states, "async_all", return_value=states):
         await data.async_dump_states()
 
@@ -201,7 +206,7 @@ async def test_load_error(hass):
 
     with patch(
         "homeassistant.helpers.storage.Store.async_load",
-        return_value=mock_coro(exception=HomeAssistantError),
+        side_effect=HomeAssistantError,
     ):
         state = await entity.async_get_last_state()
 

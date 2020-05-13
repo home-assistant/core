@@ -1,11 +1,8 @@
 {
   "domain": "zone",
   "name": "Zone",
-  "config_flow": true,
+  "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/zone",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

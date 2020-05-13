@@ -13,6 +13,8 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
+    TIME_HOURS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
@@ -35,7 +37,11 @@ CONF_TYPE_COUNT = "count"
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
-UNITS = {CONF_TYPE_TIME: "h", CONF_TYPE_RATIO: "%", CONF_TYPE_COUNT: ""}
+UNITS = {
+    CONF_TYPE_TIME: TIME_HOURS,
+    CONF_TYPE_RATIO: UNIT_PERCENTAGE,
+    CONF_TYPE_COUNT: "",
+}
 ICON = "mdi:chart-line"
 
 ATTR_VALUE = "value"
@@ -45,7 +51,7 @@ def exactly_two_period_keys(conf):
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
     if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
         raise vol.Invalid(
-            "You must provide exactly 2 of the following:" " start, end, duration"
+            "You must provide exactly 2 of the following: start, end, duration"
         )
     return conf
 
@@ -262,7 +268,7 @@ class HistoryStatsSensor(Entity):
                     )
                 except ValueError:
                     _LOGGER.error(
-                        "Parsing error: start must be a datetime" "or a timestamp"
+                        "Parsing error: start must be a datetime or a timestamp"
                     )
                     return
 
@@ -281,7 +287,7 @@ class HistoryStatsSensor(Entity):
                     )
                 except ValueError:
                     _LOGGER.error(
-                        "Parsing error: end must be a datetime " "or a timestamp"
+                        "Parsing error: end must be a datetime or a timestamp"
                     )
                     return
 

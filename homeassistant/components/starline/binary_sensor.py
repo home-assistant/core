@@ -4,7 +4,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_LOCK,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PROBLEM,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from .account import StarlineAccount, StarlineDevice
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class StarlineSensor(StarlineEntity, BinarySensorDevice):
+class StarlineSensor(StarlineEntity, BinarySensorEntity):
     """Representation of a StarLine binary sensor."""
 
     def __init__(
@@ -44,7 +44,7 @@ class StarlineSensor(StarlineEntity, BinarySensorDevice):
         name: str,
         device_class: str,
     ):
-        """Constructor."""
+        """Initialize sensor."""
         super().__init__(account, device, key, name)
         self._device_class = device_class
 

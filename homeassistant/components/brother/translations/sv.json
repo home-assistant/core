@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Den h\u00e4r skrivaren \u00e4r redan konfigurerad.",
+            "unsupported_model": "Den h\u00e4r skrivarmodellen st\u00f6ds inte."
+        },
+        "error": {
+            "connection_error": "Anslutningsfel.",
+            "snmp_error": "SNMP-servern har st\u00e4ngts av eller s\u00e5 st\u00f6ds inte skrivaren.",
+            "wrong_host": "Ogiltigt v\u00e4rdnamn eller IP-adress."
+        },
+        "flow_title": "Brother-skrivare: {model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Skrivarens v\u00e4rdnamn eller IP-adress",
+                    "type": "Typ av skrivare"
+                },
+                "description": "St\u00e4ll in Brother-skrivarintegration. Om du har problem med konfigurationen g\u00e5r du till: https://www.home-assistant.io/integrations/brother",
+                "title": "Brother-skrivare"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Typ av skrivare"
+                },
+                "description": "Vill du l\u00e4gga till Brother-skrivaren {model} med serienumret {serial_number} i Home Assistant?",
+                "title": "Uppt\u00e4ckte Brother-skrivare"
+            }
+        }
+    }
+}

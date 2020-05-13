@@ -1,8 +1,8 @@
 """The tests for the panel_custom component."""
-from unittest.mock import Mock, patch
-
 from homeassistant import setup
 from homeassistant.components import frontend
+
+from tests.async_mock import Mock, patch
 
 
 async def test_webcomponent_custom_path_not_found(hass):
@@ -181,3 +181,17 @@ async def test_url_option_conflict(hass):
     for config in to_try:
         result = await setup.async_setup_component(hass, "panel_custom", config)
         assert not result
+
+
+async def test_url_path_conflict(hass):
+    """Test config with overlapping url path."""
+    assert await setup.async_setup_component(
+        hass,
+        "panel_custom",
+        {
+            "panel_custom": [
+                {"name": "todo-mvc", "js_url": "/local/bla.js"},
+                {"name": "todo-mvc", "js_url": "/local/bla.js"},
+            ]
+        },
+    )

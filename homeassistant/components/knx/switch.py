@@ -2,7 +2,7 @@
 import voluptuous as vol
 from xknx.devices import Switch as XknxSwitch
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -52,7 +52,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     async_add_entities([KNXSwitch(switch)])
 
 
-class KNXSwitch(SwitchDevice):
+class KNXSwitch(SwitchEntity):
     """Representation of a KNX switch."""
 
     def __init__(self, device):
@@ -65,13 +65,17 @@ class KNXSwitch(SwitchDevice):
 
         async def after_update_callback(device):
             """Call after device was updated."""
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
         self.device.register_device_updated_cb(after_update_callback)
 
     async def async_added_to_hass(self):
         """Store register state change callback."""
         self.async_register_callbacks()
+
+    async def async_update(self):
+        """Request a state update from KNX bus."""
+        await self.device.sync()
 
     @property
     def name(self):

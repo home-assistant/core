@@ -30,10 +30,6 @@ class AdGuardHomeFlowHandler(ConfigFlow):
 
     _hassio_discovery = None
 
-    def __init__(self):
-        """Initialize AgGuard Home flow."""
-        pass
-
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
         return self.async_show_form(
@@ -79,7 +75,6 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             password=user_input.get(CONF_PASSWORD),
             tls=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
-            loop=self.hass.loop,
             session=session,
         )
 
@@ -161,7 +156,6 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             self._hassio_discovery[CONF_HOST],
             port=self._hassio_discovery[CONF_PORT],
             tls=False,
-            loop=self.hass.loop,
             session=session,
         )
 

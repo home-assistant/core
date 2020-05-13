@@ -2,7 +2,6 @@
 import json
 import re
 import unittest
-from unittest.mock import patch
 from urllib.parse import urlparse
 
 import requests
@@ -11,6 +10,7 @@ from homeassistant.components import sensor
 from homeassistant.components.bom.sensor import BOMCurrentData
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 
 VALID_CONFIG = {
@@ -50,7 +50,7 @@ def mocked_requests(*args, **kwargs):
     if re.match(r"^/fwo/[\w]+/[\w.]+\.json", url.path):
         return MockResponse(json.loads(load_fixture("bom_weather.json")), 200)
 
-    raise NotImplementedError("Unknown route {}".format(url.path))
+    raise NotImplementedError(f"Unknown route {url.path}")
 
 
 class TestBOMWeatherSensor(unittest.TestCase):
@@ -78,7 +78,7 @@ class TestBOMWeatherSensor(unittest.TestCase):
         ]
 
         for entity_id in fake_entities:
-            state = self.hass.states.get("sensor.{}".format(entity_id))
+            state = self.hass.states.get(f"sensor.{entity_id}")
             assert state is not None
 
     @patch("requests.get", side_effect=mocked_requests)

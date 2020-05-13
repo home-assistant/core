@@ -2,11 +2,6 @@
   "domain": "yr",
   "name": "Yr",
   "documentation": "https://www.home-assistant.io/integrations/yr",
-  "requirements": [
-    "xmltodict==0.12.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@danielhiversen"
-  ]
+  "requirements": ["xmltodict==0.12.0"],
+  "codeowners": ["@danielhiversen"]
 }

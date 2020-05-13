@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": ""
+            }
+        }
+    }
+}

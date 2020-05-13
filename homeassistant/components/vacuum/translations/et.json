@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "cleaning": "Puhastamine",
+            "docked": "Dokitud",
+            "error": "Viga",
+            "idle": "Ootel",
+            "off": "V\u00e4ljas",
+            "on": "Sees",
+            "paused": "Peatatud",
+            "returning": "P\u00f6\u00f6rdun tagasi dokki"
+        }
+    },
+    "title": "T\u00fchjenda"
+}

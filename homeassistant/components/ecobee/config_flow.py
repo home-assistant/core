@@ -107,7 +107,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
             # Credentials found and validated; create the entry.
             _LOGGER.debug(
-                "Valid ecobee configuration found for import, creating config entry"
+                "Valid ecobee configuration found for import, creating configuration entry"
             )
             return self.async_create_entry(
                 title=DOMAIN,

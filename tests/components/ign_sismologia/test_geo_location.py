@@ -1,6 +1,5 @@
 """The tests for the IGN Sismologia (Earthquakes) Feed platform."""
 import datetime
-from unittest.mock import MagicMock, call, patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -24,10 +23,12 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import MagicMock, call, patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "ign_sismologia", CONF_RADIUS: 200}]}
@@ -94,7 +95,7 @@ async def test_setup(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "georss_ign_sismologia_client." "IgnSismologiaFeed"
+        "georss_ign_sismologia_client.IgnSismologiaFeed"
     ) as mock_feed:
         mock_feed.return_value.update.return_value = (
             "OK",
@@ -126,7 +127,7 @@ async def test_setup(hass):
                 ),
                 ATTR_IMAGE_URL: "http://image.url/map.jpg",
                 ATTR_MAGNITUDE: 5.7,
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "ign_sismologia",
                 ATTR_ICON: "mdi:pulse",
             }
@@ -142,7 +143,7 @@ async def test_setup(hass):
                 ATTR_FRIENDLY_NAME: "M 4.6",
                 ATTR_TITLE: "Title 2",
                 ATTR_MAGNITUDE: 4.6,
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "ign_sismologia",
                 ATTR_ICON: "mdi:pulse",
             }
@@ -158,7 +159,7 @@ async def test_setup(hass):
                 ATTR_FRIENDLY_NAME: "Region 3",
                 ATTR_TITLE: "Title 3",
                 ATTR_REGION: "Region 3",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "ign_sismologia",
                 ATTR_ICON: "mdi:pulse",
             }
@@ -199,7 +200,7 @@ async def test_setup_with_custom_location(hass):
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (38.1, -3.1))
 
-    with patch("georss_ign_sismologia_client." "IgnSismologiaFeed") as mock_feed:
+    with patch("georss_ign_sismologia_client.IgnSismologiaFeed") as mock_feed:
         mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):

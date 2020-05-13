@@ -12,7 +12,7 @@ from pyflic import (
 )
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_HOST,
@@ -123,7 +123,7 @@ def setup_button(hass, config, add_entities, client, address):
     add_entities([button])
 
 
-class FlicButton(BinarySensorDevice):
+class FlicButton(BinarySensorEntity):
     """Representation of a flic button."""
 
     def __init__(self, hass, client, address, timeout, ignored_click_types):
@@ -168,7 +168,7 @@ class FlicButton(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return "flic_{}".format(self.address.replace(":", ""))
+        return f"flic_{self.address.replace(':', '')}"
 
     @property
     def address(self):
@@ -192,9 +192,7 @@ class FlicButton(BinarySensorDevice):
 
     def _queued_event_check(self, click_type, time_diff):
         """Generate a log message and returns true if timeout exceeded."""
-        time_string = "{:d} {}".format(
-            time_diff, "second" if time_diff == 1 else "seconds"
-        )
+        time_string = f"{time_diff:d} {'second' if time_diff == 1 else 'seconds'}"
 
         if time_diff > self._timeout:
             _LOGGER.warning(

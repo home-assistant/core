@@ -136,9 +136,7 @@ class XiaomiCamera(Camera):
         else:
             video = videos[-1]
 
-        return "ftp://{0}:{1}@{2}:{3}{4}/{5}".format(
-            self.user, self.passwd, host, self.port, ftp.pwd(), video
-        )
+        return f"ftp://{self.user}:{self.passwd}@{host}:{self.port}{ftp.pwd()}/{video}"
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""

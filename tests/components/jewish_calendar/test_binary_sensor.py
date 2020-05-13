@@ -8,9 +8,9 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
-
 from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
+
+from tests.common import async_fire_time_changed
 
 MELACHA_PARAMS = [
     make_nyc_test_params(dt(2018, 9, 1, 16, 0), STATE_ON),

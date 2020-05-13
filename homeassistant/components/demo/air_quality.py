@@ -27,7 +27,7 @@ class DemoAirQuality(AirQualityEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format("Demo Air Quality", self._name)
+        return f"Demo Air Quality {self._name}"
 
     @property
     def should_poll(self):

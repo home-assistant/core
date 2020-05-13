@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_START,
+    TIME_MINUTES,
 )
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
@@ -167,7 +168,7 @@ class WazeTravelTime(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "min"
+        return TIME_MINUTES
 
     @property
     def icon(self):

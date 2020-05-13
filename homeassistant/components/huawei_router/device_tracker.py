@@ -88,7 +88,7 @@ class HuaweiDeviceScanner(DeviceScanner):
 
         _LOGGER.debug(
             "Active clients: %s",
-            "\n".join((client.mac + " " + client.name) for client in active_clients),
+            "\n".join(f"{client.mac} {client.name}" for client in active_clients),
         )
         return True
 

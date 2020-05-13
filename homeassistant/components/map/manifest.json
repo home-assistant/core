@@ -2,9 +2,7 @@
   "domain": "map",
   "name": "Map",
   "documentation": "https://www.home-assistant.io/integrations/map",
-  "requirements": [],
-  "dependencies": [
-    "frontend"
-  ],
-  "codeowners": []
+  "dependencies": ["frontend"],
+  "codeowners": [],
+  "quality_scale": "internal"
 }

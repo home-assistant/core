@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -35,15 +35,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Blinkstick device specified by serial number."""
 
-    name = config.get(CONF_NAME)
-    serial = config.get(CONF_SERIAL)
+    name = config[CONF_NAME]
+    serial = config[CONF_SERIAL]
 
     stick = blinkstick.find_by_serial(serial)
 
     add_entities([BlinkStickLight(stick, name)], True)
 
 
-class BlinkStickLight(Light):
+class BlinkStickLight(LightEntity):
     """Representation of a BlinkStick light."""
 
     def __init__(self, stick, name):

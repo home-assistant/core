@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -53,9 +53,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not arlo.base_stations:
         return
 
-    home_mode_name = config.get(CONF_HOME_MODE_NAME)
-    away_mode_name = config.get(CONF_AWAY_MODE_NAME)
-    night_mode_name = config.get(CONF_NIGHT_MODE_NAME)
+    home_mode_name = config[CONF_HOME_MODE_NAME]
+    away_mode_name = config[CONF_AWAY_MODE_NAME]
+    night_mode_name = config[CONF_NIGHT_MODE_NAME]
     base_stations = []
     for base_station in arlo.base_stations:
         base_stations.append(
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(base_stations, True)
 
 
-class ArloBaseStation(AlarmControlPanel):
+class ArloBaseStation(AlarmControlPanelEntity):
     """Representation of an Arlo Alarm Control Panel."""
 
     def __init__(self, data, home_mode_name, away_mode_name, night_mode_name):
@@ -84,7 +84,11 @@ class ArloBaseStation(AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ARLO, self._update_callback
+            )
+        )
 
     @callback
     def _update_callback(self):
@@ -110,19 +114,19 @@ class ArloBaseStation(AlarmControlPanel):
         else:
             self._state = None
 
-    async def async_alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._base_station.mode = DISARMED
 
-    async def async_alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None):
         """Send arm away command. Uses custom mode."""
         self._base_station.mode = self._away_mode_name
 
-    async def async_alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None):
         """Send arm home command. Uses custom mode."""
         self._base_station.mode = self._home_mode_name
 
-    async def async_alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code=None):
         """Send arm night command. Uses custom mode."""
         self._base_station.mode = self._night_mode_name
 

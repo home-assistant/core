@@ -41,7 +41,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-DATA_HOMEASSISTANT_VERSION = "hassio_hass_version"
+DATA_INFO = "hassio_info"
+DATA_HOST_INFO = "hassio_host_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 SERVICE_ADDON_START = "addon_start"
@@ -130,17 +131,47 @@ def get_homeassistant_version(hass):
 
     Async friendly.
     """
-    return hass.data.get(DATA_HOMEASSISTANT_VERSION)
+    if DATA_INFO not in hass.data:
+        return None
+    return hass.data[DATA_INFO].get("homeassistant")
+
+
+@callback
+@bind_hass
+def get_info(hass):
+    """Return generic information from Supervisor.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_INFO)
+
+
+@callback
+@bind_hass
+def get_host_info(hass):
+    """Return generic host information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_HOST_INFO)
 
 
 @callback
 @bind_hass
 def is_hassio(hass):
-    """Return true if hass.io is loaded.
+    """Return true if Hass.io is loaded.
 
     Async friendly.
     """
     return DOMAIN in hass.config.components
+
+
+@callback
+def get_supervisor_ip():
+    """Return the supervisor ip address."""
+    if "SUPERVISOR" not in os.environ:
+        return None
+    return os.environ["SUPERVISOR"].partition(":")[0]
 
 
 async def async_setup(hass, config):
@@ -171,7 +202,7 @@ async def async_setup(hass, config):
         if user and user.refresh_tokens:
             refresh_token = list(user.refresh_tokens.values())[0]
 
-            # Migrate old hass.io users to be admin.
+            # Migrate old Hass.io users to be admin.
             if not user.is_admin:
                 await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
 
@@ -190,18 +221,17 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HassIOView(host, websession))
 
-    if "frontend" in hass.config.components:
-        await hass.components.panel_custom.async_register_panel(
-            frontend_url_path="hassio",
-            webcomponent_name="hassio-main",
-            sidebar_title="Hass.io",
-            sidebar_icon="hass:home-assistant",
-            js_url="/api/hassio/app/entrypoint.js",
-            embed_iframe=True,
-            require_admin=True,
-        )
+    await hass.components.panel_custom.async_register_panel(
+        frontend_url_path="hassio",
+        webcomponent_name="hassio-main",
+        sidebar_title="Supervisor",
+        sidebar_icon="hass:home-assistant",
+        js_url="/api/hassio/app/entrypoint.js",
+        embed_iframe=True,
+        require_admin=True,
+    )
 
-    await hassio.update_hass_api(config.get("http", {}), refresh_token.token)
+    await hassio.update_hass_api(config.get("http", {}), refresh_token)
 
     async def push_config(_):
         """Push core config to Hass.io."""
@@ -219,7 +249,7 @@ async def async_setup(hass, config):
         snapshot = data.pop(ATTR_SNAPSHOT, None)
         payload = None
 
-        # Pass data to hass.io API
+        # Pass data to Hass.io API
         if service.service == SERVICE_ADDON_STDIN:
             payload = data[ATTR_INPUT]
         elif MAP_SERVICE_API[service.service][3]:
@@ -240,20 +270,20 @@ async def async_setup(hass, config):
             DOMAIN, service, async_service_handler, schema=settings[1]
         )
 
-    async def update_homeassistant_version(now):
-        """Update last available Home Assistant version."""
+    async def update_info_data(now):
+        """Update last available supervisor information."""
         try:
-            data = await hassio.get_homeassistant_info()
-            hass.data[DATA_HOMEASSISTANT_VERSION] = data["last_version"]
+            hass.data[DATA_INFO] = await hassio.get_info()
+            hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
         except HassioAPIError as err:
             _LOGGER.warning("Can't read last version: %s", err)
 
         hass.helpers.event.async_track_point_in_utc_time(
-            update_homeassistant_version, utcnow() + HASSIO_UPDATE_INTERVAL
+            update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
         )
 
     # Fetch last version
-    await update_homeassistant_version(None)
+    await update_info_data(None)
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
@@ -290,7 +320,7 @@ async def async_setup(hass, config):
     async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
-    async_setup_auth_view(hass)
+    async_setup_auth_view(hass, user)
 
     # Init ingress Hass.io feature
     async_setup_ingress_view(hass, host)

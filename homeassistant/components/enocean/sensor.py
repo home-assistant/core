@@ -10,9 +10,13 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
+    STATE_CLOSED,
+    STATE_OPEN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -25,34 +29,44 @@ CONF_RANGE_TO = "range_to"
 
 DEFAULT_NAME = "EnOcean sensor"
 
-DEVICE_CLASS_POWER = "powersensor"
+SENSOR_TYPE_HUMIDITY = "humidity"
+SENSOR_TYPE_POWER = "powersensor"
+SENSOR_TYPE_TEMPERATURE = "temperature"
+SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 
 SENSOR_TYPES = {
-    DEVICE_CLASS_HUMIDITY: {
+    SENSOR_TYPE_HUMIDITY: {
         "name": "Humidity",
-        "unit": "%",
+        "unit": UNIT_PERCENTAGE,
         "icon": "mdi:water-percent",
         "class": DEVICE_CLASS_HUMIDITY,
     },
-    DEVICE_CLASS_POWER: {
+    SENSOR_TYPE_POWER: {
         "name": "Power",
         "unit": POWER_WATT,
         "icon": "mdi:power-plug",
         "class": DEVICE_CLASS_POWER,
     },
-    DEVICE_CLASS_TEMPERATURE: {
+    SENSOR_TYPE_TEMPERATURE: {
         "name": "Temperature",
         "unit": TEMP_CELSIUS,
         "icon": "mdi:thermometer",
         "class": DEVICE_CLASS_TEMPERATURE,
     },
+    SENSOR_TYPE_WINDOWHANDLE: {
+        "name": "WindowHandle",
+        "unit": None,
+        "icon": "mdi:window",
+        "class": None,
+    },
 }
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS, default=DEVICE_CLASS_POWER): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS, default=SENSOR_TYPE_POWER): cv.string,
         vol.Optional(CONF_MAX_TEMP, default=40): vol.Coerce(int),
         vol.Optional(CONF_MIN_TEMP, default=0): vol.Coerce(int),
         vol.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
@@ -65,9 +79,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an EnOcean sensor device."""
     dev_id = config.get(CONF_ID)
     dev_name = config.get(CONF_NAME)
-    dev_class = config.get(CONF_DEVICE_CLASS)
+    sensor_type = config.get(CONF_DEVICE_CLASS)
 
-    if dev_class == DEVICE_CLASS_TEMPERATURE:
+    if sensor_type == SENSOR_TYPE_TEMPERATURE:
         temp_min = config.get(CONF_MIN_TEMP)
         temp_max = config.get(CONF_MAX_TEMP)
         range_from = config.get(CONF_RANGE_FROM)
@@ -80,11 +94,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ]
         )
 
-    elif dev_class == DEVICE_CLASS_HUMIDITY:
+    elif sensor_type == SENSOR_TYPE_HUMIDITY:
         add_entities([EnOceanHumiditySensor(dev_id, dev_name)])
 
-    elif dev_class == DEVICE_CLASS_POWER:
+    elif sensor_type == SENSOR_TYPE_POWER:
         add_entities([EnOceanPowerSensor(dev_id, dev_name)])
+
+    elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
+        add_entities([EnOceanWindowHandle(dev_id, dev_name)])
 
 
 class EnOceanSensor(enocean.EnOceanDevice):
@@ -95,9 +112,7 @@ class EnOceanSensor(enocean.EnOceanDevice):
         super().__init__(dev_id, dev_name)
         self._sensor_type = sensor_type
         self._device_class = SENSOR_TYPES[self._sensor_type]["class"]
-        self._dev_name = "{} {}".format(
-            SENSOR_TYPES[self._sensor_type]["name"], dev_name
-        )
+        self._dev_name = f"{SENSOR_TYPES[self._sensor_type]['name']} {dev_name}"
         self._unit_of_measurement = SENSOR_TYPES[self._sensor_type]["unit"]
         self._icon = SENSOR_TYPES[self._sensor_type]["icon"]
         self._state = None
@@ -140,7 +155,7 @@ class EnOceanPowerSensor(EnOceanSensor):
 
     def __init__(self, dev_id, dev_name):
         """Initialize the EnOcean power sensor device."""
-        super().__init__(dev_id, dev_name, DEVICE_CLASS_POWER)
+        super().__init__(dev_id, dev_name, SENSOR_TYPE_POWER)
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
@@ -175,7 +190,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
     def __init__(self, dev_id, dev_name, scale_min, scale_max, range_from, range_to):
         """Initialize the EnOcean temperature sensor device."""
-        super().__init__(dev_id, dev_name, DEVICE_CLASS_TEMPERATURE)
+        super().__init__(dev_id, dev_name, SENSOR_TYPE_TEMPERATURE)
         self._scale_min = scale_min
         self._scale_max = scale_max
         self.range_from = range_from
@@ -205,7 +220,7 @@ class EnOceanHumiditySensor(EnOceanSensor):
 
     def __init__(self, dev_id, dev_name):
         """Initialize the EnOcean humidity sensor device."""
-        super().__init__(dev_id, dev_name, DEVICE_CLASS_HUMIDITY)
+        super().__init__(dev_id, dev_name, SENSOR_TYPE_HUMIDITY)
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
@@ -213,4 +228,30 @@ class EnOceanHumiditySensor(EnOceanSensor):
             return
         humidity = packet.data[2] * 100 / 250
         self._state = round(humidity, 1)
+        self.schedule_update_ha_state()
+
+
+class EnOceanWindowHandle(EnOceanSensor):
+    """Representation of an EnOcean window handle device.
+
+    EEPs (EnOcean Equipment Profiles):
+    - F6-10-00 (Mechanical handle / Hoppe AG)
+    """
+
+    def __init__(self, dev_id, dev_name):
+        """Initialize the EnOcean window handle sensor device."""
+        super().__init__(dev_id, dev_name, SENSOR_TYPE_WINDOWHANDLE)
+
+    def value_changed(self, packet):
+        """Update the internal state of the sensor."""
+
+        action = (packet.data[1] & 0x70) >> 4
+
+        if action == 0x07:
+            self._state = STATE_CLOSED
+        if action in (0x04, 0x06):
+            self._state = STATE_OPEN
+        if action == 0x05:
+            self._state = "tilt"
+
         self.schedule_update_ha_state()

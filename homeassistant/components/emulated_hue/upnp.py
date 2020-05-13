@@ -26,31 +26,27 @@ class DescriptionXmlView(HomeAssistantView):
     @core.callback
     def get(self, request):
         """Handle a GET request."""
-        xml_template = """<?xml version="1.0" encoding="UTF-8" ?>
+        resp_text = f"""<?xml version="1.0" encoding="UTF-8" ?>
 <root xmlns="urn:schemas-upnp-org:device-1-0">
 <specVersion>
 <major>1</major>
 <minor>0</minor>
 </specVersion>
-<URLBase>http://{0}:{1}/</URLBase>
+<URLBase>http://{self.config.advertise_ip}:{self.config.advertise_port}/</URLBase>
 <device>
 <deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
-<friendlyName>HASS Bridge ({0})</friendlyName>
+<friendlyName>Home Assistant Bridge ({self.config.advertise_ip})</friendlyName>
 <manufacturer>Royal Philips Electronics</manufacturer>
 <manufacturerURL>http://www.philips.com</manufacturerURL>
 <modelDescription>Philips hue Personal Wireless Lighting</modelDescription>
 <modelName>Philips hue bridge 2015</modelName>
 <modelNumber>BSB002</modelNumber>
 <modelURL>http://www.meethue.com</modelURL>
-<serialNumber>1234</serialNumber>
+<serialNumber>001788FFFE23BFC2</serialNumber>
 <UDN>uuid:2f402f80-da50-11e1-9b23-001788255acc</UDN>
 </device>
 </root>
 """
-
-        resp_text = xml_template.format(
-            self.config.advertise_ip, self.config.advertise_port
-        )
 
         return web.Response(text=resp_text, content_type="text/xml")
 
@@ -77,22 +73,18 @@ class UPNPResponderThread(threading.Thread):
 
         # Note that the double newline at the end of
         # this string is required per the SSDP spec
-        resp_template = """HTTP/1.1 200 OK
+        resp_template = f"""HTTP/1.1 200 OK
 CACHE-CONTROL: max-age=60
 EXT:
-LOCATION: http://{0}:{1}/description.xml
-SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/0.1
-hue-bridgeid: 1234
-ST: urn:schemas-upnp-org:device:basic:1
-USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
+LOCATION: http://{advertise_ip}:{advertise_port}/description.xml
+SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/1.16.0
+hue-bridgeid: 001788FFFE23BFC2
+ST: upnp:rootdevice
+USN: uuid:2f402f80-da50-11e1-9b23-00178829d301::upnp:rootdevice
 
 """
 
-        self.upnp_response = (
-            resp_template.format(advertise_ip, advertise_port)
-            .replace("\n", "\r\n")
-            .encode("utf-8")
-        )
+        self.upnp_response = resp_template.replace("\n", "\r\n").encode("utf-8")
 
     def run(self):
         """Run the server."""
@@ -131,7 +123,7 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
                 else:
                     # most likely the timeout, so check for interrupt
                     continue
-            except socket.error as ex:
+            except OSError as ex:
                 if self._interrupted:
                     clean_socket_close(ssdp_socket)
                     return

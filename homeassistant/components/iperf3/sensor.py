@@ -28,7 +28,7 @@ class Iperf3Sensor(RestoreEntity):
 
     def __init__(self, iperf3_data, sensor_type):
         """Initialize the sensor."""
-        self._name = "{} {}".format(SENSOR_TYPES[sensor_type][0], iperf3_data.host)
+        self._name = f"{SENSOR_TYPES[sensor_type][0]} {iperf3_data.host}"
         self._state = None
         self._sensor_type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -73,14 +73,17 @@ class Iperf3Sensor(RestoreEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DATA_UPDATED, self._schedule_immediate_update
+            )
+        )
+
         state = await self.async_get_last_state()
         if not state:
             return
         self._state = state.state
-
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
-        )
 
     def update(self):
         """Get the latest data and update the states."""

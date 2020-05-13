@@ -1,5 +1,6 @@
 """Auth models."""
 from datetime import datetime, timedelta
+import secrets
 from typing import Dict, List, NamedTuple, Optional
 import uuid
 
@@ -9,7 +10,6 @@ from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
 from .const import GROUP_ID_ADMIN
-from .util import generate_secret
 
 TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
@@ -31,22 +31,28 @@ class User:
     """A user."""
 
     name = attr.ib(type=Optional[str])
-    perm_lookup = attr.ib(type=perm_mdl.PermissionLookup, cmp=False)
+    perm_lookup = attr.ib(type=perm_mdl.PermissionLookup, eq=False, order=False)
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)
     system_generated = attr.ib(type=bool, default=False)
 
-    groups = attr.ib(type=List[Group], factory=list, cmp=False)
+    groups = attr.ib(type=List[Group], factory=list, eq=False, order=False)
 
     # List of credentials of a user.
-    credentials = attr.ib(type=List["Credentials"], factory=list, cmp=False)
+    credentials = attr.ib(type=List["Credentials"], factory=list, eq=False, order=False)
 
     # Tokens associated with a user.
-    refresh_tokens = attr.ib(type=Dict[str, "RefreshToken"], factory=dict, cmp=False)
+    refresh_tokens = attr.ib(
+        type=Dict[str, "RefreshToken"], factory=dict, eq=False, order=False
+    )
 
     _permissions = attr.ib(
-        type=Optional[perm_mdl.PolicyPermissions], init=False, cmp=False, default=None
+        type=Optional[perm_mdl.PolicyPermissions],
+        init=False,
+        eq=False,
+        order=False,
+        default=None,
     )
 
     @property
@@ -96,8 +102,8 @@ class RefreshToken:
     )
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     created_at = attr.ib(type=datetime, factory=dt_util.utcnow)
-    token = attr.ib(type=str, factory=lambda: generate_secret(64))
-    jwt_key = attr.ib(type=str, factory=lambda: generate_secret(64))
+    token = attr.ib(type=str, factory=lambda: secrets.token_hex(64))
+    jwt_key = attr.ib(type=str, factory=lambda: secrets.token_hex(64))
 
     last_used_at = attr.ib(type=Optional[datetime], default=None)
     last_used_ip = attr.ib(type=Optional[str], default=None)
@@ -117,4 +123,8 @@ class Credentials:
     is_new = attr.ib(type=bool, default=True)
 
 
-UserMeta = NamedTuple("UserMeta", [("name", Optional[str]), ("is_active", bool)])
+class UserMeta(NamedTuple):
+    """User metadata."""
+
+    name: Optional[str]
+    is_active: bool

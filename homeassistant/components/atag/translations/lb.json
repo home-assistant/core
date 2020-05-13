@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "N\u00ebmmen 1 Atag Apparat kann am Home Assistant dob\u00e4igesat ginn"
+        },
+        "error": {
+            "connection_error": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "port": "Port (10000)"
+                },
+                "title": "Mam Apparat verbannen"
+            }
+        }
+    },
+    "title": "Atag"
+}

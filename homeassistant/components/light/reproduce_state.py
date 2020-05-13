@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from types import MappingProxyType
-from typing import Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -64,11 +64,18 @@ DEPRECATED_GROUP = [
     ATTR_TRANSITION,
 ]
 
-DEPRECATION_WARNING = "The use of other attributes than device state attributes is deprecated and will be removed in a future release. Read the logs for further details: https://www.home-assistant.io/integrations/scene/"
+DEPRECATION_WARNING = (
+    "The use of other attributes than device state attributes is deprecated and will be removed in a future release. "
+    "Invalid attributes are %s. Read the logs for further details: https://www.home-assistant.io/integrations/scene/"
+)
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistantType,
+    state: State,
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -84,8 +91,9 @@ async def _async_reproduce_state(
         return
 
     # Warn if deprecated attributes are used
-    if any(attr in DEPRECATED_GROUP for attr in state.attributes):
-        _LOGGER.warning(DEPRECATION_WARNING)
+    deprecated_attrs = [attr for attr in state.attributes if attr in DEPRECATED_GROUP]
+    if deprecated_attrs:
+        _LOGGER.warning(DEPRECATION_WARNING, deprecated_attrs)
 
     # Return if we are already at the right state.
     if cur_state.state == state.state and all(
@@ -94,7 +102,10 @@ async def _async_reproduce_state(
     ):
         return
 
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: Dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
+
+    if reproduce_options is not None and ATTR_TRANSITION in reproduce_options:
+        service_data[ATTR_TRANSITION] = reproduce_options[ATTR_TRANSITION]
 
     if state.state == STATE_ON:
         service = SERVICE_TURN_ON
@@ -118,11 +129,20 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistantType,
+    states: Iterable[State],
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce Light states."""
     await asyncio.gather(
-        *(_async_reproduce_state(hass, state, context) for state in states)
+        *(
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
+            for state in states
+        )
     )
 
 

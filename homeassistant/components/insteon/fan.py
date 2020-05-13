@@ -11,7 +11,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import STATE_OFF
 
-from . import InsteonEntity
+from .insteon_entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 

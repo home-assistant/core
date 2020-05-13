@@ -3,10 +3,10 @@
 import json
 import logging
 import unittest
-from unittest.mock import Mock, mock_open, patch
 
 import homeassistant.components.remember_the_milk as rtm
 
+from tests.async_mock import Mock, mock_open, patch
 from tests.common import get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ class TestConfiguration(unittest.TestCase):
     """Basic tests for the class RememberTheMilkConfiguration."""
 
     def setUp(self):
-        """Set up test home assistant main loop."""
+        """Set up test Home Assistant main loop."""
         self.hass = get_test_home_assistant()
         self.profile = "myprofile"
         self.token = "mytoken"
@@ -32,7 +32,7 @@ class TestConfiguration(unittest.TestCase):
         )
 
     def tearDown(self):
-        """Exit home assistant."""
+        """Exit Home Assistant."""
         self.hass.stop()
 
     def test_create_new(self):

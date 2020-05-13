@@ -1,0 +1,23 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "\u0418\u0437\u043a\u043b\u044e\u0447\u0438 {entity_name}",
+            "turn_on": "\u0412\u043a\u043b\u044e\u0447\u0438 {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} \u0435 \u0438\u0437\u043a\u043b\u044e\u0447\u0435\u043d",
+            "is_on": "{entity_name} \u0435 \u0432\u043a\u043b\u044e\u0447\u0435\u043d"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} \u0431\u044a\u0434\u0435 \u0438\u0437\u043a\u043b\u044e\u0447\u0435\u043d",
+            "turned_on": "{entity_name} \u0431\u044a\u0434\u0435 \u0432\u043a\u043b\u044e\u0447\u0435\u043d"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\u0418\u0437\u043a\u043b\u044e\u0447\u0435\u043d",
+            "on": "\u0412\u043a\u043b\u044e\u0447\u0435\u043d"
+        }
+    },
+    "title": "\u0412\u0435\u043d\u0442\u0438\u043b\u0430\u0442\u043e\u0440"
+}

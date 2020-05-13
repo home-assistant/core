@@ -1,4 +1,5 @@
 """Support for Recollect Waste curbside collection pickup."""
+from datetime import timedelta
 import logging
 
 import recollect_waste
@@ -16,7 +17,7 @@ CONF_PLACE_ID = "place_id"
 CONF_SERVICE_ID = "service_id"
 DEFAULT_NAME = "recollect_waste"
 ICON = "mdi:trash-can-outline"
-SCAN_INTERVAL = 86400
+SCAN_INTERVAL = timedelta(days=1)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

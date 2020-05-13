@@ -1,10 +1,4 @@
-"""
-Support for the Meraki CMX location service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.meraki/
-
-"""
+"""Support for the Meraki CMX location service."""
 import json
 import logging
 

@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "trigger_type": {
-            "turned_off": "{entity_name} slukket",
-            "turned_on": "{entity_name} t\u00e6ndt"
-        }
-    }
-}

@@ -5,7 +5,7 @@ from libpurecool.const import FocusMode, HeatMode, HeatState, HeatTarget
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     )
 
 
-class DysonPureHotCoolLinkDevice(ClimateDevice):
+class DysonPureHotCoolLinkDevice(ClimateEntity):
     """Representation of a Dyson climate fan."""
 
     def __init__(self, device):
@@ -89,7 +89,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         if self._device.environmental_state:
             temperature_kelvin = self._device.environmental_state.temperature
             if temperature_kelvin != 0:
-                self._current_temp = float("{0:.1f}".format(temperature_kelvin - 273))
+                self._current_temp = float(f"{(temperature_kelvin - 273):.1f}")
         return self._current_temp
 
     @property

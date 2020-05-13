@@ -3,7 +3,6 @@
 from io import StringIO
 import os
 import unittest
-import unittest.mock as mock
 
 import pytest
 
@@ -21,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component, setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant, mock_service, mock_storage
 from tests.components.light import common
 
@@ -51,12 +51,6 @@ class TestLight(unittest.TestCase):
 
         self.hass.states.set("light.test", STATE_OFF)
         assert not light.is_on(self.hass, "light.test")
-
-        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_ON)
-        assert light.is_on(self.hass)
-
-        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_OFF)
-        assert not light.is_on(self.hass)
 
         # Test turn_on
         turn_on_calls = mock_service(self.hass, light.DOMAIN, SERVICE_TURN_ON)
@@ -269,6 +263,15 @@ class TestLight(unittest.TestCase):
             light.ATTR_HS_COLOR: (prof_h, prof_s),
         } == data
 
+        # Test toggle with parameters
+        common.toggle(self.hass, ent3.entity_id, profile=prof_name, brightness_pct=100)
+        self.hass.block_till_done()
+        _, data = ent3.last_call("turn_on")
+        assert {
+            light.ATTR_BRIGHTNESS: 255,
+            light.ATTR_HS_COLOR: (prof_h, prof_s),
+        } == data
+
         # Test bad data
         common.turn_on(self.hass)
         common.turn_on(self.hass, ent1.entity_id, profile="nonexisting")
@@ -372,7 +375,7 @@ class TestLight(unittest.TestCase):
                 return StringIO(profile_data)
             return real_open(path, *args, **kwargs)
 
-        profile_data = "id,x,y,brightness\n" + "group.all_lights.default,.4,.6,99\n"
+        profile_data = "id,x,y,brightness\ngroup.all_lights.default,.4,.6,99\n"
         with mock.patch("os.path.isfile", side_effect=_mock_isfile):
             with mock.patch("builtins.open", side_effect=_mock_open):
                 with mock_storage():
@@ -468,3 +471,99 @@ async def test_light_turn_on_auth(hass, hass_admin_user):
             True,
             core.Context(user_id=hass_admin_user.id),
         )
+
+
+async def test_light_brightness_step(hass):
+    """Test that light context works."""
+    platform = getattr(hass.components, "test.light")
+    platform.init()
+    entity = platform.ENTITIES[0]
+    entity.supported_features = light.SUPPORT_BRIGHTNESS
+    entity.brightness = 100
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes["brightness"] == 100
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_step": -10},
+        True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 90, data
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_step_pct": 10},
+        True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 126, data
+
+
+async def test_light_brightness_pct_conversion(hass):
+    """Test that light brightness percent conversion."""
+    platform = getattr(hass.components, "test.light")
+    platform.init()
+    entity = platform.ENTITIES[0]
+    entity.supported_features = light.SUPPORT_BRIGHTNESS
+    entity.brightness = 100
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes["brightness"] == 100
+
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 1}, True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 3, data
+
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 2}, True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 5, data
+
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 50}, True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 128, data
+
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 99}, True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 252, data
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 100},
+        True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 255, data
+
+
+def test_deprecated_base_class(caplog):
+    """Test deprecated base class."""
+
+    class CustomLight(light.Light):
+        pass
+
+    CustomLight()
+    assert "Light is deprecated, modify CustomLight" in caplog.text

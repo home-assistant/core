@@ -198,11 +198,6 @@ def air_conditioner_fixture(device_factory):
     return device
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await climate.async_setup_platform(None, None, None)
-
-
 async def test_legacy_thermostat_entity_state(hass, legacy_thermostat):
     """Tests the state attributes properly match the thermostat type."""
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[legacy_thermostat])

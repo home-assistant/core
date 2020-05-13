@@ -31,7 +31,7 @@ class TestLiteJetLight(unittest.TestCase):
         self.load_deactivated_callbacks = {}
 
         def get_load_name(number):
-            return "Mock Load #" + str(number)
+            return f"Mock Load #{number}"
 
         def on_load_activated(number, callback):
             self.load_activated_callbacks[number] = callback
@@ -50,7 +50,9 @@ class TestLiteJetLight(unittest.TestCase):
         self.mock_lj.on_load_deactivated.side_effect = on_load_deactivated
 
         assert setup.setup_component(
-            self.hass, litejet.DOMAIN, {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+            self.hass,
+            litejet.DOMAIN,
+            {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}},
         )
         self.hass.block_till_done()
 

@@ -1,7 +1,6 @@
 """Test Times of the Day Binary Sensor."""
 from datetime import datetime, timedelta
 import unittest
-from unittest.mock import patch
 
 import pytz
 
@@ -12,6 +11,7 @@ from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_ne
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -24,7 +24,7 @@ class TestBinarySensorTod(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.latitute = 50.27583
+        self.hass.config.latitude = 50.27583
         self.hass.config.longitude = 18.98583
 
     def teardown_method(self, method):

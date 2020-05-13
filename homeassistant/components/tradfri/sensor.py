@@ -1,6 +1,6 @@
 """Support for IKEA Tradfri sensors."""
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
 
 from .base_class import TradfriBaseDevice
 from .const import CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
@@ -47,4 +47,4 @@ class TradfriSensor(TradfriBaseDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return "%"
+        return UNIT_PERCENTAGE

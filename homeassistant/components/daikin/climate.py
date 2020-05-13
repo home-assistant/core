@@ -1,10 +1,9 @@
 """Support for the Daikin HVAC."""
 import logging
 
-from pydaikin import appliance
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
@@ -78,16 +77,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions the platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
-    async_add_entities([DaikinClimate(daikin_api)])
+    async_add_entities([DaikinClimate(daikin_api)], update_before_add=True)
 
 
-class DaikinClimate(ClimateDevice):
+class DaikinClimate(ClimateEntity):
     """Representation of a Daikin HVAC."""
 
     def __init__(self, api):
@@ -97,12 +95,7 @@ class DaikinClimate(ClimateDevice):
         self._list = {
             ATTR_HVAC_MODE: list(HA_STATE_TO_DAIKIN),
             ATTR_FAN_MODE: self._api.device.fan_rate,
-            ATTR_SWING_MODE: list(
-                map(
-                    str.title,
-                    appliance.daikin_values(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE]),
-                )
-            ),
+            ATTR_SWING_MODE: self._api.device.swing_modes,
         }
 
         self._supported_features = SUPPORT_TARGET_TEMPERATURE
@@ -157,7 +150,7 @@ class DaikinClimate(ClimateDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._api.mac
+        return self._api.device.mac
 
     @property
     def temperature_unit(self):

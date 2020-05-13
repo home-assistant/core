@@ -16,17 +16,11 @@ from homeassistant.components.fan import (
     SPEED_OFF,
     SUPPORT_SET_SPEED,
 )
-from homeassistant.components.smartthings import fan
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
-
-
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await fan.async_setup_platform(None, None, None)
 
 
 async def test_entity_state(hass, device_factory):

@@ -39,16 +39,18 @@ class MSTeamsNotificationService(BaseNotificationService):
     def __init__(self, webhook_url):
         """Initialize the service."""
         self._webhook_url = webhook_url
-        self.teams_message = pymsteams.connectorcard(self._webhook_url)
 
     def send_message(self, message=None, **kwargs):
         """Send a message to the webhook."""
+
+        teams_message = pymsteams.connectorcard(self._webhook_url)
+
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA)
 
-        self.teams_message.title(title)
+        teams_message.title(title)
 
-        self.teams_message.text(message)
+        teams_message.text(message)
 
         if data is not None:
             file_url = data.get(ATTR_FILE_URL)
@@ -60,8 +62,8 @@ class MSTeamsNotificationService(BaseNotificationService):
 
                 message_section = pymsteams.cardsection()
                 message_section.addImage(file_url)
-                self.teams_message.addSection(message_section)
+                teams_message.addSection(message_section)
         try:
-            self.teams_message.send()
+            teams_message.send()
         except RuntimeError as err:
             _LOGGER.error("Could not send notification. Error: %s", err)

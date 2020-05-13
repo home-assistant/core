@@ -44,9 +44,9 @@ def _optional_zone(value):
 def _zone_name_validator(config):
     for zone, zone_config in config[CONF_ZONE].items():
         if CONF_NAME not in zone_config:
-            zone_config[CONF_NAME] = "{} ({}:{}) - {}".format(
-                DEFAULT_NAME, config[CONF_HOST], config[CONF_PORT], zone
-            )
+            zone_config[
+                CONF_NAME
+            ] = f"{DEFAULT_NAME} ({config[CONF_HOST]}:{config[CONF_PORT]}) - {zone}"
     return config
 
 
@@ -162,3 +162,8 @@ async def _run_client(hass, client, interval):
             await asyncio.sleep(interval)
         except asyncio.TimeoutError:
             continue
+        except asyncio.CancelledError:
+            return
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception, aborting arcam client")
+            return

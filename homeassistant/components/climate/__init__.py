@@ -101,7 +101,7 @@ SET_TEMPERATURE_SCHEMA = vol.All(
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up climate devices."""
+    """Set up climate entities."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
@@ -156,8 +156,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class ClimateDevice(Entity):
-    """Representation of a climate device."""
+class ClimateEntity(Entity):
+    """Representation of a climate entity."""
 
     @property
     def state(self) -> str:
@@ -172,17 +172,11 @@ class ClimateDevice(Entity):
         return PRECISION_WHOLE
 
     @property
-    def state_attributes(self) -> Dict[str, Any]:
-        """Return the optional state attributes."""
+    def capability_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the capability attributes."""
         supported_features = self.supported_features
         data = {
             ATTR_HVAC_MODES: self.hvac_modes,
-            ATTR_CURRENT_TEMPERATURE: show_temp(
-                self.hass,
-                self.current_temperature,
-                self.temperature_unit,
-                self.precision,
-            ),
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit, self.precision
             ),
@@ -193,6 +187,34 @@ class ClimateDevice(Entity):
 
         if self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
+
+        if supported_features & SUPPORT_TARGET_HUMIDITY:
+            data[ATTR_MIN_HUMIDITY] = self.min_humidity
+            data[ATTR_MAX_HUMIDITY] = self.max_humidity
+
+        if supported_features & SUPPORT_FAN_MODE:
+            data[ATTR_FAN_MODES] = self.fan_modes
+
+        if supported_features & SUPPORT_PRESET_MODE:
+            data[ATTR_PRESET_MODES] = self.preset_modes
+
+        if supported_features & SUPPORT_SWING_MODE:
+            data[ATTR_SWING_MODES] = self.swing_modes
+
+        return data
+
+    @property
+    def state_attributes(self) -> Dict[str, Any]:
+        """Return the optional state attributes."""
+        supported_features = self.supported_features
+        data = {
+            ATTR_CURRENT_TEMPERATURE: show_temp(
+                self.hass,
+                self.current_temperature,
+                self.temperature_unit,
+                self.precision,
+            ),
+        }
 
         if supported_features & SUPPORT_TARGET_TEMPERATURE:
             data[ATTR_TEMPERATURE] = show_temp(
@@ -221,23 +243,18 @@ class ClimateDevice(Entity):
 
         if supported_features & SUPPORT_TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
-            data[ATTR_MIN_HUMIDITY] = self.min_humidity
-            data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
-            data[ATTR_FAN_MODES] = self.fan_modes
 
         if self.hvac_action:
             data[ATTR_HVAC_ACTION] = self.hvac_action
 
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
-            data[ATTR_PRESET_MODES] = self.preset_modes
 
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODE] = self.swing_mode
-            data[ATTR_SWING_MODES] = self.swing_modes
 
         if supported_features & SUPPORT_AUX_HEAT:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
@@ -492,7 +509,7 @@ class ClimateDevice(Entity):
 
 
 async def async_service_aux_heat(
-    entity: ClimateDevice, service: ServiceDataType
+    entity: ClimateEntity, service: ServiceDataType
 ) -> None:
     """Handle aux heat service."""
     if service.data[ATTR_AUX_HEAT]:
@@ -502,7 +519,7 @@ async def async_service_aux_heat(
 
 
 async def async_service_temperature_set(
-    entity: ClimateDevice, service: ServiceDataType
+    entity: ClimateEntity, service: ServiceDataType
 ) -> None:
     """Handle set temperature service."""
     hass = entity.hass
@@ -517,3 +534,15 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+class ClimateDevice(ClimateEntity):
+    """Representation of a climate entity (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "ClimateDevice is deprecated, modify %s to extend ClimateEntity",
+            cls.__name__,
+        )

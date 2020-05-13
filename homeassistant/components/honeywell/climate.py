@@ -7,7 +7,7 @@ import requests
 import somecomfort
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -141,11 +141,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.warning(
         "The honeywell component has been deprecated for EU (i.e. non-US) "
         "systems. For EU-based systems, use the evohome component, "
-        "see: https://home-assistant.io/integrations/evohome"
+        "see: https://www.home-assistant.io/integrations/evohome"
     )
 
 
-class HoneywellUSThermostat(ClimateDevice):
+class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
     def __init__(

@@ -1,5 +1,4 @@
 """SAJ solar inverter interface."""
-import asyncio
 from datetime import date
 import logging
 
@@ -22,6 +21,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_HOURS,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -34,13 +34,11 @@ _LOGGER = logging.getLogger(__name__)
 MIN_INTERVAL = 5
 MAX_INTERVAL = 300
 
-UNIT_OF_MEASUREMENT_HOURS = "h"
-
 INVERTER_TYPES = ["ethernet", "wifi"]
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
-    "h": UNIT_OF_MEASUREMENT_HOURS,
+    "h": TIME_HOURS,
     "kg": MASS_KILOGRAMS,
     "kWh": ENERGY_KILO_WATT_HOUR,
     "W": POWER_WATT,
@@ -93,16 +91,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         raise PlatformNotReady
 
     for sensor in sensor_def:
-        hass_sensors.append(
-            SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
-        )
+        if sensor.enabled:
+            hass_sensors.append(
+                SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+            )
 
     async_add_entities(hass_sensors)
 
     async def async_saj():
         """Update all the SAJ sensors."""
-        tasks = []
-
         values = await saj.read(sensor_def)
 
         for sensor in hass_sensors:
@@ -119,11 +116,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     not sensor.per_day_basis and not sensor.per_total_basis
                 ):
                     state_unknown = True
-            task = sensor.async_update_values(unknown_state=state_unknown)
-            if task:
-                tasks.append(task)
-        if tasks:
-            await asyncio.wait(tasks)
+            sensor.async_update_values(unknown_state=state_unknown)
+
         return values
 
     def start_update_interval(event):
@@ -217,7 +211,7 @@ class SAJsensor(Entity):
 
     @property
     def per_total_basis(self) -> bool:
-        """Return if the sensors value is cummulative or not."""
+        """Return if the sensors value is cumulative or not."""
         return self._sensor.per_total_basis
 
     @property
@@ -225,6 +219,7 @@ class SAJsensor(Entity):
         """Return the date when the sensor was last updated."""
         return self._sensor.date
 
+    @callback
     def async_update_values(self, unknown_state=False):
         """Update this sensor."""
         update = False
@@ -237,7 +232,8 @@ class SAJsensor(Entity):
             update = True
             self._state = None
 
-        return self.async_update_ha_state() if update else None
+        if update:
+            self.async_write_ha_state()
 
     @property
     def unique_id(self):

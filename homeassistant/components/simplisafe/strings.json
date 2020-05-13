@@ -1,19 +1,31 @@
 {
   "config": {
-    "title": "SimpliSafe",
     "step": {
       "user": {
-        "title": "Fill in your information",
+        "title": "Fill in your information.",
         "data": {
-          "username": "Email Address",
-          "password": "Password",
-          "code": "Code (for Home Assistant)"
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "code": "Code (used in Home Assistant UI)"
         }
       }
     },
     "error": {
       "identifier_exists": "Account already registered",
       "invalid_credentials": "Invalid credentials"
+    },
+    "abort": {
+      "already_configured": "This SimpliSafe account is already in use."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure SimpliSafe",
+        "data": {
+          "code": "Code (used in Home Assistant UI)"
+        }
+      }
     }
   }
 }

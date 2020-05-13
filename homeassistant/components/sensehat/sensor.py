@@ -7,7 +7,12 @@ from sense_hat import SenseHat
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DISPLAY_OPTIONS, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_DISPLAY_OPTIONS,
+    CONF_NAME,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -21,7 +26,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
     "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", "%"],
+    "humidity": ["humidity", UNIT_PERCENTAGE],
     "pressure": ["pressure", "mb"],
 }
 

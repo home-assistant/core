@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 import socket
 import unittest
-from unittest.mock import patch
 
 import pytest
 
@@ -12,6 +11,7 @@ from homeassistant.components import pilight
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,11 +37,10 @@ class PilightDaemonSim:
 
     def __init__(self, host, port):
         """Init pilight client, ignore parameters."""
-        pass
 
     def send_code(self, call):  # pylint: disable=no-self-use
         """Handle pilight.send service callback."""
-        _LOGGER.error("PilightDaemonSim payload: " + str(call))
+        _LOGGER.error("PilightDaemonSim payload: %s", call)
 
     def start(self):
         """Handle homeassistant.start callback.
@@ -61,7 +60,7 @@ class PilightDaemonSim:
     def set_callback(self, function):
         """Handle pilight.pilight_received event callback."""
         self.callback = function
-        _LOGGER.error("PilightDaemonSim callback: " + str(function))
+        _LOGGER.error("PilightDaemonSim callback: %s", function)
 
 
 @pytest.mark.skip("Flaky")
@@ -91,7 +90,7 @@ class TestPilight(unittest.TestCase):
                 mock_client.assert_called_once_with(
                     host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
                 )
-                assert 1 == mock_error.call_count
+                assert mock_error.call_count == 1
 
     @patch("homeassistant.components.pilight._LOGGER.error")
     def test_connection_timeout_error(self, mock_error):
@@ -106,11 +105,11 @@ class TestPilight(unittest.TestCase):
                 mock_client.assert_called_once_with(
                     host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
                 )
-                assert 1 == mock_error.call_count
+                assert mock_error.call_count == 1
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
     @patch("homeassistant.core._LOGGER.error")
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code_no_protocol(self, mock_pilight_error, mock_error):
         """Try to send data without protocol information, should give error."""
         with assert_setup_component(4):
@@ -128,7 +127,7 @@ class TestPilight(unittest.TestCase):
             assert "required key not provided @ data['protocol']" in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code(self, mock_pilight_error):
         """Try to send proper data."""
         with assert_setup_component(4):
@@ -168,7 +167,7 @@ class TestPilight(unittest.TestCase):
                 assert "Pilight send failed" in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code_delay(self, mock_pilight_error):
         """Try to send proper data with delay afterwards."""
         with assert_setup_component(4):
@@ -208,7 +207,7 @@ class TestPilight(unittest.TestCase):
             assert str(service_data2) in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_start_stop(self, mock_pilight_error):
         """Check correct startup and stop of pilight daemon."""
         with assert_setup_component(4):

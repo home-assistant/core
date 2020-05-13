@@ -13,17 +13,12 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 import homeassistant.util.color as color_util
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -66,7 +61,7 @@ def convert_scale(value, value_scale, target_scale, round_digits=4):
     return round(value * target_scale / value_scale, round_digits)
 
 
-class SmartThingsLight(SmartThingsEntity, Light):
+class SmartThingsLight(SmartThingsEntity, LightEntity):
     """Define a SmartThings Light."""
 
     def __init__(self, device):

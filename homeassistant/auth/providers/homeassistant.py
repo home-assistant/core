@@ -138,8 +138,9 @@ class Data:
         if not bcrypt.checkpw(password.encode(), user_hash):
             raise InvalidAuth
 
-    # pylint: disable=no-self-use
-    def hash_password(self, password: str, for_storage: bool = False) -> bytes:
+    def hash_password(  # pylint: disable=no-self-use
+        self, password: str, for_storage: bool = False
+    ) -> bytes:
         """Encode a password."""
         hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
 
@@ -200,7 +201,7 @@ class Data:
 
 @AUTH_PROVIDERS.register("homeassistant")
 class HassAuthProvider(AuthProvider):
-    """Auth provider based on a local storage of users in HASS config dir."""
+    """Auth provider based on a local storage of users in Home Assistant config dir."""
 
     DEFAULT_TITLE = "Home Assistant Local"
 

@@ -16,7 +16,7 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
@@ -31,11 +31,6 @@ VALUE_TO_STATE = {
     "partially open": STATE_OPEN,
     "unknown": None,
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -66,7 +61,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     return None
 
 
-class SmartThingsCover(SmartThingsEntity, CoverDevice):
+class SmartThingsCover(SmartThingsEntity, CoverEntity):
     """Define a SmartThings cover."""
 
     def __init__(self, device):

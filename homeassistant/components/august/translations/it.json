@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi, si prega di riprovare.",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "login_method": "Metodo di accesso",
+                    "password": "Password",
+                    "timeout": "Timeout (in secondi)",
+                    "username": "Nome utente"
+                },
+                "description": "Se il metodo di accesso \u00e8 \"e-mail\", il nome utente \u00e8 l'indirizzo e-mail. Se il metodo di accesso \u00e8 \"telefono\", il nome utente \u00e8 il numero di telefono nel formato \"+NNNNNNNNN\".",
+                "title": "Configura un account di August"
+            },
+            "validation": {
+                "data": {
+                    "code": "Codice di verifica"
+                },
+                "description": "Controlla il tuo {login_method} ({username}) e inserisci il codice di verifica seguente",
+                "title": "Autenticazione a due fattori"
+            }
+        }
+    }
+}

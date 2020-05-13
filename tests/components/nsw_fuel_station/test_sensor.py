@@ -1,10 +1,10 @@
 """The tests for the NSW Fuel Station sensor platform."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components import sensor
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 VALID_CONFIG = {
@@ -96,7 +96,7 @@ class TestNSWFuelStation(unittest.TestCase):
         fake_entities = ["my_fake_station_p95", "my_fake_station_e10"]
 
         for entity_id in fake_entities:
-            state = self.hass.states.get("sensor.{}".format(entity_id))
+            state = self.hass.states.get(f"sensor.{entity_id}")
             assert state is not None
 
     @patch(

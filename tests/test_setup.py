@@ -4,11 +4,11 @@ import asyncio
 import logging
 import os
 import threading
-from unittest import mock
 
+import pytest
 import voluptuous as vol
 
-from homeassistant import setup
+from homeassistant import config_entries, setup
 import homeassistant.config as config_util
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
@@ -19,7 +19,9 @@ from homeassistant.helpers.config_validation import (
 )
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import (
+    MockConfigEntry,
     MockModule,
     MockPlatform,
     assert_setup_component,
@@ -33,6 +35,19 @@ ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def mock_handlers():
+    """Mock config flows."""
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+    with patch.dict(config_entries.HANDLERS, {"comp": MockFlowHandler}):
+        yield
 
 
 class TestSetup:
@@ -240,7 +255,7 @@ class TestSetup:
 
     def test_component_not_double_initialized(self):
         """Test we do not set up a component twice."""
-        mock_setup = mock.MagicMock(return_value=True)
+        mock_setup = Mock(return_value=True)
 
         mock_integration(self.hass, MockModule("comp", setup=mock_setup))
 
@@ -252,7 +267,7 @@ class TestSetup:
         assert setup.setup_component(self.hass, "comp", {})
         assert not mock_setup.called
 
-    @mock.patch("homeassistant.util.package.install_package", return_value=False)
+    @patch("homeassistant.util.package.install_package", return_value=False)
     def test_component_not_installed_if_requirement_fails(self, mock_install):
         """Component setup should fail if requirement can't install."""
         self.hass.config.skip_pip = False
@@ -265,8 +280,7 @@ class TestSetup:
         """Test component setup while waiting for lock is not set up twice."""
         result = []
 
-        @asyncio.coroutine
-        def async_setup(hass, config):
+        async def async_setup(hass, config):
             """Tracking Setup."""
             result.append(1)
 
@@ -327,7 +341,7 @@ class TestSetup:
             """Test that config is passed in."""
             if config.get("comp_a", {}).get("valid", False):
                 return True
-            raise Exception("Config not passed in: {}".format(config))
+            raise Exception(f"Config not passed in: {config}")
 
         platform = MockPlatform()
 
@@ -352,7 +366,7 @@ class TestSetup:
             {"valid": True}, extra=vol.PREVENT_EXTRA
         )
 
-        mock_setup = mock.MagicMock(spec_set=True)
+        mock_setup = Mock(spec_set=True)
 
         mock_entity_platform(
             self.hass,
@@ -462,21 +476,17 @@ class TestSetup:
         assert call_order == [1, 1, 2]
 
 
-@asyncio.coroutine
-def test_component_cannot_depend_config(hass):
+async def test_component_cannot_depend_config(hass):
     """Test config is not allowed to be a dependency."""
-    result = yield from setup._async_process_dependencies(
-        hass, None, "test", ["config"]
-    )
+    result = await setup._async_process_dependencies(hass, None, "test", ["config"])
     assert not result
 
 
-@asyncio.coroutine
-def test_component_warn_slow_setup(hass):
+async def test_component_warn_slow_setup(hass):
     """Warn we log when a component setup takes a long time."""
     mock_integration(hass, MockModule("test_component1"))
-    with mock.patch.object(hass.loop, "call_later", mock.MagicMock()) as mock_call:
-        result = yield from setup.async_setup_component(hass, "test_component1", {})
+    with patch.object(hass.loop, "call_later") as mock_call:
+        result = await setup.async_setup_component(hass, "test_component1", {})
         assert result
         assert mock_call.called
         assert len(mock_call.mock_calls) == 3
@@ -489,14 +499,13 @@ def test_component_warn_slow_setup(hass):
         assert mock_call().cancel.called
 
 
-@asyncio.coroutine
-def test_platform_no_warn_slow(hass):
+async def test_platform_no_warn_slow(hass):
     """Do not warn for long entity setup time."""
     mock_integration(
         hass, MockModule("test_component1", platform_schema=PLATFORM_SCHEMA)
     )
-    with mock.patch.object(hass.loop, "call_later", mock.MagicMock()) as mock_call:
-        result = yield from setup.async_setup_component(hass, "test_component1", {})
+    with patch.object(hass.loop, "call_later") as mock_call:
+        result = await setup.async_setup_component(hass, "test_component1", {})
         assert result
         assert not mock_call.called
 
@@ -531,7 +540,30 @@ async def test_when_setup_already_loaded(hass):
 
 async def test_setup_import_blows_up(hass):
     """Test that we handle it correctly when importing integration blows up."""
-    with mock.patch(
+    with patch(
         "homeassistant.loader.Integration.get_component", side_effect=ValueError
     ):
         assert not await setup.async_setup_component(hass, "sun", {})
+
+
+async def test_parallel_entry_setup(hass):
+    """Test config entries are set up in parallel."""
+    MockConfigEntry(domain="comp", data={"value": 1}).add_to_hass(hass)
+    MockConfigEntry(domain="comp", data={"value": 2}).add_to_hass(hass)
+
+    calls = []
+
+    async def mock_async_setup_entry(hass, entry):
+        """Mock setting up an entry."""
+        calls.append(entry.data["value"])
+        await asyncio.sleep(0)
+        calls.append(entry.data["value"])
+        return True
+
+    mock_integration(
+        hass, MockModule("comp", async_setup_entry=mock_async_setup_entry,),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await setup.async_setup_component(hass, "comp", {})
+
+    assert calls == [1, 2, 1, 2]

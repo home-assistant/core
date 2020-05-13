@@ -1,8 +1,6 @@
 """Test Google http services."""
 from datetime import datetime, timedelta, timezone
 
-from asynctest import ANY, patch
-
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
     HOMEGRAPH_TOKEN_URL,
@@ -13,6 +11,8 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_jwt,
     _get_homegraph_token,
 )
+
+from tests.async_mock import ANY, patch
 
 DUMMY_CONFIG = GOOGLE_ASSISTANT_SCHEMA(
     {
@@ -27,7 +27,7 @@ MOCK_TOKEN = {"access_token": "dummtoken", "expires_in": 3600}
 MOCK_JSON = {"devices": {}}
 MOCK_URL = "https://dummy"
 MOCK_HEADER = {
-    "Authorization": "Bearer {}".format(MOCK_TOKEN["access_token"]),
+    "Authorization": f"Bearer {MOCK_TOKEN['access_token']}",
     "X-GFE-SSL": "yes",
 }
 
@@ -57,7 +57,7 @@ async def test_get_access_token(hass, aioclient_mock):
     await _get_homegraph_token(hass, jwt)
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[0][3] == {
-        "Authorization": "Bearer {}".format(jwt),
+        "Authorization": f"Bearer {jwt}",
         "Content-Type": "application/x-www-form-urlencoded",
     }
 
@@ -143,38 +143,6 @@ async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
         call = aioclient_mock.mock_calls[1]
         assert call[2] == MOCK_JSON
         assert call[3] == MOCK_HEADER
-
-
-async def test_call_homegraph_api_key(hass, aioclient_mock, hass_storage):
-    """Test the function to call the homegraph api."""
-    config = GoogleConfig(
-        hass, GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234", "api_key": "dummy_key"}),
-    )
-    await config.async_initialize()
-
-    aioclient_mock.post(MOCK_URL, status=200, json={})
-
-    res = await config.async_call_homegraph_api_key(MOCK_URL, MOCK_JSON)
-    assert res == 200
-    assert aioclient_mock.call_count == 1
-
-    call = aioclient_mock.mock_calls[0]
-    assert call[1].query == {"key": "dummy_key"}
-    assert call[2] == MOCK_JSON
-
-
-async def test_call_homegraph_api_key_fail(hass, aioclient_mock, hass_storage):
-    """Test the function to call the homegraph api."""
-    config = GoogleConfig(
-        hass, GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234", "api_key": "dummy_key"}),
-    )
-    await config.async_initialize()
-
-    aioclient_mock.post(MOCK_URL, status=666, json={})
-
-    res = await config.async_call_homegraph_api_key(MOCK_URL, MOCK_JSON)
-    assert res == 666
-    assert aioclient_mock.call_count == 1
 
 
 async def test_report_state(hass, aioclient_mock, hass_storage):

@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_OPEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -22,6 +22,8 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 TYPE_STANDARD = "standard"
 TYPE_INVERTED = "inverted"
@@ -110,7 +112,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices_from_config(config))
 
 
-class RflinkCover(RflinkCommand, CoverDevice, RestoreEntity):
+class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
 
     async def async_added_to_hass(self):
@@ -146,17 +148,17 @@ class RflinkCover(RflinkCommand, CoverDevice, RestoreEntity):
         """Return True because covers can be stopped midway."""
         return True
 
-    def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Turn the device close."""
-        return self._async_handle_command("close_cover")
+        await self._async_handle_command("close_cover")
 
-    def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Turn the device open."""
-        return self._async_handle_command("open_cover")
+        await self._async_handle_command("open_cover")
 
-    def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Turn the device stop."""
-        return self._async_handle_command("stop_cover")
+        await self._async_handle_command("stop_cover")
 
 
 class InvertedRflinkCover(RflinkCover):

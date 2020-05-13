@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
 
-DEFAULT_ACCURACY = 200
+DEFAULT_ACCURACY = HTTP_OK
 DEFAULT_BATTERY = -1
 
 

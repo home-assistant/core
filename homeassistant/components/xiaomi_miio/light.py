@@ -19,15 +19,14 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    ATTR_ENTITY_ID,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
@@ -237,7 +236,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class XiaomiPhilipsAbstractLight(Light):
+class XiaomiPhilipsAbstractLight(LightEntity):
     """Representation of a Abstract Xiaomi Philips Light."""
 
     def __init__(self, name, light, model, unique_id):
@@ -467,7 +466,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
             )
 
             result = await self._try_command(
-                "Setting brightness and color temperature failed: " "%s bri, %s cct",
+                "Setting brightness and color temperature failed: %s bri, %s cct",
                 self._light.set_brightness_and_color_temperature,
                 percent_brightness,
                 percent_color_temp,
@@ -479,7 +478,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         elif ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                "Setting color temperature: " "%s mireds, %s%% cct",
+                "Setting color temperature: %s mireds, %s%% cct",
                 color_temp,
                 percent_color_temp,
             )
@@ -719,7 +718,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         """Initialize the light device."""
         name = f"{name} Ambient Light"
         if unique_id is not None:
-            unique_id = "{}-{}".format(unique_id, "ambient")
+            unique_id = f"{unique_id}-ambient"
         super().__init__(name, light, model, unique_id)
 
     async def async_turn_on(self, **kwargs):
@@ -825,14 +824,14 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_HS_COLOR in kwargs:
             _LOGGER.debug(
-                "Setting brightness and color: " "%s %s%%, %s",
+                "Setting brightness and color: %s %s%%, %s",
                 brightness,
                 percent_brightness,
                 rgb,
             )
 
             result = await self._try_command(
-                "Setting brightness and color failed: " "%s bri, %s color",
+                "Setting brightness and color failed: %s bri, %s color",
                 self._light.set_brightness_and_rgb,
                 percent_brightness,
                 rgb,
@@ -853,7 +852,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             )
 
             result = await self._try_command(
-                "Setting brightness and color temperature failed: " "%s bri, %s cct",
+                "Setting brightness and color temperature failed: %s bri, %s cct",
                 self._light.set_brightness_and_color_temperature,
                 percent_brightness,
                 percent_color_temp,
@@ -875,7 +874,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
         elif ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                "Setting color temperature: " "%s mireds, %s%% cct",
+                "Setting color temperature: %s mireds, %s%% cct",
                 color_temp,
                 percent_color_temp,
             )

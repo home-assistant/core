@@ -3,12 +3,22 @@ import asyncio
 from concurrent import futures
 from functools import partial
 import json
+from typing import TYPE_CHECKING, Callable
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
+
+if TYPE_CHECKING:
+    from .connection import ActiveConnection  # noqa
+
+
+WebSocketCommandHandler = Callable[[HomeAssistant, "ActiveConnection", dict], None]
 
 DOMAIN = "websocket_api"
 URL = "/api/websocket"
-MAX_PENDING_MSG = 512
+PENDING_MSG_PEAK = 512
+PENDING_MSG_PEAK_TIME = 5
+MAX_PENDING_MSG = 2048
 
 ERR_ID_REUSE = "id_reuse"
 ERR_INVALID_FORMAT = "invalid_format"
@@ -31,6 +41,6 @@ SIGNAL_WEBSOCKET_CONNECTED = "websocket_connected"
 SIGNAL_WEBSOCKET_DISCONNECTED = "websocket_disconnected"
 
 # Data used to store the current connection list
-DATA_CONNECTIONS = DOMAIN + ".connections"
+DATA_CONNECTIONS = f"{DOMAIN}.connections"
 
 JSON_DUMP = partial(json.dumps, cls=JSONEncoder, allow_nan=False)

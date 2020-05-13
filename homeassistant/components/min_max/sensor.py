@@ -115,9 +115,7 @@ class MinMaxSensor(Entity):
         if name:
             self._name = name
         else:
-            self._name = "{} sensor".format(
-                next(v for k, v in SENSOR_TYPES.items() if self._sensor_type == v)
-            ).capitalize()
+            self._name = f"{next(v for k, v in SENSOR_TYPES.items() if self._sensor_type == v)} sensor".capitalize()
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = self.last = None
@@ -153,7 +151,7 @@ class MinMaxSensor(Entity):
                 self.last = float(new_state.state)
             except ValueError:
                 _LOGGER.warning(
-                    "Unable to store state. " "Only numerical states are supported"
+                    "Unable to store state. Only numerical states are supported"
                 )
 
             hass.async_add_job(self.async_update_ha_state, True)

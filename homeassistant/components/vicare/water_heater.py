@@ -5,7 +5,7 @@ import requests
 
 from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ViCareWater(WaterHeaterDevice):
+class ViCareWater(WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
     def __init__(self, name, api, heating_type):
@@ -122,7 +122,8 @@ class ViCareWater(WaterHeaterDevice):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            self._api.setDomesticHotWaterTemperature(self._target_temperature)
+            self._api.setDomesticHotWaterTemperature(temp)
+            self._target_temperature = temp
 
     @property
     def min_temp(self):

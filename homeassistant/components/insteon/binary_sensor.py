@@ -1,9 +1,9 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from . import InsteonEntity
+from .insteon_entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.debug(
             "Adding device %s entity %s to Binary Sensor platform",
             device.address.hex,
-            device.states[state_key].name,
+            name,
         )
 
         new_entity = InsteonBinarySensor(device, state_key)
@@ -38,7 +38,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_add_entities([new_entity])
 
 
-class InsteonBinarySensor(InsteonEntity, BinarySensorDevice):
+class InsteonBinarySensor(InsteonEntity, BinarySensorEntity):
     """A Class for an Insteon device entity."""
 
     def __init__(self, device, state_key):

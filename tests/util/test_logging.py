@@ -3,6 +3,8 @@ import asyncio
 import logging
 import threading
 
+import pytest
+
 import homeassistant.util.logging as logging_util
 
 
@@ -19,8 +21,7 @@ def test_sensitive_data_filter():
     assert sensitive_record.msg == "******* log"
 
 
-@asyncio.coroutine
-def test_async_handler_loop_log(loop):
+async def test_async_handler_loop_log(loop):
     """Test logging data inside from inside the event loop."""
     loop._thread_ident = threading.get_ident()
 
@@ -39,13 +40,12 @@ def test_async_handler_loop_log(loop):
 
     log_record = logging.makeLogRecord({"msg": "Test Log Record"})
     handler.emit(log_record)
-    yield from handler.async_close(True)
+    await handler.async_close(True)
     assert queue.get_nowait().msg == "Test Log Record"
     assert queue.empty()
 
 
-@asyncio.coroutine
-def test_async_handler_thread_log(loop):
+async def test_async_handler_thread_log(loop):
     """Test logging data from a thread."""
     loop._thread_ident = threading.get_ident()
 
@@ -60,13 +60,14 @@ def test_async_handler_thread_log(loop):
         handler.emit(log_record)
         handler.close()
 
-    yield from loop.run_in_executor(None, add_log)
-    yield from handler.async_close(True)
+    await loop.run_in_executor(None, add_log)
+    await handler.async_close(True)
 
     assert queue.get_nowait().msg == "Test Log Record"
     assert queue.empty()
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_async_create_catching_coro(hass, caplog):
     """Test exception logging of wrapped coroutine."""
 

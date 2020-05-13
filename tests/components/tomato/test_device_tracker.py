@@ -51,7 +51,7 @@ def mock_session_response(*args, **kwargs):
 def mock_exception_logger():
     """Mock pyunifi."""
     with mock.patch(
-        "homeassistant.components.tomato.device_tracker" "._LOGGER.exception"
+        "homeassistant.components.tomato.device_tracker._LOGGER.exception"
     ) as mock_exception_logger:
         yield mock_exception_logger
 
@@ -137,7 +137,7 @@ def test_config_verify_ssl_but_no_ssl_enabled(hass, mock_session_send):
                 CONF_HOST: "tomato-router",
                 CONF_PORT: 1234,
                 CONF_SSL: False,
-                CONF_VERIFY_SSL: "/tmp/tomato.crt",
+                CONF_VERIFY_SSL: "/test/tomato.crt",
                 CONF_USERNAME: "foo",
                 CONF_PASSWORD: "password",
                 tomato.CONF_HTTP_ID: "1234567890",
@@ -171,7 +171,7 @@ def test_config_valid_verify_ssl_path(hass, mock_session_send):
                 CONF_HOST: "tomato-router",
                 CONF_PORT: 1234,
                 CONF_SSL: True,
-                CONF_VERIFY_SSL: "/tmp/tomato.crt",
+                CONF_VERIFY_SSL: "/test/tomato.crt",
                 CONF_USERNAME: "bar",
                 CONF_PASSWORD: "foo",
                 tomato.CONF_HTTP_ID: "0987654321",
@@ -189,7 +189,7 @@ def test_config_valid_verify_ssl_path(hass, mock_session_send):
     assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
     assert mock_session_send.mock_calls[0] == mock.call(
-        result.req, timeout=3, verify="/tmp/tomato.crt"
+        result.req, timeout=3, verify="/test/tomato.crt"
     )
 
 
@@ -312,7 +312,7 @@ def test_config_bad_credentials(hass, mock_exception_logger):
 
     assert mock_exception_logger.call_count == 1
     assert mock_exception_logger.mock_calls[0] == mock.call(
-        "Failed to authenticate, " "please check your username and password"
+        "Failed to authenticate, please check your username and password"
     )
 
 
@@ -382,7 +382,7 @@ def test_bad_connection(hass, mock_exception_logger):
         tomato.get_scanner(hass, config)
     assert mock_exception_logger.call_count == 1
     assert mock_exception_logger.mock_calls[0] == mock.call(
-        "Failed to connect to the router " "or invalid http_id supplied"
+        "Failed to connect to the router or invalid http_id supplied"
     )
 
 

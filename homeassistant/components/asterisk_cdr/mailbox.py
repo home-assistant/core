@@ -49,8 +49,10 @@ class AsteriskCDR(Mailbox):
                 "duration": entry["duration"],
             }
             sha = hashlib.sha256(str(entry).encode("utf-8")).hexdigest()
-            msg = "Destination: {}\nApplication: {}\n Context: {}".format(
-                entry["dest"], entry["application"], entry["context"]
+            msg = (
+                f"Destination: {entry['dest']}\n"
+                f"Application: {entry['application']}\n "
+                f"Context: {entry['context']}"
             )
             cdr.append({"info": info, "sha": sha, "text": msg})
         self.cdr = cdr

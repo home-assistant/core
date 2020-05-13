@@ -76,7 +76,7 @@ async def async_setup_platform(
     )
 
 
-class LightGroup(light.Light):
+class LightGroup(light.LightEntity):
     """Representation of a light group."""
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:
@@ -113,7 +113,7 @@ class LightGroup(light.Light):
         await self.async_update()
 
     async def async_will_remove_from_hass(self):
-        """Handle removal from HASS."""
+        """Handle removal from Home Assistant."""
         if self._async_unsub_state_changed is not None:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
@@ -326,7 +326,7 @@ def _mean_int(*args):
 
 def _mean_tuple(*args):
     """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(l) / len(l) for l in zip(*args))
+    return tuple(sum(x) / len(x) for x in zip(*args))
 
 
 def _reduce_attribute(

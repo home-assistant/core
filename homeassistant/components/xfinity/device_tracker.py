@@ -24,6 +24,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Validate the configuration and return an Xfinity Gateway scanner."""
+    _LOGGER.warning(
+        "The Xfinity Gateway has been deprecated and will be removed from "
+        "Home Assistant in version 0.109. Please remove it from your "
+        "configuration. "
+    )
 
     gateway = XfinityGateway(config[DOMAIN][CONF_HOST])
     scanner = None
@@ -32,7 +37,7 @@ def get_scanner(hass, config):
         scanner = XfinityDeviceScanner(gateway)
     except (RequestException, ValueError):
         _LOGGER.error(
-            "Error communicating with Xfinity Gateway. " "Check host: %s", gateway.host
+            "Error communicating with Xfinity Gateway. Check host: %s", gateway.host
         )
 
     return scanner
@@ -51,7 +56,7 @@ class XfinityDeviceScanner(DeviceScanner):
         try:
             connected_devices = self.gateway.scan_devices()
         except (RequestException, ValueError):
-            _LOGGER.error("Unable to scan devices. " "Check connection to gateway")
+            _LOGGER.error("Unable to scan devices. Check connection to gateway")
         return connected_devices
 
     def get_device_name(self, device):

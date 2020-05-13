@@ -62,9 +62,7 @@ PARTITION_SCHEMA = vol.Schema(
 def is_alarm_code_necessary(value):
     """Check if alarm code must be configured."""
     if value.get(CONF_SWITCHABLE_OUTPUTS) and CONF_DEVICE_CODE not in value:
-        raise vol.Invalid(
-            "You need to specify alarm " " code to use switchable_outputs"
-        )
+        raise vol.Invalid("You need to specify alarm code to use switchable_outputs")
 
     return value
 
@@ -152,7 +150,7 @@ async def async_setup(hass, config):
 
     @callback
     def alarm_status_update_callback():
-        """Send status update received from alarm to home assistant."""
+        """Send status update received from alarm to Home Assistant."""
         _LOGGER.debug("Sending request to update panel state")
         async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE)
 

@@ -27,7 +27,7 @@ class TestLiteJetScene(unittest.TestCase):
         self.hass.start()
 
         def get_scene_name(number):
-            return "Mock Scene #" + str(number)
+            return f"Mock Scene #{number}"
 
         self.mock_lj = mock_pylitejet.return_value
         self.mock_lj.loads.return_value = range(0)
@@ -37,7 +37,9 @@ class TestLiteJetScene(unittest.TestCase):
         self.mock_lj.get_scene_name.side_effect = get_scene_name
 
         assert setup.setup_component(
-            self.hass, litejet.DOMAIN, {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+            self.hass,
+            litejet.DOMAIN,
+            {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}},
         )
         self.hass.block_till_done()
 

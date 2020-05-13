@@ -75,7 +75,7 @@ DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 def setup(hass, config):
     """Set up the Verisure component."""
-    global HUB
+    global HUB  # pylint: disable=global-statement
     HUB = VerisureHub(config[DOMAIN])
     HUB.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
         HUB.update_overview

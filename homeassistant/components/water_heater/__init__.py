@@ -128,7 +128,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class WaterHeaterDevice(Entity):
+class WaterHeaterEntity(Entity):
     """Representation of a water_heater device."""
 
     @property
@@ -144,6 +144,25 @@ class WaterHeaterDevice(Entity):
         return PRECISION_WHOLE
 
     @property
+    def capability_attributes(self):
+        """Return capability attributes."""
+        supported_features = self.supported_features or 0
+
+        data = {
+            ATTR_MIN_TEMP: show_temp(
+                self.hass, self.min_temp, self.temperature_unit, self.precision
+            ),
+            ATTR_MAX_TEMP: show_temp(
+                self.hass, self.max_temp, self.temperature_unit, self.precision
+            ),
+        }
+
+        if supported_features & SUPPORT_OPERATION_MODE:
+            data[ATTR_OPERATION_LIST] = self.operation_list
+
+        return data
+
+    @property
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
@@ -152,12 +171,6 @@ class WaterHeaterDevice(Entity):
                 self.current_temperature,
                 self.temperature_unit,
                 self.precision,
-            ),
-            ATTR_MIN_TEMP: show_temp(
-                self.hass, self.min_temp, self.temperature_unit, self.precision
-            ),
-            ATTR_MAX_TEMP: show_temp(
-                self.hass, self.max_temp, self.temperature_unit, self.precision
             ),
             ATTR_TEMPERATURE: show_temp(
                 self.hass,
@@ -183,8 +196,6 @@ class WaterHeaterDevice(Entity):
 
         if supported_features & SUPPORT_OPERATION_MODE:
             data[ATTR_OPERATION_MODE] = self.current_operation
-            if self.operation_list:
-                data[ATTR_OPERATION_LIST] = self.operation_list
 
         if supported_features & SUPPORT_AWAY_MODE:
             is_away = self.is_away_mode_on
@@ -308,3 +319,15 @@ async def async_service_temperature_set(entity, service):
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+class WaterHeaterDevice(WaterHeaterEntity):
+    """Representation of a water heater (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "WaterHeaterDevice is deprecated, modify %s to extend WaterHeaterEntity",
+            cls.__name__,
+        )

@@ -24,11 +24,9 @@ import slugify as unicode_slug
 
 from .dt import as_local, utcnow
 
-# pylint: disable=invalid-name
 T = TypeVar("T")
-U = TypeVar("U")
-ENUM_T = TypeVar("ENUM_T", bound=enum.Enum)
-# pylint: enable=invalid-name
+U = TypeVar("U")  # pylint: disable=invalid-name
+ENUM_T = TypeVar("ENUM_T", bound=enum.Enum)  # pylint: disable=invalid-name
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
@@ -44,16 +42,16 @@ def sanitize_path(path: str) -> str:
     return RE_SANITIZE_PATH.sub("", path)
 
 
-def slugify(text: str) -> str:
+def slugify(text: str, *, separator: str = "_") -> str:
     """Slugify a given text."""
-    return unicode_slug.slugify(text, separator="_")  # type: ignore
+    return unicode_slug.slugify(text, separator=separator)  # type: ignore
 
 
 def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
     if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
-            repr_helper(key) + "=" + repr_helper(item) for key, item in inp.items()
+            f"{repr_helper(key)}={repr_helper(item)}" for key, item in inp.items()
         )
     if isinstance(inp, datetime):
         return as_local(inp).isoformat()
@@ -101,7 +99,7 @@ def get_local_ip() -> str:
         sock.connect(("8.8.8.8", 80))
 
         return sock.getsockname()[0]  # type: ignore
-    except socket.error:
+    except OSError:
         try:
             return socket.gethostbyname(socket.gethostname())
         except socket.gaierror:
@@ -214,7 +212,6 @@ class Throttle:
 
             If we cannot acquire the lock, it is running so return None.
             """
-            # pylint: disable=protected-access
             if hasattr(method, "__self__"):
                 host = getattr(method, "__self__")
             elif is_func:
@@ -222,12 +219,14 @@ class Throttle:
             else:
                 host = args[0] if args else wrapper
 
+            # pylint: disable=protected-access # to _throttle
             if not hasattr(host, "_throttle"):
                 host._throttle = {}
 
             if id(self) not in host._throttle:
                 host._throttle[id(self)] = [threading.Lock(), None]
             throttle = host._throttle[id(self)]
+            # pylint: enable=protected-access
 
             if not throttle[0].acquire(False):
                 return throttled_value()

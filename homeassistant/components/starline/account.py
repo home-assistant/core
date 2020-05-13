@@ -23,7 +23,7 @@ class StarlineAccount:
     """StarLine Account class."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry):
-        """Constructor."""
+        """Initialize StarLine account."""
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry
         self._update_interval: int = DEFAULT_SCAN_INTERVAL
@@ -61,7 +61,6 @@ class StarlineAccount:
             )
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.error("Error updating SLNet token: %s", err)
-            pass
 
     def _update_data(self):
         """Update StarLine data."""

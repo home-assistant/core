@@ -2,12 +2,7 @@
   "domain": "history",
   "name": "History",
   "documentation": "https://www.home-assistant.io/integrations/history",
-  "requirements": [],
-  "dependencies": [
-    "http",
-    "recorder"
-  ],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "dependencies": ["http", "recorder"],
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }
