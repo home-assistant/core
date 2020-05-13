@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import requests
-from tesla_powerwall import APIError, Powerwall, PowerwallUnreachableError
+from tesla_powerwall import APIChangedError, Powerwall, PowerwallUnreachableError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -13,10 +13,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DOMAIN,
+    POWERWALL_API_CHANGED,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_GRID_STATUS,
@@ -64,7 +65,7 @@ async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
     @callback
     def _async_migrator(entity_entry: entity_registry.RegistryEntry):
         parts = entity_entry.unique_id.split("_")
-        # Check if the unique_id starts with the serial_numbers of the powerwakks
+        # Check if the unique_id starts with the serial_numbers of the powerwalls
         if parts[0 : len(serial_numbers)] != serial_numbers:
             # The old unique_id ended with the nomianal_system_engery_kWh so we can use that
             # to find the old base unique_id and extract the device_suffix.
@@ -87,6 +88,17 @@ async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
     await entity_registry.async_migrate_entries(hass, entry_id, _async_migrator)
 
 
+async def _async_handle_api_changed_error(hass: HomeAssistant, error: APIChangedError):
+    # The error might include some important information about what exactly changed.
+    _LOGGER.error(str(error))
+    hass.components.persistent_notification.async_create(
+        "It seems like your powerwall uses an unsupported version. "
+        "Please update the software of your powerwall or if it is"
+        "already the newest consider reporting this issue.\nSee logs for more information",
+        title="Unknown powerwall software version",
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Tesla Powerwall from a config entry."""
 
@@ -97,16 +109,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     power_wall = Powerwall(entry.data[CONF_IP_ADDRESS], http_session=http_session)
     try:
         await hass.async_add_executor_job(power_wall.detect_and_pin_version)
+        await hass.async_add_executor_job(_fetch_powerwall_data, power_wall)
         powerwall_data = await hass.async_add_executor_job(call_base_info, power_wall)
-    except (PowerwallUnreachableError, APIError, ConnectionError):
+    except PowerwallUnreachableError:
         http_session.close()
         raise ConfigEntryNotReady
+    except APIChangedError as err:
+        http_session.close()
+        await _async_handle_api_changed_error(hass, err)
+        return False
 
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
 
     async def async_update_data():
         """Fetch data from API endpoint."""
-        return await hass.async_add_executor_job(_fetch_powerwall_data, power_wall)
+        # Check if we had an error before
+        _LOGGER.debug("Checking if update failed")
+        if not hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED]:
+            _LOGGER.debug("Updating data")
+            try:
+                return await hass.async_add_executor_job(
+                    _fetch_powerwall_data, power_wall
+                )
+            except PowerwallUnreachableError:
+                raise UpdateFailed("Unable to fetch data from powerwall")
+            except APIChangedError as err:
+                await _async_handle_api_changed_error(hass, err)
+                hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED] = True
+                # Returns the cached data. This data can also be None
+                return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
+        else:
+            return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -122,6 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             POWERWALL_OBJECT: power_wall,
             POWERWALL_COORDINATOR: coordinator,
             POWERWALL_HTTP_SESSION: http_session,
+            POWERWALL_API_CHANGED: False,
         }
     )
 

@@ -36,17 +36,19 @@ async def async_validate_config_item(hass, config, full_config=None):
     config[CONF_TRIGGER] = triggers
 
     if CONF_CONDITION in config:
-        conditions = []
-        for cond in config[CONF_CONDITION]:
-            cond = await condition.async_validate_condition_config(hass, cond)
-            conditions.append(cond)
-        config[CONF_CONDITION] = conditions
+        config[CONF_CONDITION] = await asyncio.gather(
+            *[
+                condition.async_validate_condition_config(hass, cond)
+                for cond in config[CONF_CONDITION]
+            ]
+        )
 
-    actions = []
-    for action in config[CONF_ACTION]:
-        action = await script.async_validate_action_config(hass, action)
-        actions.append(action)
-    config[CONF_ACTION] = actions
+    config[CONF_ACTION] = await asyncio.gather(
+        *[
+            script.async_validate_action_config(hass, action)
+            for action in config[CONF_ACTION]
+        ]
+    )
 
     return config
 
@@ -69,16 +71,18 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
 
 async def async_validate_config(hass, config):
     """Validate config."""
-    automations = []
     validated_automations = await asyncio.gather(
         *(
             _try_async_validate_config_item(hass, p_config, config)
             for _, p_config in config_per_platform(config, DOMAIN)
         )
     )
-    for validated_automation in validated_automations:
-        if validated_automation is not None:
-            automations.append(validated_automation)
+
+    automations = [
+        validated_automation
+        for validated_automation in validated_automations
+        if validated_automation is not None
+    ]
 
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.

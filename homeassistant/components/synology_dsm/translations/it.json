@@ -4,9 +4,11 @@
             "already_configured": "Host gi\u00e0 configurato"
         },
         "error": {
+            "connection": "Errore di connessione: controlla host, porta e SSL",
             "login": "Errore di accesso: si prega di controllare il nome utente e la password",
             "missing_data": "Dati mancanti: si prega di riprovare pi\u00f9 tardi o un'altra configurazione",
-            "otp_failed": "Autenticazione in due fasi fallita, riprovare con un nuovo codice di accesso"
+            "otp_failed": "Autenticazione in due fasi fallita, riprovare con un nuovo codice di accesso",
+            "unknown": "Errore sconosciuto: si prega di controllare i registri per ottenere maggiori dettagli"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -37,6 +39,15 @@
                     "username": "Nome utente"
                 },
                 "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minuti tra una scansione e l'altra"
+                }
             }
         }
     }

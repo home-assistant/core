@@ -16,21 +16,24 @@
             "two": "to",
             "zero": "ingen"
         },
+        "flow_title": "UPnP/IGD: {name}",
         "step": {
             "confirm": {
-                "description": "\u00d8nsker du \u00e5 konfigurere UPnP / IGD?",
-                "title": "UPnP / IGD"
+                "description": "\u00d8nsker du \u00e5 sette opp UPnP / IGD?",
+                "title": ""
             },
-            "init": {
-                "title": "UPnP / IGD"
+            "ssdp_confirm": {
+                "description": "\u00d8nsker du \u00e5 sette opp denne UPnP/IGD-enheten?"
             },
             "user": {
                 "data": {
                     "enable_port_mapping": "Aktiver port mapping for Home Assistant",
                     "enable_sensors": "Legg til trafikk sensorer",
-                    "igd": "UPnP / IGD"
+                    "igd": "UPnP / IGD",
+                    "scan_interval": "Oppdateringsintervall (sekunder, minimum 30)",
+                    "usn": "Enhet"
                 },
-                "title": "Konfigurasjonsalternativer for UPnP / IGD"
+                "title": "Konfigurasjonsalternativer"
             }
         }
     }

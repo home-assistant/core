@@ -1,12 +1,12 @@
 """Axis switch platform tests."""
 
-from unittest.mock import Mock, call as mock_call
-
 from homeassistant.components import axis
 import homeassistant.components.switch as switch
 from homeassistant.setup import async_setup_component
 
 from .test_device import NAME, setup_axis_integration
+
+from tests.async_mock import Mock, call as mock_call
 
 EVENTS = [
     {

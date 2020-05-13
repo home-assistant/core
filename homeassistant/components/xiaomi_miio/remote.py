@@ -12,7 +12,7 @@ from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     PLATFORM_SCHEMA,
-    RemoteDevice,
+    RemoteEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -165,7 +165,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class XiaomiMiioRemote(RemoteDevice):
+class XiaomiMiioRemote(RemoteEntity):
     """Representation of a Xiaomi Miio Remote device."""
 
     def __init__(self, friendly_name, device, unique_id, slot, timeout, commands):

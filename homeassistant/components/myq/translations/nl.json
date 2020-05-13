@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MyQ is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Verbinding maken met de MyQ-gateway"
+            }
+        }
+    }
+}

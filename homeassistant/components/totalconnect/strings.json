@@ -3,10 +3,17 @@
     "step": {
       "user": {
         "title": "Total Connect",
-        "data": { "username": "Username", "password": "Password" }
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
-    "error": { "login": "Login error: please check your username & password" },
-    "abort": { "already_configured": "Account already configured" }
+    "error": {
+      "login": "Login error: please check your username & password"
+    },
+    "abort": {
+      "already_configured": "Account already configured"
+    }
   }
 }

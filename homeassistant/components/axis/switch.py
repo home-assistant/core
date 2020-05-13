@@ -2,7 +2,7 @@
 
 from axis.event_stream import CLASS_OUTPUT
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class AxisSwitch(AxisEventBase, SwitchDevice):
+class AxisSwitch(AxisEventBase, SwitchEntity):
     """Representation of a Axis switch."""
 
     @property

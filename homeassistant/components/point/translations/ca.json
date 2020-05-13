@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nom\u00e9s pots configurar un compte de Point.",
+            "already_setup": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
             "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
             "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "external_setup": "Point s'ha configurat correctament des d'un altre flux de dades.",
-            "no_flows": "Necessites configurar Point abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/point/)."
+            "no_flows": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3."
         },
         "create_entry": {
-            "default": "Autenticaci\u00f3 exitosa amb Minut per als teus dispositiu/s Point."
+            "default": "Autenticaci\u00f3 exitosa"
         },
         "error": {
             "follow_link": "V\u00e9s a l'enlla\u00e7 i autentica't abans de pr\u00e9mer Envia",
-            "no_token": "No s'ha autenticat amb Minut"
+            "no_token": "Token d'acc\u00e9s no v\u00e0lid"
         },
         "step": {
             "auth": {
@@ -23,8 +23,8 @@
                 "data": {
                     "flow_impl": "Prove\u00efdor"
                 },
-                "description": "Tria quin prove\u00efdor d'autenticaci\u00f3 vols utilitzar per autenticar-te amb Point.",
-                "title": "Prove\u00efdor d'autenticaci\u00f3"
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?",
+                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
             }
         }
     }

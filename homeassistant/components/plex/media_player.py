@@ -5,7 +5,7 @@ import logging
 import plexapi.exceptions
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
@@ -88,7 +88,7 @@ def _async_add_entities(
     async_add_entities(entities, True)
 
 
-class PlexMediaPlayer(MediaPlayerDevice):
+class PlexMediaPlayer(MediaPlayerEntity):
     """Representation of a Plex device."""
 
     def __init__(self, plex_server, device, session=None):

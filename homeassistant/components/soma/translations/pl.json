@@ -2,9 +2,9 @@
     "config": {
         "abort": {
             "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno konto Soma.",
-            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
+            "authorize_url_timeout": "[%key_id:common::config_flow::abort::oauth2_authorize_url_timeout%]",
             "connection_error": "Nie uda\u0142o si\u0119 po\u0142\u0105czy\u0107 z SOMA Connect.",
-            "missing_configuration": "Komponent Soma nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "missing_configuration": "[%key_id:common::config_flow::abort::oauth2_missing_configuration%]",
             "result_error": "SOMA Connect odpowiedzia\u0142 statusem b\u0142\u0119du."
         },
         "create_entry": {
@@ -13,8 +13,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "port": "Port"
+                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "port": "[%key_id:common::config_flow::data::port%]"
                 },
                 "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia SOMA Connect.",
                 "title": "SOMA Connect"

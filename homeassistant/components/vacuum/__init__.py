@@ -228,7 +228,7 @@ class _BaseVacuum(Entity):
         )
 
 
-class VacuumDevice(_BaseVacuum, ToggleEntity):
+class VacuumEntity(_BaseVacuum, ToggleEntity):
     """Representation of a vacuum cleaner robot."""
 
     @property
@@ -249,7 +249,7 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
     @property
     def capability_attributes(self):
         """Return capability attributes."""
-        if self.fan_speed is not None:
+        if self.supported_features & SUPPORT_FAN_SPEED:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
     @property
@@ -309,7 +309,18 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         """Not supported."""
 
 
-class StateVacuumDevice(_BaseVacuum):
+class VacuumDevice(VacuumEntity):
+    """Representation of a vacuum (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "VacuumDevice is deprecated, modify %s to extend VacuumEntity", cls.__name__
+        )
+
+
+class StateVacuumEntity(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
 
     @property
@@ -329,7 +340,7 @@ class StateVacuumDevice(_BaseVacuum):
     @property
     def capability_attributes(self):
         """Return capability attributes."""
-        if self.fan_speed is not None:
+        if self.supported_features & SUPPORT_FAN_SPEED:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
     @property
@@ -377,3 +388,15 @@ class StateVacuumDevice(_BaseVacuum):
 
     async def async_toggle(self, **kwargs):
         """Not supported."""
+
+
+class StateVacuumDevice(StateVacuumEntity):
+    """Representation of a vacuum (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "StateVacuumDevice is deprecated, modify %s to extend StateVacuumEntity",
+            cls.__name__,
+        )

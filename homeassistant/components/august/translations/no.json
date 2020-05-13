@@ -23,8 +23,8 @@
                 "data": {
                     "code": "Bekreftelseskode"
                 },
-                "description": "Kontroller {login_method} ({username}) og skriv inn bekreftelseskoden nedenfor",
-                "title": "To-faktor autentisering"
+                "description": "Kontroller {login_method} ({username}) og fyll inn bekreftelseskoden nedenfor",
+                "title": "Totrinnsbekreftelse"
             }
         }
     }

@@ -76,7 +76,7 @@ async def async_setup_platform(
     )
 
 
-class LightGroup(light.Light):
+class LightGroup(light.LightEntity):
     """Representation of a light group."""
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:
@@ -326,7 +326,7 @@ def _mean_int(*args):
 
 def _mean_tuple(*args):
     """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(l) / len(l) for l in zip(*args))
+    return tuple(sum(x) / len(x) for x in zip(*args))
 
 
 def _reduce_attribute(

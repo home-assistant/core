@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Postinumero on jo rekister\u00f6ity",
+            "invalid_zip_code": "Postinumero on virheellinen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "Postinumero"
+                },
+                "title": "IQVIA"
+            }
+        }
+    }
+}

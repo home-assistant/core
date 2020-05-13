@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Le contr\u00f4leur est d\u00e9j\u00e0 configur\u00e9",
+            "no_local_user": "Aucun utilisateur local trouv\u00e9, configurez un compte local sur le contr\u00f4leur et r\u00e9essayez",
             "user_privilege": "L'utilisateur doit \u00eatre administrateur"
         },
         "error": {
@@ -47,6 +48,13 @@
                     "one": "Vide",
                     "other": "Vide"
                 }
+            },
+            "simple_options": {
+                "data": {
+                    "track_clients": "Suivi de clients r\u00e9seaux",
+                    "track_devices": "Suivi d'\u00e9quipement r\u00e9seau (Equipements Ubiquiti)"
+                },
+                "description": "Configurer l'int\u00e9gration UniFi"
             },
             "statistics_sensors": {
                 "data": {

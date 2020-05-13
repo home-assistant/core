@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -95,7 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class SensorTrend(BinarySensorDevice):
+class SensorTrend(BinarySensorEntity):
     """Representation of a trend Sensor."""
 
     def __init__(

@@ -12,21 +12,24 @@
             "one": "Vuoto",
             "other": "Vuoto"
         },
+        "flow_title": "UPnP/IGD: {name}",
         "step": {
             "confirm": {
                 "description": "Vuoi configurare UPnP/IGD?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
+            "ssdp_confirm": {
+                "description": "Vuoi configurare questo dispositivo UPnP/IGD?"
             },
             "user": {
                 "data": {
                     "enable_port_mapping": "Abilita il port mapping per Home Assistant",
                     "enable_sensors": "Aggiungi sensori di traffico",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "scan_interval": "Intervallo di aggiornamento (secondi, minimo 30)",
+                    "usn": "Dispositivo"
                 },
-                "title": "Opzioni di configurazione per UPnP/IGD"
+                "title": "Opzioni di configurazione"
             }
         }
     }
