@@ -7,7 +7,7 @@ from homeassistant.components.sonarr.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_SOURCE
+from homeassistant.const import CONF_HOST, CONF_SOURCE, CONF_VERIFY_SSL
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -152,3 +152,32 @@ async def test_full_user_flow_implementation(
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
+
+
+async def test_full_user_flow_advanced_options(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the full manual user flow with advanced options."""
+    mock_connection(aioclient_mock)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER, "show_advanced_options": True}
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    user_input = {
+         **MOCK_USER_INPUT,
+         CONF_VERIFY_SSL: True,
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input,
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == HOST
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_VERIFY_SSL]
