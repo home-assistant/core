@@ -46,34 +46,34 @@ SUPPORT_HVAG = [HVAC_MODE_COOL, HVAC_MODE_HEAT]
 SUPPORT_HVAC_PCOOL = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
-DYSON_CLIMATE_DEVICES = "dyson_climate_devices"
+DYSON_KNOWN_CLIMATE_DEVICES = "dyson_known_climate_devices"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
     if discovery_info is None:
         return
 
-    _LOGGER.debug("Creating new Dyson climate devices")
-    if DYSON_CLIMATE_DEVICES not in hass.data:
-        hass.data[DYSON_CLIMATE_DEVICES] = []
+    known_devices = hass.data.setdefault(DYSON_KNOWN_CLIMATE_DEVICES, set())
 
     # Get Dyson Devices from parent component
-    device_serials = [device.serial for device in hass.data[DYSON_CLIMATE_DEVICES]]
+    new_entities = []
 
     for device in hass.data[DYSON_DEVICES]:
-        if device.serial not in device_serials:
+        if device.serial not in known_devices:
             if isinstance(device, DysonPureHotCool):
-                dyson_entity = DysonPureHotCoolDevice(device)
-                hass.data[DYSON_CLIMATE_DEVICES].append(dyson_entity)
+                dyson_entity = DysonPureHotCoolEntity(device)
+                new_entities.append(dyson_entity)
+                known_devices.add(device.serial)
             elif isinstance(device, DysonPureHotCoolLink):
-                dyson_entity = DysonPureHotCoolLinkDevice(device)
-                hass.data[DYSON_CLIMATE_DEVICES].append(dyson_entity)
+                dyson_entity = DysonPureHotCoolLinkEntity(device)
+                new_entities.append(dyson_entity)
+                known_devices.add(device.serial)
 
-    add_devices(hass.data[DYSON_CLIMATE_DEVICES])
+    add_entities(new_entities)
 
 
-class DysonPureHotCoolLinkDevice(ClimateEntity):
+class DysonPureHotCoolLinkEntity(ClimateEntity):
     """Representation of a Dyson climate fan."""
 
     def __init__(self, device):
@@ -225,7 +225,7 @@ class DysonPureHotCoolLinkDevice(ClimateEntity):
         return self._device.serial
 
 
-class DysonPureHotCoolDevice(ClimateEntity):
+class DysonPureHotCoolEntity(ClimateEntity):
     """Representation of a Dyson climate hot+cool fan."""
 
     def __init__(self, device):
@@ -234,7 +234,7 @@ class DysonPureHotCoolDevice(ClimateEntity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_job(self._device.add_message_listener, self.on_message)
+        self.hass.async_add_executor_job(self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
         """Call when new messages received from the climate device."""
