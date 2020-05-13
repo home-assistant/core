@@ -106,6 +106,7 @@ FLOWS = [
     "openuv",
     "owntracks",
     "panasonic_viera",
+    "pi_hole",
     "plaato",
     "plex",
     "point",
