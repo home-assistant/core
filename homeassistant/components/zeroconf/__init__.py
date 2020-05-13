@@ -210,11 +210,12 @@ def setup(hass, config):
                 )
             )
 
-    for service in ZEROCONF:
-        HaServiceBrowser(zeroconf, service, handlers=[service_update])
+    types = ZEROCONF.copy()
 
     if HOMEKIT_TYPE not in ZEROCONF:
-        HaServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
+        types.append(HOMEKIT_TYPE)
+
+    HaServiceBrowser(zeroconf, types, handlers=[service_update])
 
     return True
 
