@@ -166,4 +166,4 @@ class BroadlinkData:
                 self.data = data
                 return
 
-        _LOGGER.debug("Failed to update sensors: Device returned malformed data.")
+        _LOGGER.debug("Failed to update sensors: Device returned malformed data")
