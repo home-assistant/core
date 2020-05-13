@@ -225,7 +225,7 @@ class DysonPureHotCoolLinkDevice(ClimateEntity):
         return self._device.serial
 
 
-class DysonPureHotCoolDevice(ClimateDevice):
+class DysonPureHotCoolDevice(ClimateEntity):
     """Representation of a Dyson climate hot+cool fan."""
 
     def __init__(self, device):
