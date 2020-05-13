@@ -18,6 +18,7 @@ PLATFORMS = ["cover"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the OpenGarage component."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -29,10 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_VERIFY_SSL],
         async_get_clientsession(hass),
     )
-
-    # status = await open_garage.update_state()
-
-    hass.data[DOMAIN] = open_garage
+    hass.data[DOMAIN][entry.entry_id] = open_garage
 
     for component in PLATFORMS:
         hass.async_create_task(

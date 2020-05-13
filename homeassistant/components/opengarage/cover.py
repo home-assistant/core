@@ -7,15 +7,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     CoverEntity,
 )
-from homeassistant.const import (
-    CONF_COVERS,
-    CONF_NAME,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-)
-from homeassistant.util import slugify
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 
 from .const import ATTR_DISTANCE_SENSOR, ATTR_DOOR_STATE, ATTR_SIGNAL_STRENGTH, DOMAIN
 
@@ -27,20 +19,14 @@ STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the OpenGarage covers."""
-    covers = []
-    open_garage = hass.data.get(DOMAIN)
-    devices = entry.data[CONF_COVERS]
-
-    for device_config in devices.values():
-        covers.append(OpenGarageCover(device_config.get(CONF_NAME), open_garage))
-
-    async_add_entities(covers, True)
+    open_garage = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([OpenGarageCover(open_garage, entry.unique_id)], True)
 
 
 class OpenGarageCover(CoverEntity):
     """Representation of a OpenGarage cover."""
 
-    def __init__(self, open_garage, mac):
+    def __init__(self, open_garage, device_id):
         """Initialize the cover."""
         self._open_garage = open_garage
         self._name = ""
@@ -48,7 +34,7 @@ class OpenGarageCover(CoverEntity):
         self._state_before_move = None
         self._device_state_attributes = {}
         self._available = True
-        self._device_id = slugify(mac)
+        self._device_id = device_id
 
     @property
     def name(self):
@@ -161,6 +147,4 @@ class OpenGarageCover(CoverEntity):
             "name": self.name,
             "manufacturer": "Open Garage",
         }
-        if self.model is not None:
-            device_info["model"] = self.model
         return device_info
