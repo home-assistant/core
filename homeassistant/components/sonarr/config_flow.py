@@ -46,7 +46,7 @@ async def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
         api_key=data[CONF_API_KEY],
         base_path=data[CONF_BASE_PATH],
         tls=data[CONF_SSL],
-        verify_ssl=data[CONF_VERIFY_SSL],
+        verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         session=session,
     )
 
