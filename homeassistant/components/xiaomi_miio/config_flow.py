@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.helpers.device_registry import format_mac
 
 # pylint: disable=unused-import
 from .const import DOMAIN
@@ -62,14 +63,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not name or not self.host or not mac_address:
             return self.async_abort(reason="not_xiaomi_miio")
 
-        # format mac (include semicolns and make uppercase)
-        if len(mac_address) == 12:
-            mac_address = ":".join(mac_address[i : i + 2] for i in range(0, 12, 2))
-        mac_address = mac_address.upper()
-
         # Check which device is discovered.
         if name.startswith(ZEROCONF_GATEWAY):
-            unique_id = mac_address
+            unique_id = format_mac(mac_address)
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured({CONF_HOST: host})
 
@@ -97,7 +93,8 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             gateway_info = connect_gateway_class.gateway_info
 
             if gateway_info is not None:
-                unique_id = f"{gateway_info.mac_address}"
+                mac = format_mac(gateway_info.mac_address)
+                unique_id = mac
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -107,7 +104,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOST: self.host,
                         CONF_TOKEN: token,
                         "model": gateway_info.model,
-                        "mac": gateway_info.mac_address,
+                        "mac": mac,
                     },
                 )
 
