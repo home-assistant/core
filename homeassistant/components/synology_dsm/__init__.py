@@ -194,7 +194,7 @@ class SynoApi:
         )
 
     async def _should_fetch_api(self):
-
+        """Determine if we should fetch each API, if one entity needs it."""
         entity_reg = await self._hass.helpers.entity_registry.async_get_registry()
         entity_entries = entity_registry.async_entries_for_config_entry(
             entity_reg, self._entry.entry_id
