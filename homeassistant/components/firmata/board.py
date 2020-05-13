@@ -7,17 +7,17 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    CONF_ARDUINO_INSTANCE_ID,
     CONF_ARDUINO_WAIT,
-    CONF_SERIAL_PORT,
+    CONF_BINARY_SENSORS,
+    CONF_PIN,
+    CONF_PIN_MODE,
+    CONF_SAMPLING_INTERVAL,
     CONF_SERIAL_BAUD_RATE,
+    CONF_SERIAL_PORT,
     CONF_SLEEP_TUNE,
     CONF_SWITCHES,
     DOMAIN,
-    CONF_ARDUINO_INSTANCE_ID,
-    CONF_PIN,
-    CONF_PIN_MODE,
-    CONF_BINARY_SENSORS,
-    CONF_SAMPLING_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)

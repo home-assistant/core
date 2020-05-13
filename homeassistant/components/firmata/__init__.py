@@ -5,28 +5,28 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_NAME
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 
-from .board import FirmataBoard
 from . import config_flow  # noqa: F401
+from .board import FirmataBoard
 from .const import (
+    CONF_ARDUINO_INSTANCE_ID,
     CONF_ARDUINO_WAIT,
+    CONF_BINARY_SENSORS,
     CONF_INITIAL_STATE,
     CONF_NEGATE_STATE,
     CONF_PIN,
+    CONF_PIN_MODE,
+    CONF_SAMPLING_INTERVAL,
     CONF_SERIAL_BAUD_RATE,
-    CONF_ARDUINO_INSTANCE_ID,
     CONF_SERIAL_PORT,
     CONF_SLEEP_TUNE,
     CONF_SWITCHES,
-    CONF_PIN_MODE,
-    PIN_MODE_OUTPUT,
-    PIN_MODE_INPUT,
-    PIN_MODE_PULLUP,
-    CONF_BINARY_SENSORS,
-    CONF_SAMPLING_INTERVAL,
     DOMAIN,
+    PIN_MODE_INPUT,
+    PIN_MODE_OUTPUT,
+    PIN_MODE_PULLUP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,6 +137,6 @@ async def async_remove_entry(hass, config_entry) -> None:
     name = config_entry.data[CONF_NAME]
 
     if DOMAIN in hass.data:
-      if name in hass.data[DOMAIN]:
-          _LOGGER.info("Closing Firmata board %s", name)
-          await hass.data[DOMAIN][name].async_reset()
+        if name in hass.data[DOMAIN]:
+            _LOGGER.info("Closing Firmata board %s", name)
+            await hass.data[DOMAIN][name].async_reset()

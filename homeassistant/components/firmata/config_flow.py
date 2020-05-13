@@ -4,7 +4,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_SERIAL_PORT
+from .const import CONF_SERIAL_PORT, DOMAIN
 
 
 @callback

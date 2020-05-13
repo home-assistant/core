@@ -2,12 +2,12 @@
 
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 
 from .board import FirmataBoardPin
-from .const import CONF_NEGATE_STATE, PIN_MODE_INPUT, PIN_MODE_PULLUP, DOMAIN
+from .const import CONF_NEGATE_STATE, DOMAIN, PIN_MODE_INPUT, PIN_MODE_PULLUP
 
 _LOGGER = logging.getLogger(__name__)
 

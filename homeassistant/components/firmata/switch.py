@@ -6,7 +6,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 
 from .board import FirmataBoardPin
-from .const import CONF_INITIAL_STATE, CONF_NEGATE_STATE, PIN_MODE_OUTPUT, DOMAIN
+from .const import CONF_INITIAL_STATE, CONF_NEGATE_STATE, DOMAIN, PIN_MODE_OUTPUT
 
 _LOGGER = logging.getLogger(__name__)
 
