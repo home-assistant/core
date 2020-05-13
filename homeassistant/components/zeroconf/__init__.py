@@ -210,7 +210,7 @@ def setup(hass, config):
                 )
             )
 
-    types = ZEROCONF.keys()
+    types = list(ZEROCONF.keys())
 
     if HOMEKIT_TYPE not in ZEROCONF:
         types.append(HOMEKIT_TYPE)
