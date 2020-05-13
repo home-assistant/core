@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Nadzornik je \u017ee konfiguriran",
+            "no_local_user": "Nobenega lokalnega uporabnika ni mogo\u010de najti, konfigurirajte lokalni ra\u010dun na krmilniku in poskusite znova",
             "user_privilege": "Uporabnik mora biti skrbnik"
         },
         "error": {
@@ -37,6 +38,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "\u010cas v sekundah od zadnjega videnja na omre\u017eju do odsotnosti",
+                    "ignore_wired_bug": "Onemogo\u010di logiko \u017ei\u010dnega hro\u0161\u010da UniFi",
                     "ssid_filter": "Izberite SSID-e za sledenje brez\u017ei\u010dnim odjemalcem",
                     "track_clients": "Sledite odjemalcem omre\u017eja",
                     "track_devices": "Sledite omre\u017enim napravam (naprave Ubiquiti)",
@@ -52,6 +54,14 @@
                     "other": "OSTALO",
                     "two": "DVA"
                 }
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "Nadzorovani mre\u017eni klienti",
+                    "track_clients": "Sledite mre\u017enim klientom",
+                    "track_devices": "Sledite mre\u017enim napravam (Ubiquiti naprave)"
+                },
+                "description": "Nastavite UniFi integracijo"
             },
             "statistics_sensors": {
                 "data": {

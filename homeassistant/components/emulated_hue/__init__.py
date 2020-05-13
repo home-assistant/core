@@ -14,6 +14,7 @@ from homeassistant.util.json import load_json, save_json
 from .hue_api import (
     HueAllGroupsStateView,
     HueAllLightsStateView,
+    HueConfigView,
     HueFullStateView,
     HueGroupView,
     HueOneLightChangeView,
@@ -119,6 +120,7 @@ async def async_setup(hass, yaml_config):
     HueAllGroupsStateView(config).register(app, app.router)
     HueGroupView(config).register(app, app.router)
     HueFullStateView(config).register(app, app.router)
+    HueConfigView(config).register(app, app.router)
 
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr,

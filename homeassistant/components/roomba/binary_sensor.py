@@ -1,7 +1,7 @@
 """Roomba binary sensor entities."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import roomba_reported_state
 from .const import BLID, DOMAIN, ROOMBA_SESSION
@@ -21,7 +21,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities([roomba_vac], True)
 
 
-class RoombaBinStatus(IRobotEntity, BinarySensorDevice):
+class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
     ICON = "mdi:delete-variant"
@@ -42,7 +42,7 @@ class RoombaBinStatus(IRobotEntity, BinarySensorDevice):
         return self.ICON
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the state of the sensor."""
         return roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
 

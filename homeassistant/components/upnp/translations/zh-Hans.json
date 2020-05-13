@@ -13,14 +13,12 @@
                 "description": "\u60a8\u60f3\u8981\u914d\u7f6e UPnP/IGD \u5417\uff1f",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
-            },
             "user": {
                 "data": {
                     "enable_port_mapping": "\u4e3a Home Assistant \u542f\u7528\u7aef\u53e3\u6620\u5c04",
                     "enable_sensors": "\u6dfb\u52a0\u6d41\u91cf\u4f20\u611f\u5668",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "usn": "\u8bbe\u5907"
                 },
                 "title": "UPnP/IGD \u7684\u914d\u7f6e\u9009\u9879"
             }

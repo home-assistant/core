@@ -1,0 +1,17 @@
+{
+  "domain": "zwave_mqtt",
+  "name": "Z-Wave over MQTT",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zwave_mqtt",
+  "requirements": [
+    "python-openzwave-mqtt==1.0.1"
+  ],
+  "after_dependencies": [
+    "mqtt"
+  ],
+  "codeowners": [
+    "@cgarwood",
+    "@marcelveldt",
+    "@MartinHjelmare"
+  ]
+}

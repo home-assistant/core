@@ -11,7 +11,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_WHITE_VALUE
 import homeassistant.util.color as color_util
@@ -48,7 +48,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class FibaroLight(FibaroDevice, Light):
+class FibaroLight(FibaroDevice, LightEntity):
     """Representation of a Fibaro Light, including dimmable."""
 
     def __init__(self, fibaro_device):

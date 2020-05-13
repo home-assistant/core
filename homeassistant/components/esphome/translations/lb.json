@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP ass scho konfigur\u00e9iert"
+            "already_configured": "ESP ass scho konfigur\u00e9iert",
+            "already_in_progress": "ESP Konfiguratioun ass schonn am gaang."
         },
         "error": {
             "connection_error": "Keng Verbindung zum ESP. Iwwerpr\u00e9ift d'Pr\u00e4sens vun der Zeil api: am YAML Fichier.",

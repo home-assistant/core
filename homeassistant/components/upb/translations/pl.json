@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+        }
+    }
+}

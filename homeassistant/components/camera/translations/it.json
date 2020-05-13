@@ -3,7 +3,7 @@
         "_": {
             "idle": "Inattiva",
             "recording": "In registrazione",
-            "streaming": "Streaming"
+            "streaming": "In trasmissione"
         }
     },
     "title": "Telecamera"

@@ -12,19 +12,22 @@
             "one": "un",
             "other": "altre"
         },
+        "flow_title": "UPnP/IGD: {name}",
         "step": {
             "confirm": {
                 "description": "Vols configurar UPnP/IGD?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
+            "ssdp_confirm": {
+                "description": "Vols configurar aquest dispositiu UPnP/IGD?"
             },
             "user": {
                 "data": {
                     "enable_port_mapping": "Activa l'assignaci\u00f3 de ports per a Home Assistant",
                     "enable_sensors": "Afegeix sensors de tr\u00e0nsit",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "scan_interval": "Interval d'actualitzaci\u00f3 (en segons, m\u00ednim 30)",
+                    "usn": "Dispositiu"
                 },
                 "title": "Opcions de configuraci\u00f3 d'UPnP/IGD"
             }

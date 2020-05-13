@@ -1,12 +1,11 @@
 """Test Home Assistant scenes."""
-from unittest.mock import patch
-
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import async_mock_service
 
 

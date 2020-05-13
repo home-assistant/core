@@ -12,7 +12,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 
 from . import DOMAIN
@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoLight(Light):
+class DemoLight(LightEntity):
     """Representation of a demo light."""
 
     def __init__(

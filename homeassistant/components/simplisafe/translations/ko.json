@@ -10,10 +10,11 @@
         "step": {
             "user": {
                 "data": {
+                    "code": "\ucf54\ub4dc (Home Assistant UI \uc5d0\uc11c \uc0ac\uc6a9\ub428)",
                     "password": "\ube44\ubc00\ubc88\ud638",
-                    "username": "\uc774\uba54\uc77c \uc8fc\uc18c"
+                    "username": "\uc774\uba54\uc77c"
                 },
-                "title": "\uc0ac\uc6a9\uc790 \uc815\ubcf4 \uc785\ub825"
+                "title": "\uc0ac\uc6a9\uc790 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."
             }
         }
     },
@@ -23,7 +24,7 @@
                 "data": {
                     "code": "\ucf54\ub4dc (Home Assistant UI \uc5d0\uc11c \uc0ac\uc6a9\ub428)"
                 },
-                "title": "SimpliSafe \uad6c\uc131"
+                "title": "SimpliSafe \uad6c\uc131\ud558\uae30"
             }
         }
     }

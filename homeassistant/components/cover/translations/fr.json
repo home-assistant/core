@@ -1,7 +1,9 @@
 {
     "device_automation": {
         "action_type": {
-            "close": "Fermer {entity_name}"
+            "close": "Fermer {entity_name}",
+            "open": "Ouvrir {entity_name}",
+            "set_position": "D\u00e9finir la position de {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} est ferm\u00e9",

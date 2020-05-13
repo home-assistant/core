@@ -1,6 +1,9 @@
 {
   "config": {
-    "abort": { "already_configured": "ESP is already configured" },
+    "abort": {
+      "already_configured": "ESP is already configured",
+      "already_in_progress": "ESP configuration is already in progress"
+    },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips",
       "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",
@@ -8,11 +11,16 @@
     },
     "step": {
       "user": {
-        "data": { "host": "Host", "port": "Port" },
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
         "description": "Please enter connection settings of your [ESPHome](https://esphomelib.com/) node."
       },
       "authenticate": {
-        "data": { "password": "Password" },
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
         "description": "Please enter the password you set in your configuration for {name}."
       },
       "discovery_confirm": {

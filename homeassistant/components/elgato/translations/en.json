@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host or IP address",
-                    "port": "Port number"
+                    "host": "Host",
+                    "port": "Port"
                 },
                 "description": "Set up your Elgato Key Light to integrate with Home Assistant.",
                 "title": "Link your Elgato Key Light"

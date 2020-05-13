@@ -34,6 +34,7 @@ async def test_list_devices(hass, client, registry):
         manufacturer="manufacturer",
         model="model",
         via_device=("bridgeid", "0123"),
+        entry_type="service",
     )
 
     await client.send_json({"id": 5, "type": "config/device_registry/list"})
@@ -49,6 +50,7 @@ async def test_list_devices(hass, client, registry):
             "model": "model",
             "name": None,
             "sw_version": None,
+            "entry_type": None,
             "via_device_id": None,
             "area_id": None,
             "name_by_user": None,
@@ -60,6 +62,7 @@ async def test_list_devices(hass, client, registry):
             "model": "model",
             "name": None,
             "sw_version": None,
+            "entry_type": "service",
             "via_device_id": dev1,
             "area_id": None,
             "name_by_user": None,

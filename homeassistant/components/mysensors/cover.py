@@ -1,6 +1,6 @@
 """Support for MySensors covers."""
 from homeassistant.components import mysensors
-from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverDevice
+from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 
 
@@ -15,7 +15,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
+class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
     """Representation of the value of a MySensors Cover child node."""
 
     @property

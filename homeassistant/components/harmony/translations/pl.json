@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
-            "unknown": "Niespodziewany b\u0142\u0105d."
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
         },
         "flow_title": "Logitech Harmony Hub {name}",
         "step": {
@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
+                    "host": "[%key_id:common::config_flow::data::host%]",
                     "name": "Nazwa huba"
                 },
                 "title": "Konfiguracja Logitech Harmony Hub"

@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El puente ya esta configurado",
-            "already_in_progress": "La configuraci\u00f3n del bridge ya est\u00e1 en marcha."
+            "already_configured": "La pasarela ya est\u00e1 configurada",
+            "already_in_progress": "La configuraci\u00f3n de la pasarela ya est\u00e1 en marcha."
         },
         "error": {
             "cannot_connect": "No se puede conectar a la puerta de enlace.",

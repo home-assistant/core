@@ -5,22 +5,26 @@
         "title": "Connect to the device",
         "description": "Currently retrieving the BLID and password is a manual process. Please follow the steps outlined in the documentation at: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
         "data": {
-          "host": "Hostname or IP Address",
+          "host": "[%key:common::config_flow::data::host%]",
           "blid": "BLID",
-          "password": "Password",
+          "password": "[%key:common::config_flow::data::password%]",
           "continuous": "Continuous",
           "delay": "Delay"
         }
       }
     },
     "error": {
-      "unknown": "Unexpected error",
       "cannot_connect": "Failed to connect, please try again"
     }
   },
   "options": {
     "step": {
-      "init": { "data": { "continuous": "Continuous", "delay": "Delay" } }
+      "init": {
+        "data": {
+          "continuous": "Continuous",
+          "delay": "Delay"
+        }
+      }
     }
   }
 }

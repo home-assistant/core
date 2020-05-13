@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar, por favor int\u00e9ntelo de nuevo",
             "unknown": "Error inesperado",
-            "wrong_version": "tu powerwall utiliza una versi\u00f3n de software que no es compatible. Considera actualizar o informar de este problema para que pueda resolverse."
+            "wrong_version": "Tu powerwall utiliza una versi\u00f3n de software que no es compatible. Considera actualizar o informar de este problema para que pueda resolverse."
         },
         "step": {
             "user": {

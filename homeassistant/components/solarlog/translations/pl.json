@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
         },
         "error": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, sprawd\u017a adres hosta"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP urz\u0105dzenia Solar-Log",
+                    "host": "[%key_id:common::config_flow::data::host%]",
                     "name": "Prefiks dla sensor\u00f3w Solar-Log"
                 },
                 "title": "Zdefiniuj po\u0142\u0105czenie z Solar-Log"

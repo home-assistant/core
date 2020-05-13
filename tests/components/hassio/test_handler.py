@@ -30,26 +30,64 @@ async def test_api_ping_exeption(hassio_handler, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
-async def test_api_homeassistant_info(hassio_handler, aioclient_mock):
-    """Test setup with API Home Assistant info."""
+async def test_api_info(hassio_handler, aioclient_mock):
+    """Test setup with API generic info."""
     aioclient_mock.get(
-        "http://127.0.0.1/homeassistant/info",
-        json={"result": "ok", "data": {"last_version": "10.0"}},
+        "http://127.0.0.1/info",
+        json={
+            "result": "ok",
+            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
+        },
     )
 
-    data = await hassio_handler.get_homeassistant_info()
+    data = await hassio_handler.get_info()
     assert aioclient_mock.call_count == 1
-    assert data["last_version"] == "10.0"
+    assert data["hassos"] is None
+    assert data["homeassistant"] == "0.110.0"
+    assert data["supervisor"] == "222"
 
 
-async def test_api_homeassistant_info_error(hassio_handler, aioclient_mock):
+async def test_api_info_error(hassio_handler, aioclient_mock):
     """Test setup with API Home Assistant info error."""
     aioclient_mock.get(
-        "http://127.0.0.1/homeassistant/info", json={"result": "error", "message": None}
+        "http://127.0.0.1/info", json={"result": "error", "message": None}
     )
 
     with pytest.raises(HassioAPIError):
-        await hassio_handler.get_homeassistant_info()
+        await hassio_handler.get_info()
+
+    assert aioclient_mock.call_count == 1
+
+
+async def test_api_host_info(hassio_handler, aioclient_mock):
+    """Test setup with API Host info."""
+    aioclient_mock.get(
+        "http://127.0.0.1/host/info",
+        json={
+            "result": "ok",
+            "data": {
+                "chassis": "vm",
+                "operating_system": "Debian GNU/Linux 10 (buster)",
+                "kernel": "4.19.0-6-amd64",
+            },
+        },
+    )
+
+    data = await hassio_handler.get_host_info()
+    assert aioclient_mock.call_count == 1
+    assert data["chassis"] == "vm"
+    assert data["kernel"] == "4.19.0-6-amd64"
+    assert data["operating_system"] == "Debian GNU/Linux 10 (buster)"
+
+
+async def test_api_host_info_error(hassio_handler, aioclient_mock):
+    """Test setup with API Home Assistant info error."""
+    aioclient_mock.get(
+        "http://127.0.0.1/host/info", json={"result": "error", "message": None}
+    )
+
+    with pytest.raises(HassioAPIError):
+        await hassio_handler.get_host_info()
 
     assert aioclient_mock.call_count == 1
 

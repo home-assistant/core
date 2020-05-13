@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
+        },
+        "error": {
+            "cannot_connect": "[%key_id:common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "[%key_id:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                }
+            }
+        }
+    }
+}
