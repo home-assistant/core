@@ -24,6 +24,9 @@ from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
 
 from .const import (
+    AUDIO_CODEC_COPY,
+    AUDIO_CODEC_OPUS,
+    CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
@@ -36,14 +39,18 @@ from .const import (
     CONF_STREAM_ADDRESS,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
+    CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_SUPPORT_AUDIO,
+    DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
     DOMAIN,
@@ -60,11 +67,16 @@ from .const import (
     TYPE_SPRINKLER,
     TYPE_SWITCH,
     TYPE_VALVE,
+    VIDEO_CODEC_COPY,
+    VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_LIBX264,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 MAX_PORT = 65535
+VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
+VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 
 BASIC_INFO_SCHEMA = vol.Schema(
     {
@@ -84,12 +96,18 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
         vol.Optional(CONF_STREAM_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
         vol.Optional(CONF_STREAM_SOURCE): cv.string,
-        vol.Optional(CONF_SUPPORT_AUDIO, default=False): cv.boolean,
+        vol.Optional(CONF_AUDIO_CODEC, default=DEFAULT_AUDIO_CODEC): vol.In(
+            VALID_AUDIO_CODECS
+        ),
+        vol.Optional(CONF_SUPPORT_AUDIO, default=DEFAULT_SUPPORT_AUDIO): cv.boolean,
         vol.Optional(CONF_MAX_WIDTH, default=DEFAULT_MAX_WIDTH): cv.positive_int,
         vol.Optional(CONF_MAX_HEIGHT, default=DEFAULT_MAX_HEIGHT): cv.positive_int,
         vol.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,
         vol.Optional(CONF_AUDIO_MAP, default=DEFAULT_AUDIO_MAP): cv.string,
         vol.Optional(CONF_VIDEO_MAP, default=DEFAULT_VIDEO_MAP): cv.string,
+        vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): vol.In(
+            VALID_VIDEO_CODECS
+        ),
         vol.Optional(
             CONF_AUDIO_PACKET_SIZE, default=DEFAULT_AUDIO_PACKET_SIZE
         ): cv.positive_int,
@@ -455,3 +473,13 @@ def find_next_available_port(start_port: int):
             if port == MAX_PORT:
                 raise
             continue
+
+
+def pid_is_alive(pid):
+    """Check to see if a process is alive."""
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        pass
+    return False

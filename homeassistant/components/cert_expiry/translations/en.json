@@ -12,9 +12,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "The hostname of the certificate",
+                    "host": "Host",
                     "name": "The name of the certificate",
-                    "port": "The port of the certificate"
+                    "port": "Port"
                 },
                 "title": "Define the certificate to test"
             }

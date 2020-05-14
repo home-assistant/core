@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Kontroller nettstedet er allerede konfigurert",
+            "no_local_user": "Ingen lokale brukere funnet. Konfigurer en lokal konto p\u00e5 kontrolleren og pr\u00f8v igjen",
             "user_privilege": "Bruker m\u00e5 v\u00e6re administrator"
         },
         "error": {
@@ -14,7 +15,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "site": "Nettsted-ID",
                     "username": "Brukernavn",
                     "verify_ssl": "Kontroller bruker riktig sertifikat"
@@ -48,9 +49,16 @@
             },
             "init": {
                 "data": {
-                    "one": "Tom",
-                    "other": "Tomme"
+                    "one": "",
+                    "other": ""
                 }
+            },
+            "simple_options": {
+                "data": {
+                    "track_clients": "Spor nettverksklienter",
+                    "track_devices": "Spor nettverksenheter (Ubiquiti enheter)"
+                },
+                "description": "Konfigurer UniFi-integrasjon"
             },
             "statistics_sensors": {
                 "data": {

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
             "already_in_progress": "Konfiguracja urz\u0105dzenia jest ju\u017c w toku.",
             "not_konn_panel": "Nie rozpoznano urz\u0105dzenia Konnected.io",
-            "unknown": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d."
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z panelem Konnected na {host}:{port}"
@@ -21,7 +21,7 @@
             "user": {
                 "data": {
                     "host": "Adres IP urz\u0105dzenia Konnected",
-                    "port": "Port urz\u0105dzenia Konnected urz\u0105dzenia"
+                    "port": "[%key_id:common::config_flow::data::port%] urz\u0105dzenia Konnected"
                 },
                 "description": "Wprowad\u017a informacje o ho\u015bcie panelu Konnected.",
                 "title": "Wykryj urz\u0105dzenie Konnected"
@@ -69,7 +69,7 @@
                     "7": "Strefa 7",
                     "out": "OUT"
                 },
-                "description": "Wykryto {model} na ho\u015bcie {host}. Wybierz podstawow\u0105 konfiguracj\u0119 ka\u017cdego wej\u015bcia/wyj\u015bcia poni\u017cej \u2014 w zale\u017cno\u015bci od typu wej\u015b\u0107/wyj\u015b\u0107 mo\u017ce zastosowa\u0107 sensory binarne (otwarte/ amkni\u0119te), sensory cyfrowe (dht i ds18b20) lub prze\u0142\u0105czane wyj\u015bcia. B\u0119dziesz m\u00f3g\u0142 skonfigurowa\u0107 szczeg\u00f3\u0142owe opcje w kolejnych krokach.",
+                "description": "Wykryto {model} na ho\u015bcie {host}. Wybierz podstawow\u0105 konfiguracj\u0119 ka\u017cdego wej\u015bcia/wyj\u015bcia poni\u017cej \u2014 w zale\u017cno\u015bci od typu wej\u015b\u0107/wyj\u015b\u0107 mo\u017ce zastosowa\u0107 sensory binarne (otwarte/zamkni\u0119te), sensory cyfrowe (dht i ds18b20) lub prze\u0142\u0105czane wyj\u015bcia. B\u0119dziesz m\u00f3g\u0142 skonfigurowa\u0107 szczeg\u00f3\u0142owe opcje w kolejnych krokach.",
                 "title": "Konfiguracja wej\u015bcia/wyj\u015bcia"
             },
             "options_io_ext": {

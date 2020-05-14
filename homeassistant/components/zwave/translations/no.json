@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "network_key": "Nettverksn\u00f8kkel (la v\u00e6re tom for automatisk generering)",
+                    "network_key": "Nettverksn\u00f8kkel (la v\u00e6re tom for automatisk oppretting)",
                     "usb_path": "USB bane"
                 },
                 "description": "Se [www.home-assistant.io/docs/z-wave/installation/](https://www.home-assistant.io/docs/z-wave/installation/) for informasjon om konfigurasjon variablene",

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "already_in_progress": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "not_huawei_lte": "\ud654\uc6e8\uc774 LTE \uae30\uae30\uac00 \uc544\ub2d8"
+            "not_huawei_lte": "\ud654\uc6e8\uc774 LTE \uae30\uae30\uac00 \uc544\ub2d9\ub2c8\ub2e4"
         },
         "error": {
             "connection_failed": "\uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",

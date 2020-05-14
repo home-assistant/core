@@ -11,8 +11,8 @@
             "user": {
                 "data": {
                     "code": "Kod (u\u017cywany w interfejsie Home Assistant'a)",
-                    "password": "Has\u0142o",
-                    "username": "Adres e-mail"
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::email%]"
                 },
                 "title": "Wprowad\u017a dane"
             }

@@ -1,0 +1,88 @@
+light_fade_start:
+  description: Start fading a light either up or down from current brightness.
+  fields:
+    entity_id:
+      description: Name(s) of lights to start fading
+      example: "light.kitchen"
+    brightness:
+      description: Number between 0 and 255 indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness.
+      example: 142
+    brightness_pct:
+      description: Number between 0 and 100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness.
+      example: 42
+    rate:
+      description: Rate for light to transition to new brightness
+      example: 3
+
+light_fade_stop:
+  description: Stop a light fade.
+  fields:
+    entity_id:
+      description: Name(s) of lights to stop fadding
+      example: "light.kitchen, light.family_room"
+
+light_blink:
+  description: Blink a light
+  fields:
+    entity_id:
+      description: Name(s) of lights to start fading
+      example: "light.kitchen"
+    rate:
+      description: Number of seconds between 0 and 4.25 that the link flashes on.
+      example: 4.2
+
+link_deactivate:
+  description: Deactivate a UPB scene.
+  fields:
+    entity_id:
+      description: Name(s) of scenes to deactivate
+      example: "scene.hygge"
+
+link_goto:
+  description: Set scene to brightness.
+  fields:
+    entity_id:
+      description: Name(s) of scenes to deactivate
+      example: "scene.hygge"
+    brightness:
+      description: Number between 0 and 255 indicating brightness, where 0 turns the scene off, 1 is the minimum brightness and 255 is the maximum brightness.
+      example: 120
+    brightness_pct:
+      description: Number between 0 and 100 indicating percentage of full brightness, where 0 turns the scene off, 1 is the minimum brightness and 100 is the maximum brightness.
+      example: 42
+    rate:
+      description: Rate in seconds for scene to transition to new brightness
+      example: 3.42
+
+link_fade_start:
+  description: Start fading a link either up or down from current brightness.
+  fields:
+    entity_id:
+      description: Name(s) of links to start fading
+      example: "scene.party"
+    brightness:
+      description: Number between 0 and 255 indicating brightness, where 0 turns the scene off, 1 is the minimum brightness and 255 is the maximum brightness.
+      example: 142
+    brightness_pct:
+      description: Number between 0 and 100 indicating percentage of full brightness, where 0 turns the scene off, 1 is the minimum brightness and 100 is the maximum brightness.
+      example: 42
+    rate:
+      description: Rate in seconds for scene to transition to new brightness
+      example: 3.42
+
+link_fade_stop:
+  description: Stop a link fade.
+  fields:
+    entity_id:
+      description: Name(s) of links to stop fadding
+      example: "scene.dining, scene.no_tv"
+
+link_blink:
+  description: Blink a link.
+  fields:
+    entity_id:
+      description: Name(s) of links to start fading
+      example: "scene.hygge"
+    blink_rate:
+      description: Number of seconds between 0 and 4.25 that the link flashes on.
+      example: 1.5

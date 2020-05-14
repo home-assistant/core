@@ -18,7 +18,7 @@
             },
             "user": {
                 "data": {
-                    "host": "\u96fb\u8996\u4e3b\u6a5f\u540d\u6216 IP \u4f4d\u5740"
+                    "host": "\u4e3b\u6a5f\u7aef"
                 },
                 "description": "\u8a2d\u5b9a Sony Bravia \u96fb\u8996\u6574\u5408\u3002\u5047\u5982\u65bc\u8a2d\u5b9a\u904e\u7a0b\u4e2d\u906d\u9047\u56f0\u7136\uff0c\u8acb\u53c3\u95b1\uff1ahttps://www.home-assistant.io/integrations/braviatv \n\n\u78ba\u5b9a\u96fb\u8996\u5df2\u7d93\u958b\u555f\u3002",
                 "title": "Sony Bravia \u96fb\u8996"

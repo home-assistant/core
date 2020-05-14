@@ -125,9 +125,9 @@ def _custom_tasks(template, info) -> None:
                     }
                 },
                 "error": {
-                    "cannot_connect": "[%key:common::config_flow::abort::cannot_connect%]",
-                    "invalid_auth": "[%key:common::config_flow::abort::invalid_auth%]",
-                    "unknown": "[%key:common::config_flow::abort::unknown%]",
+                    "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+                    "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+                    "unknown": "[%key:common::config_flow::error::unknown%]",
                 },
                 "abort": {
                     "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -170,13 +170,4 @@ def _custom_tasks(template, info) -> None:
                     "default": "[%key:common::config_flow::create_entry::authenticated%]"
                 },
             },
-        )
-        _append(
-            info.integration_dir / "const.py",
-            """
-
-# TODO Update with your own urls
-OAUTH2_AUTHORIZE = "https://www.example.com/auth/authorize"
-OAUTH2_TOKEN = "https://www.example.com/auth/token"
-""",
         )

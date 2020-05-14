@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta drukarka jest ju\u017c skonfigurowana.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z drukark\u0105.",
             "connection_upgrade": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z drukark\u0105 z powodu konieczno\u015bci uaktualnienia po\u0142\u0105czenia.",
             "ipp_error": "Wyst\u0105pi\u0142 b\u0142\u0105d IPP.",
@@ -17,8 +17,8 @@
             "user": {
                 "data": {
                     "base_path": "\u015acie\u017cka wzgl\u0119dna do drukarki",
-                    "host": "Nazwa hosta lub adres IP",
-                    "port": "Port",
+                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "port": "[%key_id:common::config_flow::data::port%]",
                     "ssl": "Drukarka obs\u0142uguje komunikacj\u0119 przez SSL/TLS",
                     "verify_ssl": "Drukarka u\u017cywa prawid\u0142owego certyfikatu"
                 },
