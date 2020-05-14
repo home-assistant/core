@@ -50,7 +50,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.aftership.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.aftership.config_flow.AfterShipTest.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -72,7 +72,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.aftership.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.aftership.config_flow.AfterShipTest.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
