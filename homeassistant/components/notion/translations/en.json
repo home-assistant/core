@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Username/Email Address"
+                    "username": "Username"
                 },
                 "title": "Fill in your information"
             }

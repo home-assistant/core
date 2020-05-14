@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]"
         },
         "error": {
-            "connect_error": "No s'ha pogut connectar, torna-ho a provar",
+            "connect_error": "[%key::common::config_flow::error::cannot_connect%]",
             "no_device_selected": "No hi ha cap dispositiu seleccionat, selecciona'n un."
         },
         "step": {

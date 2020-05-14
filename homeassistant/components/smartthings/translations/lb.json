@@ -17,7 +17,7 @@
             },
             "pat": {
                 "data": {
-                    "access_token": "Acc\u00e8ss Jeton"
+                    "access_token": "Acc\u00e8s Jeton"
                 },
                 "description": "G\u00ebff w.e.g. ee pers\u00e9inlechen SmartThings [Acc\u00e8s Jeton]({token_url}) un dee via [d'Instruktiounen] ({component_url}) erstallt gouf. D\u00ebse g\u00ebtte benotzt fir d'Integratioun vum SmartThings Kont  am Home Assistant.",
                 "title": "Pers\u00e9inlechen Acc\u00e8ss Jeton uginn"

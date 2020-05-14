@@ -64,7 +64,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         ): str,
                     }
                 ),
-                errors={"base": "connection"},
+                errors={"base": "cannot_connect"},
             )
 
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
@@ -139,7 +139,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 name = interface_info.modelName
         except SongpalException as ex:
             _LOGGER.error("Import from yaml configuration failed: %s", ex)
-            return self.async_abort(reason="connection")
+            return self.async_abort(reason="cannot_connect")
 
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 

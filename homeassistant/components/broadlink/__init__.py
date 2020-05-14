@@ -5,12 +5,11 @@ from binascii import unhexlify
 from datetime import timedelta
 import logging
 import re
-import socket
 
+from broadlink.exceptions import BroadlinkException, ReadError
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
@@ -65,36 +64,35 @@ SERVICE_SEND_SCHEMA = vol.Schema(
 SERVICE_LEARN_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
 
-@callback
-def async_setup_service(hass, host, device):
+async def async_setup_service(hass, host, device):
     """Register a device for given host for use in services."""
     hass.data.setdefault(DOMAIN, {})[host] = device
 
     if hass.services.has_service(DOMAIN, SERVICE_LEARN):
         return
 
-    async def _learn_command(call):
+    async def async_learn_command(call):
         """Learn a packet from remote."""
 
         device = hass.data[DOMAIN][call.data[CONF_HOST]]
 
-        for retry in range(DEFAULT_RETRY):
-            try:
-                await hass.async_add_executor_job(device.enter_learning)
-                break
-            except (socket.timeout, ValueError):
-                try:
-                    await hass.async_add_executor_job(device.auth)
-                except socket.timeout:
-                    if retry == DEFAULT_RETRY - 1:
-                        _LOGGER.error("Failed to enter learning mode")
-                        return
+        try:
+            await device.async_request(device.api.enter_learning)
+        except BroadlinkException as err_msg:
+            _LOGGER.error("Failed to enter learning mode: %s", err_msg)
+            return
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
-            packet = await hass.async_add_executor_job(device.check_data)
-            if packet:
+            try:
+                packet = await device.async_request(device.api.check_data)
+            except ReadError:
+                await asyncio.sleep(1)
+            except BroadlinkException as err_msg:
+                _LOGGER.error("Failed to learn: %s", err_msg)
+                return
+            else:
                 data = b64encode(packet).decode("utf8")
                 log_msg = f"Received packet is: {data}"
                 _LOGGER.info(log_msg)
@@ -102,32 +100,26 @@ def async_setup_service(hass, host, device):
                     log_msg, title="Broadlink switch"
                 )
                 return
-            await asyncio.sleep(1)
-        _LOGGER.error("No signal was received")
+        _LOGGER.error("Failed to learn: No signal received")
         hass.components.persistent_notification.async_create(
             "No signal was received", title="Broadlink switch"
         )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_LEARN, _learn_command, schema=SERVICE_LEARN_SCHEMA
+        DOMAIN, SERVICE_LEARN, async_learn_command, schema=SERVICE_LEARN_SCHEMA
     )
 
-    async def _send_packet(call):
+    async def async_send_packet(call):
         """Send a packet."""
         device = hass.data[DOMAIN][call.data[CONF_HOST]]
         packets = call.data[CONF_PACKET]
         for packet in packets:
-            for retry in range(DEFAULT_RETRY):
-                try:
-                    await hass.async_add_executor_job(device.send_data, packet)
-                    break
-                except (socket.timeout, ValueError):
-                    try:
-                        await hass.async_add_executor_job(device.auth)
-                    except socket.timeout:
-                        if retry == DEFAULT_RETRY - 1:
-                            _LOGGER.error("Failed to send packet to device")
+            try:
+                await device.async_request(device.api.send_data, packet)
+            except BroadlinkException as err_msg:
+                _LOGGER.error("Failed to send packet: %s", err_msg)
+                return
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SEND, _send_packet, schema=SERVICE_SEND_SCHEMA
+        DOMAIN, SERVICE_SEND, async_send_packet, schema=SERVICE_SEND_SCHEMA
     )

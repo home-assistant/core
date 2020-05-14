@@ -17,7 +17,7 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["cover"]
+PLATFORMS = ["cover", "sensor"]
 
 PARALLEL_UPDATES = 0
 

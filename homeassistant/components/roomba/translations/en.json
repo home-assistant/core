@@ -11,7 +11,7 @@
                     "certificate": "Certificate",
                     "continuous": "Continuous",
                     "delay": "Delay",
-                    "host": "Hostname or IP Address",
+                    "host": "Host",
                     "password": "Password"
                 },
                 "description": "Currently retrieving the BLID and password is a manual process. Please follow the steps outlined in the documentation at: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",

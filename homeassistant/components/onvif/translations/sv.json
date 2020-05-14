@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "configure_profile": {
+                "title": "Konfigurera Profiler"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

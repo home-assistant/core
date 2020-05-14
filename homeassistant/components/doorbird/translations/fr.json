@@ -2,20 +2,22 @@
     "config": {
         "abort": {
             "already_configured": "Ce DoorBird est d\u00e9j\u00e0 configur\u00e9",
+            "link_local_address": "Les adresses locales ne sont pas prises en charge",
             "not_doorbird_device": "Cet appareil n'est pas un DoorBird"
         },
         "error": {
             "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
-            "invalid_auth": "Authentification non valide",
+            "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },
+        "flow_title": "DoorBird {name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "H\u00f4te (adresse IP)",
                     "name": "Nom de l'appareil",
                     "password": "Mot de passe",
-                    "username": "Nom d'utilisateur"
+                    "username": "Identifiant"
                 },
                 "title": "Connectez-vous au DoorBird"
             }

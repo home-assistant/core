@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Silta on jo m\u00e4\u00e4ritetty",
+            "no_bridges": "deCONZ-siltoja ei l\u00f6ydy"
+        },
+        "error": {
+            "no_key": "API-avainta ei voitu saada"
+        },
+        "step": {
+            "init": {
+                "title": "M\u00e4\u00e4rit\u00e4 deCONZ-yhdysk\u00e4yt\u00e4v\u00e4"
+            },
+            "link": {
+                "title": "Linkit\u00e4 deCONZiin"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Palvelin",
+                    "port": "Portti"
+                }
+            }
+        }
+    }
+}

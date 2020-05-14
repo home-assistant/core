@@ -5,13 +5,13 @@
         },
         "error": {
             "general_error": "Det oppstod en ukjent feil.",
-            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel angitt.",
             "unable_to_connect": "Kan ikke koble til Node / Pro-enheten."
         },
         "step": {
             "geography": {
                 "data": {
-                    "api_key": "API-n\u00f8kkel",
+                    "api_key": "API n\u00f8kkel",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad"
                 },

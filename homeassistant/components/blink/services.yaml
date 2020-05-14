@@ -19,3 +19,10 @@ save_video:
     filename:
       description: Filename to writable path (directory may need to be included in whitelist_dirs in config)
       example: "/tmp/video.mp4"
+
+send_pin:
+  description: Send a new pin to blink for 2FA.
+  fields:
+    pin:
+      description: Pin received from blink. Leave empty if you only received a verification email.
+      example: "abc123"
