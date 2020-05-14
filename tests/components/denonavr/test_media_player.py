@@ -1,12 +1,12 @@
 """The tests for the denonavr media player platform."""
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components import media_player
 from homeassistant.components.denonavr import ATTR_COMMAND, DOMAIN, SERVICE_GET_COMMAND
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 NAME = "fake"
 ENTITY_ID = f"{media_player.DOMAIN}.{NAME}"

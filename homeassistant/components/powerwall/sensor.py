@@ -1,7 +1,7 @@
 """Support for August sensors."""
 import logging
 
-from tesla_powerwall import MeterType
+from tesla_powerwall import MeterType, convert_to_kw
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -14,6 +14,7 @@ from .const import (
     ATTR_ENERGY_IMPORTED,
     ATTR_FREQUENCY,
     ATTR_INSTANT_AVERAGE_VOLTAGE,
+    ATTR_IS_ACTIVE,
     DOMAIN,
     ENERGY_KILO_WATT,
     POWERWALL_API_CHARGE,
@@ -143,8 +144,9 @@ class PowerWallEnergySensor(PowerWallEntity):
         """Return the device specific state attributes."""
         meter = self._coordinator.data[POWERWALL_API_METERS].get(self._meter)
         return {
-            ATTR_FREQUENCY: meter.frequency,
-            ATTR_ENERGY_EXPORTED: meter.energy_exported,
-            ATTR_ENERGY_IMPORTED: meter.energy_imported,
-            ATTR_INSTANT_AVERAGE_VOLTAGE: meter.instant_average_voltage,
+            ATTR_FREQUENCY: round(meter.frequency, 1),
+            ATTR_ENERGY_EXPORTED: convert_to_kw(meter.energy_exported),
+            ATTR_ENERGY_IMPORTED: convert_to_kw(meter.energy_imported),
+            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.instant_average_voltage, 1),
+            ATTR_IS_ACTIVE: meter.is_active(),
         }

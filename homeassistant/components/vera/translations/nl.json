@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Er is al een controller geconfigureerd.",
+            "cannot_connect": "Kan geen verbinding maken met controller met url {base_url}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Vera-apparaat-ID's om uit te sluiten van Home Assistant.",
+                    "lights": "Vera-schakelapparaat id's behandelen als lichten in Home Assistant.",
+                    "vera_controller_url": "Controller-URL"
+                },
+                "description": "Geef hieronder een URL voor de Vera-controller op. Het zou er zo uit moeten zien: http://192.168.1.161:3480.",
+                "title": "Stel Vera controller in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Vera-apparaat-ID's om uit te sluiten van Home Assistant.",
+                    "lights": "Vera-schakelapparaat id's behandelen als lichten in Home Assistant."
+                },
+                "title": "Vera controller opties"
+            }
+        }
+    }
+}

@@ -51,7 +51,8 @@ def run_upload_docker():
 
 def generate_upload_data():
     """Generate the data for uploading."""
-    translations = {"component": {}}
+    translations = json.loads((INTEGRATIONS_DIR.parent / "strings.json").read_text())
+    translations["component"] = {}
 
     for path in INTEGRATIONS_DIR.glob(f"*{os.sep}strings*.json"):
         component = path.parent.name

@@ -1,12 +1,13 @@
 """Test the National Weather Service (NWS) config flow."""
 import aiohttp
-from asynctest import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.nws.const import DOMAIN
 
+from tests.async_mock import patch
 
-async def test_form(hass, mock_simple_nws):
+
+async def test_form(hass, mock_simple_nws_config):
     """Test we get the form."""
     hass.config.latitude = 35
     hass.config.longitude = -90
@@ -40,9 +41,9 @@ async def test_form(hass, mock_simple_nws):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass, mock_simple_nws):
+async def test_form_cannot_connect(hass, mock_simple_nws_config):
     """Test we handle cannot connect error."""
-    mock_instance = mock_simple_nws.return_value
+    mock_instance = mock_simple_nws_config.return_value
     mock_instance.set_station.side_effect = aiohttp.ClientError
 
     result = await hass.config_entries.flow.async_init(
@@ -57,9 +58,9 @@ async def test_form_cannot_connect(hass, mock_simple_nws):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass, mock_simple_nws):
+async def test_form_unknown_error(hass, mock_simple_nws_config):
     """Test we handle unknown error."""
-    mock_instance = mock_simple_nws.return_value
+    mock_instance = mock_simple_nws_config.return_value
     mock_instance.set_station.side_effect = ValueError
 
     result = await hass.config_entries.flow.async_init(
@@ -74,7 +75,7 @@ async def test_form_unknown_error(hass, mock_simple_nws):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_configured(hass, mock_simple_nws):
+async def test_form_already_configured(hass, mock_simple_nws_config):
     """Test we handle duplicate entries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

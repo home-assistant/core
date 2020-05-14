@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Only one Vesync instance is allowed"
+        },
+        "error": {
+            "invalid_login": "Invalid username or password"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "title": "Enter Username and Password"
+            }
+        }
+    }
+}

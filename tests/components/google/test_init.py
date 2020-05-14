@@ -1,10 +1,10 @@
 """The tests for the Google Calendar component."""
-from unittest.mock import patch
-
 import pytest
 
 import homeassistant.components.google as google
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 
 @pytest.fixture(name="google_setup")

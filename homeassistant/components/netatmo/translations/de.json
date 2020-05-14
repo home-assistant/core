@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Bereits konfiguriert. Es ist nur eine einzige Konfiguration m\u00f6glich.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Autorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte folgen Sie der Dokumentation."
+        },
+        "create_entry": {
+            "default": "Erfolgreich authentifiziert."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "W\u00e4hle Authentifizierungs-Methode"
+            }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Csak egy Netatmo-fi\u00f3kot \u00e1ll\u00edthatsz be."
+        },
+        "create_entry": {
+            "default": "A Netatmo sikeresen hiteles\u00edtett."
+        }
+    }
+}

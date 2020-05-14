@@ -24,7 +24,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
@@ -236,7 +236,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class XiaomiPhilipsAbstractLight(Light):
+class XiaomiPhilipsAbstractLight(LightEntity):
     """Representation of a Abstract Xiaomi Philips Light."""
 
     def __init__(self, name, light, model, unique_id):

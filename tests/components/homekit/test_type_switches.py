@@ -10,8 +10,20 @@ from homeassistant.components.homekit.const import (
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
-from homeassistant.components.homekit.type_switches import Outlet, Switch, Valve
+from homeassistant.components.homekit.type_switches import (
+    DockVacuum,
+    Outlet,
+    Switch,
+    Valve,
+)
 from homeassistant.components.script import ATTR_CAN_CANCEL
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_START,
+    STATE_CLEANING,
+    STATE_DOCKED,
+)
 from homeassistant.const import ATTR_ENTITY_ID, CONF_TYPE, STATE_OFF, STATE_ON
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
@@ -178,6 +190,52 @@ async def test_valve_set_state(hass, hk_driver, events):
     assert acc.char_in_use.value == 0
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_vacuum_set_state(hass, hk_driver, events):
+    """Test if Vacuum accessory and HA are updated accordingly."""
+    entity_id = "vacuum.roomba"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+
+    acc = DockVacuum(hass, hk_driver, "DockVacuum", entity_id, 2, None)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc.aid == 2
+    assert acc.category == 8  # Switch
+
+    assert acc.char_on.value == 0
+
+    hass.states.async_set(entity_id, STATE_CLEANING)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 1
+
+    hass.states.async_set(entity_id, STATE_DOCKED)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 0
+
+    # Set from HomeKit
+    call_start = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_START)
+    call_return_to_base = async_mock_service(
+        hass, VACUUM_DOMAIN, SERVICE_RETURN_TO_BASE
+    )
+
+    await hass.async_add_executor_job(acc.char_on.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 1
+    assert call_start
+    assert call_start[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
+
+    await hass.async_add_executor_job(acc.char_on.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 0
+    assert call_return_to_base
+    assert call_return_to_base[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 

@@ -1,11 +1,9 @@
 """Test config flow."""
-from unittest.mock import Mock, patch
-
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.async_mock import Mock, patch
 
 
 async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
@@ -41,7 +39,7 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
 
     with patch(
         "homeassistant.components.mqtt.config_flow.FlowHandler.async_step_hassio",
-        Mock(return_value=mock_coro({"type": "abort"})),
+        return_value={"type": "abort"},
     ) as mock_mqtt:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -91,13 +89,13 @@ async def test_hassio_discovery_startup_done(hass, aioclient_mock, hassio_client
 
     with patch(
         "homeassistant.components.hassio.HassIO.update_hass_api",
-        Mock(return_value=mock_coro({"result": "ok"})),
+        return_value={"result": "ok"},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_homeassistant_info",
+        "homeassistant.components.hassio.HassIO.get_info",
         Mock(side_effect=HassioAPIError()),
     ), patch(
         "homeassistant.components.mqtt.config_flow.FlowHandler.async_step_hassio",
-        Mock(return_value=mock_coro({"type": "abort"})),
+        return_value={"type": "abort"},
     ) as mock_mqtt:
         await hass.async_start()
         await async_setup_component(hass, "hassio", {})
@@ -144,7 +142,7 @@ async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client):
 
     with patch(
         "homeassistant.components.mqtt.config_flow.FlowHandler.async_step_hassio",
-        Mock(return_value=mock_coro({"type": "abort"})),
+        return_value={"type": "abort"},
     ) as mock_mqtt:
         resp = await hassio_client.post(
             "/api/hassio_push/discovery/testuuid",

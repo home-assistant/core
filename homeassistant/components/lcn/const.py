@@ -2,12 +2,12 @@
 from itertools import product
 
 from homeassistant.const import (
+    DEGREE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
-    UNIT_DEGREE,
     UNIT_PERCENTAGE,
-    UNIT_VOLT,
+    VOLT,
 )
 
 DOMAIN = "lcn"
@@ -164,12 +164,12 @@ VAR_UNITS = [
     "PERCENT",
     "PPM",
     "VOLT",
-    UNIT_VOLT,
+    VOLT,
     "AMPERE",
     "AMP",
     "A",
     "DEGREE",
-    UNIT_DEGREE,
+    DEGREE,
 ]
 
 RELVARREF = ["CURRENT", "PROG"]

@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import nws
 from homeassistant.components.weather import ATTR_FORECAST
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
@@ -29,7 +30,7 @@ from tests.components.nws.const import (
     ],
 )
 async def test_imperial_metric(
-    hass, units, result_observation, result_forecast, mock_simple_nws, caplog
+    hass, units, result_observation, result_forecast, mock_simple_nws
 ):
     """Test with imperial and metric units."""
     hass.config.units = units
@@ -63,9 +64,6 @@ async def test_imperial_metric(
     forecast = data.get(ATTR_FORECAST)
     for key, value in result_forecast.items():
         assert forecast[0].get(key) == value
-
-    assert "Error updating observation" not in caplog.text
-    assert "Success updating observation" not in caplog.text
 
 
 async def test_none_values(hass, mock_simple_nws):
@@ -128,7 +126,33 @@ async def test_error_station(hass, mock_simple_nws):
     assert hass.states.get("weather.abc_daynight") is None
 
 
-async def test_error_observation(hass, mock_simple_nws, caplog):
+async def test_entity_refresh(hass, mock_simple_nws):
+    """Test manual refresh."""
+    instance = mock_simple_nws.return_value
+
+    await async_setup_component(hass, "homeassistant", {})
+
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    instance.update_observation.assert_called_once()
+    instance.update_forecast.assert_called_once()
+    instance.update_forecast_hourly.assert_called_once()
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "weather.abc_daynight"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert instance.update_observation.call_count == 2
+    assert instance.update_forecast.call_count == 2
+    instance.update_forecast_hourly.assert_called_once()
+
+
+async def test_error_observation(hass, mock_simple_nws):
     """Test error during update observation."""
     instance = mock_simple_nws.return_value
     instance.update_observation.side_effect = aiohttp.ClientError
@@ -148,10 +172,6 @@ async def test_error_observation(hass, mock_simple_nws, caplog):
     assert state
     assert state.state == "unavailable"
 
-    assert "Error updating observation for station ABC" in caplog.text
-    assert "Success updating observation for station ABC" not in caplog.text
-    caplog.clear()
-
     instance.update_observation.side_effect = None
 
     future_time = dt_util.utcnow() + timedelta(minutes=15)
@@ -168,11 +188,8 @@ async def test_error_observation(hass, mock_simple_nws, caplog):
     assert state
     assert state.state == "sunny"
 
-    assert "Error updating observation for station ABC" not in caplog.text
-    assert "Success updating observation for station ABC" in caplog.text
 
-
-async def test_error_forecast(hass, caplog, mock_simple_nws):
+async def test_error_forecast(hass, mock_simple_nws):
     """Test error during update forecast."""
     instance = mock_simple_nws.return_value
     instance.update_forecast.side_effect = aiohttp.ClientError
@@ -188,10 +205,6 @@ async def test_error_forecast(hass, caplog, mock_simple_nws):
     assert state
     assert state.state == "unavailable"
 
-    assert "Error updating forecast for station ABC" in caplog.text
-    assert "Success updating forecast for station ABC" not in caplog.text
-    caplog.clear()
-
     instance.update_forecast.side_effect = None
 
     future_time = dt_util.utcnow() + timedelta(minutes=15)
@@ -204,11 +217,8 @@ async def test_error_forecast(hass, caplog, mock_simple_nws):
     assert state
     assert state.state == "sunny"
 
-    assert "Error updating forecast for station ABC" not in caplog.text
-    assert "Success updating forecast for station ABC" in caplog.text
 
-
-async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
+async def test_error_forecast_hourly(hass, mock_simple_nws):
     """Test error during update forecast hourly."""
     instance = mock_simple_nws.return_value
     instance.update_forecast_hourly.side_effect = aiohttp.ClientError
@@ -224,10 +234,6 @@ async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
 
     instance.update_forecast_hourly.assert_called_once()
 
-    assert "Error updating forecast_hourly for station ABC" in caplog.text
-    assert "Success updating forecast_hourly for station ABC" not in caplog.text
-    caplog.clear()
-
     instance.update_forecast_hourly.side_effect = None
 
     future_time = dt_util.utcnow() + timedelta(minutes=15)
@@ -239,6 +245,3 @@ async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
     state = hass.states.get("weather.abc_hourly")
     assert state
     assert state.state == "sunny"
-
-    assert "Error updating forecast_hourly for station ABC" not in caplog.text
-    assert "Success updating forecast_hourly for station ABC" in caplog.text

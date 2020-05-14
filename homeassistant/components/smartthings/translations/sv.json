@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "app_setup_error": "Det gick inte att installera Home Assistant SmartApp. V\u00e4nligen f\u00f6rs\u00f6k igen.",
+            "token_forbidden": "Token har inte det som kr\u00e4vs inom omf\u00e5ng f\u00f6r OAuth.",
+            "token_invalid_format": "Token m\u00e5ste vara i UID/GUID-format",
+            "token_unauthorized": "Denna token \u00e4r ogiltig eller inte l\u00e4ngre auktoriserad.",
+            "webhook_error": "SmartThings kunde inte validera endpoint konfigurerad i \" base_url`. V\u00e4nligen granska kraven f\u00f6r komponenten."
+        },
+        "step": {
+            "authorize": {
+                "title": "Auktorisera Home Assistant"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Position"
+                },
+                "title": "V\u00e4lj plats"
+            },
+            "user": {
+                "description": "V\u00e4nligen ange en [personlig \u00e5tkomsttoken]({token_url}) f\u00f6r SmartThings som har skapats enligt [instruktionerna]({component_url}).",
+                "title": "Ange personlig \u00e5tkomsttoken"
+            }
+        }
+    }
+}

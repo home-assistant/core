@@ -1,0 +1,22 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "odtwarzacz medi\u00f3w {entity_name} jest nieaktywny",
+            "is_off": "odtwarzacz medi\u00f3w {entity_name} jest wy\u0142\u0105czony",
+            "is_on": "odtwarzacz medi\u00f3w {entity_name} jest w\u0142\u0105czony",
+            "is_paused": "odtwarzanie medi\u00f3w na {entity_name} jest wstrzymane",
+            "is_playing": "{entity_name} odtwarza media"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "nieaktywny",
+            "off": "wy\u0142\u0105czony",
+            "on": "w\u0142\u0105czony",
+            "paused": "wstrzymany",
+            "playing": "odtwarzanie",
+            "standby": "tryb czuwania"
+        }
+    },
+    "title": "Odtwarzacz medi\u00f3w"
+}

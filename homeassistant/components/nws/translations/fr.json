@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 API (e-mail)",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "station": "Code de la station METAR"
+                }
+            }
+        }
+    }
+}

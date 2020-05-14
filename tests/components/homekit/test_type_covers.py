@@ -65,6 +65,7 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     acc = cls.garage(hass, hk_driver, "Garage Door", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 4  # GarageDoorOpener
@@ -143,6 +144,7 @@ async def test_window_set_cover_position(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     acc = cls.window(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 14  # WindowCovering
@@ -214,6 +216,7 @@ async def test_window_cover_set_tilt(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     acc = cls.window(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 14  # CATEGORY_WINDOW_COVERING
@@ -277,6 +280,7 @@ async def test_window_open_close(hass, hk_driver, cls, events):
     hass.states.async_set(entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: 0})
     acc = cls.window_basic(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 14  # WindowCovering
@@ -359,6 +363,7 @@ async def test_window_open_close_stop(hass, hk_driver, cls, events):
     )
     acc = cls.window_basic(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     # Set from HomeKit
     call_close_cover = async_mock_service(hass, DOMAIN, "close_cover")
@@ -407,9 +412,14 @@ async def test_window_open_close_with_position_and_stop(hass, hk_driver, cls, ev
     )
     acc = cls.window(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     # Set from HomeKit
     call_stop_cover = async_mock_service(hass, DOMAIN, "stop_cover")
+
+    await hass.async_add_executor_job(acc.char_hold_position.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert not call_stop_cover
 
     await hass.async_add_executor_job(acc.char_hold_position.client_update_value, 1)
     await hass.async_block_till_done()

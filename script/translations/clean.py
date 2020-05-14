@@ -41,7 +41,7 @@ def find_core():
         if not strings.is_file():
             continue
 
-        translations = int_dir / ".translations" / "en.json"
+        translations = int_dir / "translations" / "en.json"
 
         strings_json = json.loads(strings.read_text())
         translations_json = json.loads(translations.read_text())

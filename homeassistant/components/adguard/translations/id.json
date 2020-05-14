@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Gagal terhubung."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata sandi"
+                }
+            }
+        }
+    }
+}

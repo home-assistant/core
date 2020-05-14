@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane.",
+            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
+        },
+        "create_entry": {
+            "default": "Zapoznaj si\u0119 z [dokumentacj\u0105 Neato]({docs_url})."
+        },
+        "error": {
+            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce",
+            "unexpected_error": "[%key_id:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]",
+                    "vendor": "Dostawca"
+                },
+                "description": "Zapoznaj si\u0119 z [dokumentacj\u0105 Neato]({docs_url}).",
+                "title": "Informacje o koncie Neato"
+            }
+        }
+    }
+}

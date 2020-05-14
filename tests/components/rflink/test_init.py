@@ -1,7 +1,5 @@
 """Common functions for RFLink component tests and generic platform tests."""
 
-from unittest.mock import Mock
-
 import pytest
 from voluptuous.error import MultipleInvalid
 
@@ -16,6 +14,8 @@ from homeassistant.components.rflink import (
     RflinkCommand,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_STOP_COVER, SERVICE_TURN_OFF
+
+from tests.async_mock import Mock
 
 
 async def mock_rflink(

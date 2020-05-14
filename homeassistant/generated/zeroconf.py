@@ -10,8 +10,8 @@ ZEROCONF = {
         "axis",
         "doorbird"
     ],
-    "_coap._udp.local.": [
-        "tradfri"
+    "_daap._tcp.local.": [
+        "forked_daapd"
     ],
     "_elg._tcp.local.": [
         "elgato"
@@ -52,6 +52,7 @@ HOMEKIT = {
     "Healty Home Coach": "netatmo",
     "LIFX": "lifx",
     "Netatmo Relay": "netatmo",
+    "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
     "TRADFRI": "tradfri",

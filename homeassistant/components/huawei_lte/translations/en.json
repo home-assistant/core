@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This device has already been configured",
+            "already_in_progress": "This device is already being configured",
+            "not_huawei_lte": "Not a Huawei LTE device"
+        },
+        "error": {
+            "connection_failed": "Connection failed",
+            "connection_timeout": "Connection timeout",
+            "incorrect_password": "Incorrect password",
+            "incorrect_username": "Incorrect username",
+            "incorrect_username_or_password": "Incorrect username or password",
+            "invalid_url": "Invalid URL",
+            "login_attempts_exceeded": "Maximum login attempts exceeded, please try again later",
+            "response_error": "Unknown error from device",
+            "unknown_connection_error": "Unknown error connecting to device"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "url": "URL",
+                    "username": "Username"
+                },
+                "description": "Enter device access details. Specifying username and password is optional, but enables support for more integration features. On the other hand, use of an authorized connection may cause problems accessing the device web interface from outside Home Assistant while the integration is active, and the other way around.",
+                "title": "Configure Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Notification service name (change requires restart)",
+                    "recipient": "SMS notification recipients",
+                    "track_new_devices": "Track new devices"
+                }
+            }
+        }
+    }
+}

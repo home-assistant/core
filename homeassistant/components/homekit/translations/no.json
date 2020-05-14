@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "En bro med samme navn eller port er allerede konfigurert."
+        },
+        "step": {
+            "pairing": {
+                "description": "S\u00e5 snart {name} bridge er klar, vil sammenkoblingen v\u00e6re tilgjengelig i \u201cVarsler\u201d som \u201cHomeKit Bridge Setup\u201d.",
+                "title": "Par HomeKit Bridge"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Autostart (deaktiver hvis du bruker Z-Wave eller annet forsinket startsystem)",
+                    "include_domains": "Domener \u00e5 inkludere"
+                },
+                "description": "En HomeKit Bridge gir deg tilgang til home assistant-enhetene dine i HomeKit. HomeKit Bridges er begrenset til 150 tilbeh\u00f8r per forekomst, inkludert selve broen. Hvis du \u00f8nsker \u00e5 bygge bro over mer enn maksimalt antall tilbeh\u00f8r, anbefales det at du bruker flere HomeKit-broer for forskjellige domener. Detaljert enhetskonfigurasjon er bare tilgjengelig via YAML for hovedbroen.",
+                "title": "Aktiver HomeKit Bridge"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "safe_mode": "Sikker modus (aktiver bare hvis sammenkoblingen mislykkes)",
+                    "zeroconf_default_interface": "Bruk standard zeroconf-grensesnitt (aktiver hvis broen ikke kan finnes i Hjem-appen)"
+                },
+                "description": "Disse innstillingene m\u00e5 bare justeres dersom HomeKit bridge er ikke i bruk.",
+                "title": "Avansert konfigurasjon"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kameraer som st\u00f8tter opprinnelige H.264-str\u00f8mmer"
+                },
+                "description": "Sjekk alle kameraer som st\u00f8tter opprinnelige H.264-str\u00f8mmer. Hvis kameraet ikke sender ut en H.264-str\u00f8m, vil systemet omkode videoen til H.264 for HomeKit. Transkoding krever en potent prosessor og er usannsynlig \u00e5 fungere p\u00e5 enkeltkortdatamaskiner som Raspberry Pi o.l.",
+                "title": "Velg videokodek for kamera."
+            },
+            "exclude": {
+                "data": {
+                    "exclude_entities": "Enheter \u00e5 ekskludere"
+                },
+                "description": "Velg enhetene du IKKE vil skal bygges inn.",
+                "title": "Ekskluder enheter i utvalgte domener fra bridge"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domener \u00e5 inkludere"
+                },
+                "description": "Enheter i \"Domener som skal inkluderes\" vil bli brolagt til HomeKit. Du kan velge hvilke enheter som skal utelates fra denne listen p\u00e5 neste skjermbilde.",
+                "title": "Velg domener du vil bygge bro."
+            },
+            "yaml": {
+                "description": "Denne oppf\u00f8ringen kontrolleres via YAML",
+                "title": "Juster alternativene for HomeKit Bridge"
+            }
+        }
+    },
+    "title": "HomeKit Bridge"
+}

@@ -4,7 +4,7 @@ import logging
 import pywink
 import voluptuous as vol
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -133,7 +133,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class WinkLockDevice(WinkDevice, LockDevice):
+class WinkLockDevice(WinkDevice, LockEntity):
     """Representation of a Wink lock."""
 
     async def async_added_to_hass(self):
