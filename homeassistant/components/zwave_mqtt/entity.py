@@ -268,16 +268,17 @@ def create_device_name(node: OZWNode):
     # Prefer custom name set by OZWAdmin if present
     if node.node_name:
         return node.node_name
-    # Prefer short devicename from metedata if present
+    # Prefer short devicename from metadata if present
     if node.meta_data and node.meta_data.get("Name"):
         return node.meta_data["Name"]
-    # Fallback to productname or devicetype
+    # Fallback to productname or devicetype strings
     if node.node_product_name:
         return node.node_product_name
     if node.node_device_type_string:
         return node.node_device_type_string
     if node.node_specific_string:
         return node.node_specific_string
+    # Last resort: use Node id (should never happen, but just in case)
     return f"Node {node.id}"
 
 
