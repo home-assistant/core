@@ -20,7 +20,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _options = None
 
     def __init__(self):
-        """Initialize iCloud config flow."""
+        """Initialize PoolSense config flow."""
         self.token = None
         self._email = None
         self._password = None
