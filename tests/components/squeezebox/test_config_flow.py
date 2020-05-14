@@ -104,3 +104,73 @@ async def test_form_cannot_connect(hass):
 
     assert result["type"] == "form"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_discovery(hass):
+    """Test handling of discovered server."""
+    # TODO
+
+
+async def test_import_bad_host(hass):
+    """Test handling of configuration imported with bad host."""
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.validate_input",
+        side_effect=CannotConnect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: "1.1.1.1", CONF_PORT: 9000},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
+
+
+async def test_import_bad_auth(hass):
+    """Test handling of configuration import with bad authentication."""
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.validate_input",
+        side_effect=InvalidAuth,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 9000,
+                CONF_USERNAME: "test",
+                CONF_PASSWORD: "bad",
+            },
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "invalid_auth"
+
+
+async def test_import_existing(hass):
+    """Test handling of configuration import of existing server."""
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._async_current_entries",
+        return_value=[
+            config_entries.ConfigEntry(
+                version="1",
+                domain=DOMAIN,
+                title="1.1.1.1",
+                data={},
+                options={},
+                system_options={},
+                source=config_entries.SOURCE_IMPORT,
+                connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
+                unique_id="test-uuid",
+            )
+        ],
+    ), patch(
+        "pysqueezebox.Server.async_query",
+        return_value={"ip": "1.1.1.1", "uuid": "test-uuid"},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: "1.1.1.1", CONF_PORT: 9000},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "already_configured"

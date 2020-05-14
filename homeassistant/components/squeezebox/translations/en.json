@@ -1,31 +1,31 @@
 {
-  "title": "Logitech Squeezebox",
-  "config": {
-    "step": {
-      "user": {
-	"title": "Configure Logitech Media Server",
-	"data": {
-	  "host": "Host (optional - leave blank to discover)"
-	}
-      },
-      "edit": {
-        "title": "Edit connection information",
-        "data": {
-          "host": "Host",
-	  "port": "Port",
-	  "username": "Username (optional)",
-	  "password": "Password (optional)"
+    "config": {
+        "abort": {
+            "already_configured": "Server is already configured",
+            "no_server_found": "No LMS server found"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "edit": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password (optional)",
+                    "port": "Port",
+                    "username": "Username (optional)"
+                },
+                "title": "Edit connection information"
+            },
+            "user": {
+                "data": {
+                    "host": "Host (optional - leave blank to discover)"
+                },
+                "title": "Configure Logitech Media Server"
+            }
         }
-      }
     },
-    "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
-    },
-    "abort": {
-      "already_configured": "Device is already configured",
-      "no_server_found": "No LMS server found"
-    }
-  }
+    "title": "Logitech Squeezebox"
 }

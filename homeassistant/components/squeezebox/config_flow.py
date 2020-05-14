@@ -165,8 +165,12 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             DATA_SCHEMA(config)
             info = await validate_input(self.hass, config)
             if "uuid" in info:
-                await self.async_set_unique_id(info["uuid"])
-                self._abort_if_unique_id_configured()
+                try:
+                    await self.async_set_unique_id(info["uuid"])
+                    # update with info from configuration.yaml
+                    self._abort_if_unique_id_configured(info)
+                except data_entry_flow.AbortFlow as error:
+                    return self.async_abort(reason=error.reason)
             return self.async_create_entry(title=info.get("ip"), data=config)
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
@@ -195,9 +199,8 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self.async_set_unique_id(discovery_info["uuid"])
                 self._abort_if_unique_id_configured()
-            except data_entry_flow.AbortFlow:
-                # ignore already discovered servers
-                return self.async_abort(reason="already_configured")
+            except data_entry_flow.AbortFlow as error:
+                return self.async_abort(reason=error.reason)
 
             # update schema with suggested values from discovery
             self.data_schema = vol.Schema(
