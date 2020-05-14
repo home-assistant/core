@@ -177,8 +177,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
         self._presets = None
         self._supported_flags = SUPPORT_TARGET_TEMPERATURE
         self._fan = self.cluster_channels.get(CHANNEL_FAN)
-        self._target_temp = None
-        self._target_range = (None, None)
 
     @property
     def current_temperature(self):
@@ -399,9 +397,9 @@ class Thermostat(ZhaEntity, ClimateEntity):
             # occupancy has changed
             occupancy = await self._thrm.get_occupancy()
             if occupancy is True:
-                self._preset = None
+                self._preset = PRESET_NONE
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
@@ -449,7 +447,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
                 self.debug("Couldn't turn on '%s' preset", preset_mode)
                 return
         self._preset = preset_mode
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -457,11 +455,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
         hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-
-        self.debug("target temperature %s", temp)
-        self.debug("low temperature %s", low_temp)
-        self.debug("high temperature %s", high_temp)
-        self.debug("operation mode: %s", hvac_mode)
 
         if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
@@ -474,34 +467,32 @@ class Thermostat(ZhaEntity, ClimateEntity):
                 success = success and await thrm.async_set_heating_setpoint(
                     low_temp, self.preset_mode == PRESET_AWAY
                 )
+                self.debug("Setting heating %s setpoint: %s", low_temp, success)
             if high_temp is not None:
                 high_temp = int(high_temp * ZCL_TEMP)
                 success = success and await thrm.async_set_cooling_setpoint(
                     high_temp, self.preset_mode == PRESET_AWAY
                 )
+                self.debug("Setting cooling %s setpoint: %s", low_temp, success)
         elif temp is not None:
             temp = int(temp * ZCL_TEMP)
-            success = True
             if self.hvac_mode == HVAC_MODE_COOL:
-                success = success and await thrm.async_set_cooling_setpoint(
+                success = await thrm.async_set_cooling_setpoint(
                     temp, self.preset_mode == PRESET_AWAY
                 )
             elif self.hvac_mode == HVAC_MODE_HEAT:
-                success = success and await thrm.async_set_heating_setpoint(
+                success = await thrm.async_set_heating_setpoint(
                     temp, self.preset_mode == PRESET_AWAY
                 )
             else:
                 self.debug("Not setting temperature for '%s' mode", self.hvac_mode)
-                success = False
-            if success:
-                self._target_temp = temp / ZCL_TEMP
+                return
         else:
-            success = False
-            self.debug(
-                "not setting temperature %s for '%s' mode", kwargs, self.hvac_mode
-            )
+            self.debug("incorrect %s setting for '%s' mode", kwargs, self.hvac_mode)
+            return
+
         if success:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
         """Set the preset mode via handler."""

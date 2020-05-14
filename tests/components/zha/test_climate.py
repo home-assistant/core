@@ -29,6 +29,7 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.zha.climate import (
     DOMAIN,
@@ -611,3 +612,326 @@ async def test_preset_setting_invalid(hass, device_climate_sinope):
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
     assert thrm_cluster.write_attributes.call_count == 0
+
+
+async def test_set_temperature_hvac_mode(hass, device_climate):
+    """Test setting HVAC mode in temperature service call."""
+
+    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    thrm_cluster = device_climate.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.state == HVAC_MODE_OFF
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_HVAC_MODE: HVAC_MODE_HEAT_COOL,
+            ATTR_TEMPERATURE: 20,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state == HVAC_MODE_HEAT_COOL
+    assert thrm_cluster.write_attributes.await_count == 1
+    assert thrm_cluster.write_attributes.call_args[0][0] == {
+        "system_mode": Thermostat.SystemMode.Auto
+    }
+
+
+async def test_set_temperature_heat_cool(hass, device_climate_mock):
+    """Test setting temperature service call in heating/cooling HVAC mode."""
+
+    with patch.object(
+        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
+        "ep_attribute",
+        "sinope_manufacturer_specific",
+    ):
+        device_climate = await device_climate_mock(
+            CLIMATE_SINOPE,
+            {
+                "occupied_cooling_setpoint": 2500,
+                "occupied_heating_setpoint": 2000,
+                "system_mode": Thermostat.SystemMode.Auto,
+                "unoccupied_heating_setpoint": 1600,
+                "unoccupied_cooling_setpoint": 2700,
+            },
+            manuf=SINOPE,
+        )
+    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    thrm_cluster = device_climate.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.state == HVAC_MODE_HEAT_COOL
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 20.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 25.0
+    assert thrm_cluster.write_attributes.await_count == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TARGET_TEMP_HIGH: 26,
+            ATTR_TARGET_TEMP_LOW: 19,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 19.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 26.0
+    assert thrm_cluster.write_attributes.await_count == 2
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "occupied_heating_setpoint": 1900
+    }
+    assert thrm_cluster.write_attributes.call_args_list[1][0][0] == {
+        "occupied_cooling_setpoint": 2600
+    }
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+    thrm_cluster.write_attributes.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TARGET_TEMP_HIGH: 30,
+            ATTR_TARGET_TEMP_LOW: 15,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 15.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 30.0
+    assert thrm_cluster.write_attributes.await_count == 2
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "unoccupied_heating_setpoint": 1500
+    }
+    assert thrm_cluster.write_attributes.call_args_list[1][0][0] == {
+        "unoccupied_cooling_setpoint": 3000
+    }
+
+
+async def test_set_temperature_heat(hass, device_climate_mock):
+    """Test setting temperature service call in heating HVAC mode."""
+
+    with patch.object(
+        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
+        "ep_attribute",
+        "sinope_manufacturer_specific",
+    ):
+        device_climate = await device_climate_mock(
+            CLIMATE_SINOPE,
+            {
+                "occupied_cooling_setpoint": 2500,
+                "occupied_heating_setpoint": 2000,
+                "system_mode": Thermostat.SystemMode.Heat,
+                "unoccupied_heating_setpoint": 1600,
+                "unoccupied_cooling_setpoint": 2700,
+            },
+            manuf=SINOPE,
+        )
+    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    thrm_cluster = device_climate.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.state == HVAC_MODE_HEAT
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TARGET_TEMP_HIGH: 30,
+            ATTR_TARGET_TEMP_LOW: 15,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TEMPERATURE] == 20.0
+    assert thrm_cluster.write_attributes.await_count == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TEMPERATURE] == 21.0
+    assert thrm_cluster.write_attributes.await_count == 1
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "occupied_heating_setpoint": 2100
+    }
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+    thrm_cluster.write_attributes.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
+    assert thrm_cluster.write_attributes.await_count == 1
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "unoccupied_heating_setpoint": 2200
+    }
+
+
+async def test_set_temperature_cool(hass, device_climate_mock):
+    """Test setting temperature service call in cooling HVAC mode."""
+
+    with patch.object(
+        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
+        "ep_attribute",
+        "sinope_manufacturer_specific",
+    ):
+        device_climate = await device_climate_mock(
+            CLIMATE_SINOPE,
+            {
+                "occupied_cooling_setpoint": 2500,
+                "occupied_heating_setpoint": 2000,
+                "system_mode": Thermostat.SystemMode.Cool,
+                "unoccupied_cooling_setpoint": 1600,
+                "unoccupied_heating_setpoint": 2700,
+            },
+            manuf=SINOPE,
+        )
+    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    thrm_cluster = device_climate.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.state == HVAC_MODE_COOL
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TARGET_TEMP_HIGH: 30,
+            ATTR_TARGET_TEMP_LOW: 15,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TEMPERATURE] == 25.0
+    assert thrm_cluster.write_attributes.await_count == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TEMPERATURE] == 21.0
+    assert thrm_cluster.write_attributes.await_count == 1
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "occupied_cooling_setpoint": 2100
+    }
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+    thrm_cluster.write_attributes.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
+    assert thrm_cluster.write_attributes.await_count == 1
+    assert thrm_cluster.write_attributes.call_args_list[0][0][0] == {
+        "unoccupied_cooling_setpoint": 2200
+    }
+
+
+async def test_set_temperature_wrong_mode(hass, device_climate_mock):
+    """Test setting temperature service call for wrong HVAC mode."""
+
+    with patch.object(
+        zigpy.zcl.clusters.manufacturer_specific.ManufacturerSpecificCluster,
+        "ep_attribute",
+        "sinope_manufacturer_specific",
+    ):
+        device_climate = await device_climate_mock(
+            CLIMATE_SINOPE,
+            {
+                "occupied_cooling_setpoint": 2500,
+                "occupied_heating_setpoint": 2000,
+                "system_mode": Thermostat.SystemMode.Dry,
+                "unoccupied_cooling_setpoint": 1600,
+                "unoccupied_heating_setpoint": 2700,
+            },
+            manuf=SINOPE,
+        )
+    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    thrm_cluster = device_climate.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.state == HVAC_MODE_DRY
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 24},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TEMPERATURE] is None
+    assert thrm_cluster.write_attributes.await_count == 0
