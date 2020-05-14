@@ -18,21 +18,25 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 ATTR_HOSTNAME = "hostname"
 ATTR_PROPERTIES = "properties"
 
+HOST = "192.168.1.31"
+PORT = 631
+BASE_PATH = "/ipp/print"
+
 IPP_ZEROCONF_SERVICE_TYPE = "_ipp._tcp.local."
 IPPS_ZEROCONF_SERVICE_TYPE = "_ipps._tcp.local."
 
 ZEROCONF_NAME = "EPSON XP-6000 Series"
-ZEROCONF_HOST = "192.168.1.31"
+ZEROCONF_HOST = HOST
 ZEROCONF_HOSTNAME = "EPSON123456.local."
-ZEROCONF_PORT = 631
-
+ZEROCONF_PORT = PORT
+ZEROCONF_RP = "ipp/print"
 
 MOCK_USER_INPUT = {
-    CONF_HOST: "192.168.1.31",
-    CONF_PORT: 361,
+    CONF_HOST: HOST,
+    CONF_PORT: PORT,
     CONF_SSL: False,
     CONF_VERIFY_SSL: False,
-    CONF_BASE_PATH: "/ipp/print",
+    CONF_BASE_PATH: BASE_PATH,
 }
 
 MOCK_ZEROCONF_IPP_SERVICE_INFO = {
@@ -41,7 +45,7 @@ MOCK_ZEROCONF_IPP_SERVICE_INFO = {
     CONF_HOST: ZEROCONF_HOST,
     ATTR_HOSTNAME: ZEROCONF_HOSTNAME,
     CONF_PORT: ZEROCONF_PORT,
-    ATTR_PROPERTIES: {"rp": "ipp/print"},
+    ATTR_PROPERTIES: {"rp": ZEROCONF_RP},
 }
 
 MOCK_ZEROCONF_IPPS_SERVICE_INFO = {
@@ -50,7 +54,7 @@ MOCK_ZEROCONF_IPPS_SERVICE_INFO = {
     CONF_HOST: ZEROCONF_HOST,
     ATTR_HOSTNAME: ZEROCONF_HOSTNAME,
     CONF_PORT: ZEROCONF_PORT,
-    ATTR_PROPERTIES: {"rp": "ipp/print"},
+    ATTR_PROPERTIES: {"rp": ZEROCONF_RP},
 }
 
 
@@ -61,30 +65,45 @@ def load_fixture_binary(filename):
         return fptr.read()
 
 
-async def init_integration(
-    hass: HomeAssistant,
+def mock_connection(
     aioclient_mock: AiohttpClientMocker,
-    skip_setup: bool = False,
-    uuid: str = "cfe92100-67c4-11d4-a45f-f8d027761251",
-    unique_id: str = "cfe92100-67c4-11d4-a45f-f8d027761251",
-) -> MockConfigEntry:
-    """Set up the IPP integration in Home Assistant."""
+    host: str = HOST,
+    port: int = PORT,
+    ssl: bool = False,
+    base_path: str = BASE_PATH,
+):
+    """Mock the IPP connection."""
+    scheme = "https" if ssl else "http"
+    ipp_url = f"{scheme}://{host}:{port}"
+
     fixture = "ipp/get-printer-attributes.bin"
     aioclient_mock.post(
-        "http://192.168.1.31:631/ipp/print",
+        f"{ipp_url}{base_path}",
         content=load_fixture_binary(fixture),
         headers={"Content-Type": "application/ipp"},
     )
 
+async def init_integration(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    skip_setup: bool = False,
+    host: str = HOST,
+    port: int = PORT,
+    ssl: bool = False,
+    base_path: str = BASE_PATH,
+    uuid: str = "cfe92100-67c4-11d4-a45f-f8d027761251",
+    unique_id: str = "cfe92100-67c4-11d4-a45f-f8d027761251",
+) -> MockConfigEntry:
+    """Set up the IPP integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=unique_id,
         data={
-            CONF_HOST: "192.168.1.31",
-            CONF_PORT: 631,
-            CONF_SSL: False,
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_SSL: ssl,
             CONF_VERIFY_SSL: True,
-            CONF_BASE_PATH: "/ipp/print",
+            CONF_BASE_PATH: base_path,
             CONF_UUID: uuid,
         },
     )
@@ -92,6 +111,13 @@ async def init_integration(
     entry.add_to_hass(hass)
 
     if not skip_setup:
+        mock_connection(
+            aioclient_mock,
+            host=host,
+            port=port,
+            ssl=ssl,
+            base_path=base_path,
+        )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
