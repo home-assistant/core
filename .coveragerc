@@ -919,10 +919,10 @@ omit =
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
-    homeassistant/components/zwave_mqtt/__init__.py
-    homeassistant/components/zwave_mqtt/discovery.py
-    homeassistant/components/zwave_mqtt/entity.py
-    homeassistant/components/zwave_mqtt/services.py
+    homeassistant/components/ozw/__init__.py
+    homeassistant/components/ozw/discovery.py
+    homeassistant/components/ozw/entity.py
+    homeassistant/components/ozw/services.py
 
 [report]
 # Regexes for lines to exclude from consideration

@@ -1,5 +1,5 @@
 """Test Z-Wave (central) Scenes."""
-from .common import MQTTMessage, setup_zwave
+from .common import MQTTMessage, setup_ozw
 
 from tests.common import async_capture_events
 
@@ -7,8 +7,8 @@ from tests.common import async_capture_events
 async def test_scenes(hass, generic_data, sent_messages):
     """Test setting up config entry."""
 
-    receive_message = await setup_zwave(hass, fixture=generic_data)
-    events = async_capture_events(hass, "zwave_mqtt.scene_activated")
+    receive_message = await setup_ozw(hass, fixture=generic_data)
+    events = async_capture_events(hass, "ozw.scene_activated")
 
     # Publish fake scene event on mqtt
     message = MQTTMessage(

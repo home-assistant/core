@@ -1,18 +1,18 @@
 """Test integration initialization."""
 from homeassistant import config_entries
-from homeassistant.components.zwave_mqtt import DOMAIN, PLATFORMS, const
+from homeassistant.components.ozw import DOMAIN, PLATFORMS, const
 
-from .common import setup_zwave
+from .common import setup_ozw
 
 from tests.common import MockConfigEntry
 
 
 async def test_init_entry(hass, generic_data):
     """Test setting up config entry."""
-    await setup_zwave(hass, fixture=generic_data)
+    await setup_ozw(hass, fixture=generic_data)
 
     # Verify integration + platform loaded.
-    assert "zwave_mqtt" in hass.config.components
+    assert "ozw" in hass.config.components
     for platform in PLATFORMS:
         assert platform in hass.config.components, platform
         assert f"{platform}.{DOMAIN}" in hass.config.components, f"{platform}.{DOMAIN}"
@@ -32,7 +32,7 @@ async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     entry.add_to_hass(hass)
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
 
-    receive_message = await setup_zwave(hass, entry=entry, fixture=generic_data)
+    receive_message = await setup_ozw(hass, entry=entry, fixture=generic_data)
 
     assert entry.state == config_entries.ENTRY_STATE_LOADED
     assert len(hass.states.async_entity_ids("switch")) == 1
@@ -53,7 +53,7 @@ async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     # adding the entities.
     # This asserts that we have unsubscribed the entity addition signals
     # when unloading the integration previously.
-    await setup_zwave(hass, entry=entry, fixture=generic_data)
+    await setup_ozw(hass, entry=entry, fixture=generic_data)
     await hass.async_block_till_done()
 
     assert entry.state == config_entries.ENTRY_STATE_LOADED
