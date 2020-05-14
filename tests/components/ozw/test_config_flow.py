@@ -1,7 +1,7 @@
 """Test the Z-Wave over MQTT config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.zwave_mqtt.config_flow import TITLE
-from homeassistant.components.zwave_mqtt.const import DOMAIN
+from homeassistant.components.ozw.config_flow import TITLE
+from homeassistant.components.ozw.const import DOMAIN
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -18,9 +18,9 @@ async def test_user_create_entry(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.zwave_mqtt.async_setup", return_value=True
+        "homeassistant.components.ozw.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zwave_mqtt.async_setup_entry", return_value=True,
+        "homeassistant.components.ozw.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

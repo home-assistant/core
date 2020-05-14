@@ -1,13 +1,13 @@
-"""Config flow for zwave_mqtt integration."""
+"""Config flow for ozw integration."""
 from homeassistant import config_entries
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
-TITLE = "Z-Wave MQTT"
+TITLE = "OpenZWave"
 
 
 class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for zwave_mqtt."""
+    """Handle a config flow for ozw."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
