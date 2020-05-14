@@ -1,4 +1,4 @@
-"""Support for Zigbee sensors."""
+"""Support for XBee Zigbee sensors."""
 from binascii import hexlify
 import logging
 
@@ -8,13 +8,7 @@ from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-from . import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    ZigBeeAnalogIn,
-    ZigBeeAnalogInConfig,
-    ZigBeeConfig,
-)
+from . import DOMAIN, PLATFORM_SCHEMA, XBeeAnalogIn, XBeeAnalogInConfig, XBeeConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Zigbee platform.
+    """Set up the XBee Zigbee platform.
 
     Uses the 'type' config value to work out which type of Zigbee sensor we're
     dealing with and instantiates the relevant classes to handle it.
@@ -44,13 +38,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         sensor_class, config_class = TYPE_CLASSES[typ]
     except KeyError:
-        _LOGGER.exception("Unknown Zigbee sensor type: %s", typ)
+        _LOGGER.exception("Unknown XBee Zigbee sensor type: %s", typ)
         return
 
     add_entities([sensor_class(config_class(config), zigbee_device)], True)
 
 
-class ZigBeeTemperatureSensor(Entity):
+class XBeeTemperatureSensor(Entity):
     """Representation of XBee Pro temperature sensor."""
 
     def __init__(self, config, device):
@@ -90,6 +84,6 @@ class ZigBeeTemperatureSensor(Entity):
 
 # This must be below the classes to which it refers.
 TYPE_CLASSES = {
-    "temperature": (ZigBeeTemperatureSensor, ZigBeeConfig),
-    "analog": (ZigBeeAnalogIn, ZigBeeAnalogInConfig),
+    "temperature": (XBeeTemperatureSensor, XBeeConfig),
+    "analog": (XBeeAnalogIn, XBeeAnalogInConfig),
 }
