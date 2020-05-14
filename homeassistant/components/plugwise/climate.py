@@ -161,11 +161,6 @@ class PwThermostat(SmileGateway, ClimateEntity):
         return SUPPORT_FLAGS
 
     @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {}

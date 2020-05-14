@@ -22,8 +22,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
-# SENSOR_PLATFORMS = ["sensor"]
-# ALL_PLATFORMS = ["binary_sensor", "climate", "sensor", "switch"]
 ALL_PLATFORMS = ["climate"]
 
 
@@ -98,12 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=api.smile_version[0],
     )
 
-    # single_master_thermostat = api.single_master_thermostat()
-    platforms = ALL_PLATFORMS
-    # if single_master_thermostat is None:
-    #     platforms = SENSOR_PLATFORMS
-
-    for component in platforms:
+    for component in ALL_PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
