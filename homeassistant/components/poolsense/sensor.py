@@ -1,7 +1,7 @@
 """Sensor platform for the PoolSense sensor."""
 import logging
 
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_OK, STATE_PROBLEM
 from homeassistant.helpers.entity import Entity
 
 from . import get_coordinator
