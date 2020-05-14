@@ -10,8 +10,8 @@ from . import DATA_ASUSWRT
 
 _LOGGER = logging.getLogger(__name__)
 
-_UPLOAD_ICON = "mdi:upload-network"
-_DOWNLOAD_ICON = "mdi:download-network"
+UPLOAD_ICON = "mdi:upload-network"
+DOWNLOAD_ICON = "mdi:download-network"
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
