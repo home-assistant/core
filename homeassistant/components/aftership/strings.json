@@ -17,7 +17,7 @@
       "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "AfterShip is already configured"
+      "already_configured": "This AfterShip API key is already configured"
     }
   }
 }
