@@ -134,6 +134,14 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         _LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
 
+        # Ensure complete discovery.
+        if (
+            ssdp.ATTR_UPNP_UDN not in discovery_info
+            or ssdp.ATTR_SSDP_ST not in discovery_info
+        ):
+            _LOGGER.debug("Incomplete discovery, ignoring")
+            return self.async_abort(reason="incomplete_discovery")
+
         # Ensure not already configuring/configured.
         udn = discovery_info[ssdp.ATTR_UPNP_UDN]
         st = discovery_info[ssdp.ATTR_SSDP_ST]  # pylint: disable=invalid-name
@@ -218,6 +226,7 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
                 CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )
             update_interval = timedelta(seconds=update_interval_sec)
+            _LOGGER.debug("Updating coordinator, update_interval: %s", update_interval)
             coordinator.update_interval = update_interval
             return self.async_create_entry(title="", data=user_input)
 
