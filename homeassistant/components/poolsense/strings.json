@@ -4,7 +4,7 @@
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
-          "password": "Password"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
