@@ -410,8 +410,8 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
                     type = data
                 if key == "values":
                     for row in data:
-                        self.data[type] = row['value']
-                        self.attributes[type] = {"date": row['date']}
+                        self.data[type] = row["value"]
+                        self.attributes[type] = {"date": row["date"]}
 
         _LOGGER.debug(
             "Updated SolarEdge energy details: %s, %s", self.data, self.attributes
