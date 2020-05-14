@@ -99,15 +99,11 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     @property
     def unit_of_measurement(self):
         """Return unit of measurement the value is expressed in."""
-        if not self.values.primary.units:
-            return None
         if self.values.primary.units == "C":
             return TEMP_CELSIUS
         if self.values.primary.units == "F":
             return TEMP_FAHRENHEIT
-        if self.values.primary.units.lower() == "watts":
-            return POWER_WATT
-        if self.values.primary.units.lower() == "watt":
+        if self.values.primary.units == "Watt":
             return POWER_WATT
 
         return self.values.primary.units
