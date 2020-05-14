@@ -98,7 +98,9 @@ def mock_connection(
         return
 
     fixture = "ipp/get-printer-attributes.bin"
-    if version_not_supported:
+    if no_unique_id:
+        fixture = "ipp/get-printer-attributes-minimal.bin"
+    elif version_not_supported:
         fixture = "ipp/get-printer-attributes-error-0x0503.bin"
     
     if parse_error:
