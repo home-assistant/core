@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_UPDATE_COORDINATORS, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,8 +58,7 @@ def get_data_update_coordinator(
 ) -> GogoGateDataUpdateCoordinator:
     """Get an update coordinator."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(DATA_UPDATE_COORDINATORS, {})
-    data_update_coordinators = hass.data[DOMAIN][DATA_UPDATE_COORDINATORS]
+    data_update_coordinators = hass.data[DOMAIN]
 
     if config_entry.unique_id not in data_update_coordinators:
         api = get_api(config_entry.data)
