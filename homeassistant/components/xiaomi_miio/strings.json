@@ -23,7 +23,8 @@
       "no_device_selected": "No device selected, please select one device."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "Config flow for this Xiaomi Miio device is already in progress."
     }
   }
 }
