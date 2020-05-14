@@ -121,6 +121,7 @@ async def init_integration(
     base_path: str = BASE_PATH,
     uuid: str = "cfe92100-67c4-11d4-a45f-f8d027761251",
     unique_id: str = "cfe92100-67c4-11d4-a45f-f8d027761251",
+    conn_error: bool = False,
 ) -> MockConfigEntry:
     """Set up the IPP integration in Home Assistant."""
     entry = MockConfigEntry(
@@ -145,6 +146,7 @@ async def init_integration(
             port=port,
             ssl=ssl,
             base_path=base_path,
+            conn_error=conn_error,
         )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
