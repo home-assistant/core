@@ -1,19 +1,19 @@
 """Test Z-Wave Sensors."""
+from homeassistant.components.ozw.const import DOMAIN
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DOMAIN as SENSOR_DOMAIN,
 )
-from homeassistant.components.zwave_mqtt.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS
 
-from .common import setup_zwave
+from .common import setup_ozw
 
 
 async def test_sensor(hass, generic_data):
     """Test setting up config entry."""
-    await setup_zwave(hass, fixture=generic_data)
+    await setup_ozw(hass, fixture=generic_data)
 
     # Test standard sensor
     state = hass.states.get("sensor.smart_plug_electric_v")
@@ -66,7 +66,7 @@ async def test_sensor_enabled(hass, generic_data, sensor_msg):
     )
     assert entry.disabled is False
 
-    receive_msg = await setup_zwave(hass, fixture=generic_data)
+    receive_msg = await setup_ozw(hass, fixture=generic_data)
     receive_msg(sensor_msg)
     await hass.async_block_till_done()
 

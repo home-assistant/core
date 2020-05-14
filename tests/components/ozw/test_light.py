@@ -1,12 +1,12 @@
 """Test Z-Wave Lights."""
-from homeassistant.components.zwave_mqtt.light import byte_to_zwave_brightness
+from homeassistant.components.ozw.light import byte_to_zwave_brightness
 
-from .common import setup_zwave
+from .common import setup_ozw
 
 
 async def test_light(hass, light_data, light_msg, sent_messages):
     """Test setting up config entry."""
-    receive_message = await setup_zwave(hass, fixture=light_data)
+    receive_message = await setup_ozw(hass, fixture=light_data)
 
     # Test loaded
     state = hass.states.get("light.led_bulb_6_multi_colour_level")

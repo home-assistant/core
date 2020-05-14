@@ -1,1 +1,1 @@
-"""Tests for the Z-Wave MQTT integration."""
+"""Tests for the OZW integration."""

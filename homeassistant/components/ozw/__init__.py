@@ -1,4 +1,4 @@
-"""The zwave_mqtt integration."""
+"""The ozw integration."""
 import asyncio
 import json
 import logging
@@ -43,7 +43,7 @@ DATA_DEVICES = "zwave-mqtt-devices"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Initialize basic config of zwave_mqtt component."""
+    """Initialize basic config of ozw component."""
     if "mqtt" not in hass.config.components:
         _LOGGER.error("MQTT integration is not set up")
         return False
@@ -52,9 +52,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up zwave_mqtt from a config entry."""
-    zwave_mqtt_data = hass.data[DOMAIN][entry.entry_id] = {}
-    zwave_mqtt_data[DATA_UNSUBSCRIBE] = []
+    """Set up ozw from a config entry."""
+    ozw_data = hass.data[DOMAIN][entry.entry_id] = {}
+    ozw_data[DATA_UNSUBSCRIBE] = []
 
     data_nodes = {}
     data_values = {}
@@ -216,7 +216,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 for component in PLATFORMS
             ]
         )
-        zwave_mqtt_data[DATA_UNSUBSCRIBE].append(
+        ozw_data[DATA_UNSUBSCRIBE].append(
             await mqtt.async_subscribe(
                 hass, f"{TOPIC_OPENZWAVE}/#", async_receive_message
             )
