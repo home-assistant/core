@@ -1,42 +1,39 @@
 """Opensprinkler integration."""
-from datetime import datetime
 import logging
 from typing import Callable
-
-import pytz
 
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import OpensprinklerCoordinator, OpensprinklerSensor
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-UTC_TZ = pytz.timezone("UTC")
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: dict, async_add_entities: Callable,
+    hass: HomeAssistant, entry: dict, async_add_entities: Callable,
 ):
     """Set up the opensprinkler sensors."""
-    entities = _create_entities(hass, config)
+    entities = _create_entities(hass, entry)
     async_add_entities(entities)
 
 
-def _create_entities(hass: HomeAssistant, config: dict):
+def _create_entities(hass: HomeAssistant, entry: dict):
     entities = []
 
-    device = hass.data[DOMAIN][config.entry_id]
-    name = config.data[CONF_NAME]
+    device = hass.data[DOMAIN][entry.entry_id]
+    name = entry.data[CONF_NAME]
     coordinator = OpensprinklerCoordinator(hass, device)
 
-    entities.append(LastRunSensor(config.entry_id, name, device, coordinator))
-    entities.append(RainDelayStopTimeSensor(config.entry_id, name, device, coordinator))
-    entities.append(WaterLevelSensor(config.entry_id, name, device, coordinator))
+    entities.append(LastRunSensor(entry.entry_id, name, device, coordinator))
+    entities.append(RainDelayStopTimeSensor(entry.entry_id, name, device, coordinator))
+    entities.append(WaterLevelSensor(entry.entry_id, name, device, coordinator))
 
     for station in device.stations:
-        entities.append(StationSensor(config.entry_id, station, device, coordinator))
+        entities.append(StationSensor(entry.entry_id, station, device, coordinator))
 
     return entities
 
@@ -65,7 +62,7 @@ class WaterLevelSensor(OpensprinklerSensor, Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._entry_id}_{self._entity_type}_{self._name}_water_level"
+        return f"{self._entry_id}_{self._entity_type}_water_level"
 
     @property
     def unit_of_measurement(self) -> str:
@@ -106,13 +103,12 @@ class LastRunSensor(OpensprinklerSensor, Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._entry_id}_{self._entity_type}_{self._name}_last_run"
+        return f"{self._entry_id}_{self._entity_type}_last_run"
 
     def _get_state(self):
         """Retrieve latest state."""
         last_run = self._device.device.last_run
-        utc_time = datetime.fromtimestamp(last_run, UTC_TZ)
-        return utc_time.isoformat()
+        return utc_from_timestamp(last_run).isoformat()
 
 
 class RainDelayStopTimeSensor(OpensprinklerSensor, Entity):
@@ -144,16 +140,15 @@ class RainDelayStopTimeSensor(OpensprinklerSensor, Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._entry_id}_{self._entity_type}_{self._name}_rdst"
+        return f"{self._entry_id}_{self._entity_type}_rdst"
 
     def _get_state(self):
         """Retrieve latest state."""
         rdst = self._device.device.rain_delay_stop_time
         if rdst == 0:
-            return "Not in effect"
+            return None
 
-        utc_time = datetime.fromtimestamp(rdst, UTC_TZ)
-        return utc_time.isoformat()
+        return utc_from_timestamp(rdst).isoformat()
 
 
 class StationSensor(OpensprinklerSensor, Entity):
@@ -175,8 +170,8 @@ class StationSensor(OpensprinklerSensor, Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._entry_id}_{self._entity_type}_station_{self._station.name}"
+        return f"{self._entry_id}_{self._entity_type}_station_{self._station.index}"
 
-    def _get_state(self) -> bool:
+    def _get_state(self) -> str:
         """Retrieve latest state."""
         return self._station.status

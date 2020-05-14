@@ -35,7 +35,6 @@ async def test_form(hass):
         "password": "test-password",
         "port": 8080,
         "name": "Opensprinkler",
-        "run_seconds": 60,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1

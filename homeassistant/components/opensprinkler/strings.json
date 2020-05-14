@@ -5,21 +5,20 @@
       "user": {
         "title": "Connect to the device",
         "data": {
-          "host": "Host",
+          "host": "[%key:common::config_flow::data::host%]",
           "password": "MD5 Password",
-          "port": "Port",
-          "name": "Device Name",
-          "run_seconds": "Station Run Time (seconds)"
+          "port": "[%key:common::config_flow::data::port%]",
+          "name": "Device Name"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }
