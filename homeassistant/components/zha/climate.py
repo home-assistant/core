@@ -503,10 +503,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
         if success:
             self.async_schedule_update_ha_state()
 
-    async def async_update_outdoor_temperature(self, temperature):
-        """Update outdoor temperature display."""
-        pass
-
     async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
         """Set the preset mode via handler."""
 
@@ -563,16 +559,3 @@ class SinopeTechnologiesThermostat(Thermostat):
 
         self.debug("set occupancy to %s. Status: %s", 0 if is_away else 1, res)
         return res
-
-    async def async_update_outdoor_temperature(self, temperature):
-        """Update Outdoor temperature display service call."""
-        outdoor_temp = convert_temperature(
-            temperature, self.hass.config.units.temperature_unit, TEMP_CELSIUS
-        )
-        outdoor_temp = int(outdoor_temp * ZCL_TEMP)
-        self.debug("Updating outdoor temp to %s", outdoor_temp)
-        cluster = self.endpoint.sinope_manufacturer_specific
-        res = await cluster.write_attributes(
-            {"outdoor_temp": outdoor_temp}, manufacturer=self.manufacturer
-        )
-        self.debug("Write Attr: %s", res)
