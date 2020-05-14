@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "Integracija MQTT ni nastavljena",
+            "one_instance_allowed": "Integracija podpira samo en primerek Z-Wave"
+        },
+        "step": {
+            "user": {
+                "title": "Potrdite nastavitev"
+            }
+        }
+    },
+    "title": "Z-Wave \u010dez MQTT"
+}

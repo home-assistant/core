@@ -4,13 +4,13 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "connect_error": "Failed to connect, please try again",
+            "connect_error": "Failed to connect",
             "no_device_selected": "No device selected, please select one device."
         },
         "step": {
             "gateway": {
                 "data": {
-                    "host": "IP adress",
+                    "host": "IP address",
                     "name": "Name of the Gateway",
                     "token": "API Token"
                 },

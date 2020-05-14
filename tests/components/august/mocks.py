@@ -107,11 +107,11 @@ async def _create_august_with_devices(
     def lock_return_activities_side_effect(access_token, device_id):
         lock = _get_device_detail("locks", device_id)
         return [
-            _mock_lock_operation_activity(lock, "lock", 0),
             # There is a check to prevent out of order events
-            # so we set the doorclosed event in the future
+            # so we set the doorclosed & lock event in the future
             # to prevent a race condition where we reject the event
-            # because it happened before the dooropen event.
+            # because it happened before the dooropen & unlock event.
+            _mock_lock_operation_activity(lock, "lock", 2000),
             _mock_door_operation_activity(lock, "doorclosed", 2000),
         ]
 

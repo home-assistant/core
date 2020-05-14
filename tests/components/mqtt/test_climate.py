@@ -1,7 +1,6 @@
 """The tests for the mqtt climate component."""
 import copy
 import json
-import unittest
 
 import pytest
 import voluptuous as vol
@@ -47,6 +46,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
+from tests.async_mock import call
 from tests.common import async_fire_mqtt_message, async_setup_component
 from tests.components.climate import common
 
@@ -180,10 +180,7 @@ async def test_set_operation_with_power_command(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "cool"
     mqtt_mock.async_publish.assert_has_calls(
-        [
-            unittest.mock.call("power-command", "ON", 0, False),
-            unittest.mock.call("mode-topic", "cool", 0, False),
-        ]
+        [call("power-command", "ON", 0, False), call("mode-topic", "cool", 0, False)]
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -191,10 +188,7 @@ async def test_set_operation_with_power_command(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "off"
     mqtt_mock.async_publish.assert_has_calls(
-        [
-            unittest.mock.call("power-command", "OFF", 0, False),
-            unittest.mock.call("mode-topic", "off", 0, False),
-        ]
+        [call("power-command", "OFF", 0, False), call("mode-topic", "off", 0, False)]
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -322,10 +316,7 @@ async def test_set_target_temperature(hass, mqtt_mock):
     assert state.state == "cool"
     assert state.attributes.get("temperature") == 21
     mqtt_mock.async_publish.assert_has_calls(
-        [
-            unittest.mock.call("mode-topic", "cool", 0, False),
-            unittest.mock.call("temperature-topic", 21, 0, False),
-        ]
+        [call("mode-topic", "cool", 0, False), call("temperature-topic", 21, 0, False)]
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -465,10 +456,7 @@ async def test_set_away_mode(hass, mqtt_mock):
 
     await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_has_calls(
-        [
-            unittest.mock.call("hold-topic", "off", 0, False),
-            unittest.mock.call("away-mode-topic", "AN", 0, False),
-        ]
+        [call("hold-topic", "off", 0, False), call("away-mode-topic", "AN", 0, False)]
     )
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "away"
@@ -880,6 +868,7 @@ async def test_discovery_update_climate(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",' '  "power_command_topic": "test_topic#" }'

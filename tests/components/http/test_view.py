@@ -1,6 +1,4 @@
 """Tests for Home Assistant View."""
-from unittest.mock import Mock
-
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
     HTTPInternalServerError,
@@ -15,7 +13,7 @@ from homeassistant.components.http.view import (
 )
 from homeassistant.exceptions import ServiceNotFound, Unauthorized
 
-from tests.async_mock import AsyncMock
+from tests.async_mock import AsyncMock, Mock
 
 
 @pytest.fixture

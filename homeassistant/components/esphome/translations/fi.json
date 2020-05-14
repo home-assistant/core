@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "ESP on jo m\u00e4\u00e4ritetty"
+        },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "user": {
                 "title": "[%key:component::esphome::title%]"

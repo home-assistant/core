@@ -9,8 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "radio_type": "Radio Type",
-                    "usb_path": "USB-apparaatpad"
+                    "radio_type": "Radio Type"
                 },
                 "title": "ZHA"
             }

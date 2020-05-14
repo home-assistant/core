@@ -3,8 +3,8 @@
         "abort": {
             "already_setup": "TelldusLive jest ju\u017c skonfigurowany.",
             "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
-            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
-            "unknown": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d"
+            "authorize_url_timeout": "[%key_id:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
         },
         "error": {
             "auth_error": "B\u0142\u0105d uwierzytelniania, spr\u00f3buj ponownie"
@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP"
+                    "host": "[%key_id:common::config_flow::data::host%]"
                 },
                 "description": "Puste",
                 "title": "Wybierz punkt ko\u0144cowy."

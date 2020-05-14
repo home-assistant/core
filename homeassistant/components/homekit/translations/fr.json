@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Une passerelle avec le m\u00eame nom ou port est d\u00e9j\u00e0 configur\u00e9e."
+        },
+        "step": {
+            "pairing": {
+                "description": "D\u00e8s que le pont {name} est pr\u00eat, l'appairage sera disponible dans \"Notifications\" sous \"Configuration de la Passerelle HomeKit\".",
+                "title": "Appairage de la Passerelle Homekit"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "D\u00e9marrage automatique (d\u00e9sactiver si vous utilisez Z-Wave ou un autre syst\u00e8me de d\u00e9marrage diff\u00e9r\u00e9)",
+                    "include_domains": "Domaines \u00e0 inclure"
+                },
+                "description": "La passerelle HomeKit vous permettra d'acc\u00e9der \u00e0 vos entit\u00e9s Home Assistant dans HomeKit. Les passerelles HomeKit sont limit\u00e9es \u00e0 150 accessoires par instance, y compris la passerelle elle-m\u00eame. Si vous souhaitez connecter plus que le nombre maximum d'accessoires, il est recommand\u00e9 d'utiliser plusieurs passerelles HomeKit pour diff\u00e9rents domaines. La configuration d\u00e9taill\u00e9e des entit\u00e9s est uniquement disponible via YAML pour la passerelle principale.",
+                "title": "Activer la Passerelle HomeKit"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "D\u00e9marrage automatique (d\u00e9sactiver si vous utilisez Z-Wave ou un autre syst\u00e8me de d\u00e9marrage diff\u00e9r\u00e9)",
+                    "safe_mode": "Mode sans \u00e9chec (activez uniquement si le jumelage \u00e9choue)",
+                    "zeroconf_default_interface": "Utiliser l'interface zeroconf par d\u00e9faut (activer si le pont est introuvable dans l'application Home)"
+                },
+                "description": "Ces param\u00e8tres ne doivent \u00eatre ajust\u00e9s que si le pont HomeKit n'est pas fonctionnel.",
+                "title": "Configuration avanc\u00e9e"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Cam\u00e9ras prenant en charge les flux H.264 natifs"
+                },
+                "title": "S\u00e9lectionnez le codec vid\u00e9o de la cam\u00e9ra."
+            },
+            "exclude": {
+                "data": {
+                    "exclude_entities": "Entit\u00e9s \u00e0 exclure"
+                },
+                "description": "Choisissez les entit\u00e9s que vous ne souhaitez PAS voir reli\u00e9es.",
+                "title": "Exclure les entit\u00e9s des domaines s\u00e9lectionn\u00e9s de la passerelle"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domaine \u00e0 inclure"
+                },
+                "description": "Les entit\u00e9s des \u00abdomaines \u00e0 inclure\u00bb seront pont\u00e9es vers HomeKit. Vous pourrez s\u00e9lectionner les entit\u00e9s \u00e0 exclure de cette liste sur l'\u00e9cran suivant.",
+                "title": "S\u00e9lectionnez les domaines \u00e0 relier."
+            },
+            "yaml": {
+                "description": "Cette entr\u00e9e est contr\u00f4l\u00e9e via YAML",
+                "title": "Ajuster les options de la passerelle HomeKit"
+            }
+        }
+    },
+    "title": "Passerelle HomeKit"
+}

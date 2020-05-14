@@ -4,14 +4,14 @@
             "already_configured": "Ten klucz API jest ju\u017c w u\u017cyciu."
         },
         "error": {
-            "general_error": "Nieznany b\u0142\u0105d",
-            "invalid_api_key": "Nieprawid\u0142owy klucz API",
+            "general_error": "[%key_id:common::config_flow::error::unknown%]",
+            "invalid_api_key": "Nieprawid\u0142owy klucz API.",
             "unable_to_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z jednostk\u0105 Node/Pro."
         },
         "step": {
             "geography": {
                 "data": {
-                    "api_key": "Klucz API",
+                    "api_key": "[%key_id:common::config_flow::data::api_key%]",
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
                 },
@@ -20,15 +20,15 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Nazwa hosta lub adres IP jednostki",
-                    "password": "Has\u0142o jednostki"
+                    "ip_address": "[%key_id:common::config_flow::data::host%]",
+                    "password": "[%key_id:common::config_flow::data::password%] jednostki"
                 },
-                "description": "Has\u0142o",
+                "description": "Monitoruj jednostk\u0119 AirVisual. Has\u0142o mo\u017cna odzyska\u0107 z interfejsu u\u017cytkownika urz\u0105dzenia.",
                 "title": "Konfiguracja AirVisual Node/Pro"
             },
             "user": {
                 "data": {
-                    "api_key": "Klucz API",
+                    "api_key": "[%key_id:common::config_flow::data::api_key%]",
                     "cloud_api": "Lokalizacja geograficzna",
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna",

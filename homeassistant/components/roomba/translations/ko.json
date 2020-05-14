@@ -11,7 +11,7 @@
                     "certificate": "\uc778\uc99d\uc11c",
                     "continuous": "\uc5f0\uc18d",
                     "delay": "\uc9c0\uc5f0",
-                    "host": "\ud638\uc2a4\ud2b8 \uc774\ub984 \ub610\ub294 IP \uc8fc\uc18c",
+                    "host": "\ud638\uc2a4\ud2b8",
                     "password": "\ube44\ubc00\ubc88\ud638"
                 },
                 "description": "\ud604\uc7ac BLID \ubc0f \ube44\ubc00\ubc88\ud638\ub294 \uc218\ub3d9\uc73c\ub85c \uac00\uc838\uc640\uc57c\ud569\ub2c8\ub2e4. \ub2e4\uc74c \ubb38\uc11c\uc5d0 \uc124\uba85\ub41c \uc808\ucc28\ub97c \ub530\ub77c \uc124\uc815\ud574\uc8fc\uc138\uc694: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",

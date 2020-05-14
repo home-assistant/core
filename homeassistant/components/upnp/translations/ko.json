@@ -8,19 +8,22 @@
             "no_sensors_or_port_mapping": "\ucd5c\uc18c\ud55c \uc13c\uc11c \ud639\uc740 \ud3ec\ud2b8 \ub9e4\ud551\uc744 \ud65c\uc131\ud654 \ud574\uc57c \ud569\ub2c8\ub2e4",
             "single_instance_allowed": "\ud558\ub098\uc758 UPnP/IGD \ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
         },
+        "flow_title": "UPnP/IGD: {name}",
         "step": {
             "confirm": {
                 "description": "UPnP/IGD \ub97c \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
+            "ssdp_confirm": {
+                "description": "\uc774 UPnP/IGD \uae30\uae30\ub97c \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
             },
             "user": {
                 "data": {
                     "enable_port_mapping": "Home Assistant \ud3ec\ud2b8 \ub9e4\ud551 \ud65c\uc131\ud654",
                     "enable_sensors": "\ud2b8\ub798\ud53d \uc13c\uc11c \ucd94\uac00",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "scan_interval": "\uc5c5\ub370\uc774\ud2b8 \uac04\uaca9 (\ucd08, \ucd5c\uc18c\uac12 30)",
+                    "usn": "\uae30\uae30"
                 },
                 "title": "\uc635\uc158 \uad6c\uc131\ud558\uae30"
             }

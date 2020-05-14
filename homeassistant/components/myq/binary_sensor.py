@@ -1,22 +1,21 @@
 """Support for MyQ gateways."""
 import logging
 
+from pymyq.const import (
+    DEVICE_FAMILY as MYQ_DEVICE_FAMILY,
+    DEVICE_FAMILY_GATEWAY as MYQ_DEVICE_FAMILY_GATEWAY,
+    DEVICE_STATE as MYQ_DEVICE_STATE,
+    DEVICE_STATE_ONLINE as MYQ_DEVICE_STATE_ONLINE,
+    KNOWN_MODELS,
+    MANUFACTURER,
+)
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
 
-from .const import (
-    DOMAIN,
-    KNOWN_MODELS,
-    MANUFACTURER,
-    MYQ_COORDINATOR,
-    MYQ_DEVICE_FAMILY,
-    MYQ_DEVICE_FAMILY_GATEWAY,
-    MYQ_DEVICE_STATE,
-    MYQ_DEVICE_STATE_ONLINE,
-    MYQ_GATEWAY,
-)
+from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 

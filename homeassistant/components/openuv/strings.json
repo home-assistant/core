@@ -4,7 +4,7 @@
       "user": {
         "title": "Fill in your information",
         "data": {
-          "api_key": "OpenUV API Key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "elevation": "Elevation",
           "latitude": "Latitude",
           "longitude": "Longitude"

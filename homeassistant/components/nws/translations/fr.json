@@ -10,8 +10,10 @@
         "step": {
             "user": {
                 "data": {
+                    "api_key": "Cl\u00e9 API (e-mail)",
                     "latitude": "Latitude",
-                    "longitude": "Longitude"
+                    "longitude": "Longitude",
+                    "station": "Code de la station METAR"
                 }
             }
         }

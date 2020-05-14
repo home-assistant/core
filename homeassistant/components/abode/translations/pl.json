@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Has\u0142o",
-                    "username": "Adres e-mail"
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::email%]"
                 },
                 "title": "Wprowad\u017a informacje logowania Abode"
             }

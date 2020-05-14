@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
         },
         "error": {
             "connect_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",

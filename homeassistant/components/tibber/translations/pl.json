@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_account%]"
+        },
+        "error": {
+            "connection_error": "B\u0142\u0105d po\u0142\u0105czenia z Tibber.",
+            "invalid_access_token": "[%key_id:common::config_flow::error::invalid_access_token%]",
+            "timeout": "Przekroczono limit czasu \u0142\u0105czenia z Tibber."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "[%key_id:common::config_flow::data::access_token%]"
+                },
+                "description": "Wprowad\u017a token dost\u0119pu z https://developer.tibber.com/settings/accesstoken",
+                "title": "Tibber"
+            }
+        }
+    },
+    "title": "Tibber"
+}
