@@ -1,6 +1,8 @@
 """Tests for the IPP integration."""
 import os
 
+from pyipp import IPPError, IPPParseError
+
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -71,11 +73,21 @@ def mock_connection(
     port: int = PORT,
     ssl: bool = False,
     base_path: str = BASE_PATH,
-    version_nlt_supported: bool = False,
+    ipp_error: bool = False,
+    parse_error: bool = False,
+    version_not_supported: bool = False,
 ):
     """Mock the IPP connection."""
     scheme = "https" if ssl else "http"
     ipp_url = f"{scheme}://{host}:{port}"
+
+    if ipp_error:
+        aioclient_mock.post(f"{ipp_url}{base_path}", exc=IPPError)
+        return
+
+    if parse_error:
+        aioclient_mock.post(f"{ipp_url}{base_path}", exc=IPPParseError)
+        return
 
     fixture = "ipp/get-printer-attributes.bin"
     if version_not_supported:
