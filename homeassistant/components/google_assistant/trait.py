@@ -19,6 +19,7 @@ from homeassistant.components import (
     vacuum,
 )
 from homeassistant.components.climate import const as climate
+from homeassistant.components.manual import alarm_control_panel as alarm
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_CODE,
@@ -38,6 +39,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -1003,8 +1005,8 @@ class ArmDisArmTrait(_Trait):
 
     def query_attributes(self):
         """Return ArmDisarm query attributes."""
-        if "post_pending_state" in self.state.attributes:
-            armed_state = self.state.attributes["post_pending_state"]
+        if self.state.state in [STATE_ALARM_ARMING, STATE_ALARM_PENDING]:
+            armed_state = self.state.attributes[alarm.ATTR_NEXT_STATE]
         else:
             armed_state = self.state.state
         response = {"isArmed": armed_state in self.state_to_service}
@@ -1025,7 +1027,7 @@ class ArmDisArmTrait(_Trait):
         elif (
             params["arm"]
             and params.get("cancel")
-            and self.state.state == STATE_ALARM_PENDING
+            and self.state.state == STATE_ALARM_ARMING
         ):
             service = SERVICE_ALARM_DISARM
         else:
