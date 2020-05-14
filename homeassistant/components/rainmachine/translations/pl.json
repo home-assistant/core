@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ten kontroler RainMachine jest ju\u017c skonfigurowany."
+        },
+        "error": {
+            "identifier_exists": "Konto jest ju\u017c zarejestrowane.",
+            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "[%key_id:common::config_flow::data::host%]",
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "port": "[%key_id:common::config_flow::data::port%]"
+                },
+                "title": "Wprowad\u017a dane"
+            }
+        }
+    }
+}

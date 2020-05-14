@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta nazwa u\u017cytkownika jest ju\u017c w u\u017cyciu."
+        },
+        "error": {
+            "invalid_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika lub has\u0142o",
+            "no_devices": "Nie znaleziono urz\u0105dze\u0144 na koncie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]/adres e-mail"
+                },
+                "title": "Wprowad\u017a dane"
+            }
+        }
+    }
+}

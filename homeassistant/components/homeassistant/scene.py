@@ -1,11 +1,12 @@
 """Allow users to set and activate scenes."""
 from collections import namedtuple
 import logging
-from typing import List
+from typing import Any, List
 
 import voluptuous as vol
 
 from homeassistant import config as conf_util
+from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -62,8 +63,8 @@ def _ensure_no_intersection(value):
     if (
         CONF_SNAPSHOT not in value
         or CONF_ENTITIES not in value
-        or not any(
-            entity_id in value[CONF_SNAPSHOT] for entity_id in value[CONF_ENTITIES]
+        or all(
+            entity_id not in value[CONF_SNAPSHOT] for entity_id in value[CONF_ENTITIES]
         )
     ):
         return value
@@ -123,13 +124,11 @@ def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
     platform = hass.data[DATA_PLATFORM]
 
-    results = []
-
-    for scene_entity in platform.entities.values():
-        if entity_id in scene_entity.scene_config.states:
-            results.append(scene_entity.entity_id)
-
-    return results
+    return [
+        scene_entity.entity_id
+        for scene_entity in platform.entities.values()
+        if entity_id in scene_entity.scene_config.states
+    ]
 
 
 @callback
@@ -171,7 +170,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         conf = await conf_util.async_process_component_config(hass, conf, integration)
 
-        if not conf or not platform:
+        if not (conf and platform):
             return
 
         await platform.async_reset()
@@ -189,15 +188,30 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def apply_service(call):
         """Apply a scene."""
+        reproduce_options = {}
+
+        if ATTR_TRANSITION in call.data:
+            reproduce_options[ATTR_TRANSITION] = call.data.get(ATTR_TRANSITION)
+
         await async_reproduce_state(
-            hass, call.data[CONF_ENTITIES].values(), blocking=True, context=call.context
+            hass,
+            call.data[CONF_ENTITIES].values(),
+            context=call.context,
+            reproduce_options=reproduce_options,
         )
 
     hass.services.async_register(
         SCENE_DOMAIN,
         SERVICE_APPLY,
         apply_service,
-        vol.Schema({vol.Required(CONF_ENTITIES): STATES_SCHEMA}),
+        vol.Schema(
+            {
+                vol.Optional(ATTR_TRANSITION): vol.All(
+                    vol.Coerce(float), vol.Clamp(min=0, max=6553)
+                ),
+                vol.Required(CONF_ENTITIES): STATES_SCHEMA,
+            }
+        ),
     )
 
     async def create_service(call):
@@ -289,11 +303,11 @@ class HomeAssistantScene(Scene):
             attributes[CONF_ID] = unique_id
         return attributes
 
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await async_reproduce_state(
             self.hass,
             self.scene_config.states.values(),
-            blocking=True,
             context=self._context,
+            reproduce_options=kwargs,
         )

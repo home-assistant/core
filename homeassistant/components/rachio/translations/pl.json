@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "invalid_auth": "[%key_id:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "[%key_id:common::config_flow::data::api_key%] dla konta Rachio."
+                },
+                "description": "B\u0119dziesz potrzebowa\u0142 klucza API ze strony https://app.rach.io/. Wybierz 'Account Settings', a nast\u0119pnie kliknij 'GET API KEY'.",
+                "title": "Po\u0142\u0105czenie z urz\u0105dzeniem Rachio"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Jak d\u0142ugo, w minutach, nale\u017cy w\u0142\u0105czy\u0107 stacj\u0119, gdy prze\u0142\u0105cznik jest w\u0142\u0105czony."
+                }
+            }
+        }
+    }
+}

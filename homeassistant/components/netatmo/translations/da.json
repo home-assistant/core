@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan kun konfigurere \u00e9n Netatmo-konto."
+        },
+        "create_entry": {
+            "default": "Korrekt godkendt med Netatmo."
+        }
+    }
+}

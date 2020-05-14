@@ -1,7 +1,7 @@
 """Support for Xiaomi aqara binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
@@ -99,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
+class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
     """Representation of a base XiaomiBinarySensor."""
 
     def __init__(self, device, name, xiaomi_hub, data_key, device_class):

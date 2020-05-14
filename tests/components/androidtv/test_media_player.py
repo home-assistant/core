@@ -1,7 +1,6 @@
 """The tests for the androidtv platform."""
 import base64
 import logging
-from unittest.mock import patch
 
 from androidtv.exceptions import LockNotAcquiredException
 
@@ -40,6 +39,8 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from . import patchers
+
+from tests.async_mock import patch
 
 # Android TV device with Python ADB implementation
 CONFIG_ANDROIDTV_PYTHON_ADB = {

@@ -25,9 +25,9 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 if sys.version_info >= (3, 8, 0):
-    from unittest.mock import patch
+    from tests.async_mock import patch
 else:
-    from asynctest import patch
+    from tests.async_mock import patch
 
 
 NAME = "fake"
@@ -42,6 +42,7 @@ def client_fixture():
     ) as mock_client_class:
         client = mock_client_class.return_value
         client.software_info = {"device_id": "a1:b1:c1:d1:e1:f1"}
+        client.client_key = "0123456789"
         yield client
 
 

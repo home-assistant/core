@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.core import callback
 
@@ -18,7 +18,7 @@ from . import KNOWN_DEVICES, HomeKitEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
+class HomeKitMotionSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit motion sensor."""
 
     def get_characteristic_types(self):
@@ -36,7 +36,7 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
         return self.service.value(CharacteristicsTypes.MOTION_DETECTED)
 
 
-class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
+class HomeKitContactSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit contact sensor."""
 
     def get_characteristic_types(self):
@@ -54,7 +54,7 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
         return self.service.value(CharacteristicsTypes.CONTACT_STATE) == 1
 
 
-class HomeKitSmokeSensor(HomeKitEntity, BinarySensorDevice):
+class HomeKitSmokeSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit smoke sensor."""
 
     @property
@@ -72,7 +72,7 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorDevice):
         return self.service.value(CharacteristicsTypes.SMOKE_DETECTED) == 1
 
 
-class HomeKitOccupancySensor(HomeKitEntity, BinarySensorDevice):
+class HomeKitOccupancySensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit occupancy sensor."""
 
     @property
@@ -90,7 +90,7 @@ class HomeKitOccupancySensor(HomeKitEntity, BinarySensorDevice):
         return self.service.value(CharacteristicsTypes.OCCUPANCY_DETECTED) == 1
 
 
-class HomeKitLeakSensor(HomeKitEntity, BinarySensorDevice):
+class HomeKitLeakSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit leak sensor."""
 
     def get_characteristic_types(self):

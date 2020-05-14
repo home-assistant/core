@@ -7,11 +7,19 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
-import asyncio
 from collections import OrderedDict
-from itertools import chain
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    cast,
+)
 
 import attr
 
@@ -26,10 +34,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.loader import bind_hass
-from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
+from .singleton import singleton
 from .typing import HomeAssistantType
 
 if TYPE_CHECKING:
@@ -52,6 +60,18 @@ ATTR_RESTORED = "restored"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
+
+# Attributes relevant to describing entity
+# to external services.
+ENTITY_DESCRIBING_ATTRIBUTES = {
+    "entity_id",
+    "name",
+    "original_name",
+    "capabilities",
+    "supported_features",
+    "device_class",
+    "unit_of_measurement",
+}
 
 
 @attr.s(slots=True, frozen=True)
@@ -111,6 +131,22 @@ class EntityRegistry:
         )
 
     @callback
+    def async_get_device_class_lookup(self, domain_device_classes: set) -> dict:
+        """Return a lookup for the device class by domain."""
+        lookup: Dict[str, Dict[Tuple[Any, Any], str]] = {}
+        for entity in self.entities.values():
+            if not entity.device_id:
+                continue
+            domain_device_class = (entity.domain, entity.device_class)
+            if domain_device_class not in domain_device_classes:
+                continue
+            if entity.device_id not in lookup:
+                lookup[entity.device_id] = {domain_device_class: entity.entity_id}
+            else:
+                lookup[entity.device_id][domain_device_class] = entity.entity_id
+        return lookup
+
+    @callback
     def async_is_registered(self, entity_id: str) -> bool:
         """Check if an entity_id is currently registered."""
         return entity_id in self.entities
@@ -145,14 +181,21 @@ class EntityRegistry:
 
         Conflicts checked against registered and currently existing entities.
         """
-        return ensure_unique_string(
-            f"{domain}.{slugify(suggested_object_id)}",
-            chain(
-                self.entities.keys(),
-                self.hass.states.async_entity_ids(domain),
-                known_object_ids if known_object_ids else [],
-            ),
-        )
+        preferred_string = f"{domain}.{slugify(suggested_object_id)}"
+        test_string = preferred_string
+        if not known_object_ids:
+            known_object_ids = {}
+
+        tries = 1
+        while (
+            test_string in self.entities
+            or test_string in known_object_ids
+            or self.hass.states.get(test_string)
+        ):
+            tries += 1
+            test_string = f"{preferred_string}_{tries}"
+
+        return test_string
 
     @callback
     def async_get_or_create(
@@ -385,6 +428,12 @@ class EntityRegistry:
 
         if data is not None:
             for entity in data["entities"]:
+                # Some old installations can have some bad entities.
+                # Filter them out as they cause errors down the line.
+                # Can be removed in Jan 2021
+                if not valid_entity_id(entity["entity_id"]):
+                    continue
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     entity_id=entity["entity_id"],
                     config_entry_id=entity.get("config_entry_id"),
@@ -447,27 +496,12 @@ class EntityRegistry:
             self.async_remove(entity_id)
 
 
-@bind_hass
+@singleton(DATA_REGISTRY)
 async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
-    """Return entity registry instance."""
-    reg_or_evt = hass.data.get(DATA_REGISTRY)
-
-    if not reg_or_evt:
-        evt = hass.data[DATA_REGISTRY] = asyncio.Event()
-
-        reg = EntityRegistry(hass)
-        await reg.async_load()
-
-        hass.data[DATA_REGISTRY] = reg
-        evt.set()
-        return reg
-
-    if isinstance(reg_or_evt, asyncio.Event):
-        evt = reg_or_evt
-        await evt.wait()
-        return cast(EntityRegistry, hass.data.get(DATA_REGISTRY))
-
-    return cast(EntityRegistry, reg_or_evt)
+    """Create entity registry."""
+    reg = EntityRegistry(hass)
+    await reg.async_load()
+    return reg
 
 
 @callback
@@ -577,4 +611,4 @@ async def async_migrate_entries(
         updates = entry_callback(entry)
 
         if updates is not None:
-            ent_reg.async_update_entity(entry.entity_id, **updates)  # type: ignore
+            ent_reg.async_update_entity(entry.entity_id, **updates)

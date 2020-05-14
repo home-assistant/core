@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_host": "\u4e3b\u6a5f\u7aef\u4e26\u672a\u4ee5\u5b8c\u6574\u7db2\u5740\u683c\u5f0f\u8f38\u5165\uff0c\u4f8b\u5982\uff1ahttp://192.168.10.100:80",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u7db2\u5740",
+                    "password": "\u5bc6\u78bc",
+                    "tls": "ISY \u63a7\u5236\u5668 TLS \u7248\u672c",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u4e3b\u6a5f\u7aef\u5fc5\u9808\u4ee5\u5b8c\u6574\u7db2\u5740\u683c\u5f0f\u8f38\u5165\uff0c\u4f8b\u5982\uff1ahttp://192.168.10.100:80",
+                "title": "\u9023\u7dda\u81f3 ISY994"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "\u5ffd\u7565\u5b57\u4e32",
+                    "restore_light_state": "\u56de\u5fa9\u4eae\u5ea6",
+                    "sensor_string": "\u7bc0\u9ede\u50b3\u611f\u5668\u5b57\u4e32",
+                    "variable_sensor_string": "\u53ef\u8b8a\u50b3\u611f\u5668\u5b57\u4e32"
+                },
+                "description": "ISY \u6574\u5408\u8a2d\u5b9a\u9078\u9805\uff1a \n \u2022 \u7bc0\u9ede\u50b3\u611f\u5668\u5b57\u4e32\uff08Node Sensor String\uff09\uff1a\u4efb\u4f55\u540d\u7a31\u6216\u8cc7\u6599\u593e\u5305\u542b\u300cNode Sensor String\u300d\u7684\u8a2d\u5099\u90fd\u6703\u88ab\u8996\u70ba\u50b3\u611f\u5668\u6216\u4e8c\u9032\u4f4d\u50b3\u611f\u5668\u3002\n \u2022 \u5ffd\u7565\u5b57\u4e32\uff08Ignore String\uff09\uff1a\u4efb\u4f55\u540d\u7a31\u5305\u542b\u300cIgnore String\u300d\u7684\u8a2d\u5099\u90fd\u6703\u88ab\u5ffd\u7565\u3002\n \u2022 \u53ef\u8b8a\u50b3\u611f\u5668\u5b57\u4e32\uff08Variable Sensor String\uff09\uff1a\u4efb\u4f55\u5305\u542b\u300cVariable Sensor String\u300d\u7684\u8b8a\u6578\u90fd\u5c07\u65b0\u589e\u70ba\u50b3\u611f\u5668\u3002 \n \u2022 \u56de\u5fa9\u4eae\u5ea6\uff08Restore Light Brightness\uff09\uff1a\u958b\u5553\u5f8c\u3001\u7576\u71c8\u5149\u958b\u555f\u6642\u6703\u56de\u5fa9\u5148\u524d\u7684\u4eae\u5ea6\uff0c\u800c\u4e0d\u662f\u4f7f\u7528\u8a2d\u5099\u9810\u8a2d\u4eae\u5ea6\u3002",
+                "title": "ISY994 \u9078\u9805"
+            }
+        }
+    },
+    "title": "Universal Devices ISY994"
+}

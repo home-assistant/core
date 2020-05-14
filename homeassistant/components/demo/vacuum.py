@@ -21,8 +21,8 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
-    StateVacuumDevice,
-    VacuumDevice,
+    StateVacuumEntity,
+    VacuumEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class DemoVacuum(VacuumDevice):
+class DemoVacuum(VacuumEntity):
     """Representation of a demo vacuum."""
 
     def __init__(self, name, supported_features):
@@ -254,7 +254,7 @@ class DemoVacuum(VacuumDevice):
         self.schedule_update_ha_state()
 
 
-class StateDemoVacuum(StateVacuumDevice):
+class StateDemoVacuum(StateVacuumEntity):
     """Representation of a demo vacuum supporting states."""
 
     def __init__(self, name):

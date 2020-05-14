@@ -2,6 +2,7 @@
 import logging
 
 import aiohttp
+from pynws import SimpleNWS
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -9,7 +10,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import NwsData, base_unique_id
+from . import base_unique_id
 from .const import CONF_STATION, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,10 +28,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     client_session = async_get_clientsession(hass)
     ha_api_key = f"{api_key} homeassistant"
-    nws = NwsData(hass, latitude, longitude, ha_api_key, client_session)
+    nws = SimpleNWS(latitude, longitude, ha_api_key, client_session)
 
     try:
-        await nws.async_set_station(station)
+        await nws.set_station(station)
     except aiohttp.ClientError as err:
         _LOGGER.error("Could not connect: %s", err)
         raise CannotConnect

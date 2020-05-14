@@ -1,10 +1,11 @@
 """Test system log component."""
 import logging
-from unittest.mock import MagicMock, patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
 from homeassistant.core import callback
+
+from tests.async_mock import MagicMock, patch
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}
@@ -139,7 +140,7 @@ async def test_remove_older_logs(hass, hass_client):
 
 def log_msg(nr=2):
     """Log an error at same line."""
-    _LOGGER.error(f"error message %s", nr)
+    _LOGGER.error("error message %s", nr)
 
 
 async def test_dedup_logs(hass, hass_client):

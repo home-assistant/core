@@ -1,7 +1,7 @@
 """This platform provides binary sensors for key RainMachine data."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -86,7 +86,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
+class RainMachineBinarySensor(RainMachineEntity, BinarySensorEntity):
     """A sensor implementation for raincloud device."""
 
     def __init__(

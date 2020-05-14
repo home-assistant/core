@@ -26,7 +26,7 @@ from epson_projector.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -124,7 +124,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class EpsonProjector(MediaPlayerDevice):
+class EpsonProjector(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
     def __init__(self, websession, name, host, port, encryption):

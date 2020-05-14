@@ -3,7 +3,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities([ToonThermostatDevice(toon_client, toon_data)], True)
 
 
-class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
+class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     """Representation of a Toon climate device."""
 
     def __init__(self, toon_client, toon_data: ToonData) -> None:

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "certificate": "Certifikat",
+                    "continuous": "Kontinuerlig",
+                    "delay": "F\u00f6rdr\u00f6jning",
+                    "host": "V\u00e4rdnamn eller IP-adress",
+                    "password": "L\u00f6senord"
+                },
+                "title": "Anslut till enheten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Kontinuerlig",
+                    "delay": "F\u00f6rdr\u00f6jning"
+                }
+            }
+        }
+    }
+}

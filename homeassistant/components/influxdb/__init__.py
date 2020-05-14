@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_INCLUDE,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
@@ -83,6 +84,7 @@ CONFIG_SCHEMA = vol.Schema(
                         }
                     ),
                     vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+                    vol.Optional(CONF_PATH): cv.string,
                     vol.Optional(CONF_PORT): cv.port,
                     vol.Optional(CONF_SSL): cv.boolean,
                     vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
@@ -130,6 +132,9 @@ def setup(hass, config):
 
     if CONF_HOST in conf:
         kwargs["host"] = conf[CONF_HOST]
+
+    if CONF_PATH in conf:
+        kwargs["path"] = conf[CONF_PATH]
 
     if CONF_PORT in conf:
         kwargs["port"] = conf[CONF_PORT]

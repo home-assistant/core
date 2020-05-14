@@ -24,15 +24,14 @@ async def test_reproducing_states(hass, caplog):
                 "8",
                 {"initial": 12, "minimum": 5, "maximum": 15, "step": 3},
             ),
-        ],
-        blocking=True,
+        ]
     )
 
     assert len(configure_calls) == 0
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("counter.entity", "not_supported")], blocking=True
+        [State("counter.entity", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -49,8 +48,7 @@ async def test_reproducing_states(hass, caplog):
             ),
             # Should not raise
             State("counter.non_existing", "6"),
-        ],
-        blocking=True,
+        ]
     )
 
     valid_calls = [

@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Zasoby"
+                },
+                "title": "Wybierz zasoby do monitorowania"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Zasoby"
+                },
+                "title": "Wybierz UPS do monitorowania"
+            },
+            "user": {
+                "data": {
+                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "port": "[%key_id:common::config_flow::data::port%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                },
+                "title": "Po\u0142\u0105cz z serwerem NUT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Zasoby",
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji (sekundy)"
+                },
+                "description": "Wybierz zasoby sensor\u00f3w"
+            }
+        }
+    }
+}

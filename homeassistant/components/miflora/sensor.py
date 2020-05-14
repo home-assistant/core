@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONDUCTIVITY,
     CONF_FORCE_UPDATE,
     CONF_MAC,
     CONF_MONITORED_CONDITIONS,
@@ -18,7 +19,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_CONDUCTIVITY,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
@@ -55,7 +55,7 @@ SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "light": ["Light intensity", "lx", "mdi:white-balance-sunny"],
     "moisture": ["Moisture", UNIT_PERCENTAGE, "mdi:water-percent"],
-    "conductivity": ["Conductivity", UNIT_CONDUCTIVITY, "mdi:flash-circle"],
+    "conductivity": ["Conductivity", CONDUCTIVITY, "mdi:flash-circle"],
     "battery": ["Battery", UNIT_PERCENTAGE, "mdi:battery-charging"],
 }
 

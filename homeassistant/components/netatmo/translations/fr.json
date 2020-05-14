@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Vous ne pouvez configurer qu'un seul compte Netatmo.",
+            "missing_configuration": "Ce composant n'est pas configur\u00e9. Veuillez suivre la documentation."
+        },
+        "create_entry": {
+            "default": "Authentification r\u00e9ussie avec Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Choisir une m\u00e9thode d'authentification"
+            }
+        }
+    }
+}
