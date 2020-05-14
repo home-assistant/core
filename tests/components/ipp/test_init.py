@@ -1,6 +1,4 @@
 """Tests for the IPP integration."""
-import aiohttp
-
 from homeassistant.components.ipp.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
