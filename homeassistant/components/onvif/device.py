@@ -123,7 +123,7 @@ class ONVIFDevice:
                 "Couldn't connect to camera '%s', please verify "
                 "that the credentials are correct. Error: %s",
                 self.name,
-                err.message,
+                err,
             )
             return False
 
