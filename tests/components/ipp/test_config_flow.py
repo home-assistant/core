@@ -16,7 +16,6 @@ from . import (
     MOCK_ZEROCONF_IPP_SERVICE_INFO,
     MOCK_ZEROCONF_IPPS_SERVICE_INFO,
     init_integration,
-    load_fixture_binary,
     mock_connection,
 )
 
