@@ -114,6 +114,7 @@ def mock_connection(
         headers={"Content-Type": "application/ipp"},
     )
 
+
 async def init_integration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
