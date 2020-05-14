@@ -10,20 +10,22 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
 from homeassistant.helpers.device_registry import format_mac
 
+# pylint: disable=unused-import
+from .const import (
+    CONF_DISCOVERY_RETRY,
+    CONF_INTERFACE,
+    CONF_KEY,
+    CONF_PROTOCOL,
+    CONF_SID,
+    DOMAIN,
+    ZEROCONF_GATEWAY,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "xiaomi_aqara"
-
-CONF_DISCOVERY_RETRY = "discovery_retry"
-CONF_INTERFACE = "interface"
-CONF_PROTOCOL = "protocol"
-CONF_KEY = "key"
-CONF_SID = "sid"
 
 DEFAULT_GATEWAY_NAME = "Xiaomi Aqara Gateway"
 DEFAULT_INTERFACE = "any"
 DEFAULT_DISCOVERY_RETRY = 3
-ZEROCONF_GATEWAY = "lumi-gateway"
 
 
 GATEWAY_CONFIG = vol.Schema(
@@ -125,7 +127,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="not_xiaomi_aqara")
 
-        unique_id = f"aqara-gateway-{mac_address}"
+        unique_id = mac_address
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
@@ -149,7 +151,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if mac_address is not None:
                 # set unique_id
-                unique_id = f"aqara-gateway-{mac_address}"
+                unique_id = mac_address
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 

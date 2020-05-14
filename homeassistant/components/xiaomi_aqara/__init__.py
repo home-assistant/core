@@ -1,4 +1,5 @@
 """Support for Xiaomi Gateways."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -22,7 +23,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .config_flow import (
+from .const import (
     CONF_DISCOVERY_RETRY,
     CONF_INTERFACE,
     CONF_KEY,
@@ -135,14 +136,15 @@ async def async_setup_entry(
         hass.data[DOMAIN] = {}
 
     # Connect to Xiaomi Aqara Gateway
-    xiaomi_gateway = XiaomiGateway(
+    xiaomi_gateway = await hass.async_add_executor_job(
+        XiaomiGateway,
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         entry.data[CONF_SID],
         entry.data[CONF_KEY],
         entry.data[CONF_DISCOVERY_RETRY],
         entry.data[CONF_INTERFACE],
-        proto=entry.data[CONF_PROTOCOL],
+        entry.data[CONF_PROTOCOL],
     )
     hass.data[DOMAIN][entry.entry_id] = xiaomi_gateway
 
@@ -157,8 +159,9 @@ async def async_setup_entry(
         # register stop callback to shutdown listining for local pushes
         def stop_xiaomi(event):
             """Stop Xiaomi Socket."""
-            _LOGGER.info("Shutting down Xiaomi Gateway")
-            hass.data[DOMAIN]["Listener"].stop_listen()
+            if hass.data[DOMAIN].get("Listener") is not None:
+                _LOGGER.info("Shutting down Xiaomi Gateway Listener")
+                hass.data[DOMAIN]["Listener"].stop_listen()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
 
@@ -184,6 +187,30 @@ async def async_setup_entry(
         )
 
     return True
+
+
+async def async_unload_entry(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in GATEWAY_PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    if len(hass.data[DOMAIN]) == 1:
+        # only the listener is left, Stop Xiaomi Socket
+        _LOGGER.info("Shutting down Xiaomi Gateway Listener")
+        hass.data[DOMAIN]["Listener"].stop_listen()
+        hass.data[DOMAIN].pop("Listener")
+
+    return unload_ok
 
 
 class XiaomiDevice(Entity):
