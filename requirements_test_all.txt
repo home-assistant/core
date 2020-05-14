@@ -141,7 +141,7 @@ async-upnp-client==0.14.13
 av==7.0.1
 
 # homeassistant.components.axis
-axis==25
+axis==26
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -312,7 +312,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200513.0
+home-assistant-frontend==20200514.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
