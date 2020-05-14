@@ -84,12 +84,11 @@ class AsuswrtRXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Download Speed"
     _unit = DATA_RATE_MEGABITS_PER_SECOND
-    _icon = _DOWNLOAD_ICON
 
     @property
     def icon(self):
         """Return the icon."""
-        return self._icon
+        return DOWNLOAD_ICON
 
     @property
     def unit_of_measurement(self):
@@ -108,6 +107,7 @@ class AsuswrtTXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Upload Speed"
     _unit = DATA_RATE_MEGABITS_PER_SECOND
+
     @property
     def icon(self):
         """Return the icon."""
@@ -130,12 +130,11 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Download"
     _unit = DATA_GIGABYTES
-    _icon = _DOWNLOAD_ICON
 
     @property
     def icon(self):
         """Return the icon."""
-        return self._icon
+        return DOWNLOAD_ICON
 
     @property
     def unit_of_measurement(self):
@@ -154,12 +153,11 @@ class AsuswrtTotalTXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Upload"
     _unit = DATA_GIGABYTES
-    _icon = _UPLOAD_ICON
 
     @property
     def icon(self):
         """Return the icon."""
-        return self._icon
+        return UPLOAD_ICON
 
     @property
     def unit_of_measurement(self):
