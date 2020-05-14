@@ -8,6 +8,8 @@
         }
       }
     },
-    "abort": { "already_configured": "PoolSense Config Error" }
+    "abort": { 
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
   }
 }
