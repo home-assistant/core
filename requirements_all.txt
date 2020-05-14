@@ -155,9 +155,6 @@ aioambient==1.1.1
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.5
 
-# homeassistant.components.automatic
-aioautomatic==0.6.5
-
 # homeassistant.components.aws
 aiobotocore==0.11.1
 
@@ -2197,7 +2194,7 @@ wled==0.3.0
 # homeassistant.components.wunderlist
 wunderpy2==0.1.6
 
-# homeassistant.components.zigbee
+# homeassistant.components.xbee
 xbee-helper==0.0.7
 
 # homeassistant.components.xbox_live
