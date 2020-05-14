@@ -27,7 +27,7 @@ async def test_form(hass):
             result["flow_id"],
             {
                 "name": "My AfterShip Packages",
-                "api_key": "188bdc54-30c0-407b-90fb-e6c303d7922e"
+                "api_key": "188bdc54-30c0-407b-90fb-e6c303d7922e",
             },
         )
 
@@ -36,7 +36,7 @@ async def test_form(hass):
     assert result2["data"] == {
         "name": "My AfterShip Packages",
         "api_key": "188bdc54-30c0-407b-90fb-e6c303d7922e",
-        "unique_id": "aftership_188bdc54"
+        "unique_id": "aftership_188bdc54",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -57,7 +57,7 @@ async def test_form_invalid_auth(hass):
             result["flow_id"],
             {
                 "name": "My AfterShip Packages",
-                "api_key": "188bdc54-30c0-407b-90fb-e6c303d7922e"
+                "api_key": "188bdc54-30c0-407b-90fb-e6c303d7922e",
             },
         )
 
@@ -79,7 +79,7 @@ async def test_form_cannot_connect(hass):
             result["flow_id"],
             {
                 "name": "My AfterShip Packages",
-                "api_key": "188bdc54-30c0-407b-90fb-e6c303d7922e"
+                "api_key": "188bdc54-30c0-407b-90fb-e6c303d7922e",
             },
         )
 
