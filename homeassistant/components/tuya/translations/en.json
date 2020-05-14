@@ -1,21 +1,22 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Configured Tuya credential are incorrect.",
-            "conn_error": "Connection to Tuya failed.",
-            "single_instance_allowed": "Only a single configuration of Tuya is allowed."
+            "already_in_progress": "Tuya configuration is already in progress.",
+            "auth_failed": "Invalid authentication",
+            "conn_error": "Failed to connect",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "auth_failed": "Provided credential are incorrect."
+            "auth_failed": "Invalid authentication"
         },
         "flow_title": "Tuya configuration",
         "step": {
             "user": {
                 "data": {
                     "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
-                    "password": "Your password to log in to Tuya",
+                    "password": "Password",
                     "platform": "The app where your account register",
-                    "username": "Your username to log in to Tuya"
+                    "username": "Username"
                 },
                 "description": "Enter your Tuya credential.",
                 "title": "Tuya"

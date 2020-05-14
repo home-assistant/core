@@ -13,9 +13,6 @@
                 "description": "Chcete nastavit UPnP/IGD?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
-            },
             "user": {
                 "data": {
                     "enable_port_mapping": "Povolit mapov\u00e1n\u00ed port\u016f pro Home Assistant",

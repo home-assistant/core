@@ -23,17 +23,17 @@
                 "title": "Parowanie zako\u0144czone"
             },
             "pairing_complete_import": {
-                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant'em.\n\nTw\u00f3j token dost\u0119powy to '**{access_token}**'.",
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant'em.\n\nToken dost\u0119pu to '**{access_token}**'.",
                 "title": "Parowanie zako\u0144czone"
             },
             "user": {
                 "data": {
-                    "access_token": "Token dost\u0119pu",
+                    "access_token": "[%key_id:common::config_flow::data::access_token%]",
                     "device_class": "Typ urz\u0105dzenia",
                     "host": "<Host/IP>:<Port>",
                     "name": "Nazwa"
                 },
-                "description": "Token dost\u0119powy potrzebny jest tylko dla telewizor\u00f3w. Je\u015bli konfigurujesz telewizor i nie masz jeszcze tokenu dost\u0119powego, pozostaw go pusty aby przej\u015b\u0107 przez proces parowania.",
+                "description": "Token dost\u0119pu potrzebny jest tylko dla telewizor\u00f3w. Je\u015bli konfigurujesz telewizor i nie masz jeszcze tokenu dost\u0119pu, pozostaw go pusty, aby przej\u015b\u0107 przez proces parowania.",
                 "title": "Konfiguracja klienta Vizio SmartCast"
             }
         }

@@ -10,11 +10,23 @@
             "unknown": "Non riuscito per motivo sconosciuto"
         },
         "error": {
-            "faulty_credentials": "Autorizzazione non riuscita",
-            "no_servers": "Nessun server collegato all'account",
-            "not_found": "Server Plex non trovato"
+            "faulty_credentials": "Autorizzazione non riuscita, verificare il Token",
+            "host_or_token": "Si deve fornire almeno un Host o un Token",
+            "no_servers": "Nessun server collegato all'account Plex",
+            "not_found": "Server Plex non trovato",
+            "ssl_error": "Problema con il certificato SSL"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Host (opzionale se si \u00e8 fornito un Token)",
+                    "port": "Porta",
+                    "ssl": "Utilizzare SSL",
+                    "token": "Token (opzionale)",
+                    "verify_ssl": "Verificare il certificato SSL"
+                },
+                "title": "Configurazione manuale Plex"
+            },
             "select_server": {
                 "data": {
                     "server": "Server"
@@ -25,6 +37,16 @@
             "start_website_auth": {
                 "description": "Continuare ad autorizzare su plex.tv.",
                 "title": "Collegare il server Plex"
+            },
+            "user": {
+                "description": "Continuare su [plex.tv](https://plex.tv) per collegare un server Plex.",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Metodo di impostazione"
+                },
+                "title": "Plex Media Server"
             }
         }
     },
@@ -33,6 +55,7 @@
             "plex_mp_settings": {
                 "data": {
                     "ignore_new_shared_users": "Ignora nuovi utenti gestiti/condivisi",
+                    "ignore_plex_web_clients": "Ignora i client Web Plex",
                     "monitored_users": "Utenti monitorati",
                     "use_episode_art": "Usa la grafica dell'episodio"
                 },

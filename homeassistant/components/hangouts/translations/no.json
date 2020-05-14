@@ -5,7 +5,7 @@
             "unknown": "Ukjent feil oppstod."
         },
         "error": {
-            "invalid_2fa": "Ugyldig tofaktorautentisering, vennligst pr\u00f8v igjen.",
+            "invalid_2fa": "Ugyldig totrinnsbekreftelse, vennligst pr\u00f8v igjen.",
             "invalid_2fa_method": "Ugyldig 2FA-metode (Bekreft p\u00e5 telefon).",
             "invalid_login": "Ugyldig innlogging, vennligst pr\u00f8v igjen."
         },
@@ -15,11 +15,11 @@
                     "2fa": "2FA Pin"
                 },
                 "description": "Tom",
-                "title": "Tofaktorautentisering"
+                "title": "Totrinnsbekreftelse"
             },
             "user": {
                 "data": {
-                    "authorization_code": "Autorisasjonskode (kreves for manuell godkjenning)",
+                    "authorization_code": "Godkjenningskode (kreves for manuell godkjenning)",
                     "email": "E-postadresse",
                     "password": "Passord"
                 },

@@ -11,10 +11,22 @@
         },
         "error": {
             "faulty_credentials": "Ha fallat l'autoritzaci\u00f3",
+            "host_or_token": "Has de proporcionar almenys o un amfitri\u00f3 (host) o un token",
             "no_servers": "No hi ha servidors enlla\u00e7ats amb el compte",
-            "not_found": "No s'ha trobat el servidor Plex"
+            "not_found": "No s'ha trobat el servidor Plex",
+            "ssl_error": "Problema amb el certificat SSL"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Amfitri\u00f3 (opcional si es proporciona un token)",
+                    "port": "Port",
+                    "ssl": "Utilitza SSL",
+                    "token": "Token (opcional)",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "title": "Configuraci\u00f3 manual de Plex"
+            },
             "select_server": {
                 "data": {
                     "server": "Servidor"
@@ -25,6 +37,16 @@
             "start_website_auth": {
                 "description": "Continua l'autoritzaci\u00f3 a plex.tv.",
                 "title": "Connexi\u00f3 amb el servidor Plex"
+            },
+            "user": {
+                "description": "V\u00e9s a [plex.tv](https://plex.tv) per enlla\u00e7ar un servidor Plex.",
+                "title": "Servidor Multim\u00e8dia Plex"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "M\u00e8tode de configuraci\u00f3"
+                },
+                "title": "Servidor Multim\u00e8dia Plex"
             }
         }
     },
@@ -33,6 +55,7 @@
             "plex_mp_settings": {
                 "data": {
                     "ignore_new_shared_users": "Ignora els nous usuaris gestionats/compartits",
+                    "ignore_plex_web_clients": "Ignora els clients de Plex Web",
                     "monitored_users": "Usuaris monitoritzats",
                     "use_episode_art": "Utilitza imatges de l'episodi"
                 },

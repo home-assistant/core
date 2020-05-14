@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
         },
         "error": {
-            "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "unknown": "Niespodziewany b\u0142\u0105d"
+            "invalid_auth": "[%key_id:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
         },
         "step": {
             "2fa": {
@@ -16,8 +16,8 @@
             },
             "user": {
                 "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
                 },
                 "title": "Zaloguj si\u0119 do konta Ring"
             }
