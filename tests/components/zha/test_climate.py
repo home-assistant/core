@@ -26,6 +26,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
+    PRESET_NONE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
 )
@@ -511,3 +512,102 @@ async def test_set_hvac_mode(hass, device_climate, hvac_mode, sys_mode):
     assert thrm_cluster.write_attributes.call_args[0][0] == {
         "system_mode": Thermostat.SystemMode.Off
     }
+
+
+async def test_preset_setting(hass, device_climate_sinope):
+    """Test preset setting."""
+
+    entity_id = await find_entity_id(DOMAIN, device_climate_sinope, hass)
+    thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    # unsuccessful occupancy change
+    thrm_cluster.write_attributes.return_value = [
+        zcl_f.WriteAttributesResponse.deserialize(b"\x01\x00\x00")[0]
+    ]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+    assert thrm_cluster.write_attributes.call_count == 1
+    assert thrm_cluster.write_attributes.call_args[0][0] == {"set_occupancy": 0}
+
+    # successful occupancy change
+    thrm_cluster.write_attributes.reset_mock()
+    thrm_cluster.write_attributes.return_value = [
+        zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]
+    ]
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+    assert thrm_cluster.write_attributes.call_count == 1
+    assert thrm_cluster.write_attributes.call_args[0][0] == {"set_occupancy": 0}
+
+    # unsuccessful occupancy change
+    thrm_cluster.write_attributes.reset_mock()
+    thrm_cluster.write_attributes.return_value = [
+        zcl_f.WriteAttributesResponse.deserialize(b"\x01\x01\x01")[0]
+    ]
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+    assert thrm_cluster.write_attributes.call_count == 1
+    assert thrm_cluster.write_attributes.call_args[0][0] == {"set_occupancy": 1}
+
+    # successful occupancy change
+    thrm_cluster.write_attributes.reset_mock()
+    thrm_cluster.write_attributes.return_value = [
+        zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]
+    ]
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+    assert thrm_cluster.write_attributes.call_count == 1
+    assert thrm_cluster.write_attributes.call_args[0][0] == {"set_occupancy": 1}
+
+
+async def test_preset_setting_invalid(hass, device_climate_sinope):
+    """Test invalid preset setting."""
+
+    entity_id = await find_entity_id(DOMAIN, device_climate_sinope, hass)
+    thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "invalid_preset"},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+    assert thrm_cluster.write_attributes.call_count == 0
