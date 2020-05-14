@@ -29,7 +29,9 @@ async def async_setup_entry(hass, config, async_add_entities):
 
     platform = entity_platform.current_platform.get()
 
-    platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
+    platform.async_register_entity_service(
+        SERVICE_TRIGGER, SERVICE_TRIGGER_SCHEMA, "trigger_camera"
+    )
 
 
 class BlinkCamera(Camera):
