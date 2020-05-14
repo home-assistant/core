@@ -2,10 +2,25 @@
 from copy import deepcopy
 
 import axis as axislib
+from axis.event_stream import OPERATION_INITIALIZED
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import axis
+from homeassistant.components.axis.const import (
+    CONF_CAMERA,
+    CONF_EVENTS,
+    CONF_MODEL,
+    DOMAIN as AXIS_DOMAIN,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 
 from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
@@ -14,16 +29,16 @@ MAC = "00408C12345"
 MODEL = "model"
 NAME = "name"
 
-ENTRY_OPTIONS = {axis.CONF_CAMERA: True, axis.CONF_EVENTS: True}
+ENTRY_OPTIONS = {CONF_CAMERA: True, CONF_EVENTS: True}
 
 ENTRY_CONFIG = {
-    axis.CONF_HOST: "1.2.3.4",
-    axis.CONF_USERNAME: "username",
-    axis.CONF_PASSWORD: "password",
-    axis.CONF_PORT: 80,
-    axis.CONF_MAC: MAC,
-    axis.device.CONF_MODEL: MODEL,
-    axis.device.CONF_NAME: NAME,
+    CONF_HOST: "1.2.3.4",
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+    CONF_PORT: 80,
+    CONF_MAC: MAC,
+    CONF_MODEL: MODEL,
+    CONF_NAME: NAME,
 }
 
 DEFAULT_BRAND = """root.Brand.Brand=AXIS
@@ -67,7 +82,7 @@ async def setup_axis_integration(
 ):
     """Create the Axis device."""
     config_entry = MockConfigEntry(
-        domain=axis.DOMAIN,
+        domain=AXIS_DOMAIN,
         data=deepcopy(config),
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
@@ -95,7 +110,7 @@ async def setup_axis_integration(
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    return hass.data[axis.DOMAIN].get(config[axis.CONF_MAC])
+    return hass.data[AXIS_DOMAIN].get(config[CONF_MAC])
 
 
 async def test_device_setup(hass):
@@ -113,10 +128,10 @@ async def test_device_setup(hass):
     assert forward_entry_setup.mock_calls[1][1] == (entry, "binary_sensor")
     assert forward_entry_setup.mock_calls[2][1] == (entry, "switch")
 
-    assert device.host == ENTRY_CONFIG[axis.CONF_HOST]
-    assert device.model == ENTRY_CONFIG[axis.device.CONF_MODEL]
-    assert device.name == ENTRY_CONFIG[axis.device.CONF_NAME]
-    assert device.serial == ENTRY_CONFIG[axis.CONF_MAC]
+    assert device.host == ENTRY_CONFIG[CONF_HOST]
+    assert device.model == ENTRY_CONFIG[CONF_MODEL]
+    assert device.name == ENTRY_CONFIG[CONF_NAME]
+    assert device.serial == ENTRY_CONFIG[CONF_MAC]
 
 
 async def test_update_address(hass):
@@ -125,7 +140,7 @@ async def test_update_address(hass):
     assert device.api.config.host == "1.2.3.4"
 
     await hass.config_entries.flow.async_init(
-        axis.DOMAIN,
+        AXIS_DOMAIN,
         data={
             "host": "2.3.4.5",
             "port": 80,
@@ -157,14 +172,14 @@ async def test_device_not_accessible(hass):
     """Failed setup schedules a retry of setup."""
     with patch.object(axis.device, "get_device", side_effect=axis.errors.CannotConnect):
         await setup_axis_integration(hass)
-    assert hass.data[axis.DOMAIN] == {}
+    assert hass.data[AXIS_DOMAIN] == {}
 
 
 async def test_device_unknown_error(hass):
     """Unknown errors are handled."""
     with patch.object(axis.device, "get_device", side_effect=Exception):
         await setup_axis_integration(hass)
-    assert hass.data[axis.DOMAIN] == {}
+    assert hass.data[AXIS_DOMAIN] == {}
 
 
 async def test_new_event_sends_signal(hass):
@@ -175,7 +190,7 @@ async def test_new_event_sends_signal(hass):
     axis_device = axis.device.AxisNetworkDevice(hass, entry)
 
     with patch.object(axis.device, "async_dispatcher_send") as mock_dispatch_send:
-        axis_device.async_event_callback(action="add", event_id="event")
+        axis_device.async_event_callback(action=OPERATION_INITIALIZED, event_id="event")
         await hass.async_block_till_done()
 
     assert len(mock_dispatch_send.mock_calls) == 1
