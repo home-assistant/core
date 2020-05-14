@@ -2,14 +2,14 @@
 import json
 
 from homeassistant import config_entries
-from homeassistant.components.zwave_mqtt.const import DOMAIN
+from homeassistant.components.ozw.const import DOMAIN
 
 from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
-async def setup_zwave(hass, entry=None, fixture=None):
-    """Set up Z-Wave and load a dump."""
+async def setup_ozw(hass, entry=None, fixture=None):
+    """Set up OZW and load a dump."""
     hass.config.components.add("mqtt")
 
     if entry is None:
@@ -26,7 +26,7 @@ async def setup_zwave(hass, entry=None, fixture=None):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert "zwave_mqtt" in hass.config.components
+    assert "ozw" in hass.config.components
     assert len(mock_subscribe.mock_calls) == 1
     receive_message = mock_subscribe.mock_calls[0][1][2]
 

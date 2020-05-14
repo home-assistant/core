@@ -3,15 +3,15 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DOMAIN as BINARY_SENSOR_DOMAIN,
 )
-from homeassistant.components.zwave_mqtt.const import DOMAIN
+from homeassistant.components.ozw.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS
 
-from .common import setup_zwave
+from .common import setup_ozw
 
 
 async def test_binary_sensor(hass, generic_data, binary_sensor_msg):
     """Test setting up config entry."""
-    receive_msg = await setup_zwave(hass, fixture=generic_data)
+    receive_msg = await setup_ozw(hass, fixture=generic_data)
 
     # Test Legacy sensor (disabled by default)
     registry = await hass.helpers.entity_registry.async_get_registry()
@@ -57,7 +57,7 @@ async def test_sensor_enabled(hass, generic_data, binary_sensor_alt_msg):
     )
     assert entry.disabled is False
 
-    receive_msg = await setup_zwave(hass, fixture=generic_data)
+    receive_msg = await setup_ozw(hass, fixture=generic_data)
     receive_msg(binary_sensor_alt_msg)
     await hass.async_block_till_done()
 

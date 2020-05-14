@@ -106,6 +106,7 @@ FLOWS = [
     "opentherm_gw",
     "openuv",
     "owntracks",
+    "ozw",
     "panasonic_viera",
     "pi_hole",
     "plaato",
@@ -164,6 +165,5 @@ FLOWS = [
     "xiaomi_miio",
     "zerproc",
     "zha",
-    "zwave",
-    "zwave_mqtt"
+    "zwave"
 ]
