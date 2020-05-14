@@ -1,7 +1,7 @@
 """Tests for the IPP integration."""
 import os
 
-from pyipp import IPPError, IPPParseError
+from pyipp import IPPError, IPPConnectionUpgradeRequired
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.const import (
@@ -73,6 +73,8 @@ def mock_connection(
     port: int = PORT,
     ssl: bool = False,
     base_path: str = BASE_PATH,
+    conn_error: bool = False,
+    conn_upgrade: bool = False,
     ipp_error: bool = False,
     parse_error: bool = False,
     version_not_supported: bool = False,
@@ -85,17 +87,26 @@ def mock_connection(
         aioclient_mock.post(f"{ipp_url}{base_path}", exc=IPPError)
         return
 
-    if parse_error:
-        aioclient_mock.post(f"{ipp_url}{base_path}", exc=IPPParseError)
+    if conn_error:
+        aioclient_mock.post(f"{ipp_url}{base_path}", exc=aiohttp.ClientError)
+        return
+
+    if conn_upgrade_error:
+        aioclient_mock.post(f"{ipp_url}{base_path}", exc=IPPConnectionUpgradeRequired)
         return
 
     fixture = "ipp/get-printer-attributes.bin"
     if version_not_supported:
         fixture = "ipp/get-printer-attributes-error-0x0503.bin"
-        
+    
+    if parse_error:
+        content = "BAD"
+    else:
+        content = load_fixture_binary(fixture)
+
     aioclient_mock.post(
         f"{ipp_url}{base_path}",
-        content=load_fixture_binary(fixture),
+        content=content,
         headers={"Content-Type": "application/ipp"},
     )
 
