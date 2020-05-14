@@ -6,14 +6,13 @@ from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceC
 from arcam.fmj.state import State
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
@@ -25,15 +24,16 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.core import callback
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
+    DOMAIN,
+    DOMAIN_DATA_ENTRIES,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
-    DOMAIN_DATA_ENTRIES,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,7 +130,7 @@ class ArcamFmj(MediaPlayerDevice):
         @callback
         def _data(host):
             if host == self._state.client.host:
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
         @callback
         def _started(host):
@@ -142,14 +142,22 @@ class ArcamFmj(MediaPlayerDevice):
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_CLIENT_DATA, _data)
-
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_CLIENT_STARTED, _started
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_CLIENT_DATA, _data
+            )
         )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_CLIENT_STOPPED, _stopped
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_CLIENT_STARTED, _started
+            )
+        )
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_CLIENT_STOPPED, _stopped
+            )
         )
 
     async def async_update(self):
@@ -160,7 +168,7 @@ class ArcamFmj(MediaPlayerDevice):
     async def async_mute_volume(self, mute):
         """Send mute command."""
         await self._state.set_mute(mute)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_select_source(self, source):
         """Select a specific source."""
@@ -171,7 +179,7 @@ class ArcamFmj(MediaPlayerDevice):
             return
 
         await self._state.set_source(value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_select_sound_mode(self, sound_mode):
         """Select a specific source."""
@@ -184,22 +192,22 @@ class ArcamFmj(MediaPlayerDevice):
             _LOGGER.error("Unsupported sound_mode %s", sound_mode)
             return
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         await self._state.set_volume(round(volume * 99.0))
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_volume_up(self):
         """Turn volume up for media player."""
         await self._state.inc_volume()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_volume_down(self):
         """Turn volume up for media player."""
         await self._state.dec_volume()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_on(self):
         """Turn the media player on."""

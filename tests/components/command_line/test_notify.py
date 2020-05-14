@@ -4,8 +4,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component
 import homeassistant.components.notify as notify
+from homeassistant.setup import setup_component
+
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -56,7 +57,7 @@ class TestCommandLine(unittest.TestCase):
                         "notify": {
                             "name": "test",
                             "platform": "command_line",
-                            "command": "echo $(cat) > {}".format(filename),
+                            "command": f"echo $(cat) > {filename}",
                         }
                     },
                 )
@@ -68,7 +69,7 @@ class TestCommandLine(unittest.TestCase):
 
             with open(filename) as fil:
                 # the echo command adds a line break
-                assert fil.read() == "{}\n".format(message)
+                assert fil.read() == f"{message}\n"
 
     @patch("homeassistant.components.command_line.notify._LOGGER.error")
     def test_error_for_none_zero_exit_code(self, mock_error):
@@ -90,4 +91,4 @@ class TestCommandLine(unittest.TestCase):
         assert self.hass.services.call(
             "notify", "test", {"message": "error"}, blocking=True
         )
-        assert 1 == mock_error.call_count
+        assert mock_error.call_count == 1

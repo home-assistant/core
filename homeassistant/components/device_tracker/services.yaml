@@ -5,59 +5,22 @@ see:
   fields:
     mac:
       description: MAC address of device
-      example: 'FF:FF:FF:FF:FF:FF'
+      example: "FF:FF:FF:FF:FF:FF"
     dev_id:
       description: Id of device (find id in known_devices.yaml).
-      example: 'phonedave'
+      example: "phonedave"
     host_name:
       description: Hostname of device
-      example: 'Dave'
+      example: "Dave"
     location_name:
       description: Name of location where device is located (not_home is away).
-      example: 'home'
+      example: "home"
     gps:
       description: GPS coordinates where device is located (latitude, longitude).
-      example: '[51.509802, -0.086692]'
+      example: "[51.509802, -0.086692]"
     gps_accuracy:
       description: Accuracy of GPS coordinates.
-      example: '80'
+      example: "80"
     battery:
       description: Battery level of device.
-      example: '100'
-
-icloud_lost_iphone:
-  description: Service to play the lost iphone sound on an iDevice.
-  fields:
-    account_name:
-      description: Name of the account in the config that will be used to look for the device. This is optional, if it isn't given it will use all accounts.
-      example: 'bart'
-    device_name:
-      description: Name of the device that will play the sound. This is optional, if it isn't given it will play on all devices for the given account.
-      example: 'iphonebart'
-icloud_set_interval:
-  description: Service to set the interval of an iDevice.
-  fields:
-    account_name:
-      description: Name of the account in the config that will be used to look for the device. This is optional, if it isn't given it will use all accounts.
-      example: 'bart'
-    device_name:
-      description: Name of the device that will get a new interval. This is optional, if it isn't given it will change the interval for all devices for the given account.
-      example: 'iphonebart'
-    interval:
-      description: The interval (in minutes) that the iDevice will have until the according device_tracker entity changes from zone or until this service is used again. This is optional, if it isn't given the interval of the device will revert back to the original interval based on the current state.
-      example: 1
-icloud_update:
-  description: Service to ask for an update of an iDevice.
-  fields:
-    account_name:
-      description: Name of the account in the config that will be used to look for the device. This is optional, if it isn't given it will use all accounts.
-      example: 'bart'
-    device_name:
-      description: Name of the device that will be updated. This is optional, if it isn't given it will update all devices for the given account.
-      example: 'iphonebart'
-icloud_reset_account:
-  description: Service to restart an iCloud account. Helpful when not all devices are found after initializing or when you add a new device.
-  fields:
-    account_name:
-      description: Name of the account in the config that will be restarted. This is optional, if it isn't given it will restart all accounts.
-      example: 'bart'
+      example: "100"

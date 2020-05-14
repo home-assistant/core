@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Any, Dict
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
@@ -77,7 +77,7 @@ class GeniusBattery(GeniusDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of the sensor."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def state(self) -> str:

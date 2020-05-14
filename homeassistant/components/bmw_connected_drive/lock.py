@@ -4,10 +4,12 @@ import logging
 from bimmer_connected.state import LockState
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_LOCKED, STATE_UNLOCKED
 
 from . import DOMAIN as BMW_DOMAIN
+from .const import ATTRIBUTION
 
+DOOR_LOCK_STATE = "door_lock_state"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -36,6 +38,9 @@ class BMWLock(LockDevice):
         self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
         self._sensor_name = sensor_name
         self._state = None
+        self.door_lock_state_available = (
+            DOOR_LOCK_STATE in self._vehicle.available_attributes
+        )
 
     @property
     def should_poll(self):
@@ -59,10 +64,14 @@ class BMWLock(LockDevice):
     def device_state_attributes(self):
         """Return the state attributes of the lock."""
         vehicle_state = self._vehicle.state
-        return {
+        result = {
             "car": self._vehicle.name,
-            "door_lock_state": vehicle_state.door_lock_state.value,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
+        if self.door_lock_state_available:
+            result["door_lock_state"] = vehicle_state.door_lock_state.value
+            result["last_update_reason"] = vehicle_state.last_update_reason
+        return result
 
     @property
     def is_locked(self):
@@ -89,7 +98,6 @@ class BMWLock(LockDevice):
 
     def update(self):
         """Update state of the lock."""
-
         _LOGGER.debug("%s: updating data for %s", self._vehicle.name, self._attribute)
         vehicle_state = self._vehicle.state
 

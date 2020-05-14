@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} is thuis",
+            "is_not_home": "{entity_name} is niet thuis"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "Thuis",
+            "not_home": "Afwezig"
+        }
+    },
+    "title": "Apparaat tracker"
+}

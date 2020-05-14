@@ -1,18 +1,22 @@
 """Support for Wireless Sensor Tags."""
 import logging
 
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
+from wirelesstagpy import NotificationConfig as NC, WirelessTags, WirelessTagsException
+
+from homeassistant import util
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_VOLTAGE,
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_USERNAME,
+    UNIT_PERCENTAGE,
+    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant import util
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +100,6 @@ class WirelessTagPlatform:
             configs.extend(bi_sensor.event.build_notifications(bi_url, mac))
 
         update_url = self.update_callback_url
-        from wirelesstagpy import NotificationConfig as NC
 
         update_config = NC.make_config_for_update_event(update_url, mac)
 
@@ -128,7 +131,7 @@ class WirelessTagPlatform:
     def local_base_url(self):
         """Define base url of hass in local network."""
         if self._local_base_url is None:
-            self._local_base_url = "http://{}".format(util.get_local_ip())
+            self._local_base_url = f"http://{util.get_local_ip()}"
 
             port = self.hass.config.api.port
             if port is not None:
@@ -188,8 +191,6 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     try:
-        from wirelesstagpy import WirelessTags, WirelessTagsException
-
         wirelesstags = WirelessTags(username=username, password=password)
 
         platform = WirelessTagPlatform(hass, wirelesstags)
@@ -198,7 +199,7 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />" "Please restart hass after fixing this." "".format(ex),
+            f"Error: {ex}<br />Please restart hass after fixing this.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -280,8 +281,8 @@ class WirelessTagBaseSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),
-            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}V",
+            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}{VOLT}",
             ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}dBm",
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
-            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}%",
+            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{UNIT_PERCENTAGE}",
         }

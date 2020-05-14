@@ -1,26 +1,26 @@
 """The tests for the Alert component."""
-import unittest
-
 # pylint: disable=protected-access
 from copy import deepcopy
+import unittest
 
 import homeassistant.components.alert as alert
-import homeassistant.components.notify as notify
 from homeassistant.components.alert import DOMAIN
+import homeassistant.components.notify as notify
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
-    STATE_IDLE,
     CONF_NAME,
     CONF_STATE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
+    STATE_IDLE,
     STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 NAME = "alert_test"
@@ -60,7 +60,7 @@ TEST_NOACK = [
     None,
     None,
 ]
-ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
+ENTITY_ID = f"{alert.DOMAIN}.{NAME}"
 
 
 def turn_on(hass, entity_id):
@@ -234,15 +234,15 @@ class TestAlert(unittest.TestCase):
         self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, config)
-        assert 0 == len(events)
+        assert len(events) == 0
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
         self.hass.states.set("sensor.test", STATE_OFF)
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
     def test_notification(self):
         """Test notifications."""
@@ -256,15 +256,15 @@ class TestAlert(unittest.TestCase):
         self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        assert 0 == len(events)
+        assert len(events) == 0
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
         self.hass.states.set("sensor.test", STATE_OFF)
         self.hass.block_till_done()
-        assert 2 == len(events)
+        assert len(events) == 2
 
     def test_sending_non_templated_notification(self):
         """Test notifications."""
@@ -350,11 +350,11 @@ class TestAlert(unittest.TestCase):
         self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, config)
-        assert 0 == len(events)
+        assert len(events) == 0
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        assert 0 == len(events)
+        assert len(events) == 0
 
     def test_noack(self):
         """Test no ack feature."""

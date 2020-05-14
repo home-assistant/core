@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan kun konfigurere \u00e9n Netatmo-konto.",
+            "authorize_url_timeout": "Timeout ved generering af godkendelses-url.",
+            "missing_configuration": "Netatmo-komponenten er ikke konfigureret. F\u00f8lg venligst dokumentationen."
+        },
+        "create_entry": {
+            "default": "Korrekt godkendt med Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e6lg godkendelsesmetode"
+            }
+        }
+    }
+}

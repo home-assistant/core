@@ -1,8 +1,9 @@
 """Support for IKEA Tradfri sensors."""
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
+
 from .base_class import TradfriBaseDevice
-from .const import KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
+from .const import CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -19,6 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not dev.has_light_control
         and not dev.has_socket_control
         and not dev.has_blind_control
+        and not dev.has_signal_repeater_control
     )
     if devices:
         async_add_entities(TradfriSensor(device, api, gateway_id) for device in devices)
@@ -45,4 +47,4 @@ class TradfriSensor(TradfriBaseDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return "%"
+        return UNIT_PERCENTAGE

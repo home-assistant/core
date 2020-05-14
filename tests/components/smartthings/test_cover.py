@@ -18,17 +18,11 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.components.smartthings import cover
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
-
-
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await cover.async_setup_platform(None, None, None)
 
 
 async def test_entity_and_device_attributes(hass, device_factory):
@@ -114,7 +108,10 @@ async def test_set_cover_position(hass, device_factory):
     await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 50}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_POSITION: 50, "entity_id": "all"},
+        blocking=True,
     )
 
     state = hass.states.get("cover.shade")
@@ -136,7 +133,10 @@ async def test_set_cover_position_unsupported(hass, device_factory):
     await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 50}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {"entity_id": "all", ATTR_POSITION: 50},
+        blocking=True,
     )
 
     state = hass.states.get("cover.shade")

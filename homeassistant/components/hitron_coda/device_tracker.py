@@ -1,17 +1,23 @@
 """Support for the Hitron CODA-4582U, provided by Rogers."""
-import logging
 from collections import namedtuple
+import logging
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_TYPE
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_TYPE,
+    CONF_USERNAME,
+    HTTP_OK,
+)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +89,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
-        if res.status_code != 200:
+        if res.status_code != HTTP_OK:
             _LOGGER.error("Connection failed with http code %s", res.status_code)
             return False
         try:
@@ -109,7 +115,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
-        if res.status_code != 200:
+        if res.status_code != HTTP_OK:
             _LOGGER.error("Connection failed with http code %s", res.status_code)
             return False
         try:

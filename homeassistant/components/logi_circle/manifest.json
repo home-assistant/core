@@ -4,6 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/logi_circle",
   "requirements": ["logi_circle==0.2.2"],
-  "dependencies": ["ffmpeg"],
+  "dependencies": ["ffmpeg", "http"],
   "codeowners": ["@evanjd"]
 }

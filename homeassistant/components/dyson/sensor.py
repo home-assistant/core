@@ -1,15 +1,19 @@
 """Support for Dyson Pure Cool Link Sensors."""
 import logging
 
-from homeassistant.const import STATE_OFF, TEMP_CELSIUS
+from libpurecool.dyson_pure_cool import DysonPureCool
+from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+
+from homeassistant.const import STATE_OFF, TEMP_CELSIUS, TIME_HOURS, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
+
 from . import DYSON_DEVICES
 
 SENSOR_UNITS = {
     "air_quality": None,
     "dust": None,
-    "filter_life": "hours",
-    "humidity": "%",
+    "filter_life": TIME_HOURS,
+    "humidity": UNIT_PERCENTAGE,
 }
 
 SENSOR_ICONS = {
@@ -27,8 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson Sensors."""
-    from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
-    from libpurecool.dyson_pure_cool import DysonPureCool
 
     if discovery_info is None:
         return
@@ -41,9 +43,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device_ids = [device.unique_id for device in hass.data[DYSON_SENSOR_DEVICES]]
     for device in hass.data[DYSON_DEVICES]:
         if isinstance(device, DysonPureCool):
-            if "{}-{}".format(device.serial, "temperature") not in device_ids:
+            if f"{device.serial}-temperature" not in device_ids:
                 devices.append(DysonTemperatureSensor(device, unit))
-            if "{}-{}".format(device.serial, "humidity") not in device_ids:
+            if f"{device.serial}-humidity" not in device_ids:
                 devices.append(DysonHumiditySensor(device))
         elif isinstance(device, DysonPureCoolLink):
             devices.append(DysonFilterLifeSensor(device))
@@ -171,8 +173,8 @@ class DysonTemperatureSensor(DysonSensor):
             if temperature_kelvin == 0:
                 return STATE_OFF
             if self._unit == TEMP_CELSIUS:
-                return float("{0:.1f}".format(temperature_kelvin - 273.15))
-            return float("{0:.1f}".format(temperature_kelvin * 9 / 5 - 459.67))
+                return float(f"{(temperature_kelvin - 273.15):.1f}")
+            return float(f"{(temperature_kelvin * 9 / 5 - 459.67):.1f}")
         return None
 
     @property
@@ -193,5 +195,5 @@ class DysonAirQualitySensor(DysonSensor):
     def state(self):
         """Return Air Quality value."""
         if self._device.environmental_state:
-            return self._device.environmental_state.volatil_organic_compounds
+            return int(self._device.environmental_state.volatil_organic_compounds)
         return None

@@ -12,8 +12,9 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_PLATFORM, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.json import JSONEncoder
+
 from .const import (
     CONF_CONTEXT,
     CONF_CREDENTIAL_NAME,

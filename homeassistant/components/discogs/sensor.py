@@ -66,7 +66,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Discogs sensor."""
-
     token = config[CONF_TOKEN]
     name = config[CONF_NAME]
 
@@ -84,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(DiscogsSensor(discogs_data, name, sensor_type))
 
     add_entities(sensors, True)
@@ -104,7 +103,7 @@ class DiscogsSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, SENSORS[self._type]["name"])
+        return f"{self._name} {SENSORS[self._type]['name']}"
 
     @property
     def state(self):
@@ -136,10 +135,7 @@ class DiscogsSensor(Entity):
         return {
             "cat_no": self._attrs["labels"][0]["catno"],
             "cover_image": self._attrs["cover_image"],
-            "format": "{} ({})".format(
-                self._attrs["formats"][0]["name"],
-                self._attrs["formats"][0]["descriptions"][0],
-            ),
+            "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
             "label": self._attrs["labels"][0]["name"],
             "released": self._attrs["year"],
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -154,9 +150,7 @@ class DiscogsSensor(Entity):
         random_record = collection.releases[random_index].release
 
         self._attrs = random_record.data
-        return "{} - {}".format(
-            random_record.data["artists"][0]["name"], random_record.data["title"]
-        )
+        return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
 
     def update(self):
         """Set state to the amount of records in user's collection."""

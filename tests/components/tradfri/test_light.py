@@ -1,7 +1,7 @@
 """Tradfri lights platform tests."""
 
 from copy import deepcopy
-from unittest.mock import Mock, MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from pytradfri.device import Device
@@ -11,7 +11,6 @@ from pytradfri.device.light_control import LightControl
 from homeassistant.components import tradfri
 
 from tests.common import MockConfigEntry
-
 
 DEFAULT_TEST_FEATURES = {
     "can_set_dimmer": False,
@@ -156,13 +155,17 @@ def mock_light(test_features={}, test_state={}, n=0):
     """Mock a tradfri light."""
     mock_light_data = Mock(**test_state)
 
+    dev_info_mock = MagicMock()
+    dev_info_mock.manufacturer = "manufacturer"
+    dev_info_mock.model_number = "model"
+    dev_info_mock.firmware_version = "1.2.3"
     mock_light = Mock(
-        id="mock-light-id-{}".format(n),
+        id=f"mock-light-id-{n}",
         reachable=True,
         observe=Mock(),
-        device_info=MagicMock(),
+        device_info=dev_info_mock,
     )
-    mock_light.name = "tradfri_light_{}".format(n)
+    mock_light.name = f"tradfri_light_{n}"
 
     # Set supported features for the light.
     features = {**DEFAULT_TEST_FEATURES, **test_features}
@@ -259,7 +262,7 @@ async def test_turn_on(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.tradfri_light_{}".format(id), **test_data},
+        {"entity_id": f"light.tradfri_light_{id}", **test_data},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -287,7 +290,7 @@ async def test_turn_on(
     await hass.async_block_till_done()
 
     # Check that the state is correct.
-    states = hass.states.get("light.tradfri_light_{}".format(id))
+    states = hass.states.get(f"light.tradfri_light_{id}")
     for k, v in expected_result.items():
         if k == "state":
             assert states.state == v
@@ -343,7 +346,7 @@ def mock_group(test_state={}, n=0):
     state = {**default_state, **test_state}
 
     mock_group = Mock(member_ids=[], observe=Mock(), **state)
-    mock_group.name = "tradfri_group_{}".format(n)
+    mock_group.name = f"tradfri_group_{n}"
     return mock_group
 
 

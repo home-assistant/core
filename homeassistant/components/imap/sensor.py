@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SERVER = "server"
 CONF_FOLDER = "folder"
 CONF_SEARCH = "search"
+CONF_CHARSET = "charset"
 
 DEFAULT_PORT = 993
 
@@ -35,6 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_SERVER): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_CHARSET, default="utf-8"): cv.string,
         vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): cv.string,
     }
@@ -49,6 +51,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         config.get(CONF_PASSWORD),
         config.get(CONF_SERVER),
         config.get(CONF_PORT),
+        config.get(CONF_CHARSET),
         config.get(CONF_FOLDER),
         config.get(CONF_SEARCH),
     )
@@ -62,13 +65,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ImapSensor(Entity):
     """Representation of an IMAP sensor."""
 
-    def __init__(self, name, user, password, server, port, folder, search):
+    def __init__(self, name, user, password, server, port, charset, folder, search):
         """Initialize the sensor."""
         self._name = name or user
         self._user = user
         self._password = password
         self._server = server
         self._port = port
+        self._charset = charset
         self._folder = folder
         self._email_count = None
         self._search = search
@@ -126,7 +130,7 @@ class ImapSensor(Entity):
             try:
                 if await self.connection():
                     await self.refresh_email_count()
-                    await self.async_update_ha_state()
+                    self.async_write_ha_state()
 
                     idle = await self._connection.idle_start()
                     await self._connection.wait_server_push()
@@ -134,7 +138,7 @@ class ImapSensor(Entity):
                     with async_timeout.timeout(10):
                         await idle
                 else:
-                    await self.async_update_ha_state()
+                    self.async_write_ha_state()
             except (AioImapException, asyncio.TimeoutError):
                 self.disconnected()
 
@@ -150,13 +154,15 @@ class ImapSensor(Entity):
         """Check the number of found emails."""
         if self._connection:
             await self._connection.noop()
-            result, lines = await self._connection.search(self._search)
+            result, lines = await self._connection.search(
+                self._search, charset=self._charset
+            )
 
             if result == "OK":
                 self._email_count = len(lines[0].split())
             else:
                 _LOGGER.error(
-                    "Can't parse IMAP server response to search " "'%s':  %s / %s",
+                    "Can't parse IMAP server response to search '%s':  %s / %s",
                     self._search,
                     result,
                     lines[0],

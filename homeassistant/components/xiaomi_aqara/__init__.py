@@ -1,9 +1,9 @@
 """Support for Xiaomi Gateways."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
-
 import voluptuous as vol
+from xiaomi_gateway import XiaomiGatewayDiscovery
 
 from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (
@@ -135,8 +135,6 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_XIAOMI_GW, xiaomi_gw_discovered)
 
-    from xiaomi_gateway import XiaomiGatewayDiscovery
-
     xiaomi = hass.data[PY_XIAOMI_GATEWAY] = XiaomiGatewayDiscovery(
         hass.add_job, gateways, interface
     )
@@ -244,8 +242,8 @@ class XiaomiDevice(Entity):
         self.parse_voltage(device["data"])
 
         if hasattr(self, "_data_key") and self._data_key:  # pylint: disable=no-member
-            self._unique_id = "{}{}".format(
-                self._data_key, self._sid  # pylint: disable=no-member
+            self._unique_id = (
+                f"{self._data_key}{self._sid}"  # pylint: disable=no-member
             )
         else:
             self._unique_id = f"{self._type}{self._sid}"
@@ -288,7 +286,7 @@ class XiaomiDevice(Entity):
         """Set state to UNAVAILABLE."""
         self._remove_unavailability_tracker = None
         self._is_available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _async_track_unavailable(self):
@@ -310,7 +308,7 @@ class XiaomiDevice(Entity):
         is_data = self.parse_data(data, raw_data)
         is_voltage = self.parse_voltage(data)
         if is_data or is_voltage or was_unavailable:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     def parse_voltage(self, data):
         """Parse battery level data sent by gateway."""

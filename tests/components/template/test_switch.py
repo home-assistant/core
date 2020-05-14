@@ -1,9 +1,9 @@
 """The tests for the  Template switch platform."""
-from homeassistant.core import callback
 from homeassistant import setup
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import callback
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.switch import common
 
 

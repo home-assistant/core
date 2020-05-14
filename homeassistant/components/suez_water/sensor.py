@@ -2,10 +2,9 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
-from pysuez.client import PySuezError
 from pysuez import SuezClient
+from pysuez.client import PySuezError
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, VOLUME_LITERS

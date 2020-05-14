@@ -1,23 +1,22 @@
 """Support for Google - Calendar Event Devices."""
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 import logging
 import os
-import yaml
 
+from googleapiclient import discovery as google_discovery
 import httplib2
 from oauth2client.client import (
-    OAuth2WebServerFlow,
-    OAuth2DeviceCodeError,
     FlowExchangeError,
+    OAuth2DeviceCodeError,
+    OAuth2WebServerFlow,
 )
 from oauth2client.file import Storage
-from googleapiclient import discovery as google_discovery
-
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
+import yaml
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, dt
@@ -145,17 +144,17 @@ def do_authentication(hass, hass_config, config):
         dev_flow = oauth.step1_get_device_and_user_codes()
     except OAuth2DeviceCodeError as err:
         hass.components.persistent_notification.create(
-            "Error: {}<br />You will need to restart hass after fixing." "".format(err),
+            f"Error: {err}<br />You will need to restart hass after fixing." "",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
         return False
 
     hass.components.persistent_notification.create(
-        "In order to authorize Home-Assistant to view your calendars "
-        'you must visit: <a href="{}" target="_blank">{}</a> and enter '
-        "code: {}".format(
-            dev_flow.verification_url, dev_flow.verification_url, dev_flow.user_code
+        (
+            f"In order to authorize Home-Assistant to view your calendars "
+            f'you must visit: <a href="{dev_flow.verification_url}" target="_blank">{dev_flow.verification_url}</a> and enter '
+            f"code: {dev_flow.user_code}"
         ),
         title=NOTIFICATION_TITLE,
         notification_id=NOTIFICATION_ID,
@@ -183,8 +182,10 @@ def do_authentication(hass, hass_config, config):
         do_setup(hass, hass_config, config)
         listener()
         hass.components.persistent_notification.create(
-            "We are all setup now. Check {} for calendars that have "
-            "been found".format(YAML_DEVICES),
+            (
+                f"We are all setup now. Check {YAML_DEVICES} for calendars that have "
+                f"been found"
+            ),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -220,7 +221,7 @@ def setup(hass, config):
 
 def check_correct_scopes(token_file):
     """Check for the correct scopes in file."""
-    tokenfile = open(token_file, "r").read()
+    tokenfile = open(token_file).read()
     if "readonly" in tokenfile:
         _LOGGER.warning("Please re-authenticate with Google.")
         return False
@@ -233,7 +234,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
     def _found_calendar(call):
         """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
         calendar = get_calendar_info(hass, call.data)
-        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID], None) is not None:
+        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID]) is not None:
             return
 
         hass.data[DATA_INDEX].update({calendar[CONF_CAL_ID]: calendar})

@@ -5,7 +5,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_CURRENCY, POWER_WATT, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import CONF_CURRENCY, ENERGY_KILO_WATT_HOUR, POWER_WATT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -63,9 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         if variable[CONF_SENSOR_TYPE] == CONF_CURRENT_VALUES:
-            url_string = "{}getCurrentValuesSummary?token={}".format(
-                _RESOURCE, app_token
-            )
+            url_string = f"{_RESOURCE}getCurrentValuesSummary?token={app_token}"
             response = requests.get(url_string, timeout=10)
             for sensor in response.json():
                 sid = sensor["sid"]
@@ -136,9 +134,7 @@ class EfergySensor(Entity):
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["reading"]
             elif self.type == "amount":
-                url_string = "{}getEnergy?token={}&offset={}&period={}".format(
-                    _RESOURCE, self.app_token, self.utc_offset, self.period
-                )
+                url_string = f"{_RESOURCE}getEnergy?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["sum"]
             elif self.type == "budget":
@@ -146,14 +142,12 @@ class EfergySensor(Entity):
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["status"]
             elif self.type == "cost":
-                url_string = "{}getCost?token={}&offset={}&period={}".format(
-                    _RESOURCE, self.app_token, self.utc_offset, self.period
-                )
+                url_string = f"{_RESOURCE}getCost?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["sum"]
             elif self.type == "current_values":
-                url_string = "{}getCurrentValuesSummary?token={}".format(
-                    _RESOURCE, self.app_token
+                url_string = (
+                    f"{_RESOURCE}getCurrentValuesSummary?token={self.app_token}"
                 )
                 response = requests.get(url_string, timeout=10)
                 for sensor in response.json():

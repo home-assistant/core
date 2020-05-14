@@ -1,15 +1,15 @@
 """Sensor for SigFox devices."""
-import logging
 import datetime
 import json
+import logging
 from urllib.parse import urljoin
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, HTTP_OK
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class SigfoxAPI:
         """Check API credentials are valid."""
         url = urljoin(API_URL, "devicetypes")
         response = requests.get(url, auth=self._auth, timeout=10)
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             if response.status_code == 401:
                 _LOGGER.error("Invalid credentials for Sigfox API")
             else:
@@ -100,7 +100,7 @@ class SigfoxAPI:
 
     @property
     def auth(self):
-        """Return the API authentification."""
+        """Return the API authentication."""
         return self._auth
 
     @property

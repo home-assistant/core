@@ -4,10 +4,9 @@ import subprocess
 
 import voluptuous as vol
 
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import CONF_COMMAND, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +33,10 @@ class CommandLineNotificationService(BaseNotificationService):
         """Send a message to a command line."""
         try:
             proc = subprocess.Popen(
-                self.command, universal_newlines=True, stdin=subprocess.PIPE, shell=True
+                self.command,
+                universal_newlines=True,
+                stdin=subprocess.PIPE,
+                shell=True,  # nosec # shell by design
             )
             proc.communicate(input=message)
             if proc.returncode != 0:

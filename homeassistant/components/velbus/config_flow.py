@@ -3,7 +3,7 @@ import velbus
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -13,9 +13,9 @@ from .const import DOMAIN
 @callback
 def velbus_entries(hass: HomeAssistant):
     """Return connections for Velbus domain."""
-    return set(
+    return {
         (entry.data[CONF_PORT]) for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -49,7 +49,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     async def async_step_user(self, user_input=None):
-        """Step when user intializes a integration."""
+        """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])

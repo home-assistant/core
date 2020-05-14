@@ -22,7 +22,7 @@ from homeassistant.components.toon.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockDependency
+from tests.common import MockConfigEntry
 
 FIXTURE_APP = {
     DOMAIN: {CONF_CLIENT_ID: "1234567890abcdef", CONF_CLIENT_SECRET: "1234567890abcdef"}
@@ -40,9 +40,9 @@ FIXTURE_DISPLAY = {CONF_DISPLAY: "display1"}
 @pytest.fixture
 def mock_toonapilib():
     """Mock toonapilib."""
-    with MockDependency("toonapilib") as mock_toonapilib_:
-        mock_toonapilib_.Toon().display_names = [FIXTURE_DISPLAY[CONF_DISPLAY]]
-        yield mock_toonapilib_
+    with patch("homeassistant.components.toon.config_flow.Toon") as Toon:
+        Toon().display_names = [FIXTURE_DISPLAY[CONF_DISPLAY]]
+        yield Toon
 
 
 async def setup_component(hass):
@@ -90,7 +90,7 @@ async def test_toon_abort(hass, mock_toonapilib, side_effect, reason):
     flow = config_flow.ToonFlowHandler()
     flow.hass = hass
 
-    mock_toonapilib.Toon.side_effect = side_effect
+    mock_toonapilib.side_effect = side_effect
 
     result = await flow.async_step_authenticate(user_input=FIXTURE_CREDENTIALS)
 
@@ -100,7 +100,7 @@ async def test_toon_abort(hass, mock_toonapilib, side_effect, reason):
 
 async def test_invalid_credentials(hass, mock_toonapilib):
     """Test we show authentication form on Toon auth error."""
-    mock_toonapilib.Toon.side_effect = InvalidCredentials
+    mock_toonapilib.side_effect = InvalidCredentials
 
     await setup_component(hass)
 
@@ -140,7 +140,7 @@ async def test_no_displays(hass, mock_toonapilib):
     """Test abort when there are no displays."""
     await setup_component(hass)
 
-    mock_toonapilib.Toon().display_names = []
+    mock_toonapilib().display_names = []
 
     flow = config_flow.ToonFlowHandler()
     flow.hass = hass
@@ -177,7 +177,7 @@ async def test_abort_last_minute_fail(hass, mock_toonapilib):
     flow.hass = hass
     await flow.async_step_user(user_input=FIXTURE_CREDENTIALS)
 
-    mock_toonapilib.Toon.side_effect = Exception
+    mock_toonapilib.side_effect = Exception
 
     result = await flow.async_step_display(user_input=FIXTURE_DISPLAY)
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

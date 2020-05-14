@@ -3,17 +3,18 @@
 from datetime import datetime, timedelta
 import unittest
 from unittest.mock import patch
+
 import pytest
 import pytz
 
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.setup import setup_component
 from homeassistant.components.history_stats.sensor import HistoryStatsSensor
+from homeassistant.const import STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.helpers.template import Template
+from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import init_recorder_component, get_test_home_assistant
+from tests.common import get_test_home_assistant, init_recorder_component
 
 
 class TestHistoryStatsSensor(unittest.TestCase):
@@ -49,7 +50,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         assert state.state == STATE_UNKNOWN
 
     @patch(
-        "homeassistant.helpers.template.TemplateEnvironment." "is_safe_callable",
+        "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
         return_value=True,
     )
     def test_period_parsing(self, mock):
@@ -57,7 +58,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         now = datetime(2019, 1, 1, 23, 30, 0, tzinfo=pytz.utc)
         with patch("homeassistant.util.dt.now", return_value=now):
             today = Template(
-                "{{ now().replace(hour=0).replace(minute=0)" ".replace(second=0) }}",
+                "{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}",
                 self.hass,
             )
             duration = timedelta(hours=2, minutes=1)
@@ -136,7 +137,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         assert sensor4._type == "ratio"
 
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch("homeassistant.components.history.get_state", return_value=None):

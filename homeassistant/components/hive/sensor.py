@@ -2,7 +2,7 @@
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN, DATA_HIVE, HiveEntity
+from . import DATA_HIVE, DOMAIN, HiveEntity
 
 FRIENDLY_NAMES = {
     "Hub_OnlineStatus": "Hive Hub Status",

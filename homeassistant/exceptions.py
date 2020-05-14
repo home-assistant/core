@@ -1,11 +1,10 @@
 """The exceptions used by Home Assistant."""
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Tuple
+
 import jinja2
 
-# pylint: disable=using-constant-test
 if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from .core import Context  # noqa
+    from .core import Context  # noqa: F401 pylint: disable=unused-import
 
 
 class HomeAssistantError(Exception):

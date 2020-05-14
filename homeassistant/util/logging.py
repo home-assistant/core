@@ -80,28 +80,28 @@ class AsyncHandler:
 
     def _process(self) -> None:
         """Process log in a thread."""
-        while True:
-            record = asyncio.run_coroutine_threadsafe(
-                self._queue.get(), self.loop
-            ).result()
+        try:
+            while True:
+                record = asyncio.run_coroutine_threadsafe(
+                    self._queue.get(), self.loop
+                ).result()
 
-            if record is None:
-                self.handler.close()
-                return
+                if record is None:
+                    self.handler.close()
+                    return
 
-            self.handler.emit(record)
+                self.handler.emit(record)
+        except asyncio.CancelledError:
+            self.handler.close()
 
     def createLock(self) -> None:
         """Ignore lock stuff."""
-        pass
 
     def acquire(self) -> None:
         """Ignore lock stuff."""
-        pass
 
     def release(self) -> None:
         """Ignore lock stuff."""
-        pass
 
     @property
     def level(self) -> int:

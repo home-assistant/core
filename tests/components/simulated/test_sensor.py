@@ -1,27 +1,27 @@
 """The tests for the simulated sensor."""
 import unittest
 
-from tests.common import get_test_home_assistant
-
 from homeassistant.components.simulated.sensor import (
     CONF_AMP,
     CONF_FWHM,
     CONF_MEAN,
     CONF_PERIOD,
     CONF_PHASE,
+    CONF_RELATIVE_TO_EPOCH,
     CONF_SEED,
     CONF_UNIT,
-    CONF_RELATIVE_TO_EPOCH,
     DEFAULT_AMP,
     DEFAULT_FWHM,
     DEFAULT_MEAN,
     DEFAULT_NAME,
     DEFAULT_PHASE,
-    DEFAULT_SEED,
     DEFAULT_RELATIVE_TO_EPOCH,
+    DEFAULT_SEED,
 )
 from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.setup import setup_component
+
+from tests.common import get_test_home_assistant
 
 
 class TestSimulatedSensor(unittest.TestCase):

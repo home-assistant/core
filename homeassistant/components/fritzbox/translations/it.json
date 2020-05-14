@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questo AVM FRITZ!Box \u00e8 gi\u00e0 configurato.",
+            "already_in_progress": "La configurazione di AVM FRITZ!Box \u00e8 gi\u00e0 in corso.",
+            "not_found": "Nessun AVM FRITZ!Box supportato trovato sulla rete."
+        },
+        "error": {
+            "auth_failed": "Nome utente e/o password non sono corretti."
+        },
+        "flow_title": "AVM FRITZ!Box: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Vuoi impostare {name}?",
+                "title": "AVM FRITZ!Box"
+            },
+            "user": {
+                "data": {
+                    "host": "Host o indirizzo IP",
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci le informazioni del tuo AVM FRITZ!Box .",
+                "title": "AVM FRITZ!Box"
+            }
+        }
+    }
+}

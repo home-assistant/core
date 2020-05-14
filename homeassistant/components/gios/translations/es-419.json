@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nombre de la integraci\u00f3n"
+                }
+            }
+        }
+    }
+}

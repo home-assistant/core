@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     DOMAIN,
@@ -14,36 +13,38 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE,
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
-    SUPPORT_STOP,
-    SUPPORT_STATE,
     SUPPORT_START,
+    SUPPORT_STATE,
+    SUPPORT_STOP,
     StateVacuumDevice,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_RETURNING,
-    STATE_ERROR,
 )
 from homeassistant.const import (
+    CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
-    CONF_ENTITY_ID,
-    MATCH_ALL,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
+from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,45 +110,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         fan_speed_list = device_config[CONF_FAN_SPEED_LIST]
 
-        entity_ids = set()
-        manual_entity_ids = device_config.get(CONF_ENTITY_ID)
-        invalid_templates = []
+        templates = {
+            CONF_VALUE_TEMPLATE: state_template,
+            CONF_BATTERY_LEVEL_TEMPLATE: battery_level_template,
+            CONF_FAN_SPEED_TEMPLATE: fan_speed_template,
+            CONF_AVAILABILITY_TEMPLATE: availability_template,
+        }
 
-        for tpl_name, template in (
-            (CONF_VALUE_TEMPLATE, state_template),
-            (CONF_BATTERY_LEVEL_TEMPLATE, battery_level_template),
-            (CONF_FAN_SPEED_TEMPLATE, fan_speed_template),
-            (CONF_AVAILABILITY_TEMPLATE, availability_template),
-        ):
-            if template is None:
-                continue
-            template.hass = hass
-
-            if manual_entity_ids is not None:
-                continue
-
-            template_entity_ids = template.extract_entities()
-            if template_entity_ids == MATCH_ALL:
-                entity_ids = MATCH_ALL
-                # Cut off _template from name
-                invalid_templates.append(tpl_name[:-9])
-            elif entity_ids != MATCH_ALL:
-                entity_ids |= set(template_entity_ids)
-
-        if invalid_templates:
-            _LOGGER.warning(
-                "Template vacuum %s has no entity ids configured to track nor"
-                " were we able to extract the entities to track from the %s "
-                "template(s). This entity will only be able to be updated "
-                "manually.",
-                device,
-                ", ".join(invalid_templates),
-            )
-
-        if manual_entity_ids is not None:
-            entity_ids = manual_entity_ids
-        elif entity_ids != MATCH_ALL:
-            entity_ids = list(entity_ids)
+        initialise_templates(hass, templates)
+        entity_ids = extract_entities(device, "vacuum", None, templates)
 
         vacuums.append(
             TemplateVacuum(

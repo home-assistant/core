@@ -1,14 +1,15 @@
 """Webhooks for Home Assistant."""
 import logging
+import secrets
 
-from aiohttp.web import Response, Request
+from aiohttp.web import Request, Response
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.loader import bind_hass
-from homeassistant.auth.util import generate_secret
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import HTTP_OK
+from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ def async_unregister(hass, webhook_id):
 @callback
 def async_generate_id():
     """Generate a webhook_id."""
-    return generate_secret(entropy=32)
+    return secrets.token_hex(32)
 
 
 @callback
@@ -71,16 +72,16 @@ async def async_handle_webhook(hass, webhook_id, request):
     # Always respond successfully to not give away if a hook exists or not.
     if webhook is None:
         _LOGGER.warning("Received message for unregistered webhook %s", webhook_id)
-        return Response(status=200)
+        return Response(status=HTTP_OK)
 
     try:
         response = await webhook["handler"](hass, webhook_id, request)
         if response is None:
-            response = Response(status=200)
+            response = Response(status=HTTP_OK)
         return response
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error processing webhook %s", webhook_id)
-        return Response(status=200)
+        return Response(status=HTTP_OK)
 
 
 async def async_setup(hass, config):

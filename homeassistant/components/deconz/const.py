@@ -1,12 +1,12 @@
 """Constants for the deCONZ component."""
 import logging
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "deconz"
 
-CONF_BRIDGEID = "bridgeid"
-CONF_UUID = "uuid"
+CONF_BRIDGE_ID = "bridgeid"
+CONF_GROUP_ID_BASE = "group_id_base"
 
 DEFAULT_PORT = 80
 DEFAULT_ALLOW_CLIP_SENSOR = False
@@ -26,17 +26,10 @@ SUPPORTED_PLATFORMS = [
     "switch",
 ]
 
-NEW_GROUP = "group"
-NEW_LIGHT = "light"
-NEW_SCENE = "scene"
-NEW_SENSOR = "sensor"
-
-NEW_DEVICE = {
-    NEW_GROUP: "deconz_new_group_{}",
-    NEW_LIGHT: "deconz_new_light_{}",
-    NEW_SCENE: "deconz_new_scene_{}",
-    NEW_SENSOR: "deconz_new_sensor_{}",
-}
+NEW_GROUP = "groups"
+NEW_LIGHT = "lights"
+NEW_SCENE = "scenes"
+NEW_SENSOR = "sensors"
 
 ATTR_DARK = "dark"
 ATTR_OFFSET = "offset"
@@ -47,6 +40,8 @@ DAMPERS = ["Level controllable output"]
 WINDOW_COVERS = ["Window covering device"]
 COVER_TYPES = DAMPERS + WINDOW_COVERS
 
-POWER_PLUGS = ["On/Off plug-in unit", "Smart plug"]
+POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
 SIRENS = ["Warning device"]
 SWITCH_TYPES = POWER_PLUGS + SIRENS
+
+CONF_GESTURE = "gesture"

@@ -18,8 +18,8 @@ from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import slugify
-from .const import DOMAIN
 
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +114,7 @@ def _is_mobile_beacon(data, mobile_beacons):
 def _device_name(data):
     """Return name of device tracker."""
     if ATTR_BEACON_ID in data:
-        return "{}_{}".format(BEACON_DEV_PREFIX, data["name"])
+        return f"{BEACON_DEV_PREFIX}_{data['name']}"
     return data["device"]
 
 

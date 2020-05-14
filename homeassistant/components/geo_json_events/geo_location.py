@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from geojson_client.generic_feed import GenericFeedManager
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
@@ -13,6 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -24,12 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EXTERNAL_ID = "external_id"
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
-SIGNAL_DELETE_ENTITY = "geo_json_events_delete_{}"
-SIGNAL_UPDATE_ENTITY = "geo_json_events_update_{}"
 
 SOURCE = "geo_json_events"
 
@@ -71,7 +69,6 @@ class GeoJsonFeedEntityManager:
         self, hass, add_entities, scan_interval, coordinates, url, radius_in_km
     ):
         """Initialize the GeoJSON Feed Manager."""
-        from geojson_client.generic_feed import GenericFeedManager
 
         self._hass = hass
         self._feed_manager = GenericFeedManager(
@@ -108,11 +105,11 @@ class GeoJsonFeedEntityManager:
 
     def _update_entity(self, external_id):
         """Update entity."""
-        dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        dispatcher_send(self._hass, f"geo_json_events_update_{external_id}")
 
     def _remove_entity(self, external_id):
         """Remove entity."""
-        dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        dispatcher_send(self._hass, f"geo_json_events_delete_{external_id}")
 
 
 class GeoJsonLocationEvent(GeolocationEvent):
@@ -133,12 +130,12 @@ class GeoJsonLocationEvent(GeolocationEvent):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
-            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            f"geo_json_events_delete_{self._external_id}",
             self._delete_callback,
         )
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
-            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            f"geo_json_events_update_{self._external_id}",
             self._update_callback,
         )
 
@@ -201,7 +198,7 @@ class GeoJsonLocationEvent(GeolocationEvent):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
+        return LENGTH_KILOMETERS
 
     @property
     def device_state_attributes(self):

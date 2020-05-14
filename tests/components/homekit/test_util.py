@@ -10,6 +10,8 @@ from homeassistant.components.homekit.const import (
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     HOMEKIT_NOTIFY_ID,
+    HOMEKIT_PAIRING_QR,
+    HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -20,6 +22,7 @@ from homeassistant.components.homekit.const import (
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping,
     SpeedRange,
+    cleanup_name_for_homekit,
     convert_to_float,
     density_to_air_quality,
     dismiss_setup_message,
@@ -170,6 +173,19 @@ def test_convert_to_float():
     assert convert_to_float(None) is None
 
 
+def test_cleanup_name_for_homekit():
+    """Ensure name sanitize works as expected."""
+
+    assert cleanup_name_for_homekit("abc") == "abc"
+    assert cleanup_name_for_homekit("a b c") == "a b c"
+    assert cleanup_name_for_homekit("ab_c") == "ab c"
+    assert (
+        cleanup_name_for_homekit('ab!@#$%^&*()-=":.,><?//\\ frog')
+        == "ab--#---&----- -.,------ frog"
+    )
+    assert cleanup_name_for_homekit("の日本_語文字セット") == "の日本 語文字セット"
+
+
 def test_temperature_to_homekit():
     """Test temperature conversion from HA to HomeKit."""
     assert temperature_to_homekit(20.46, TEMP_CELSIUS) == 20.5
@@ -199,8 +215,10 @@ async def test_show_setup_msg(hass):
 
     call_create_notification = async_mock_service(hass, DOMAIN, "create")
 
-    await hass.async_add_job(show_setup_message, hass, pincode)
+    await hass.async_add_executor_job(show_setup_message, hass, pincode, "X-HM://0")
     await hass.async_block_till_done()
+    assert hass.data[HOMEKIT_PAIRING_QR_SECRET]
+    assert hass.data[HOMEKIT_PAIRING_QR]
 
     assert call_create_notification
     assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == HOMEKIT_NOTIFY_ID
@@ -211,7 +229,7 @@ async def test_dismiss_setup_msg(hass):
     """Test dismiss setup message."""
     call_dismiss_notification = async_mock_service(hass, DOMAIN, "dismiss")
 
-    await hass.async_add_job(dismiss_setup_message, hass)
+    await hass.async_add_executor_job(dismiss_setup_message, hass)
     await hass.async_block_till_done()
 
     assert call_dismiss_notification

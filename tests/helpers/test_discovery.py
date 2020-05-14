@@ -9,12 +9,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 
 from tests.common import (
-    get_test_home_assistant,
     MockModule,
     MockPlatform,
+    get_test_home_assistant,
     mock_coro,
-    mock_integration,
     mock_entity_platform,
+    mock_integration,
 )
 
 

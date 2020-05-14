@@ -1,35 +1,36 @@
 """Support for Enigma2 media players."""
 import logging
 
+from openwebif.api import CreateDevice
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_TVSHOW,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_ON,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
-    SUPPORT_STOP,
-    SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_STEP,
-    MEDIA_TYPE_TVSHOW,
 )
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_SSL,
+    CONF_USERNAME,
     STATE_OFF,
     STATE_ON,
     STATE_PLAYING,
-    CONF_PORT,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,14 +102,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config[CONF_DEEP_STANDBY] = DEFAULT_DEEP_STANDBY
         config[CONF_SOURCE_BOUQUET] = DEFAULT_SOURCE_BOUQUET
 
-    from openwebif.api import CreateDevice
-
     device = CreateDevice(
         host=config[CONF_HOST],
         port=config.get(CONF_PORT),
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
-        is_https=config.get(CONF_SSL),
+        is_https=config[CONF_SSL],
         prefer_picon=config.get(CONF_USE_CHANNEL_ICON),
         mac_address=config.get(CONF_MAC_ADDRESS),
         turn_off_to_deep=config.get(CONF_DEEP_STANDBY),

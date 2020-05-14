@@ -44,3 +44,15 @@ def test_battery_icon():
             postfix = ""
         assert iconbase + postfix == icon_for_battery_level(level, False)
         assert iconbase + postfix_charging == icon_for_battery_level(level, True)
+
+
+def test_signal_icon():
+    """Test icon generator for signal sensor."""
+    from homeassistant.helpers.icon import icon_for_signal_level
+
+    assert icon_for_signal_level(None) == "mdi:signal-cellular-outline"
+    assert icon_for_signal_level(0) == "mdi:signal-cellular-outline"
+    assert icon_for_signal_level(5) == "mdi:signal-cellular-1"
+    assert icon_for_signal_level(40) == "mdi:signal-cellular-2"
+    assert icon_for_signal_level(80) == "mdi:signal-cellular-3"
+    assert icon_for_signal_level(100) == "mdi:signal-cellular-3"

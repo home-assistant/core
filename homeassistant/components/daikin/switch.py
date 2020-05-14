@@ -16,7 +16,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions the platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -54,7 +53,7 @@ class DaikinZoneSwitch(ToggleEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._api.name, self._api.device.zones[self._zone_id][0])
+        return f"{self._api.name} {self._api.device.zones[self._zone_id][0]}"
 
     @property
     def is_on(self):

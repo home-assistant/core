@@ -13,7 +13,7 @@ from aiohttp.web_exceptions import (
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
@@ -34,8 +34,8 @@ class HomeAssistantView:
     requires_auth = True
     cors_allowed = False
 
-    # pylint: disable=no-self-use
-    def context(self, request):
+    @staticmethod
+    def context(request):
         """Generate a context from a request."""
         user = request.get("hass_user")
         if user is None:
@@ -43,7 +43,8 @@ class HomeAssistantView:
 
         return Context(user_id=user.id)
 
-    def json(self, result, status_code=200, headers=None):
+    @staticmethod
+    def json(result, status_code=HTTP_OK, headers=None):
         """Return a JSON response."""
         try:
             msg = json.dumps(
@@ -61,7 +62,9 @@ class HomeAssistantView:
         response.enable_compression()
         return response
 
-    def json_message(self, message, status_code=200, message_code=None, headers=None):
+    def json_message(
+        self, message, status_code=HTTP_OK, message_code=None, headers=None
+    ):
         """Return a JSON message response."""
         data = {"message": message}
         if message_code is not None:
@@ -131,7 +134,7 @@ def request_handler_factory(view, handler):
             # The method handler returned a ready-made Response, how nice of it
             return result
 
-        status_code = 200
+        status_code = HTTP_OK
 
         if isinstance(result, tuple):
             result, status_code = result
@@ -141,9 +144,9 @@ def request_handler_factory(view, handler):
         elif result is None:
             result = b""
         elif not isinstance(result, bytes):
-            assert False, (
-                "Result should be None, string, bytes or Response. " "Got: {}"
-            ).format(result)
+            assert (
+                False
+            ), f"Result should be None, string, bytes or Response. Got: {result}"
 
         return web.Response(body=result, status=status_code)
 

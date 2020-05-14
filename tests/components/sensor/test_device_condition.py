@@ -1,20 +1,20 @@
 """The test for sensor device automation."""
 import pytest
 
+import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
-from homeassistant.const import STATE_UNKNOWN, CONF_PLATFORM
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
+from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, UNIT_PERCENTAGE
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
-    async_get_device_automation_capabilities,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
 
@@ -33,7 +33,7 @@ def entity_reg(hass):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -97,13 +97,13 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
     expected_capabilities = {
         "extra_fields": [
             {
-                "description": {"suffix": "%"},
+                "description": {"suffix": UNIT_PERCENTAGE},
                 "name": "above",
                 "optional": True,
                 "type": "float",
             },
             {
-                "description": {"suffix": "%"},
+                "description": {"suffix": UNIT_PERCENTAGE},
                 "name": "below",
                 "optional": True,
                 "type": "float",

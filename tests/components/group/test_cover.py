@@ -19,16 +19,16 @@ from homeassistant.const import (
     CONF_ENTITIES,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
-    SERVICE_TOGGLE,
-    SERVICE_TOGGLE_COVER_TILT,
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
-    STATE_OPEN,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
+    STATE_OPEN,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util

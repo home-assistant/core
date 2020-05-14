@@ -1,11 +1,12 @@
 """Test Alexa config."""
 import contextlib
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
-from homeassistant.util.dt import utcnow
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
-from tests.common import mock_coro, async_fire_time_changed
+from homeassistant.util.dt import utcnow
+
+from tests.common import async_fire_time_changed, mock_coro
 
 
 async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
@@ -164,7 +165,18 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
                 "action": "update",
                 "entity_id": "light.kitchen",
                 "changes": ["entity_id"],
+                "old_entity_id": "light.living_room",
             },
+        )
+        await hass.async_block_till_done()
+
+    assert to_update == ["light.kitchen"]
+    assert to_remove == ["light.living_room"]
+
+    with patch_sync_helper() as (to_update, to_remove):
+        hass.bus.async_fire(
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "update", "entity_id": "light.kitchen", "changes": ["icon"]},
         )
         await hass.async_block_till_done()
 

@@ -5,8 +5,8 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components.cover import DOMAIN
 import homeassistant.components.command_line.cover as cmd_rs
+from homeassistant.components.cover import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -44,7 +44,9 @@ def test_query_state_value(rs):
         result = rs._query_state_value("runme")
         assert "foo bar" == result
         assert mock_run.call_count == 1
-        assert mock_run.call_args == mock.call("runme", shell=True)
+        assert mock_run.call_args == mock.call(
+            "runme", shell=True,  # nosec # shell by design
+        )
 
 
 async def test_state_value(hass):
@@ -52,10 +54,10 @@ async def test_state_value(hass):
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "cover_status")
         test_cover = {
-            "command_state": "cat {}".format(path),
-            "command_open": "echo 1 > {}".format(path),
-            "command_close": "echo 1 > {}".format(path),
-            "command_stop": "echo 0 > {}".format(path),
+            "command_state": f"cat {path}",
+            "command_open": f"echo 1 > {path}",
+            "command_close": f"echo 1 > {path}",
+            "command_stop": f"echo 0 > {path}",
             "value_template": "{{ value }}",
         }
         assert (

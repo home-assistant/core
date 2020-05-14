@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host already configured"
+        },
+        "error": {
+            "connection": "Connection error: please check your host, port & ssl",
+            "login": "Login error: please check your username & password",
+            "missing_data": "Missing data: please retry later or an other configuration",
+            "otp_failed": "Two-step authentication failed, retry with a new pass code",
+            "unknown": "Unknown error: please check logs to get more details"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Code"
+                },
+                "title": "Synology DSM: two-step authentication"
+            },
+            "link": {
+                "data": {
+                    "password": "Password",
+                    "port": "Port (Optional)",
+                    "ssl": "Use SSL/TLS to connect to your NAS",
+                    "username": "Username"
+                },
+                "description": "Do you want to setup {name} ({host})?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port (Optional)",
+                    "ssl": "Use SSL/TLS to connect to your NAS",
+                    "username": "Username"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    }
+}

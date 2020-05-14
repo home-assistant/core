@@ -2,6 +2,7 @@
 import logging
 
 import requests
+from starlingbank import StarlingAccount
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -40,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sterling Bank sensor platform."""
-    from starlingbank import StarlingAccount
 
     sensors = []
     for account in config[CONF_ACCOUNTS]:
@@ -75,7 +75,7 @@ class StarlingBalanceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{0} {1}".format(
+        return "{} {}".format(
             self._account_name, self._balance_data_type.replace("_", " ").capitalize()
         )
 

@@ -1,15 +1,14 @@
 """API for persistent storage for the frontend."""
 from functools import wraps
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 DATA_STORAGE = "frontend_storage"
 STORAGE_VERSION_USER_DATA = 1
-STORAGE_KEY_USER_DATA = "frontend.user_data_{}"
 
 
 async def async_setup_frontend_storage(hass):
@@ -31,8 +30,7 @@ def with_store(orig_func):
 
         if store is None:
             store = stores[user_id] = hass.helpers.storage.Store(
-                STORAGE_VERSION_USER_DATA,
-                STORAGE_KEY_USER_DATA.format(connection.user.id),
+                STORAGE_VERSION_USER_DATA, f"frontend.user_data_{connection.user.id}"
             )
 
         if user_id not in data:

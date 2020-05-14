@@ -1,6 +1,8 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 import logging
 
+from pyspcwebgw.const import ZoneInput, ZoneType
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -11,12 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_device_class(zone_type):
-    from pyspcwebgw.const import ZoneType
-
     return {
         ZoneType.ALARM: "motion",
         ZoneType.ENTRY_EXIT: "opening",
         ZoneType.FIRE: "smoke",
+        ZoneType.TECHNICAL: "power",
     }.get(zone_type)
 
 
@@ -43,8 +44,12 @@ class SpcBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_SENSOR.format(self._zone.id), self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_SENSOR.format(self._zone.id),
+                self._update_callback,
+            )
         )
 
     @callback
@@ -60,15 +65,7 @@ class SpcBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Whether the device is switched on."""
-        from pyspcwebgw.const import ZoneInput
-
         return self._zone.input == ZoneInput.OPEN
-
-    @property
-    def hidden(self) -> bool:
-        """Whether the device is hidden by default."""
-        # These type of sensors are probably mainly used for automations
-        return True
 
     @property
     def should_poll(self):

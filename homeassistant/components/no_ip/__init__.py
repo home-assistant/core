@@ -5,11 +5,11 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-from aiohttp.hdrs import USER_AGENT, AUTHORIZATION
+from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_TIMEOUT, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
 
@@ -83,7 +83,7 @@ async def _update_no_ip(hass, session, domain, auth_str, timeout):
     params = {"hostname": domain}
 
     headers = {
-        AUTHORIZATION: "Basic {}".format(auth_str.decode("utf-8")),
+        AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
         USER_AGENT: HA_USER_AGENT,
     }
 

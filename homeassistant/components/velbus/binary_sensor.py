@@ -3,15 +3,10 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from .const import DOMAIN
 from . import VelbusEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way."""
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

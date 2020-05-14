@@ -66,6 +66,7 @@ class DeLijnPublicTransportSensor(Entity):
         self._attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._name = name
         self._state = None
+        self._available = False
 
     async def async_update(self):
         """Get the latest data from the De Lijn API."""
@@ -88,8 +89,15 @@ class DeLijnPublicTransportSensor(Entity):
             self._attributes["due_at_schedule"] = first["due_at_schedule"]
             self._attributes["due_at_realtime"] = first["due_at_realtime"]
             self._attributes["next_passages"] = self.line.passages
+            self._available = True
         except (KeyError, IndexError) as error:
             _LOGGER.debug("Error getting data from De Lijn: %s", error)
+            self._available = False
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def device_class(self):

@@ -2,14 +2,12 @@
 from datetime import timedelta
 import logging
 
+from oru import Meter, MeterError
 import voluptuous as vol
 
-from oru import Meter
-from oru import MeterError
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import ENERGY_KILO_WATT_HOUR
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +50,7 @@ class CurrentEnergyUsageSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return self.meter.meter_id
 
     @property

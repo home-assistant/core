@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "site_exists": "Questo site_id \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "site_exists": "Questo site_id \u00e8 gi\u00e0 configurato"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "La chiave API per questo sito",
+                    "name": "Il nome di questa installazione",
+                    "site_id": "Il sito-id di SolarEdge"
+                },
+                "title": "Definire i parametri API per questa installazione"
+            }
+        }
+    }
+}

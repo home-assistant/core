@@ -6,6 +6,8 @@ from typing import Dict, List
 
 import aiohttp
 import async_timeout
+from smhi import Smhi
+from smhi.smhi_lib import SmhiForecastException
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -49,15 +51,6 @@ RETRY_TIMEOUT = 5 * 60
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up components.
-
-    Can only be called when a user accidentally mentions smhi in the
-    config. In that case it will be ignored.
-    """
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, config_entries
 ) -> bool:
@@ -90,7 +83,6 @@ class SmhiWeather(WeatherEntity):
         session: aiohttp.ClientSession = None,
     ) -> None:
         """Initialize the SMHI weather entity."""
-        from smhi import Smhi
 
         self._name = name
         self._latitude = latitude
@@ -107,7 +99,6 @@ class SmhiWeather(WeatherEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
-        from smhi.smhi_lib import SmhiForecastException
 
         def fail():
             """Postpone updates."""

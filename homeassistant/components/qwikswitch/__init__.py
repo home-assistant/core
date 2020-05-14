@@ -1,6 +1,8 @@
 """Support for Qwikswitch devices."""
 import logging
 
+from pyqwikswitch.async_ import QSUsb
+from pyqwikswitch.qwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, SENSORS, QSType
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
@@ -85,12 +87,14 @@ class QSEntity(Entity):
     @callback
     def update_packet(self, packet):
         """Receive update packet from QSUSB. Match dispather_send signature."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.qsid, self.update_packet
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                self.qsid, self.update_packet
+            )
         )
 
 
@@ -128,8 +132,6 @@ class QSToggleEntity(QSEntity):
 
 async def async_setup(hass, config):
     """Qwiskswitch component setup."""
-    from pyqwikswitch.async_ import QSUsb
-    from pyqwikswitch.qwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, QSType, SENSORS
 
     # Add cmd's to in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
@@ -203,9 +205,7 @@ async def async_setup(hass, config):
         # If button pressed, fire a hass event
         if QS_ID in qspacket:
             if qspacket.get(QS_CMD, "") in cmd_buttons:
-                hass.bus.async_fire(
-                    "qwikswitch.button.{}".format(qspacket[QS_ID]), qspacket
-                )
+                hass.bus.async_fire(f"qwikswitch.button.{qspacket[QS_ID]}", qspacket)
                 return
 
             if qspacket[QS_ID] in sensor_ids:

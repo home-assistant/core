@@ -2,39 +2,40 @@
 import logging
 import threading
 
+from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_STATE,
+    CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
     CONF_TIMEOUT,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    ATTR_ADDRESS,
+    ATTR_HUB,
+    ATTR_UNIT,
+    ATTR_VALUE,
+    CONF_BAUDRATE,
+    CONF_BYTESIZE,
+    CONF_PARITY,
+    CONF_STOPBITS,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN as DOMAIN,
+    SERVICE_WRITE_COIL,
+    SERVICE_WRITE_REGISTER,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ADDRESS = "address"
-ATTR_HUB = "hub"
-ATTR_UNIT = "unit"
-ATTR_VALUE = "value"
-
-CONF_BAUDRATE = "baudrate"
-CONF_BYTESIZE = "bytesize"
-CONF_HUB = "hub"
-CONF_PARITY = "parity"
-CONF_STOPBITS = "stopbits"
-
-DEFAULT_HUB = "default"
-DOMAIN = "modbus"
-
-SERVICE_WRITE_COIL = "write_coil"
-SERVICE_WRITE_REGISTER = "write_register"
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
@@ -57,6 +58,7 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
         vol.Required(CONF_PORT): cv.port,
         vol.Required(CONF_TYPE): vol.Any("tcp", "udp", "rtuovertcp"),
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+        vol.Optional(CONF_DELAY, default=0): cv.positive_int,
     }
 )
 
@@ -86,90 +88,24 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 )
 
 
-def setup_client(client_config):
-    """Set up pymodbus client."""
-    client_type = client_config[CONF_TYPE]
-
-    if client_type == "serial":
-        from pymodbus.client.sync import ModbusSerialClient as ModbusClient
-
-        return ModbusClient(
-            method=client_config[CONF_METHOD],
-            port=client_config[CONF_PORT],
-            baudrate=client_config[CONF_BAUDRATE],
-            stopbits=client_config[CONF_STOPBITS],
-            bytesize=client_config[CONF_BYTESIZE],
-            parity=client_config[CONF_PARITY],
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    if client_type == "rtuovertcp":
-        from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-        from pymodbus.transaction import ModbusRtuFramer
-
-        return ModbusClient(
-            host=client_config[CONF_HOST],
-            port=client_config[CONF_PORT],
-            framer=ModbusRtuFramer,
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    if client_type == "tcp":
-        from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-
-        return ModbusClient(
-            host=client_config[CONF_HOST],
-            port=client_config[CONF_PORT],
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    if client_type == "udp":
-        from pymodbus.client.sync import ModbusUdpClient as ModbusClient
-
-        return ModbusClient(
-            host=client_config[CONF_HOST],
-            port=client_config[CONF_PORT],
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    assert False
-
-
 def setup(hass, config):
     """Set up Modbus component."""
     hass.data[DOMAIN] = hub_collect = {}
 
     for client_config in config[DOMAIN]:
-        client = setup_client(client_config)
-        name = client_config[CONF_NAME]
-        hub_collect[name] = ModbusHub(client, name)
-        _LOGGER.debug("Setting up hub: %s", client_config)
+        hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config)
 
     def stop_modbus(event):
         """Stop Modbus service."""
         for client in hub_collect.values():
             client.close()
 
-    def start_modbus(event):
-        """Start Modbus service."""
-        for client in hub_collect.values():
-            client.connect()
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
-
-        # Register services for modbus
-        hass.services.register(
-            DOMAIN,
-            SERVICE_WRITE_REGISTER,
-            write_register,
-            schema=SERVICE_WRITE_REGISTER_SCHEMA,
-        )
-        hass.services.register(
-            DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA
-        )
-
     def write_register(service):
         """Write Modbus registers."""
-        unit = int(float(service.data.get(ATTR_UNIT)))
-        address = int(float(service.data.get(ATTR_ADDRESS)))
-        value = service.data.get(ATTR_VALUE)
-        client_name = service.data.get(ATTR_HUB)
+        unit = int(float(service.data[ATTR_UNIT]))
+        address = int(float(service.data[ATTR_ADDRESS]))
+        value = service.data[ATTR_VALUE]
+        client_name = service.data[ATTR_HUB]
         if isinstance(value, list):
             hub_collect[client_name].write_registers(
                 unit, address, [int(float(i)) for i in value]
@@ -179,30 +115,105 @@ def setup(hass, config):
 
     def write_coil(service):
         """Write Modbus coil."""
-        unit = service.data.get(ATTR_UNIT)
-        address = service.data.get(ATTR_ADDRESS)
-        state = service.data.get(ATTR_STATE)
-        client_name = service.data.get(ATTR_HUB)
+        unit = service.data[ATTR_UNIT]
+        address = service.data[ATTR_ADDRESS]
+        state = service.data[ATTR_STATE]
+        client_name = service.data[ATTR_HUB]
         hub_collect[client_name].write_coil(unit, address, state)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
+    # do not wait for EVENT_HOMEASSISTANT_START, activate pymodbus now
+    for client in hub_collect.values():
+        client.setup()
 
+    # register function to gracefully stop modbus
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
+
+    # Register services for modbus
+    hass.services.register(
+        DOMAIN,
+        SERVICE_WRITE_REGISTER,
+        write_register,
+        schema=SERVICE_WRITE_REGISTER_SCHEMA,
+    )
+    hass.services.register(
+        DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA
+    )
     return True
 
 
 class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
-    def __init__(self, modbus_client, name):
+    def __init__(self, client_config):
         """Initialize the Modbus hub."""
-        self._client = modbus_client
+
+        # generic configuration
+        self._client = None
         self._lock = threading.Lock()
-        self._name = name
+        self._config_name = client_config[CONF_NAME]
+        self._config_type = client_config[CONF_TYPE]
+        self._config_port = client_config[CONF_PORT]
+        self._config_timeout = client_config[CONF_TIMEOUT]
+        self._config_delay = 0
+
+        if self._config_type == "serial":
+            # serial configuration
+            self._config_method = client_config[CONF_METHOD]
+            self._config_baudrate = client_config[CONF_BAUDRATE]
+            self._config_stopbits = client_config[CONF_STOPBITS]
+            self._config_bytesize = client_config[CONF_BYTESIZE]
+            self._config_parity = client_config[CONF_PARITY]
+        else:
+            # network configuration
+            self._config_host = client_config[CONF_HOST]
+            self._config_delay = client_config[CONF_DELAY]
+            if self._config_delay > 0:
+                _LOGGER.warning(
+                    "Parameter delay is accepted but not used in this version"
+                )
 
     @property
     def name(self):
         """Return the name of this hub."""
-        return self._name
+        return self._config_name
+
+    def setup(self):
+        """Set up pymodbus client."""
+        if self._config_type == "serial":
+            self._client = ModbusSerialClient(
+                method=self._config_method,
+                port=self._config_port,
+                baudrate=self._config_baudrate,
+                stopbits=self._config_stopbits,
+                bytesize=self._config_bytesize,
+                parity=self._config_parity,
+                timeout=self._config_timeout,
+                retry_on_empty=True,
+            )
+        elif self._config_type == "rtuovertcp":
+            self._client = ModbusTcpClient(
+                host=self._config_host,
+                port=self._config_port,
+                framer=ModbusRtuFramer,
+                timeout=self._config_timeout,
+            )
+        elif self._config_type == "tcp":
+            self._client = ModbusTcpClient(
+                host=self._config_host,
+                port=self._config_port,
+                timeout=self._config_timeout,
+            )
+        elif self._config_type == "udp":
+            self._client = ModbusUdpClient(
+                host=self._config_host,
+                port=self._config_port,
+                timeout=self._config_timeout,
+            )
+        else:
+            assert False
+
+        # Connect device
+        self.connect()
 
     def close(self):
         """Disconnect client."""
@@ -219,6 +230,12 @@ class ModbusHub:
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             return self._client.read_coils(address, count, **kwargs)
+
+    def read_discrete_inputs(self, unit, address, count):
+        """Read discrete inputs."""
+        with self._lock:
+            kwargs = {"unit": unit} if unit else {}
+            return self._client.read_discrete_inputs(address, count, **kwargs)
 
     def read_input_registers(self, unit, address, count):
         """Read input registers."""

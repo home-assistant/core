@@ -50,8 +50,10 @@ class NessZoneBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change
+            )
         )
 
     @property
@@ -79,4 +81,4 @@ class NessZoneBinarySensor(BinarySensorDevice):
         """Handle zone state update."""
         if self._zone_id == data.zone_id:
             self._state = data.state
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

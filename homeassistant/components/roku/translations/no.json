@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Roku-enheten er allerede konfigurert",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Vil du sette opp {name} ?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert eller IP-adresse"
+                },
+                "description": "Skriv inn Roku-informasjonen din.",
+                "title": "Roku"
+            }
+        }
+    }
+}

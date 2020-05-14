@@ -1,18 +1,18 @@
 """The tests for the pilight component."""
+from datetime import timedelta
 import logging
+import socket
 import unittest
 from unittest.mock import patch
-import socket
-from datetime import timedelta
 
 import pytest
 
 from homeassistant import core as ha
-from homeassistant.setup import setup_component
 from homeassistant.components import pilight
+from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,11 +37,10 @@ class PilightDaemonSim:
 
     def __init__(self, host, port):
         """Init pilight client, ignore parameters."""
-        pass
 
     def send_code(self, call):  # pylint: disable=no-self-use
         """Handle pilight.send service callback."""
-        _LOGGER.error("PilightDaemonSim payload: " + str(call))
+        _LOGGER.error("PilightDaemonSim payload: %s", call)
 
     def start(self):
         """Handle homeassistant.start callback.
@@ -61,7 +60,7 @@ class PilightDaemonSim:
     def set_callback(self, function):
         """Handle pilight.pilight_received event callback."""
         self.callback = function
-        _LOGGER.error("PilightDaemonSim callback: " + str(function))
+        _LOGGER.error("PilightDaemonSim callback: %s", function)
 
 
 @pytest.mark.skip("Flaky")
@@ -91,7 +90,7 @@ class TestPilight(unittest.TestCase):
                 mock_client.assert_called_once_with(
                     host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
                 )
-                assert 1 == mock_error.call_count
+                assert mock_error.call_count == 1
 
     @patch("homeassistant.components.pilight._LOGGER.error")
     def test_connection_timeout_error(self, mock_error):
@@ -106,7 +105,7 @@ class TestPilight(unittest.TestCase):
                 mock_client.assert_called_once_with(
                     host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
                 )
-                assert 1 == mock_error.call_count
+                assert mock_error.call_count == 1
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
     @patch("homeassistant.core._LOGGER.error")

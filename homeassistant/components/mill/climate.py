@@ -6,12 +6,13 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    FAN_ON,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    FAN_ON,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -22,15 +23,18 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTR_AWAY_TEMP,
+    ATTR_COMFORT_TEMP,
+    ATTR_ROOM_NAME,
+    ATTR_SLEEP_TEMP,
+    DOMAIN,
+    MAX_TEMP,
+    MIN_TEMP,
+    SERVICE_SET_ROOM_TEMP,
+)
 
-ATTR_AWAY_TEMP = "away_temp"
-ATTR_COMFORT_TEMP = "comfort_temp"
-ATTR_ROOM_NAME = "room_name"
-ATTR_SLEEP_TEMP = "sleep_temp"
-MAX_TEMP = 35
-MIN_TEMP = 5
-SERVICE_SET_ROOM_TEMP = "mill_set_room_temperature"
+_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
@@ -164,6 +168,13 @@ class MillHeater(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         return MAX_TEMP
+
+    @property
+    def hvac_action(self):
+        """Return current hvac i.e. heat, cool, idle."""
+        if self._heater.is_gen1 or self._heater.is_heating == 1:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
     @property
     def hvac_mode(self) -> str:

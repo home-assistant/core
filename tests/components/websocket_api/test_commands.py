@@ -1,15 +1,16 @@
 """Tests for WebSocket API commands."""
 from async_timeout import timeout
 
-from homeassistant.core import callback
-from homeassistant.components.websocket_api.const import URL
+from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
-from homeassistant.components.websocket_api import const
+from homeassistant.components.websocket_api.const import URL
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -467,3 +468,46 @@ async def test_render_template_returns_with_match_all(
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
+
+
+async def test_manifest_list(hass, websocket_client):
+    """Test loading manifests."""
+    http = await async_get_integration(hass, "http")
+    websocket_api = await async_get_integration(hass, "websocket_api")
+
+    await websocket_client.send_json({"id": 5, "type": "manifest/list"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert sorted(msg["result"], key=lambda manifest: manifest["domain"]) == [
+        http.manifest,
+        websocket_api.manifest,
+    ]
+
+
+async def test_manifest_get(hass, websocket_client):
+    """Test getting a manifest."""
+    hue = await async_get_integration(hass, "hue")
+
+    await websocket_client.send_json(
+        {"id": 6, "type": "manifest/get", "integration": "hue"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == hue.manifest
+
+    # Non existing
+    await websocket_client.send_json(
+        {"id": 7, "type": "manifest/get", "integration": "non_existing"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"

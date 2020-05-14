@@ -14,7 +14,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from . import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice
+from .const import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMThermostat(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMThermostat(HMDevice, ClimateDevice):

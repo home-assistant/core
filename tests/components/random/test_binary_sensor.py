@@ -18,7 +18,7 @@ class TestRandomSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch("random.getrandbits", return_value=1)
+    @patch("homeassistant.components.random.binary_sensor.getrandbits", return_value=1)
     def test_random_binary_sensor_on(self, mocked):
         """Test the Random binary sensor."""
         config = {"binary_sensor": {"platform": "random", "name": "test"}}
@@ -29,7 +29,9 @@ class TestRandomSensor(unittest.TestCase):
 
         assert state.state == "on"
 
-    @patch("random.getrandbits", return_value=False)
+    @patch(
+        "homeassistant.components.random.binary_sensor.getrandbits", return_value=False
+    )
     def test_random_binary_sensor_off(self, mocked):
         """Test the Random binary sensor."""
         config = {"binary_sensor": {"platform": "random", "name": "test"}}

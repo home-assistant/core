@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Falha ao conectar, tente novamente",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "certificate": "Certificado",
+                    "continuous": "Cont\u00ednuo",
+                    "delay": "Atraso",
+                    "host": "Nome servidor ou endere\u00e7o IP",
+                    "password": "Palavra-passe"
+                },
+                "title": "Conectar ao dispositivo"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Cont\u00ednuo",
+                    "delay": "Atraso"
+                }
+            }
+        }
+    }
+}

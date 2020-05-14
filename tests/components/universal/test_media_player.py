@@ -5,14 +5,14 @@ import unittest
 
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_PLAYING, STATE_PAUSED
-import homeassistant.components.switch as switch
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
+import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 
-from tests.common import mock_service, get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_service
 
 
 def validate_config(config):
@@ -184,13 +184,13 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_state_switch_id = switch.ENTITY_ID_FORMAT.format("state")
         self.hass.states.set(self.mock_state_switch_id, STATE_OFF)
 
-        self.mock_volume_id = input_number.ENTITY_ID_FORMAT.format("volume_level")
+        self.mock_volume_id = f"{input_number.DOMAIN}.volume_level"
         self.hass.states.set(self.mock_volume_id, 0)
 
-        self.mock_source_list_id = input_select.ENTITY_ID_FORMAT.format("source_list")
+        self.mock_source_list_id = f"{input_select.DOMAIN}.source_list"
         self.hass.states.set(self.mock_source_list_id, ["dvd", "htpc"])
 
-        self.mock_source_id = input_select.ENTITY_ID_FORMAT.format("source")
+        self.mock_source_id = f"{input_select.DOMAIN}.source"
         self.hass.states.set(self.mock_source_id, "dvd")
 
         self.mock_shuffle_switch_id = switch.ENTITY_ID_FORMAT.format("shuffle")
@@ -539,10 +539,10 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
-        assert "0" == ump.volume_level
+        assert 0 == ump.volume_level
 
         self.hass.states.set(self.mock_volume_id, 100)
-        assert "100" == ump.volume_level
+        assert 100 == ump.volume_level
 
     def test_is_volume_muted_children_and_attr(self):
         """Test is volume muted property w/ children and attrs."""

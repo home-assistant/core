@@ -1,13 +1,13 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 import base64
+from datetime import datetime
+from functools import wraps
 import json
 import logging
 import math
 import random
 import re
-from datetime import datetime
-from functools import wraps
-from typing import Any, Iterable
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import jinja2
 from jinja2 import contextfilter, contextfunction
@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_METERS,
     MATCH_ALL,
     STATE_UNKNOWN,
 )
@@ -29,7 +30,6 @@ from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -51,7 +51,7 @@ _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
 
 
 @bind_hass
-def attach(hass, obj):
+def attach(hass: HomeAssistantType, obj: Any) -> None:
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
         for child in obj:
@@ -63,16 +63,20 @@ def attach(hass, obj):
         obj.hass = hass
 
 
-def render_complex(value, variables=None):
+def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
     if isinstance(value, dict):
         return {key: render_complex(item, variables) for key, item in value.items()}
-    return value.async_render(variables)
+    if isinstance(value, Template):
+        return value.async_render(variables)
+    return value
 
 
-def extract_entities(template, variables=None):
+def extract_entities(
+    template: Optional[str], variables: Optional[Dict[str, Any]] = None
+) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
         return []
@@ -86,6 +90,7 @@ def extract_entities(template, variables=None):
     for result in extraction:
         if (
             result[0] == "trigger.entity_id"
+            and variables
             and "trigger" in variables
             and "entity_id" in variables["trigger"]
         ):
@@ -139,7 +144,7 @@ class RenderInfo:
     def result(self) -> str:
         """Results of the template computation."""
         if self._exception is not None:
-            raise self._exception  # pylint: disable=raising-bad-type
+            raise self._exception
         return self._result
 
     def _freeze(self) -> None:
@@ -163,7 +168,7 @@ class Template:
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
-        self.template = template
+        self.template: str = template
         self._compiled_code = None
         self._compiled = None
         self.hass = hass
@@ -187,7 +192,9 @@ class Template:
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
-    def extract_entities(self, variables=None):
+    def extract_entities(
+        self, variables: Optional[Dict[str, Any]] = None
+    ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
         return extract_entities(self.template, variables)
 
@@ -300,11 +307,11 @@ class Template:
             and self.hass == other.hass
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Hash code for template."""
         return hash(self.template)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of Template."""
         return 'Template("' + self.template + '")'
 
@@ -322,11 +329,11 @@ class AllStates:
             if not valid_entity_id(name):
                 raise TemplateError(f"Invalid entity ID '{name}'")
             return _get_state(self._hass, name)
-        if not valid_entity_id(name + ".entity"):
+        if not valid_entity_id(f"{name}.entity"):
             raise TemplateError(f"Invalid domain name '{name}'")
         return DomainStates(self._hass, name)
 
-    def _collect_all(self):
+    def _collect_all(self) -> None:
         render_info = self._hass.data.get(_RENDER_INFO)
         if render_info is not None:
             # pylint: disable=protected-access
@@ -342,7 +349,7 @@ class AllStates:
             )
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return number of states."""
         self._collect_all()
         return len(self._hass.states.async_entity_ids())
@@ -352,7 +359,7 @@ class AllStates:
         state = _get_state(self._hass, entity_id)
         return STATE_UNKNOWN if state is None else state.state
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of All States."""
         return "<template AllStates>"
 
@@ -372,7 +379,7 @@ class DomainStates:
             raise TemplateError(f"Invalid entity ID '{entity_id}'")
         return _get_state(self._hass, entity_id)
 
-    def _collect_domain(self):
+    def _collect_domain(self) -> None:
         entity_collect = self._hass.data.get(_RENDER_INFO)
         if entity_collect is not None:
             # pylint: disable=protected-access
@@ -392,12 +399,12 @@ class DomainStates:
             )
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return number of states."""
         self._collect_domain()
         return len(self._hass.states.async_entity_ids(self._domain))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of Domain States."""
         return f"<template DomainStates('{self._domain}')>"
 
@@ -420,7 +427,7 @@ class TemplateState(State):
         return state
 
     @property
-    def state_with_unit(self):
+    def state_with_unit(self) -> str:
         """Return the state concatenated with the unit if available."""
         state = object.__getattribute__(self, "_access_state")()
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -441,36 +448,40 @@ class TemplateState(State):
         state = object.__getattribute__(self, "_access_state")()
         return getattr(state, name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of Template State."""
         state = object.__getattribute__(self, "_access_state")()
         rep = state.__repr__()
-        return "<template " + rep[1:]
+        return f"<template {rep[1:]}"
 
 
-def _collect_state(hass, entity_id):
+def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
     entity_collect = hass.data.get(_RENDER_INFO)
     if entity_collect is not None:
         # pylint: disable=protected-access
         entity_collect._entities.append(entity_id)
 
 
-def _wrap_state(hass, state):
+def _wrap_state(
+    hass: HomeAssistantType, state: Optional[State]
+) -> Optional[TemplateState]:
     """Wrap a state."""
     return None if state is None else TemplateState(hass, state)
 
 
-def _get_state(hass, entity_id):
+def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateState]:
     state = hass.states.get(entity_id)
     if state is None:
-        # Only need to collect if none, if not none collect first actuall
+        # Only need to collect if none, if not none collect first actual
         # access to the state properties in the state wrapper.
         _collect_state(hass, entity_id)
         return None
     return _wrap_state(hass, state)
 
 
-def _resolve_state(hass, entity_id_or_state):
+def _resolve_state(
+    hass: HomeAssistantType, entity_id_or_state: Any
+) -> Union[State, TemplateState, None]:
     """Return state or entity_id if given."""
     if isinstance(entity_id_or_state, State):
         return entity_id_or_state
@@ -499,6 +510,7 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
+        # pylint: disable=import-outside-toplevel
         from homeassistant.components import group
 
         if split_entity_id(entity_id)[0] == group.DOMAIN:
@@ -609,7 +621,7 @@ def distance(hass, *args):
 
             if latitude is None or longitude is None:
                 _LOGGER.warning(
-                    "Distance:Unable to process latitude and " "longitude: %s, %s",
+                    "Distance:Unable to process latitude and longitude: %s, %s",
                     value,
                     value_2,
                 )
@@ -631,7 +643,7 @@ def distance(hass, *args):
         return hass.config.distance(*locations[0])
 
     return hass.config.units.length(
-        loc_util.distance(*locations[0] + locations[1]), "m"
+        loc_util.distance(*locations[0] + locations[1]), LENGTH_METERS
     )
 
 
@@ -664,6 +676,8 @@ def forgiving_round(value, precision=0, method="common"):
             value = math.ceil(float(value) * multiplier) / multiplier
         elif method == "floor":
             value = math.floor(float(value) * multiplier) / multiplier
+        elif method == "half":
+            value = round(float(value) * 2) / 2
         else:
             # if method is common or something else, use common rounding
             value = round(float(value), precision)
@@ -904,6 +918,27 @@ def random_every_time(context, values):
     return random.choice(values)
 
 
+def relative_time(value):
+    """
+    Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month or year. Only the
+    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
+    be returned.
+    Make sure date is not in the future, or else it will return None.
+
+    If the input are not a datetime object the input will be returned unmodified.
+    """
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() < value:
+        return value
+    return dt_util.get_age(value)
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -958,7 +993,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["now"] = dt_util.now
         self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["relative_time"] = dt_util.get_age
+        self.globals["relative_time"] = relative_time
         self.globals["strptime"] = strptime
         if hass is None:
             return

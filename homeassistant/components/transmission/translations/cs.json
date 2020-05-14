@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hostitel je ji\u017e nakonfigurov\u00e1n."
+        },
+        "error": {
+            "name_exists": "Jm\u00e9no ji\u017e existuje"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Nakonfigurujte mo\u017enosti pro Transmission"
+            }
+        }
+    }
+}

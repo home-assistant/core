@@ -4,7 +4,8 @@
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/NEW_DOMAIN",
   "requirements": [],
-  "ssdp": {},
+  "ssdp": [],
+  "zeroconf": [],
   "homekit": {},
   "dependencies": [],
   "codeowners": []

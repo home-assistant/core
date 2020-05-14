@@ -2,6 +2,8 @@
 from datetime import datetime
 import logging
 
+from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
+
 from homeassistant.const import ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -41,7 +43,7 @@ class TelldusLiveEntity(Entity):
         """Return the property of the device might have changed."""
         if self.device.name:
             self._name = self.device.name
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def device_id(self):
@@ -91,7 +93,6 @@ class TelldusLiveEntity(Entity):
     @property
     def _battery_level(self):
         """Return the battery level of a device."""
-        from tellduslive import BATTERY_LOW, BATTERY_UNKNOWN, BATTERY_OK
 
         if self.device.battery == BATTERY_LOW:
             return 1

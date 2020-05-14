@@ -6,8 +6,8 @@ import os
 import time
 
 from aiohttp.web import Response
-import pywink
 from pubnubsubhandler import PubNubSubscriptionHandler
+import pywink
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
@@ -131,11 +131,11 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-RENAME_DEVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+RENAME_DEVICE_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_NAME): cv.string}, extra=vol.ALLOW_EXTRA
 )
 
-DELETE_DEVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+DELETE_DEVICE_SCHEMA = make_entity_service_schema({}, extra=vol.ALLOW_EXTRA)
 
 SET_PAIRING_MODE_SCHEMA = vol.Schema(
     {
@@ -146,31 +146,31 @@ SET_PAIRING_MODE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SET_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_VOLUME_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_VOLUME): vol.In(VOLUMES)}
 )
 
-SET_SIREN_TONE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_SIREN_TONE_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_TONE): vol.In(TONES)}
 )
 
-SET_CHIME_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_CHIME_MODE_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_TONE): vol.In(CHIME_TONES)}
 )
 
-SET_AUTO_SHUTOFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_AUTO_SHUTOFF_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES)}
 )
 
-SET_STROBE_ENABLED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_STROBE_ENABLED_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_ENABLED): cv.boolean}
 )
 
-ENABLED_SIREN_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+ENABLED_SIREN_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_ENABLED): cv.boolean}
 )
 
-DIAL_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+DIAL_CONFIG_SCHEMA = make_entity_service_schema(
     {
         vol.Optional(ATTR_MIN_VALUE): vol.Coerce(int),
         vol.Optional(ATTR_MAX_VALUE): vol.Coerce(int),
@@ -182,7 +182,7 @@ DIAL_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     }
 )
 
-DIAL_STATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+DIAL_STATE_SCHEMA = make_entity_service_schema(
     {
         vol.Required(ATTR_VALUE): vol.Coerce(int),
         vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string),
@@ -233,15 +233,13 @@ def _request_app_setup(hass, config):
 
     start_url = f"{hass.config.api.base_url}{WINK_AUTH_CALLBACK_PATH}"
 
-    description = """Please create a Wink developer app at
+    description = f"""Please create a Wink developer app at
                      https://developer.wink.com.
-                     Add a Redirect URI of {}.
+                     Add a Redirect URI of {start_url}.
                      They will provide you a Client ID and secret
                      after reviewing your request.
                      (This can take several days).
-                     """.format(
-        start_url
-    )
+                     """
 
     hass.data[DOMAIN]["configuring"][DOMAIN] = configurator.request_config(
         DOMAIN,
@@ -351,9 +349,7 @@ def setup(hass, config):
         # Home .
         else:
 
-            redirect_uri = "{}{}".format(
-                hass.config.api.base_url, WINK_AUTH_CALLBACK_PATH
-            )
+            redirect_uri = f"{hass.config.api.base_url}{WINK_AUTH_CALLBACK_PATH}"
 
             wink_auth_start_url = pywink.get_authorization_url(
                 config_file.get(ATTR_CLIENT_ID), redirect_uri
@@ -695,7 +691,7 @@ class WinkAuthCallbackView(HomeAssistantView):
 
         response_message = """Wink has been successfully authorized!
          You can close this window now! For the best results you should reboot
-         HomeAssistant"""
+         Home Assistant"""
         html_response = """<html><head><title>Wink Auth</title></head>
                 <body><h1>{}</h1></body></html>"""
 
@@ -740,7 +736,7 @@ class WinkDevice(Entity):
         try:
             if message is None:
                 _LOGGER.error(
-                    "Error on pubnub update for %s " "polling API for current state",
+                    "Error on pubnub update for %s polling API for current state",
                     self.name,
                 )
                 self.schedule_update_ha_state(True)
@@ -749,8 +745,7 @@ class WinkDevice(Entity):
                 self.schedule_update_ha_state()
         except (ValueError, KeyError, AttributeError):
             _LOGGER.error(
-                "Error in pubnub JSON for %s " "polling API for current state",
-                self.name,
+                "Error in pubnub JSON for %s polling API for current state", self.name
             )
             self.schedule_update_ha_state(True)
 
@@ -763,7 +758,7 @@ class WinkDevice(Entity):
     def unique_id(self):
         """Return the unique id of the Wink device."""
         if hasattr(self.wink, "capability") and self.wink.capability() is not None:
-            return "{}_{}".format(self.wink.object_id(), self.wink.capability())
+            return f"{self.wink.object_id()}_{self.wink.capability()}"
         return self.wink.object_id()
 
     @property
@@ -913,7 +908,7 @@ class WinkNimbusDialDevice(WinkDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.parent.name() + " dial " + str(self.wink.index() + 1)
+        return f"{self.parent.name()} dial {self.wink.index() + 1}"
 
     @property
     def device_state_attributes(self):

@@ -1,4 +1,5 @@
 """Config flow to configure Z-Wave."""
+# pylint: disable=import-outside-toplevel
 from collections import OrderedDict
 import logging
 
@@ -7,8 +8,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 
 from .const import (
-    CONF_USB_STICK_PATH,
     CONF_NETWORK_KEY,
+    CONF_USB_STICK_PATH,
     DEFAULT_CONF_USB_STICK_PATH,
     DOMAIN,
 )
@@ -48,8 +49,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
             try:
                 from functools import partial
 
-                # pylint: disable=unused-variable
-                option = await self.hass.async_add_executor_job(  # noqa: F841
+                option = await self.hass.async_add_executor_job(  # noqa: F841 pylint: disable=unused-variable
                     partial(
                         ZWaveOption,
                         user_input[CONF_USB_STICK_PATH],
@@ -66,7 +66,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
                 # Generate a random key
                 from random import choice
 
-                key = str()
+                key = ""
                 for i in range(16):
                     key += "0x"
                     key += choice("1234567890ABCDEF")

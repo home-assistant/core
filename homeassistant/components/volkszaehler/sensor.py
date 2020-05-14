@@ -2,16 +2,18 @@
 from datetime import timedelta
 import logging
 
+from volkszaehler import Volkszaehler
+from volkszaehler.exceptions import VolkszaehlerApiConnectionError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PORT,
-    CONF_MONITORED_CONDITIONS,
-    POWER_WATT,
     ENERGY_WATT_HOUR,
+    POWER_WATT,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -51,7 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Volkszaehler sensors."""
-    from volkszaehler import Volkszaehler
 
     host = config[CONF_HOST]
     name = config[CONF_NAME]
@@ -130,7 +131,6 @@ class VolkszaehlerData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Volkszaehler REST API."""
-        from volkszaehler.exceptions import VolkszaehlerApiConnectionError
 
         try:
             await self.api.get_data()

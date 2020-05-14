@@ -1,7 +1,7 @@
 """Decorators for ZHA core registries."""
 from typing import Callable, TypeVar, Union
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # noqa pylint: disable=invalid-name
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
 
 class DictRegistry(dict):

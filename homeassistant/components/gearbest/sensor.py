@@ -1,15 +1,16 @@
 """Parse prices of an item from gearbest."""
-import logging
 from datetime import timedelta
+import logging
 
+from gearbest_parser import CurrencyConverter, GearbestParser
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_CURRENCY, CONF_ID, CONF_NAME, CONF_URL
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.const import CONF_NAME, CONF_ID, CONF_URL, CONF_CURRENCY
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gearbest sensor."""
-    from gearbest_parser import CurrencyConverter
 
     currency = config.get(CONF_CURRENCY)
 
@@ -71,7 +71,6 @@ class GearbestSensor(Entity):
 
     def __init__(self, converter, item, currency):
         """Initialize the sensor."""
-        from gearbest_parser import GearbestParser
 
         self._name = item.get(CONF_NAME)
         self._parser = GearbestParser()

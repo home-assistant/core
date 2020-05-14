@@ -1,9 +1,8 @@
 """Demo platform that has two fake binary sensors."""
 import copy
 
-import homeassistant.util.dt as dt_util
-
 from homeassistant.components.calendar import CalendarEventDevice, get_date
+import homeassistant.util.dt as dt_util
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

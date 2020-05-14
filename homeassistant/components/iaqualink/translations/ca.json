@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Nom\u00e9s pots configurar una \u00fanica connexi\u00f3 d'iAqualink."
+        },
+        "error": {
+            "connection_failure": "No s'ha pogut connectar amb iAqualink. Comprova el nom d'usuari i la contrasenya."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari / Correu electr\u00f2nic"
+                },
+                "description": "Introdueix el nom d'usuari i la contrasenya del teu compte d'iAqualink.",
+                "title": "Connexi\u00f3 amb iAqualink"
+            }
+        }
+    }
+}

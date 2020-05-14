@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 from homeassistant.components import sensor
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant, assert_setup_component, MockDependency
+
+from tests.common import assert_setup_component, get_test_home_assistant
 
 VALID_CONFIG = {
     "platform": "nsw_fuel_station",
@@ -83,9 +84,11 @@ class TestNSWFuelStation(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @MockDependency("nsw_fuel")
-    @patch("nsw_fuel.FuelCheckClient", new=FuelCheckClientMock)
-    def test_setup(self, mock_nsw_fuel):
+    @patch(
+        "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
+        new=FuelCheckClientMock,
+    )
+    def test_setup(self):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
             assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
@@ -93,12 +96,14 @@ class TestNSWFuelStation(unittest.TestCase):
         fake_entities = ["my_fake_station_p95", "my_fake_station_e10"]
 
         for entity_id in fake_entities:
-            state = self.hass.states.get("sensor.{}".format(entity_id))
+            state = self.hass.states.get(f"sensor.{entity_id}")
             assert state is not None
 
-    @MockDependency("nsw_fuel")
-    @patch("nsw_fuel.FuelCheckClient", new=FuelCheckClientMock)
-    def test_sensor_values(self, mock_nsw_fuel):
+    @patch(
+        "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
+        new=FuelCheckClientMock,
+    )
+    def test_sensor_values(self):
         """Test retrieval of sensor values."""
         assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
 

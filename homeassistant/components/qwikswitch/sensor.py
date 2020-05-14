@@ -1,6 +1,8 @@
 """Support for Qwikswitch Sensors."""
 import logging
 
+from pyqwikswitch.qwikswitch import SENSORS
+
 from homeassistant.core import callback
 
 from . import DOMAIN as QWIKSWITCH, QSEntity
@@ -26,7 +28,6 @@ class QSSensor(QSEntity):
 
     def __init__(self, sensor):
         """Initialize the sensor."""
-        from pyqwikswitch.qwikswitch import SENSORS
 
         super().__init__(sensor["id"], sensor["name"])
         self.channel = sensor["channel"]
@@ -50,7 +51,7 @@ class QSSensor(QSEntity):
         )
         if val is not None:
             self._val = val
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def state(self):

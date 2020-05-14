@@ -8,24 +8,24 @@ import requests
 from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_AUTHENTICATION,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
     DEFAULT_CONTENT_TYPE,
+    PLATFORM_SCHEMA,
     SUPPORT_STREAM,
     Camera,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
+)
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
-        vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Optional(CONF_FRAMERATE, default=2): vol.Any(
+            cv.small_float, cv.positive_int
+        ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
@@ -130,7 +132,9 @@ class GenericCamera(Camera):
                     )
                     return response.content
                 except requests.exceptions.RequestException as error:
-                    _LOGGER.error("Error getting camera image: %s", error)
+                    _LOGGER.error(
+                        "Error getting new camera image from %s: %s", self._name, error
+                    )
                     return self._last_image
 
             self._last_image = await self.hass.async_add_job(fetch)
@@ -144,10 +148,12 @@ class GenericCamera(Camera):
                     response = await websession.get(url, auth=self._auth)
                 self._last_image = await response.read()
             except asyncio.TimeoutError:
-                _LOGGER.error("Timeout getting image from: %s", self._name)
+                _LOGGER.error("Timeout getting camera image from %s", self._name)
                 return self._last_image
             except aiohttp.ClientError as err:
-                _LOGGER.error("Error getting new camera image: %s", err)
+                _LOGGER.error(
+                    "Error getting new camera image from %s: %s", self._name, err
+                )
                 return self._last_image
 
         self._last_url = url

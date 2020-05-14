@@ -6,9 +6,6 @@ from pysmartthings import AppEntity, Capability
 
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.const import (
-    CONF_INSTALLED_APP_ID,
-    CONF_INSTALLED_APPS,
-    CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN,
     DATA_MANAGER,
     DOMAIN,
@@ -38,64 +35,6 @@ async def test_update_app_updated_needed(hass, app):
     assert mock_app.app_type == app.app_type
     assert mock_app.single_instance == app.single_instance
     assert mock_app.classifications == app.classifications
-
-
-async def test_smartapp_install_store_if_no_other(
-    hass, smartthings_mock, device_factory
-):
-    """Test aborts if no other app was configured already."""
-    # Arrange
-    app = Mock()
-    app.app_id = uuid4()
-    request = Mock()
-    request.installed_app_id = str(uuid4())
-    request.auth_token = str(uuid4())
-    request.location_id = str(uuid4())
-    request.refresh_token = str(uuid4())
-    # Act
-    await smartapp.smartapp_install(hass, request, None, app)
-    # Assert
-    entries = hass.config_entries.async_entries("smartthings")
-    assert not entries
-    data = hass.data[DOMAIN][CONF_INSTALLED_APPS][0]
-    assert data[CONF_REFRESH_TOKEN] == request.refresh_token
-    assert data[CONF_LOCATION_ID] == request.location_id
-    assert data[CONF_INSTALLED_APP_ID] == request.installed_app_id
-
-
-async def test_smartapp_install_creates_flow(
-    hass, smartthings_mock, config_entry, location, device_factory
-):
-    """Test installation creates flow."""
-    # Arrange
-    config_entry.add_to_hass(hass)
-    app = Mock()
-    app.app_id = config_entry.data["app_id"]
-    request = Mock()
-    request.installed_app_id = str(uuid4())
-    request.auth_token = str(uuid4())
-    request.refresh_token = str(uuid4())
-    request.location_id = location.location_id
-    devices = [
-        device_factory("", [Capability.battery, "ping"]),
-        device_factory("", [Capability.switch, Capability.switch_level]),
-        device_factory("", [Capability.switch]),
-    ]
-    smartthings_mock.devices.return_value = devices
-    # Act
-    await smartapp.smartapp_install(hass, request, None, app)
-    # Assert
-    await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries("smartthings")
-    assert len(entries) == 2
-    assert entries[1].data["app_id"] == app.app_id
-    assert entries[1].data["installed_app_id"] == request.installed_app_id
-    assert entries[1].data["location_id"] == request.location_id
-    assert entries[1].data["access_token"] == config_entry.data["access_token"]
-    assert entries[1].data["refresh_token"] == request.refresh_token
-    assert entries[1].data["client_secret"] == config_entry.data["client_secret"]
-    assert entries[1].data["client_id"] == config_entry.data["client_id"]
-    assert entries[1].title == location.name
 
 
 async def test_smartapp_update_saves_token(

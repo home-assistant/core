@@ -1,9 +1,9 @@
 """Modesl used by multiple MQTT modules."""
-from typing import Union, Callable
+import datetime as dt
+from typing import Callable, Union
 
 import attr
 
-# pylint: disable=invalid-name
 PublishPayloadType = Union[str, bytes, int, float, None]
 
 
@@ -15,6 +15,8 @@ class Message:
     payload = attr.ib(type=PublishPayloadType)
     qos = attr.ib(type=int)
     retain = attr.ib(type=bool)
+    subscribed_topic = attr.ib(type=str, default=None)
+    timestamp = attr.ib(type=dt.datetime, default=None)
 
 
 MessageCallbackType = Callable[[Message], None]

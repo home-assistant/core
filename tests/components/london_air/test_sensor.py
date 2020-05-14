@@ -1,10 +1,12 @@
 """The tests for the tube_state platform."""
 import unittest
+
 import requests_mock
 
 from homeassistant.components.london_air.sensor import CONF_LOCATIONS, URL
 from homeassistant.setup import setup_component
-from tests.common import load_fixture, get_test_home_assistant
+
+from tests.common import get_test_home_assistant, load_fixture
 
 VALID_CONFIG = {"platform": "london_air", CONF_LOCATIONS: ["Merton"]}
 

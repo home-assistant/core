@@ -3,12 +3,12 @@ from typing import Optional
 
 from homeassistant.components import zone
 from homeassistant.const import (
-    STATE_NOT_HOME,
-    STATE_HOME,
+    ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_BATTERY_LEVEL,
+    STATE_HOME,
+    STATE_NOT_HOME,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -60,6 +60,16 @@ class BaseTrackerEntity(Entity):
 
 class TrackerEntity(BaseTrackerEntity):
     """Represent a tracked device."""
+
+    @property
+    def should_poll(self):
+        """No polling for entities that have location pushed."""
+        return False
+
+    @property
+    def force_update(self):
+        """All updates need to be written to the state machine if we're not polling."""
+        return not self.should_poll
 
     @property
     def location_accuracy(self):

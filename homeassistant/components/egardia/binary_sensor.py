@@ -65,12 +65,6 @@ class EgardiaBinarySensor(BinarySensorDevice):
         return self._state == STATE_ON
 
     @property
-    def hidden(self):
-        """Whether the device is hidden by default."""
-        # these type of sensors are probably mainly used for automations
-        return True
-
-    @property
     def device_class(self):
         """Return the device class."""
         return self._device_class

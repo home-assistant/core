@@ -6,22 +6,19 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONTENT_TYPE_JSON
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PAGE_ACCESS_TOKEN = "page_access_token"
 BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
-CREATE_BROADCAST_URL = "https://graph.facebook.com/v2.11/me/message_creatives"
-SEND_BROADCAST_URL = "https://graph.facebook.com/v2.11/me/broadcast_messages"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string}
@@ -58,56 +55,29 @@ class FacebookNotificationService(BaseNotificationService):
             _LOGGER.error("At least 1 target is required")
             return
 
-        # broadcast message
-        if targets[0].lower() == "broadcast":
-            broadcast_create_body = {"messages": [body_message]}
-            _LOGGER.debug("Broadcast body %s : ", broadcast_create_body)
+        for target in targets:
+            # If the target starts with a "+", it's a phone number,
+            # otherwise it's a user id.
+            if target.startswith("+"):
+                recipient = {"phone_number": target}
+            else:
+                recipient = {"id": target}
 
-            resp = requests.post(
-                CREATE_BROADCAST_URL,
-                data=json.dumps(broadcast_create_body),
-                params=payload,
-                headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
-                timeout=10,
-            )
-            _LOGGER.debug("FB Messager broadcast id %s : ", resp.json())
-
-            # at this point we get broadcast id
-            broadcast_body = {
-                "message_creative_id": resp.json().get("message_creative_id"),
-                "notification_type": "REGULAR",
+            body = {
+                "recipient": recipient,
+                "message": body_message,
+                "messaging_type": "MESSAGE_TAG",
+                "tag": "ACCOUNT_UPDATE",
             }
-
             resp = requests.post(
-                SEND_BROADCAST_URL,
-                data=json.dumps(broadcast_body),
+                BASE_URL,
+                data=json.dumps(body),
                 params=payload,
                 headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
                 timeout=10,
             )
-            if resp.status_code != 200:
+            if resp.status_code != HTTP_OK:
                 log_error(resp)
-
-        # non-broadcast message
-        else:
-            for target in targets:
-                # If the target starts with a "+", it's a phone number,
-                # otherwise it's a user id.
-                if target.startswith("+"):
-                    recipient = {"phone_number": target}
-                else:
-                    recipient = {"id": target}
-
-                body = {"recipient": recipient, "message": body_message}
-                resp = requests.post(
-                    BASE_URL,
-                    data=json.dumps(body),
-                    params=payload,
-                    headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
-                    timeout=10,
-                )
-                if resp.status_code != 200:
-                    log_error(resp)
 
 
 def log_error(response):

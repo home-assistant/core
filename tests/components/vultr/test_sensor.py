@@ -7,13 +7,18 @@ import pytest
 import requests_mock
 import voluptuous as vol
 
-import homeassistant.components.vultr.sensor as vultr
 from homeassistant.components import vultr as base_vultr
 from homeassistant.components.vultr import CONF_SUBSCRIPTION
-from homeassistant.const import CONF_NAME, CONF_MONITORED_CONDITIONS, CONF_PLATFORM
+import homeassistant.components.vultr.sensor as vultr
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    CONF_PLATFORM,
+    DATA_GIGABYTES,
+)
 
-from tests.components.vultr.test_init import VALID_CONFIG
 from tests.common import get_test_home_assistant, load_fixture
+from tests.components.vultr.test_init import VALID_CONFIG
 
 
 class TestVultrSensorSetup(unittest.TestCase):
@@ -83,7 +88,7 @@ class TestVultrSensorSetup(unittest.TestCase):
 
             device.update()
 
-            if device.unit_of_measurement == "GB":  # Test Bandwidth Used
+            if device.unit_of_measurement == DATA_GIGABYTES:  # Test Bandwidth Used
                 if device.subscription == "576965":
                     assert "Vultr my new server Current Bandwidth Used" == device.name
                     assert "mdi:chart-histogram" == device.icon

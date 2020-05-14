@@ -4,11 +4,10 @@ from copy import deepcopy
 from asynctest import patch
 
 from homeassistant.components import deconz
+import homeassistant.components.climate as climate
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.climate as climate
-
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 SENSORS = {
     "1": {
@@ -57,10 +56,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_sensors(hass):
     """Test that no sensors in deconz results in no climate entities."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
@@ -69,9 +65,7 @@ async def test_climate_devices(hass):
     """Test successful creation of sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
     assert "climate.thermostat" in gateway.deconz_ids
     assert "sensor.thermostat" not in gateway.deconz_ids
     assert "sensor.thermostat_battery_level" in gateway.deconz_ids
@@ -94,21 +88,41 @@ async def test_climate_devices(hass):
     clip_thermostat = hass.states.get("climate.clip_thermostat")
     assert clip_thermostat is None
 
-    thermostat_device = gateway.api.sensors["1"]
-
-    thermostat_device.async_update({"config": {"mode": "off"}})
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "config": {"mode": "off"},
+    }
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
     assert thermostat.state == "off"
 
-    thermostat_device.async_update({"config": {"mode": "other"}, "state": {"on": True}})
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "config": {"mode": "other"},
+        "state": {"on": True},
+    }
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
     assert thermostat.state == "heat"
 
-    thermostat_device.async_update({"state": {"on": False}})
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"on": False},
+    }
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -116,9 +130,9 @@ async def test_climate_devices(hass):
 
     # Verify service calls
 
-    with patch.object(
-        thermostat_device, "_async_set_callback", return_value=True
-    ) as set_callback:
+    thermostat_device = gateway.api.sensors["1"]
+
+    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
             climate.DOMAIN,
             climate.SERVICE_SET_HVAC_MODE,
@@ -126,11 +140,11 @@ async def test_climate_devices(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/sensors/1/config", {"mode": "auto"})
+        set_callback.assert_called_with(
+            "put", "/sensors/1/config", json={"mode": "auto"}
+        )
 
-    with patch.object(
-        thermostat_device, "_async_set_callback", return_value=True
-    ) as set_callback:
+    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
             climate.DOMAIN,
             climate.SERVICE_SET_HVAC_MODE,
@@ -138,29 +152,31 @@ async def test_climate_devices(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/sensors/1/config", {"mode": "heat"})
+        set_callback.assert_called_with(
+            "put", "/sensors/1/config", json={"mode": "heat"}
+        )
 
-    with patch.object(
-        thermostat_device, "_async_set_callback", return_value=True
-    ) as set_callback:
+    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
             climate.DOMAIN,
             climate.SERVICE_SET_HVAC_MODE,
             {"entity_id": "climate.thermostat", "hvac_mode": "off"},
             blocking=True,
         )
-        set_callback.assert_called_with("/sensors/1/config", {"mode": "off"})
+        set_callback.assert_called_with(
+            "put", "/sensors/1/config", json={"mode": "off"}
+        )
 
-    with patch.object(
-        thermostat_device, "_async_set_callback", return_value=True
-    ) as set_callback:
+    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
             climate.DOMAIN,
             climate.SERVICE_SET_TEMPERATURE,
             {"entity_id": "climate.thermostat", "temperature": 20},
             blocking=True,
         )
-        set_callback.assert_called_with("/sensors/1/config", {"heatsetpoint": 2000.0})
+        set_callback.assert_called_with(
+            "put", "/sensors/1/config", json={"heatsetpoint": 2000.0}
+        )
 
     await gateway.async_reset()
 
@@ -173,7 +189,6 @@ async def test_clip_climate_device(hass):
     data["sensors"] = deepcopy(SENSORS)
     gateway = await setup_deconz_integration(
         hass,
-        ENTRY_CONFIG,
         options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True},
         get_state_response=data,
     )
@@ -199,27 +214,49 @@ async def test_clip_climate_device(hass):
     clip_thermostat = hass.states.get("climate.clip_thermostat")
     assert clip_thermostat.state == "heat"
 
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+    )
+    await hass.async_block_till_done()
+
+    assert "climate.thermostat" in gateway.deconz_ids
+    assert "sensor.thermostat" not in gateway.deconz_ids
+    assert "sensor.thermostat_battery_level" in gateway.deconz_ids
+    assert "climate.presence_sensor" not in gateway.deconz_ids
+    assert "climate.clip_thermostat" not in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 3
+
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+    )
+    await hass.async_block_till_done()
+
+    assert "climate.thermostat" in gateway.deconz_ids
+    assert "sensor.thermostat" not in gateway.deconz_ids
+    assert "sensor.thermostat_battery_level" in gateway.deconz_ids
+    assert "climate.presence_sensor" not in gateway.deconz_ids
+    assert "climate.clip_thermostat" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 4
+
 
 async def test_verify_state_update(hass):
     """Test that state update properly."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
     assert "climate.thermostat" in gateway.deconz_ids
 
     thermostat = hass.states.get("climate.thermostat")
     assert thermostat.state == "auto"
 
-    state_update = {
+    state_changed_event = {
         "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
         "state": {"on": False},
     }
-    gateway.api.async_event_handler(state_update)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -229,20 +266,17 @@ async def test_verify_state_update(hass):
 
 async def test_add_new_climate_device(hass):
     """Test that adding a new climate device works."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
 
-    state_added = {
+    state_added_event = {
         "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
         "sensor": deepcopy(SENSORS["1"]),
     }
-    gateway.api.async_event_handler(state_added)
+    gateway.api.event_handler(state_added_event)
     await hass.async_block_till_done()
 
     assert "climate.thermostat" in gateway.deconz_ids

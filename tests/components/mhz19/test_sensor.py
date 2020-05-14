@@ -1,12 +1,17 @@
 """Tests for MH-Z19 sensor."""
 import unittest
-from unittest.mock import patch, DEFAULT, Mock
+from unittest.mock import DEFAULT, Mock, patch
 
-from homeassistant.setup import setup_component
-from homeassistant.components.sensor import DOMAIN
 import homeassistant.components.mhz19.sensor as mhz19
-from homeassistant.const import TEMP_FAHRENHEIT
-from tests.common import get_test_home_assistant, assert_setup_component
+from homeassistant.components.sensor import DOMAIN
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.setup import setup_component
+
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestMHZ19Sensor(unittest.TestCase):
@@ -56,7 +61,7 @@ class TestMHZ19Sensor(unittest.TestCase):
                 },
                 mock_add,
             )
-        assert 1 == mock_add.call_count
+        assert mock_add.call_count == 1
 
     @patch(
         "pmsensor.co2sensor.read_mh_z19_with_temperature",
@@ -97,11 +102,11 @@ class TestMHZ19Sensor(unittest.TestCase):
         sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_CO2, None, "name")
         sensor.update()
 
-        assert "name: CO2" == sensor.name
-        assert 1000 == sensor.state
-        assert "ppm" == sensor.unit_of_measurement
+        assert sensor.name == "name: CO2"
+        assert sensor.state == 1000
+        assert sensor.unit_of_measurement == CONCENTRATION_PARTS_PER_MILLION
         assert sensor.should_poll
-        assert {"temperature": 24} == sensor.device_state_attributes
+        assert sensor.device_state_attributes == {"temperature": 24}
 
     @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
     def test_temperature_sensor(self, mock_function):
@@ -112,11 +117,11 @@ class TestMHZ19Sensor(unittest.TestCase):
         sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_TEMPERATURE, None, "name")
         sensor.update()
 
-        assert "name: Temperature" == sensor.name
-        assert 24 == sensor.state
-        assert "°C" == sensor.unit_of_measurement
+        assert sensor.name == "name: Temperature"
+        assert sensor.state == 24
+        assert sensor.unit_of_measurement == TEMP_CELSIUS
         assert sensor.should_poll
-        assert {"co2_concentration": 1000} == sensor.device_state_attributes
+        assert sensor.device_state_attributes == {"co2_concentration": 1000}
 
     @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
     def test_temperature_sensor_f(self, mock_function):
@@ -129,4 +134,4 @@ class TestMHZ19Sensor(unittest.TestCase):
         )
         sensor.update()
 
-        assert 75.2 == sensor.state
+        assert sensor.state == 75.2

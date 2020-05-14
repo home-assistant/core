@@ -1,10 +1,11 @@
 """Light support for switch entities."""
 import logging
-from typing import cast, Callable, Dict, Optional, Sequence
+from typing import Callable, Optional, Sequence, cast
 
 import voluptuous as vol
 
 from homeassistant.components import switch
+from homeassistant.components.light import PLATFORM_SCHEMA, Light
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -12,14 +13,15 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import CALLBACK_TYPE, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-
-from homeassistant.components.light import PLATFORM_SCHEMA, Light
-
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -39,7 +41,7 @@ async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     async_add_entities: Callable[[Sequence[Entity], bool], None],
-    discovery_info: Optional[Dict] = None,
+    discovery_info: Optional[DiscoveryInfoType] = None,
 ) -> None:
     """Initialize Light Switch platform."""
     async_add_entities(
@@ -56,7 +58,7 @@ class LightSwitch(Light):
         self._switch_entity_id = switch_entity_id
         self._is_on = False
         self._available = False
-        self._async_unsub_state_changed = None
+        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
 
     @property
     def name(self) -> str:
@@ -113,6 +115,7 @@ class LightSwitch(Light):
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
+        assert self.hass is not None
         self._async_unsub_state_changed = async_track_state_change(
             self.hass, self._switch_entity_id, async_state_changed_listener
         )

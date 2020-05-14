@@ -1,13 +1,13 @@
 """The kodi component."""
 
 import asyncio
+
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
-from homeassistant.helpers import config_validation as cv
 from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.helpers import config_validation as cv
 
 SERVICE_ADD_MEDIA = "add_to_playlist"
 SERVICE_CALL_METHOD = "call_method"
@@ -46,9 +46,7 @@ SERVICE_TO_METHOD = {
 
 async def async_setup(hass, config):
     """Set up the Kodi integration."""
-    if any(
-        ((CONF_PLATFORM, DOMAIN) in cfg.items() for cfg in config.get(MP_DOMAIN, []))
-    ):
+    if any((CONF_PLATFORM, DOMAIN) in cfg.items() for cfg in config.get(MP_DOMAIN, [])):
         # Register the Kodi media_player services
         async def async_service_handler(service):
             """Map services to methods on MediaPlayerDevice."""

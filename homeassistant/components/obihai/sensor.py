@@ -1,10 +1,9 @@
 """Support for Obihai Sensors."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
-import voluptuous as vol
-
 from pyobihai import PyObihai
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -13,10 +12,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     DEVICE_CLASS_TIMESTAMP,
 )
-
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,8 +59,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for key in services:
         sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
 
-    for key in line_services:
-        sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
+    if line_services is not None:
+        for key in line_services:
+            sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
 
     for key in call_direction:
         sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
@@ -139,8 +137,9 @@ class ObihaiServiceSensors(Entity):
 
         services = self._pyobihai.get_line_state()
 
-        if self._service_name in services:
-            self._state = services.get(self._service_name)
+        if services is not None:
+            if self._service_name in services:
+                self._state = services.get(self._service_name)
 
         call_direction = self._pyobihai.get_call_direction()
 

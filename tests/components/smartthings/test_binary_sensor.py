@@ -32,11 +32,6 @@ async def test_mapping_integrity():
         assert device_class in DEVICE_CLASSES, device_class
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await binary_sensor.async_setup_platform(None, None, None)
-
-
 async def test_entity_state(hass, device_factory):
     """Tests the state attributes properly match the light types."""
     device = device_factory(
@@ -45,7 +40,7 @@ async def test_entity_state(hass, device_factory):
     await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     state = hass.states.get("binary_sensor.motion_sensor_1_motion")
     assert state.state == "off"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " " + Attribute.motion
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} {Attribute.motion}"
 
 
 async def test_entity_and_device_attributes(hass, device_factory):
@@ -61,7 +56,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     # Assert
     entry = entity_registry.async_get("binary_sensor.motion_sensor_1_motion")
     assert entry
-    assert entry.unique_id == device.device_id + "." + Attribute.motion
+    assert entry.unique_id == f"{device.device_id}.{Attribute.motion}"
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)}, [])
     assert entry
     assert entry.name == device.label

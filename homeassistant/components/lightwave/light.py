@@ -72,10 +72,10 @@ class LWRFLight(Light):
         else:
             self._lwlink.turn_on_light(self._device_id, self._name)
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the LightWave light off."""
         self._state = False
         self._lwlink.turn_off(self._device_id, self._name)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -2,9 +2,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
     DEVICE_CLASS_COLD,
     DOMAIN,
+    BinarySensorDevice,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType

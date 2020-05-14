@@ -31,13 +31,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     @callback
-    def async_add_climate(sensors):
+    def async_add_climate(sensors, new=True):
         """Add climate devices from deCONZ."""
         entities = []
 
         for sensor in sensors:
 
-            if sensor.type in Thermostat.ZHATYPE:
+            if (
+                new
+                and sensor.type in Thermostat.ZHATYPE
+                and (
+                    gateway.option_allow_clip_sensor
+                    or not sensor.type.startswith("CLIP")
+                )
+            ):
                 entities.append(DeconzThermostat(sensor, gateway))
 
         async_add_entities(entities, True)

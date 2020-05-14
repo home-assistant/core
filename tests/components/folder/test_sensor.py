@@ -1,11 +1,11 @@
 """The tests for the folder sensor."""
-import unittest
 import os
+import unittest
 
 from homeassistant.components.folder.sensor import CONF_FOLDER_PATHS
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant
 
+from tests.common import get_test_home_assistant
 
 CWD = os.path.join(os.path.dirname(__file__))
 TEST_FOLDER = "test_folder"
@@ -28,7 +28,7 @@ class TestFolderSensor(unittest.TestCase):
         self.hass = get_test_home_assistant()
         if not os.path.isdir(TEST_DIR):
             os.mkdir(TEST_DIR)
-        self.hass.config.whitelist_external_dirs = set((TEST_DIR))
+        self.hass.config.whitelist_external_dirs = {TEST_DIR}
 
     def teardown_method(self, method):
         """Stop everything that was started."""

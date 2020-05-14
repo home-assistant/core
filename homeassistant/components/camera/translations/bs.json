@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Besposlen",
+            "recording": "Snimanje",
+            "streaming": "Predaja slike"
+        }
+    },
+    "title": "Kamera"
+}

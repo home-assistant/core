@@ -2,9 +2,9 @@
 import logging
 
 from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
-from homeassistant.const import STATE_UNKNOWN
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
         devices.append(HMLock(conf))
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMLock(HMDevice, LockDevice):
@@ -44,7 +44,7 @@ class HMLock(HMDevice, LockDevice):
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""
         self._state = "STATE"
-        self._data.update({self._state: STATE_UNKNOWN})
+        self._data.update({self._state: None})
 
     @property
     def supported_features(self):

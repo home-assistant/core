@@ -1,11 +1,12 @@
 """Helpers for sun events."""
 import datetime
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import callback
-from homeassistant.util import dt as dt_util
 from homeassistant.loader import bind_hass
+from homeassistant.util import dt as dt_util
+
 from .typing import HomeAssistantType
 
 if TYPE_CHECKING:
@@ -18,7 +19,8 @@ DATA_LOCATION_CACHE = "astral_location_cache"
 @bind_hass
 def get_astral_location(hass: HomeAssistantType) -> "astral.Location":
     """Get an astral location for the current Home Assistant configuration."""
-    from astral import Location
+
+    from astral import Location  # pylint: disable=import-outside-toplevel
 
     latitude = hass.config.latitude
     longitude = hass.config.longitude
@@ -57,7 +59,7 @@ def get_location_astral_event_next(
     offset: Optional[datetime.timedelta] = None,
 ) -> datetime.datetime:
     """Calculate the next specified solar event."""
-    from astral import AstralError
+    from astral import AstralError  # pylint: disable=import-outside-toplevel
 
     if offset is None:
         offset = datetime.timedelta()
@@ -91,7 +93,7 @@ def get_astral_event_date(
     date: Union[datetime.date, datetime.datetime, None] = None,
 ) -> Optional[datetime.datetime]:
     """Calculate the astral event time for the specified date."""
-    from astral import AstralError
+    from astral import AstralError  # pylint: disable=import-outside-toplevel
 
     location = get_astral_location(hass)
 

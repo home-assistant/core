@@ -1,9 +1,17 @@
 """Support for Homekit motion sensors."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
+    BinarySensorDevice,
+)
+from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -13,56 +21,100 @@ _LOGGER = logging.getLogger(__name__)
 class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     """Representation of a Homekit motion sensor."""
 
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._on = False
-
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.MOTION_DETECTED]
 
-    def _update_motion_detected(self, value):
-        self._on = value
-
     @property
     def device_class(self):
         """Define this binary_sensor as a motion sensor."""
-        return "motion"
+        return DEVICE_CLASS_MOTION
 
     @property
     def is_on(self):
         """Has motion been detected."""
-        return self._on
+        return self.service.value(CharacteristicsTypes.MOTION_DETECTED)
 
 
 class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
     """Representation of a Homekit contact sensor."""
 
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._state = None
-
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.CONTACT_STATE]
 
-    def _update_contact_state(self, value):
-        self._state = value
+    @property
+    def device_class(self):
+        """Define this binary_sensor as a opening sensor."""
+        return DEVICE_CLASS_OPENING
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on/open."""
-        return self._state == 1
+        return self.service.value(CharacteristicsTypes.CONTACT_STATE) == 1
 
 
-ENTITY_TYPES = {"motion": HomeKitMotionSensor, "contact": HomeKitContactSensor}
+class HomeKitSmokeSensor(HomeKitEntity, BinarySensorDevice):
+    """Representation of a Homekit smoke sensor."""
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_SMOKE
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [CharacteristicsTypes.SMOKE_DETECTED]
+
+    @property
+    def is_on(self):
+        """Return true if smoke is currently detected."""
+        return self.service.value(CharacteristicsTypes.SMOKE_DETECTED) == 1
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Legacy set up platform."""
-    pass
+class HomeKitOccupancySensor(HomeKitEntity, BinarySensorDevice):
+    """Representation of a Homekit occupancy sensor."""
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_OCCUPANCY
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [CharacteristicsTypes.OCCUPANCY_DETECTED]
+
+    @property
+    def is_on(self):
+        """Return true if occupancy is currently detected."""
+        return self.service.value(CharacteristicsTypes.OCCUPANCY_DETECTED) == 1
+
+
+class HomeKitLeakSensor(HomeKitEntity, BinarySensorDevice):
+    """Representation of a Homekit leak sensor."""
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [CharacteristicsTypes.LEAK_DETECTED]
+
+    @property
+    def device_class(self):
+        """Define this binary_sensor as a leak sensor."""
+        return DEVICE_CLASS_MOISTURE
+
+    @property
+    def is_on(self):
+        """Return true if a leak is detected from the binary sensor."""
+        return self.service.value(CharacteristicsTypes.LEAK_DETECTED) == 1
+
+
+ENTITY_TYPES = {
+    "motion": HomeKitMotionSensor,
+    "contact": HomeKitContactSensor,
+    "smoke": HomeKitSmokeSensor,
+    "occupancy": HomeKitOccupancySensor,
+    "leak": HomeKitLeakSensor,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -70,6 +122,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
+    @callback
     def async_add_service(aid, service):
         entity_class = ENTITY_TYPES.get(service["stype"])
         if not entity_class:

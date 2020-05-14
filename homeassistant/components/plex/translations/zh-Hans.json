@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "\u5ffd\u7565\u65b0\u589e\u7ba1\u7406/\u5171\u4eab\u4f7f\u7528\u8005",
+                    "monitored_users": "\u53d7\u76d1\u89c6\u7684\u7528\u6237"
+                }
+            }
+        }
+    }
+}

@@ -272,7 +272,7 @@ class WeatherData:
                     self.latitude, self.longitude
                 )
         except APICallError:
-            _LOGGER.error("Exception when calling OWM web API " "to update forecast")
+            _LOGGER.error("Exception when calling OWM web API to update forecast")
             return
 
         if fcd is None:

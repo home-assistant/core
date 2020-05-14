@@ -1,7 +1,12 @@
 """Support for Vera thermostats."""
 import logging
+from typing import Callable, List
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate import (
+    DOMAIN as PLATFORM_DOMAIN,
+    ENTITY_ID_FORMAT,
+    ClimateDevice,
+)
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_ON,
@@ -12,10 +17,14 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert
 
-from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
+from . import VeraDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,14 +34,18 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF]
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
-    """Set up of Vera thermostats."""
-    add_entities_callback(
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up the sensor config entry."""
+    controller_data = hass.data[DOMAIN]
+    async_add_entities(
         [
-            VeraThermostat(device, hass.data[VERA_CONTROLLER])
-            for device in hass.data[VERA_DEVICES]["climate"]
-        ],
-        True,
+            VeraThermostat(device, controller_data.controller)
+            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+        ]
     )
 
 
@@ -92,6 +105,8 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         else:
             self.vera_device.fan_auto()
 
+        self.schedule_update_ha_state()
+
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
@@ -129,6 +144,8 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self.vera_device.set_temperature(kwargs.get(ATTR_TEMPERATURE))
 
+        self.schedule_update_ha_state()
+
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_OFF:
@@ -139,3 +156,5 @@ class VeraThermostat(VeraDevice, ClimateDevice):
             self.vera_device.turn_cool_on()
         elif hvac_mode == HVAC_MODE_HEAT:
             self.vera_device.turn_heat_on()
+
+        self.schedule_update_ha_state()

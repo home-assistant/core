@@ -2,13 +2,14 @@
 import pypck
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BRIGHTNESS,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
+    TIME_SECONDS,
 )
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CONNECTIONS,
@@ -178,7 +179,7 @@ class VarAbs(LcnServiceCall):
     """Set absolute value of a variable or setpoint.
 
     Variable has to be set as counter!
-    Reguator setpoints can also be set using R1VARSETPOINT, R2VARSETPOINT.
+    Regulator setpoints can also be set using R1VARSETPOINT, R2VARSETPOINT.
     """
 
     schema = LcnServiceCall.schema.extend(
@@ -281,7 +282,7 @@ class SendKeys(LcnServiceCall):
                 vol.Upper, vol.In(SENDKEYCOMMANDS)
             ),
             vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
-            vol.Optional(CONF_TIME_UNIT, default="s"): vol.All(
+            vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }
@@ -305,7 +306,7 @@ class SendKeys(LcnServiceCall):
             hit = pypck.lcn_defs.SendKeyCommand.HIT
             if pypck.lcn_defs.SendKeyCommand[call.data[CONF_STATE]] != hit:
                 raise ValueError(
-                    "Only hit command is allowed when sending" " deferred keys."
+                    "Only hit command is allowed when sending deferred keys."
                 )
             delay_unit = pypck.lcn_defs.TimeUnit.parse(call.data[CONF_TIME_UNIT])
             address_connection.send_keys_hit_deferred(keys, delay_time, delay_unit)
@@ -324,7 +325,7 @@ class LockKeys(LcnServiceCall):
             ),
             vol.Required(CONF_STATE): is_key_lock_states_string,
             vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
-            vol.Optional(CONF_TIME_UNIT, default="s"): vol.All(
+            vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }
@@ -344,7 +345,7 @@ class LockKeys(LcnServiceCall):
         if delay_time != 0:
             if table_id != 0:
                 raise ValueError(
-                    "Only table A is allowed when locking keys" " for a specific time."
+                    "Only table A is allowed when locking keys for a specific time."
                 )
             delay_unit = pypck.lcn_defs.TimeUnit.parse(call.data[CONF_TIME_UNIT])
             address_connection.lock_keys_tab_a_temporary(delay_time, delay_unit, states)

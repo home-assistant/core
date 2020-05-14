@@ -23,11 +23,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
 )
-from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import DOMAIN
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -130,16 +129,14 @@ async def async_get_triggers(hass, device_id):
         )
 
         triggers.extend(
-            (
-                {
-                    **automation,
-                    "platform": "device",
-                    "device_id": device_id,
-                    "entity_id": entry.entity_id,
-                    "domain": DOMAIN,
-                }
-                for automation in templates
-            )
+            {
+                **automation,
+                "platform": "device",
+                "device_id": device_id,
+                "entity_id": entry.entity_id,
+                "domain": DOMAIN,
+            }
+            for automation in templates
         )
 
     return triggers

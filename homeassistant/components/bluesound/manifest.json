@@ -2,9 +2,6 @@
   "domain": "bluesound",
   "name": "Bluesound",
   "documentation": "https://www.home-assistant.io/integrations/bluesound",
-  "requirements": [
-    "xmltodict==0.12.0"
-  ],
-  "dependencies": [],
+  "requirements": ["xmltodict==0.12.0"],
   "codeowners": []
 }

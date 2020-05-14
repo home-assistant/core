@@ -1,9 +1,10 @@
 """Test the Mythic Beasts DNS component."""
 import logging
+
 import asynctest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import mythicbeastsdns
+from homeassistant.setup import async_setup_component
 
 _LOGGER = logging.getLogger(__name__)
 

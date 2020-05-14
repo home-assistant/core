@@ -1,7 +1,7 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
@@ -17,9 +17,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     client = hass.data[DOMAIN]["client"]
-    heater = hass.data[DOMAIN]["heater"]
+    heaters = hass.data[DOMAIN]["heaters"]
 
-    async_add_entities([InComfortClimate(client, heater, r) for r in heater.rooms])
+    async_add_entities(
+        [InComfortClimate(client, h, r) for h in heaters for r in h.rooms]
+    )
 
 
 class InComfortClimate(IncomfortChild, ClimateDevice):
@@ -30,7 +32,7 @@ class InComfortClimate(IncomfortChild, ClimateDevice):
         super().__init__()
 
         self._unique_id = f"{heater.serial_no}_{room.room_no}"
-        self.entity_id = ENTITY_ID_FORMAT.format(f"{DOMAIN}_{room.room_no}")
+        self.entity_id = f"{CLIMATE_DOMAIN}.{DOMAIN}_{room.room_no}"
         self._name = f"Thermostat {room.room_no}"
 
         self._client = client
@@ -88,4 +90,3 @@ class InComfortClimate(IncomfortChild, ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        pass

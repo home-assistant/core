@@ -4,29 +4,29 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
+    ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    SERVICE_TOGGLE,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
-    SERVICE_TOGGLE_COVER_TILT,
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util

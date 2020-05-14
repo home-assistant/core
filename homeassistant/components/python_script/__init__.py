@@ -5,6 +5,15 @@ import logging
 import os
 import time
 
+from RestrictedPython import compile_restricted_exec
+from RestrictedPython.Eval import default_guarded_getitem
+from RestrictedPython.Guards import (
+    full_write_guard,
+    guarded_iter_unpack_sequence,
+    guarded_unpack_sequence,
+    safe_builtins,
+)
+from RestrictedPython.Utilities import utility_builtins
 import voluptuous as vol
 
 from homeassistant.const import SERVICE_RELOAD
@@ -12,8 +21,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
-from homeassistant.util.yaml.loader import load_yaml
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml.loader import load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,36 +32,45 @@ FOLDER = "python_scripts"
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(dict)}, extra=vol.ALLOW_EXTRA)
 
-ALLOWED_HASS = set(["bus", "services", "states"])
-ALLOWED_EVENTBUS = set(["fire"])
-ALLOWED_STATEMACHINE = set(
-    ["entity_ids", "all", "get", "is_state", "is_state_attr", "remove", "set"]
-)
-ALLOWED_SERVICEREGISTRY = set(["services", "has_service", "call"])
-ALLOWED_TIME = set(
-    ["sleep", "strftime", "strptime", "gmtime", "localtime", "ctime", "time", "mktime"]
-)
-ALLOWED_DATETIME = set(["date", "time", "datetime", "timedelta", "tzinfo"])
-ALLOWED_DT_UTIL = set(
-    [
-        "utcnow",
-        "now",
-        "as_utc",
-        "as_timestamp",
-        "as_local",
-        "utc_from_timestamp",
-        "start_of_local_day",
-        "parse_datetime",
-        "parse_date",
-        "get_age",
-    ]
-)
+ALLOWED_HASS = {"bus", "services", "states"}
+ALLOWED_EVENTBUS = {"fire"}
+ALLOWED_STATEMACHINE = {
+    "entity_ids",
+    "all",
+    "get",
+    "is_state",
+    "is_state_attr",
+    "remove",
+    "set",
+}
+ALLOWED_SERVICEREGISTRY = {"services", "has_service", "call"}
+ALLOWED_TIME = {
+    "sleep",
+    "strftime",
+    "strptime",
+    "gmtime",
+    "localtime",
+    "ctime",
+    "time",
+    "mktime",
+}
+ALLOWED_DATETIME = {"date", "time", "datetime", "timedelta", "tzinfo"}
+ALLOWED_DT_UTIL = {
+    "utcnow",
+    "now",
+    "as_utc",
+    "as_timestamp",
+    "as_local",
+    "utc_from_timestamp",
+    "start_of_local_day",
+    "parse_datetime",
+    "parse_date",
+    "get_age",
+}
 
 
 class ScriptError(HomeAssistantError):
     """When a script error occurs."""
-
-    pass
 
 
 def setup(hass, config):
@@ -122,15 +140,6 @@ def execute_script(hass, name, data=None):
 @bind_hass
 def execute(hass, filename, source, data=None):
     """Execute Python source."""
-    from RestrictedPython import compile_restricted_exec
-    from RestrictedPython.Guards import (
-        safe_builtins,
-        full_write_guard,
-        guarded_iter_unpack_sequence,
-        guarded_unpack_sequence,
-    )
-    from RestrictedPython.Utilities import utility_builtins
-    from RestrictedPython.Eval import default_guarded_getitem
 
     compiled = compile_restricted_exec(source, filename=filename)
 
@@ -147,7 +156,6 @@ def execute(hass, filename, source, data=None):
 
     def protected_getattr(obj, name, default=None):
         """Restricted method to get attributes."""
-        # pylint: disable=too-many-boolean-expressions
         if name.startswith("async_"):
             raise ScriptError("Not allowed to access async methods")
         if (
@@ -176,6 +184,7 @@ def execute(hass, filename, source, data=None):
     builtins["sorted"] = sorted
     builtins["time"] = TimeWrapper()
     builtins["dt_util"] = dt_util
+    logger = logging.getLogger(f"{__name__}.{filename}")
     restricted_globals = {
         "__builtins__": builtins,
         "_print_": StubPrinter,
@@ -185,14 +194,15 @@ def execute(hass, filename, source, data=None):
         "_getitem_": default_guarded_getitem,
         "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
         "_unpack_sequence_": guarded_unpack_sequence,
+        "hass": hass,
+        "data": data or {},
+        "logger": logger,
     }
-    logger = logging.getLogger(f"{__name__}.{filename}")
-    local = {"hass": hass, "data": data or {}, "logger": logger}
 
     try:
         _LOGGER.info("Executing %s: %s", filename, data)
         # pylint: disable=exec-used
-        exec(compiled.code, restricted_globals, local)
+        exec(compiled.code, restricted_globals)
     except ScriptError as err:
         logger.error("Error executing script: %s", err)
     except Exception as err:  # pylint: disable=broad-except
@@ -204,7 +214,6 @@ class StubPrinter:
 
     def __init__(self, _getattr_):
         """Initialize our printer."""
-        pass
 
     def _call_print(self, *objects, **kwargs):
         """Print text."""
@@ -224,7 +233,7 @@ class TimeWrapper:
         if not TimeWrapper.warned:
             TimeWrapper.warned = True
             _LOGGER.warning(
-                "Using time.sleep can reduce the performance of " "Home Assistant"
+                "Using time.sleep can reduce the performance of Home Assistant"
             )
 
         time.sleep(*args, **kwargs)

@@ -1,23 +1,23 @@
 """The tests for the Template fan platform."""
 import logging
-import pytest
 
+import pytest
 import voluptuous as vol
 
 from homeassistant import setup
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.fan import (
-    ATTR_SPEED,
-    ATTR_OSCILLATING,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_HIGH,
     ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
 )
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
-from tests.common import async_mock_service, assert_setup_component
+from tests.common import assert_setup_component, async_mock_service
 from tests.components.fan import common
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ _DIRECTION_INPUT_SELECT = "input_select.direction"
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -594,9 +594,9 @@ def _verify(
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
     assert state.state == expected_state
-    assert attributes.get(ATTR_SPEED, None) == expected_speed
-    assert attributes.get(ATTR_OSCILLATING, None) == expected_oscillating
-    assert attributes.get(ATTR_DIRECTION, None) == expected_direction
+    assert attributes.get(ATTR_SPEED) == expected_speed
+    assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
+    assert attributes.get(ATTR_DIRECTION) == expected_direction
 
 
 async def _register_components(hass, speed_list=None):

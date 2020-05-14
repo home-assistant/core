@@ -1,16 +1,16 @@
 """Service for obtaining information about closer bus from Transport Yandex Service."""
 
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 from ya_ma import YandexMapsRequester
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,6 @@ class DiscoverMoscowYandexTransport(Entity):
         try:
             yandex_reply = self.requester.get_stop_info(self._stop_id)
             data = yandex_reply["data"]
-            stop_metadata = data["properties"]["StopMetaData"]
         except KeyError as key_error:
             _LOGGER.warning(
                 "Exception KeyError was captured, missing key is %s. Yandex returned: %s",
@@ -74,9 +73,8 @@ class DiscoverMoscowYandexTransport(Entity):
             )
             self.requester.set_new_session()
             data = self.requester.get_stop_info(self._stop_id)["data"]
-            stop_metadata = data["properties"]["StopMetaData"]
-        stop_name = data["properties"]["name"]
-        transport_list = stop_metadata["Transport"]
+        stop_name = data["name"]
+        transport_list = data["transports"]
         for transport in transport_list:
             route = transport["name"]
             for thread in transport["threads"]:

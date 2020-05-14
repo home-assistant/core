@@ -1,11 +1,11 @@
 """Support for the Google Cloud TTS service."""
+import asyncio
 import logging
 import os
 
-import asyncio
 import async_timeout
-import voluptuous as vol
 from google.cloud import texttospeech
+import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
@@ -22,6 +22,9 @@ CONF_GAIN = "gain"
 CONF_PROFILES = "profiles"
 
 SUPPORTED_LANGUAGES = [
+    "ar-XA",
+    "bn-IN",
+    "cmn-CN",
     "cs-CZ",
     "da-DK",
     "de-DE",
@@ -35,12 +38,15 @@ SUPPORTED_LANGUAGES = [
     "fil-PH",
     "fr-CA",
     "fr-FR",
+    "gu-IN",
     "hi-IN",
     "hu-HU",
     "id-ID",
     "it-IT",
     "ja-JP",
+    "kn-IN",
     "ko-KR",
+    "ml-IN",
     "nb-NO",
     "nl-NL",
     "pl-PL",
@@ -49,6 +55,9 @@ SUPPORTED_LANGUAGES = [
     "ru-RU",
     "sk-SK",
     "sv-SE",
+    "ta-IN",
+    "te-IN",
+    "th-TH",
     "tr-TR",
     "uk-UA",
     "vi-VN",
@@ -122,7 +131,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_engine(hass, config):
+async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google Cloud TTS component."""
     key_file = config.get(CONF_KEY_FILE)
     if key_file:

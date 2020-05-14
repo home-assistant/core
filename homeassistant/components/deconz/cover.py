@@ -1,11 +1,11 @@
 """Support for deCONZ covers."""
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    CoverDevice,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    SUPPORT_STOP,
     SUPPORT_SET_POSITION,
+    SUPPORT_STOP,
+    CoverDevice,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -61,7 +61,7 @@ class DeconzCover(DeconzDevice, CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return 100 - int(self._device.brightness / 255 * 100)
+        return 100 - int(self._device.brightness / 254 * 100)
 
     @property
     def is_closed(self):
@@ -88,7 +88,7 @@ class DeconzCover(DeconzDevice, CoverDevice):
 
         if position < 100:
             data["on"] = True
-            data["bri"] = 255 - int(position / 100 * 255)
+            data["bri"] = 254 - int(position / 100 * 254)
 
         await self._device.async_set_state(data)
 

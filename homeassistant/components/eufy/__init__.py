@@ -1,7 +1,7 @@
 """Support for Eufy devices."""
 import logging
-import lakeside
 
+import lakeside
 import voluptuous as vol
 
 from homeassistant.const import (

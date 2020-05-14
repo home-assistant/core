@@ -1,0 +1,175 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_bat_low": "{entity_name} batteri er lavt",
+            "is_cold": "{entity_name} er kold",
+            "is_connected": "{entity_name} er tilsluttet",
+            "is_gas": "{entity_name} registrerer gas",
+            "is_hot": "{entity_name} er varm",
+            "is_light": "{entity_name} registrerer lys",
+            "is_locked": "{entity_name} er l\u00e5st",
+            "is_moist": "{entity_name} er fugtig",
+            "is_motion": "{entity_name} registrerer bev\u00e6gelse",
+            "is_moving": "{entity_name} bev\u00e6ger sig",
+            "is_no_gas": "{entity_name} registrerer ikke gas",
+            "is_no_light": "{entity_name} registrerer ikke lys",
+            "is_no_motion": "{entity_name} registrerer ikke bev\u00e6gelse",
+            "is_no_problem": "{entity_name} registrerer ikke noget problem",
+            "is_no_smoke": "{entity_name} registrerer ikke r\u00f8g",
+            "is_no_sound": "{entity_name} registrerer ikke lyd",
+            "is_no_vibration": "{entity_name} registrerer ikke vibration",
+            "is_not_bat_low": "{entity_name} batteri er normalt",
+            "is_not_cold": "{entity_name} er ikke kold",
+            "is_not_connected": "{entity_name} er afbrudt",
+            "is_not_hot": "{entity_name} er ikke varm",
+            "is_not_locked": "{entity_name} er l\u00e5st op",
+            "is_not_moist": "{entity_name} er t\u00f8r",
+            "is_not_moving": "{entity_name} bev\u00e6ger sig ikke",
+            "is_not_occupied": "{entity_name} er ikke optaget",
+            "is_not_open": "{entity_name} er lukket",
+            "is_not_plugged_in": "{entity_name} er ikke tilsluttet str\u00f8m",
+            "is_not_powered": "{entity_name} er ikke tilsluttet str\u00f8m",
+            "is_not_present": "{entity_name} er ikke til stede",
+            "is_not_unsafe": "{entity_name} er sikker",
+            "is_occupied": "{entity_name} er optaget",
+            "is_off": "{entity_name} er sl\u00e5et fra",
+            "is_on": "{entity_name} er sl\u00e5et til",
+            "is_open": "{entity_name} er \u00e5ben",
+            "is_plugged_in": "{entity_name} er tilsluttet str\u00f8m",
+            "is_powered": "{entity_name} er tilsluttet str\u00f8m",
+            "is_present": "{entity_name} er til stede",
+            "is_problem": "{entity_name} registrerer problem",
+            "is_smoke": "{entity_name} registrerer r\u00f8g",
+            "is_sound": "{entity_name} registrerer lyd",
+            "is_unsafe": "{entity_name} er usikker",
+            "is_vibration": "{entity_name} registrerer vibration"
+        },
+        "trigger_type": {
+            "bat_low": "{entity_name} lavt batteriniveau",
+            "cold": "{entity_name} blev kold",
+            "connected": "{entity_name} tilsluttet",
+            "gas": "{entity_name} begyndte at registrere gas",
+            "hot": "{entity_name} blev varm",
+            "light": "{entity_name} begyndte at registrere lys",
+            "locked": "{entity_name} l\u00e5st",
+            "moist": "{entity_name} blev fugtig",
+            "motion": "{entity_name} begyndte at registrere bev\u00e6gelse",
+            "moving": "{entity_name} begyndte at bev\u00e6ge sig",
+            "no_gas": "{entity_name} stoppede med at registrere gas",
+            "no_light": "{entity_name} stoppede med at registrere lys",
+            "no_motion": "{entity_name} stoppede med at registrere bev\u00e6gelse",
+            "no_problem": "{entity_name} stoppede med at registrere problem",
+            "no_smoke": "{entity_name} stoppede med at registrere r\u00f8g",
+            "no_sound": "{entity_name} stoppede med at registrere lyd",
+            "no_vibration": "{entity_name} stoppede med at registrere vibration",
+            "not_bat_low": "{entity_name} batteri normalt",
+            "not_cold": "{entity_name} blev ikke kold",
+            "not_connected": "{entity_name} afbrudt",
+            "not_hot": "{entity_name} blev ikke varm",
+            "not_locked": "{entity_name} l\u00e5st op",
+            "not_moist": "{entity_name} blev t\u00f8r",
+            "not_moving": "{entity_name} stoppede med at bev\u00e6ge sig",
+            "not_occupied": "{entity_name} blev ikke optaget",
+            "not_opened": "{entity_name} lukket",
+            "not_plugged_in": "{entity_name} ikke tilsluttet str\u00f8m",
+            "not_powered": "{entity_name} ikke tilsluttet str\u00f8m",
+            "not_present": "{entity_name} ikke til stede",
+            "not_unsafe": "{entity_name} blev sikker",
+            "occupied": "{entity_name} blev optaget",
+            "opened": "{entity_name} \u00e5bnet",
+            "plugged_in": "{entity_name} tilsluttet str\u00f8m",
+            "powered": "{entity_name} tilsluttet str\u00f8m",
+            "present": "{entity_name} til stede",
+            "problem": "{entity_name} begyndte at registrere problem",
+            "smoke": "{entity_name} begyndte at registrere r\u00f8g",
+            "sound": "{entity_name} begyndte at registrere lyd",
+            "turned_off": "{entity_name} slukkede",
+            "turned_on": "{entity_name} t\u00e6ndte",
+            "unsafe": "{entity_name} blev usikker",
+            "vibration": "{entity_name} begyndte at registrere vibration"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Fra",
+            "on": "Til"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Lav"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Kold"
+        },
+        "connectivity": {
+            "off": "Afbrudt",
+            "on": "Forbundet"
+        },
+        "door": {
+            "off": "Lukket",
+            "on": "\u00c5ben"
+        },
+        "garage_door": {
+            "off": "Lukket",
+            "on": "\u00c5ben"
+        },
+        "gas": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Varm"
+        },
+        "lock": {
+            "off": "L\u00e5st",
+            "on": "Ul\u00e5st"
+        },
+        "moisture": {
+            "off": "T\u00f8r",
+            "on": "Fugtig"
+        },
+        "motion": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "occupancy": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "opening": {
+            "off": "Lukket",
+            "on": "\u00c5ben"
+        },
+        "presence": {
+            "off": "Ude",
+            "on": "Hjemme"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "Sikret",
+            "on": "Usikret"
+        },
+        "smoke": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "sound": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "vibration": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "window": {
+            "off": "Lukket",
+            "on": "\u00c5ben"
+        }
+    },
+    "title": "Bin\u00e6r sensor"
+}

@@ -1,11 +1,12 @@
 """Support for sending data to an Influx database."""
 import logging
-import re
+import math
 import queue
+import re
 import threading
 import time
-import math
 
+from influxdb import InfluxDBClient, exceptions
 import requests.exceptions
 import voluptuous as vol
 
@@ -20,12 +21,12 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    EVENT_STATE_CHANGED,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers import state as state_helper, event as event_helper
+from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 
@@ -118,7 +119,6 @@ RE_DECIMAL = re.compile(r"[^\d.]+")
 
 def setup(hass, config):
     """Set up the InfluxDB component."""
-    from influxdb import InfluxDBClient, exceptions
 
     conf = config[DOMAIN]
 
@@ -239,7 +239,7 @@ def setup(hass, config):
             elif key != "unit_of_measurement" or include_uom:
                 # If the key is already in fields
                 if key in json["fields"]:
-                    key = key + "_"
+                    key = f"{key}_"
                 # Prevent column data errors in influxDB.
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
@@ -341,7 +341,6 @@ class InfluxThread(threading.Thread):
 
     def write_to_influxdb(self, json):
         """Write preprocessed events to influxdb, with retry."""
-        from influxdb import exceptions
 
         for retry in range(self.max_tries + 1):
             try:
@@ -356,7 +355,7 @@ class InfluxThread(threading.Thread):
             except (
                 exceptions.InfluxDBClientError,
                 exceptions.InfluxDBServerError,
-                IOError,
+                OSError,
             ) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)

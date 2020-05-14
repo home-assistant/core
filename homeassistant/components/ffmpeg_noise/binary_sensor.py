@@ -1,19 +1,20 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
 import logging
 
+import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
-from homeassistant.components.ffmpeg_motion.binary_sensor import FFmpegBinarySensor
 from homeassistant.components.ffmpeg import (
-    DATA_FFMPEG,
-    CONF_INPUT,
-    CONF_OUTPUT,
     CONF_EXTRA_ARGUMENTS,
     CONF_INITIAL_STATE,
+    CONF_INPUT,
+    CONF_OUTPUT,
+    DATA_FFMPEG,
 )
+from homeassistant.components.ffmpeg_motion.binary_sensor import FFmpegBinarySensor
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,10 +55,11 @@ class FFmpegNoise(FFmpegBinarySensor):
 
     def __init__(self, hass, manager, config):
         """Initialize FFmpeg noise binary sensor."""
-        from haffmpeg.sensor import SensorNoise
 
         super().__init__(config)
-        self.ffmpeg = SensorNoise(manager.binary, hass.loop, self._async_callback)
+        self.ffmpeg = ffmpeg_sensor.SensorNoise(
+            manager.binary, hass.loop, self._async_callback
+        )
 
     async def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg instance.

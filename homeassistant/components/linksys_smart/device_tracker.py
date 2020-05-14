@@ -4,13 +4,13 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, HTTP_OK
+import homeassistant.helpers.config_validation as cv
 
 DEFAULT_TIMEOUT = 10
 
@@ -37,7 +37,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
         # Check if the access point is accessible
         response = self._make_request()
-        if not response.status_code == 200:
+        if not response.status_code == HTTP_OK:
             raise ConnectionError("Cannot connect to Linksys Access Point")
 
     def scan_devices(self):
@@ -56,7 +56,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
         self.last_results = {}
         response = self._make_request()
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.error(
                 "Got HTTP status code %d when getting device list", response.status_code
             )

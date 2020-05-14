@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, DATA_GIGABYTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -21,7 +21,7 @@ DEFAULT_NAME = "Vultr {} {}"
 MONITORED_CONDITIONS = {
     ATTR_CURRENT_BANDWIDTH_USED: [
         "Current Bandwidth Used",
-        "GB",
+        DATA_GIGABYTES,
         "mdi:chart-histogram",
     ],
     ATTR_PENDING_CHARGES: ["Pending Charges", "US$", "mdi:currency-usd"],

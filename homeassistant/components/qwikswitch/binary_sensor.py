@@ -1,6 +1,8 @@
 """Support for Qwikswitch Binary Sensors."""
 import logging
 
+from pyqwikswitch.qwikswitch import SENSORS
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 
@@ -27,7 +29,6 @@ class QSBinarySensor(QSEntity, BinarySensorDevice):
 
     def __init__(self, sensor):
         """Initialize the sensor."""
-        from pyqwikswitch.qwikswitch import SENSORS
 
         super().__init__(sensor["id"], sensor["name"])
         self.channel = sensor["channel"]
@@ -51,7 +52,7 @@ class QSBinarySensor(QSEntity, BinarySensorDevice):
         )
         if val is not None:
             self._val = bool(val)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def is_on(self):

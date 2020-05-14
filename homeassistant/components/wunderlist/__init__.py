@@ -4,8 +4,8 @@ import logging
 import voluptuous as vol
 from wunderpy2 import WunderApi
 
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME, CONF_ACCESS_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 

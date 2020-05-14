@@ -1,8 +1,7 @@
 {
   "domain": "vesync",
-  "name": "VeSync",
+  "name": "Etekcity VeSync",
   "documentation": "https://www.home-assistant.io/integrations/vesync",
-  "dependencies": [],
   "codeowners": ["@markperdue", "@webdjoe"],
   "requirements": ["pyvesync==1.1.0"],
   "config_flow": true

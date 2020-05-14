@@ -4,10 +4,9 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_DEVICE
-from homeassistant.helpers import config_validation as cv
-
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE, HTTP_OK
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://llamalab.com/automate/cloud/message"
@@ -52,5 +51,5 @@ class AutomateNotificationService(BaseNotificationService):
         }
 
         response = requests.post(_RESOURCE, json=data)
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.error("Error sending message: %s", response)

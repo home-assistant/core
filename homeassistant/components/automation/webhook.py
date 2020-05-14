@@ -5,12 +5,11 @@ import logging
 from aiohttp import hdrs
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as AUTOMATION_DOMAIN
-
 
 # mypy: allow-untyped-defs
 

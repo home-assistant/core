@@ -7,7 +7,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, HTTP_OK, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -72,7 +72,7 @@ async def async_http_request(hass, uri):
         session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
         with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
-        if req.status != 200:
+        if req.status != HTTP_OK:
             return {"error": req.status}
         json_response = await req.json()
         return json_response
@@ -177,5 +177,5 @@ class ViaggiaTrenoSensor(Entity):
                 self._unit = ""
             else:
                 self._state = res.get("ritardo")
-                self._unit = "min"
+                self._unit = TIME_MINUTES
                 self._icon = ICON

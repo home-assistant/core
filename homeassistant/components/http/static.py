@@ -3,9 +3,8 @@ from pathlib import Path
 
 from aiohttp import hdrs
 from aiohttp.web import FileResponse
-from aiohttp.web_exceptions import HTTPNotFound, HTTPForbidden
+from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
-
 
 # mypy: allow-untyped-defs
 
@@ -13,8 +12,6 @@ CACHE_TIME = 31 * 86400  # = 1 month
 CACHE_HEADERS = {hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"}
 
 
-# https://github.com/PyCQA/astroid/issues/633
-# pylint: disable=duplicate-bases
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 

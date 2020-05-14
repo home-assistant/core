@@ -1,22 +1,25 @@
-"""The matrix bot component."""
+"""The Matrix bot component."""
+from functools import partial
 import logging
 import os
-from functools import partial
 
+from matrix_client.client import MatrixClient, MatrixRequestError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import ATTR_TARGET, ATTR_MESSAGE
+from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_VERIFY_SSL,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_STOP,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.util.json import load_json, save_json
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import load_json, save_json
+
+from .const import DOMAIN, SERVICE_SEND_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,10 +33,7 @@ CONF_EXPRESSION = "expression"
 
 EVENT_MATRIX_COMMAND = "matrix_command"
 
-DOMAIN = "matrix"
-
 COMMAND_SCHEMA = vol.All(
-    # Basic Schema
     vol.Schema(
         {
             vol.Exclusive(CONF_WORD, "trigger"): cv.string,
@@ -42,7 +42,6 @@ COMMAND_SCHEMA = vol.All(
             vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         }
     ),
-    # Make sure it's either a word or an expression command
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION),
 )
 
@@ -64,7 +63,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_SEND_MESSAGE = "send_message"
 
 SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
@@ -76,8 +74,6 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 
 def setup(hass, config):
     """Set up the Matrix bot component."""
-    from matrix_client.client import MatrixRequestError
-
     config = config[DOMAIN]
 
     try:
@@ -138,11 +134,11 @@ class MatrixBot:
         # so we only do it once per room.
         self._aliases_fetched_for = set()
 
-        # word commands are stored dict-of-dict: First dict indexes by room ID
+        # Word commands are stored dict-of-dict: First dict indexes by room ID
         #  / alias, second dict indexes by the word
         self._word_commands = {}
 
-        # regular expression commands are stored as a list of commands per
+        # Regular expression commands are stored as a list of commands per
         # room, i.e., a dict-of-list
         self._expression_commands = {}
 
@@ -184,7 +180,7 @@ class MatrixBot:
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
     def _handle_room_message(self, room_id, room, event):
-        """Handle a message sent to a room."""
+        """Handle a message sent to a Matrix room."""
         if event["content"]["msgtype"] != "m.text":
             return
 
@@ -194,7 +190,7 @@ class MatrixBot:
         _LOGGER.debug("Handling message: %s", event["content"]["body"])
 
         if event["content"]["body"][0] == "!":
-            # Could trigger a single-word command.
+            # Could trigger a single-word command
             pieces = event["content"]["body"].split(" ")
             cmd = pieces[0][1:]
 
@@ -248,9 +244,7 @@ class MatrixBot:
         return room
 
     def _join_rooms(self):
-        """Join the rooms that we listen for commands in."""
-        from matrix_client.client import MatrixRequestError
-
+        """Join the Matrix rooms that we listen for commands in."""
         for room_id in self._listening_rooms:
             try:
                 room = self._join_or_get_room(room_id)
@@ -286,9 +280,7 @@ class MatrixBot:
         save_json(self._session_filepath, self._auth_tokens)
 
     def _login(self):
-        """Login to the matrix homeserver and return the client instance."""
-        from matrix_client.client import MatrixRequestError
-
+        """Login to the Matrix homeserver and return the client instance."""
         # Attempt to generate a valid client using either of the two possible
         # login methods:
         client = None
@@ -301,13 +293,12 @@ class MatrixBot:
 
             except MatrixRequestError as ex:
                 _LOGGER.warning(
-                    "Login by token failed, falling back to password. "
-                    "login_by_token raised: (%d) %s",
+                    "Login by token failed, falling back to password: %d, %s",
                     ex.code,
                     ex.content,
                 )
 
-        # If we still don't have a client try password.
+        # If we still don't have a client try password
         if not client:
             try:
                 client = self._login_by_password()
@@ -315,21 +306,17 @@ class MatrixBot:
 
             except MatrixRequestError as ex:
                 _LOGGER.error(
-                    "Login failed, both token and username/password invalid "
-                    "login_by_password raised: (%d) %s",
+                    "Login failed, both token and username/password invalid: %d, %s",
                     ex.code,
                     ex.content,
                 )
-
-                # re-raise the error so _setup can catch it.
+                # Re-raise the error so _setup can catch it
                 raise
 
         return client
 
     def _login_by_token(self):
         """Login using authentication token and return the client."""
-        from matrix_client.client import MatrixClient
-
         return MatrixClient(
             base_url=self._homeserver,
             token=self._auth_tokens[self._mx_id],
@@ -339,8 +326,6 @@ class MatrixBot:
 
     def _login_by_password(self):
         """Login using password authentication and return the client."""
-        from matrix_client.client import MatrixClient
-
         _client = MatrixClient(
             base_url=self._homeserver, valid_cert_check=self._verify_tls
         )
@@ -352,8 +337,7 @@ class MatrixBot:
         return _client
 
     def _send_message(self, message, target_rooms):
-        """Send the message to the matrix server."""
-        from matrix_client.client import MatrixRequestError
+        """Send the message to the Matrix server."""
 
         for target_room in target_rooms:
             try:
@@ -361,7 +345,7 @@ class MatrixBot:
                 _LOGGER.debug(room.send_text(message))
             except MatrixRequestError as ex:
                 _LOGGER.error(
-                    "Unable to deliver message to room '%s': (%d): %s",
+                    "Unable to deliver message to room '%s': %d, %s",
                     target_room,
                     ex.code,
                     ex.content,

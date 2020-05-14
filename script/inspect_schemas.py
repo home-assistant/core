@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Inspect all component SCHEMAS."""
-import os
 import importlib
+import os
 import pkgutil
 
 from homeassistant.config import _identify_config_schema
@@ -13,7 +13,7 @@ def explore_module(package):
     module = importlib.import_module(package)
     if not hasattr(module, "__path__"):
         return []
-    for _, name, _ in pkgutil.iter_modules(module.__path__, package + "."):
+    for _, name, _ in pkgutil.iter_modules(module.__path__, f"{package}."):
         yield name
 
 
@@ -39,8 +39,7 @@ def main():
             if hasattr(module, "CONFIG_SCHEMA"):
                 add_msg(
                     "WARNING",
-                    "Module {} contains PLATFORM and CONFIG "
-                    "schemas".format(module_name),
+                    f"Module {module_name} contains PLATFORM and CONFIG schemas",
                 )
             add_msg("PLATFORM SCHEMA", module_name)
             continue
@@ -52,8 +51,8 @@ def main():
         schema_type, schema = _identify_config_schema(module)
 
         add_msg(
-            "CONFIG_SCHEMA " + str(schema_type),
-            module_name + " " + color("cyan", str(schema)[:60]),
+            f"CONFIG_SCHEMA {schema_type}",
+            f"{module_name} {color('cyan', str(schema)[:60])}",
         )
 
     for key in sorted(msg):

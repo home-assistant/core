@@ -1,7 +1,6 @@
 """The tests for the Buienradar sensor platform."""
-from homeassistant.setup import async_setup_component
 from homeassistant.components import sensor
-
+from homeassistant.setup import async_setup_component
 
 CONDITIONS = ["stationname", "temperature"]
 BASE_CONFIG = {

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "adguard_home_addon_outdated": "D\u00ebs Integratioun ben\u00e9idegt AdgGuard Home {minimal_version} oder m\u00e9i, dir hutt {current_version}. Aktualis\u00e9iert w.e.g. \u00e4ren Hass.io AdGuard Home Add-on.",
+            "adguard_home_outdated": "D\u00ebs Integratioun ben\u00e9idegt AdgGuard Home {minimal_version} oder m\u00e9i, dir hutt {current_version}.",
+            "existing_instance_updated": "D\u00e9i bestehend Konfiguratioun ass ge\u00e4nnert.",
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun AdGuard Home ass erlaabt."
+        },
+        "error": {
+            "connection_error": "Feeler beim verbannen."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam AdGuard Home ze verbannen dee vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
+                "title": "AdGuard Home via Hass.io add-on"
+            },
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "ssl": "AdGuard Home benotzt een SSL Zertifikat",
+                    "username": "Benotzernumm",
+                    "verify_ssl": "AdGuard Home benotzt een eegenen Zertifikat"
+                },
+                "description": "Konfigur\u00e9iert \u00e4r AdGuard Home Instanz fir d'Iwwerwaachung an d'Kontroll z'erlaben.",
+                "title": "Verbannt \u00e4ren AdGuard Home"
+            }
+        }
+    }
+}

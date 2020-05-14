@@ -1,12 +1,8 @@
 {
   "domain": "onvif",
-  "name": "Onvif",
+  "name": "ONVIF",
   "documentation": "https://www.home-assistant.io/integrations/onvif",
-  "requirements": [
-    "onvif-zeep-async==0.2.0"
-  ],
-  "dependencies": [
-    "ffmpeg"
-  ],
+  "requirements": ["onvif-zeep-async==0.2.0"],
+  "dependencies": ["ffmpeg"],
   "codeowners": []
 }

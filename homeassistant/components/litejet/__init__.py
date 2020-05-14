@@ -1,11 +1,12 @@
 """Support for the LiteJet lighting system."""
 import logging
 
+from pylitejet import LiteJet
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.const import CONF_PORT
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the LiteJet component."""
-    from pylitejet import LiteJet
 
     url = config[DOMAIN].get(CONF_PORT)
 

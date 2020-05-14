@@ -1,14 +1,13 @@
 """Support for Automation Device Specification (ADS)."""
-import threading
-import struct
-import logging
-import ctypes
-from collections import namedtuple
 import asyncio
+from collections import namedtuple
+import ctypes
+import logging
+import struct
+import threading
+
 import async_timeout
-
 import pyads
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -83,9 +82,9 @@ def setup(hass, config):
 
     conf = config[DOMAIN]
 
-    net_id = conf.get(CONF_DEVICE)
+    net_id = conf[CONF_DEVICE]
     ip_address = conf.get(CONF_IP_ADDRESS)
-    port = conf.get(CONF_PORT)
+    port = conf[CONF_PORT]
 
     client = pyads.Connection(net_id, port, ip_address)
 

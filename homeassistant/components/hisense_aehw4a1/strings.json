@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up Hisense AEH-W4A1?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of Hisense AEH-W4A1 is possible.",
+      "no_devices_found": "No Hisense AEH-W4A1 devices found on the network."
+    }
+  }
+}
