@@ -77,6 +77,7 @@ def mock_connection(
     conn_error: bool = False,
     conn_upgrade: bool = False,
     ipp_error: bool = False,
+    no_unique_id: bool = False,
     parse_error: bool = False,
     version_not_supported: bool = False,
 ):
