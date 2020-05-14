@@ -72,7 +72,7 @@ class PoolSenseSensor(Entity):
         """State of the sensor."""
         if self.info_type == "pH Status":
             if self.coordinator.data[self.info_type] == "red":
-                return "!"
+                return STATE_PROBLEM
             return "✅"
         if self.info_type == "Chlorine Status":
             if self.coordinator.data[self.info_type] == "red":
