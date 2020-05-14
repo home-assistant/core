@@ -108,12 +108,10 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "connect_error"
 
         if self.host:
-            return self.async_show_form(
-                step_id="gateway",
-                data_schema=vol.Schema(GATEWAY_SETTINGS),
-                errors=errors,
-            )
+            schema = vol.Schema(GATEWAY_SETTINGS)
+        else:
+            schema = GATEWAY_CONFIG
 
         return self.async_show_form(
-            step_id="gateway", data_schema=GATEWAY_CONFIG, errors=errors
+            step_id="gateway", data_schema=schema, errors=errors
         )
