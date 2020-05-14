@@ -32,7 +32,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._email = user_input[CONF_EMAIL]
             self._password = user_input[CONF_PASSWORD]
-            _LOGGER.info("Configuring user: " + self._email + " Password hidden.")
+            _LOGGER.info("Configuring user: %s - Password hidden.", self._email)
 
             return self.async_create_entry(
                 title=self._email,
