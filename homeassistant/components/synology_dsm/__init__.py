@@ -230,15 +230,15 @@ class SynoApi:
 
         # Reset not used API
         if not self._with_security:
-            self.dsm._security = None  # pylint: disable=protected-access
+            self.dsm.reset(self.security)
             self.security = None
 
         if not self._with_storage:
-            self.dsm._storage = None  # pylint: disable=protected-access
+            self.dsm.reset(self.storage)
             self.storage = None
 
         if not self._with_utilisation:
-            self.dsm._utilisation = None  # pylint: disable=protected-access
+            self.dsm.reset(self.utilisation)
             self.utilisation = None
 
     def _fetch_device_configuration(self):
