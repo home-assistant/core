@@ -22,9 +22,6 @@ DATA_CLASSES = {
     "HomeCoachData": pyatmo.HomeCoachData,
     "CameraData": pyatmo.CameraData,
     "HomeData": pyatmo.HomeData,
-    # "HomeStatus": pyatmo.HomeStatus,
-}
-STATUS_CLASSES = {
     "HomeStatus": pyatmo.HomeStatus,
 }
 
@@ -51,7 +48,6 @@ class NetatmoDataHandler:
         self._auth = hass.data[DOMAIN][entry.entry_id][AUTH]
         self.listeners: List[CALLBACK_TYPE] = []
         self._data_classes: Dict = {}
-        self._status_classes: Dict = {}
         self.data = {}
         self._intervals = {}
 
@@ -61,7 +57,7 @@ class NetatmoDataHandler:
             pyatmo.WeatherStationData,
             pyatmo.HomeCoachData,
             pyatmo.CameraData,
-            # pyatmo.HomeData,
+            pyatmo.HomeData,
         ]:
             try:
                 self.data[data_class.__name__] = await self.hass.async_add_executor_job(
@@ -79,7 +75,7 @@ class NetatmoDataHandler:
                         self.hass.async_add_executor_job(
                             partial(
                                 self._data_classes[data_class]["class"],
-                                # **self._data_classes[data_class]["kwargs"],
+                                **self._data_classes[data_class]["kwargs"],
                             ),
                             self._auth,
                         )
@@ -90,29 +86,6 @@ class NetatmoDataHandler:
                 _LOGGER.debug(err)
 
             for data_class, result in zip(self._data_classes, data_results):
-                print("data", data_class, result)
-                self.data[data_class] = result
-                async_dispatcher_send(self.hass, f"netatmo-update-{data_class}")
-
-            try:
-                status_results = await asyncio.gather(
-                    *[
-                        self.hass.async_add_executor_job(
-                            partial(
-                                self._status_classes[data_class]["class"],
-                                home_data=self.data["HomeData"],
-                                **self._status_classes[data_class]["kwargs"],
-                            ),
-                            self._auth,
-                        )
-                        for data_class in self._status_classes
-                    ]
-                )
-            except pyatmo.NoDevice as err:
-                _LOGGER.debug(err)
-
-            for data_class, result in zip(self._status_classes, status_results):
-                print("status", data_class, result)
                 self.data[data_class] = result
                 async_dispatcher_send(self.hass, f"netatmo-update-{data_class}")
 
@@ -125,61 +98,29 @@ class NetatmoDataHandler:
         else:
             data_class_entry = data_class_name
 
-        if data_class_name in DATA_CLASSES:
-
-            if data_class_entry not in self._data_classes:
-                self._data_classes[data_class_entry] = {
-                    "class": DATA_CLASSES[data_class_name],
-                    "registered": 1,
-                }
-                self.data[data_class_entry] = await self.hass.async_add_executor_job(
-                    DATA_CLASSES[data_class_name], self._auth
-                )
-                _LOGGER.debug("Data class %s added", data_class_name)
-            else:
-                self._data_classes[data_class_entry].update(
-                    registered=self._data_classes[data_class_entry]["registered"] + 1
-                )
-
-        elif data_class_name in STATUS_CLASSES:
-
-            if data_class_entry not in self._status_classes:
-                print("kwargs", kwargs)
-                self._status_classes[data_class_entry] = {
-                    "class": STATUS_CLASSES[data_class_name],
-                    "kwargs": kwargs,
-                    "registered": 1,
-                }
-                self.data[data_class_entry] = await self.hass.async_add_executor_job(
-                    partial(
-                        STATUS_CLASSES[data_class_name],
-                        home_data=self.data["HomeData"],
-                        **kwargs,
-                    ),
-                    self._auth,
-                )
-                _LOGGER.debug("Status class %s added", data_class_name)
-            else:
-                self._status_classes[data_class_entry].update(
-                    registered=self._status_classes[data_class_entry]["registered"] + 1
-                )
+        if data_class_entry not in self._data_classes:
+            self._data_classes[data_class_entry] = {
+                "class": DATA_CLASSES[data_class_name],
+                "kwargs": kwargs,
+                "registered": 1,
+            }
+            self.data[data_class_entry] = await self.hass.async_add_executor_job(
+                partial(DATA_CLASSES[data_class_name], **kwargs,), self._auth,
+            )
+            _LOGGER.debug("Data class %s added", data_class_name)
+        else:
+            self._data_classes[data_class_entry].update(
+                registered=self._data_classes[data_class_entry]["registered"] + 1
+            )
 
     async def unregister_data_class(self, data_class_entry):
         """Unregister data class."""
-        if not data_class_entry.startswith("HomeStatus"):
-            registered = self._data_classes[data_class_entry]["registered"]
-            if registered > 1:
-                self._data_classes[data_class_entry].update(registered=registered - 1)
-            else:
-                self._data_classes.pop(data_class_entry)
-                _LOGGER.debug("Data class %s removed", data_class_entry)
+        registered = self._data_classes[data_class_entry]["registered"]
+        if registered > 1:
+            self._data_classes[data_class_entry].update(registered=registered - 1)
         else:
-            registered = self._status_classes[data_class_entry]["registered"]
-            if registered > 1:
-                self._status_classes[data_class_entry].update(registered=registered - 1)
-            else:
-                self._status_classes.pop(data_class_entry)
-                _LOGGER.debug("Status class %s removed", data_class_entry)
+            self._data_classes.pop(data_class_entry)
+            _LOGGER.debug("Data class %s removed", data_class_entry)
 
 
 @callback
