@@ -64,6 +64,7 @@ async def test_sync_message(hass):
         entity_config={
             "light.demo_light": {
                 const.CONF_ROOM_HINT: "Living Room",
+                const.CONF_STRUCTURE_HINT: "Home",
                 const.CONF_ALIASES: ["Hello", "World"],
             }
         },
@@ -106,6 +107,7 @@ async def test_sync_message(hass):
                         },
                     },
                     "roomHint": "Living Room",
+                    "structureHint": "Home",
                 }
             ],
         },

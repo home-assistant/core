@@ -25,6 +25,7 @@ from . import trait
 from .const import (
     CONF_ALIASES,
     CONF_ROOM_HINT,
+    CONF_STRUCTURE_HINT,
     DEVICE_CLASS_TO_GOOGLE_TYPES,
     DOMAIN,
     DOMAIN_TO_GOOGLE_TYPES,
@@ -432,6 +433,10 @@ class GoogleEntity:
 
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
+
+        structure = entity_config.get(CONF_STRUCTURE_HINT)
+        if structure:
+            device["structureHint"] = structure
 
         room = entity_config.get(CONF_ROOM_HINT)
         if room:
