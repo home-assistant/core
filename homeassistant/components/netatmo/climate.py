@@ -110,7 +110,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
     data_class = "HomeData"
+    await data_handler.register_data_class(data_class)
     home_data = data_handler.data.get(data_class)
+    # print("home_data", home_data)
+
+    # if home_data is None:
+    #     await data_handler.register_data_class(data_class)
+    # else:
+    #     print("home_data", home_data)
 
     async def get_entities():
         """Retrieve Netatmo entities."""
@@ -388,6 +395,13 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
         try:
             roomstatus = {}
 
+            self._home_status = self.data_handler.data[f"HomeStatus-{self._home_id}"]
+            self._room_status = self._home_status.rooms[self._room_id]
+            self._room_data = self._data.rooms[self._home_id][self._room_id]
+
+            # print("-homedata", self._data)
+            # print("homestatus", self._home_status.home_data)
+
             roomstatus["roomID"] = self._room_status["id"]
             if self._room_status["reachable"]:
                 roomstatus["roomname"] = self._room_data["name"]
@@ -449,7 +463,7 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
         self._hg_temperature = self._home_status.getHgtemp(home_id=self._home_id)
         self._setpoint_duration = self._data.setpoint_duration[self._home_id]
 
-        print("roomstatus", self._room_name, self._room_id, roomstatus)
+        # print("roomstatus", self._room_name, self._room_id, roomstatus)
 
         try:
             if self._module_type is None:

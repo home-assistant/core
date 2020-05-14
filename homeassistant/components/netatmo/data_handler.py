@@ -61,7 +61,7 @@ class NetatmoDataHandler:
             pyatmo.WeatherStationData,
             pyatmo.HomeCoachData,
             pyatmo.CameraData,
-            pyatmo.HomeData,
+            # pyatmo.HomeData,
         ]:
             try:
                 self.data[data_class.__name__] = await self.hass.async_add_executor_job(
@@ -89,13 +89,18 @@ class NetatmoDataHandler:
             except pyatmo.NoDevice as err:
                 _LOGGER.debug(err)
 
+            for data_class, result in zip(self._data_classes, data_results):
+                print("data", data_class, result)
+                self.data[data_class] = result
+                async_dispatcher_send(self.hass, f"netatmo-update-{data_class}")
+
             try:
                 status_results = await asyncio.gather(
                     *[
                         self.hass.async_add_executor_job(
                             partial(
                                 self._status_classes[data_class]["class"],
-                                home_data=self._data_classes["HomeData"]["class"],
+                                home_data=self.data["HomeData"],
                                 **self._status_classes[data_class]["kwargs"],
                             ),
                             self._auth,
@@ -106,11 +111,8 @@ class NetatmoDataHandler:
             except pyatmo.NoDevice as err:
                 _LOGGER.debug(err)
 
-            for data_class, result in zip(self._data_classes, data_results):
-                self.data[data_class] = result
-                async_dispatcher_send(self.hass, f"netatmo-update-{data_class}")
-
             for data_class, result in zip(self._status_classes, status_results):
+                print("status", data_class, result)
                 self.data[data_class] = result
                 async_dispatcher_send(self.hass, f"netatmo-update-{data_class}")
 
@@ -128,11 +130,10 @@ class NetatmoDataHandler:
             if data_class_entry not in self._data_classes:
                 self._data_classes[data_class_entry] = {
                     "class": DATA_CLASSES[data_class_name],
-                    "kwargs": kwargs,
                     "registered": 1,
                 }
                 self.data[data_class_entry] = await self.hass.async_add_executor_job(
-                    partial(DATA_CLASSES[data_class_name], **kwargs), self._auth
+                    DATA_CLASSES[data_class_name], self._auth
                 )
                 _LOGGER.debug("Data class %s added", data_class_name)
             else:
@@ -143,13 +144,19 @@ class NetatmoDataHandler:
         elif data_class_name in STATUS_CLASSES:
 
             if data_class_entry not in self._status_classes:
+                print("kwargs", kwargs)
                 self._status_classes[data_class_entry] = {
                     "class": STATUS_CLASSES[data_class_name],
                     "kwargs": kwargs,
                     "registered": 1,
                 }
                 self.data[data_class_entry] = await self.hass.async_add_executor_job(
-                    partial(STATUS_CLASSES[data_class_name], **kwargs), self._auth
+                    partial(
+                        STATUS_CLASSES[data_class_name],
+                        home_data=self.data["HomeData"],
+                        **kwargs,
+                    ),
+                    self._auth,
                 )
                 _LOGGER.debug("Status class %s added", data_class_name)
             else:
