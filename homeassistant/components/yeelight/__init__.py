@@ -234,10 +234,7 @@ class YeelightDevice:
 
     @property
     def model(self):
-        """Return configured device model.
-
-        Model method returns declared model, and if not, it tries to get it from
-        """
+        """Return configured/autodetected device model."""
         return self._bulb_device.model
 
     @property
