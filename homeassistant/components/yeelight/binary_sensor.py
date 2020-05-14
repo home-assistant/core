@@ -1,5 +1,6 @@
 """Sensor platform support for yeelight."""
 import logging
+from typing import Optional
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -37,6 +38,14 @@ class YeelightNightlightModeSensor(BinarySensorEntity):
                 self.async_write_ha_state,
             )
         )
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        unique = self._device.unique_id
+
+        if unique:
+            return unique + "-nightlight_sensor"
 
     @property
     def should_poll(self):
