@@ -20,14 +20,14 @@
     },
     "state": {
         "_": {
-            "dead": "Mrtev",
+            "dead": "Mrtva",
             "initializing": "Inicializacija",
             "ready": "Pripravljen",
-            "sleeping": "Spanje"
+            "sleeping": "Spi"
         },
         "query_stage": {
-            "dead": "Mrtev ({query_stage})",
-            "initializing": "Inicializacija ({query_stage})"
+            "dead": "Mrtva",
+            "initializing": "Inicializacija"
         }
     }
 }

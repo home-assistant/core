@@ -1,17 +1,18 @@
 {
-  "config": {
-    "step": {
-      "import_failed": {
-        "title": "Failed to import Caséta bridge configuration.",
-        "description": "Couldn’t import Caséta bridge (host: {host}) from configuration.yaml."
-      }
+    "config": {
+        "abort": {
+            "already_configured": "Cas\u00e9ta bridge already configured.",
+            "cannot_connect": "Cancelled setup of Cas\u00e9ta bridge due to connection failure."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to Cas\u00e9ta bridge; check your host and certificate configuration."
+        },
+        "step": {
+            "import_failed": {
+                "description": "Couldn\u2019t setup bridge (host: {host}) imported from configuration.yaml.",
+                "title": "Failed to import Cas\u00e9ta bridge configuration."
+            }
+        }
     },
-    "error": {
-      "cannot_connect": "Failed to connect to Caséta bridge; check your host and certificate configuration."
-    },
-    "abort": {
-      "already_configured": "Caséta bridge already configured.",
-      "cannot_connect": "Cancelled setup of Caséta bridge due to connection failure."
-    }
-  }
+    "title": "Lutron Cas\u00e9ta"
 }

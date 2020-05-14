@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "invalid_credentials": "Credenciais inv\u00e1lidas",
-            "user_already_configured": "A conta j\u00e1 foi configurada"
+            "invalid_credentials": "Credenciais inv\u00e1lidas"
         },
         "create_entry": {
             "default": "Para definir op\u00e7\u00f5es avan\u00e7adas, consulte [Documenta\u00e7\u00e3o da Life360] ({docs_url})."

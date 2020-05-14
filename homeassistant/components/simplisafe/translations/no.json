@@ -10,11 +10,11 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Kode (brukt i Home Assistant grensesnitt)",
+                    "code": "Kode (brukt i Home Assistant brukergrensesnittet)",
                     "password": "Passord",
                     "username": "E-postadresse"
                 },
-                "title": "Fyll ut informasjonen din"
+                "title": "Fyll ut informasjonen din."
             }
         }
     },

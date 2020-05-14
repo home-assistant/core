@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Esta clave API ya est\u00e1 en uso."
+            "already_configured": "Estas coordenadas o Nodo/Pro ID ya est\u00e1n registradas."
         },
         "error": {
             "general_error": "Se ha producido un error desconocido.",
-            "invalid_api_key": "Clave API inv\u00e1lida",
+            "invalid_api_key": "Se proporciona una clave API no v\u00e1lida.",
             "unable_to_connect": "No se puede conectar a la unidad Node/Pro."
         },
         "step": {
@@ -35,7 +35,7 @@
                     "node_pro": "AirVisual Node Pro",
                     "type": "Tipo de Integraci\u00f3n"
                 },
-                "description": "Monitorizar la calidad del aire en una ubicaci\u00f3n geogr\u00e1fica.",
+                "description": "Elige qu\u00e9 tipo de datos de AirVisual quieres monitorear.",
                 "title": "Configurar AirVisual"
             }
         }

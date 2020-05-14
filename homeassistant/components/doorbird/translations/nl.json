@@ -6,18 +6,14 @@
             "not_doorbird_device": "Dit apparaat is geen DoorBird"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
-            "invalid_auth": "Ongeldige authenticatie",
-            "unknown": "Onverwachte fout"
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw"
         },
         "flow_title": "DoorBird {name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "Host (IP-adres)",
-                    "name": "Apparaatnaam",
-                    "password": "Wachtwoord",
-                    "username": "Gebruikersnaam"
+                    "name": "Apparaatnaam"
                 },
                 "title": "Maak verbinding met de DoorBird"
             }

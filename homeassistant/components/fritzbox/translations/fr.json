@@ -1,25 +1,32 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Cette AVM FRITZ!Box est d\u00e9j\u00e0 configur\u00e9e.",
+            "already_in_progress": "Une configuration d'AVM FRITZ!Box est d\u00e9j\u00e0 en cours.",
+            "not_found": "Aucune AVM FRITZ!Box support\u00e9e trouv\u00e9e sur le r\u00e9seau.",
             "not_supported": "Connect\u00e9 \u00e0 AVM FRITZ! Box mais impossible de contr\u00f4ler les appareils Smart Home."
         },
         "error": {
             "auth_failed": "Le nom d'utilisateur et / ou le mot de passe sont incorrects."
         },
+        "flow_title": "AVM FRITZ!Box : {name}",
         "step": {
             "confirm": {
                 "data": {
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
                 },
-                "description": "Voulez-vous configurer {name} ?"
+                "description": "Voulez-vous configurer {name} ?",
+                "title": "AVM FRITZ!Box"
             },
             "user": {
                 "data": {
                     "host": "H\u00f4te ou adresse IP",
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "description": "Entrez les informations de votre AVM FRITZ!Box.",
+                "title": "AVM FRITZ!Box"
             }
         }
     }
