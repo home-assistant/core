@@ -5,6 +5,7 @@ from typing import Dict
 import pytest
 from zeroconf import InterfaceChoice
 
+from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
 from homeassistant.components.homekit import (
     MAX_DEVICES,
@@ -94,6 +95,7 @@ async def test_setup_min(hass):
     with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_setup_zeroconf = AsyncMock()
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -135,6 +137,7 @@ async def test_setup_auto_start_disabled(hass):
     with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_setup_zeroconf = AsyncMock()
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -703,25 +706,28 @@ async def test_homekit_finds_linked_batteries(
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
+        sw_version="0.16.0",
+        model="Powerwall 2",
+        manufacturer="Tesla",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     binary_charging_sensor = entity_reg.async_get_or_create(
         "binary_sensor",
-        "light",
+        "powerwall",
         "battery_charging",
         device_id=device_entry.id,
         device_class=DEVICE_CLASS_BATTERY_CHARGING,
     )
     battery_sensor = entity_reg.async_get_or_create(
         "sensor",
-        "light",
+        "powerwall",
         "battery",
         device_id=device_entry.id,
         device_class=DEVICE_CLASS_BATTERY,
     )
     light = entity_reg.async_get_or_create(
-        "light", "light", "demo", device_id=device_entry.id
+        "light", "powerwall", "demo", device_id=device_entry.id
     )
 
     hass.states.async_set(
@@ -751,8 +757,11 @@ async def test_homekit_finds_linked_batteries(
         ANY,
         ANY,
         {
-            "linked_battery_charging_sensor": "binary_sensor.light_battery_charging",
-            "linked_battery_sensor": "sensor.light_battery",
+            "manufacturer": "Tesla",
+            "model": "Powerwall 2",
+            "sw_version": "0.16.0",
+            "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
+            "linked_battery_sensor": "sensor.powerwall_battery",
         },
     )
 
@@ -781,6 +790,7 @@ async def test_setup_imported(hass):
     with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_setup_zeroconf = AsyncMock()
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -835,6 +845,7 @@ async def test_yaml_updates_update_config_entry_for_name(hass):
     with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_setup_zeroconf = AsyncMock()
         assert await async_setup_component(
             hass, "homekit", {"homekit": {CONF_NAME: BRIDGE_NAME, CONF_PORT: 12345}}
         )
@@ -877,6 +888,24 @@ async def test_raise_config_entry_not_ready(hass):
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
+    """Test HomeKit uses system zeroconf."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
+        options={},
+    )
+    system_zc = await zeroconf.async_get_instance(hass)
+
+    with patch(f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver), patch(
+        f"{PATH_HOMEKIT}.HomeKit.async_start"
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert hk_driver.advertiser == system_zc
 
 
 def _write_data(path: str, data: Dict) -> None:

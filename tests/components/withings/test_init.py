@@ -14,6 +14,7 @@ from homeassistant.components.withings import (
     async_setup_entry,
     const,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -164,6 +165,10 @@ async def test_upgrade_token(
     config = await setup_hass(hass)
     profiles = config[const.DOMAIN][const.PROFILES]
 
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local"},
+    )
+
     await configure_integration(
         hass=hass,
         aiohttp_client=aiohttp_client,
@@ -234,6 +239,10 @@ async def test_auth_failure(
     config = await setup_hass(hass)
     profiles = config[const.DOMAIN][const.PROFILES]
 
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local"},
+    )
+
     await configure_integration(
         hass=hass,
         aiohttp_client=aiohttp_client,
@@ -268,6 +277,10 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
     """Test the whole component lifecycle."""
     config = await setup_hass(hass)
     profiles = config[const.DOMAIN][const.PROFILES]
+
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local"},
+    )
 
     await configure_integration(
         hass=hass,

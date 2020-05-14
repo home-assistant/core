@@ -40,7 +40,7 @@ class ZWaveDeviceEntityValues:
         # and add a check to the schema to make sure the Instance matches.
         for name, disc_settings in self._schema[const.DISC_VALUES].items():
             self._values[name] = None
-            disc_settings[const.DISC_INSTANCE] = [primary_value.instance]
+            disc_settings[const.DISC_INSTANCE] = (primary_value.instance,)
 
         self._values[const.DISC_PRIMARY] = primary_value
         self._node = primary_value.node

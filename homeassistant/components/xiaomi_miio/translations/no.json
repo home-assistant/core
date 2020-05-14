@@ -4,8 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "connect_error": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
-            "no_device_selected": "Ingen enhet valgt. Velg en enhet."
+            "no_device_selected": "Ingen enhet valgt, vennligst velg en enhet."
         },
         "step": {
             "gateway": {
@@ -14,7 +13,7 @@
                     "name": "Navnet p\u00e5 gatewayen",
                     "token": "API-token"
                 },
-                "description": "Du trenger API-symbolet, se https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token for instruksjoner.",
+                "description": "Du trenger API-tilgangstoken, se [https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token](https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token) for instruksjoner.",
                 "title": "Koble til en Xiaomi Gateway"
             },
             "user": {
@@ -22,7 +21,7 @@
                     "gateway": "Koble til en Xiaomi Gateway"
                 },
                 "description": "Velg hvilken enhet du vil koble til.",
-                "title": "Xiaomi Miio"
+                "title": ""
             }
         }
     }

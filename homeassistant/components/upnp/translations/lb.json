@@ -12,19 +12,22 @@
             "one": "Een",
             "other": "Aaner"
         },
+        "flow_title": "UPnP/IGD: {name}",
         "step": {
             "confirm": {
                 "description": "Soll UPnP/IGD konfigur\u00e9iert ginn?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
+            "ssdp_confirm": {
+                "description": "Soll d\u00ebsen UPnP/IGD Apparat konfigur\u00e9iert ginn?"
             },
             "user": {
                 "data": {
                     "enable_port_mapping": "Port Mapping fir Home Assistant aktiv\u00e9ieren",
                     "enable_sensors": "Trafic Sensoren dob\u00e4isetzen",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "scan_interval": "Update Intervall (Sekonnen, minimum 30)",
+                    "usn": "Apparat"
                 },
                 "title": "Konfiguratiouns Optiounen"
             }

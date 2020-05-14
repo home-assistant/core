@@ -14,6 +14,7 @@ from .typing import HomeAssistantType
 async def async_get_system_info(hass: HomeAssistantType) -> Dict:
     """Return info about the system."""
     info_object = {
+        "installation_type": "Unknown",
         "version": current_version,
         "dev": "dev" in current_version,
         "hassio": hass.components.hassio.is_hassio(),
@@ -32,5 +33,27 @@ async def async_get_system_info(hass: HomeAssistantType) -> Dict:
         info_object["os_version"] = platform.mac_ver()[0]
     elif platform.system() == "Linux":
         info_object["docker"] = os.path.isfile("/.dockerenv")
+
+    # Determine installation type on current data
+    if info_object["docker"]:
+        info_object["installation_type"] = "Home Assistant Core on Docker"
+    elif is_virtual_env():
+        info_object[
+            "installation_type"
+        ] = "Home Assistant Core in a Python Virtual Environment"
+
+    # Enrich with Supervisor information
+    if hass.components.hassio.is_hassio():
+        info = hass.components.hassio.get_info()
+        host = hass.components.hassio.get_host_info()
+
+        info_object["supervisor"] = info.get("supervisor")
+        info_object["host_os"] = host.get("operating_system")
+        info_object["chassis"] = host.get("chassis")
+
+        if info.get("hassos") is not None:
+            info_object["installation_type"] = "Home Assistant"
+        else:
+            info_object["installation_type"] = "Home Assistant Supervised"
 
     return info_object

@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 
 DOMAIN = "blebox"
 PRODUCT = "product"
@@ -40,6 +41,9 @@ BLEBOX_TO_HASS_COVER_STATES = {
     # 7 is not used
     8: STATE_OPEN,  # safety stop
 }
+
+BLEBOX_TO_UNIT_MAP = {"celsius": TEMP_CELSIUS}
+BLEBOX_DEV_CLASS_MAP = {"temperature": DEVICE_CLASS_TEMPERATURE}
 
 DEFAULT_HOST = "192.168.0.2"
 DEFAULT_PORT = 80

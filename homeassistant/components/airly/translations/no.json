@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Airly integrering for disse koordinatene er allerede konfigurert."
+            "already_configured": "Airly integrasjonen for disse koordinatene er allerede konfigurert."
         },
         "error": {
             "auth": "API-n\u00f8kkelen er ikke korrekt.",
@@ -15,7 +15,7 @@
                     "longitude": "Lengdegrad",
                     "name": "Navn p\u00e5 integrasjonen"
                 },
-                "description": "Sett opp Airly luftkvalitet integrering. For \u00e5 generere API-n\u00f8kkel g\u00e5 til https://developer.airly.eu/register",
+                "description": "Sett opp Airly luftkvalitet integrasjon. For \u00e5 opprette API-n\u00f8kkel, g\u00e5 til [https://developer.airly.eu/register](https://developer.airly.eu/register)",
                 "title": ""
             }
         }

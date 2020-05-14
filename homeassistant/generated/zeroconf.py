@@ -10,6 +10,9 @@ ZEROCONF = {
         "axis",
         "doorbird"
     ],
+    "_daap._tcp.local.": [
+        "forked_daapd"
+    ],
     "_elg._tcp.local.": [
         "elgato"
     ],

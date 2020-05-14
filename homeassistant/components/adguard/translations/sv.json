@@ -16,9 +16,7 @@
             },
             "user": {
                 "data": {
-                    "host": "V\u00e4rd",
                     "password": "L\u00f6senord",
-                    "port": "Port",
                     "ssl": "AdGuard Home anv\u00e4nder ett SSL-certifikat",
                     "username": "Anv\u00e4ndarnamn",
                     "verify_ssl": "AdGuard Home anv\u00e4nder ett korrekt certifikat"

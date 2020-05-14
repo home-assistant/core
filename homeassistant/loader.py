@@ -26,7 +26,6 @@ from typing import (
 )
 
 # Typing imports that create a circular dependency
-# pylint: disable=unused-import
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
@@ -252,16 +251,6 @@ class Integration:
     def quality_scale(self) -> Optional[str]:
         """Return Integration Quality Scale."""
         return cast(str, self.manifest.get("quality_scale"))
-
-    @property
-    def logo(self) -> Optional[str]:
-        """Return Integration Logo."""
-        return cast(str, self.manifest.get("logo"))
-
-    @property
-    def icon(self) -> Optional[str]:
-        """Return Integration Icon."""
-        return cast(str, self.manifest.get("icon"))
 
     @property
     def is_built_in(self) -> bool:

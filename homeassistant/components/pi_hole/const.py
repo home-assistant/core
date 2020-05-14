@@ -6,7 +6,6 @@ from homeassistant.const import UNIT_PERCENTAGE
 DOMAIN = "pi_hole"
 
 CONF_LOCATION = "location"
-CONF_SLUG = "slug"
 
 DEFAULT_LOCATION = "admin"
 DEFAULT_METHOD = "GET"

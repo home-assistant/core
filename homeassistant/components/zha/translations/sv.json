@@ -7,10 +7,26 @@
             "cannot_connect": "Det gick inte att ansluta till ZHA enhet."
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Radiotyp"
+                },
+                "description": "V\u00e4lj en typ av Zigbee radio",
+                "title": "Radiotyp"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "port hastighet",
+                    "flow_control": "datafl\u00f6deskontroll",
+                    "path": "Seriell enhetsv\u00e4g"
+                },
+                "description": "Ange portspecifika inst\u00e4llningar",
+                "title": "Inst\u00e4llningar"
+            },
             "user": {
                 "data": {
-                    "radio_type": "Typ av radio",
-                    "usb_path": "USB-enhetens s\u00f6kv\u00e4g"
+                    "path": "Seriell enhetsv\u00e4g",
+                    "radio_type": "Typ av radio"
                 },
                 "title": "ZHA"
             }

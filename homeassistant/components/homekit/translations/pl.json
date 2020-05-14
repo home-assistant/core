@@ -9,6 +9,7 @@
             },
             "user": {
                 "data": {
+                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli u\u017cywasz Z-Wave lub innej integracji op\u00f3\u017aniaj\u0105cej start systemu)",
                     "include_domains": "Domeny do uwzgl\u0119dnienia"
                 },
                 "title": "Aktywowanie mostka HomeKit"
@@ -19,10 +20,29 @@
         "step": {
             "advanced": {
                 "data": {
+                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli u\u017cywasz Z-Wave lub innej integracji op\u00f3\u017aniaj\u0105cej start systemu)",
                     "safe_mode": "Tryb awaryjny (w\u0142\u0105cz tylko wtedy, gdy parowanie nie powiedzie si\u0119)"
-                }
+                },
+                "title": "Konfiguracja zaawansowana"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kamery obs\u0142uguj\u0105ce kodek H.264"
+                },
+                "description": "Sprawd\u017a, czy wszystkie kamery obs\u0142uguj\u0105 kodek H.264. Je\u015bli kamera nie wysy\u0142a strumienia skompresowanego kodekiem H.264, system b\u0119dzie transkodowa\u0142 wideo do H.264 dla HomeKit. Transkodowanie wymaga wydajnego procesora i jest ma\u0142o prawdopodobne, aby dzia\u0142a\u0142o na komputerach jednop\u0142ytkowych.",
+                "title": "Wyb\u00f3r kodeka wideo kamery"
+            },
+            "exclude": {
+                "data": {
+                    "exclude_entities": "Wykluczone encje"
+                },
+                "title": "Wykluczenie encji z wybranych domen"
             },
             "init": {
+                "data": {
+                    "include_domains": "Wykluczone domeny"
+                },
+                "description": "Encje w \"uwzgl\u0119dnionych domenach\" zostan\u0105 po\u0142\u0105czone z HomeKit. B\u0119dziesz m\u00f3g\u0142 wybra\u0107, kt\u00f3re encje maj\u0105 zosta\u0107 wykluczone z tej listy na nast\u0119pnym ekranie.",
                 "title": "Domeny do uwzgl\u0119dnienia."
             },
             "yaml": {

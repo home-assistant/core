@@ -19,8 +19,8 @@ from homeassistant.setup import async_setup_component
 
 from .test_controller import (
     CONTROLLER_HOST,
+    DESCRIPTION,
     ENTRY_CONFIG,
-    SITES,
     setup_unifi_integration,
 )
 
@@ -211,6 +211,30 @@ EVENT_BLOCKED_CLIENT_CONNECTED = {
     "_id": "5ea331fa30c49e00f90ddc1a",
 }
 
+EVENT_BLOCKED_CLIENT_BLOCKED = {
+    "user": BLOCKED["mac"],
+    "hostname": BLOCKED["hostname"],
+    "key": "EVT_WC_Blocked",
+    "subsystem": "wlan",
+    "site_id": "name",
+    "time": 1587753456179,
+    "datetime": "2020-04-24T18:37:36Z",
+    "msg": f'User{[BLOCKED["mac"]]} has been blocked."',
+    "_id": "5ea331fa30c49e00f90ddc1a",
+}
+
+EVENT_BLOCKED_CLIENT_UNBLOCKED = {
+    "user": BLOCKED["mac"],
+    "hostname": BLOCKED["hostname"],
+    "key": "EVT_WC_Unblocked",
+    "subsystem": "wlan",
+    "site_id": "name",
+    "time": 1587753456179,
+    "datetime": "2020-04-24T18:37:36Z",
+    "msg": f'User{[BLOCKED["mac"]]} has been unblocked."',
+    "_id": "5ea331fa30c49e00f90ddc1a",
+}
+
 
 EVENT_CLIENT_2_CONNECTED = {
     "user": CLIENT_2["mac"],
@@ -265,12 +289,12 @@ async def test_controller_not_client(hass):
 
 async def test_not_admin(hass):
     """Test that switch platform only work on an admin account."""
-    sites = deepcopy(SITES)
-    sites["Site name"]["role"] = "not admin"
+    description = deepcopy(DESCRIPTION)
+    description[0]["site_role"] = "not admin"
     controller = await setup_unifi_integration(
         hass,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
-        sites=sites,
+        site_description=description,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )
@@ -366,6 +390,74 @@ async def test_remove_switches(hass):
 
     block_switch = hass.states.get("switch.block_client_2")
     assert block_switch is None
+
+
+async def test_block_switches(hass):
+    """Test the update_items function with some clients."""
+    controller = await setup_unifi_integration(
+        hass,
+        options={
+            CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        },
+        clients_response=[UNBLOCKED],
+        clients_all_response=[BLOCKED],
+    )
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+
+    blocked = hass.states.get("switch.block_client_1")
+    assert blocked is not None
+    assert blocked.state == "off"
+
+    unblocked = hass.states.get("switch.block_client_2")
+    assert unblocked is not None
+    assert unblocked.state == "on"
+
+    controller.api.websocket._data = {
+        "meta": {"message": MESSAGE_EVENT},
+        "data": [EVENT_BLOCKED_CLIENT_UNBLOCKED],
+    }
+    controller.api.session_handler(SIGNAL_DATA)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+    blocked = hass.states.get("switch.block_client_1")
+    assert blocked is not None
+    assert blocked.state == "on"
+
+    controller.api.websocket._data = {
+        "meta": {"message": MESSAGE_EVENT},
+        "data": [EVENT_BLOCKED_CLIENT_BLOCKED],
+    }
+    controller.api.session_handler(SIGNAL_DATA)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+    blocked = hass.states.get("switch.block_client_1")
+    assert blocked is not None
+    assert blocked.state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
+    )
+    assert len(controller.mock_requests) == 5
+    assert controller.mock_requests[4] == {
+        "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
+        "method": "post",
+        "path": "/cmd/stamgr",
+    }
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
+    )
+    assert len(controller.mock_requests) == 6
+    assert controller.mock_requests[5] == {
+        "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
+        "method": "post",
+        "path": "/cmd/stamgr",
+    }
 
 
 async def test_new_client_discovered_on_block_control(hass):

@@ -5,7 +5,7 @@
             "one_instance_allowed": "Slechts \u00e9\u00e9n enkele instantie is nodig."
         },
         "create_entry": {
-            "default": "Om evenementen naar Home Assistant te verzenden, moet u [Webhooks with Mailgun] instellen ( {mailgun_url} ). \n\n Vul de volgende info in: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n - Inhoudstype: application/json \n\n Zie [de documentatie] ( {docs_url} ) voor informatie over het configureren van automatiseringen om binnenkomende gegevens te verwerken."
+            "default": "Om evenementen naar Home Assistant te verzenden, moet u [Webhooks with Mailgun]({mailgun_url}) instellen. \n\n Vul de volgende info in: \n\n - URL: `{webhook_url}` \n - Methode: POST \n - Inhoudstype: application/json \n\n Zie [de documentatie]({docs_url}) voor informatie over het configureren van automatiseringen om binnenkomende gegevens te verwerken."
         },
         "step": {
             "user": {

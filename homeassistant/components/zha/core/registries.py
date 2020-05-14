@@ -3,14 +3,9 @@ import collections
 from typing import Callable, Dict, List, Set, Tuple, Union
 
 import attr
-import bellows.zigbee.application
 import zigpy.profiles.zha
 import zigpy.profiles.zll
 import zigpy.zcl as zcl
-import zigpy_cc.zigbee.application
-import zigpy_deconz.zigbee.application
-import zigpy_xbee.zigbee.application
-import zigpy_zigate.zigbee.application
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.cover import DOMAIN as COVER
@@ -23,7 +18,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 
 # importing channels updates registries
 from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
-from .const import CONTROLLER, ZHA_GW_RADIO_DESCRIPTION, RadioType
 from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 from .typing import ChannelType
 
@@ -123,29 +117,6 @@ DEVICE_TRACKER_CLUSTERS = SetRegistry()
 LIGHT_CLUSTERS = SetRegistry()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLIENT_CHANNELS_REGISTRY = DictRegistry()
-
-RADIO_TYPES = {
-    RadioType.deconz.name: {
-        CONTROLLER: zigpy_deconz.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "Deconz",
-    },
-    RadioType.ezsp.name: {
-        CONTROLLER: bellows.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "EZSP",
-    },
-    RadioType.ti_cc.name: {
-        CONTROLLER: zigpy_cc.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "TI CC",
-    },
-    RadioType.xbee.name: {
-        CONTROLLER: zigpy_xbee.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "XBee",
-    },
-    RadioType.zigate.name: {
-        CONTROLLER: zigpy_zigate.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "ZiGate",
-    },
-}
 
 COMPONENT_CLUSTERS = {
     BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,

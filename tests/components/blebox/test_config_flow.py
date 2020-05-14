@@ -50,7 +50,7 @@ def flow_feature_mock():
     )
 
 
-async def test_flow_works(hass, flow_feature_mock):
+async def test_flow_works(hass, valid_feature_mock, flow_feature_mock):
     """Test that config flow works."""
 
     result = await hass.config_entries.flow.async_init(

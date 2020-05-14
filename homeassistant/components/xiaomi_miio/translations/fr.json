@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
-        },
         "error": {
             "connect_error": "Impossible de se connecter, veuillez r\u00e9essayer",
             "no_device_selected": "Aucun appareil s\u00e9lectionn\u00e9, veuillez s\u00e9lectionner un appareil."
