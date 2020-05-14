@@ -5,21 +5,8 @@ from inspect import getmodule
 import logging
 
 from pyhap.accessory import Accessory, Bridge
-from pyhap.accessory_driver import (
-    CHAR_STAT_OK,
-    SERVICE_COMMUNICATION_FAILURE,
-    AccessoryDriver,
-)
-from pyhap.characteristic import CharacteristicError
-from pyhap.const import (
-    CATEGORY_OTHER,
-    HAP_REPR_AID,
-    HAP_REPR_CHARS,
-    HAP_REPR_IID,
-    HAP_REPR_STATUS,
-    HAP_REPR_VALUE,
-    STANDALONE_AID,
-)
+from pyhap.accessory_driver import AccessoryDriver
+from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.components import cover, vacuum
 from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
@@ -338,7 +325,10 @@ class HomeAccessory(Accessory):
     @property
     def available(self):
         """Return if accessory is available."""
-        return self.hass.states.get(self.entity_id).state != STATE_UNAVAILABLE
+        state = self.hass.states.get(self.entity_id)
+        if state is None or state.state == STATE_UNAVAILABLE:
+            return False
+        return True
 
     async def run(self):
         """Handle accessory driver started event.
@@ -550,33 +540,3 @@ class HomeDriver(AccessoryDriver):
             self.state.pincode,
             self.accessory.xhm_uri(),
         )
-
-    def get_characteristics(self, char_ids):
-        """Build a get characteristics response."""
-        chars = []
-        for aid_iid in char_ids:
-            aid, iid = (int(i) for i in aid_iid.split("."))
-            rep = {
-                HAP_REPR_AID: aid,
-                HAP_REPR_IID: iid,
-                HAP_REPR_STATUS: SERVICE_COMMUNICATION_FAILURE,
-            }
-
-            if aid == STANDALONE_AID:
-                char = self.accessory.iid_manager.get_obj(iid)
-                available = True
-            else:
-                acc = self.accessory.accessories.get(aid)
-                available = acc.available
-                char = acc.iid_manager.get_obj(iid)
-
-            if available:
-                try:
-                    rep[HAP_REPR_VALUE] = char.get_value()
-                    rep[HAP_REPR_STATUS] = CHAR_STAT_OK
-                except CharacteristicError:
-                    _LOGGER.error("Error getting value for characteristic %s.", id)
-
-            chars.append(rep)
-        _LOGGER.debug("Get chars response: %s", chars)
-        return {HAP_REPR_CHARS: chars}
