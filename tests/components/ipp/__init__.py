@@ -75,7 +75,7 @@ def mock_connection(
     ssl: bool = False,
     base_path: str = BASE_PATH,
     conn_error: bool = False,
-    conn_upgrade: bool = False,
+    conn_upgrade_error: bool = False,
     ipp_error: bool = False,
     no_unique_id: bool = False,
     parse_error: bool = False,
@@ -102,7 +102,7 @@ def mock_connection(
         fixture = "ipp/get-printer-attributes-minimal.bin"
     elif version_not_supported:
         fixture = "ipp/get-printer-attributes-error-0x0503.bin"
-    
+
     if parse_error:
         content = "BAD"
     else:
