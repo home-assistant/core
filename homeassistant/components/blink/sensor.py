@@ -1,17 +1,20 @@
 """Support for Blink system camera sensors."""
 import logging
 
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, TYPE_BATTERY, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
+from .const import DOMAIN, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
-    TYPE_TEMPERATURE: ["Temperature", TEMP_FAHRENHEIT, "mdi:thermometer"],
-    TYPE_BATTERY: ["Battery", "", "mdi:battery-80"],
-    TYPE_WIFI_STRENGTH: ["Wifi Signal", "dBm", "mdi:wifi-strength-2"],
+    TYPE_TEMPERATURE: ["Temperature", TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE],
+    TYPE_WIFI_STRENGTH: ["Wifi Signal", "dBm", DEVICE_CLASS_SIGNAL_STRENGTH],
 }
 
 
@@ -31,15 +34,15 @@ class BlinkSensor(Entity):
 
     def __init__(self, data, camera, sensor_type):
         """Initialize sensors from Blink camera."""
-        name, units, icon = SENSORS[sensor_type]
+        name, units, device_class = SENSORS[sensor_type]
         self._name = f"{DOMAIN} {camera} {name}"
         self._camera_name = name
         self._type = sensor_type
+        self._device_class = device_class
         self.data = data
         self._camera = data.cameras[camera]
         self._state = None
         self._unit_of_measurement = units
-        self._icon = icon
         self._unique_id = f"{self._camera.serial}-{self._type}"
         self._sensor_key = self._type
         if self._type == "temperature":
@@ -56,14 +59,14 @@ class BlinkSensor(Entity):
         return self._unique_id
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
-
-    @property
     def state(self):
         """Return the camera's current state."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the device's class."""
+        return self._device_class
 
     @property
     def unit_of_measurement(self):
