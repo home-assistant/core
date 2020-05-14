@@ -108,12 +108,10 @@ class AsuswrtTXSensor(AsuswrtSensor):
 
     _name = "Asuswrt Upload Speed"
     _unit = DATA_RATE_MEGABITS_PER_SECOND
-    _icon = _UPLOAD_ICON
-
     @property
     def icon(self):
         """Return the icon."""
-        return self._icon
+        return UPLOAD_ICON
 
     @property
     def unit_of_measurement(self):
