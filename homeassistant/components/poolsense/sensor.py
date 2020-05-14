@@ -109,5 +109,4 @@ class PoolSenseSensor(Entity):
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-        """When entity will be removed from hass."""
         self.coordinator.async_remove_listener(self.async_write_ha_state)
