@@ -270,7 +270,7 @@ async def test_zeroconf_unique_id_required_abort(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow if printer lacks unique identification."""
-    mock_connection(aioclient_mock)
+    mock_connection(aioclient_mock, no_unique_id=True)
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
