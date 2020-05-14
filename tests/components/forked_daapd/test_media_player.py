@@ -111,7 +111,7 @@ SAMPLE_PLAYER_STOPPED = {
     "item_progress_ms": 5,
 }
 
-SAMPLE_TTS_QUEUE = {
+SAMPLE_QUEUE_TTS = {
     "version": 833,
     "count": 1,
     "items": [
@@ -127,7 +127,27 @@ SAMPLE_TTS_QUEUE = {
             "length_ms": 0,
             "track_number": 1,
             "media_kind": "music",
+            "data_kind": "url",
             "uri": "tts_proxy_somefile.mp3",
+        }
+    ],
+}
+
+SAMPLE_QUEUE_PIPE = {
+    "version": 833,
+    "count": 1,
+    "items": [
+        {
+            "id": 12322,
+            "title": "librespot-java",
+            "artist": "some artist",
+            "album": "some album",
+            "album_artist": "The xx",
+            "length_ms": 0,
+            "track_number": 1,
+            "media_kind": "music",
+            "data_kind": "pipe",
+            "uri": "pipeuri",
         }
     ],
 }
@@ -272,7 +292,7 @@ async def get_request_return_values_fixture():
         "config": SAMPLE_CONFIG,
         "outputs": SAMPLE_OUTPUTS_ON,
         "player": SAMPLE_PLAYER_PAUSED,
-        "queue": SAMPLE_TTS_QUEUE,
+        "queue": SAMPLE_QUEUE_TTS,
     }
 
 
@@ -630,7 +650,9 @@ async def pipe_control_api_object_fixture(
     return pipe_control_api.return_value
 
 
-async def test_librespot_java_stuff(hass, pipe_control_api_object):
+async def test_librespot_java_stuff(
+    hass, get_request_return_values, mock_api_object, pipe_control_api_object
+):
     """Test options update and librespot-java stuff."""
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert state.attributes[ATTR_INPUT_SOURCE] == "librespot-java (pipe)"
@@ -652,6 +674,13 @@ async def test_librespot_java_stuff(hass, pipe_control_api_object):
     )
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert state.attributes[ATTR_INPUT_SOURCE] == SOURCE_NAME_DEFAULT
+    # test pipe getting queued externally changes source
+    get_request_return_values["queue"] = SAMPLE_QUEUE_PIPE
+    updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
+    await updater_update(["queue"])
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.attributes[ATTR_INPUT_SOURCE] == "librespot-java (pipe)"
 
 
 async def test_librespot_java_play_media(hass, pipe_control_api_object):
