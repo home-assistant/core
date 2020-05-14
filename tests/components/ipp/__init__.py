@@ -71,12 +71,16 @@ def mock_connection(
     port: int = PORT,
     ssl: bool = False,
     base_path: str = BASE_PATH,
+    version_nlt_supported: bool = False,
 ):
     """Mock the IPP connection."""
     scheme = "https" if ssl else "http"
     ipp_url = f"{scheme}://{host}:{port}"
 
     fixture = "ipp/get-printer-attributes.bin"
+    if version_not_supported:
+        fixture = "ipp/get-printer-attributes-error-0x0503.bin"
+        
     aioclient_mock.post(
         f"{ipp_url}{base_path}",
         content=load_fixture_binary(fixture),
