@@ -180,7 +180,7 @@ def setup(hass, config):
         service_info = zeroconf.get_service_info(service_type, name)
         if not service_info:
             # Prevent the browser thread from collapsing as
-            # server_info can be None
+            # service_info can be None
             return
 
         info = info_from_service(service_info)
