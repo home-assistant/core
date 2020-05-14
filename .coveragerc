@@ -914,7 +914,7 @@ omit =
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py
     homeassistant/components/zhong_hong/climate.py
-    homeassistant/components/zigbee/*
+    homeassistant/components/xbee/*
     homeassistant/components/ziggo_mediabox_xl/media_player.py
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*

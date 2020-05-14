@@ -3,7 +3,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from . import DOMAIN, PLATFORM_SCHEMA, ZigBeeDigitalIn, ZigBeeDigitalInConfig
+from . import DOMAIN, PLATFORM_SCHEMA, XBeeDigitalIn, XBeeDigitalInConfig
 
 CONF_ON_STATE = "on_state"
 
@@ -14,12 +14,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_ON_STATE): vol.In(ST
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Zigbee binary sensor platform."""
+    """Set up the XBee Zigbee binary sensor platform."""
     zigbee_device = hass.data[DOMAIN]
-    add_entities(
-        [ZigBeeBinarySensor(ZigBeeDigitalInConfig(config), zigbee_device)], True
-    )
+    add_entities([XBeeBinarySensor(XBeeDigitalInConfig(config), zigbee_device)], True)
 
 
-class ZigBeeBinarySensor(ZigBeeDigitalIn, BinarySensorEntity):
-    """Use ZigBeeDigitalIn as binary sensor."""
+class XBeeBinarySensor(XBeeDigitalIn, BinarySensorEntity):
+    """Use XBeeDigitalIn as binary sensor."""
