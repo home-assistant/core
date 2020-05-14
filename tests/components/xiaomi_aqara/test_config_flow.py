@@ -183,7 +183,7 @@ async def test_config_flow_user_discovery_error(hass):
 
 
 async def test_config_flow_user_get_mac_error(hass):
-    """Test a failed config flow initialized by the user where the mac adress of the gateway could not be retrieved."""
+    """Test a failed config flow initialized by the user where the mac address of the gateway could not be retrieved."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
