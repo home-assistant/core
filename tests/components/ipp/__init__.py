@@ -2,7 +2,7 @@
 import os
 
 import aiohttp
-from pyipp import IPPError, IPPConnectionUpgradeRequired
+from pyipp import IPPConnectionUpgradeRequired, IPPError
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.const import (
