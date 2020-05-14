@@ -1,10 +1,10 @@
 """Test Z-Wave Switches."""
-from .common import setup_zwave
+from .common import setup_ozw
 
 
 async def test_switch(hass, generic_data, sent_messages, switch_msg):
     """Test setting up config entry."""
-    receive_message = await setup_zwave(hass, fixture=generic_data)
+    receive_message = await setup_ozw(hass, fixture=generic_data)
 
     # Test loaded
     state = hass.states.get("switch.smart_plug_switch")
