@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "email": "Email",
+          "email": "[%key:common::config_flow::data::email%]",
           "password": "Password"
         }
       }
