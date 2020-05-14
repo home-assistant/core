@@ -303,7 +303,7 @@ avea==1.4
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==25
+axis==26
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==1.3.1
