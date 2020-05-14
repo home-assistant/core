@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import slugify
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_DEVICE_KEY, DEFAULT_PORT, DOMAIN
 
@@ -40,7 +40,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     if status is None:
         raise InvalidAuth
 
-    return {"title": status.get("name"), "unique_id": slugify(status["mac"])}
+    return {"title": status.get("name"), "unique_id": format_mac(status["mac"])}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
