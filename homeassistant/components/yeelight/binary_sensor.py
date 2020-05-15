@@ -46,6 +46,13 @@ class YeelightNightlightModeSensor(BinarySensorEntity):
 
         if unique:
             return unique + "-nightlight_sensor"
+        else:
+            return None
+
+    @property
+    def available(self) -> bool:
+        """Return if bulb is available."""
+        return self._device.available
 
     @property
     def should_poll(self):
