@@ -207,8 +207,13 @@ class ONVIFDevice:
 
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
-        media_service = self.device.create_media_service()
-        media_capabilities = await media_service.GetServiceCapabilities()
+        snapshot = False
+        try:
+            media_service = self.device.create_media_service()
+            media_capabilities = await media_service.GetServiceCapabilities()
+            snapshot = media_capabilities.SnapshotUri
+        except (ONVIFError, Fault):
+            pass
 
         pullpoint = False
         try:
@@ -225,7 +230,7 @@ class ONVIFDevice:
         except ONVIFError:
             pass
 
-        return Capabilities(media_capabilities.SnapshotUri, pullpoint, ptz)
+        return Capabilities(snapshot, pullpoint, ptz)
 
     async def async_get_profiles(self) -> List[Profile]:
         """Obtain media profiles for this device."""
