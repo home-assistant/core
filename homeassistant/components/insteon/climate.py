@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_OFF,
+    CURRENT_HVAC_IDLE,
     DOMAIN,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -156,7 +156,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
 
         Need to be one of CURRENT_HVAC_*.
         """
-        hvac_action = CURRENT_HVAC_OFF
+        hvac_action = CURRENT_HVAC_IDLE
         if self._insteon_device.groups[COOLING].value:
             hvac_action = CURRENT_HVAC_COOL
         elif self._insteon_device.groups[HEATING].value:
