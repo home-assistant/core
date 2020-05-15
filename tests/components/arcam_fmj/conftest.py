@@ -6,7 +6,6 @@ import pytest
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
