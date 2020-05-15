@@ -21,7 +21,8 @@
     "error": {
       "cannot_connect": "Failed to connect, please try again",
       "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "unknown": "Unexpected error",
+      "no_server_found": "Could not automatically discovery server"
     },
     "abort": {
       "already_configured": "Server is already configured",

@@ -63,18 +63,62 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = DATA_SCHEMA
-        self.data = None
+        self.discovery_info = None
+
+    async def _discover(self, uuid=None):
+        """
+        Discover an unconfigured LMS server.
+
+        Parameters:
+            uuid: search for this uuid (optional)
+        """
+        self.discovery_info = None
+
+        def _discovery_callback(server):
+            if server.uuid:
+                if uuid:
+                    # ignore non-matching uuid
+                    if server.uuid != uuid:
+                        return
+                else:
+                    # ignore already configured uuids
+                    for entry in self._async_current_entries():
+                        if entry.unique_id == server.uuid:
+                            return
+                self.discovery_info = {
+                    CONF_HOST: server.host,
+                    CONF_PORT: server.port,
+                    "uuid": server.uuid,
+                }
+                _LOGGER.debug("Discovered server: %s", self.discovery_info)
+
+        discovery_task = self.hass.async_create_task(
+            async_discover(_discovery_callback)
+        )
+        while not self.discovery_info:
+            await asyncio.sleep(0)
+        discovery_task.cancel()  # stop searching as soon as we find server
+
+        # update with suggested values from discovery
+        self.data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOST,
+                    description={"suggested_value": self.discovery_info[CONF_HOST]},
+                ): str,
+                vol.Required(
+                    CONF_PORT,
+                    default=DEFAULT_PORT,
+                    description={"suggested_value": self.discovery_info[CONF_PORT]},
+                ): int,
+                vol.Optional(CONF_USERNAME): str,
+                vol.Optional(CONF_PASSWORD): str,
+            }
+        )
 
     async def async_step_user(self, user_input=None, errors=None):
         """Handle a flow initialized by the user."""
-        if user_input is None:
-            # display the form
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
-                errors=errors,
-            )
-        if CONF_HOST in user_input:
+        if user_input and CONF_HOST in user_input:
             # update with host provided by user
             self.data_schema = vol.Schema(
                 {
@@ -90,53 +134,22 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_edit()
 
         # no host specified, see if we can discover an unconfigured LMS server
-        async def discover():
-            """Discover an unconfigured LMS server."""
-            self.data = None
-
-            def _discovery_callback(server):
-                if server.uuid:
-                    for entry in self._async_current_entries():
-                        if entry.unique_id == server.uuid:
-                            # ignore already configured uuids
-                            return
-                    self.data = {
-                        "host": server.host,
-                        "port": server.port,
-                        "uuid": server.uuid,
-                    }
-                    _LOGGER.debug("Discovered server: %s", self.data)
-
-            discovery_task = self.hass.async_create_task(
-                async_discover(_discovery_callback)
-            )
-            while not self.data:
-                await asyncio.sleep(1)
-            discovery_task.cancel()  # stop searching as soon as we find a server
-            return self.data
-
         try:
-            discovery_info = await asyncio.wait_for(discover(), timeout=TIMEOUT)
-            # got a new server
-            # update with suggested values from discovery
-            self.data_schema = vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST,
-                        description={"suggested_value": discovery_info.get(CONF_HOST)},
-                    ): str,
-                    vol.Required(
-                        CONF_PORT,
-                        default=DEFAULT_PORT,
-                        description={"suggested_value": discovery_info.get(CONF_PORT)},
-                    ): int,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                }
-            )
+            await asyncio.wait_for(self._discover(), timeout=TIMEOUT)
             return await self.async_step_edit()
         except asyncio.TimeoutError:
-            return self.async_abort(reason="no_server_found")
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
+                errors={"base": "no_server_found"},
+            )
+
+        # display the form
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
+            errors=errors,
+        )
 
     async def async_step_edit(self, user_input=None):
         """Edit a discovered or manually inputted server."""
@@ -219,6 +232,17 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
             return await self.async_step_edit()
+
+    async def async_step_unignore(self, user_input):
+        """Set up previously ignored Logitech Media Server."""
+        unique_id = user_input["unique_id"]
+        await self.async_set_unique_id(unique_id)
+        # see if we can discover an unconfigured LMS server matching uuid
+        try:
+            await asyncio.wait_for(self._discover(unique_id), timeout=TIMEOUT)
+            return await self.async_step_edit()
+        except asyncio.TimeoutError:
+            return self.async_abort(reason="no_server_found")
 
 
 class CannotConnect(exceptions.HomeAssistantError):
