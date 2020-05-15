@@ -96,7 +96,7 @@ ZCL_ATTR_PLUG = {
     "max_heat_setpoint_limit": 2900,
     "min_cool_setpoint_limit": 2100,
     "min_heat_setpoint_limit": 700,
-    "occupancy": 0,
+    "occupancy": 1,
     "occupied_cooling_setpoint": 2500,
     "occupied_heating_setpoint": 2200,
     "pi_cooling_demand": None,
@@ -935,3 +935,31 @@ async def test_set_temperature_wrong_mode(hass, device_climate_mock):
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
     assert state.attributes[ATTR_TEMPERATURE] is None
     assert thrm_cluster.write_attributes.await_count == 0
+
+
+async def test_occupancy_reset(hass, device_climate_sinope):
+    """Test away preset reset."""
+
+    entity_id = await find_entity_id(DOMAIN, device_climate_sinope, hass)
+    thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+    thrm_cluster.write_attributes.reset_mock()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+
+    thrm_cluster.read_attributes.return_value = [True], {}
+    await send_attributes_report(
+        hass, thrm_cluster, {"occupied_heating_setpoint": 1950}
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
