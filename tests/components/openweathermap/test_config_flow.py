@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
-    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
 )
 
@@ -27,7 +26,6 @@ CONFIG = {
     CONF_LONGITUDE: 40,
     CONF_MODE: DEFAULT_FORECAST_MODE,
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
-    CONF_MONITORED_CONDITIONS: "",
 }
 
 
@@ -84,7 +82,6 @@ async def test_options_form(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options == {
             CONF_MODE: "daily",
-            CONF_MONITORED_CONDITIONS: "",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
         }
 
@@ -102,22 +99,6 @@ async def test_invalid_api_key(hass):
         )
 
         assert result["errors"] == {"base": "auth"}
-
-
-async def test_invalid_monitored_conditions(hass):
-    """Test that the form is served with no input."""
-    mocked_owm = _create_mocked_owm(True)
-    CONFIG[CONF_MONITORED_CONDITIONS] = "test"
-
-    with patch(
-        "homeassistant.components.openweathermap.config_flow.OWM",
-        return_value=mocked_owm,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
-
-        assert result["errors"] == {"base": "monitored_conditions"}
 
 
 def _create_mocked_owm(is_api_online: bool):
