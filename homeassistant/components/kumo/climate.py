@@ -4,7 +4,7 @@ import pprint
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     CURRENT_HVAC_COOL,
@@ -108,7 +108,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class KumoThermostat(ClimateDevice):
+class KumoThermostat(ClimateEntity):
     """Representation of a Kumo Thermostat device."""
 
     # pylint: disable=C0415, R0902, R0904
