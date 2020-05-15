@@ -110,7 +110,7 @@ async def setup_axis_integration(
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    return hass.data[AXIS_DOMAIN].get(config[CONF_MAC])
+    return hass.data[AXIS_DOMAIN].get(config_entry.unique_id)
 
 
 async def test_device_setup(hass):

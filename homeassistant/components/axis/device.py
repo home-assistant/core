@@ -210,8 +210,6 @@ class AxisNetworkDevice:
         for unsubscribe_listener in self.listeners:
             unsubscribe_listener()
 
-        self.hass.data[AXIS_DOMAIN].pop(self.config_entry.unique_id)
-
         return True
 
 
