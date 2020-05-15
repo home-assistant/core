@@ -1,10 +1,11 @@
 """Axis network device abstraction."""
 
 import asyncio
+import json
 
 import async_timeout
 import axis
-from axis.event_stream import OPERATION_INITIALIZED
+from axis.event_stream import OPERATION_CHANGED, OPERATION_INITIALIZED
 from axis.streammanager import SIGNAL_PLAYING
 
 from homeassistant.const import (
@@ -142,6 +143,32 @@ class AxisNetworkDevice:
             sw_version=self.fw_version,
         )
 
+    @callback
+    def async_mqtt_message(self, msg):
+        """Axis MQTT message."""
+        message = json.loads(msg.payload)
+        topic = message["topic"].replace("onvif", "tns1").replace("axis", "tnsaxis")
+        print(topic)
+        source = ""
+        source_idx = ""
+        data_type = ""
+        data_value = ""
+        if message["message"]["source"]:
+            source, source_idx = next(iter(message["message"]["source"].items()))
+        if message["message"]["data"]:
+            data_type, data_value = next(iter(message["message"]["data"].items()))
+
+        event = {
+            "operation": OPERATION_CHANGED,
+            "topic": topic,
+            "source": source,
+            "source_idx": source_idx,
+            "type": data_type,
+            "value": data_value,
+        }
+        print(event)
+        self.api.event.process_event(event)
+
     async def async_setup(self):
         """Set up the device."""
         try:
@@ -177,13 +204,22 @@ class AxisNetworkDevice:
                     self.async_connection_status_callback
                 )
                 self.api.enable_events(event_callback=self.async_event_callback)
-                self.api.start()
+                # self.api.start()
 
         self.hass.async_create_task(start_platforms())
 
         self.config_entry.add_update_listener(self.async_new_address_callback)
 
+        await mqtt.async_subscribe(
+            self.hass, f"{self.serial}/#", self.async_mqtt_message
+        )
+
         return True
+
+    async def start(self, platform_tasks):
+        """Start the event stream when all platforms are loaded."""
+        await asyncio.gather(*platform_tasks)
+        # self.api.start()
 
     @callback
     def shutdown(self, event):
