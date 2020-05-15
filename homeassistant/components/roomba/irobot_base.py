@@ -121,7 +121,7 @@ class IRobotEntity(Entity):
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
 
-    def new_state_filter(self, new_state):
+    def new_state_filter(self, new_state):  # pylint: disable=no-self-use
         """Filter out wifi state messages."""
         return len(new_state) > 1 or "signal" not in new_state
 
