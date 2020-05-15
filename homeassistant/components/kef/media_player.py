@@ -162,7 +162,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     def add_service(name, which, option):
         platform.async_register_entity_service(
             name,
-            {vol.Required(option): vol.In(DSP_OPTION_MAPPING[which])},
+            {
+                vol.Required(option): vol.All(
+                    vol.Coerce(float), vol.In(DSP_OPTION_MAPPING[which])
+                )
+            },
             f"set_{which}",
         )
 
