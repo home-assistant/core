@@ -49,7 +49,7 @@ async def async_setup_entry(hass, config_entry):
             return
 
         hass.bus.async_fire(
-            EVENT_UPB_LINK_CHANGED,
+            EVENT_UPB_SCENE_CHANGED,
             {
                 ATTR_COMMAND: change["command"],
                 ATTR_ADDRESS: element.addr.index,
