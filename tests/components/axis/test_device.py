@@ -110,7 +110,7 @@ async def setup_axis_integration(
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    return hass.data[AXIS_DOMAIN].get(config[CONF_MAC])
+    return hass.data[AXIS_DOMAIN].get(config_entry.unique_id)
 
 
 async def test_device_setup(hass):
@@ -124,8 +124,8 @@ async def test_device_setup(hass):
         entry = device.config_entry
 
     assert len(forward_entry_setup.mock_calls) == 3
-    assert forward_entry_setup.mock_calls[0][1] == (entry, "camera")
-    assert forward_entry_setup.mock_calls[1][1] == (entry, "binary_sensor")
+    assert forward_entry_setup.mock_calls[0][1] == (entry, "binary_sensor")
+    assert forward_entry_setup.mock_calls[1][1] == (entry, "camera")
     assert forward_entry_setup.mock_calls[2][1] == (entry, "switch")
 
     assert device.host == ENTRY_CONFIG[CONF_HOST]

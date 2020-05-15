@@ -7,9 +7,6 @@ import axis
 from axis.event_stream import OPERATION_INITIALIZED
 from axis.streammanager import SIGNAL_PLAYING
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -32,6 +29,7 @@ from .const import (
     DEFAULT_TRIGGER_TIME,
     DOMAIN as AXIS_DOMAIN,
     LOGGER,
+    PLATFORMS,
 )
 from .errors import AuthenticationRequired, CannotConnect
 
@@ -165,37 +163,27 @@ class AxisNetworkDevice:
         self.fw_version = self.api.vapix.params.firmware_version
         self.product_type = self.api.vapix.params.prodtype
 
-        if self.option_camera:
-
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, CAMERA_DOMAIN
-                )
+        async def start_platforms():
+            await asyncio.gather(
+                *[
+                    self.hass.config_entries.async_forward_entry_setup(
+                        self.config_entry, platform
+                    )
+                    for platform in PLATFORMS
+                ]
             )
-
-        if self.option_events:
-
-            self.api.stream.connection_status_callback = (
-                self.async_connection_status_callback
-            )
-            self.api.enable_events(event_callback=self.async_event_callback)
-
-            platform_tasks = [
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
+            if self.option_events:
+                self.api.stream.connection_status_callback = (
+                    self.async_connection_status_callback
                 )
-                for platform in [BINARY_SENSOR_DOMAIN, SWITCH_DOMAIN]
-            ]
-            self.hass.async_create_task(self.start(platform_tasks))
+                self.api.enable_events(event_callback=self.async_event_callback)
+                self.api.start()
+
+        self.hass.async_create_task(start_platforms())
 
         self.config_entry.add_update_listener(self.async_new_address_callback)
 
         return True
-
-    async def start(self, platform_tasks):
-        """Start the event stream when all platforms are loaded."""
-        await asyncio.gather(*platform_tasks)
-        self.api.start()
 
     @callback
     def shutdown(self, event):
@@ -204,29 +192,23 @@ class AxisNetworkDevice:
 
     async def async_reset(self):
         """Reset this device to default state."""
-        platform_tasks = []
+        self.api.stop()
 
-        if self.config_entry.options[CONF_CAMERA]:
-            platform_tasks.append(
-                self.hass.config_entries.async_forward_entry_unload(
-                    self.config_entry, CAMERA_DOMAIN
-                )
+        unload_ok = all(
+            await asyncio.gather(
+                *[
+                    self.hass.config_entries.async_forward_entry_unload(
+                        self.config_entry, platform
+                    )
+                    for platform in PLATFORMS
+                ]
             )
+        )
+        if not unload_ok:
+            return False
 
-        if self.config_entry.options[CONF_EVENTS]:
-            self.api.stop()
-            platform_tasks += [
-                self.hass.config_entries.async_forward_entry_unload(
-                    self.config_entry, platform
-                )
-                for platform in [BINARY_SENSOR_DOMAIN, SWITCH_DOMAIN]
-            ]
-
-        await asyncio.gather(*platform_tasks)
-
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
+        for unsubscribe_listener in self.listeners:
+            unsubscribe_listener()
 
         return True
 
