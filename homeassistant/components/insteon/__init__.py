@@ -84,7 +84,7 @@ async def async_setup_platforms(hass, config):
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in devices:
         await devices[address].async_status()
-    # await async_id_unknown_devices(hass.config.config_dir)
+    await async_id_unknown_devices(hass.config.config_dir)
 
 
 async def close_insteon_connection(*args):
