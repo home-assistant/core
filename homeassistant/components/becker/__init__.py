@@ -41,8 +41,8 @@ async def async_setup_entry(hass, entry):
     if not becker:
         return False
 
-    for init_call_count in range(0, 2):
-        _LOGGER.debug("Init call to cover channel 1 #{init_call_count}")
+    for _ in range(0, 2):
+        _LOGGER.debug("Init call to cover channel 1")
         await becker.connection.stop("1")
 
     hass.data[DOMAIN]["connector"] = becker.connection
