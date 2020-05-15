@@ -209,13 +209,11 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return data
 
     @property
-    def fan(self):
-        """Fan channel."""
-        return self._fan
-
-    @property
     def fan_mode(self) -> Optional[str]:
         """Return current FAN mode."""
+        if self._thrm.running_state is None:
+            return FAN_AUTO
+
         if self._thrm.running_state & (
             RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
         ):

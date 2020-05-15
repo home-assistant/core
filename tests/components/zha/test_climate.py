@@ -1,4 +1,5 @@
 """Test zha climate."""
+import logging
 
 import pytest
 import zigpy.zcl.clusters
@@ -7,6 +8,8 @@ import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
@@ -18,6 +21,9 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
+    FAN_AUTO,
+    FAN_LOW,
+    FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -27,6 +33,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -963,3 +970,91 @@ async def test_occupancy_reset(hass, device_climate_sinope):
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+
+async def test_fan_mode(hass, device_climate_fan):
+    """Test fan mode."""
+
+    entity_id = await find_entity_id(DOMAIN, device_climate_fan, hass)
+    thrm_cluster = device_climate_fan.device.endpoints[1].thermostat
+
+    state = hass.states.get(entity_id)
+    assert set(state.attributes[ATTR_FAN_MODES]) == {FAN_AUTO, FAN_ON}
+    assert state.attributes[ATTR_FAN_MODE] == FAN_AUTO
+
+    await send_attributes_report(
+        hass, thrm_cluster, {"running_state": Thermostat.RunningState.Fan_State_On}
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_FAN_MODE] == FAN_ON
+
+    await send_attributes_report(
+        hass, thrm_cluster, {"running_state": Thermostat.RunningState.Idle}
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_FAN_MODE] == FAN_AUTO
+
+    await send_attributes_report(
+        hass, thrm_cluster, {"running_state": Thermostat.RunningState.Fan_2nd_Stage_On}
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_FAN_MODE] == FAN_ON
+
+
+async def test_set_fan_mode_no_fan(hass, device_climate, caplog):
+    """Test setting fan mode on fun less climate."""
+
+    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+
+    with caplog.at_level(logging.DEBUG):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_ON},
+            blocking=True,
+        )
+    assert "Fan is not supported" in caplog.text
+
+
+async def test_set_fan_mode_not_supported(hass, device_climate_fan, caplog):
+    """Test fan setting unsupported mode."""
+
+    entity_id = await find_entity_id(DOMAIN, device_climate_fan, hass)
+
+    with caplog.at_level(logging.DEBUG):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
+            blocking=True,
+        )
+    assert "Unsupported 'low' fan mode" in caplog.text
+
+
+async def test_set_fan_mode(hass, device_climate_fan):
+    """Test fan mode setting."""
+
+    entity_id = await find_entity_id(DOMAIN, device_climate_fan, hass)
+    fan_cluster = device_climate_fan.device.endpoints[1].fan
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_FAN_MODE] == FAN_AUTO
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_ON},
+        blocking=True,
+    )
+    assert fan_cluster.write_attributes.await_count == 1
+    assert fan_cluster.write_attributes.call_args[0][0] == {"fan_mode": 4}
+
+    fan_cluster.write_attributes.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_AUTO},
+        blocking=True,
+    )
+    assert fan_cluster.write_attributes.await_count == 1
+    assert fan_cluster.write_attributes.call_args[0][0] == {"fan_mode": 5}
