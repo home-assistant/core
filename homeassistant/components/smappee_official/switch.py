@@ -68,6 +68,9 @@ class SmappeeActuator(SwitchEntity):
         self._actuator_serialnumber = actuator_serialnumber
         self._actuator_state_option = actuator_state_option
         self._state = self._service_location.actuators.get(actuator_id).state
+        self._connection_state = self._service_location.actuators.get(
+            actuator_id
+        ).connection_state
 
     @property
     def name(self):
@@ -114,6 +117,11 @@ class SmappeeActuator(SwitchEntity):
                 self._actuator_id, state="PLACEHOLDER", api=False
             )
         self._state = self._service_location.actuators.get(self._actuator_id).state
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._connection_state == "CONNECTED"
 
     @property
     def today_energy_kwh(self):
@@ -168,3 +176,6 @@ class SmappeeActuator(SwitchEntity):
         """Update state value for this switch."""
         await self._smappee_base.async_update()
         self._state = self._service_location.actuators.get(self._actuator_id).state
+        self._connection_state = self._service_location.actuators.get(
+            self._actuator_id
+        ).connection_state
