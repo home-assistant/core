@@ -11,7 +11,7 @@
                 "data": {
                     "email": "Correu electr\u00f2nic (opcional)",
                     "host": "Amfitri\u00f3",
-                    "port": "Port (10000)"
+                    "port": "Port"
                 },
                 "title": "Connexi\u00f3 amb el dispositiu"
             }

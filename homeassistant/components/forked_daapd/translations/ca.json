@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat.",
+            "not_forked_daapd": "El dispositiu no \u00e9s un servidor de forked-daapd."
+        },
+        "error": {
+            "unknown_error": "Error desconegut.",
+            "websocket_not_enabled": "El websocket de forked-daapd no est\u00e0 activat.",
+            "wrong_host_or_port": "No s'ha pogut connectar, verifica l'amfitri\u00f3 i el port.",
+            "wrong_password": "Contrasenya incorrecta."
+        },
+        "flow_title": "Servidor forked-daapd: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya de l'API (deixa-ho en blanc si no t\u00e9 contrasenya)",
+                    "port": "Port de l'API"
+                },
+                "title": "Configuraci\u00f3 del dispositiu forked-daapd"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_playlists": "Nombre m\u00e0xim de llistes de reproducci\u00f3 utilitzades com a fonts",
+                    "tts_pause_time": "Segons de pausa abans i despr\u00e9s de TTS",
+                    "tts_volume": "Volum TTS (valor 'float' entre [0,1])"
+                },
+                "description": "Configura les diferents opcions de la integraci\u00f3 forked-daapd.",
+                "title": "Configuraci\u00f3 de les opcions de forked-daapd"
+            }
+        }
+    }
+}

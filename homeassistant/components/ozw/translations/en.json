@@ -9,6 +9,5 @@
                 "title": "Confirm set up"
             }
         }
-    },
-    "title": "Z-Wave over MQTT"
+    }
 }

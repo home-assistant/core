@@ -9,9 +9,9 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "[%key_id:common::config_flow::data::email%] (opcjonalnie)",
-                    "host": "[%key_id:common::config_flow::data::host%]",
-                    "port": "[%key_id:common::config_flow::data::port%] (10000)"
+                    "email": "Adres e-mail (opcjonalnie)",
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
                 },
                 "title": "Po\u0142\u0105cz z urz\u0105dzeniem"
             }

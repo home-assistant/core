@@ -14,7 +14,7 @@
         },
         "step": {
             "auth": {
-                "description": "Vennligst f\u00f8lg denne [linken]({authorization_url}) og <b>Tillat</b> tilgang til din Ambiclimate konto, kom deretter tilbake og trykk <b>Send</b> nedenfor.\n(Kontroller at den angitte URL-adressen for tilbakeringing er {cb_url})",
+                "description": "Vennligst f\u00f8lg denne [linken]({authorization_url}) og **Tillat** tilgang til din Ambiclimate konto, kom deretter tilbake og trykk **Send** nedenfor.\n(Kontroller at den angitte URL-adressen for tilbakeringing er {cb_url})",
                 "title": "Godkjenn Ambiclimate"
             }
         }

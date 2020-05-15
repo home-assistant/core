@@ -11,8 +11,8 @@
     "state": {
         "_": {
             "idle": "Inactiu",
-            "off": "Apagat",
-            "on": "Enc\u00e8s",
+            "off": "OFF",
+            "on": "ON",
             "paused": "Pausat",
             "playing": "Reproduint",
             "standby": "En espera"

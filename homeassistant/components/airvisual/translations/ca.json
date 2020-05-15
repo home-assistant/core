@@ -21,7 +21,7 @@
             "node_pro": {
                 "data": {
                     "ip_address": "Adre\u00e7a IP o amfitri\u00f3 de la unitat",
-                    "password": "Contrasenya de la unitat"
+                    "password": "Contrasenya"
                 },
                 "description": "Monitoritza una unitat personal d'AirVisual. Pots obtenir la contrasenya des de la interf\u00edcie d'usuari (UI) de la unitat.",
                 "title": "Configuraci\u00f3 d'AirVisual Node/Pro"
