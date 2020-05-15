@@ -1480,11 +1480,13 @@ class Config:
                     external_url=network.normalize_url(str(base_url))
                 )
 
-        # Try to migrate base_url to internal_url/external_url
-        if data and "external_url" not in data:
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, migrate_base_url)
-
         if data:
+            # Try to migrate base_url to internal_url/external_url
+            if "external_url" not in data:
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_START, migrate_base_url
+                )
+
             self._update(
                 source=SOURCE_STORAGE,
                 latitude=data.get("latitude"),
