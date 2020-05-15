@@ -711,7 +711,7 @@ python-openzwave-mqtt==1.0.1
 python-songpal==0.12
 
 # homeassistant.components.synology_dsm
-python-synology==0.8.0
+python-synology==0.8.1
 
 # homeassistant.components.tado
 python-tado==0.8.1
