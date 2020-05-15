@@ -88,3 +88,14 @@ async def binary_sensor_alt_msg_fixture(hass):
     message = MQTTMessage(topic=sensor_json["topic"], payload=sensor_json["payload"])
     message.encode()
     return message
+
+
+@pytest.fixture(name="climate_msg")
+async def climate_msg_fixture(hass):
+    """Return a mock MQTT msg with a climate mode change message."""
+    sensor_json = json.loads(
+        await hass.async_add_executor_job(load_fixture, "ozw/climate.json")
+    )
+    message = MQTTMessage(topic=sensor_json["topic"], payload=sensor_json["payload"])
+    message.encode()
+    return message
