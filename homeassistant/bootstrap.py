@@ -281,12 +281,12 @@ def async_enable_logging(
         logger.addHandler(err_handler)
         logger.setLevel(logging.INFO)
 
-        async_migrate_log_handlers_to_queue(hass)
-
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
     else:
         _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
+
+    async_migrate_log_handlers_to_queue(hass)
 
 
 async def async_mount_local_lib_path(config_dir: str) -> str:

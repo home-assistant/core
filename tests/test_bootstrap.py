@@ -37,6 +37,15 @@ async def test_home_assistant_core_config_validation(hass):
     assert result is None
 
 
+async def test_async_enable_logging(hass):
+    """Test to ensure logging is migrated to the queue handlers."""
+    with patch("logging.getLogger"), patch(
+        "homeassistant.bootstrap.async_migrate_log_handlers_to_queue"
+    ) as mock_async_migrate_log_handlers_to_queue:
+        bootstrap.async_enable_logging(hass)
+        mock_async_migrate_log_handlers_to_queue.assert_called_once()
+
+
 async def test_load_hassio(hass):
     """Test that we load Hass.io component."""
     with patch.dict(os.environ, {}, clear=True):
