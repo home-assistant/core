@@ -4,18 +4,17 @@ import logging
 from pysmappee import Smappee
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_PASSWORD,
+    CONF_PLATFORM,
+    CONF_USERNAME,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    DATA_CLIENT,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-    SMAPPEE_COMPONENTS,
-)
+from .const import DATA_CLIENT, DOMAIN, MIN_TIME_BETWEEN_UPDATES, SMAPPEE_COMPONENTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +26,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Inclusive(CONF_CLIENT_SECRET, "Server credentials"): cv.string,
                 vol.Inclusive(CONF_USERNAME, "Server credentials"): cv.string,
                 vol.Inclusive(CONF_PASSWORD, "Server credentials"): cv.string,
+                vol.Inclusive(CONF_PLATFORM, "Server platform"): cv.string,
             }
         )
     },
@@ -48,9 +48,10 @@ async def async_setup_entry(hass, config_entry):
     client_secret = config_entry.data[CONF_CLIENT_SECRET]
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
+    platform = config_entry.data[CONF_PLATFORM]
 
     smappee = await hass.async_add_executor_job(
-        Smappee, username, password, client_id, client_secret
+        Smappee, username, password, client_id, client_secret, platform
     )
     await hass.async_add_executor_job(smappee.load_service_locations)
 

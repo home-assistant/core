@@ -9,7 +9,8 @@
                     "username": "Smappee username",
                     "password": "Password",
                     "client_id": "Smappee API client id",
-                    "client_secret": "Smappee API client secret"
+                    "client_secret": "Smappee API client secret",
+                    "platform": "Smappee platform"
                 }
             }
         },

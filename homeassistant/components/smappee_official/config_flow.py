@@ -6,6 +6,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_PASSWORD,
+    CONF_PLATFORM,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -50,10 +51,11 @@ class SmappeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input.get(CONF_PASSWORD)
         client_id = user_input.get(CONF_CLIENT_ID)
         client_secret = user_input.get(CONF_CLIENT_SECRET)
+        platform = user_input.get(CONF_PLATFORM)
 
         try:
             await self.hass.async_add_executor_job(
-                Smappee, username, password, client_id, client_secret
+                Smappee, username, password, client_id, client_secret, platform
             )
         except Exception:
             return await self._show_config_form(errors={"base": "invalid_credentials"})
@@ -72,6 +74,9 @@ class SmappeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_CLIENT_ID): str,
                     vol.Required(CONF_CLIENT_SECRET): str,
+                    vol.Required(CONF_PLATFORM, default="PRODUCTION"): vol.In(
+                        ["PRODUCTION", "ACCEPTANCE", "DEVELOPMENT"]
+                    ),
                 }
             ),
             errors=errors if errors else {},
