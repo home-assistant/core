@@ -1,8 +1,8 @@
 """BleBox switch implementation."""
-from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchDevice
+from homeassistant.components.switch import SwitchDevice
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import DOMAIN, PRODUCT
+from .const import BLEBOX_TO_HASS_DEVICE_CLASSES, DOMAIN, PRODUCT
 
 
 async def async_setup_entry(hass, config_entry, async_add):
@@ -19,8 +19,7 @@ class BleBoxSwitchEntity(BleBoxEntity, SwitchDevice):
     @property
     def device_class(self):
         """Return the device class."""
-        types = {"relay": DEVICE_CLASS_SWITCH}
-        return types[self._feature.device_class]
+        return BLEBOX_TO_HASS_DEVICE_CLASSES[self._feature.device_class]
 
     @property
     def is_on(self):
