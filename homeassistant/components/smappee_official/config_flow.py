@@ -13,8 +13,6 @@ from homeassistant.core import callback
 
 from . import DOMAIN
 
-print(DOMAIN)
-
 
 @callback
 def configured_instances(hass):
