@@ -174,7 +174,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._thrm = self.cluster_channels.get(CHANNEL_THERMOSTAT)
         self._preset = PRESET_NONE
-        self._presets = None
+        self._presets = []
         self._supported_flags = SUPPORT_TARGET_TEMPERATURE
         self._fan = self.cluster_channels.get(CHANNEL_FAN)
 
@@ -236,14 +236,14 @@ class Thermostat(ZhaEntity, ClimateEntity):
         ):
             self.info("Running mode: %s", self._thrm.running_mode)
             self.info("Running state: %s", self._thrm.running_state)
-            rs = self._thrm.running_state
-            if rs is None:
+            running_state = self._thrm.running_state
+            if running_state is None:
                 return None
-            if rs & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
+            if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
                 return CURRENT_HVAC_HEAT
-            if rs & (RunningState.COOL | RunningState.COOL_STAGE_2):
+            if running_state & (RunningState.COOL | RunningState.COOL_STAGE_2):
                 return CURRENT_HVAC_COOL
-            if rs & (
+            if running_state & (
                 RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
             ):
                 return CURRENT_HVAC_FAN
