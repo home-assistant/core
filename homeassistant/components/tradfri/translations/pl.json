@@ -12,7 +12,7 @@
         "step": {
             "auth": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "host": "Nazwa hosta lub adres IP",
                     "security_code": "Kod bezpiecze\u0144stwa"
                 },
                 "description": "Mo\u017cesz znale\u017a\u0107 kod bezpiecze\u0144stwa z ty\u0142u bramki.",

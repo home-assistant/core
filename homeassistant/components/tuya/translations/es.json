@@ -3,7 +3,7 @@
         "abort": {
             "already_in_progress": "La configuraci\u00f3n de Tuya ya est\u00e1 en progreso.",
             "auth_failed": "Autenticaci\u00f3n no v\u00e1lida",
-            "conn_error": "Fallo al conectarse",
+            "conn_error": "No se pudo conectar",
             "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {

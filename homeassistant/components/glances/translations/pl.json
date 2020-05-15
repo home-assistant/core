@@ -10,12 +10,12 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "port": "[%key_id:common::config_flow::data::port%]",
+                    "password": "Has\u0142o",
+                    "port": "Port",
                     "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z systemem Glances",
-                    "username": "[%key_id:common::config_flow::data::username%]",
+                    "username": "Nazwa u\u017cytkownika",
                     "verify_ssl": "Sprawd\u017a certyfikacj\u0119 systemu",
                     "version": "Glances wersja API (2 lub 3)"
                 },
