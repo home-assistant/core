@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DATA_UPDATE_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,9 +58,10 @@ def get_data_update_coordinator(
 ) -> GogoGateDataUpdateCoordinator:
     """Get an update coordinator."""
     hass.data.setdefault(DOMAIN, {})
-    data_update_coordinators = hass.data[DOMAIN]
+    hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
+    config_entry_data = hass.data[DOMAIN][config_entry.entry_id]
 
-    if config_entry.unique_id not in data_update_coordinators:
+    if DATA_UPDATE_COORDINATOR not in config_entry_data:
         api = get_api(config_entry.data)
 
         async def async_update_data():
@@ -70,9 +71,7 @@ def get_data_update_coordinator(
             except Exception as exception:
                 raise UpdateFailed(f"Error communicating with API: {exception}")
 
-        data_update_coordinators[
-            config_entry.unique_id
-        ] = GogoGateDataUpdateCoordinator(
+        config_entry_data[DATA_UPDATE_COORDINATOR] = GogoGateDataUpdateCoordinator(
             hass,
             _LOGGER,
             api,
@@ -83,7 +82,7 @@ def get_data_update_coordinator(
             update_interval=timedelta(seconds=5),
         )
 
-    return data_update_coordinators[config_entry.unique_id]
+    return config_entry_data[DATA_UPDATE_COORDINATOR]
 
 
 def cover_unique_id(config_entry: ConfigEntry, door: Door) -> str:
