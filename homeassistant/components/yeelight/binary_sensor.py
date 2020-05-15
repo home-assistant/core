@@ -46,8 +46,8 @@ class YeelightNightlightModeSensor(BinarySensorEntity):
 
         if unique:
             return unique + "-nightlight_sensor"
-        else:
-            return None
+
+        return None
 
     @property
     def available(self) -> bool:

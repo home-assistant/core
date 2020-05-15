@@ -916,8 +916,8 @@ class YeelightNightLightMode(YeelightGenericLight):
 
         if unique:
             return unique + "-nightlight"
-        else:
-            return None
+
+        return None
 
     @property
     def name(self) -> str:
