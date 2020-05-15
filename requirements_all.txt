@@ -1401,6 +1401,9 @@ pyitachip2ir==0.0.7
 # homeassistant.components.kira
 pykira==0.1.1
 
+# homeassistant.components.kumo
+pykumo==0.1.5
+
 # homeassistant.components.kwb
 pykwb==0.0.8
 

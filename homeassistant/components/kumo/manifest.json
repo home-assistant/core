@@ -1,0 +1,13 @@
+{
+  "domain": "kumo",
+  "name": "Kumo",
+  "documentation": "https://github.com/dlarrick/hass-kumo",
+  "dependencies": [],
+  "codeowners": [
+    "@dlarrick"
+  ],
+  "requirements": [
+    "pykumo==0.1.5"
+  ],
+  "config_flow": true
+}

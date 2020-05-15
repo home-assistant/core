@@ -76,6 +76,7 @@ FLOWS = [
     "izone",
     "juicenet",
     "konnected",
+    "kumo",
     "life360",
     "lifx",
     "linky",
