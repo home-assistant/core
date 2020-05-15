@@ -16,6 +16,7 @@
             "not_found": "Kee Plex Server fonnt",
             "ssl_error": "SSL Zertifikat Problem"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {

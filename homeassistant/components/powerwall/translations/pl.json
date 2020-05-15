@@ -5,13 +5,13 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
-            "unknown": "[%key_id:common::config_flow::error::unknown%]",
+            "unknown": "Nieoczekiwany b\u0142\u0105d.",
             "wrong_version": "Powerwall u\u017cywa wersji oprogramowania, kt\u00f3ra nie jest obs\u0142ugiwana. Rozwa\u017c uaktualnienie lub zg\u0142oszenie tego problemu, aby mo\u017cna go by\u0142o rozwi\u0105za\u0107."
         },
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "[%key_id:common::config_flow::data::ip%]"
+                    "ip_address": "Adres IP"
                 },
                 "title": "Po\u0142\u0105czenie z Powerwall"
             }

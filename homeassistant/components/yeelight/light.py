@@ -1,5 +1,6 @@
 """Light platform support for yeelight."""
 import logging
+from typing import Optional
 
 import voluptuous as vol
 import yeelight
@@ -471,6 +472,12 @@ class YeelightGenericLight(LightEntity):
         return False
 
     @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+
+        return self.device.unique_id
+
+    @property
     def available(self) -> bool:
         """Return if bulb is available."""
         return self.device.available
@@ -903,6 +910,14 @@ class YeelightNightLightMode(YeelightGenericLight):
     """Representation of a Yeelight when in nightlight mode."""
 
     @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        unique = super().unique_id
+
+        if unique:
+            return unique + "-nightlight"
+
+    @property
     def name(self) -> str:
         """Return the name of the device if any."""
         return f"{self.device.name} nightlight"
@@ -984,6 +999,14 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
         self._max_mireds = kelvin_to_mired(1700)
 
         self._light_type = LightType.Ambient
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        unique = super().unique_id
+
+        if unique:
+            return unique + "-ambilight"
 
     @property
     def name(self) -> str:

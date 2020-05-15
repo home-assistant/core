@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "password": "Contrasenya",
-                    "username": "Nom d'usuari / Correu electr\u00f2nic"
+                    "username": "Nom d'usuari"
                 },
                 "description": "Introdueix el nom d'usuari i la contrasenya del teu compte d'iAqualink.",
                 "title": "Connexi\u00f3 amb iAqualink"

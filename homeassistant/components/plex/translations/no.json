@@ -16,6 +16,7 @@
             "not_found": "Plex-server ikke funnet",
             "ssl_error": "Problem med SSL-sertifikat"
         },
+        "flow_title": "{name}({host})",
         "step": {
             "manual_setup": {
                 "data": {

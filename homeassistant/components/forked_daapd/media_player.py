@@ -237,7 +237,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         self._track_info = defaultdict(
             str
         )  # _track info is found by matching _player data with _queue data
-        self._last_outputs = None  # used for device on/off
+        self._last_outputs = []  # used for device on/off
         self._last_volume = DEFAULT_UNMUTE_VOLUME
         self._player_last_updated = None
         self._pipe_control_api = {}
@@ -349,6 +349,13 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         ):
             self._tts_requested = False
             self._tts_queued = True
+
+        if (
+            self._queue["count"] >= 1
+            and self._queue["items"][0]["data_kind"] == "pipe"
+            and self._queue["items"][0]["title"] in KNOWN_PIPES
+        ):  # if we're playing a pipe, set the source automatically so we can forward controls
+            self._source = f"{self._queue['items'][0]['title']} (pipe)"
         self._update_track_info()
         event.set()
 
@@ -407,6 +414,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
     async def async_turn_on(self):
         """Restore the last on outputs state."""
         # restore state
+        await self._api.set_volume(volume=self._last_volume * 100)
         if self._last_outputs:
             futures = []
             for output in self._last_outputs:
@@ -418,19 +426,16 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                     )
                 )
             await asyncio.wait(futures)
-        else:
-            selected = []
-            for output in self._outputs:
-                selected.append(output["id"])
-            await self._api.set_enabled_outputs(selected)
+        else:  # enable all outputs
+            await self._api.set_enabled_outputs(
+                [output["id"] for output in self._outputs]
+            )
 
     async def async_turn_off(self):
         """Pause player and store outputs state."""
         await self.async_media_pause()
-        if any(
-            [output["selected"] for output in self._outputs]
-        ):  # only store output state if some output is selected
-            self._last_outputs = self._outputs
+        self._last_outputs = self._outputs
+        if any([output["selected"] for output in self._outputs]):
             await self._api.set_enabled_outputs([])
 
     async def async_toggle(self):
@@ -613,8 +618,12 @@ class ForkedDaapdMaster(MediaPlayerDevice):
             url = self._api.full_url(url)
         return url
 
-    async def _set_tts_volumes(self):
+    async def _save_and_set_tts_volumes(self):
+        if self.volume_level:  # save master volume
+            self._last_volume = self.volume_level
+        self._last_outputs = self._outputs
         if self._outputs:
+            await self._api.set_volume(volume=self._tts_volume * 100)
             futures = []
             for output in self._outputs:
                 futures.append(
@@ -623,7 +632,6 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                     )
                 )
             await asyncio.wait(futures)
-            await self._api.set_volume(volume=self._tts_volume * 100)
 
     async def _pause_and_wait_for_callback(self):
         """Send pause and wait for the pause callback to be received."""
@@ -641,14 +649,12 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         """Play a URI."""
         if media_type == MEDIA_TYPE_MUSIC:
             saved_state = self.state  # save play state
-            if any([output["selected"] for output in self._outputs]):  # save outputs
-                self._last_outputs = self._outputs
-            await self._api.set_enabled_outputs([])  # turn off outputs
+            saved_mute = self.is_volume_muted
             sleep_future = asyncio.create_task(
                 asyncio.sleep(self._tts_pause_time)
             )  # start timing now, but not exact because of fd buffer + tts latency
             await self._pause_and_wait_for_callback()
-            await self._set_tts_volumes()
+            await self._save_and_set_tts_volumes()
             # save position
             saved_song_position = self._player["item_progress_ms"]
             saved_queue = (
@@ -678,7 +684,9 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                 _LOGGER.warning("TTS request timed out")
             self._tts_playing_event.clear()
             # TTS done, return to normal
-            await self.async_turn_on()  # restores outputs
+            await self.async_turn_on()  # restore outputs and volumes
+            if saved_mute:  # mute if we were muted
+                await self.async_mute_volume(True)
             if self._use_pipe_control():  # resume pipe
                 await self._api.add_to_queue(
                     uris=self._sources_uris[self._source], clear=True
