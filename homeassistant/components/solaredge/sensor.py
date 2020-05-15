@@ -1,5 +1,4 @@
 """Support for SolarEdge Monitoring API."""
-# To remove
 from datetime import date, datetime
 import logging
 
