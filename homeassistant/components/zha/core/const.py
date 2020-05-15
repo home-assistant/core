@@ -157,23 +157,23 @@ class RadioType(enum.Enum):
     """Possible options for radio type."""
 
     ezsp = (
-        "ezsp = Silicon Labs Ember based radios with EmberZNet Zigbee firmware",
+        "EZSP = Silicon Labs EmberZNet protocol (ex; Elelabs, HUSBZB-1, Telegesis)",
         bellows.zigbee.application.ControllerApplication,
     )
     deconz = (
-        "deconz = dresden elektronik ConBee and RaspBee based radios with deCONZ Zigbee firmware",
+        "deCONZ = dresden elektronik deCONZ protocol (ex; ConBee I/II, RaspBee I/II)",
         zigpy_deconz.zigbee.application.ControllerApplication,
     )
     ti_cc = (
-        "ti_cc = : Texas Instruments CC253x/CC26x2/CC13x2 based radios with Z-Stack firmware",
+        "TI_CC = : Texas Instruments Z-Stack ZNP protocol (ex; CC253x, CC26x2, CC13x2)",
         zigpy_cc.zigbee.application.ControllerApplication,
     )
     zigate = (
-        "zigate = ZiGate USB-TTL, PiZiGate, and WiFi based Zigbee radios with ZiGate firmware",
+        "ZiGate = ZiGate Serial protocol (ZiGate WiFi, ZiGate USB-TTL, PiZiGate)",
         zigpy_zigate.zigbee.application.ControllerApplication,
     )
     xbee = (
-        "xbee = Digi XBee Series 2 and 3 based radios with XBee Zigbee firmware",
+        "XBee = Digi XBee ZB Coordinator Firmware protocol (Digi XBee Series 2, 2C, 3)",
         zigpy_xbee.zigbee.application.ControllerApplication,
     )
 
