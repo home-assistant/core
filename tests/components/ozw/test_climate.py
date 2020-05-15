@@ -1,17 +1,17 @@
 """Test Z-Wave Multi-setpoint Climate entities."""
-from .common import setup_ozw
-from homeassistant.components.climate.const import (
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_AUTO,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_PRESET_MODES,
-    ATTR_FAN_MODES,
-    ATTR_FAN_MODE,
-)
 from homeassistant.components.climate import ATTR_TEMPERATURE
+from homeassistant.components.climate.const import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
+    ATTR_PRESET_MODES,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+)
+
+from .common import setup_ozw
 
 
 async def test_climate(hass, generic_data, sent_messages, climate_msg):
@@ -34,13 +34,13 @@ async def test_climate(hass, generic_data, sent_messages, climate_msg):
     await hass.services.async_call(
         "climate",
         "set_temperature",
-        {"entity_id": "climate.ct32_thermostat_mode", "temperature": 26.1,},
+        {"entity_id": "climate.ct32_thermostat_mode", "temperature": 26.1},
         blocking=True,
     )
     assert len(sent_messages) == 1
     msg = sent_messages[0]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
-    # Celcius is converted to Fahrenheit here!
+    # Celsius is converted to Fahrenheit here!
     assert round(msg["payload"]["Value"], 2) == 78.98
     assert msg["payload"]["ValueIDKey"] == 281475099443218
 
