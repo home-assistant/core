@@ -917,6 +917,8 @@ class YeelightNightLightMode(YeelightGenericLight):
         if unique:
             return unique + "-nightlight"
 
+        return None
+
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
