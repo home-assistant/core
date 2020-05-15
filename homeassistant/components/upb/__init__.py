@@ -14,7 +14,7 @@ from .const import (
     ATTR_COMMAND,
     ATTR_RATE,
     DOMAIN,
-    EVENT_UPB_LINK_CHANGED,
+    EVENT_UPB_SCENE_CHANGED,
 )
 
 UPB_PLATFORMS = ["light", "scene"]
