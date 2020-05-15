@@ -124,8 +124,8 @@ async def test_device_setup(hass):
         entry = device.config_entry
 
     assert len(forward_entry_setup.mock_calls) == 3
-    assert forward_entry_setup.mock_calls[0][1] == (entry, "camera")
-    assert forward_entry_setup.mock_calls[1][1] == (entry, "binary_sensor")
+    assert forward_entry_setup.mock_calls[0][1] == (entry, "binary_sensor")
+    assert forward_entry_setup.mock_calls[1][1] == (entry, "camera")
     assert forward_entry_setup.mock_calls[2][1] == (entry, "switch")
 
     assert device.host == ENTRY_CONFIG[CONF_HOST]

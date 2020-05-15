@@ -32,6 +32,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
+    if not device.option_camera:
+        return
+
     config = {
         CONF_NAME: config_entry.data[CONF_NAME],
         CONF_USERNAME: config_entry.data[CONF_USERNAME],
