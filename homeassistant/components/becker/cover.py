@@ -100,6 +100,7 @@ class BeckerDevice(CoverEntity, RestoreEntity):
         self._template = state_template
         self._entities = entity_ids
         self._position = position
+        self._state = True
 
     async def async_added_to_hass(self):
         """Register callbacks."""
