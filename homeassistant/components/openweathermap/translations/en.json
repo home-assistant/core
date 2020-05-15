@@ -4,8 +4,7 @@
             "already_configured": "OpenWeatherMap integration for these coordinates is already configured."
         },
         "error": {
-            "auth": "API key is not correct.",
-            "monitored_conditions": "Monitored Conditions is wrong"
+            "auth": "API key is not correct."
         },
         "step": {
             "user": {
@@ -15,7 +14,6 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "mode": "Mode",
-                    "monitored_conditions": "Monitored Conditions",
                     "name": "Name of the integration"
                 },
                 "description": "Set up OpenWeatherMap integration. To generate API key go to https://openweathermap.org/appid",
@@ -24,15 +22,11 @@
         }
     },
     "options": {
-        "error": {
-            "monitored_conditions": "Monitored Conditions is wrong"
-        },
         "step": {
             "init": {
                 "data": {
                     "language": "Language",
-                    "mode": "Mode",
-                    "monitored_conditions": "Monitored Conditions"
+                    "mode": "Mode"
                 }
             }
         }

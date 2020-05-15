@@ -48,7 +48,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         with async_timeout.timeout(20):
             try:
                 weather_response = await self._update_weather()
-                data = self._get_parsed_weather(weather_response)
+                data = self._convert_weather_response(weather_response)
             except (APICallError, UnauthorizedError) as error:
                 raise UpdateFailed(error)
         return data
@@ -59,9 +59,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         )
         return weather.get_weather()
 
-    def _get_parsed_weather(self, weather_response):
+    def _convert_weather_response(self, weather_response):
         return {
-            ATTR_API_WEATHER: weather_response.get_detailed_status(),
             ATTR_API_TEMPERATURE: self.hass.config.units.temperature(
                 float(weather_response.get_temperature("celsius").get("temp")),
                 TEMP_CELSIUS,
@@ -70,12 +69,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 weather_response.get_pressure().get("press"), PRESSURE_PA
             ),
             ATTR_API_HUMIDITY: weather_response.get_humidity(),
-            ATTR_API_CONDITION: _get_condition(weather_response.get_weather_code()),
             ATTR_API_WIND_BEARING: weather_response.get_wind().get("deg"),
             ATTR_API_WIND_SPEED: weather_response.get_wind().get("speed"),
             ATTR_API_CLOUDS: weather_response.get_clouds(),
             ATTR_API_RAIN: _get_rain(weather_response.get_rain()),
             ATTR_API_SNOW: _get_snow(weather_response.get_snow()),
+            ATTR_API_WEATHER: weather_response.get_detailed_status(),
+            ATTR_API_CONDITION: _get_condition(weather_response.get_weather_code()),
             ATTR_API_WEATHER_CODE: weather_response.get_weather_code(),
         }
 

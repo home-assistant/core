@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
-    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
@@ -21,7 +20,6 @@ from .const import (
     CONF_LANGUAGE,
     DOMAIN,
     ENTRY_FORECAST_COORDINATOR,
-    ENTRY_MONITORED_CONDITIONS,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
 )
@@ -44,10 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     longitude = config_entry.data[CONF_LONGITUDE]
     forecast_mode = _get_config_value(config_entry, CONF_MODE)
     language = _get_config_value(config_entry, CONF_LANGUAGE)
-    monitored_conditions_str = _get_config_value(
-        config_entry, CONF_MONITORED_CONDITIONS
-    )
-    monitored_conditions = _get_monitored_conditions_list(monitored_conditions_str)
 
     owm = OWM(API_key=api_key, language=language)
     weather_coordinator = WeatherUpdateCoordinator(owm, latitude, longitude, hass)
@@ -69,7 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         ENTRY_NAME: name,
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,
         ENTRY_FORECAST_COORDINATOR: forecast_coordinator,
-        ENTRY_MONITORED_CONDITIONS: monitored_conditions,
     }
 
     for component in COMPONENTS:
@@ -108,7 +101,3 @@ def _get_config_value(config_entry, key):
     if config_entry.options:
         return config_entry.options[key]
     return config_entry.data[key]
-
-
-def _get_monitored_conditions_list(string):
-    return list(filter(None, str(string).split(",")))

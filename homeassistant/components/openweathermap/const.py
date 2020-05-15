@@ -1,4 +1,21 @@
 """Consts for the OpenWeatherMap."""
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
+)
+from homeassistant.const import (
+    DEGREE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
+)
+
 DOMAIN = "openweathermap"
 DEFAULT_NAME = "OpenWeatherMap"
 DEFAULT_LANGUAGE = "en"
@@ -8,7 +25,8 @@ CONF_LANGUAGE = "language"
 ENTRY_NAME = "name"
 ENTRY_FORECAST_COORDINATOR = "forecast_coordinator"
 ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
-ENTRY_MONITORED_CONDITIONS = "monitored_conditions"
+ATTR_API_PRECIPITATION = "precipitation"
+ATTR_API_DATETIME = "datetime"
 ATTR_API_WEATHER = "weather"
 ATTR_API_TEMPERATURE = "temperature"
 ATTR_API_WIND_SPEED = "wind_speed"
@@ -21,12 +39,12 @@ ATTR_API_RAIN = "rain"
 ATTR_API_SNOW = "snow"
 ATTR_API_WEATHER_CODE = "weather_code"
 ATTR_API_FORECAST = "forecast"
+ATTR_API_THIS_DAY_FORECAST = "this_day_forecast"
 SENSOR_NAME = "sensor_name"
 SENSOR_UNIT = "sensor_unit"
 SENSOR_DEVICE_CLASS = "sensor_device_class"
 COMPONENTS = ["sensor", "weather"]
 FORECAST_MODES = ["hourly", "daily", "freedaily"]
-# weather,temperature,wind_speed,wind_bearing,humidity,pressure,clouds,rain,snow,weather_code
 MONITORED_CONDITIONS = [
     ATTR_API_WEATHER,
     ATTR_API_TEMPERATURE,
@@ -37,7 +55,16 @@ MONITORED_CONDITIONS = [
     ATTR_API_CLOUDS,
     ATTR_API_RAIN,
     ATTR_API_SNOW,
-    ATTR_API_WEATHER_CODE,
+    ATTR_API_CONDITION,
+]
+FORECAST_MONITORED_CONDITIONS = [
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
 ]
 LANGUAGES = ["en", "es", "ru", "it"]
 CONDITION_CLASSES = {
@@ -55,4 +82,41 @@ CONDITION_CLASSES = {
     "windy": [905, 951, 952, 953, 954, 955, 956, 957],
     "windy-variant": [958, 959, 960, 961],
     "exceptional": [711, 721, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904],
+}
+FORECAST_SENSOR_TYPES = {
+    ATTR_FORECAST_CONDITION: {
+        SENSOR_NAME: "Condition",
+        SENSOR_UNIT: None,
+        SENSOR_DEVICE_CLASS: None,
+    },
+    ATTR_FORECAST_PRECIPITATION: {
+        SENSOR_NAME: "Precipitation",
+        SENSOR_UNIT: None,
+        SENSOR_DEVICE_CLASS: None,
+    },
+    ATTR_FORECAST_TEMP: {
+        SENSOR_NAME: "Temperature",
+        SENSOR_UNIT: TEMP_CELSIUS,
+        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+    },
+    ATTR_FORECAST_TEMP_LOW: {
+        SENSOR_NAME: "Temperature Low",
+        SENSOR_UNIT: TEMP_CELSIUS,
+        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+    },
+    ATTR_FORECAST_TIME: {
+        SENSOR_NAME: "Time",
+        SENSOR_UNIT: None,
+        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+    },
+    ATTR_API_WIND_BEARING: {
+        SENSOR_NAME: "Wind bearing",
+        SENSOR_UNIT: DEGREE,
+        SENSOR_DEVICE_CLASS: None,
+    },
+    ATTR_API_WIND_SPEED: {
+        SENSOR_NAME: "Wind speed",
+        SENSOR_UNIT: SPEED_METERS_PER_SECOND,
+        SENSOR_DEVICE_CLASS: None,
+    },
 }

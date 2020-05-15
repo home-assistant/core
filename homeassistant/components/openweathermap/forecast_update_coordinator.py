@@ -17,7 +17,12 @@ from homeassistant.components.weather import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_API_FORECAST, CONDITION_CLASSES, DOMAIN
+from .const import (
+    ATTR_API_FORECAST,
+    ATTR_API_THIS_DAY_FORECAST,
+    CONDITION_CLASSES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +49,7 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
         with async_timeout.timeout(20):
             try:
                 forecast_response = await self._update_forecast()
-                data[ATTR_API_FORECAST] = self._convert_forecast(forecast_response)
+                data = self._convert_forecast_response(forecast_response)
             except (APICallError, UnauthorizedError) as error:
                 raise UpdateFailed(error)
 
@@ -66,15 +71,25 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
             )
         return forecast_response.get_forecast()
 
-    def _convert_forecast(self, forecast_response):
-        if self._forecast_mode == "freedaily":
-            values = forecast_response.get_weathers()[::8]
-        else:
-            values = forecast_response.get_weathers()
+    def _convert_forecast_response(self, forecast_response):
+        values = self._get_weathers(forecast_response)
 
+        forecast_entries = self._convert_forecast_entries(values)
+
+        return {
+            ATTR_API_FORECAST: forecast_entries,
+            ATTR_API_THIS_DAY_FORECAST: forecast_entries[0],
+        }
+
+    def _convert_forecast_entries(self, values):
         if self._forecast_mode == "daily":
-            return map(_convert_daily_forecast, values)
-        return map(_convert_other_forecast, values)
+            return list(map(_convert_daily_forecast, values))
+        return list(map(_convert_forecast, values))
+
+    def _get_weathers(self, forecast_response):
+        if self._forecast_mode == "freedaily":
+            return forecast_response.get_weathers()[::8]
+        return forecast_response.get_weathers()
 
 
 def _convert_daily_forecast(entry):
@@ -91,11 +106,11 @@ def _convert_daily_forecast(entry):
     }
 
 
-def _convert_other_forecast(entry):
+def _convert_forecast(entry):
     return {
         ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
         ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("temp"),
-        ATTR_FORECAST_PRECIPITATION: _calc_other_precipitation(entry),
+        ATTR_FORECAST_PRECIPITATION: _calc_precipitation(entry),
         ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
         ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
         ATTR_FORECAST_CONDITION: _get_condition(entry.get_weather_code()),
@@ -111,7 +126,7 @@ def _calc_daily_precipitation(rain, snow):
     return round(rain_value + snow_value, 1)
 
 
-def _calc_other_precipitation(entry):
+def _calc_precipitation(entry):
     return (
         round(entry.get_rain().get("3h"), 1)
         if entry.get_rain().get("3h") is not None

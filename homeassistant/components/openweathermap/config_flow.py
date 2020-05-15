@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
-    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
 )
 from homeassistant.core import callback
@@ -25,7 +24,6 @@ from .const import (
     DEFAULT_NAME,
     FORECAST_MODES,
     LANGUAGES,
-    MONITORED_CONDITIONS,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -59,15 +57,10 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
-            api_key_valid = _validate_api_key(user_input[CONF_API_KEY])
+            api_key_valid = await _validate_api_key(self.hass, user_input[CONF_API_KEY])
 
-            monitored_conditions_valid = _validate_monitored_conditions(
-                user_input.get(CONF_MONITORED_CONDITIONS, None)
-            )
             if not api_key_valid:
                 errors["base"] = "auth"
-            if not monitored_conditions_valid:
-                errors["base"] = "monitored_conditions"
 
             if not errors:
                 return self.async_create_entry(
@@ -92,7 +85,6 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(
                     FORECAST_MODES
                 ),
-                vol.Optional(CONF_MONITORED_CONDITIONS, default=""): str,
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     LANGUAGES
                 ),
@@ -109,17 +101,8 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        errors = {}
-
         if user_input is not None:
-            monitored_conditions_valid = _validate_monitored_conditions(
-                user_input[CONF_MONITORED_CONDITIONS]
-            )
-            if not monitored_conditions_valid:
-                errors["base"] = "monitored_conditions"
-
-            if not errors:
-                return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -132,12 +115,6 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
                         ),
                     ): vol.In(FORECAST_MODES),
                     vol.Optional(
-                        CONF_MONITORED_CONDITIONS,
-                        default=self.config_entry.options.get(
-                            CONF_MONITORED_CONDITIONS, ""
-                        ),
-                    ): str,
-                    vol.Optional(
                         CONF_LANGUAGE,
                         default=self.config_entry.options.get(
                             CONF_LANGUAGE, DEFAULT_LANGUAGE
@@ -148,20 +125,9 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
         )
 
 
-def _validate_monitored_conditions(conditions_str):
-    if not conditions_str:
-        return True
-
-    conditions = list(filter(None, str(conditions_str).split(",")))
-    for condition in conditions:
-        if condition.strip() not in MONITORED_CONDITIONS:
-            return False
-    return True
-
-
-def _validate_api_key(api_key):
+async def _validate_api_key(hass, api_key):
     try:
         owm = OWM(api_key)
-        return owm.is_API_online()
+        return await hass.async_add_executor_job(owm.is_API_online)
     except (APICallError, UnauthorizedError):
         return False
