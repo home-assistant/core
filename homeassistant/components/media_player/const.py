@@ -1,4 +1,4 @@
-"""Proides the constants needed for component."""
+"""Provides the constants needed for component."""
 
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
@@ -26,6 +26,17 @@ ATTR_MEDIA_VOLUME_LEVEL = "volume_level"
 ATTR_MEDIA_VOLUME_MUTED = "is_volume_muted"
 ATTR_SOUND_MODE = "sound_mode"
 ATTR_SOUND_MODE_LIST = "sound_mode_list"
+
+CONF_CLEAR_PLAYLIST = "clear_playlist"
+CONF_MEDIA_PLAY_PAUSE = "media_play_pause"
+CONF_MEDIA_PLAY = "media_play"
+CONF_MEDIA_PAUSE = "media_pause"
+CONF_MEDIA_STOP = "media_stop"
+CONF_MEDIA_NEXT_TRACK = "media_next_track"
+CONF_MEDIA_PREVIOUS_TRACK = "media_previous_track"
+CONF_SUPPORTED_FEATURES = "supported_features"
+CONF_VOLUME_UP = "volume_up"
+CONF_VOLUME_DOWN = "volume_down"
 
 DOMAIN = "media_player"
 

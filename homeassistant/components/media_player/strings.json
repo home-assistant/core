@@ -1,6 +1,20 @@
 {
   "title": "Media player",
   "device_automation": {
+    "action_type": {
+      "turn_on": "Turn on {entity_name}",
+      "turn_off": "Turn off {entity_name}",
+      "toggle": "Toggle {entity_name}",
+      "volume_up": "Increase volume of {entity_name}",
+      "volume_down": "Decrease volume of {entity_name}",
+      "media_play_pause": "Toggle play {entity_name}",
+      "media_pause": "Pause {entity_name}",
+      "media_play": "Play {entity_name}",
+      "media_stop": "Stop {entity_name}",
+      "media_next_track": "Play next track on {entity_name}",
+      "media_previous_track": "Play previous track on {entity_name}",
+      "clear_playlist": "Clear playlist on {entity_name}"
+    },
     "condition_type": {
       "is_on": "{entity_name} is on",
       "is_off": "{entity_name} is off",
