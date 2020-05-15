@@ -20,7 +20,6 @@ async def mock_discover(_discovery_callback):
 
 async def mock_failed_discover(_discovery_callback):
     """Mock unsuccessful discovery by doing nothing."""
-    pass
 
 
 async def test_user_form(hass):
