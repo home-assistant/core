@@ -37,7 +37,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
-
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
@@ -379,23 +378,30 @@ class TelevisionMediaPlayer(HomeAccessory):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
         key_name = MEDIA_PLAYER_KEYS.get(value)
-        if key_name:
-            # Handle Play Pause
-            if key_name == KEY_PLAY_PAUSE:
-                state = self.hass.states.get(self.entity_id).state
-                if state in (STATE_PLAYING, STATE_PAUSED):
-                    service = (
-                        SERVICE_MEDIA_PLAY
-                        if state == STATE_PAUSED
-                        else SERVICE_MEDIA_PAUSE
-                    )
-                else:
-                    service = SERVICE_MEDIA_PLAY_PAUSE
-                params = {ATTR_ENTITY_ID: self.entity_id}
-                self.call_service(DOMAIN, service, params)
+        if key_name is None:
+            _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
+            return
 
+        if key_name == KEY_PLAY_PAUSE:
+            # Handle Play Pause by directly updating the media player entity.
+            state = self.hass.states.get(self.entity_id).state
+            if state in (STATE_PLAYING, STATE_PAUSED):
+                service = (
+                    SERVICE_MEDIA_PLAY
+                    if state == STATE_PAUSED
+                    else SERVICE_MEDIA_PAUSE
+                )
+            else:
+                service = SERVICE_MEDIA_PLAY_PAUSE
+            params = {ATTR_ENTITY_ID: self.entity_id}
+            self.call_service(DOMAIN, service, params)
+        else:
+            # Other keys can be handled by listening to the event bus
             self.hass.bus.fire(
-                EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED, {ATTR_KEY_NAME: key_name}
+                EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED, {
+                    ATTR_KEY_NAME: key_name,
+                    ATTR_ENTITY_ID: self.entity_id,
+                }
             )
 
     @callback
