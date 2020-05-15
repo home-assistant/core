@@ -42,7 +42,8 @@ class NetatmoBase(Entity):
         Remove entity if no entry in entity registry exist.
         Remove entity registry entry if no entry in device registry exist.
         Remove device registry entry if there is only one linked entity (this entity).
-        Remove entity registry entry if there are more than one entity linked to the device registry entry.
+        Remove entity registry entry if there are more than one entity linked to the
+        device registry entry.
         """
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
         entity_entry = entity_registry.async_get(self.entity_id)

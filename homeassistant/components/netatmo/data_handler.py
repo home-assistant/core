@@ -25,6 +25,9 @@ DATA_CLASSES = {
     "HomeStatus": pyatmo.HomeStatus,
 }
 
+MAX_CALLS_10S = 2
+MAX_CALLS_1H = 20
+
 
 class NetatmoDataHandler:
     """Manages the Netatmo data handling."""
@@ -50,46 +53,46 @@ class NetatmoDataHandler:
         self._data_classes: Dict = {}
         self.data = {}
         self._intervals = {}
+        self._queue: List = []
+        self._parallel = 2
+        self._wait = 20
 
     async def async_setup(self):
         """Set up a UniFi controller."""
-        for data_class in [
-            pyatmo.WeatherStationData,
-            pyatmo.HomeCoachData,
-            pyatmo.CameraData,
-            pyatmo.HomeData,
+        for data_class_name in [
+            "WeatherStationData",
+            "HomeCoachData",
+            "CameraData",
+            "HomeData",
         ]:
-            try:
-                self.data[data_class.__name__] = await self.hass.async_add_executor_job(
-                    data_class, self._auth
-                )
-            except pyatmo.NoDevice:
-                _LOGGER.debug("No devices for %s", data_class.__name__)
-                continue
+            await self.register_data_class(data_class_name)
 
         async def async_update(event_time):
             """Update device."""
+            queue = [entry for entry in self._queue[0 : self._parallel]]
+            for _ in queue:
+                self._queue.append(self._queue.pop(0))
+
             try:
-                data_results = await asyncio.gather(
+                results = await asyncio.gather(
                     *[
                         self.hass.async_add_executor_job(
-                            partial(
-                                self._data_classes[data_class]["class"],
-                                **self._data_classes[data_class]["kwargs"],
-                            ),
+                            partial(data_class["class"], **data_class["kwargs"],),
                             self._auth,
                         )
-                        for data_class in self._data_classes
+                        for data_class in queue
                     ]
                 )
             except pyatmo.NoDevice as err:
                 _LOGGER.debug(err)
 
-            for data_class, result in zip(self._data_classes, data_results):
-                self.data[data_class] = result
-                async_dispatcher_send(self.hass, f"netatmo-update-{data_class}")
+            for data_class, result in zip(queue, results):
+                self.data[data_class["name"]] = result
+                async_dispatcher_send(self.hass, f"netatmo-update-{data_class['name']}")
 
-        async_track_time_interval(self.hass, async_update, timedelta(seconds=180))
+        async_track_time_interval(
+            self.hass, async_update, timedelta(seconds=self._wait)
+        )
 
     async def register_data_class(self, data_class_name, **kwargs):
         """Register data class."""
@@ -101,12 +104,14 @@ class NetatmoDataHandler:
         if data_class_entry not in self._data_classes:
             self._data_classes[data_class_entry] = {
                 "class": DATA_CLASSES[data_class_name],
+                "name": data_class_entry,
                 "kwargs": kwargs,
                 "registered": 1,
             }
             self.data[data_class_entry] = await self.hass.async_add_executor_job(
                 partial(DATA_CLASSES[data_class_name], **kwargs,), self._auth,
             )
+            self._queue.append(self._data_classes[data_class_entry])
             _LOGGER.debug("Data class %s added", data_class_name)
         else:
             self._data_classes[data_class_entry].update(
@@ -121,6 +126,9 @@ class NetatmoDataHandler:
         else:
             self._data_classes.pop(data_class_entry)
             _LOGGER.debug("Data class %s removed", data_class_entry)
+
+    # def update_interval(self):
+    #     self._wait =
 
 
 @callback
