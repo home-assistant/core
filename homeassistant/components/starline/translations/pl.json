@@ -30,8 +30,8 @@
             },
             "auth_user": {
                 "data": {
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Adres e-mail i has\u0142o do konta StarLine",
                 "title": "Po\u015bwiadczenia u\u017cytkownika"

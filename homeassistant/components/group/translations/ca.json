@@ -1,17 +1,17 @@
 {
     "state": {
         "_": {
-            "closed": "Tancat",
+            "closed": "Tancat/da",
             "home": "A casa",
             "locked": "Bloquejat",
             "not_home": "Fora",
-            "off": "Desactivat",
+            "off": "OFF",
             "ok": "Correcte",
-            "on": "Activat",
-            "open": "Obert",
+            "on": "ON",
+            "open": "Obert/a",
             "problem": "Problema",
             "unlocked": "Desbloquejat"
         }
     },
-    "title": "Grups"
+    "title": "Grup"
 }

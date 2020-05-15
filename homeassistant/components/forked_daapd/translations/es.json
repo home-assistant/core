@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado."
+        },
+        "error": {
+            "unknown_error": "Error desconocido.",
+            "wrong_password": "Contrase\u00f1a incorrecta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nombre amigable",
+                    "password": "Contrase\u00f1a API (dejar en blanco si no hay contrase\u00f1a)",
+                    "port": "Puerto API"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "tts_pause_time": "Segundos para pausar antes y despu\u00e9s del TTS",
+                    "tts_volume": "Volumen TTS (decimal en el rango [0,1])"
+                }
+            }
+        }
+    }
+}

@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Token d'acc\u00e9s per l'API de l'encaminador Vilfo",
-                    "host": "Nom d'amfitri\u00f3 o IP de l'encaminador"
+                    "access_token": "Token d'acc\u00e9s",
+                    "host": "Amfitri\u00f3"
                 },
                 "description": "Configura la integraci\u00f3 de l'encaminador Vilfo. Necessites la seva IP o nom d'amfitri\u00f3 i el token d'acc\u00e9s de l'API. Per a m\u00e9s informaci\u00f3, visita: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Connexi\u00f3 amb l'encaminador Vilfo"

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2-Faktor Code"
+                },
+                "title": "2-Faktor-Authentifikatioun"
+            }
+        }
+    }
+}

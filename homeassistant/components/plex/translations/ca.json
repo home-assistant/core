@@ -16,10 +16,11 @@
             "not_found": "No s'ha trobat el servidor Plex",
             "ssl_error": "Problema amb el certificat SSL"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Amfitri\u00f3 (opcional si es proporciona un token)",
+                    "host": "Amfitri\u00f3",
                     "port": "Port",
                     "ssl": "Utilitza SSL",
                     "token": "Token (opcional)",

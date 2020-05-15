@@ -19,10 +19,10 @@
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%] (opcjonalnie, je\u015bli wprowadzono token)",
-                    "port": "[%key_id:common::config_flow::data::port%]",
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port",
                     "ssl": "U\u017cyj SSL",
-                    "token": "[%key_id:common::config_flow::data::access_token%] (opcjonalnie)",
+                    "token": "Token dost\u0119pu (opcjonalnie)",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
                 "title": "Manualna konfiguracja Plex"

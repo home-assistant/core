@@ -4,6 +4,7 @@
             "invalid_host": "Vertsoppf\u00f8ringen var ikke i fullstendig URL-format, for eksempel http://192.168.10.100:80",
             "unknown": "[%key:common::config_flow::error::unknown%"
         },
+        "flow_title": "Universelle enheter ISY994 {name} ( {host} )",
         "step": {
             "user": {
                 "data": {

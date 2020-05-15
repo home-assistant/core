@@ -14,9 +14,9 @@
         "step": {
             "authenticate": {
                 "data": {
-                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "password": "Has\u0142o",
                     "tenant": "Najemca",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Uwierzytelnij konto Eneco Toon (nie konto programisty).",
                 "title": "Po\u0142\u0105cz konto Toon"
