@@ -3,7 +3,7 @@
 from homeassistant.helpers.entity import Entity
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_DEV_CLASS_MAP, BLEBOX_TO_UNIT_MAP, DOMAIN, PRODUCT
+from .const import BLEBOX_TO_HASS_DEVICE_CLASSES, BLEBOX_TO_UNIT_MAP, DOMAIN, PRODUCT
 
 
 async def async_setup_entry(hass, config_entry, async_add):
@@ -30,4 +30,4 @@ class BleBoxSensorEntity(BleBoxEntity, Entity):
     @property
     def device_class(self):
         """Return the device class."""
-        return BLEBOX_DEV_CLASS_MAP[self._feature.device_class]
+        return BLEBOX_TO_HASS_DEVICE_CLASSES[self._feature.device_class]
