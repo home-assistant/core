@@ -152,6 +152,15 @@ class MockPlexServer:
         """Mock version of PlexServer."""
         return "1.0"
 
+    @property
+    def library(self):
+        """Mock library object of PlexServer."""
+        return MockPlexLibrary()
+
+    def playlist(self, playlist):
+        """Mock the playlist lookup method."""
+        return MockPlexMediaItem(playlist, mediatype="playlist")
+
 
 class MockPlexClient:
     """Mock a PlexClient instance."""
@@ -259,9 +268,67 @@ class MockPlexSession:
         return 2020
 
 
+class MockPlexLibrary:
+    """Mock a Plex Library instance."""
+
+    def __init__(self):
+        """Initialize the object."""
+
+    def section(self, library_name):
+        """Mock the LibrarySection lookup."""
+        return MockPlexLibrarySection(library_name)
+
+
 class MockPlexLibrarySection:
     """Mock a Plex LibrarySection instance."""
 
     def __init__(self, library="Movies"):
         """Initialize the object."""
         self.title = library
+
+    def get(self, query):
+        """Mock the get lookup method."""
+        return MockPlexMediaItem(query)
+
+
+class MockPlexMediaItem:
+    """Mock a Plex Media instance."""
+
+    def __init__(self, title, mediatype="video"):
+        """Initialize the object."""
+        self.title = str(title)
+        self.type = mediatype
+
+    def album(self, album):
+        """Mock the album lookup method."""
+        return MockPlexMediaItem(album, mediatype="album")
+
+    def track(self, track):
+        """Mock the track lookup method."""
+        return MockPlexMediaTrack()
+
+    def tracks(self):
+        """Mock the tracks lookup method."""
+        for index in range(1, 10):
+            yield MockPlexMediaTrack(index)
+
+    def episode(self, episode):
+        """Mock the episode lookup method."""
+        return MockPlexMediaItem(episode, mediatype="episode")
+
+    def season(self, season):
+        """Mock the season lookup method."""
+        return MockPlexMediaItem(season, mediatype="season")
+
+    def searchTracks(self, track_name, maxresults):
+        """Mock the searchTracks method."""
+        return MockPlexMediaTrack()
+
+
+class MockPlexMediaTrack(MockPlexMediaItem):
+    """Mock a Plex Track instance."""
+
+    def __init__(self, index=1):
+        """Initialize the object."""
+        super().__init__(f"Track {index}", "track")
+        self.index = index

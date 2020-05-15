@@ -3,7 +3,7 @@ import logging
 import ssl
 from urllib.parse import urlparse
 
-from plexapi.exceptions import Unauthorized
+from plexapi.exceptions import NotFound, Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -11,6 +11,12 @@ from requests import Session
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_VIDEO,
+)
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
@@ -367,3 +373,78 @@ class PlexServer:
     def fetch_item(self, item):
         """Fetch item from Plex server."""
         return self._plex_server.fetchItem(item)
+
+    def lookup_media(self, media_type, **kwargs):
+        """Lookup a piece of media."""
+
+        library_name = kwargs.get("library_name")
+
+        def lookup_music(**kwargs):
+            """Search for music and return a Plex media object."""
+            artist_name = kwargs.get("artist_name")
+            album_name = kwargs.get("album_name")
+            track_name = kwargs.get("track_name")
+            track_number = kwargs.get("track_number")
+
+            artist = self.library.section(library_name).get(artist_name)
+
+            if album_name:
+                album = artist.album(album_name)
+                if track_name:
+                    return album.track(track_name)
+                if track_number:
+                    for track in album.tracks():
+                        if int(track.index) == int(track_number):
+                            return track
+                    return None
+                return album
+            if track_name:
+                return artist.searchTracks(track_name, maxresults=1)
+            return artist
+
+        def lookup_tv(**kwargs):
+            """Find TV media and return a Plex media object."""
+            show_name = kwargs.get("show_name")
+            season_number = kwargs.get("season_number")
+            episode_number = kwargs.get("episode_number")
+            target_season = None
+            target_episode = None
+
+            show = self.library.section(library_name).get(show_name)
+
+            if not season_number:
+                return show
+
+            try:
+                target_season = show.season(int(season_number))
+            except NotFound:
+                _LOGGER.error(
+                    "Season not found: %s - S%s",
+                    show_name,
+                    str(season_number).zfill(2),
+                )
+                return None
+
+            if not episode_number:
+                return target_season
+
+            try:
+                target_episode = target_season.episode(episode=int(episode_number))
+            except NotFound:
+                _LOGGER.error(
+                    "Episode not found: %s - S%sE%s",
+                    show_name,
+                    str(season_number).zfill(2),
+                    str(episode_number).zfill(2),
+                )
+
+            return target_episode
+
+        if media_type == MEDIA_TYPE_MUSIC:
+            return lookup_music(**kwargs)
+        if media_type == MEDIA_TYPE_EPISODE:
+            return lookup_tv(**kwargs)
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            return self.playlist(kwargs["playlist_name"])
+        if media_type == MEDIA_TYPE_VIDEO:
+            return self.library.section(library_name).get(kwargs["video_name"])

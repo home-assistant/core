@@ -1,7 +1,15 @@
 """Tests for Plex server."""
 import copy
 
+from plexapi.exceptions import NotFound
+
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_VIDEO,
+)
 from homeassistant.components.plex.const import (
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
@@ -13,7 +21,7 @@ from homeassistant.components.plex.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
-from .mock_classes import MockPlexServer
+from .mock_classes import MockPlexMediaItem, MockPlexServer
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -244,3 +252,109 @@ async def test_ignore_plex_web_client(hass):
     media_players = hass.states.async_entity_ids("media_player")
 
     assert len(media_players) == int(sensor.state) - 1
+
+
+async def test_media_lookups(hass):
+    """Test media lookups to Plex server."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEFAULT_DATA,
+        options=DEFAULT_OPTIONS,
+        unique_id=DEFAULT_DATA["server_id"],
+    )
+
+    mock_plex_server = MockPlexServer(config_entry=entry)
+
+    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
+        "homeassistant.components.plex.PlexWebsocket.listen"
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    server_id = mock_plex_server.machineIdentifier
+    loaded_server = hass.data[DOMAIN][SERVERS][server_id]
+
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_EPISODE, library_name="TV Shows", show_name="A TV Show"
+    )
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_EPISODE,
+        library_name="TV Shows",
+        show_name="A TV Show",
+        season_number=2,
+    )
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_EPISODE,
+        library_name="TV Shows",
+        show_name="A TV Show",
+        season_number=2,
+        episode_number=3,
+    )
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_MUSIC, library_name="Music", artist_name="An Artist"
+    )
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_MUSIC,
+        library_name="Music",
+        artist_name="An Artist",
+        track_name="A Track",
+    )
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_MUSIC,
+        library_name="Music",
+        artist_name="An Artist",
+        album_name="An Album",
+    )
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_MUSIC,
+        library_name="Music",
+        artist_name="An Artist",
+        album_name="An Album",
+        track_number=3,
+    )
+    assert (
+        loaded_server.lookup_media(
+            MEDIA_TYPE_MUSIC,
+            library_name="Music",
+            artist_name="An Artist",
+            album_name="An Album",
+            track_number=30,
+        )
+        is None
+    )
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_MUSIC,
+        library_name="Music",
+        artist_name="An Artist",
+        album_name="An Album",
+        track_name="A Track",
+    )
+    assert loaded_server.lookup_media(MEDIA_TYPE_PLAYLIST, playlist_name="A Playlist")
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_VIDEO, library_name="Movies", video_name="A Movie"
+    )
+
+    with patch.object(MockPlexMediaItem, "season", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_EPISODE,
+                library_name="TV Shows",
+                show_name="A TV Show",
+                season_number=2,
+            )
+            is None
+        )
+
+    with patch.object(MockPlexMediaItem, "episode", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_EPISODE,
+                library_name="TV Shows",
+                show_name="A TV Show",
+                season_number=2,
+                episode_number=1,
+            )
+            is None
+        )
