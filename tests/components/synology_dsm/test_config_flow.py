@@ -309,7 +309,7 @@ async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
 
 async def test_unknown_failed(hass: HomeAssistantType, service: MagicMock):
     """Test when we have an unknown error."""
-    service.return_value.login = Mock(side_effect=SynologyDSMException)
+    service.return_value.login = Mock(side_effect=SynologyDSMException(None, None))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
