@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bare en Atag-enhet kan legges til Home Assistant"
+        },
+        "error": {
+            "connection_error": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-post (valgfritt)",
+                    "host": "Vert",
+                    "port": "Port "
+                },
+                "title": "Koble til enheten"
+            }
+        }
+    },
+    "title": ""
+}

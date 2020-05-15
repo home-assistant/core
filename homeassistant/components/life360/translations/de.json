@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
+            "user_already_configured": "Account ist bereits konfiguriert"
+        },
+        "create_entry": {
+            "default": "M\u00f6gliche erweiterte Einstellungen finden sich unter [Life360-Dokumentation]({docs_url})."
+        },
+        "error": {
+            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
+            "invalid_username": "Ung\u00fcltiger Benutzername",
+            "unexpected": "Unerwarteter Fehler bei der Kommunikation mit dem Life360-Server",
+            "user_already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Erweiterte Optionen sind in der [Life360-Dokumentation]({docs_url}) zu finden.\nDies sollte vor dem Hinzuf\u00fcgen von Kontoinformationen getan werden.",
+                "title": "Life360-Kontoinformationen"
+            }
+        }
+    }
+}

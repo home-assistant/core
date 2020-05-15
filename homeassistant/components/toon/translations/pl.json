@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "client_id": "Identyfikator klienta z konfiguracji jest nieprawid\u0142owy.",
+            "client_secret": "Tajny klucz klienta z konfiguracji jest nieprawid\u0142owy.",
+            "no_agreements": "To konto nie posiada wy\u015bwietlaczy Toon.",
+            "no_app": "Musisz skonfigurowa\u0107 Toon, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/toon/).",
+            "unknown_auth_fail": "Nieoczekiwany b\u0142\u0105d podczas uwierzytelniania."
+        },
+        "error": {
+            "credentials": "Wprowadzone dane logowania s\u0105 nieprawid\u0142owe.",
+            "display_exists": "Wybrany ekran jest ju\u017c skonfigurowany."
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "tenant": "Najemca",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Uwierzytelnij konto Eneco Toon (nie konto programisty).",
+                "title": "Po\u0142\u0105cz konto Toon"
+            },
+            "display": {
+                "data": {
+                    "display": "Wybierz wy\u015bwietlacz"
+                },
+                "description": "Wybierz wy\u015bwietlacz Toon, z kt\u00f3rym chcesz si\u0119 po\u0142\u0105czy\u0107.",
+                "title": "Wybierz wy\u015bwietlacz"
+            }
+        }
+    }
+}

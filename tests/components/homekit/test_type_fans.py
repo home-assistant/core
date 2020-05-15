@@ -1,6 +1,5 @@
 """Test different accessory types: Fans."""
 from collections import namedtuple
-from unittest.mock import Mock
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
@@ -33,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
 
+from tests.async_mock import Mock
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
 
@@ -286,6 +286,8 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     assert acc.char_speed.value != 0
 
     await acc.run_handler()
+    await hass.async_block_till_done()
+
     assert (
         acc.speed_mapping.speed_ranges == HomeKitSpeedMapping(speed_list).speed_ranges
     )
@@ -302,6 +304,7 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     call_set_speed = async_mock_service(hass, DOMAIN, "set_speed")
 
     char_speed_iid = acc.char_speed.to_HAP()[HAP_REPR_IID]
+    char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
 
     hk_driver.set_characteristics(
         {
@@ -318,11 +321,36 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     await hass.async_add_executor_job(acc.char_speed.client_update_value, 42)
     await hass.async_block_till_done()
     acc.speed_mapping.speed_to_states.assert_called_with(42)
+    assert acc.char_speed.value == 42
+    assert acc.char_active.value == 1
+
     assert call_set_speed[0]
     assert call_set_speed[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_speed[0].data[ATTR_SPEED] == "ludicrous"
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "ludicrous"
+
+    # Verify speed is preserved from off to on
+    hass.states.async_set(entity_id, STATE_OFF, {ATTR_SPEED: SPEED_OFF})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 42
+    assert acc.char_active.value == 0
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_active_iid,
+                    HAP_REPR_VALUE: 1,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 42
+    assert acc.char_active.value == 1
 
 
 async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
@@ -351,6 +379,8 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     # speed to 100 when turning on a fan on a freshly booted up server.
     assert acc.char_speed.value != 0
     await acc.run_handler()
+    await hass.async_block_till_done()
+
     assert (
         acc.speed_mapping.speed_ranges == HomeKitSpeedMapping(speed_list).speed_ranges
     )
@@ -415,8 +445,7 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     )
     await hass.async_block_till_done()
     acc.speed_mapping.speed_to_states.assert_called_with(42)
-    assert call_turn_on
-    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert not call_turn_on
     assert call_set_speed[0]
     assert call_set_speed[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_speed[0].data[ATTR_SPEED] == "ludicrous"
@@ -426,11 +455,11 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     assert call_set_direction[0]
     assert call_set_direction[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_direction[0].data[ATTR_DIRECTION] == DIRECTION_REVERSE
-    assert len(events) == 4
+    assert len(events) == 3
 
-    assert events[1].data[ATTR_VALUE] is True
-    assert events[2].data[ATTR_VALUE] == DIRECTION_REVERSE
-    assert events[3].data[ATTR_VALUE] == "ludicrous"
+    assert events[0].data[ATTR_VALUE] is True
+    assert events[1].data[ATTR_VALUE] == DIRECTION_REVERSE
+    assert events[2].data[ATTR_VALUE] == "ludicrous"
 
     hass.states.async_set(
         entity_id,
@@ -478,7 +507,7 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     # and we set a fan speed
     await hass.async_block_till_done()
     acc.speed_mapping.speed_to_states.assert_called_with(42)
-    assert len(events) == 7
+    assert len(events) == 6
     assert call_set_speed[1]
     assert call_set_speed[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_speed[1].data[ATTR_SPEED] == "ludicrous"
@@ -522,7 +551,7 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     )
     await hass.async_block_till_done()
 
-    assert len(events) == 8
+    assert len(events) == 7
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(call_set_speed) == 2

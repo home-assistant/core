@@ -3,7 +3,7 @@ import logging
 
 from velbus.util import VelbusException
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import VelbusEntity
 from .const import DOMAIN
@@ -22,7 +22,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class VelbusSwitch(VelbusEntity, SwitchDevice):
+class VelbusSwitch(VelbusEntity, SwitchEntity):
     """Representation of a switch."""
 
     @property

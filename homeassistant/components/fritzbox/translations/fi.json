@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Salasana",
+                    "username": "K\u00e4ytt\u00e4j\u00e4tunnus"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Salasana",
+                    "username": "K\u00e4ytt\u00e4j\u00e4tunnus"
+                },
+                "title": "AVM FRITZ!Box"
+            }
+        }
+    }
+}

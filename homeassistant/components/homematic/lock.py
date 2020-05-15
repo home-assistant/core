@@ -1,7 +1,7 @@
 """Support for Homematic locks."""
 import logging
 
-from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
+from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 
 from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMLock(HMDevice, LockDevice):
+class HMLock(HMDevice, LockEntity):
     """Representation of a Homematic lock aka KeyMatic."""
 
     @property

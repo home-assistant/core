@@ -2,7 +2,7 @@
 from itertools import chain
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 from . import CONF_BINARY_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
@@ -114,7 +114,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(await hass.async_add_job(get_binary_sensors), True)
 
 
-class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
+class NestBinarySensor(NestSensorDevice, BinarySensorEntity):
     """Represents a Nest binary sensor."""
 
     @property

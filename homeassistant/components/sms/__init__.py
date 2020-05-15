@@ -17,7 +17,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Configure Gammu state machine."""
     conf = config[DOMAIN]
     device = conf.get(CONF_DEVICE)

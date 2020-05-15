@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "unknown_error": "Onbekannten Feeler.",
+            "wrong_host_or_port": "Feeler beim verbannen, iwwerpr\u00e9if w.e.g d'Adresse a Port.",
+            "wrong_password": "Ong\u00ebltegt Passwuert."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "name": "Numm",
+                    "password": "API Passwuert (eidel loosse fir kee Passwuert)",
+                    "port": "API Port"
+                }
+            }
+        }
+    }
+}

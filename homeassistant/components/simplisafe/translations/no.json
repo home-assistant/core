@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne SimpliSafe-kontoen er allerede i bruk."
+        },
+        "error": {
+            "identifier_exists": "Konto er allerede registrert",
+            "invalid_credentials": "Ugyldig legitimasjon"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Kode (brukt i Home Assistant brukergrensesnittet)",
+                    "password": "Passord",
+                    "username": "E-postadresse"
+                },
+                "title": "Fyll ut informasjonen din."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kode (brukt i Home Assistant brukergrensesnittet)"
+                },
+                "title": "Konfigurer SimpliSafe"
+            }
+        }
+    }
+}

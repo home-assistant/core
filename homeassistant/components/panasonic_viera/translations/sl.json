@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta televizor Panasonic Viera je \u017ee konfiguriran.",
+            "not_connected": "Oddaljena povezava s televizorjem Panasonic Viera je bila prekinjena. Za ve\u010d informacij preverite dnevnike.",
+            "unknown": "Pri\u0161lo je do neznane napake. Za ve\u010d informacij preverite dnevnike."
+        },
+        "error": {
+            "invalid_pin_code": "Koda PIN, ki ste jo vnesli, je neveljavna",
+            "not_connected": "Oddaljene povezave s TV Panasonic Viera ni bilo mogo\u010de vzpostaviti"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Vnesite kodo PIN, prikazano na televizorju",
+                "title": "Seznanjanje"
+            },
+            "user": {
+                "data": {
+                    "host": "IP naslov",
+                    "name": "Ime"
+                },
+                "description": "Vnesite IP naslov va\u0161ega Panasonic Viera TV",
+                "title": "Nastavite televizor"
+            }
+        }
+    },
+    "title": "Panasonic Viera"
+}

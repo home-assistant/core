@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquesta Central Unit de Home Control ja est\u00e0 en \u00fas."
+        },
+        "error": {
+            "invalid_credentials": "Nom d'usuari i/o contrasenya incorrectes."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "Home_Control_URL": "URL de Home Control",
+                    "Mydevolo_URL": "URL de mydevolo",
+                    "home_control_url": "URL de Home Control",
+                    "mydevolo_url": "URL de mydevolo",
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic / ID de devolo"
+                },
+                "description": "Configura el teu Home Control de devolo.",
+                "title": "Home Control devolo"
+            }
+        }
+    },
+    "title": "Home Control devolo"
+}

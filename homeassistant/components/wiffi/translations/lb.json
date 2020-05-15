@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Server Port g\u00ebtt scho benotzt.",
+            "start_server_failed": "Feeler beim starte vum Server"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Server Port"
+                }
+            }
+        }
+    }
+}

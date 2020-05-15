@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} \u00e8 in casa",
+            "is_not_home": "{entity_name} non \u00e8 in casa"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "In casa",
+            "not_home": "Fuori casa"
+        }
+    },
+    "title": "Tracciatore dispositivo"
+}
