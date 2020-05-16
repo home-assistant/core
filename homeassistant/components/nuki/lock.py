@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     bridge = NukiBridge(
         config[CONF_HOST], config[CONF_TOKEN], config[CONF_PORT], DEFAULT_TIMEOUT
     )
-    devices = [NukiLockEntitiy(lock) for lock in bridge.locks]
+    devices = [NukiLockEntity(lock) for lock in bridge.locks]
 
     def service_handler(service):
         """Service handler for nuki services."""
@@ -68,11 +68,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         DOMAIN, SERVICE_LOCK_N_GO, service_handler, schema=LOCK_N_GO_SERVICE_SCHEMA
     )
 
-    devices.extend([NukiOpenerEntitiy(opener) for opener in bridge.openers])
+    devices.extend([NukiOpenerEntity(opener) for opener in bridge.openers])
     add_entities(devices)
 
 
-class NukiLockEntitiy(LockEntity):
+class NukiLockEntity(LockEntity):
     """Representation of a Nuki lock."""
 
     def __init__(self, nuki_lock):
@@ -150,7 +150,7 @@ class NukiLockEntitiy(LockEntity):
         self._nuki_lock.lock_n_go(unlatch, kwargs)
 
 
-class NukiOpenerEntitiy(LockEntity):
+class NukiOpenerEntity(LockEntity):
     """Representation of a Nuki opener."""
 
     def __init__(self, nuki_opener):
@@ -218,4 +218,3 @@ class NukiOpenerEntitiy(LockEntity):
     def open(self, **kwargs):
         """Activate the electric strike actuation."""
         self._nuki_opener.electric_strike_actuation()
-
