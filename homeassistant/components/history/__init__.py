@@ -298,7 +298,7 @@ class HistoryPeriodView(HomeAssistantView):
 
     async def get(self, request, datetime=None):
         """Return history over a period of time."""
-        timer_start = time.perf_counter()
+
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
 
@@ -335,8 +335,29 @@ class HistoryPeriodView(HomeAssistantView):
 
         hass = request.app["hass"]
 
-        result = await hass.async_add_job(
-            get_significant_states,
+        return await hass.async_add_executor_job(
+            self._get_sorted_significant_states_as_json,
+            hass,
+            start_time,
+            end_time,
+            entity_ids,
+            include_start_time_state,
+            significant_changes_only,
+        )
+
+    def _get_sorted_significant_states_as_json(
+        self,
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+        include_start_time_state,
+        significant_changes_only,
+    ):
+        """Fetch significant stats from the database as json."""
+        timer_start = time.perf_counter()
+
+        result = get_significant_states(
             hass,
             start_time,
             end_time,
@@ -363,7 +384,7 @@ class HistoryPeriodView(HomeAssistantView):
             sorted_result.extend(result)
             result = sorted_result
 
-        return await hass.async_add_job(self.json, result)
+        return self.json(result)
 
 
 class Filters:
