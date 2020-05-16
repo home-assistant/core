@@ -4,7 +4,6 @@ import logging
 
 import plugwise
 from plugwise.exceptions import (
-    CirclePlusError,
     NetworkDown,
     PortError,
     StickInitError,
