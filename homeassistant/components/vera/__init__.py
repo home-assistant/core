@@ -24,7 +24,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert, slugify
 from homeassistant.util.dt import utc_from_timestamp
 
-from .common import ControllerData, get_configured_platforms
+from .common import ControllerData, SubscriptionRegistry, get_configured_platforms
 from .config_flow import fix_device_id_list, new_options
 from .const import (
     ATTR_CURRENT_ENERGY_KWH,
@@ -95,7 +95,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
 
     # Initialize the Vera controller.
-    controller = veraApi.VeraController(base_url)
+    subscription_registry = SubscriptionRegistry(hass)
+    controller = veraApi.VeraController(base_url, subscription_registry)
     controller.start()
 
     hass.bus.async_listen_once(
