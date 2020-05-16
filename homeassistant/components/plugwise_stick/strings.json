@@ -14,11 +14,11 @@
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         }
-      }
-    },
-    "manual_path": {
-      "data": {
-        "usb_path": "[%key:common::config_flow::data::usb_path%]"
+      },
+      "manual_path": {
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        }
       }
     }
   }
