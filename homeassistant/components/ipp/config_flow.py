@@ -152,6 +152,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(
                 "Unable to determine unique id from discovery info and IPP response"
             )
+            return self.async_abort(reason="unique_id_required")
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
