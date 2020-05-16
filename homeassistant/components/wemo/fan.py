@@ -295,14 +295,14 @@ class WemoHumidifier(FanEntity):
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the switch on."""
-        try:
-            if speed is None:
+        if speed is None:
+            try:
                 self.wemo.set_state(self._last_fan_on_mode)
-            else:
-                self.set_speed(speed)
-        except ActionException as err:
-            _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
-            self._available = False
+            except ActionException as err:
+                _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
+                self._available = False
+        else:
+            self.set_speed(speed)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
@@ -324,17 +324,22 @@ class WemoHumidifier(FanEntity):
 
     def set_humidity(self, humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
+        target_humidity = None
+
+        if humidity < 50:
+            target_humidity = WEMO_HUMIDITY_45
+        elif 50 <= humidity < 55:
+            target_humidity = WEMO_HUMIDITY_50
+        elif 55 <= humidity < 60:
+            target_humidity = WEMO_HUMIDITY_55
+        elif 60 <= humidity < 100:
+            target_humidity = WEMO_HUMIDITY_60
+        elif humidity >= 100:
+            target_humidity = WEMO_HUMIDITY_100
+
         try:
-            if humidity < 50:
-                self.wemo.set_humidity(WEMO_HUMIDITY_45)
-            elif 50 <= humidity < 55:
-                self.wemo.set_humidity(WEMO_HUMIDITY_50)
-            elif 55 <= humidity < 60:
-                self.wemo.set_humidity(WEMO_HUMIDITY_55)
-            elif 60 <= humidity < 100:
-                self.wemo.set_humidity(WEMO_HUMIDITY_60)
-            elif humidity >= 100:
-                self.wemo.set_humidity(WEMO_HUMIDITY_100)
+            if target_humidity is not None:
+                self.wemo.set_humidity(target_humidity)
         except ActionException as err:
             _LOGGER.warning(
                 "Error while setting humidity of device: %s (%s)", self.name, err

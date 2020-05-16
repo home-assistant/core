@@ -152,34 +152,45 @@ class WemoLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
+        brightness = None
+        xy_color = None
+        color_temp = None
+        transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+
+        if hs_color is not None:
+            xy_color = color_util.color_hs_to_xy(*hs_color)
+
+        if ATTR_COLOR_TEMP in kwargs:
+            color_temp = kwargs[ATTR_COLOR_TEMP]
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
+
+        turn_on_kwargs = {
+            "level": brightness,
+            "transition": transition_time,
+            "force_update": False,
+        }
+
         try:
-            transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
+            if xy_color is not None:
+                self.wemo.set_color(xy_color, transition=transition_time)
 
-            hs_color = kwargs.get(ATTR_HS_COLOR)
+            if color_temp is not None:
+                self.wemo.set_temperature(mireds=color_temp, transition=transition_time)
 
-            if hs_color is not None:
-                xy_color = color_util.color_hs_to_xy(*hs_color)
-                self.wemo.set_color(xy_color, transition=transitiontime)
-
-            if ATTR_COLOR_TEMP in kwargs:
-                colortemp = kwargs[ATTR_COLOR_TEMP]
-                self.wemo.set_temperature(mireds=colortemp, transition=transitiontime)
-
-            if ATTR_BRIGHTNESS in kwargs:
-                brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
-                self.wemo.turn_on(level=brightness, transition=transitiontime)
-            else:
-                self.wemo.turn_on(transition=transitiontime)
+            self.wemo.turn_on(**turn_on_kwargs)
         except ActionException as err:
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
+        transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
 
         try:
-            self.wemo.turn_off(transition=transitiontime)
+            self.wemo.turn_off(transition=transition_time)
         except ActionException as err:
             _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
             self._available = False
@@ -189,7 +200,11 @@ class WemoLight(LightEntity):
         try:
             self._update_lights(no_throttle=force_update)
             self._state = self.wemo.state
-
+        except (AttributeError, ActionException) as err:
+            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
+            self._available = False
+            self.wemo.reconnect_with_device()
+        else:
             self._is_on = self._state.get("onoff") != 0
             self._brightness = self._state.get("level", 255)
             self._color_temp = self._state.get("temperature_mireds")
@@ -201,10 +216,6 @@ class WemoLight(LightEntity):
                 self._hs_color = color_util.color_xy_to_hs(*xy_color)
             else:
                 self._hs_color = None
-        except (AttributeError, ActionException) as err:
-            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
-            self._available = False
-            self.wemo.reconnect_with_device()
 
     async def async_update(self):
         """Synchronize state with bridge."""
@@ -340,16 +351,16 @@ class WemoDimmer(LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the dimmer on."""
+        # Wemo dimmer switches use a range of [0, 100] to control
+        # brightness. Level 255 might mean to set it to previous value
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            brightness = int((brightness / 255) * 100)
+        else:
+            brightness = 255
+
         try:
             self.wemo.on()
-
-            # Wemo dimmer switches use a range of [0, 100] to control
-            # brightness. Level 255 might mean to set it to previous value
-            if ATTR_BRIGHTNESS in kwargs:
-                brightness = kwargs[ATTR_BRIGHTNESS]
-                brightness = int((brightness / 255) * 100)
-            else:
-                brightness = 255
             self.wemo.set_brightness(brightness)
         except ActionException as err:
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
