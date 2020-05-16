@@ -20,7 +20,6 @@ from homeassistant.util.color import (
 )
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import DOMAIN, PRODUCT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
 
-    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    create_blebox_entities(product, async_add, BleBoxLightEntity, "lights")
-    return True
+    create_blebox_entities(hass, config_entry, async_add, BleBoxLightEntity, "lights")
 
 
 class BleBoxLightEntity(BleBoxEntity, Light):
