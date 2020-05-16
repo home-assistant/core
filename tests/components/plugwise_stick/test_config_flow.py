@@ -41,9 +41,7 @@ async def test_user_flow(detect_mock, hass):
     port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data={CONF_USB_PATH: port_select},
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: port_select},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == port.device
@@ -56,9 +54,7 @@ async def test_user_flow_manual(detect_mock, hass):
     """Test user flow, manual."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data={CONF_USB_PATH: MANUAL_PORT},
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: MANUAL_PORT},
     )
 
     assert result["type"] == RESULT_TYPE_FORM

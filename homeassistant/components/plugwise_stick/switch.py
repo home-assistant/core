@@ -107,7 +107,9 @@ class PlugwiseSwitchWithPower(PlugwiseSwitch, SwitchDevice):
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
         if getattr(self._node, self.energy_sensor["state"])():
-            return float(round(getattr(self._node, self.energy_sensor["state"])() / 1000, 3))
+            return float(
+                round(getattr(self._node, self.energy_sensor["state"])() / 1000, 3)
+            )
         return None
 
     @property

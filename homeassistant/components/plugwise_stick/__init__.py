@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import ConfigEntryNotReady
 
 import homeassistant.helpers.config_validation as cv
@@ -28,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 PLUGWISE_STICK_PLATFORMS = ["switch", "sensor"]
+
 
 async def async_setup(hass, config):
     """Set up the Plugwise stick platform."""
@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 hass.config_entries.async_forward_entry_setup(config_entry, platform)
             )
         stick.auto_update()
-    
+
     stick = plugwise.stick(config_entry.data[CONF_USB_PATH])
     try:
         _LOGGER.debug("Connect to USB-Stick")
@@ -75,7 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     except TimeoutException:
         _LOGGER.debug("Timeout")
         raise ConfigEntryNotReady
-
     return True
 
 
@@ -93,7 +92,6 @@ async def async_unload_entry(hass, config_entry):
         stick = hass.data[DOMAIN][config_entry.entry_id]["stick"]
         await hass.async_add_executor_job(stick.disconnect)
         hass.data[DOMAIN].pop(config_entry.entry_id)
-
     return unload_ok
 
 
