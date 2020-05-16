@@ -9,7 +9,7 @@
             "websocket_not_enabled": "forked-daapd \u4f3a\u670d\u5668 websocket \u672a\u958b\u555f\u3002",
             "wrong_host_or_port": "\u7121\u6cd5\u9023\u7dda\uff0c\u8acb\u78ba\u8a8d\u4e3b\u6a5f\u8207\u901a\u8a0a\u57e0\u3002",
             "wrong_password": "\u5bc6\u78bc\u932f\u8aa4\u3002",
-            "wrong_server_type": "\u975e forked-daapd \u4f3a\u670d\u5668\u3002"
+            "wrong_server_type": "forked-daapd \u6574\u5408\u9700\u8981\u7248\u6b21 >= 27.0 \u7248\u4e4b forked-daapd \u4f3a\u670d\u5668\u3002"
         },
         "flow_title": "forked-daapd \u4f3a\u670d\u5668\uff1a{name} ({host})",
         "step": {

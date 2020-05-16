@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf fir d\u00ebse Xiaomi Miio Apparat ass schonn am gaangen."
         },
         "error": {
             "connect_error": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",

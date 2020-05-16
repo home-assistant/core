@@ -37,6 +37,9 @@
                     "one": "um",
                     "other": "uns"
                 }
+            },
+            "simple_options": {
+                "description": "Configurar integra\u00e7\u00e3o UniFi"
             }
         }
     }
