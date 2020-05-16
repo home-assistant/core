@@ -114,8 +114,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
 
-        self._check_already_configured()
-
         # probably access denied
         if self._id is None:
             return self.async_abort(reason=RESULT_AUTH_MISSING)
@@ -130,6 +128,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+        self._check_already_configured()
+
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
 
@@ -140,8 +140,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._model = user_input.get("properties").get(ATTR_UPNP_MODEL_NAME)
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
-
-        self._check_already_configured()
 
         # probably access denied
         if self._id is None:
@@ -156,6 +154,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: self._model,
             }
         )
+
+        self._check_already_configured()
 
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
