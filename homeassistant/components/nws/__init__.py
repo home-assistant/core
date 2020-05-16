@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["weather"]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
-
+FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 DEBOUNCE_TIME = 60  # in seconds
 
 
@@ -62,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
+        failed_update_interval=FAILED_SCAN_INTERVAL,
     )
 
     coordinator_forecast = DataUpdateCoordinator(
@@ -73,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
+        failed_update_interval=FAILED_SCAN_INTERVAL,
     )
 
     coordinator_forecast_hourly = DataUpdateCoordinator(
@@ -84,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
+        failed_update_interval=FAILED_SCAN_INTERVAL,
     )
     nws_hass_data = hass.data.setdefault(DOMAIN, {})
     nws_hass_data[entry.entry_id] = {

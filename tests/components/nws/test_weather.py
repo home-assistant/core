@@ -154,6 +154,7 @@ async def test_entity_refresh(hass, mock_simple_nws):
 
 async def test_error_observation(hass, mock_simple_nws):
     """Test error during update observation."""
+
     instance = mock_simple_nws.return_value
     instance.update_observation.side_effect = aiohttp.ClientError
 
@@ -174,8 +175,7 @@ async def test_error_observation(hass, mock_simple_nws):
 
     instance.update_observation.side_effect = None
 
-    future_time = dt_util.utcnow() + timedelta(minutes=15)
-    async_fire_time_changed(hass, future_time)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
     await hass.async_block_till_done()
 
     assert instance.update_observation.call_count == 2
@@ -207,8 +207,7 @@ async def test_error_forecast(hass, mock_simple_nws):
 
     instance.update_forecast.side_effect = None
 
-    future_time = dt_util.utcnow() + timedelta(minutes=15)
-    async_fire_time_changed(hass, future_time)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
     await hass.async_block_till_done()
 
     assert instance.update_forecast.call_count == 2
@@ -236,8 +235,7 @@ async def test_error_forecast_hourly(hass, mock_simple_nws):
 
     instance.update_forecast_hourly.side_effect = None
 
-    future_time = dt_util.utcnow() + timedelta(minutes=15)
-    async_fire_time_changed(hass, future_time)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
     await hass.async_block_till_done()
 
     assert instance.update_forecast_hourly.call_count == 2
