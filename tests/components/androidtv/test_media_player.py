@@ -850,6 +850,34 @@ async def test_adb_command_get_properties(hass):
         assert state.attributes["adb_response"] == str(response)
 
 
+async def test_adb_command_learn_sendevent(hass):
+    """Test sending the "learn_sendevent" command via the `androidtv.adb_command` service."""
+    patch_key = "server"
+    entity_id = "media_player.android_tv"
+    command = "LEARN_SENDEVENT"
+    response = "sendevent 1 2 3 4"
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patch(
+        "androidtv.basetv.BaseTV.learn_sendevent", return_value=response
+    ) as patch_get_props:
+        await hass.services.async_call(
+            ANDROIDTV_DOMAIN,
+            SERVICE_ADB_COMMAND,
+            {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+            blocking=True,
+        )
+
+        patch_get_props.assert_called()
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["adb_response"] == response
+
+
 async def test_update_lock_not_acquired(hass):
     """Test that the state does not get updated when a `LockNotAcquiredException` is raised."""
     patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)

@@ -572,6 +572,11 @@ class ADBDevice(MediaPlayerEntity):
             self.schedule_update_ha_state()
             return self._adb_response
 
+        if cmd == "LEARN_SENDEVENT":
+            self._adb_response = str(self.aftv.learn_sendevent())
+            self.schedule_update_ha_state()
+            return self._adb_response
+
         try:
             response = self.aftv.adb_shell(cmd)
         except UnicodeDecodeError:
