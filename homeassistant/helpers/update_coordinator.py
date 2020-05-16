@@ -33,6 +33,7 @@ class DataUpdateCoordinator:
         update_interval: timedelta,
         update_method: Optional[Callable[[], Awaitable]] = None,
         request_refresh_debouncer: Optional[Debouncer] = None,
+        failed_update_interval: Optional[timedelta] = None,
     ):
         """Initialize global data updater."""
         self.hass = hass
@@ -40,13 +41,17 @@ class DataUpdateCoordinator:
         self.name = name
         self.update_method = update_method
         self.update_interval = update_interval
-
+        if failed_update_interval:
+            self.failed_update_interval = failed_update_interval
+        else:
+            self.failed_update_interval = update_interval
         self.data: Optional[Any] = None
 
         self._listeners: List[CALLBACK_TYPE] = []
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
         self._request_refresh_task: Optional[asyncio.TimerHandle] = None
         self.last_update_success = True
+        self.last_update_success_time = None  # type: Optional[datetime]
 
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
@@ -99,10 +104,14 @@ class DataUpdateCoordinator:
         # minimizing the time between the point and the real activation.
         # That way we obtain a constant update frequency,
         # as long as the update process takes less than a second
+        if self.last_update_success:
+            update_interval = self.update_interval
+        else:
+            update_interval = self.failed_update_interval
         self._unsub_refresh = async_track_point_in_utc_time(
             self.hass,
             self._handle_refresh_interval,
-            utcnow().replace(microsecond=0) + self.update_interval,
+            utcnow().replace(microsecond=0) + update_interval,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:
@@ -163,6 +172,7 @@ class DataUpdateCoordinator:
             if not self.last_update_success:
                 self.last_update_success = True
                 self.logger.info("Fetching %s data recovered", self.name)
+            self.last_update_success_time = utcnow()
 
         finally:
             self.logger.debug(
