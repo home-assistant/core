@@ -455,9 +455,7 @@ class ADBDevice(MediaPlayerEntity):
     @property
     def media_image_hash(self):
         """Hash value for media image."""
-        if self._screencap:
-            return f"{datetime.now().timestamp()}"
-        return None
+        return f"{datetime.now().timestamp()}" if self._screencap else None
 
     @property
     def name(self):
