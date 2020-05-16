@@ -12,9 +12,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta certyfikatu",
+                    "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa certyfikatu",
-                    "port": "[%key_id:common::config_flow::data::port%] certyfikatu"
+                    "port": "Port"
                 },
                 "title": "Zdefiniuj certyfikat do przetestowania"
             }

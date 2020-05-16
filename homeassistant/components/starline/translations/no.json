@@ -11,7 +11,7 @@
                     "app_id": "App-ID",
                     "app_secret": "Hemmelig"
                 },
-                "description": "Applikasjons-ID og hemmelig kode fra <a href=\"https://my.starline.ru/developer\" target=\"_blank\"> StarLine utviklerkonto </a>",
+                "description": "Applikasjons-ID og hemmelig kode fra [StarLine utviklerkonto](https://my.starline.ru/developer)",
                 "title": "Programlegitimasjon"
             },
             "auth_captcha": {

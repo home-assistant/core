@@ -141,7 +141,7 @@ async-upnp-client==0.14.13
 av==7.0.1
 
 # homeassistant.components.axis
-axis==25
+axis==26
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -312,7 +312,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200514.0
+home-assistant-frontend==20200515.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -328,7 +328,7 @@ homematicip==0.10.17
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.4.11
+huawei-lte-api==1.4.12
 
 # homeassistant.components.iaqualink
 iaqualink==0.3.1
@@ -527,7 +527,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==5.1.0
+pychromecast==5.2.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -681,7 +681,7 @@ pysmartthings==0.7.1
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.28
+pysonos==0.0.29
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -704,14 +704,14 @@ python-miio==0.5.0.1
 # homeassistant.components.nest
 python-nest==4.1.0
 
-# homeassistant.components.zwave_mqtt
+# homeassistant.components.ozw
 python-openzwave-mqtt==1.0.1
 
 # homeassistant.components.songpal
 python-songpal==0.12
 
 # homeassistant.components.synology_dsm
-python-synology==0.8.0
+python-synology==0.8.1
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -765,7 +765,7 @@ ring_doorbell==0.6.0
 rokuecp==0.4.0
 
 # homeassistant.components.roomba
-roombapy==1.5.3
+roombapy==1.6.1
 
 # homeassistant.components.yamaha
 rxv==0.6.0

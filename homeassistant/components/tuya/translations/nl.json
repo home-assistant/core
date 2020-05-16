@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Tuya-configuratie is al bezig.",
+            "auth_failed": "Verkeerde gegevens",
+            "conn_error": "Niet gelukt om te verbinden.",
+            "single_instance_allowed": "Al geconfigureerd. Er is maar een configuratie mogelijk."
+        },
+        "error": {
+            "auth_failed": "Verkeerde gegevens"
+        },
+        "flow_title": "Tuya-configuratie",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "De landcode van uw account (bijvoorbeeld 1 voor de VS of 86 voor China)",
+                    "password": "Wachtwoord",
+                    "platform": "De app waar uw account is geregistreerd",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Voer uw Tuya-referentie in.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

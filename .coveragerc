@@ -62,7 +62,6 @@ omit =
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
     homeassistant/components/aurora_abb_powerone/sensor.py
-    homeassistant/components/automatic/*
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
     homeassistant/components/avri/sensor.py
@@ -915,15 +914,15 @@ omit =
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py
     homeassistant/components/zhong_hong/climate.py
-    homeassistant/components/zigbee/*
+    homeassistant/components/xbee/*
     homeassistant/components/ziggo_mediabox_xl/media_player.py
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
-    homeassistant/components/zwave_mqtt/__init__.py
-    homeassistant/components/zwave_mqtt/discovery.py
-    homeassistant/components/zwave_mqtt/entity.py
-    homeassistant/components/zwave_mqtt/services.py
+    homeassistant/components/ozw/__init__.py
+    homeassistant/components/ozw/discovery.py
+    homeassistant/components/ozw/entity.py
+    homeassistant/components/ozw/services.py
 
 [report]
 # Regexes for lines to exclude from consideration

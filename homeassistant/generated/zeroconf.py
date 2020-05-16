@@ -31,6 +31,9 @@ ZEROCONF = {
     "_ipps._tcp.local.": [
         "ipp"
     ],
+    "_miio._udp.local.": [
+        "xiaomi_miio"
+    ],
     "_printer._tcp.local.": [
         "brother"
     ],

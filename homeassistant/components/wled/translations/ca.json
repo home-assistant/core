@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3 o adre\u00e7a IP"
+                    "host": "Amfitri\u00f3"
                 },
                 "description": "Configura el teu WLED per integrar-lo amb Home Assistant.",
                 "title": "Enlla\u00e7 amb WLED"

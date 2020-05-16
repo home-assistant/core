@@ -31,7 +31,7 @@
                 "data": {
                     "access_token": "[%key::common::config_flow::data::access_token%]",
                     "device_class": "Tipus de dispositiu",
-                    "host": "<Amfitri\u00f3/IP>:<Port>",
+                    "host": "Amfitri\u00f3",
                     "name": "Nom"
                 },
                 "description": "Nom\u00e9s es necessita el [%key::common::config_flow::data::access_token%] per als televisors. Si est\u00e0s configurant un televisor i encara no tens un [%key::common::config_flow::data::access_token%], deixa-ho en blanc per poder fer el proc\u00e9s d'emparellament.",

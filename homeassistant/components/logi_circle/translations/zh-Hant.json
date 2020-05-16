@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "\u8acb\u4f7f\u7528\u4e0b\u65b9\u9023\u7d50\u4e26\u9ede\u9078<b>\u63a5\u53d7</b>\u4ee5\u5b58\u53d6 Logi Circle \u5e33\u865f\uff0c\u7136\u5f8c\u8fd4\u56de\u6b64\u9801\u9762\u4e26\u9ede\u9078\u4e0b\u65b9\u7684<b>\u50b3\u9001</b>\u3002\n\n[Link]({authorization_url})",
+                "description": "\u8acb\u4f7f\u7528\u4e0b\u65b9\u9023\u7d50\u4e26\u9ede\u9078 **\u63a5\u53d7** \u4ee5\u5b58\u53d6 Logi Circle \u5e33\u865f\uff0c\u7136\u5f8c\u8fd4\u56de\u6b64\u9801\u9762\u4e26\u9ede\u9078\u4e0b\u65b9\u7684 **\u50b3\u9001**\u3002\n\n[\u9023\u7d50]({authorization_url})",
                 "title": "\u4ee5 Logi Circle \u8a8d\u8b49"
             },
             "user": {

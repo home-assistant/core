@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "host": "Nazwa hosta lub adres IP",
                     "type": "Typ drukarki"
                 },
                 "description": "Konfiguracja integracji drukarek Brother. Je\u015bli masz problemy z konfiguracj\u0105, przejd\u017a na stron\u0119: https://www.home-assistant.io/integrations/brother",

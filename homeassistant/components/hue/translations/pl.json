@@ -8,7 +8,7 @@
             "discover_timeout": "Nie mo\u017cna wykry\u0107 \u017cadnych mostk\u00f3w Hue",
             "no_bridges": "Nie wykryto \u017cadnych mostk\u00f3w Hue",
             "not_hue_bridge": "To nie jest mostek Hue",
-            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
         },
         "error": {
             "linking": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d w trakcie \u0142\u0105czenia.",
@@ -17,7 +17,7 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]"
+                    "host": "Nazwa hosta lub adres IP"
                 },
                 "title": "Wybierz mostek Hue"
             },

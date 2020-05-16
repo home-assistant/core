@@ -207,19 +207,30 @@ class ONVIFDevice:
 
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
-        media_service = self.device.create_media_service()
-        media_capabilities = await media_service.GetServiceCapabilities()
-        event_service = self.device.create_events_service()
-        event_capabilities = await event_service.GetServiceCapabilities()
+        snapshot = False
+        try:
+            media_service = self.device.create_media_service()
+            media_capabilities = await media_service.GetServiceCapabilities()
+            snapshot = media_capabilities.SnapshotUri
+        except (ONVIFError, Fault):
+            pass
+
+        pullpoint = False
+        try:
+            event_service = self.device.create_events_service()
+            event_capabilities = await event_service.GetServiceCapabilities()
+            pullpoint = event_capabilities.WSPullPointSupport
+        except (ONVIFError, Fault):
+            pass
+
         ptz = False
         try:
             self.device.get_definition("ptz")
             ptz = True
         except ONVIFError:
             pass
-        return Capabilities(
-            media_capabilities.SnapshotUri, event_capabilities.WSPullPointSupport, ptz
-        )
+
+        return Capabilities(snapshot, pullpoint, ptz)
 
     async def async_get_profiles(self) -> List[Profile]:
         """Obtain media profiles for this device."""
