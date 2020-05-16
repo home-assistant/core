@@ -14,6 +14,7 @@
                     "passkey": "String Passkey",
                     "port": "Port"
                 },
+                "description": "Configura un dispositiu BSB-Lan per a integrar-lo amb Home Assistant.",
                 "title": "Connexi\u00f3 amb dispositiu BSB-Lan"
             }
         }
