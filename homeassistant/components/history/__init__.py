@@ -298,6 +298,7 @@ class HistoryPeriodView(HomeAssistantView):
 
     async def get(self, request, datetime=None):
         """Return history over a period of time."""
+
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
 
