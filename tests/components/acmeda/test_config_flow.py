@@ -62,7 +62,7 @@ async def test_show_form_one_hub(hass, mock_hub_discover, mock_hub_run):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == DUMMY_HOST1
+    assert result["title"] == f"None ({DUMMY_HOST1})"
     assert result["result"].data == {
         "host": DUMMY_HOST1,
     }
@@ -100,7 +100,7 @@ async def test_create_second_entry(hass, mock_hub_run, mock_hub_discover):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == DUMMY_HOST2
+    assert result["title"] == f"None ({DUMMY_HOST2})"
     assert result["result"].data == {
         "host": DUMMY_HOST2,
     }
@@ -113,11 +113,8 @@ async def test_create_entry(hass, mock_hub_run):
         DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == DUMMY_HOST1
-    assert result["result"].data == {
-        "host": DUMMY_HOST1,
-    }
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_duplicate_error(hass):

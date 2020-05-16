@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 
 from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
-from .errors import CannotConnect
 
 
 class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -33,9 +32,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             # pylint: disable=unsubscriptable-object
             self.hub = self.discovered_hubs[user_input["id"]]
-            await self.async_set_unique_id(self.hub.id, raise_on_progress=False)
-            # We pass user input to link so it will attempt to link right away
-            return await self.async_step_link()
+            return await self.async_step_create()
 
         hubs = []
         try:
@@ -60,8 +57,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if len(hubs) == 1:
             self.hub = hubs[0]
-            await self.async_set_unique_id(self.hub.id, raise_on_progress=False)
-            return await self.async_step_link()
+            return await self.async_step_create()
 
         self.discovered_hubs = {hub.id: hub for hub in hubs}
 
@@ -72,35 +68,16 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_link(self, user_input=None):
-        """Attempt to link with the Acmeda Hub."""
+    async def async_step_create(self, user_input=None):
+        """Create the Acmeda Hub entry."""
         hub = self.hub
         assert hub is not None
-        errors = {}
 
-        try:
-            # Can happen if we come from import.
-            if self.unique_id is None:
-                await self.async_set_unique_id(hub.id, raise_on_progress=False)
+        await self.async_set_unique_id(self.hub.id, raise_on_progress=False)
 
-            if hub.id:
-                title = f"{hub.id} ({hub.host})"
-            else:
-                title = hub.host
+        title = f"{hub.id} ({hub.host})"
 
-            return self.async_create_entry(title=title, data={"host": hub.host})
-
-        except CannotConnect:
-            LOGGER.error("Error connecting to the Acmeda Pulse hub at %s", hub.host)
-            errors["base"] = "linking"
-
-        except Exception:  # pylint: disable=broad-except
-            LOGGER.exception(
-                "Unknown error connecting with Acmeda Pulse hub at %s", hub.host
-            )
-            errors["base"] = "linking"
-
-        return self.async_show_form(step_id="link", errors=errors)
+        return self.async_create_entry(title=title, data={"host": hub.host})
 
     async def async_step_import(self, import_info):
         """Import a new hub as a config entry.
@@ -116,4 +93,25 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         self.hub = aiopulse.Hub(import_info["host"])
-        return await self.async_step_link()
+        try:
+            with async_timeout.timeout(30):
+                await self.hub.connect()
+            if self.hub.id:
+                return await self.async_step_create()
+
+        except asyncio.TimeoutError:
+            LOGGER.error(
+                "TImeout connecting to the Acmeda Pulse hub at %s", self.hub.host
+            )
+
+        except aiopulse.NotConnectedException:
+            LOGGER.error(
+                "Error connecting to the Acmeda Pulse hub at %s", self.hub.host
+            )
+
+        except Exception:  # pylint: disable=broad-except
+            LOGGER.exception(
+                "Unknown error connecting with Acmeda Pulse hub at %s", self.hub.host
+            )
+
+        return self.async_abort(reason="cannot_connect")

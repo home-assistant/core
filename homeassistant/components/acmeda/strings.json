@@ -18,6 +18,7 @@
     },
     "abort": {
       "discover_timeout": "Unable to discover Pulse hubs",
+      "cannot_connect": "Cannot connce to Pulse hub",
       "no_hubs": "No Pulse hubs discovered",
       "all_configured": "All Pulse hubs are already configured",
       "already_configured": "Hub is already configured"
