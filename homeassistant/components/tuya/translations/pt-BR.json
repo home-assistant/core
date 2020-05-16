@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "platform": "O aplicativo onde sua conta \u00e9 registrada",
+                    "username": "Nome de usu\u00e1rio"
+                },
+                "description": "Digite sua credencial Tuya.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

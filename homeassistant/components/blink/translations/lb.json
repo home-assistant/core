@@ -6,6 +6,9 @@
                     "2fa": "2-Faktor Code"
                 },
                 "title": "2-Faktor-Authentifikatioun"
+            },
+            "user": {
+                "title": "Mam Blink Kont verbannen"
             }
         }
     }
