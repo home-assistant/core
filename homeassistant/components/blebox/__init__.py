@@ -17,7 +17,7 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["cover", "sensor", "switch"]
+PLATFORMS = ["cover", "sensor", "switch", "air_quality"]
 
 PARALLEL_UPDATES = 0
 
@@ -74,8 +74,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 @callback
-def create_blebox_entities(product, async_add, entity_klass, entity_type):
+def create_blebox_entities(hass, config_entry, async_add, entity_klass, entity_type):
     """Create entities from a BleBox product's features."""
+
+    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
 
     entities = []
     if entity_type in product.features:

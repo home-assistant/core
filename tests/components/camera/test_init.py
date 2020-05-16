@@ -67,6 +67,19 @@ async def test_get_image_from_camera(hass, image_mock_url):
     assert image.content == b"Test"
 
 
+async def test_get_stream_source_from_camera(hass, mock_camera):
+    """Fetch stream source from camera entity."""
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        return_value="rtsp://127.0.0.1/stream",
+    ) as mock_camera_stream_source:
+        stream_source = await camera.async_get_stream_source(hass, "camera.demo_camera")
+
+    assert mock_camera_stream_source.called
+    assert stream_source == "rtsp://127.0.0.1/stream"
+
+
 async def test_get_image_without_exists_camera(hass, image_mock_url):
     """Try to get image without exists camera."""
     with patch(
