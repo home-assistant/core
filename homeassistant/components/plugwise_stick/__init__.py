@@ -10,16 +10,11 @@ from plugwise.exceptions import (
     StickInitError,
     TimeoutException,
 )
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import AVAILABLE_SENSOR_ID, CONF_USB_PATH, DOMAIN, SENSORS
 
@@ -66,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     except PortError:
         _LOGGER.debug("Connecting to Plugwise USBstick communication failed")
         raise ConfigEntryNotReady
-    except StickInitError as exception:
+    except StickInitError:
         _LOGGER.debug("Initializing of Plugwise USBstick communication failed")
         raise ConfigEntryNotReady
     except NetworkDown:
@@ -105,12 +100,12 @@ class PlugwiseNodeEntity(Entity):
         self.node_callbacks = (AVAILABLE_SENSOR_ID,)
 
     async def async_added_to_hass(self):
-        """Subscribe to updates"""
+        """Subscribe to updates."""
         for node_callback in self.node_callbacks:
             self._node.subscribe_callback(self.sensor_update, node_callback)
 
     async def async_will_remove_from_hass(self):
-        """Unsubscribe to updates"""
+        """Unsubscribe to updates."""
         for node_callback in self.node_callbacks:
             self._node.unsubscribe_callback(self.sensor_update, node_callback)
 
@@ -136,7 +131,7 @@ class PlugwiseNodeEntity(Entity):
         return f"{self._node.get_node_type()} {self._mac[-5:]}"
 
     def sensor_update(self, state):
-        """Handle status update of Entity"""
+        """Handle status update of Entity."""
         self.schedule_update_ha_state()
 
     @property

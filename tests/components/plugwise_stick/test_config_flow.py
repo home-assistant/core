@@ -2,7 +2,6 @@
 
 import os
 
-import pytest
 import serial.tools.list_ports
 
 from homeassistant import setup
@@ -12,7 +11,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
-from tests.async_mock import AsyncMock, MagicMock, patch, sentinel
+from tests.async_mock import MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
 
 MANUAL_PORT = "/dev/ttyUSB10"
@@ -35,7 +34,7 @@ def com_port():
     return_value={},
 )
 async def test_user_flow(detect_mock, hass):
-    """Test user flow, USB stick selected"""
+    """Test user flow for USB-stick selection."""
 
     port = com_port()
     port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"

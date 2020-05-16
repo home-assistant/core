@@ -3,7 +3,6 @@
 from homeassistant.const import (
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     POWER_WATT,
     TIME_MILLISECONDS,
 )

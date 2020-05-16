@@ -4,7 +4,6 @@ import os
 
 import plugwise
 from plugwise.exceptions import (
-    CirclePlusError,
     NetworkDown,
     PortError,
     StickInitError,
@@ -15,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util import slugify
 
 from .const import CONF_USB_PATH, DOMAIN
 
@@ -79,7 +77,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual_path(self, user_input=None):
-        """Step when manual path to device"""
+        """Step when manual path to device."""
         errors = None
 
         if user_input is not None:
