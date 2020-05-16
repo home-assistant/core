@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import DATA_SETUP, async_setup_component
-from homeassistant.util.logging import async_migrate_log_handlers_to_queue
+from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
 
@@ -286,7 +286,7 @@ def async_enable_logging(
     else:
         _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
 
-    async_migrate_log_handlers_to_queue(hass)
+    async_activate_log_queue_handler(hass)
 
 
 async def async_mount_local_lib_path(config_dir: str) -> str:

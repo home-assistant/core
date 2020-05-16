@@ -53,7 +53,7 @@ async def test_logging_with_queue_handler():
 async def test_migrate_log_handler(hass):
     """Test migrating log handlers."""
 
-    logging_util.async_migrate_log_handlers_to_queue(hass)
+    logging_util.async_activate_log_queue_handler(hass)
 
     assert len(logging.root.handlers) == 1
     assert isinstance(logging.root.handlers[0], logging_util.HomeAssistantQueueHandler)

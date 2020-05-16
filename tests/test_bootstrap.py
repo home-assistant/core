@@ -40,10 +40,10 @@ async def test_home_assistant_core_config_validation(hass):
 async def test_async_enable_logging(hass):
     """Test to ensure logging is migrated to the queue handlers."""
     with patch("logging.getLogger"), patch(
-        "homeassistant.bootstrap.async_migrate_log_handlers_to_queue"
-    ) as mock_async_migrate_log_handlers_to_queue:
+        "homeassistant.bootstrap.async_activate_log_queue_handler"
+    ) as mock_async_activate_log_queue_handler:
         bootstrap.async_enable_logging(hass)
-        mock_async_migrate_log_handlers_to_queue.assert_called_once()
+        mock_async_activate_log_queue_handler.assert_called_once()
 
 
 async def test_load_hassio(hass):

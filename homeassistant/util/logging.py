@@ -41,7 +41,7 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
 
 
 @callback
-def async_migrate_log_handlers_to_queue(hass: HomeAssistant) -> None:
+def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     """
     Migrate the existing log handlers to use the queue.
 
