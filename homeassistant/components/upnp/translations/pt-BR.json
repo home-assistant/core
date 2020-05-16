@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "UPnP / IGD j\u00e1 est\u00e1 configurado",
             "incomplete_device": "Ignorando o dispositivo UPnP incompleto",
+            "incomplete_discovery": "Descoberta incompleta",
             "no_devices_discovered": "Nenhum UPnP/IGD descoberto",
             "no_devices_found": "Nenhum dispositivo UPnP/IGD encontrado na rede.",
             "no_sensors_or_port_mapping": "Ative pelo menos sensores ou mapeamento de porta",
@@ -17,7 +18,8 @@
                 "data": {
                     "enable_port_mapping": "Ativar o mapeamento de porta para o Home Assistant",
                     "enable_sensors": "Adicionar sensores de tr\u00e1fego",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "usn": "Dispositivo"
                 },
                 "title": "Op\u00e7\u00f5es de configura\u00e7\u00e3o para o UPnP/IGD"
             }

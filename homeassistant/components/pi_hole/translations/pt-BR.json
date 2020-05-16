@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Servi\u00e7o j\u00e1 configurado",
+            "duplicated_name": "O nome j\u00e1 existe"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chave de API (Opcional)",
+                    "host": "Endere\u00e7o (IP)",
+                    "name": "Nome",
+                    "port": "Porta",
+                    "ssl": "Usar SSL",
+                    "verify_ssl": "Verifique o certificado SSL"
+                }
+            }
+        }
+    }
+}

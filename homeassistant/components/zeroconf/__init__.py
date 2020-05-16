@@ -178,6 +178,11 @@ def setup(hass, config):
             return
 
         service_info = zeroconf.get_service_info(service_type, name)
+        if not service_info:
+            # Prevent the browser thread from collapsing as
+            # service_info can be None
+            return
+
         info = info_from_service(service_info)
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
@@ -196,7 +201,8 @@ def setup(hass, config):
                 and HOMEKIT_PAIRED_STATUS_FLAG in info[HOMEKIT_PROPERTIES]
             ):
                 try:
-                    if not int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
+                    # 0 means paired and not discoverable by iOS clients)
+                    if int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
                         return
                 except ValueError:
                     # HomeKit pairing status unknown

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "flow_title": "Dispositivos universais ISY994 {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL"
+                },
+                "description": "A entrada do endere\u00e7o deve estar no formato de URL completo, por exemplo, http://192.168.10.100:80",
+                "title": "Conecte-se ao seu ISY994"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Ignorar texto"
+                },
+                "title": "ISY994 Op\u00e7\u00f5es"
+            }
+        }
+    },
+    "title": "Dispositivos universais ISY994"
+}

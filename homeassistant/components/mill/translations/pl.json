@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key_id:common::config_flow::abort::already_configured_account%]"
+            "already_configured": "Konto jest ju\u017c skonfigurowane."
         },
         "error": {
-            "connection_error": "[%key_id:common::config_flow::error::cannot_connect%]"
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
                 }
             }
         }

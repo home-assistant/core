@@ -31,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CLEANING_TIME = "cleaning_time"
 ATTR_CLEANED_AREA = "cleaned_area"
 ATTR_ERROR = "error"
+ATTR_ERROR_CODE = "error_code"
 ATTR_POSITION = "position"
 ATTR_SOFTWARE_VERSION = "software_version"
 
@@ -174,11 +175,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         # Roomba software version
         software_version = state.get("softwareVer")
 
-        # Error message in plain english
-        error_msg = "None"
-        if hasattr(self.vacuum, "error_message"):
-            error_msg = self.vacuum.error_message
-
         # Set properties that are to appear in the GUI
         state_attrs = {ATTR_SOFTWARE_VERSION: software_version}
 
@@ -198,9 +194,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state_attrs[ATTR_CLEANING_TIME] = cleaning_time
             state_attrs[ATTR_CLEANED_AREA] = cleaned_area
 
-        # Skip error attr if there is none
-        if error_msg and error_msg != "None":
-            state_attrs[ATTR_ERROR] = error_msg
+        # Error
+        if self.vacuum.error_code != 0:
+            state_attrs[ATTR_ERROR] = self.vacuum.error_message
+            state_attrs[ATTR_ERROR_CODE] = self.vacuum.error_code
 
         # Not all Roombas expose position data
         # https://github.com/koalazak/dorita980/issues/48

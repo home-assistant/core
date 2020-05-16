@@ -32,6 +32,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
+    if not device.option_camera:
+        return
+
     config = {
         CONF_NAME: config_entry.data[CONF_NAME],
         CONF_USERNAME: config_entry.data[CONF_USERNAME],
@@ -59,7 +62,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         """Subscribe camera events."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.device.event_new_address, self._new_address
+                self.hass, self.device.signal_new_address, self._new_address
             )
         )
 
