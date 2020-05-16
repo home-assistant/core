@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import logging
 
 import async_timeout
-
 from pywemo.ouimeaux_device.api.service import ActionException
 
 from homeassistant.components.switch import SwitchEntity

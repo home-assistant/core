@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 import async_timeout
-
 from pywemo.ouimeaux_device.api.service import ActionException
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
