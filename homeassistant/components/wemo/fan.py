@@ -324,8 +324,6 @@ class WemoHumidifier(FanEntity):
 
     def set_humidity(self, humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
-        target_humidity = None
-
         if humidity < 50:
             target_humidity = WEMO_HUMIDITY_45
         elif 50 <= humidity < 55:
@@ -338,8 +336,7 @@ class WemoHumidifier(FanEntity):
             target_humidity = WEMO_HUMIDITY_100
 
         try:
-            if target_humidity is not None:
-                self.wemo.set_humidity(target_humidity)
+            self.wemo.set_humidity(target_humidity)
         except ActionException as err:
             _LOGGER.warning(
                 "Error while setting humidity of device: %s (%s)", self.name, err
