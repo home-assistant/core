@@ -1,80 +1,28 @@
 """Tests for the GogoGate2 component."""
-from unittest.mock import MagicMock
+import pytest
 
-from gogogate2_api import GogoGate2Api
-from gogogate2_api.common import ApiError
-from gogogate2_api.const import ApiErrorCode
-
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.gogogate2 import async_setup_entry
+from homeassistant.components.gogogate2.common import GogoGateDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .common import INFO_RESPONSE, ComponentFactory
+from tests.async_mock import MagicMock, patch
+from tests.common import MockConfigEntry
 
 
-async def test_auth_fail(
-    hass: HomeAssistant, component_factory: ComponentFactory
-) -> None:
+async def test_auth_fail(hass: HomeAssistant) -> None:
     """Test authorization failures."""
-    api_mock: GogoGate2Api = MagicMock(spec=GogoGate2Api)
 
-    await component_factory.configure_component()
-    component_factory.api_class_mock.return_value = api_mock
+    coordinator_mock: GogoGateDataUpdateCoordinator = MagicMock(
+        spec=GogoGateDataUpdateCoordinator
+    )
+    coordinator_mock.last_update_success = False
 
-    api_mock.reset_mock()
-    api_mock.info.side_effect = ApiError(ApiErrorCode.CREDENTIALS_INCORRECT, "blah")
-    result = await hass.config_entries.flow.async_init(
-        "gogogate2", context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_IP_ADDRESS: "127.0.0.2",
-            CONF_USERNAME: "user0",
-            CONF_PASSWORD: "password0",
-        },
-    )
-    assert result
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {
-        "base": "invalid_auth",
-    }
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
 
-    api_mock.reset_mock()
-    api_mock.info.side_effect = Exception("Generic connection error.")
-    result = await hass.config_entries.flow.async_init(
-        "gogogate2", context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_IP_ADDRESS: "127.0.0.2",
-            CONF_USERNAME: "user0",
-            CONF_PASSWORD: "password0",
-        },
-    )
-    assert result
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    api_mock.reset_mock()
-    api_mock.info.side_effect = [INFO_RESPONSE, Exception("Error")]
-    result = await hass.config_entries.flow.async_init(
-        "gogogate2", context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_IP_ADDRESS: "127.0.0.2",
-            CONF_USERNAME: "user0",
-            CONF_PASSWORD: "password0",
-        },
-    )
-    assert result
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-
-    await hass.async_block_till_done()
-
-    assert not hass.states.async_entity_ids(COVER_DOMAIN)
+    with patch(
+        "homeassistant.components.gogogate2.get_data_update_coordinator",
+        return_value=coordinator_mock,
+    ), pytest.raises(ConfigEntryNotReady):
+        await async_setup_entry(hass, config_entry)
