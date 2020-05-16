@@ -3,14 +3,13 @@
 from homeassistant.components.air_quality import AirQualityEntity
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import DOMAIN, PRODUCT
 
 
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox air quality entity."""
-    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    create_blebox_entities(product, async_add, BleBoxAirQualityEntity, "air_qualities")
-    return True
+    create_blebox_entities(
+        hass, config_entry, async_add, BleBoxAirQualityEntity, "air_qualities"
+    )
 
 
 class BleBoxAirQualityEntity(BleBoxEntity, AirQualityEntity):
