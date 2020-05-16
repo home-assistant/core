@@ -73,9 +73,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USB_PATH): vol.In(self._list_of_ports),
-                }
+                {vol.Required(CONF_USB_PATH): vol.In(self._list_of_ports),}
             ),
             errors=errors,
         )

@@ -49,7 +49,7 @@ SENSORS = {
         "name": "Power usage 8 seconds",
         "state": "get_power_usage_8_sec",
         "unit": POWER_WATT,
-    },   
+    },
     "power_con_cur_hour": {
         "class": DEVICE_CLASS_POWER,
         "enabled_default": True,
@@ -72,7 +72,7 @@ SENSORS = {
         "icon": "mdi:flash",
         "name": "Power consumption today",
         "state": "get_power_consumption_today",
-        "unit": ENERGY_KILO_WATT_HOUR, 
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "power_con_yesterday": {
         "class": DEVICE_CLASS_POWER,
@@ -80,7 +80,7 @@ SENSORS = {
         "icon": "mdi:flash",
         "name": "Power consumption yesterday",
         "state": "get_power_consumption_yesterday",
-        "unit": ENERGY_KILO_WATT_HOUR, 
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "power_prod_cur_hour": {
         "class": DEVICE_CLASS_POWER,
@@ -88,7 +88,7 @@ SENSORS = {
         "icon": "mdi:flash",
         "name": "Power production current hour",
         "state": "get_power_production_current_hour",
-        "unit": ENERGY_KILO_WATT_HOUR, 
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "power_prod_prev_hour": {
         "class": DEVICE_CLASS_POWER,
@@ -96,7 +96,7 @@ SENSORS = {
         "icon": "mdi:flash",
         "name": "Power production previous hour",
         "state": "get_power_production_previous_hour",
-        "unit": ENERGY_KILO_WATT_HOUR, 
+        "unit": ENERGY_KILO_WATT_HOUR,
     }
 }
 
