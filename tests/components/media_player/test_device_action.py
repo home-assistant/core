@@ -1,5 +1,9 @@
 """The tests for Media Player device actions."""
-from components.media_player import (
+import pytest
+
+import homeassistant.components.automation as automation
+from homeassistant.components.media_player import (
+    DOMAIN,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -11,10 +15,6 @@ from components.media_player import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-import pytest
-
-import homeassistant.components.automation as automation
-from homeassistant.components.media_player import DOMAIN
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
