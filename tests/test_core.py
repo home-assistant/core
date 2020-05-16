@@ -1294,17 +1294,17 @@ async def test_migration_base_url(hass, hass_storage):
     with patch.object(hass.bus, "async_listen_once") as mock_listen:
         # Empty config
         await config.async_load()
-        assert len(mock_listen.mock_calls) == 1
+        assert len(mock_listen.mock_calls) == 0
 
         # With just a name
         stored["data"] = {"location_name": "Test Name"}
         await config.async_load()
-        assert len(mock_listen.mock_calls) == 2
+        assert len(mock_listen.mock_calls) == 1
 
         # With external url
         stored["data"]["external_url"] = "https://example.com"
         await config.async_load()
-        assert len(mock_listen.mock_calls) == 2
+        assert len(mock_listen.mock_calls) == 1
 
     # Test that the event listener works
     assert mock_listen.mock_calls[0][1][0] == EVENT_HOMEASSISTANT_START
@@ -1319,3 +1319,14 @@ async def test_migration_base_url(hass, hass_storage):
         hass.config.api = Mock(deprecated_base_url=internal)
         await mock_listen.mock_calls[0][1][1](None)
         assert config.internal_url == internal
+
+
+async def test_additional_data_in_core_config(hass, hass_storage):
+    """Test that we can handle additional data in core configuration."""
+    config = ha.Config(hass)
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {"location_name": "Test Name", "additional_valid_key": "value"},
+    }
+    await config.async_load()
+    assert config.location_name == "Test Name"
