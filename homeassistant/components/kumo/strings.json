@@ -4,9 +4,11 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "username": "[kumo username]",
+          "password": "[kumo password]",
+          "prefer_cache": "[prefer cache]",
+          "connect_timeout": "[connect timeout]",
+          "response_timeout": "[response timeout]"
         }
       }
     },

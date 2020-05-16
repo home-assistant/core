@@ -11,9 +11,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key:common::config_flow::data::host%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "username": "[%key:common::config_flow::data::username%]"
+                    "password": "[password]",
+                    "username": "[username]",
+                    "prefer_cache": "[prefer cache]",
+                    "connect_timeout": "[connect timeout]",
+                    "response_timeout": "[response timeout]"
                 }
             }
         }

@@ -10,7 +10,15 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
-DATA_SCHEMA = vol.Schema({"username": str, "password": str})
+DATA_SCHEMA = vol.Schema(
+    {
+        "username": str,
+        "password": str,
+        "prefer_cache": bool,
+        "connect_timeout": int,
+        "response_timeout": int,
+    }
+)
 
 
 class PlaceholderHub:
