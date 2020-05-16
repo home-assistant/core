@@ -130,10 +130,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Register service(s)
     hass.services.async_register(
-        WEMO_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        service_handle,
-        schema=SET_HUMIDITY_SCHEMA,
+        WEMO_DOMAIN, SERVICE_SET_HUMIDITY, service_handle, schema=SET_HUMIDITY_SCHEMA,
     )
 
     hass.services.async_register(
@@ -321,7 +318,9 @@ class WemoHumidifier(FanEntity):
         try:
             self.wemo.set_state(HASS_FAN_SPEED_TO_WEMO.get(speed))
         except ActionException as err:
-            _LOGGER.warning("Error while setting speed of device %s (%s)", self.name, err)
+            _LOGGER.warning(
+                "Error while setting speed of device %s (%s)", self.name, err
+            )
             self._available = False
 
     def set_humidity(self, humidity: float) -> None:
@@ -338,7 +337,9 @@ class WemoHumidifier(FanEntity):
             elif humidity >= 100:
                 self.wemo.set_humidity(WEMO_HUMIDITY_100)
         except ActionException as err:
-            _LOGGER.warning("Error while setting humidity of device: %s (%s)", self.name, err)
+            _LOGGER.warning(
+                "Error while setting humidity of device: %s (%s)", self.name, err
+            )
             self._available = False
 
     def reset_filter_life(self) -> None:
@@ -346,5 +347,7 @@ class WemoHumidifier(FanEntity):
         try:
             self.wemo.reset_filter_life()
         except ActionException as err:
-            _LOGGER.warning("Error while resetting filter life on device: %s (%s)", self.name, err)
+            _LOGGER.warning(
+                "Error while resetting filter life on device: %s (%s)", self.name, err
+            )
             self._available = False
