@@ -6,7 +6,7 @@ import logging
 from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     CONF_HOST,
@@ -116,7 +116,7 @@ async def update_listener(hass, entry):
     )
 
 
-class ForkedDaapdZone(MediaPlayerDevice):
+class ForkedDaapdZone(MediaPlayerEntity):
     """Representation of a forked-daapd output."""
 
     def __init__(self, api, output, entry_id):
@@ -221,7 +221,7 @@ class ForkedDaapdZone(MediaPlayerDevice):
         return SUPPORTED_FEATURES_ZONE
 
 
-class ForkedDaapdMaster(MediaPlayerDevice):
+class ForkedDaapdMaster(MediaPlayerEntity):
     """Representation of the main forked-daapd device."""
 
     def __init__(
