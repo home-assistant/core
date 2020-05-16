@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN  # pylint: disable=unused-import
 
 
 class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -78,40 +78,3 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         title = f"{hub.id} ({hub.host})"
 
         return self.async_create_entry(title=title, data={"host": hub.host})
-
-    async def async_step_import(self, import_info):
-        """Import a new hub as a config entry.
-
-        This flow is triggered by `async_setup` for any configured
-        hub that does not have a config entry yet (based on host).
-        """
-        # Check if host exists, abort if so.
-        if any(
-            import_info["host"] == entry.data["host"]
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
-
-        self.hub = aiopulse.Hub(import_info["host"])
-        try:
-            with async_timeout.timeout(30):
-                await self.hub.connect()
-            if self.hub.id:
-                return await self.async_step_create()
-
-        except asyncio.TimeoutError:
-            LOGGER.error(
-                "TImeout connecting to the Acmeda Pulse hub at %s", self.hub.host
-            )
-
-        except aiopulse.NotConnectedException:
-            LOGGER.error(
-                "Error connecting to the Acmeda Pulse hub at %s", self.hub.host
-            )
-
-        except Exception:  # pylint: disable=broad-except
-            LOGGER.exception(
-                "Unknown error connecting with Acmeda Pulse hub at %s", self.hub.host
-            )
-
-        return self.async_abort(reason="cannot_connect")

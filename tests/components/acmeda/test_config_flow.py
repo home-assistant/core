@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.acmeda.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
@@ -104,30 +104,6 @@ async def test_create_second_entry(hass, mock_hub_run, mock_hub_discover):
     assert result["result"].data == {
         "host": DUMMY_HOST2,
     }
-
-
-async def test_create_entry(hass, mock_hub_run):
-    """Test that the import from a config entry succeeds."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_duplicate_error(hass):
-    """Test that flow aborts when a duplicate is added."""
-
-    MockConfigEntry(domain=DOMAIN, unique_id="123-456", data=CONFIG).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
 
 
 async def test_already_configured(hass, mock_hub_discover):
