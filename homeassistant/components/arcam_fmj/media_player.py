@@ -18,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_NAME,
     CONF_ZONE,
     SERVICE_TURN_ON,
@@ -31,6 +32,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .const import (
     DOMAIN,
     DOMAIN_DATA_ENTRIES,
+    EVENT_TURN_ON,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
@@ -53,6 +55,7 @@ async def async_setup_entry(
         [
             ArcamFmj(
                 State(client, zone),
+                config_entry.unique_id or config_entry.entry_id,
                 zone_config[CONF_NAME],
                 zone_config.get(SERVICE_TURN_ON),
             )
@@ -67,9 +70,12 @@ async def async_setup_entry(
 class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
-    def __init__(self, state: State, name: str, turn_on: Optional[ConfigType]):
+    def __init__(
+        self, state: State, uuid: str, name: str, turn_on: Optional[ConfigType]
+    ):
         """Initialize device."""
         self._state = state
+        self._uuid = uuid
         self._name = name
         self._turn_on = turn_on
         self._support = (
@@ -78,6 +84,7 @@ class ArcamFmj(MediaPlayerEntity):
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_STEP
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
         )
         if state.zn == 1:
             self._support |= SUPPORT_SELECT_SOUND_MODE
@@ -94,6 +101,11 @@ class ArcamFmj(MediaPlayerEntity):
                 None,
             )
         )
+
+    @property
+    def unique_id(self):
+        """Return unique identifier if known."""
+        return f"{self._uuid}-{self._state.zn}"
 
     @property
     def device_info(self):
@@ -124,10 +136,7 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        support = self._support
-        if self._state.get_power() is not None or self._turn_on:
-            support |= SUPPORT_TURN_ON
-        return support
+        return self._support
 
     async def async_added_to_hass(self):
         """Once registered, add listener for events."""
@@ -230,7 +239,8 @@ class ArcamFmj(MediaPlayerEntity):
                 validate_config=False,
             )
         else:
-            _LOGGER.error("Unable to turn on")
+            _LOGGER.debug("Firing event to turn on device")
+            self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
 
     async def async_turn_off(self):
         """Turn the media player off."""

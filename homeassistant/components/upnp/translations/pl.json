@@ -8,25 +8,21 @@
             "no_sensors_or_port_mapping": "W\u0142\u0105cz przynajmniej sensory lub mapowanie port\u00f3w",
             "single_instance_allowed": "Wymagana jest tylko jedna konfiguracja UPnP/IGD."
         },
-        "error": {
-            "few": "kilka",
-            "many": "wiele",
-            "one": "jeden",
-            "other": "inne"
-        },
+        "flow_title": "UPnP/IGD: {name}",
         "step": {
             "confirm": {
                 "description": "Czy chcesz skonfigurowa\u0107 UPnP/IGD?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
+            "ssdp_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 to urz\u0105dzenie UPnP/IGD?"
             },
             "user": {
                 "data": {
                     "enable_port_mapping": "W\u0142\u0105cz mapowanie port\u00f3w dla Home Assistant'a",
                     "enable_sensors": "Dodaj sensor ruchu sieciowego",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "usn": "Urz\u0105dzenie"
                 },
                 "title": "Opcje konfiguracji dla UPnP/IGD"
             }

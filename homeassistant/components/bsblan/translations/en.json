@@ -1,26 +1,23 @@
 {
-  "config": {
-    "title": "BSB-Lan",
-    "flow_title": "BSB-Lan: {name}",
-    "step": {
-      "user": {
-        "title": "Connect to the BSB-Lan device",
-        "description": "Set up you BSB-Lan device to integrate with Home Assistant.",
-        "data": {
-          "host": "Host or IP address",
-          "port": "Port number",
-          "passkey": "Passkey"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "connection_error": "Failed to connect to BSB-Lan device."
+        },
+        "flow_title": "BSB-Lan: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "passkey": "Passkey string",
+                    "port": "Port"
+                },
+                "description": "Set up you BSB-Lan device to integrate with Home Assistant.",
+                "title": "Connect to the BSB-Lan device"
+            }
         }
-      }
     },
-    "error": {
-      "connection_error": "Failed to connect to BSB-Lan device.",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
-    },
-    "abort": {
-      "already_configured": "Device is already configured",
-      "connection_error": "Failed to connect to BSB-Lan device."
-    }
-  }
+    "title": "BSB-Lan"
 }

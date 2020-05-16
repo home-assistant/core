@@ -8,7 +8,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "key": "Authentifizierungsschl\u00fcssel (wird nur von BRP072C / Zena-Ger\u00e4ten verwendet)",
+                    "password": "Ger\u00e4tekennwort (wird nur von SKYFi-Ger\u00e4ten verwendet)"
                 },
                 "description": "Gib die IP-Adresse deiner Daikin AC ein.",
                 "title": "Daikin AC konfigurieren"

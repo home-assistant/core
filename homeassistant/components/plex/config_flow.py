@@ -4,6 +4,7 @@ import logging
 
 from aiohttp import web_response
 import plexapi.exceptions
+from plexapi.gdm import GDM
 from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
@@ -60,6 +61,18 @@ def configured_servers(hass):
         entry.data[CONF_SERVER_IDENTIFIER]
         for entry in hass.config_entries.async_entries(DOMAIN)
     }
+
+
+async def async_discover(hass):
+    """Scan for available Plex servers."""
+    gdm = GDM()
+    await hass.async_add_executor_job(gdm.scan)
+    for server_data in gdm.entries:
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=server_data,
+        )
 
 
 class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -265,6 +278,19 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import from Plex configuration."""
         _LOGGER.debug("Imported Plex configuration")
         return await self.async_step_server_validate(import_config)
+
+    async def async_step_integration_discovery(self, discovery_info):
+        """Handle GDM discovery."""
+        machine_identifier = discovery_info["data"]["Resource-Identifier"]
+        await self.async_set_unique_id(machine_identifier)
+        self._abort_if_unique_id_configured()
+        host = f"{discovery_info['from'][0]}:{discovery_info['data']['Port']}"
+        name = discovery_info["data"]["Name"]
+        self.context["title_placeholders"] = {  # pylint: disable=no-member
+            "host": host,
+            "name": name,
+        }
+        return await self.async_step_user()
 
     async def async_step_plex_website_auth(self):
         """Begin external auth flow on Plex website."""

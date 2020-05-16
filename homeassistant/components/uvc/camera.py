@@ -1,5 +1,6 @@
 """Support for Ubiquiti's UVC cameras."""
 import logging
+import re
 
 import requests
 from uvcclient import camera as uvc_camera, nvr
@@ -213,7 +214,16 @@ class UnifiVideoCamera(Camera):
         """Return the source of the stream."""
         for channel in self._caminfo["channels"]:
             if channel["isRtspEnabled"]:
-                return channel["rtspUris"][0]
+                uri = next(
+                    (
+                        uri
+                        for i, uri in enumerate(channel["rtspUris"])
+                        # pylint: disable=protected-access
+                        if re.search(self._nvr._host, uri)
+                        # pylint: enable=protected-access
+                    )
+                )
+                return uri
 
         return None
 

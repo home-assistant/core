@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Controller-Site ist bereits konfiguriert",
+            "no_local_user": "Kein lokaler Benutzer gefunden, konfigurieren Sie ein lokales Konto auf dem Controller und versuchen Sie es erneut",
             "user_privilege": "Der Benutzer muss Administrator sein"
         },
         "error": {
@@ -52,6 +53,9 @@
                 }
             },
             "simple_options": {
+                "data": {
+                    "track_clients": "Netzwerk Ger\u00e4te \u00fcberwachen"
+                },
                 "description": "Konfigurieren Sie die UniFi-Integration"
             },
             "statistics_sensors": {

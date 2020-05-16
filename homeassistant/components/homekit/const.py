@@ -23,6 +23,10 @@ AUDIO_CODEC_COPY = "copy"
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
+ATTR_INTERGRATION = "platform"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL = "model"
+ATTR_SOFTWARE_VERSION = "sw_version"
 
 # #### Config ####
 CONF_ADVERTISE_IP = "advertise_ip"
@@ -50,6 +54,7 @@ CONF_VIDEO_MAP = "video_map"
 CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 
 # #### Config Defaults ####
+DEFAULT_SUPPORT_AUDIO = False
 DEFAULT_AUDIO_CODEC = AUDIO_CODEC_OPUS
 DEFAULT_AUDIO_MAP = "0:a:0"
 DEFAULT_AUDIO_PACKET_SIZE = 188
@@ -98,6 +103,7 @@ TYPE_VALVE = "valve"
 SERV_ACCESSORY_INFO = "AccessoryInformation"
 SERV_AIR_QUALITY_SENSOR = "AirQualitySensor"
 SERV_BATTERY_SERVICE = "BatteryService"
+SERV_CAMERA_RTP_STREAM_MANAGEMENT = "CameraRTPStreamManagement"
 SERV_CARBON_DIOXIDE_SENSOR = "CarbonDioxideSensor"
 SERV_CARBON_MONOXIDE_SENSOR = "CarbonMonoxideSensor"
 SERV_CONTACT_SENSOR = "ContactSensor"
@@ -177,6 +183,7 @@ CHAR_SERIAL_NUMBER = "SerialNumber"
 CHAR_SLEEP_DISCOVER_MODE = "SleepDiscoveryMode"
 CHAR_SMOKE_DETECTED = "SmokeDetected"
 CHAR_STATUS_LOW_BATTERY = "StatusLowBattery"
+CHAR_STREAMING_STRATUS = "StreamingStatus"
 CHAR_SWING_MODE = "SwingMode"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"

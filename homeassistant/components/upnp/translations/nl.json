@@ -12,19 +12,21 @@
             "one": "Een",
             "other": "Ander"
         },
+        "flow_title": "[%%]: {naam}",
         "step": {
             "confirm": {
                 "description": "Wilt u UPnP/IGD instellen?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
+            "ssdp_confirm": {
+                "description": "Wilt u [%%] instellen?"
             },
             "user": {
                 "data": {
                     "enable_port_mapping": "Poorttoewijzing voor Home Assistant inschakelen",
                     "enable_sensors": "Voeg verkeerssensoren toe",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "usn": "Apparaat"
                 },
                 "title": "Configuratiemogelijkheden voor de UPnP/IGD"
             }

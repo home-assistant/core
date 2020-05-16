@@ -25,9 +25,11 @@
         "confirm_setup": "Do you want to start set up?"
       },
       "data": {
+        "email": "Email",
         "username": "Username",
         "password": "Password",
         "host": "Host",
+        "ip": "IP address",
         "port": "Port",
         "usb_path": "USB Device Path",
         "access_token": "Access Token",

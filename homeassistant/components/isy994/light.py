@@ -9,7 +9,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -21,6 +20,7 @@ from .const import (
 )
 from .entity import ISYNodeEntity
 from .helpers import migrate_old_unique_ids
+from .services import async_setup_device_services, async_setup_light_services
 
 ATTR_LAST_BRIGHTNESS = "last_brightness"
 
@@ -41,6 +41,8 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, LIGHT, devices)
     async_add_entities(devices)
+    async_setup_device_services(hass)
+    async_setup_light_services(hass)
 
 
 class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
@@ -55,14 +57,16 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 light is on."""
-        if self.value == ISY_VALUE_UNKNOWN:
+        if self._node.status == ISY_VALUE_UNKNOWN:
             return False
-        return int(self.value) != 0
+        return int(self._node.status) != 0
 
     @property
     def brightness(self) -> float:
         """Get the brightness of the ISY994 light."""
-        return STATE_UNKNOWN if self.value == ISY_VALUE_UNKNOWN else int(self.value)
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return int(self._node.status)
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""
@@ -72,8 +76,8 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
 
     def on_update(self, event: object) -> None:
         """Save brightness in the update event from the ISY994 Node."""
-        if self.value not in (0, ISY_VALUE_UNKNOWN):
-            self._last_brightness = self.value
+        if self._node.status not in (0, ISY_VALUE_UNKNOWN):
+            self._last_brightness = self._node.status
         super().on_update(event)
 
     # pylint: disable=arguments-differ
@@ -110,3 +114,11 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             and last_state.attributes[ATTR_LAST_BRIGHTNESS]
         ):
             self._last_brightness = last_state.attributes[ATTR_LAST_BRIGHTNESS]
+
+    def set_on_level(self, value):
+        """Set the ON Level for a device."""
+        self._node.set_on_level(value)
+
+    def set_ramp_rate(self, value):
+        """Set the Ramp Rate for a device."""
+        self._node.set_ramp_rate(value)

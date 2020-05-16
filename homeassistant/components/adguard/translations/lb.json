@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Apparat",
+                    "host": "Host",
                     "password": "Passwuert",
                     "port": "Port",
                     "ssl": "AdGuard Home benotzt een SSL Zertifikat",

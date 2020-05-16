@@ -5,13 +5,13 @@
         },
         "error": {
             "general_error": "S'ha produ\u00eft un error desconegut.",
-            "invalid_api_key": "Clau API inv\u00e0lida",
+            "invalid_api_key": "Clau API proporiconada no v\u00e0lida.",
             "unable_to_connect": "No s'ha pogut connectar a la unitat Node/Pro."
         },
         "step": {
             "geography": {
                 "data": {
-                    "api_key": "Clau API",
+                    "api_key": "[%key::common::config_flow::data::api_key%]",
                     "latitude": "Latitud",
                     "longitude": "Longitud"
                 },
@@ -21,7 +21,7 @@
             "node_pro": {
                 "data": {
                     "ip_address": "Adre\u00e7a IP o amfitri\u00f3 de la unitat",
-                    "password": "Contrasenya de la unitat"
+                    "password": "Contrasenya"
                 },
                 "description": "Monitoritza una unitat personal d'AirVisual. Pots obtenir la contrasenya des de la interf\u00edcie d'usuari (UI) de la unitat.",
                 "title": "Configuraci\u00f3 d'AirVisual Node/Pro"

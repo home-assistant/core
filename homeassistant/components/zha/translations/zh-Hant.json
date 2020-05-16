@@ -7,11 +7,29 @@
             "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 ZHA \u8a2d\u5099\u3002"
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "\u7121\u7dda\u96fb\u985e\u578b"
+                },
+                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u985e\u578b",
+                "title": "\u7121\u7dda\u96fb\u985e\u578b"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "\u901a\u8a0a\u57e0\u901f\u5ea6",
+                    "flow_control": "\u8cc7\u6599\u6d41\u91cf\u63a7\u5236",
+                    "path": "\u5e8f\u5217\u8a2d\u5099\u8def\u5f91"
+                },
+                "description": "\u8f38\u5165\u901a\u8a0a\u57e0\u7279\u5b9a\u8a2d\u5b9a",
+                "title": "\u8a2d\u5b9a"
+            },
             "user": {
                 "data": {
+                    "path": "\u5e8f\u5217\u8a2d\u5099\u8def\u5f91",
                     "radio_type": "\u7121\u7dda\u96fb\u985e\u578b",
                     "usb_path": "USB \u8a2d\u5099\u8def\u5f91"
                 },
+                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u5e8f\u5217\u57e0",
                 "title": "ZHA"
             }
         }

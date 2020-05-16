@@ -91,7 +91,7 @@ async def test_hassio_discovery_startup_done(hass, aioclient_mock, hassio_client
         "homeassistant.components.hassio.HassIO.update_hass_api",
         return_value={"result": "ok"},
     ), patch(
-        "homeassistant.components.hassio.HassIO.get_homeassistant_info",
+        "homeassistant.components.hassio.HassIO.get_info",
         Mock(side_effect=HassioAPIError()),
     ), patch(
         "homeassistant.components.mqtt.config_flow.FlowHandler.async_step_hassio",

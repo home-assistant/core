@@ -1,0 +1,9 @@
+{
+    "options": {
+        "step": {
+            "cameras": {
+                "title": "Selecione o codec de v\u00eddeo da c\u00e2mera."
+            }
+        }
+    }
+}

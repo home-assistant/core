@@ -263,6 +263,15 @@ class TestLight(unittest.TestCase):
             light.ATTR_HS_COLOR: (prof_h, prof_s),
         } == data
 
+        # Test toggle with parameters
+        common.toggle(self.hass, ent3.entity_id, profile=prof_name, brightness_pct=100)
+        self.hass.block_till_done()
+        _, data = ent3.last_call("turn_on")
+        assert {
+            light.ATTR_BRIGHTNESS: 255,
+            light.ATTR_HS_COLOR: (prof_h, prof_s),
+        } == data
+
         # Test bad data
         common.turn_on(self.hass)
         common.turn_on(self.hass, ent1.entity_id, profile="nonexisting")
