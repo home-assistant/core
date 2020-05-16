@@ -90,7 +90,7 @@ class DemoHumidifier(HumidifierEntity):
 
     @property
     def is_on(self):
-        """Return true if switch is on."""
+        """Return true if the humidifier is on."""
         return self._state
 
     @property
