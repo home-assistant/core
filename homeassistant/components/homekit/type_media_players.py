@@ -387,9 +387,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             state = self.hass.states.get(self.entity_id).state
             if state in (STATE_PLAYING, STATE_PAUSED):
                 service = (
-                    SERVICE_MEDIA_PLAY
-                    if state == STATE_PAUSED
-                    else SERVICE_MEDIA_PAUSE
+                    SERVICE_MEDIA_PLAY if state == STATE_PAUSED else SERVICE_MEDIA_PAUSE
                 )
             else:
                 service = SERVICE_MEDIA_PLAY_PAUSE
@@ -398,10 +396,8 @@ class TelevisionMediaPlayer(HomeAccessory):
         else:
             # Other keys can be handled by listening to the event bus
             self.hass.bus.fire(
-                EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED, {
-                    ATTR_KEY_NAME: key_name,
-                    ATTR_ENTITY_ID: self.entity_id,
-                }
+                EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
+                {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id,},
             )
 
     @callback
