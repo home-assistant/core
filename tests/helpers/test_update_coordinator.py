@@ -9,7 +9,7 @@ import pytest
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, Mock, patch
+from tests.async_mock import AsyncMock, Mock
 from tests.common import async_fire_time_changed
 
 LOGGER = logging.getLogger(__name__)
@@ -37,16 +37,12 @@ def crd(hass):
 
 async def test_async_refresh(crd):
     """Test async_refresh for update coordinator."""
-    utc_time = utcnow()
-    with patch("homeassistant.helpers.update_coordinator.utcnow") as mock_utc:
-        mock_utc.return_value = utc_time
-        assert crd.data is None
-        await crd.async_refresh()
-        assert crd.data == 1
-        assert crd.last_update_success is True
-        assert crd.last_update_success_time == utc_time
-        # Make sure we didn't schedule a refresh because we have 0 listeners
-        assert crd._unsub_refresh is None
+    assert crd.data is None
+    await crd.async_refresh()
+    assert crd.data == 1
+    assert crd.last_update_success is True
+    # Make sure we didn't schedule a refresh because we have 0 listeners
+    assert crd._unsub_refresh is None
 
     updates = []
 
@@ -128,70 +124,31 @@ async def test_refresh_no_update_method(crd):
 async def test_update_interval(hass, crd):
     """Test update interval works."""
     # Test we don't update without subscriber
-    utc_time = utcnow()
-    with patch("homeassistant.helpers.update_coordinator.utcnow") as mock_utc:
-        mock_utc.return_value = utc_time + crd.update_interval
-        async_fire_time_changed(hass, mock_utc.return_value)
-        await hass.async_block_till_done()
-        assert crd.data is None
-        assert crd.last_update_success_time is None
+    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    await hass.async_block_till_done()
+    assert crd.data is None
 
-        # Add subscriber
-        update_callback = Mock()
-        crd.async_add_listener(update_callback)
+    # Add subscriber
+    update_callback = Mock()
+    crd.async_add_listener(update_callback)
 
-        # Test twice we update with subscriber
-        mock_utc.return_value += crd.update_interval
-        async_fire_time_changed(hass, mock_utc.return_value)
-        await hass.async_block_till_done()
-        assert crd.data == 1
-        assert crd.last_update_success_time == mock_utc.return_value
+    # Test twice we update with subscriber
+    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    await hass.async_block_till_done()
+    assert crd.data == 1
 
-        mock_utc.return_value += crd.update_interval
-        async_fire_time_changed(hass, mock_utc.return_value)
-        await hass.async_block_till_done()
-        assert crd.data == 2
-        assert crd.last_update_success_time == mock_utc.return_value
-        last_success_time = mock_utc.return_value
+    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    await hass.async_block_till_done()
+    assert crd.data == 2
 
-        # Test removing listener
-        crd.async_remove_listener(update_callback)
+    # Test removing listener
+    crd.async_remove_listener(update_callback)
 
-        mock_utc.return_value += crd.update_interval
-        async_fire_time_changed(hass, mock_utc.return_value)
-        await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    await hass.async_block_till_done()
 
-        # Test we stop updating after we lose last subscriber
-        assert crd.data == 2
-        assert crd.last_update_success_time == last_success_time
-
-
-async def test_failed_update_interval(crd, hass):
-    """Test failed update interval."""
-    utc_time = utcnow()
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = utc_time
-        old_update_method = crd.update_method
-        crd.update_method = AsyncMock(side_effect=asyncio.TimeoutError)
-        crd.failed_update_interval = timedelta(seconds=5)
-
-        def update_callback():
-            pass
-
-        crd.async_add_listener(update_callback)
-
-        await crd.async_refresh()
-        await hass.async_block_till_done()
-
-        assert crd.data is None
-        assert crd.last_update_success is False
-
-        crd.update_method = old_update_method
-        mock_utcnow.return_value += timedelta(seconds=5)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        await hass.async_block_till_done()
-        assert crd.data == 1
-        assert crd.last_update_success is True
+    # Test we stop updating after we lose last subscriber
+    assert crd.data == 2
 
 
 async def test_refresh_recover(crd, caplog):
