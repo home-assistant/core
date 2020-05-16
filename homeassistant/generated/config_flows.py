@@ -133,6 +133,7 @@ FLOWS = [
     "plaato",
     "plex",
     "plugwise",
+    "plugwise_stick",
     "plum_lightpad",
     "point",
     "poolsense",

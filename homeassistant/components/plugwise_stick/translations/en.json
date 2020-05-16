@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "connection_exists": "Plugwise USB-Stick already configured",
+            "network_down": "Plugwise Zigbee network is down",
+            "network_timeout": "Network communication timeout",
+            "stick_init": "Initialization of Plugwise USB-stick failed",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "The name for this Plugwise stick connection",
+                    "usb_path": "USB Device Path"
+                },
+                "description": "Setup direct connection to legacy Plugwise USB-stick",
+                "title": "Plugwise USB-stick"
+            },
+            "manual_path": {
+                "data": {
+                  "usb_path": "USB Device Path"
+                },
+                "title": "Plugwise USB-stick"
+            }
+        }
+    }
+}

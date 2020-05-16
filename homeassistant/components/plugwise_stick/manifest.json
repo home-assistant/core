@@ -1,0 +1,8 @@
+{
+  "domain": "plugwise_stick",
+  "name": "Plugwise USB-stick",
+  "documentation": "https://www.home-assistant.io/integrations/plugwise_stick",
+  "config_flow": true,
+  "codeowners": ["@brefra"],
+  "requirements": ["python-plugwise==0.7"]
+}
