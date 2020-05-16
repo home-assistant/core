@@ -39,6 +39,24 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
         except Exception:  # pylint: disable=broad-except
             self.handleError(record)
 
+    def handle(self, record: logging.LogRecord) -> Any:
+        """
+        Conditionally emit the specified logging record.
+
+        Depending on which filters have been added to the handler, push the new
+        records onto the backing Queue.
+
+        The default python logger Handler acquires a lock
+        in the parent class which we do not need as
+        SimpleQueue is already thread safe.
+
+        See https://bugs.python.org/issue24645
+        """
+        return_value = self.filter(record)
+        if return_value:
+            self.emit(record)
+        return return_value
+
 
 @callback
 def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
