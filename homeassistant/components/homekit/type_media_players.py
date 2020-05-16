@@ -37,8 +37,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
+
 from .accessories import TYPES, HomeAccessory
 from .const import (
+    ATTR_KEY_NAME,
     CHAR_ACTIVE,
     CHAR_ACTIVE_IDENTIFIER,
     CHAR_CONFIGURED_NAME,
@@ -55,6 +57,7 @@ from .const import (
     CHAR_VOLUME_CONTROL_TYPE,
     CHAR_VOLUME_SELECTOR,
     CONF_FEATURE_LIST,
+    EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
@@ -68,6 +71,7 @@ from .const import (
     KEY_FAST_FORWARD,
     KEY_INFORMATION,
     KEY_NEXT_TRACK,
+    KEY_PLAY_PAUSE,
     KEY_PREVIOUS_TRACK,
     KEY_REWIND,
     KEY_SELECT,
@@ -75,9 +79,6 @@ from .const import (
     SERV_SWITCH,
     SERV_TELEVISION,
     SERV_TELEVISION_SPEAKER,
-    EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
-    ATTR_KEY_NAME,
-    KEY_PLAY_PAUSE,
 )
 from .util import get_media_player_features
 

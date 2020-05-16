@@ -1,14 +1,14 @@
 """Test different accessory types: Media Players."""
 
 from homeassistant.components.homekit.const import (
+    ATTR_KEY_NAME,
     ATTR_VALUE,
     CONF_FEATURE_LIST,
+    EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
-    EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
-    ATTR_KEY_NAME,
     KEY_ARROW_RIGHT,
 )
 from homeassistant.components.homekit.type_media_players import (
