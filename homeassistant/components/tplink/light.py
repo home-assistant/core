@@ -120,27 +120,22 @@ class TPLinkSmartBulb(LightEntity):
             hsv = kwargs[ATTR_HS_COLOR]
 
         self._is_setting_light_state = True
+        try:
+            if brightness is not None:
+                await self.smartbulb.set_brightness(brightness)
+            if color_temp is not None:
+                await self.smartbulb.set_color_temp(color_temp)
+            if hsv is not None:
+                await self.smartbulb.set_hsv(*hsv, brightness)
 
-        for t in range(5):
-            try:
-                if brightness is not None:
-                    await self.smartbulb.set_brightness(brightness)
-                if color_temp is not None:
-                    await self.smartbulb.set_color_temp(color_temp)
-                if hsv is not None:
-                    await self.smartbulb.set_hsv(*hsv, brightness)
-
-                await self.smartbulb.turn_on()
-                # all actions on bulbs will cause an automatic update
-                await self.async_update_ha_state(force_refresh=False)
-                self._is_available = True
-                self._is_setting_light_state = False
-                return
-            except (SmartDeviceException, OSError) as ex:
-                _LOGGER.debug("Got error while setting the state, retrying: %s", ex)
-
-        _LOGGER.warning("Could not set state for %s", self.smartbulb.host)
-        self._is_setting_light_state = False
+            await self.smartbulb.turn_on()
+            # all actions on bulbs will cause an automatic update
+            await self.async_update_ha_state(force_refresh=False)
+            self._is_available = True
+            self._is_setting_light_state = False
+            return
+        except (SmartDeviceException, OSError) as ex:
+            _LOGGER.debug("Got error while setting the state: %s", ex)
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
