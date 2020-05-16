@@ -195,7 +195,9 @@ class Camera(HomeAccessory, PyhapCamera):
         if stream_source:
             return stream_source
         try:
-            stream_source = await camera.stream_source()
+            stream_source = await self.hass.components.camera.async_get_stream_source(
+                self.entity_id
+            )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to get stream source - this could be a transient error or your camera might not be compatible with HomeKit yet"
