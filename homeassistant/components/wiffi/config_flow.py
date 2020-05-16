@@ -8,10 +8,14 @@ import voluptuous as vol
 from wiffi import WiffiTcpServer
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import callback
 
-from .const import DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 
 
 class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -50,7 +54,10 @@ class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_show_form(self, errors=None):
         """Show the config flow form to the user."""
-        data_schema = {vol.Required(CONF_PORT, default=DEFAULT_PORT): int}
+        data_schema = {
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): int,
+        }
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(data_schema), errors=errors or {}

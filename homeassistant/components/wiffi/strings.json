@@ -4,7 +4,8 @@
       "user": {
         "title": "Setup TCP server for WIFFI devices",
         "data": {
-          "port": "Server Port"
+          "port": "Server Port",
+          "timeout": "Timeout (minutes)"
         }
       }
     },

@@ -7,7 +7,7 @@ import logging
 from wiffi import WiffiTcpServer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
@@ -22,6 +22,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     CHECK_ENTITIES_SIGNAL,
     CREATE_ENTITY_SIGNAL,
+    DEFAULT_TIMEOUT,
     DOMAIN,
     UPDATE_ENTITY_SIGNAL,
 )
@@ -97,9 +98,11 @@ class WiffiIntegrationApi:
         self._server = None
         self._known_devices = {}
         self._periodic_callback = None
+        self._config = {CONF_TIMEOUT: DEFAULT_TIMEOUT}
 
     def async_setup(self, config_entry):
         """Set up api instance."""
+        self._config[CONF_TIMEOUT] = config_entry.data[CONF_TIMEOUT]
         self._server = WiffiTcpServer(config_entry.data[CONF_PORT], self)
         self._periodic_callback = async_track_time_interval(
             self._hass, self._periodic_tick, timedelta(seconds=10)
@@ -123,7 +126,9 @@ class WiffiIntegrationApi:
         for metric in metrics:
             if metric.id not in self._known_devices[device.mac_address]:
                 self._known_devices[device.mac_address].add(metric.id)
-                async_dispatcher_send(self._hass, CREATE_ENTITY_SIGNAL, device, metric)
+                async_dispatcher_send(
+                    self._hass, CREATE_ENTITY_SIGNAL, device, metric, self._config
+                )
             else:
                 async_dispatcher_send(
                     self._hass,
@@ -146,7 +151,7 @@ class WiffiIntegrationApi:
 class WiffiEntity(Entity):
     """Common functionality for all wiffi entities."""
 
-    def __init__(self, device, metric):
+    def __init__(self, device, metric, config):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
         self._device_info = {
@@ -162,6 +167,7 @@ class WiffiEntity(Entity):
         self._name = metric.description
         self._expiration_date = None
         self._value = None
+        self._timeout = config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
     async def async_added_to_hass(self):
         """Entity has been added to hass."""
@@ -208,7 +214,7 @@ class WiffiEntity(Entity):
 
         Will be called by derived classes after a value update has been received.
         """
-        self._expiration_date = utcnow() + timedelta(minutes=3)
+        self._expiration_date = utcnow() + timedelta(minutes=self._timeout)
 
     @callback
     def _update_value_callback(self, device, metric):

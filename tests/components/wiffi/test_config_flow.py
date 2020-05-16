@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.wiffi.const import DOMAIN
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, CONF_TIMEOUT
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -78,7 +78,7 @@ async def test_form(hass, dummy_tcp_server):
     assert result["step_id"] == config_entries.SOURCE_USER
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_PORT: 8765},
+        result["flow_id"], user_input={CONF_PORT: 8765, CONF_TIMEOUT: 5},
     )
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
 
