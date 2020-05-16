@@ -96,7 +96,7 @@ SENSORS = {
         "name": "Power production previous hour",
         "state": "get_power_production_previous_hour",
         "unit": ENERGY_KILO_WATT_HOUR,
-    }
+    },
 }
 
 # Switch types
