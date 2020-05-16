@@ -44,14 +44,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """
 
     @callback
-    def _create_entity(device, metric, config):
+    def _create_entity(device, metric):
         """Create platform specific entities."""
         entities = []
 
         if metric.is_number:
-            entities.append(NumberEntity(device, metric, config))
+            entities.append(NumberEntity(device, metric, config_entry.options))
         elif metric.is_string:
-            entities.append(StringEntity(device, metric, config))
+            entities.append(StringEntity(device, metric, config_entry.options))
 
         async_add_entities(entities)
 
@@ -61,9 +61,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class NumberEntity(WiffiEntity):
     """Entity for wiffi metrics which have a number value."""
 
-    def __init__(self, device, metric, config):
+    def __init__(self, device, metric, options):
         """Initialize the entity."""
-        super().__init__(device, metric, config)
+        super().__init__(device, metric, options)
         self._device_class = UOM_TO_DEVICE_CLASS_MAP.get(metric.unit_of_measurement)
         self._unit_of_measurement = UOM_MAP.get(
             metric.unit_of_measurement, metric.unit_of_measurement
@@ -103,9 +103,9 @@ class NumberEntity(WiffiEntity):
 class StringEntity(WiffiEntity):
     """Entity for wiffi metrics which have a string value."""
 
-    def __init__(self, device, metric, config):
+    def __init__(self, device, metric, options):
         """Initialize the entity."""
-        super().__init__(device, metric, config)
+        super().__init__(device, metric, options)
         self._value = metric.value
         self.reset_expiration_date()
 

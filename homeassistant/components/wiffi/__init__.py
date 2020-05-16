@@ -40,6 +40,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
+    if not config_entry.update_listeners:
+        config_entry.add_update_listener(async_update_options)
+
     # create api object
     api = WiffiIntegrationApi(hass)
     api.async_setup(config_entry)
@@ -62,6 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
 
     return True
+
+
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Update options."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -98,11 +106,9 @@ class WiffiIntegrationApi:
         self._server = None
         self._known_devices = {}
         self._periodic_callback = None
-        self._config = {CONF_TIMEOUT: DEFAULT_TIMEOUT}
 
     def async_setup(self, config_entry):
         """Set up api instance."""
-        self._config[CONF_TIMEOUT] = config_entry.data[CONF_TIMEOUT]
         self._server = WiffiTcpServer(config_entry.data[CONF_PORT], self)
         self._periodic_callback = async_track_time_interval(
             self._hass, self._periodic_tick, timedelta(seconds=10)
@@ -126,9 +132,7 @@ class WiffiIntegrationApi:
         for metric in metrics:
             if metric.id not in self._known_devices[device.mac_address]:
                 self._known_devices[device.mac_address].add(metric.id)
-                async_dispatcher_send(
-                    self._hass, CREATE_ENTITY_SIGNAL, device, metric, self._config
-                )
+                async_dispatcher_send(self._hass, CREATE_ENTITY_SIGNAL, device, metric)
             else:
                 async_dispatcher_send(
                     self._hass,
@@ -151,7 +155,7 @@ class WiffiIntegrationApi:
 class WiffiEntity(Entity):
     """Common functionality for all wiffi entities."""
 
-    def __init__(self, device, metric, config):
+    def __init__(self, device, metric, options):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
         self._device_info = {
@@ -167,7 +171,7 @@ class WiffiEntity(Entity):
         self._name = metric.description
         self._expiration_date = None
         self._value = None
-        self._timeout = config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+        self._timeout = options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
     async def async_added_to_hass(self):
         """Entity has been added to hass."""

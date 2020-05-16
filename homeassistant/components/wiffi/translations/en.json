@@ -7,10 +7,18 @@
         "step": {
             "user": {
                 "data": {
-                    "port": "Server Port",
-                    "timeout": "Timeout (minutes)"
+                    "port": "Server Port"
                 },
                 "title": "Setup TCP server for WIFFI devices"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Timeout (minutes)"
+                }
             }
         }
     }
