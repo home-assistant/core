@@ -94,6 +94,146 @@ async def test_get_actions(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
+async def test_get_action_turn_on(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a media_player."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=SUPPORT_TURN_ON,
+    )
+
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "turn_on",
+            "device_id": device_entry.id,
+            "entity_id": "media_player.test_5678",
+        }
+    ]
+
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_actions_toggle(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a media_player."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=SUPPORT_TURN_ON | SUPPORT_TURN_OFF,
+    )
+
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "turn_on",
+            "device_id": device_entry.id,
+            "entity_id": "media_player.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "turn_off",
+            "device_id": device_entry.id,
+            "entity_id": "media_player.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "toggle",
+            "device_id": device_entry.id,
+            "entity_id": "media_player.test_5678",
+        },
+    ]
+
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_actions_volume_step(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a media_player."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=SUPPORT_VOLUME_STEP,
+    )
+
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "volume_up",
+            "device_id": device_entry.id,
+            "entity_id": "media_player.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "volume_down",
+            "device_id": device_entry.id,
+            "entity_id": "media_player.test_5678",
+        },
+    ]
+
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_actions_volume_set(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a media_player."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=SUPPORT_VOLUME_SET,
+    )
+
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "volume_up",
+            "device_id": device_entry.id,
+            "entity_id": "media_player.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "volume_down",
+            "device_id": device_entry.id,
+            "entity_id": "media_player.test_5678",
+        },
+    ]
+
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
 async def test_action(hass):
     """Test for turn_on and turn_off actions."""
     assert await async_setup_component(
