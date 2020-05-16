@@ -3,8 +3,7 @@
 from homeassistant.helpers.entity import Entity
 
 from . import BleBoxEntity, create_blebox_entities
-
-from .const import BLEBOX_TO_HASS_DEVICE_CLASSES, BLEBOX_TO_UNIT_MAP, DOMAIN, PRODUCT
+from .const import BLEBOX_TO_HASS_DEVICE_CLASSES, BLEBOX_TO_UNIT_MAP
 
 
 async def async_setup_entry(hass, config_entry, async_add):
