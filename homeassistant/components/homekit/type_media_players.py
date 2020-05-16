@@ -398,7 +398,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             # Other keys can be handled by listening to the event bus
             self.hass.bus.fire(
                 EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
-                {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id,},
+                {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
             )
 
     @callback
