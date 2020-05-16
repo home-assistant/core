@@ -3,15 +3,13 @@
 from homeassistant.helpers.entity import Entity
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_TO_HASS_DEVICE_CLASSES, BLEBOX_TO_UNIT_MAP, DOMAIN, PRODUCT
+from .const import BLEBOX_TO_HASS_DEVICE_CLASSES, BLEBOX_TO_UNIT_MAP
 
 
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
 
-    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    create_blebox_entities(product, async_add, BleBoxSensorEntity, "sensors")
-    return True
+    create_blebox_entities(hass, config_entry, async_add, BleBoxSensorEntity, "sensors")
 
 
 class BleBoxSensorEntity(BleBoxEntity, Entity):
