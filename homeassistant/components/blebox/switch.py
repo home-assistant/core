@@ -2,15 +2,14 @@
 from homeassistant.components.switch import SwitchDevice
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_TO_HASS_DEVICE_CLASSES, DOMAIN, PRODUCT
+from .const import BLEBOX_TO_HASS_DEVICE_CLASSES
 
 
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox switch entity."""
-
-    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    create_blebox_entities(product, async_add, BleBoxSwitchEntity, "switches")
-    return True
+    create_blebox_entities(
+        hass, config_entry, async_add, BleBoxSwitchEntity, "switches"
+    )
 
 
 class BleBoxSwitchEntity(BleBoxEntity, SwitchDevice):
