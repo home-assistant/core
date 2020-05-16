@@ -74,7 +74,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == self._host:
                 if self._id and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=self._id)
-                return self.async_abort(reason="already_configured")
+                raise data_entry_flow.AbortFlow("already_configured")
 
     def _try_connect(self):
         """Try to connect and check auth."""
