@@ -38,7 +38,7 @@ class PlugwiseSensor(PlugwiseNodeEntity):
 
     @property
     def entity_registry_enabled_default(self):
-        """Default sensor registration."""
+        """Return the sensor registration state."""
         return self.sensor_type["enabled_default"]
 
     @property

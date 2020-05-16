@@ -54,7 +54,7 @@ class PlugwiseSwitch(PlugwiseNodeEntity, SwitchDevice):
 
     @property
     def entity_registry_enabled_default(self):
-        """Return the sensor registration state."""
+        """Return the switch registration state."""
         return self.switch_type["enabled_default"]
 
     @property
