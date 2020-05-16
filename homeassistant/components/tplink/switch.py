@@ -1,6 +1,5 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
 import logging
-import time
 from typing import Union
 
 from kasa import SmartDeviceException, SmartPlug, SmartStrip
@@ -128,7 +127,7 @@ class SmartPlugSwitch(SwitchEntity):
                 await self.smartplug.update()
 
             if self.smartplug.has_emeter:
-                emeter_readings = await self.smartplug.get_emeter_realtime()
+                emeter_readings = self.smartplug.emeter_realtime
 
                 self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
                     emeter_readings["power"]
@@ -143,14 +142,9 @@ class SmartPlugSwitch(SwitchEntity):
                     emeter_readings["current"]
                 )
 
-                emeter_statics = await self.smartplug.get_emeter_daily()
-                try:
-                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
-                        emeter_statics[int(time.strftime("%e"))]
-                    )
-                except KeyError:
-                    # Device returned no daily history
-                    pass
+                consumption_today = self.smartplug.emeter_today
+                if consumption_today is not None:
+                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = consumption_today
 
             self._available = True
 
