@@ -10,6 +10,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.nws.const import (
     EXPECTED_FORECAST_IMPERIAL,
@@ -154,39 +155,79 @@ async def test_entity_refresh(hass, mock_simple_nws):
 
 async def test_error_observation(hass, mock_simple_nws):
     """Test error during update observation."""
+    utc_time = dt_util.utcnow()
+    with patch("homeassistant.components.nws.utcnow") as mock_utc, patch(
+        "homeassistant.components.nws.weather.utcnow"
+    ) as mock_utc_weather:
 
-    instance = mock_simple_nws.return_value
-    instance.update_observation.side_effect = aiohttp.ClientError
+        def increment_time(time):
+            mock_utc.return_value += time
+            mock_utc_weather.return_value += time
+            async_fire_time_changed(hass, mock_utc.return_value)
 
-    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        mock_utc.return_value = utc_time
+        mock_utc_weather.return_value = utc_time
+        instance = mock_simple_nws.return_value
+        # first update fails
+        instance.update_observation.side_effect = aiohttp.ClientError
 
-    instance.update_observation.assert_called_once()
+        entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("weather.abc_daynight")
-    assert state
-    assert state.state == "unavailable"
+        instance.update_observation.assert_called_once()
 
-    state = hass.states.get("weather.abc_hourly")
-    assert state
-    assert state.state == "unavailable"
+        state = hass.states.get("weather.abc_daynight")
+        assert state
+        assert state.state == "unavailable"
 
-    instance.update_observation.side_effect = None
+        state = hass.states.get("weather.abc_hourly")
+        assert state
+        assert state.state == "unavailable"
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
-    await hass.async_block_till_done()
+        # second update happens faster and succeeds
+        instance.update_observation.side_effect = None
+        increment_time(timedelta(minutes=1))
+        await hass.async_block_till_done()
 
-    assert instance.update_observation.call_count == 2
+        assert instance.update_observation.call_count == 2
 
-    state = hass.states.get("weather.abc_daynight")
-    assert state
-    assert state.state == "sunny"
+        state = hass.states.get("weather.abc_daynight")
+        assert state
+        assert state.state == "sunny"
 
-    state = hass.states.get("weather.abc_hourly")
-    assert state
-    assert state.state == "sunny"
+        state = hass.states.get("weather.abc_hourly")
+        assert state
+        assert state.state == "sunny"
+
+        # third udate fails, but data is cached
+        instance.update_observation.side_effect = aiohttp.ClientError
+
+        increment_time(timedelta(minutes=10))
+        await hass.async_block_till_done()
+
+        assert instance.update_observation.call_count == 3
+
+        state = hass.states.get("weather.abc_daynight")
+        assert state
+        assert state.state == "sunny"
+
+        state = hass.states.get("weather.abc_hourly")
+        assert state
+        assert state.state == "sunny"
+
+        # after 20 minutes data caching expires, data is no longer shown
+        increment_time(timedelta(minutes=10))
+        await hass.async_block_till_done()
+
+        state = hass.states.get("weather.abc_daynight")
+        assert state
+        assert state.state == "unavailable"
+
+        state = hass.states.get("weather.abc_hourly")
+        assert state
+        assert state.state == "unavailable"
 
 
 async def test_error_forecast(hass, mock_simple_nws):
