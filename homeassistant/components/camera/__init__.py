@@ -162,6 +162,14 @@ async def async_get_image(hass, entity_id, timeout=10):
 
 
 @bind_hass
+async def async_get_stream_source(hass, entity_id):
+    """Fetch the stream source for a camera entity."""
+    camera = _get_camera_from_entity_id(hass, entity_id)
+
+    return await camera.stream_source()
+
+
+@bind_hass
 async def async_get_mjpeg_stream(hass, request, entity_id):
     """Fetch an mjpeg stream from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
