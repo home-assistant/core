@@ -530,8 +530,8 @@ class Recorder(threading.Thread):
                 # https://www.sqlite.org/threadsafe.html
                 # In serialized mode, SQLite can be safely used by multiple threads with no restriction.
                 # The default mode is serialized.
-                kwargs["poolclass"] = QueuePool
                 kwargs["connect_args"] = {"check_same_thread": False}
+                kwargs["poolclass"] = QueuePool
                 kwargs["pool_reset_on_return"] = None
             kwargs["echo"] = False
         else:
