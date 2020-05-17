@@ -558,8 +558,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
             )
             return
 
-        media = None
-        media_type = media_type.lower()
         src = json.loads(media_id)
         if media_type == PLEX_DOMAIN and isinstance(src, int):
             try:

@@ -376,6 +376,7 @@ class PlexServer:
 
     def lookup_media(self, media_type, **kwargs):
         """Lookup a piece of media."""
+        media_type = media_type.lower()
         if media_type == MEDIA_TYPE_PLAYLIST:
             try:
                 playlist_name = kwargs["playlist_name"]
