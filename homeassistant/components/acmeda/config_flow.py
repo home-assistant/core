@@ -19,7 +19,6 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self.hub: Optional[aiopulse.Hub] = None
         self.discovered_hubs: Optional[Dict[str, aiopulse.Hub]] = None
 
     async def async_step_user(self, user_input=None):
@@ -66,12 +65,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_create(self, hub=None):
+    async def async_create(self, hub):
         """Create the Acmeda Hub entry."""
-        assert hub is not None
-
-        self.hub = hub
-
         await self.async_set_unique_id(hub.id, raise_on_progress=False)
-
         return self.async_create_entry(title=hub.id, data={"host": hub.host})
