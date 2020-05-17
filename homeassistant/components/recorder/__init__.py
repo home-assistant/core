@@ -524,12 +524,15 @@ class Recorder(threading.Thread):
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith("sqlite://"):
-            # https://www.sqlite.org/threadsafe.html
-            # In serialized mode, SQLite can be safely used by multiple threads with no restriction.
-            # The default mode is serialized.
-            kwargs["poolclass"] = SingletonThreadPool
-            kwargs["connect_args"] = {"check_same_thread": False}
-            kwargs["pool_size"] = 0
+            import sqlite3  # pylint: disable=import-outside-toplevel
+
+            if sqlite3.threadsafety:
+                # https://www.sqlite.org/threadsafe.html
+                # In serialized mode, SQLite can be safely used by multiple threads with no restriction.
+                # The default mode is serialized.
+                kwargs["poolclass"] = SingletonThreadPool
+                kwargs["connect_args"] = {"check_same_thread": False}
+                kwargs["pool_size"] = 0
             kwargs["echo"] = False
         else:
             kwargs["echo"] = False
