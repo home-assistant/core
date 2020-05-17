@@ -113,7 +113,7 @@ class TPLinkSmartBulb(LightEntity):
 
         brightness = None
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = brightness_to_percentage(int(kwargs[ATTR_BRIGHTNESS]))
+            brightness = int(kwargs[ATTR_BRIGHTNESS])
 
         self._is_setting_light_state = True
         try:
