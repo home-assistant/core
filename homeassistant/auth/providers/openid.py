@@ -148,7 +148,7 @@ class OpenIdAuthProvider(AuthProvider):
         self, token: Dict[str, Any], nonce: str
     ) -> Dict[str, Any]:
         """Validate a token."""
-        from jose import jwt
+        from jose import jwt  # noqa: pylint: disable=import-outside-toplevel
 
         algorithms = self._configuration["id_token_signing_alg_values_supported"]
         issuer = self._configuration["issuer"]
