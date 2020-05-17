@@ -26,12 +26,22 @@ def com_port():
     return port
 
 
+async def test_user_flow_show_form(hass):
+    """Test user step form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch(
     "homeassistant.components.plugwise_stick.config_flow.validate_connection",
     return_value={},
 )
-async def test_user_flow_select(detect_mock, hass):
+async def test_user_flow_select(hass):
     """Test user flow when USB-stick is selected from list."""
 
     port = com_port()
@@ -42,18 +52,6 @@ async def test_user_flow_select(detect_mock, hass):
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {CONF_USB_PATH: "/dev/ttyUSB1234"}
-    assert detect_mock.await_count == 1
-    assert detect_mock.await_args[0][0] == port.device
-
-
-async def test_user_flow_show_form(hass):
-    """Test user step form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER},
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
 
 
 async def test_user_flow_manual(hass):
