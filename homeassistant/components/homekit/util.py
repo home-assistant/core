@@ -4,6 +4,7 @@ import io
 import ipaddress
 import logging
 import os
+import re
 import secrets
 import socket
 
@@ -413,6 +414,14 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     return hass.config.path(
         STORAGE_DIR, get_aid_storage_filename_for_entry_id(entry_id)
     )
+
+
+def format_sw_version(version):
+    """Extract the version string in a format homekit can consume."""
+    match = re.search(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?", str(version).replace("-", "."))
+    if match:
+        return match.group(0)
+    return None
 
 
 def migrate_filesystem_state_data_for_primary_imported_entry_id(
