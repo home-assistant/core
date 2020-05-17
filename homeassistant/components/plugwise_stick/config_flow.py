@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant, callback
 from .const import CONF_USB_PATH, DOMAIN
 
 CONF_MANUAL_PATH = "Enter Manually"
-CONF_DEFAULT_NAME = "Plugwise USB-stick"
 
 
 @callback
@@ -33,7 +32,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the Plugwise USB-stick config flow."""
-        self._name = None
         self._list_of_ports = []
 
     async def async_step_user(self, user_input=None):

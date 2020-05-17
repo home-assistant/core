@@ -14,8 +14,6 @@ from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_
 from tests.async_mock import MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
 
-MANUAL_PORT = "/dev/ttyUSB10"
-
 
 def com_port():
     """Mock of a serial port."""
