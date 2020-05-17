@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 API (facultatif)",
+                    "name": "Nom",
+                    "ssl": "Utiliser SSL",
+                    "verify_ssl": "V\u00e9rifier le certificat SSL"
+                }
+            }
+        }
+    }
+}
