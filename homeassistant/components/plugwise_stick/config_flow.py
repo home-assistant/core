@@ -77,7 +77,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual_path(self, user_input=None):
         """Step when manual path to device."""
-        errors = None
+        errors = {}
 
         if user_input is not None:
             device_path = await self.hass.async_add_executor_job(
