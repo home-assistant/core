@@ -1,4 +1,5 @@
 """Config flow for ONVIF."""
+import asyncio
 from pprint import pformat
 from typing import List
 from urllib.parse import urlparse
@@ -191,13 +192,12 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.onvif_config[CONF_USERNAME],
             self.onvif_config[CONF_PASSWORD],
         )
-
         await device.update_xaddrs()
-
         try:
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
                 devicemgmt = device.create_devicemgmt_service()
+                await asyncio.sleep(0.1)
                 network_interfaces = await devicemgmt.GetNetworkInterfaces()
                 for interface in network_interfaces:
                     if interface.Enabled:
@@ -217,6 +217,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Verify there is an H264 profile
             media_service = device.create_media_service()
+            await asyncio.sleep(0.1)
             profiles = await media_service.GetProfiles()
             h264 = any(
                 profile.VideoEncoderConfiguration.Encoding == "H264"

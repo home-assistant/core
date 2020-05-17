@@ -4,7 +4,11 @@ import datetime as dt
 import os
 from typing import List
 
-from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
+from aiohttp.client_exceptions import (
+    ClientConnectionError,
+    ClientPayloadError,
+    ServerDisconnectedError,
+)
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
@@ -134,6 +138,7 @@ class ONVIFDevice:
         LOGGER.debug("Setting up the ONVIF device management service")
         devicemgmt = self.device.create_devicemgmt_service()
 
+        await asyncio.sleep(0.1)
         LOGGER.debug("Retrieving current device date/time")
         try:
             system_date = dt_util.utcnow()
@@ -197,6 +202,7 @@ class ONVIFDevice:
     async def async_get_device_info(self) -> DeviceInfo:
         """Obtain information about this device."""
         devicemgmt = self.device.create_devicemgmt_service()
+        await asyncio.sleep(0.1)
         device_info = await devicemgmt.GetDeviceInformation()
         return DeviceInfo(
             device_info.Manufacturer,
@@ -210,6 +216,7 @@ class ONVIFDevice:
         snapshot = False
         try:
             media_service = self.device.create_media_service()
+            await asyncio.sleep(0.1)
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities.SnapshotUri
         except (ONVIFError, Fault):
@@ -218,6 +225,7 @@ class ONVIFDevice:
         pullpoint = False
         try:
             event_service = self.device.create_events_service()
+            await asyncio.sleep(0.1)
             event_capabilities = await event_service.GetServiceCapabilities()
             pullpoint = event_capabilities.WSPullPointSupport
         except (ONVIFError, Fault):
@@ -235,6 +243,7 @@ class ONVIFDevice:
     async def async_get_profiles(self) -> List[Profile]:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
+        await asyncio.sleep(0.1)
         result = await media_service.GetProfiles()
         profiles = []
         for key, onvif_profile in enumerate(result):
@@ -266,10 +275,15 @@ class ONVIFDevice:
                     is not None,
                 )
 
-                ptz_service = self.device.get_service("ptz")
-                presets = await ptz_service.GetPresets(profile.token)
-                profile.ptz.presets = [preset.token for preset in presets]
-
+                try:
+                    ptz_service = self.device.get_service("ptz")
+                    await asyncio.sleep(0.1)
+                    presets = await ptz_service.GetPresets(profile.token)
+                    profile.ptz.presets = [preset.token for preset in presets]
+                except ClientPayloadError as err:
+                    LOGGER.warning(
+                        "Couldn't get PTZ presets for: %s Error: %s", self.name, err,
+                    )
             profiles.append(profile)
 
         return profiles
