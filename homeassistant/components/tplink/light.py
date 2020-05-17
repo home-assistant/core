@@ -111,22 +111,28 @@ class TPLinkSmartBulb(LightEntity):
         if self._is_setting_light_state:
             return  # we are already trying to set a state
 
-        brightness = color_temp = hsv = None
+        brightness = None
         if ATTR_BRIGHTNESS in kwargs:
             brightness = brightness_to_percentage(int(kwargs[ATTR_BRIGHTNESS]))
-        if ATTR_COLOR_TEMP in kwargs:
-            color_temp = int(mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP])))
-        if ATTR_HS_COLOR in kwargs:
-            hsv = kwargs[ATTR_HS_COLOR]
 
         self._is_setting_light_state = True
         try:
             if brightness is not None and self.supported_features & SUPPORT_BRIGHTNESS:
                 await self.smartbulb.set_brightness(brightness)
-            if color_temp is not None and self.supported_features & SUPPORT_COLOR_TEMP:
+            if (
+                ATTR_COLOR_TEMP in kwargs
+                and self.supported_features & SUPPORT_COLOR_TEMP
+            ):
+                color_temp = int(mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP])))
                 await self.smartbulb.set_color_temp(color_temp)
-            if hsv is not None and self.supported_features & SUPPORT_COLOR:
-                await self.smartbulb.set_hsv(*hsv, brightness)
+            if ATTR_HS_COLOR in kwargs and self.supported_features & SUPPORT_COLOR:
+                hue, sat = kwargs[ATTR_HS_COLOR]
+                if brightness is None:
+                    brightness = self.brightness
+                # TODO: allow floats in upstream for hue&sat?
+                await self.smartbulb.set_hsv(
+                    int(hue), int(sat), brightness_to_percentage(brightness)
+                )
 
             await self.smartbulb.turn_on()
             # all actions on bulbs will cause an automatic update
