@@ -16,6 +16,7 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
+                    "name": "Sobrenom",
                     "password": "Contrasenya de l'API (deixa-ho en blanc si no t\u00e9 contrasenya)",
                     "port": "Port de l'API"
                 },

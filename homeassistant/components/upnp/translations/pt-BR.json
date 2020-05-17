@@ -19,6 +19,7 @@
                     "enable_port_mapping": "Ativar o mapeamento de porta para o Home Assistant",
                     "enable_sensors": "Adicionar sensores de tr\u00e1fego",
                     "igd": "UPnP/IGD",
+                    "scan_interval": "Intervalo de atualiza\u00e7\u00e3o (segundos, m\u00ednimo 30)",
                     "usn": "Dispositivo"
                 },
                 "title": "Op\u00e7\u00f5es de configura\u00e7\u00e3o para o UPnP/IGD"

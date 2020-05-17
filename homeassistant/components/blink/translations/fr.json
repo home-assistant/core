@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "2fa": {
+                "title": "Authentification \u00e0 deux facteurs"
+            }
+        }
+    }
+}

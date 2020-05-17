@@ -3,6 +3,7 @@
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API kulcs",
                     "name": "Ennek az install\u00e1ci\u00f3nak a neve"
                 },
                 "title": "Az API param\u00e9terek megad\u00e1sa ehhez a telep\u00edt\u00e9shez"
