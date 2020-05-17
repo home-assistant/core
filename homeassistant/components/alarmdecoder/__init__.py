@@ -34,6 +34,7 @@ CONF_ZONES = "zones"
 CONF_RELAY_ADDR = "relayaddr"
 CONF_RELAY_CHAN = "relaychan"
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
+CONF_ALT_NIGHT_MODE = "alt_night_mode"
 
 DEFAULT_DEVICE_TYPE = "socket"
 DEFAULT_DEVICE_HOST = "localhost"
@@ -44,6 +45,7 @@ DEFAULT_DEVICE_BAUD = 115200
 DEFAULT_AUTO_BYPASS = False
 DEFAULT_PANEL_DISPLAY = False
 DEFAULT_CODE_ARM_REQUIRED = True
+DEFAULT_ALT_NIGHT_MODE = False
 
 DEFAULT_ZONE_TYPE = "opening"
 
@@ -56,6 +58,11 @@ SIGNAL_ZONE_FAULT = "alarmdecoder.zone_fault"
 SIGNAL_ZONE_RESTORE = "alarmdecoder.zone_restore"
 SIGNAL_RFX_MESSAGE = "alarmdecoder.rfx_message"
 SIGNAL_REL_MESSAGE = "alarmdecoder.rel_message"
+
+BRAND_ADEMCO = "ademco"
+BRAND_DSC = "dsc"
+
+ATTR_PANEL_BRAND = "panel_brand"
 
 DEVICE_SOCKET_SCHEMA = vol.Schema(
     {
@@ -110,6 +117,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_CODE_ARM_REQUIRED, default=DEFAULT_CODE_ARM_REQUIRED
                 ): cv.boolean,
+                vol.Optional(
+                    CONF_ALT_NIGHT_MODE, default=DEFAULT_ALT_NIGHT_MODE
+                ): cv.boolean,
                 vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
             }
         )
@@ -127,6 +137,7 @@ def setup(hass, config):
     display = conf[CONF_PANEL_DISPLAY]
     auto_bypass = conf[CONF_AUTO_BYPASS]
     code_arm_required = conf[CONF_CODE_ARM_REQUIRED]
+    alt_night_mode = conf[CONF_ALT_NIGHT_MODE]
     zones = conf.get(CONF_ZONES)
 
     device_type = device[CONF_DEVICE_TYPE]
@@ -150,11 +161,28 @@ def setup(hass, config):
         except NoDeviceError:
             _LOGGER.debug("Failed to connect.  Retrying in 5 seconds")
             hass.helpers.event.track_point_in_time(
-                open_connection, dt_util.utcnow() + timedelta(seconds=5)
+                hass, open_connection, dt_util.utcnow() + timedelta(seconds=5)
             )
             return
         _LOGGER.debug("Established a connection with the alarmdecoder")
         restart = True
+
+    def get_panel_brand():
+        """Return alarm panel manufacturer from AlarmDecoder config string."""
+        nonlocal restart
+        brands = {"A": BRAND_ADEMCO, "D": BRAND_DSC}
+
+        try:
+            config_str = controller.get_config_string()
+            config_dict = dict(x.split("=") for x in config_str.split("&"))
+            brand = config_dict["MODE"]
+            assert brand in brands.keys()
+            return brands[brand]
+        except (KeyError, AssertionError):
+            _LOGGER.warning(
+                "Could not determine AlarmDecoder alarm panel brand. Stopping AlarmDecoder."
+            )
+            controller.close()
 
     def handle_closed_connection(event):
         """Restart after unexpected loss of connection."""
@@ -209,13 +237,20 @@ def setup(hass, config):
 
     open_connection()
 
+    panel_brand = get_panel_brand()
+
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
 
     load_platform(
         hass,
         "alarm_control_panel",
         DOMAIN,
-        {CONF_AUTO_BYPASS: auto_bypass, CONF_CODE_ARM_REQUIRED: code_arm_required},
+        {
+            CONF_AUTO_BYPASS: auto_bypass,
+            CONF_CODE_ARM_REQUIRED: code_arm_required,
+            CONF_ALT_NIGHT_MODE: alt_night_mode,
+            ATTR_PANEL_BRAND: panel_brand,
+        },
         config,
     )
 
