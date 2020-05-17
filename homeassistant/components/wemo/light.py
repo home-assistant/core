@@ -152,20 +152,15 @@ class WemoLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        brightness = None
         xy_color = None
-        color_temp = None
-        transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
+
+        brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP)
         hs_color = kwargs.get(ATTR_HS_COLOR)
+        transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
 
         if hs_color is not None:
             xy_color = color_util.color_hs_to_xy(*hs_color)
-
-        if ATTR_COLOR_TEMP in kwargs:
-            color_temp = kwargs[ATTR_COLOR_TEMP]
-
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
 
         turn_on_kwargs = {
             "level": brightness,
