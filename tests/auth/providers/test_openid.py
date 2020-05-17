@@ -46,6 +46,7 @@ CONST_ID_TOKEN = {
     "iat": datetime(2020, 1, 1, tzinfo=timezone.utc).timestamp(),
     "name": "John Doe",
     "email": CONST_EMAIL,
+    "email_verified": True,
 }
 
 
