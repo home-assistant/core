@@ -229,7 +229,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input[CONF_DEVICE_CLASS],
                         session=async_get_clientsession(self.hass, False),
                     ):
-                        errors["base"] = "cant_connect"
+                        errors["base"] = "cannot_connect"
 
                     if not errors:
                         unique_id = await VizioAsync.get_unique_id(
@@ -323,7 +323,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="updated_entry")
 
-                return self.async_abort(reason="already_setup")
+                return self.async_abort(reason="already_configured_device")
 
         self._must_show_form = True
         # Store config key/value pairs that are not configurable in user step so they
@@ -354,7 +354,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 continue
 
             if _host_is_same(entry.data[CONF_HOST], discovery_info[CONF_HOST]):
-                return self.async_abort(reason="already_setup")
+                return self.async_abort(reason="already_configured_device")
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`
@@ -400,7 +400,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=_get_config_schema(self._data),
-                errors={"base": "cant_connect"},
+                errors={"base": "cannot_connect"},
             )
 
         # Complete pairing process if PIN has been provided
