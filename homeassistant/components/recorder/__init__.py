@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.pool import SingletonThreadPool, StaticPool
+from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -530,7 +530,7 @@ class Recorder(threading.Thread):
                 # https://www.sqlite.org/threadsafe.html
                 # In serialized mode, SQLite can be safely used by multiple threads with no restriction.
                 # The default mode is serialized.
-                kwargs["poolclass"] = SingletonThreadPool
+                kwargs["poolclass"] = StaticPool
                 kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["echo"] = False
         else:
