@@ -1,6 +1,4 @@
 """Support for Plugwise Circle(+) nodes."""
-import logging
-
 from homeassistant.components.switch import SwitchDevice
 
 from . import PlugwiseNodeEntity
@@ -12,8 +10,6 @@ from .const import (
     SWITCHES,
     TODAY_ENERGY_SENSOR_ID,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
