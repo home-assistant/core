@@ -528,6 +528,7 @@ class Recorder(threading.Thread):
 
         if self.db_url.startswith("sqlite://"):
             kwargs["poolclass"] = SingletonThreadPool
+            kwargs["connect_args"] = {"check_same_thread": False}
 
         if self.engine is not None:
             self.engine.dispose()
