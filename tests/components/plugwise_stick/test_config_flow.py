@@ -30,11 +30,11 @@ def com_port():
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch(
-    "homeassistant.components.plugwise_stick.config_flow.async_validate_connection",
+    "homeassistant.components.plugwise_stick.config_flow.validate_connection",
     return_value={},
 )
-async def test_user_flow(detect_mock, hass):
-    """Test user flow for USB-stick selection."""
+async def test_user_flow_select(hass):
+    """Test user flow when USB-stick is selected from list."""
 
     port = com_port()
     port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
@@ -43,21 +43,7 @@ async def test_user_flow(detect_mock, hass):
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: port_select},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == port.device
-    assert detect_mock.await_count == 1
-    assert detect_mock.await_args[0][0] == port.device
-
-
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-async def test_user_flow_manual(detect_mock, hass):
-    """Test user flow, manual."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: MANUAL_PORT},
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "manual_path"
+    assert result["data"] == {CONF_USB_PATH: "/dev/ttyUSB1234"}
 
 
 async def test_user_flow_show_form(hass):
@@ -70,15 +56,25 @@ async def test_user_flow_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_user_flow_existing_config_entry(hass):
-    """Test if config entry already exists."""
-    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+async def test_user_flow_manual(hass):
+    """Test user step form when manual path is selected."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: config_flow.CONF_MANUAL_PATH}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "manual_path"
+
+
+async def test_connection(hass):
+    """Test connections ."""
+    MockConfigEntry(domain=DOMAIN, data={CONF_USB_PATH: "/dev/null"}).add_to_hass(hass)
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: config_flow.CONF_MANUAL_PATH}
     )
-
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_USB_PATH: "cannot_connect"}
 
 
 def test_get_serial_by_id_no_dir():

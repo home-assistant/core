@@ -1,6 +1,7 @@
 """Config flow for the Plugwise_stick platform."""
 import logging
 import os
+from typing import Dict
 
 import plugwise
 from plugwise.exceptions import NetworkDown, PortError, StickInitError, TimeoutException
@@ -57,7 +58,10 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, port.device
             )
-            errors = await self.async_validate_connection(device_path)
+            if device_path in plugwise_stick_entries(self.hass):
+                errors["base"] = "connection_exists"
+            else:
+                errors = await validate_connection(self.hass, device_path)
             if not errors:
                 return self.async_create_entry(
                     title=device_path, data={CONF_USB_PATH: device_path}
@@ -79,12 +83,14 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, user_input.get(CONF_USB_PATH)
             )
-            errors = await self.async_validate_connection(device_path)
-
-            if not errors:
-                return self.async_create_entry(
-                    title=device_path, data={CONF_USB_PATH: device_path}
-                )
+            if device_path in plugwise_stick_entries(self.hass):
+                errors["base"] = "connection_exists"
+            else:
+                errors = await validate_connection(self.hass, device_path)
+                if not errors:
+                    return self.async_create_entry(
+                        title=device_path, data={CONF_USB_PATH: device_path}
+                    )
         return self.async_show_form(
             step_id="manual_path",
             data_schema=vol.Schema(
@@ -97,29 +103,27 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors if errors else {},
         )
 
-    async def async_validate_connection(self, device_path=None):
-        """Test if device_path is a real Plugwise USB-Stick."""
-        errors = {}
-        if device_path is None:
-            errors["base"] = "connection_failed"
-            return errors
-        if device_path in plugwise_stick_entries(self.hass):
-            errors["base"] = "connection_exists"
-            return errors
-        stick = await self.hass.async_add_executor_job(plugwise.stick, device_path)
-        try:
-            await self.hass.async_add_executor_job(stick.connect)
-            await self.hass.async_add_executor_job(stick.initialize_stick)
-            await self.hass.async_add_executor_job(stick.disconnect)
-        except PortError:
-            errors["base"] = "cannot_connect"
-        except StickInitError:
-            errors["base"] = "stick_init"
-        except NetworkDown:
-            errors["base"] = "network_down"
-        except TimeoutException:
-            errors["base"] = "network_timeout"
+
+async def validate_connection(self, device_path=None) -> Dict[str, str]:
+    """Test if device_path is a real Plugwise USB-Stick."""
+    errors = {}
+    if device_path is None:
+        errors["base"] = "connection_failed"
         return errors
+    stick = await self.hass.async_add_executor_job(plugwise.stick, device_path)
+    try:
+        await self.hass.async_add_executor_job(stick.connect)
+        await self.hass.async_add_executor_job(stick.initialize_stick)
+        await self.hass.async_add_executor_job(stick.disconnect)
+    except PortError:
+        errors["base"] = "cannot_connect"
+    except StickInitError:
+        errors["base"] = "stick_init"
+    except NetworkDown:
+        errors["base"] = "network_down"
+    except TimeoutException:
+        errors["base"] = "network_timeout"
+    return errors
 
 
 def get_serial_by_id(dev_path: str) -> str:
