@@ -43,9 +43,15 @@ SIGNIFICANT_DOMAINS = ("climate", "device_tracker", "thermostat", "water_heater"
 IGNORE_DOMAINS = ("zone", "scene")
 
 
-def _get_significant_states_with_session(
-    hass,
+def get_significant_states(hass, start_time, **kwargs):
+    """Wrap _get_significant_states with a sql session."""
+    with session_scope(hass=hass) as session:
+        return _get_significant_states(session, hass, start_time, **kwargs)
+
+
+def _get_significant_states(
     session,
+    hass,
     start_time,
     end_time=None,
     entity_ids=None,
@@ -89,11 +95,11 @@ def _get_significant_states_with_session(
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
-        _LOGGER.debug("_get_significant_states_with_session took %fs", elapsed)
+        _LOGGER.debug("get_significant_states took %fs", elapsed)
 
-    return _states_to_json_with_session(
-        hass,
+    return _states_to_json(
         session,
+        hass,
         states,
         start_time,
         entity_ids,
@@ -121,9 +127,7 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
 
         states = execute(query.order_by(States.last_updated))
 
-        return _states_to_json_with_session(
-            hass, session, states, start_time, entity_ids
-        )
+        return _states_to_json(session, hass, states, start_time, entity_ids)
 
 
 def get_last_state_changes(hass, number_of_states, entity_id):
@@ -143,9 +147,9 @@ def get_last_state_changes(hass, number_of_states, entity_id):
             query.order_by(States.last_updated.desc()).limit(number_of_states)
         )
 
-        return _states_to_json_with_session(
-            hass,
+        return _states_to_json(
             session,
+            hass,
             reversed(states),
             start_time,
             entity_ids,
@@ -172,6 +176,7 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
 def _get_states_with_session(
     session, utc_point_in_time, entity_ids=None, run=None, filters=None
 ):
+    """Return the states at a specific point in time."""
     if run is None:
         run = recorder.run_information_with_session(session, utc_point_in_time)
 
@@ -245,9 +250,9 @@ def _get_states_with_session(
     ]
 
 
-def _states_to_json_with_session(
-    hass,
+def _states_to_json(
     session,
+    hass,
     states,
     start_time,
     entity_ids,
@@ -394,9 +399,9 @@ class HistoryPeriodView(HomeAssistantView):
         timer_start = time.perf_counter()
 
         with session_scope(hass=hass) as session:
-            result = _get_significant_states_with_session(
-                hass,
+            result = _get_significant_states(
                 session,
+                hass,
                 start_time,
                 end_time,
                 entity_ids,
