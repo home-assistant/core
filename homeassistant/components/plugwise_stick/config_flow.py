@@ -110,11 +110,11 @@ async def validate_connection(self, device_path=None) -> Dict[str, str]:
     if device_path is None:
         errors["base"] = "connection_failed"
         return errors
-    stick = await self.hass.async_add_executor_job(plugwise.stick, device_path)
+    stick = await self.async_add_executor_job(plugwise.stick, device_path)
     try:
-        await self.hass.async_add_executor_job(stick.connect)
-        await self.hass.async_add_executor_job(stick.initialize_stick)
-        await self.hass.async_add_executor_job(stick.disconnect)
+        await self.async_add_executor_job(stick.connect)
+        await self.async_add_executor_job(stick.initialize_stick)
+        await self.async_add_executor_job(stick.disconnect)
     except PortError:
         errors["base"] = "cannot_connect"
     except StickInitError:
