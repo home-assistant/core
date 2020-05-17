@@ -52,11 +52,11 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_selection = user_input[CONF_USB_PATH]
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_manual_path()
-            else:
-                port = ports[self._list_of_ports.index(user_selection)]
-                device_path = await self.hass.async_add_executor_job(
-                    get_serial_by_id, port.device
-                )
+
+            port = ports[self._list_of_ports.index(user_selection)]
+            device_path = await self.hass.async_add_executor_job(
+                get_serial_by_id, port.device
+            )
             errors = await self.async_validate_connection(device_path)
             if not errors:
                 return self.async_create_entry(
