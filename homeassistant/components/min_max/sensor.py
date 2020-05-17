@@ -78,36 +78,36 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 def calc_min(sensor_values):
     """Calculate min value, honoring unknown states."""
     val = None
-    entity = None
-    for entity_id, sval in sensor_values:
-        if sval != STATE_UNKNOWN:
-            if val is None or val > sval:
-                entity, val = entity_id, sval
-    return entity, val
+    entity_id = None
+    for sensor_id, sensor_value in sensor_values:
+        if sensor_value != STATE_UNKNOWN:
+            if val is None or val > sensor_value:
+                entity_id, val = sensor_id, sensor_value
+    return entity_id, val
 
 
 def calc_max(sensor_values):
     """Calculate max value, honoring unknown states."""
     val = None
-    entity = None
-    for entity_id, sval in sensor_values:
-        if sval != STATE_UNKNOWN:
-            if val is None or val < sval:
-                entity, val = entity_id, sval
-    return entity, val
+    entity_id = None
+    for sensor_id, sensor_value in sensor_values:
+        if sensor_value != STATE_UNKNOWN:
+            if val is None or val < sensor_value:
+                entity_id, val = sensor_id, sensor_value
+    return entity_id, val
 
 
 def calc_mean(sensor_values, round_digits):
     """Calculate mean value, honoring unknown states."""
-    val = 0
+    sensor_value_sum = 0
     count = 0
-    for _, sval in sensor_values:
-        if sval != STATE_UNKNOWN:
-            val += sval
+    for _, sensor_value in sensor_values:
+        if sensor_value != STATE_UNKNOWN:
+            sensor_value_sum += sensor_value
             count += 1
     if count == 0:
         return None
-    return round(val / count, round_digits)
+    return round(sensor_value_sum / count, round_digits)
 
 
 class MinMaxSensor(Entity):
@@ -212,7 +212,9 @@ class MinMaxSensor(Entity):
     async def async_update(self):
         """Get the latest data and updates the states."""
         sensor_values = [
-            (k, self.states[k]) for k in self._entity_ids if k in self.states
+            (entity_id, self.states[entity_id])
+            for entity_id in self._entity_ids
+            if entity_id in self.states
         ]
         self.min_entity_id, self.min_value = calc_min(sensor_values)
         self.max_entity_id, self.max_value = calc_max(sensor_values)
