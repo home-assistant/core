@@ -7,10 +7,27 @@
             "cannot_connect": "Kan geen verbinding maken met ZHA apparaat."
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Radio type"
+                },
+                "description": "Kies een type Zigbee-radio",
+                "title": "Radio type"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "poort snelheid",
+                    "path": "Serieel apparaatpad"
+                },
+                "description": "Voer poortspecifieke instellingen in",
+                "title": "Instellingen"
+            },
             "user": {
                 "data": {
+                    "path": "Serieel apparaatpad",
                     "radio_type": "Radio Type"
                 },
+                "description": "Selecteer seri\u00eble poort voor Zigbee-radio",
                 "title": "ZHA"
             }
         }

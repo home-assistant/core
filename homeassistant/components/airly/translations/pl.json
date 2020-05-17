@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "[%key_id:common::config_flow::data::api_key%] Airly",
+                    "api_key": "Klucz API",
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
                     "name": "Nazwa integracji"

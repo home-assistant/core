@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "UPnP/IGD ja est\u00e0 configurat",
             "incomplete_device": "Ignorant el dispositiu incomplet UPnP",
+            "incomplete_discovery": "Descoberta incompleta",
             "no_devices_discovered": "No s'ha trobat cap UPnP/IGD",
             "no_devices_found": "No s'han trobat dispositius UPnP/IGD a la xarxa.",
             "no_sensors_or_port_mapping": "Activa, com a m\u00ednim, els sensors o l'assignaci\u00f3 de ports",

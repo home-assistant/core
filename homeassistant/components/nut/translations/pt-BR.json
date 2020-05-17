@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar, tente novamente",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Recursos"
+                },
+                "title": "Escolha os recursos para monitorar"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Recursos"
+                },
+                "title": "Escolha o no-break (UPS) para monitorar"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalo de escaneamento (segundos)"
+                }
+            }
+        }
+    }
+}

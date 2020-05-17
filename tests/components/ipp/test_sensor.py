@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.async_mock import patch
-from tests.components.ipp import init_integration
+from tests.components.ipp import init_integration, mock_connection
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -16,6 +16,8 @@ async def test_sensors(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the IPP sensors."""
+    mock_connection(aioclient_mock)
+
     entry = await init_integration(hass, aioclient_mock, skip_setup=True)
     registry = await hass.helpers.entity_registry.async_get_registry()
 

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "Xiaomi Miio \uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4."
         },
         "error": {
             "connect_error": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
@@ -14,7 +15,7 @@
                     "name": "\uac8c\uc774\ud2b8\uc6e8\uc774 \uc774\ub984",
                     "token": "API \ud1a0\ud070"
                 },
-                "description": "API \ud1a0\ud070\uc774 \ud544\uc694\ud569\ub2c8\ub2e4. https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token \uc548\ub0b4\ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694.",
+                "description": "API \ud1a0\ud070\uc774 \ud544\uc694\ud569\ub2c8\ub2e4. [\uc548\ub0b4](https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token) \ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694.",
                 "title": "Xiaomi \uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud558\uae30"
             },
             "user": {

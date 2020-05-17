@@ -30,5 +30,11 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "bottom_buttons": "Bot\u00f5es inferiores",
+            "top_buttons": "Bot\u00f5es superiores"
+        }
     }
 }

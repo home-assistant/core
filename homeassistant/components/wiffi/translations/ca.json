@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "El port del servidor que ja est\u00e0 en us.",
+            "start_server_failed": "Ha fallat l'inici del servidor."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port del servidor"
+                },
+                "title": "Configuraci\u00f3 del servidor TCP per a dispositius WIFFI"
+            }
+        }
+    }
+}

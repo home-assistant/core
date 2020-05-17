@@ -10,10 +10,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3 o adre\u00e7a IP",
+                    "host": "Amfitri\u00f3",
                     "passkey": "String Passkey",
-                    "port": "N\u00famero de port"
+                    "port": "Port"
                 },
+                "description": "Configura un dispositiu BSB-Lan per a integrar-lo amb Home Assistant.",
                 "title": "Connexi\u00f3 amb dispositiu BSB-Lan"
             }
         }

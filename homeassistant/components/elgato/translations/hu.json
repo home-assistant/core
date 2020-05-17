@@ -7,8 +7,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Hosztn\u00e9v vagy IP c\u00edm",
-                    "port": "Portsz\u00e1m"
+                    "host": "Hoszt",
+                    "port": "Port"
                 }
             }
         }

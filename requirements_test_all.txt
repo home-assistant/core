@@ -94,6 +94,9 @@ aiohue==2.1.0
 # homeassistant.components.notion
 aionotion==1.1.0
 
+# homeassistant.components.acmeda
+aiopulse==0.4.0
+
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
 
@@ -131,7 +134,7 @@ apprise==0.8.5
 aprslib==0.6.46
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.4.4
+arcam-fmj==0.4.6
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
@@ -278,6 +281,9 @@ gios==0.1.1
 # homeassistant.components.glances
 glances_api==0.2.0
 
+# homeassistant.components.gogogate2
+gogogate2-api==1.0.3
+
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
@@ -312,7 +318,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200514.0
+home-assistant-frontend==20200515.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -328,7 +334,7 @@ homematicip==0.10.17
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.4.11
+huawei-lte-api==1.4.12
 
 # homeassistant.components.iaqualink
 iaqualink==0.3.1
@@ -527,7 +533,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==5.1.0
+pychromecast==5.2.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -573,7 +579,7 @@ pyhaversion==3.3.0
 pyheos==0.6.0
 
 # homeassistant.components.homematic
-pyhomematic==0.1.66
+pyhomematic==0.1.67
 
 # homeassistant.components.icloud
 pyicloud==0.9.7
@@ -681,7 +687,7 @@ pysmartthings==0.7.1
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.28
+pysonos==0.0.29
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -704,14 +710,14 @@ python-miio==0.5.0.1
 # homeassistant.components.nest
 python-nest==4.1.0
 
-# homeassistant.components.zwave_mqtt
+# homeassistant.components.ozw
 python-openzwave-mqtt==1.0.1
 
 # homeassistant.components.songpal
 python-songpal==0.12
 
 # homeassistant.components.synology_dsm
-python-synology==0.8.0
+python-synology==0.8.1
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -765,7 +771,7 @@ ring_doorbell==0.6.0
 rokuecp==0.4.0
 
 # homeassistant.components.roomba
-roombapy==1.5.3
+roombapy==1.6.1
 
 # homeassistant.components.yamaha
 rxv==0.6.0
@@ -918,4 +924,4 @@ zigpy-xbee==0.12.1
 zigpy-zigate==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.20.3
+zigpy==0.20.4

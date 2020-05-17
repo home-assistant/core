@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
             "invalid_auth": "[%key::common::config_flow::error::invalid_auth%]",
+            "invalid_host": "L'entrada de l'amfitri\u00f3 no t\u00e9 el fromat d'URL complet, ex: http://192.168.10.100:80",
             "unknown": "Error inesperat"
         },
         "flow_title": "Dispositius universals ISY994 {name} ({host})",
@@ -17,6 +18,7 @@
                     "tls": "Versi\u00f3 TLS del controlador ISY.",
                     "username": "[%key::common::config_flow::data::username%]"
                 },
+                "description": "L'entrada de l'amfitri\u00f3 ha de tenir el format d'URL complet, ex: http://192.168.10.100:80",
                 "title": "Connexi\u00f3 amb ISY994"
             }
         }

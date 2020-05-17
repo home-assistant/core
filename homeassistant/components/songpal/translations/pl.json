@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
             "not_songpal_device": "To nie jest urz\u0105dzenie Songpal"
         },
         "error": {
-            "cannot_connect": "[%key_id:common::config_flow::error::cannot_connect%]",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
             "connection": "B\u0142\u0105d po\u0142\u0105czenia: sprawd\u017a punkt ko\u0144cowy"
         },
         "flow_title": "Sony Songpal {name} ({host})",

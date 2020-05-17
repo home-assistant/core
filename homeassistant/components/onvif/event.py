@@ -143,19 +143,22 @@ class EventManager:
     async def async_parse_messages(self, messages) -> None:
         """Parse notification message."""
         for msg in messages:
-            # LOGGER.debug("ONVIF Event Message %s: %s", self.device.host, pformat(msg))
             topic = msg.Topic._value_1
             parser = PARSERS.get(topic)
             if not parser:
                 if topic not in UNHANDLED_TOPICS:
-                    LOGGER.info("No registered handler for event: %s", msg)
+                    LOGGER.info(
+                        "No registered handler for event from %s: %s",
+                        self.unique_id,
+                        msg,
+                    )
                     UNHANDLED_TOPICS.add(topic)
                 continue
 
             event = await parser(self.unique_id, msg)
 
             if not event:
-                LOGGER.warning("Unable to parse event: %s", msg)
+                LOGGER.warning("Unable to parse event from %s: %s", self.unique_id, msg)
                 return
 
             self._events[event.uid] = event

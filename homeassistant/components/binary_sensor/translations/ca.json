@@ -91,8 +91,8 @@
     },
     "state": {
         "_": {
-            "off": "Desactivat",
-            "on": "Activat"
+            "off": "OFF",
+            "on": "ON"
         },
         "battery": {
             "off": "Normal",

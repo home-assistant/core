@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]"
+            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]",
+            "already_in_progress": "El flux de dades de configuraci\u00f3 pel dispositiu Xiaomi Miio ja est\u00e0 en curs."
         },
         "error": {
             "connect_error": "[%key::common::config_flow::error::cannot_connect%]",

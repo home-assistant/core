@@ -27,7 +27,7 @@
                 "data": {
                     "path": "\u015acie\u017cka urz\u0105dzenia szeregowego",
                     "radio_type": "Typ radia",
-                    "usb_path": "[%key_id:common::config_flow::data::usb_path%]"
+                    "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
                 },
                 "description": "Wyb\u00f3r portu szeregowego dla radia Zigbee",
                 "title": "ZHA"
