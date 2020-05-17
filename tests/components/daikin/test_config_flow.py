@@ -87,19 +87,6 @@ async def test_import(hass, mock_daikin):
     assert result["data"][KEY_MAC] == MAC
 
 
-async def test_discovery(hass, mock_daikin):
-    """Test discovery step."""
-    result = await hass.config_entries.flow.async_init(
-        "daikin",
-        context={"source": SOURCE_DISCOVERY},
-        data={KEY_IP: HOST, KEY_MAC: MAC},
-    )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][KEY_MAC] == MAC
-
-
 @pytest.mark.parametrize(
     "s_effect,reason",
     [
@@ -121,18 +108,25 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
     assert result["step_id"] == "user"
 
 
-async def test_zeroconf(hass, mock_daikin):
-    """Test zeroconf step."""
+@pytest.mark.parametrize(
+    "source, data, unique_id",
+    [
+        (SOURCE_DISCOVERY, {KEY_IP: HOST, KEY_MAC: MAC}, MAC),
+        (SOURCE_ZEROCONF, {CONF_HOST: HOST}, HOST),
+    ],
+)
+async def test_discovery_zeroconf(hass, mock_daikin, source, data, unique_id):
+    """Test discovery/zeroconf step."""
     result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": SOURCE_ZEROCONF}, data={},
+        "daikin", context={"source": source}, data=data,
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    MockConfigEntry(domain="daikin", unique_id=unique_id).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": SOURCE_ZEROCONF}, data={CONF_HOST: HOST},
+        "daikin", context={"source": source}, data=data,
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][KEY_MAC] == MAC
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_in_progress"
