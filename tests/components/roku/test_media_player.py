@@ -147,6 +147,7 @@ async def test_supported_features(
         | SUPPORT_SELECT_SOURCE
         | SUPPORT_PAUSE
         | SUPPORT_PLAY
+        | SUPPORT_PAUSE
         | SUPPORT_PLAY_MEDIA
         | SUPPORT_TURN_ON
         | SUPPORT_TURN_OFF
@@ -176,6 +177,7 @@ async def test_tv_supported_features(
         | SUPPORT_SELECT_SOURCE
         | SUPPORT_PAUSE
         | SUPPORT_PLAY
+        | SUPPORT_PAUSE
         | SUPPORT_PLAY_MEDIA
         | SUPPORT_TURN_ON
         | SUPPORT_TURN_OFF
