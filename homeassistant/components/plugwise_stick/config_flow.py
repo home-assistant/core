@@ -45,7 +45,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_selection = user_input[CONF_USB_PATH]
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_manual_path()
-
             port = ports[list_of_ports.index(user_selection)]
             device_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, port.device
@@ -58,7 +57,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=device_path, data={CONF_USB_PATH: device_path}
                 )
-
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
