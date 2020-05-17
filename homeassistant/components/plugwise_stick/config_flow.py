@@ -3,12 +3,7 @@ import logging
 import os
 
 import plugwise
-from plugwise.exceptions import (
-    NetworkDown,
-    PortError,
-    StickInitError,
-    TimeoutException,
-)
+from plugwise.exceptions import NetworkDown, PortError, StickInitError, TimeoutException
 import serial.tools.list_ports
 import voluptuous as vol
 

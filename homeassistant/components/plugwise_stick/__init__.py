@@ -3,15 +3,10 @@ import asyncio
 import logging
 
 import plugwise
-from plugwise.exceptions import (
-    NetworkDown,
-    PortError,
-    StickInitError,
-    TimeoutException,
-)
+from plugwise.exceptions import NetworkDown, PortError, StickInitError, TimeoutException
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 
