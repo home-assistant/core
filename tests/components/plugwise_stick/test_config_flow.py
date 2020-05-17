@@ -60,7 +60,9 @@ async def test_user_flow_manual(hass):
     """Test user step form when manual path is selected."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: config_flow.CONF_MANUAL_PATH}
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data={CONF_USB_PATH: config_flow.CONF_MANUAL_PATH},
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "manual_path"
@@ -71,7 +73,9 @@ async def test_connection(hass):
     MockConfigEntry(domain=DOMAIN, data={CONF_USB_PATH: "/dev/null"}).add_to_hass(hass)
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: config_flow.CONF_MANUAL_PATH}
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data={CONF_USB_PATH: config_flow.CONF_MANUAL_PATH},
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {CONF_USB_PATH: "cannot_connect"}
