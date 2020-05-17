@@ -33,7 +33,7 @@ def com_port():
     "homeassistant.components.plugwise_stick.config_flow.validate_connection",
     return_value={},
 )
-async def test_user_flow_select(hass):
+async def test_user_flow_select(detect_mock, hass):
     """Test user flow when USB-stick is selected from list."""
 
     port = com_port()
@@ -44,6 +44,8 @@ async def test_user_flow_select(hass):
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {CONF_USB_PATH: "/dev/ttyUSB1234"}
+    assert detect_mock.await_count == 1
+    assert detect_mock.await_args[0][0] == port.device
 
 
 async def test_user_flow_show_form(hass):
@@ -68,17 +70,28 @@ async def test_user_flow_manual(hass):
     assert result["step_id"] == "manual_path"
 
 
-async def test_connection(hass):
-    """Test connections ."""
+async def test_invalid_connection(hass):
+    """Test invalid connection."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data={CONF_USB_PATH: "/dev/null"},
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_USB_PATH: "cannot_connect"}
+
+
+async def test_duplicate_connection(hass):
+    """Test invalid connection."""
     MockConfigEntry(domain=DOMAIN, data={CONF_USB_PATH: "/dev/null"}).add_to_hass(hass)
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
-        data={CONF_USB_PATH: config_flow.CONF_MANUAL_PATH},
+        data={CONF_USB_PATH: "/dev/null"},
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_USB_PATH: "cannot_connect"}
+    assert result["errors"] == {CONF_USB_PATH: "connection_exists"}
 
 
 def test_get_serial_by_id_no_dir():
