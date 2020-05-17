@@ -31,50 +31,47 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             and user_input["id"] in self.discovered_hubs
         ):
             # pylint: disable=unsubscriptable-object
-            self.hub = self.discovered_hubs[user_input["id"]]
-            return await self.async_step_create()
+            return await self.async_create(self.discovered_hubs[user_input["id"]])
+
+        # Already configured hosts
+        already_configured = {
+            entry.unique_id for entry in self._async_current_entries()
+        }
 
         hubs = []
         try:
             with async_timeout.timeout(5):
                 async for hub in aiopulse.Hub.discover():
-                    hubs.append(hub)
+                    if hub.id not in already_configured:
+                        hubs.append(hub)
         except asyncio.TimeoutError:
-            if len(hubs) == 0:
-                return self.async_abort(reason="discover_timeout")
+            pass
 
-        if not hubs:
-            return self.async_abort(reason="no_hubs")
-
-        # Find already configured hosts
-        already_configured = {
-            entry.data["host"] for entry in self._async_current_entries()
-        }
-        hubs = [hub for hub in hubs if hub.host not in already_configured]
-
-        if not hubs:
+        if len(hubs) == 0:
             return self.async_abort(reason="all_configured")
 
         if len(hubs) == 1:
-            self.hub = hubs[0]
-            return await self.async_step_create()
+            return await self.async_create(hubs[0])
 
         self.discovered_hubs = {hub.id: hub for hub in hubs}
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required("id"): vol.In({hub.id: hub.host for hub in hubs})}
+                {
+                    vol.Required("id"): vol.In(
+                        {hub.id: f"{hub.id} {hub.host}" for hub in hubs}
+                    )
+                }
             ),
         )
 
-    async def async_step_create(self, user_input=None):
+    async def async_create(self, hub=None):
         """Create the Acmeda Hub entry."""
-        hub = self.hub
         assert hub is not None
 
-        await self.async_set_unique_id(self.hub.id, raise_on_progress=False)
+        self.hub = hub
 
-        title = f"{hub.id} ({hub.host})"
+        await self.async_set_unique_id(hub.id, raise_on_progress=False)
 
-        return self.async_create_entry(title=title, data={"host": hub.host})
+        return self.async_create_entry(title=hub.id, data={"host": hub.host})
