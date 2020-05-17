@@ -121,21 +121,22 @@ class TPLinkSmartBulb(LightEntity):
 
         self._is_setting_light_state = True
         try:
-            if brightness is not None:
+            if brightness is not None and self.supported_features & SUPPORT_BRIGHTNESS:
                 await self.smartbulb.set_brightness(brightness)
-            if color_temp is not None:
+            if color_temp is not None and self.supported_features & SUPPORT_COLOR_TEMP:
                 await self.smartbulb.set_color_temp(color_temp)
-            if hsv is not None:
+            if hsv is not None and self.supported_features & SUPPORT_COLOR:
                 await self.smartbulb.set_hsv(*hsv, brightness)
 
             await self.smartbulb.turn_on()
             # all actions on bulbs will cause an automatic update
             await self.async_update_ha_state(force_refresh=False)
             self._is_available = True
-            self._is_setting_light_state = False
             return
         except (SmartDeviceException, OSError) as ex:
             _LOGGER.debug("Got error while setting the state: %s", ex)
+        finally:
+            self._is_setting_light_state = False
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
