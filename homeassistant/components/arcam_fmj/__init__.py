@@ -132,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.Confi
         "config": config,
     }
 
-    task = asyncio.ensure_future(_run_client(hass, client, DEFAULT_SCAN_INTERVAL))
+    task = asyncio.create_task(_run_client(hass, client, DEFAULT_SCAN_INTERVAL))
     tasks[entry.entry_id] = task
 
     hass.async_create_task(
@@ -147,8 +147,8 @@ async def async_unload_entry(hass, entry):
     await hass.config_entries.async_forward_entry_unload(entry, "media_player")
 
     task = hass.data[DOMAIN_DATA_TASKS].pop(entry.entry_id)
-    if task:
-        await _await_cancel(task)
+    await _await_cancel(task)
+
     hass.data[DOMAIN_DATA_ENTRIES].pop(entry.entry_id)
 
     return True
