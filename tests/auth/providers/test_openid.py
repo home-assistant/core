@@ -38,7 +38,7 @@ CONST_NONCE = "dummy_nonce"
 CONST_EMAIL = "john.doe@openid.test"
 
 CONST_ID_TOKEN = {
-    "iss": CONST_DESCRIPTION_URI,
+    "iss": "https://openid.test/",
     "sub": "248289761001",
     "aud": CONST_CLIENT_ID,
     "nonce": CONST_NONCE,
