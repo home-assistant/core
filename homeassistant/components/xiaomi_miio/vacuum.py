@@ -40,6 +40,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     DOMAIN,
     SERVICE_CLEAN_ZONE,
+    SERVICE_GOTO,
     SERVICE_MOVE_REMOTE_CONTROL,
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL,
@@ -127,6 +128,13 @@ SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend(
     }
 )
 
+SERVICE_SCHEMA_GOTO = VACUUM_SERVICE_SCHEMA.extend(
+    {
+        vol.Required("x_coord"): vol.Coerce(int),
+        vol.Required("y_coord"): vol.Coerce(int),
+    }
+)
+
 SERVICE_TO_METHOD = {
     SERVICE_START_REMOTE_CONTROL: {"method": "async_remote_control_start"},
     SERVICE_STOP_REMOTE_CONTROL: {"method": "async_remote_control_stop"},
@@ -142,6 +150,7 @@ SERVICE_TO_METHOD = {
         "method": "async_clean_zone",
         "schema": SERVICE_SCHEMA_CLEAN_ZONE,
     },
+    SERVICE_GOTO: {"method": "async_goto", "schema": SERVICE_SCHEMA_GOTO},
 }
 
 SUPPORT_XIAOMI = (
@@ -407,6 +416,7 @@ class MiroboVacuum(StateVacuumEntity):
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send raw command."""
+        _LOGGER.debug("Raw command")
         await self._try_command(
             "Unable to send command to the vacuum: %s",
             self._vacuum.raw_command,
@@ -448,6 +458,15 @@ class MiroboVacuum(StateVacuumEntity):
             velocity=velocity,
             rotation=rotation,
             duration=duration,
+        )
+
+    async def async_goto(self, x_coord: int = 25500, y_coord: int = 25500):
+        """Goto the specified coordinates."""
+        await self._try_command(
+            "Unable to remote control the vacuum: %s",
+            self._vacuum.goto,
+            x_coord=x_coord,
+            y_coord=y_coord,
         )
 
     def update(self):

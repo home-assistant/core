@@ -37,6 +37,7 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     CONF_TOKEN,
     DOMAIN as XIAOMI_DOMAIN,
     SERVICE_CLEAN_ZONE,
+    SERVICE_GOTO,
     SERVICE_MOVE_REMOTE_CONTROL,
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL,
@@ -386,6 +387,16 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     )
     mock_mirobo_is_on.zoned_clean.assert_has_calls(
         [mock.call([[123, 123, 123, 123, 2]])], any_order=True
+    )
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
+    mock_mirobo_is_on.reset_mock()
+
+    coordinates = {"x_coord": 25500, "y_coord": 25500}
+    await hass.services.async_call(
+        XIAOMI_DOMAIN, SERVICE_GOTO, coordinates, blocking=True
+    )
+    mock_mirobo_is_on.goto.assert_has_calls(
+        [mock.call(x_coord=25500, y_coord=25500)], any_order=True
     )
     mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_on.reset_mock()
