@@ -1,5 +1,4 @@
 """Config flow for the Plugwise_stick platform."""
-import logging
 import os
 from typing import Dict
 
@@ -13,7 +12,6 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_USB_PATH, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 CONF_MANUAL_PATH = "Enter Manually"
 CONF_DEFAULT_NAME = "Plugwise USB-stick"
 
