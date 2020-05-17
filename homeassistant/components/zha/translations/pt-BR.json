@@ -7,7 +7,17 @@
             "cannot_connect": "N\u00e3o \u00e9 poss\u00edvel conectar-se ao dispositivo ZHA."
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Tipo de r\u00e1dio"
+                },
+                "description": "Escolha o tipo de seu r\u00e1dio Zigbee",
+                "title": "Tipo de r\u00e1dio"
+            },
             "port_config": {
+                "data": {
+                    "baudrate": "velocidade da porta"
+                },
                 "title": "Configura\u00e7\u00f5es"
             },
             "user": {

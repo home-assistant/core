@@ -3,11 +3,22 @@
         "abort": {
             "non-interactive": "Importa\u00e7\u00e3o n\u00e3o interativa"
         },
+        "error": {
+            "ssl_error": "Problema no certificado SSL"
+        },
         "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
-                    "ssl": "Usar SSL"
+                    "ssl": "Usar SSL",
+                    "token": "Token (Opcional)",
+                    "verify_ssl": "Verifique o certificado SSL"
+                },
+                "title": "Configura\u00e7\u00e3o manual do Plex"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "M\u00e9todo de configura\u00e7\u00e3o"
                 }
             }
         }

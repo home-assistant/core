@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Hosztn\u00e9v vagy IP c\u00edm"
+                    "host": "Hoszt"
                 },
                 "description": "\u00c1ll\u00edtsd be a WLED-et a Home Assistant-ba val\u00f3 integr\u00e1l\u00e1shoz.",
                 "title": "Csatlakoztasd a WLED-et"

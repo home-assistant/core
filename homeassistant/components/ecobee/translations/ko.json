@@ -9,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "https://www.ecobee.com/consumerportal/index.html \uc5d0\uc11c PIN \ucf54\ub4dc\ub97c \uc0ac\uc6a9\ud558\uc5ec \uc774 \uc571\uc744 \uc2b9\uc778\ud574\uc8fc\uc138\uc694:\n\n {pin} \n \n \uadf8\ub7f0 \ub2e4\uc74c Submit \uc744 \ub20c\ub7ec\uc8fc\uc138\uc694.",
+                "description": "https://www.ecobee.com/consumerportal/index.html \uc5d0\uc11c PIN \ucf54\ub4dc\ub97c \uc0ac\uc6a9\ud558\uc5ec \uc774 \uc571\uc744 \uc2b9\uc778\ud574\uc8fc\uc138\uc694:\n\n {pin} \n \n \uadf8\ub7f0 \ub2e4\uc74c \ud655\uc778\uc744 \ud074\ub9ad\ud574\uc8fc\uc138\uc694.",
                 "title": "ecobee.com \uc5d0\uc11c \uc571 \uc2b9\uc778\ud558\uae30"
             },
             "user": {

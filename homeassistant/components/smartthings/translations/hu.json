@@ -8,6 +8,11 @@
             "webhook_error": "A SmartThings nem tudta \u00e9rv\u00e9nyes\u00edteni a `base_url`-ben konfigur\u00e1lt v\u00e9gpontot. K\u00e9rlek, tekintsd \u00e1t az \u00f6sszetev\u0151 k\u00f6vetelm\u00e9nyeit."
         },
         "step": {
+            "pat": {
+                "data": {
+                    "access_token": "Hozz\u00e1f\u00e9r\u00e9si token"
+                }
+            },
             "user": {
                 "description": "K\u00e9rlek add meg a SmartThings [Personal Access Tokent]({token_url}), amit az [instrukci\u00f3k] ({component_url}) alapj\u00e1n hozt\u00e1l l\u00e9tre.",
                 "title": "Adja meg a szem\u00e9lyes hozz\u00e1f\u00e9r\u00e9si Tokent"
