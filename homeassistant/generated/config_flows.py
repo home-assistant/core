@@ -7,6 +7,7 @@ To update, run python3 -m script.hassfest
 
 FLOWS = [
     "abode",
+    "acmeda",
     "adguard",
     "agent_dvr",
     "airly",
