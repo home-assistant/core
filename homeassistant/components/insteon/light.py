@@ -3,11 +3,13 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    DOMAIN,
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
 
 from .insteon_entity import InsteonEntity
+from .utils import async_add_insteon_entities
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,31 +18,18 @@ MAX_BRIGHTNESS = 255
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Insteon component."""
-    insteon_modem = hass.data["insteon"].get("modem")
-
-    address = discovery_info["address"]
-    device = insteon_modem.devices[address]
-    state_key = discovery_info["state_key"]
-
-    _LOGGER.debug(
-        "Adding device %s entity %s to Light platform",
-        device.address.hex,
-        device.states[state_key].name,
+    async_add_insteon_entities(
+        hass, DOMAIN, InsteonDimmerEntity, async_add_entities, discovery_info
     )
 
-    new_entity = InsteonDimmerDevice(device, state_key)
 
-    async_add_entities([new_entity])
-
-
-class InsteonDimmerDevice(InsteonEntity, LightEntity):
-    """A Class for an Insteon device."""
+class InsteonDimmerEntity(InsteonEntity, LightEntity):
+    """A Class for an Insteon light entity."""
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        onlevel = self._insteon_device_state.value
-        return int(onlevel)
+        return self._insteon_device_group.value
 
     @property
     def is_on(self):
@@ -53,13 +42,15 @@ class InsteonDimmerDevice(InsteonEntity, LightEntity):
         return SUPPORT_BRIGHTNESS
 
     async def async_turn_on(self, **kwargs):
-        """Turn device on."""
+        """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
-            self._insteon_device_state.set_level(brightness)
+            await self._insteon_device.async_on(
+                on_level=brightness, group=self._insteon_device_group.group
+            )
         else:
-            self._insteon_device_state.on()
+            await self._insteon_device.async_on(group=self._insteon_device_group.group)
 
     async def async_turn_off(self, **kwargs):
-        """Turn device off."""
-        self._insteon_device_state.off()
+        """Turn light off."""
+        await self._insteon_device.async_off(self._insteon_device_group.group)

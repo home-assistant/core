@@ -787,9 +787,6 @@ incomfort-client==0.4.0
 # homeassistant.components.influxdb
 influxdb==5.2.3
 
-# homeassistant.components.insteon
-insteonplm==0.16.8
-
 # homeassistant.components.iperf3
 iperf3==0.1.11
 
@@ -1376,6 +1373,9 @@ pyialarm==0.3
 
 # homeassistant.components.icloud
 pyicloud==0.9.7
+
+# homeassistant.components.insteon
+pyinsteon==1.0.0
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.4
