@@ -131,8 +131,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
             supported_features = entry.supported_features
 
         # Add actions for each entity that belongs to this integration
-        for action in ACTION_TYPES:
-            action_config = ACTION_TYPES[action]
+        for action, action_config in ACTION_TYPES.items():
             if any(
                 (x & supported_features) == x
                 for x in action_config[CONF_SUPPORTED_FEATURES]
