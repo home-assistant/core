@@ -532,7 +532,6 @@ class Recorder(threading.Thread):
                 # The default mode is serialized.
                 kwargs["connect_args"] = {"check_same_thread": False}
                 kwargs["poolclass"] = QueuePool
-                kwargs["pool_reset_on_return"] = None
             kwargs["echo"] = False
         else:
             kwargs["echo"] = False
