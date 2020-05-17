@@ -43,10 +43,10 @@ SIGNIFICANT_DOMAINS = ("climate", "device_tracker", "thermostat", "water_heater"
 IGNORE_DOMAINS = ("zone", "scene")
 
 
-def get_significant_states(hass, start_time, **kwargs):
+def get_significant_states(hass, *args, **kwargs):
     """Wrap _get_significant_states with a sql session."""
     with session_scope(hass=hass) as session:
-        return _get_significant_states(session, hass, start_time, **kwargs)
+        return _get_significant_states(session, hass, *args, **kwargs)
 
 
 def _get_significant_states(
