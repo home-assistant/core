@@ -73,9 +73,7 @@ async def test_user_flow_manual(hass):
 async def test_invalid_connection(hass):
     """Test invalid connection."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data={CONF_USB_PATH: "/dev/null"},
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {CONF_USB_PATH: "cannot_connect"}
@@ -86,9 +84,7 @@ async def test_duplicate_connection(hass):
     MockConfigEntry(domain=DOMAIN, data={CONF_USB_PATH: "/dev/null"}).add_to_hass(hass)
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data={CONF_USB_PATH: "/dev/null"},
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {CONF_USB_PATH: "connection_exists"}
