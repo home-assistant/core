@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
+from pywemo.ouimeaux_device.api.service import ActionException
 import voluptuous as vol
 
 from homeassistant.components.fan import (
@@ -128,7 +129,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Register service(s)
     hass.services.async_register(
-        WEMO_DOMAIN, SERVICE_SET_HUMIDITY, service_handle, schema=SET_HUMIDITY_SCHEMA
+        WEMO_DOMAIN, SERVICE_SET_HUMIDITY, service_handle, schema=SET_HUMIDITY_SCHEMA,
     )
 
     hass.services.async_register(
@@ -198,9 +199,9 @@ class WemoHumidifier(FanEntity):
     def device_info(self):
         """Return the device info."""
         return {
-            "name": self.wemo.name,
-            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
-            "model": self.wemo.model_name,
+            "name": self._name,
+            "identifiers": {(WEMO_DOMAIN, self._serialnumber)},
+            "model": self._model_name,
             "manufacturer": "Belkin",
         }
 
@@ -287,38 +288,67 @@ class WemoHumidifier(FanEntity):
             if not self._available:
                 _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
-        except AttributeError as err:
+        except (AttributeError, ActionException) as err:
             _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
+            self.wemo.reconnect_with_device()
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the switch on."""
         if speed is None:
-            self.wemo.set_state(self._last_fan_on_mode)
+            try:
+                self.wemo.set_state(self._last_fan_on_mode)
+            except ActionException as err:
+                _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
+                self._available = False
         else:
             self.set_speed(speed)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
-        self.wemo.set_state(WEMO_FAN_OFF)
+        try:
+            self.wemo.set_state(WEMO_FAN_OFF)
+        except ActionException as err:
+            _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
+            self._available = False
 
     def set_speed(self, speed: str) -> None:
         """Set the fan_mode of the Humidifier."""
-        self.wemo.set_state(HASS_FAN_SPEED_TO_WEMO.get(speed))
+        try:
+            self.wemo.set_state(HASS_FAN_SPEED_TO_WEMO.get(speed))
+        except ActionException as err:
+            _LOGGER.warning(
+                "Error while setting speed of device %s (%s)", self.name, err
+            )
+            self._available = False
 
     def set_humidity(self, humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
         if humidity < 50:
-            self.wemo.set_humidity(WEMO_HUMIDITY_45)
+            target_humidity = WEMO_HUMIDITY_45
         elif 50 <= humidity < 55:
-            self.wemo.set_humidity(WEMO_HUMIDITY_50)
+            target_humidity = WEMO_HUMIDITY_50
         elif 55 <= humidity < 60:
-            self.wemo.set_humidity(WEMO_HUMIDITY_55)
+            target_humidity = WEMO_HUMIDITY_55
         elif 60 <= humidity < 100:
-            self.wemo.set_humidity(WEMO_HUMIDITY_60)
+            target_humidity = WEMO_HUMIDITY_60
         elif humidity >= 100:
-            self.wemo.set_humidity(WEMO_HUMIDITY_100)
+            target_humidity = WEMO_HUMIDITY_100
+
+        try:
+            self.wemo.set_humidity(target_humidity)
+        except ActionException as err:
+            _LOGGER.warning(
+                "Error while setting humidity of device: %s (%s)", self.name, err
+            )
+            self._available = False
 
     def reset_filter_life(self) -> None:
         """Reset the filter life to 100%."""
-        self.wemo.reset_filter_life()
+        try:
+            self.wemo.reset_filter_life()
+        except ActionException as err:
+            _LOGGER.warning(
+                "Error while resetting filter life on device: %s (%s)", self.name, err
+            )
+            self._available = False

@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "not_forked_daapd": "Apparat ass kee forked-daapd server."
         },
         "error": {
             "unknown_error": "Onbekannten Feeler.",
+            "websocket_not_enabled": "forked-daapd server websocket net aktiv.",
             "wrong_host_or_port": "Feeler beim verbannen, iwwerpr\u00e9if w.e.g d'Adresse a Port.",
             "wrong_password": "Ong\u00ebltegt Passwuert."
         },
+        "flow_title": "forked-daapd server: {name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -15,7 +18,8 @@
                     "name": "Numm",
                     "password": "API Passwuert (eidel loosse fir kee Passwuert)",
                     "port": "API Port"
-                }
+                },
+                "title": "forked-daapd Apparat ariichten"
             }
         }
     }

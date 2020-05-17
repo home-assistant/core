@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El servei ja est\u00e0 configurat"
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "duplicated_name": "El nom ja existeix"
         },
         "error": {
             "cannot_connect": "No s'ha pogut connectar"

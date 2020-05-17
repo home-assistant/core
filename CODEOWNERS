@@ -14,6 +14,7 @@ homeassistant/scripts/check_config.py @kellerza
 
 # Integrations
 homeassistant/components/abode/* @shred86
+homeassistant/components/acmeda/* @atmurray
 homeassistant/components/adguard/* @frenck
 homeassistant/components/agent_dvr/* @ispysoftware
 homeassistant/components/airly/* @bieniu
@@ -148,6 +149,7 @@ homeassistant/components/gios/* @bieniu
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/gntp/* @robbiet480
+homeassistant/components/gogogate2/* @vangorra
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
@@ -192,6 +194,7 @@ homeassistant/components/input_datetime/* @home-assistant/core
 homeassistant/components/input_number/* @home-assistant/core
 homeassistant/components/input_select/* @home-assistant/core
 homeassistant/components/input_text/* @home-assistant/core
+homeassistant/components/insteon/* @teharris1
 homeassistant/components/integration/* @dgomes
 homeassistant/components/intent/* @home-assistant/core
 homeassistant/components/intesishome/* @jnimmo

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "error": {
+            "invalid_login": "Usu\u00e1rio ou senha inv\u00e1lidos"
+        },
+        "step": {
+            "user": {
+                "title": "Digite o nome de usu\u00e1rio e a senha"
+            }
+        }
+    }
+}

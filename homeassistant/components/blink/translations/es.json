@@ -12,13 +12,15 @@
                 "data": {
                     "2fa": "C\u00f3digo de dos factores"
                 },
+                "description": "Introduce el pin enviado a tu correo electr\u00f3nico. Si el correo electr\u00f3nico no contiene un pin, d\u00e9jalo en blanco",
                 "title": "Autenticaci\u00f3n de dos factores"
             },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
-                }
+                },
+                "title": "Iniciar sesi\u00f3n con cuenta Blink"
             }
         }
     }

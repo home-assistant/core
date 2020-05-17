@@ -13,20 +13,13 @@ from homeassistant.components.cover import (
 )
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import (
-    BLEBOX_TO_HASS_COVER_STATES,
-    BLEBOX_TO_HASS_DEVICE_CLASSES,
-    DOMAIN,
-    PRODUCT,
-)
+from .const import BLEBOX_TO_HASS_COVER_STATES, BLEBOX_TO_HASS_DEVICE_CLASSES
 
 
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
 
-    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    create_blebox_entities(product, async_add, BleBoxCoverEntity, "covers")
-    return True
+    create_blebox_entities(hass, config_entry, async_add, BleBoxCoverEntity, "covers")
 
 
 class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
