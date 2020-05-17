@@ -12,5 +12,14 @@
       "addr_in_use": "Server port already in use.",
       "start_server_failed": "Start server failed."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timeout": "Timeout (minutes)"
+        }
+      }
+    }
   }
 }
