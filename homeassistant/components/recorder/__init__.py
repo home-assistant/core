@@ -532,7 +532,6 @@ class Recorder(threading.Thread):
                 # The default mode is serialized.
                 kwargs["poolclass"] = SingletonThreadPool
                 kwargs["connect_args"] = {"check_same_thread": False}
-                kwargs["pool_size"] = 0
             kwargs["echo"] = False
         else:
             kwargs["echo"] = False
