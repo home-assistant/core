@@ -38,6 +38,17 @@ async def test_logging_with_queue_handler():
     ):
         handler.emit(log_record)
 
+    with patch.object(handler, "emit") as emit_mock:
+        handler.handle(log_record)
+        emit_mock.assert_called_once()
+
+    with patch.object(handler, "filter") as filter_mock, patch.object(
+        handler, "emit"
+    ) as emit_mock:
+        filter_mock.return_value = False
+        handler.handle(log_record)
+        emit_mock.assert_not_called()
+
     with patch.object(handler, "enqueue", side_effect=OSError), patch.object(
         handler, "handleError"
     ) as mock_handle_error:
