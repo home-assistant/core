@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 import async_timeout
+from pywemo.ouimeaux_device.api.service import ActionException
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,7 +41,7 @@ class WemoBinarySensor(BinarySensorEntity):
         self._update_lock = None
         self._model_name = self.wemo.model_name
         self._name = self.wemo.name
-        self._serialnumber = self.wemo.serialnumber
+        self._serial_number = self.wemo.serialnumber
 
     def _subscription_callback(self, _device, _type, _params):
         """Update the state by the Wemo sensor."""
@@ -98,14 +99,15 @@ class WemoBinarySensor(BinarySensorEntity):
             if not self._available:
                 _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
-        except AttributeError as err:
+        except (AttributeError, ActionException) as err:
             _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
+            self.wemo.reconnect_with_device()
 
     @property
     def unique_id(self):
         """Return the id of this WeMo sensor."""
-        return self._serialnumber
+        return self._serial_number
 
     @property
     def name(self):
@@ -126,8 +128,8 @@ class WemoBinarySensor(BinarySensorEntity):
     def device_info(self):
         """Return the device info."""
         return {
-            "name": self.wemo.name,
-            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
-            "model": self.wemo.model_name,
+            "name": self._name,
+            "identifiers": {(WEMO_DOMAIN, self._serial_number)},
+            "model": self._model_name,
             "manufacturer": "Belkin",
         }
