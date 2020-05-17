@@ -59,7 +59,7 @@ SIGNAL_ZONE_RESTORE = "alarmdecoder.zone_restore"
 SIGNAL_RFX_MESSAGE = "alarmdecoder.rfx_message"
 SIGNAL_REL_MESSAGE = "alarmdecoder.rel_message"
 
-BRAND_ADEMCO = "ademco"
+BRAND_HONEYWELL = "honeywell"
 BRAND_DSC = "dsc"
 
 ATTR_PANEL_BRAND = "panel_brand"
@@ -170,7 +170,7 @@ def setup(hass, config):
     def get_panel_brand():
         """Return alarm panel manufacturer from AlarmDecoder config string."""
         nonlocal restart
-        brands = {"A": BRAND_ADEMCO, "D": BRAND_DSC}
+        brands = {"A": BRAND_HONEYWELL, "D": BRAND_DSC}
 
         try:
             config_str = controller.get_config_string()

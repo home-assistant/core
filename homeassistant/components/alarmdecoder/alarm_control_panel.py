@@ -23,8 +23,8 @@ import homeassistant.helpers.config_validation as cv
 
 from . import (
     ATTR_PANEL_BRAND,
-    BRAND_ADEMCO,
     BRAND_DSC,
+    BRAND_HONEYWELL,
     CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED,
@@ -44,7 +44,7 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema({vol.Required(ATTR_KEYPRESS): cv.string})
 
 
 def get_arm_sequences(panel_brand, code_arm_required, alt_night_mode):
-    """Return the arming key sequences for a DSC or Ademco system given the code_arm_require and alt_night_mode settings."""
+    """Return the arming key sequences for a DSC or Honeywell system given the code_arm_require and alt_night_mode settings."""
     dsc_nocode_sequences = {
         "arm_home": lambda code: chr(4) + chr(4) + chr(4),
         "arm_away": lambda code: chr(5) + chr(5) + chr(5),
@@ -59,22 +59,22 @@ def get_arm_sequences(panel_brand, code_arm_required, alt_night_mode):
         "arm_night": lambda code: f"*9{code!s}" if alt_night_mode else str(code),
     }
 
-    ademco_nocode_sequences = {
+    honeywell_nocode_sequences = {
         "arm_home": lambda code: "#3",
         "arm_away": lambda code: "#2",
         "arm_night": lambda code: f"{code!s}33" if alt_night_mode else "#7",
     }
 
-    ademco_code_sequences = {
+    honeywell_code_sequences = {
         "arm_home": lambda code: f"{code!s}3",
         "arm_away": lambda code: f"{code!s}2",
         "arm_night": lambda code: f"{code!s}33" if alt_night_mode else f"{code!s}7",
     }
 
-    if panel_brand == BRAND_ADEMCO:
+    if panel_brand == BRAND_HONEYWELL:
         if code_arm_required:
-            return ademco_code_sequences
-        return ademco_nocode_sequences
+            return honeywell_code_sequences
+        return honeywell_nocode_sequences
 
     if panel_brand == BRAND_DSC:
         if code_arm_required:
