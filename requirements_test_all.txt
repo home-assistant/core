@@ -94,6 +94,9 @@ aiohue==2.1.0
 # homeassistant.components.notion
 aionotion==1.1.0
 
+# homeassistant.components.acmeda
+aiopulse==0.4.0
+
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
 

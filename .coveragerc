@@ -10,6 +10,14 @@ omit =
     # omit pieces of code that rely on external devices being present
     homeassistant/components/acer_projector/switch.py
     homeassistant/components/actiontec/device_tracker.py
+    homeassistant/components/acmeda/__init__.py
+    homeassistant/components/acmeda/base.py
+    homeassistant/components/acmeda/const.py
+    homeassistant/components/acmeda/cover.py
+    homeassistant/components/acmeda/errors.py
+    homeassistant/components/acmeda/helpers.py
+    homeassistant/components/acmeda/hub.py
+    homeassistant/components/acmeda/sensor.py
     homeassistant/components/adguard/__init__.py
     homeassistant/components/adguard/const.py
     homeassistant/components/adguard/sensor.py
