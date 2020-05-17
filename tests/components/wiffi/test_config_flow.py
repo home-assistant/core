@@ -4,14 +4,18 @@ import errno
 from asynctest import patch
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wiffi.const import DOMAIN
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, CONF_TIMEOUT
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
+
+from tests.common import MockConfigEntry
+
+MOCK_CONFIG = {CONF_PORT: 8765}
 
 
 @pytest.fixture(name="dummy_tcp_server")
@@ -78,7 +82,7 @@ async def test_form(hass, dummy_tcp_server):
     assert result["step_id"] == config_entries.SOURCE_USER
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_PORT: 8765},
+        result["flow_id"], user_input=MOCK_CONFIG,
     )
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
 
@@ -90,7 +94,7 @@ async def test_form_addr_in_use(hass, addr_in_use):
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_PORT: 8765},
+        result["flow_id"], user_input=MOCK_CONFIG,
     )
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "addr_in_use"
@@ -103,7 +107,28 @@ async def test_form_start_server_failed(hass, start_server_failed):
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_PORT: 8765},
+        result["flow_id"], user_input=MOCK_CONFIG,
     )
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "start_server_failed"
+
+
+async def test_option_flow(hass):
+    """Test option flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+
+    assert not entry.options
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_TIMEOUT: 9}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_TIMEOUT] == 9
