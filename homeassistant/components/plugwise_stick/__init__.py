@@ -15,7 +15,7 @@ from .const import AVAILABLE_SENSOR_ID, CONF_USB_PATH, DOMAIN, SENSORS
 _LOGGER = logging.getLogger(__name__)
 
 
-PLUGWISE_STICK_PLATFORMS = ["switch", "sensor"]
+PLUGWISE_STICK_PLATFORMS = ["switch"]
 
 
 async def async_setup(hass, config):
