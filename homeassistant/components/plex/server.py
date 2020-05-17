@@ -467,8 +467,6 @@ class PlexServer:
             """Find TV media and return a Plex media object."""
             season_number = kwargs.get("season_number")
             episode_number = kwargs.get("episode_number")
-            season = None
-            episode = None
 
             try:
                 show_name = kwargs["show_name"]
@@ -495,7 +493,7 @@ class PlexServer:
                 return season
 
             try:
-                episode = season.episode(episode=int(episode_number))
+                return season.episode(episode=int(episode_number))
             except NotFound:
                 _LOGGER.error(
                     "Episode not found: %s - S%sE%s",
@@ -503,8 +501,7 @@ class PlexServer:
                     str(season_number).zfill(2),
                     str(episode_number).zfill(2),
                 )
-
-            return episode
+                return None
 
         if media_type == MEDIA_TYPE_MUSIC:
             return lookup_music(**kwargs)
