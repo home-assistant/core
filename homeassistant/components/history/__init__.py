@@ -335,35 +335,41 @@ class HistoryPeriodView(HomeAssistantView):
 
         hass = request.app["hass"]
 
-        result = await hass.async_add_job(
-            get_significant_states,
-            hass,
-            start_time,
-            end_time,
-            entity_ids,
-            self.filters,
-            include_start_time_state,
-            significant_changes_only,
-        )
-        result = list(result.values())
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            elapsed = time.perf_counter() - timer_start
-            _LOGGER.debug("Extracted %d states in %fs", sum(map(len, result)), elapsed)
+        def _sorted_significant_states_json():
+            """Fetch significant stats from the database as json."""
 
-        # Optionally reorder the result to respect the ordering given
-        # by any entities explicitly included in the configuration.
-        if self.use_include_order:
-            sorted_result = []
-            for order_entity in self.filters.included_entities:
-                for state_list in result:
-                    if state_list[0].entity_id == order_entity:
-                        sorted_result.append(state_list)
-                        result.remove(state_list)
-                        break
-            sorted_result.extend(result)
-            result = sorted_result
+            result = get_significant_states(
+                hass,
+                start_time,
+                end_time,
+                entity_ids,
+                self.filters,
+                include_start_time_state,
+                significant_changes_only,
+            )
+            result = list(result.values())
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                elapsed = time.perf_counter() - timer_start
+                _LOGGER.debug(
+                    "Extracted %d states in %fs", sum(map(len, result)), elapsed
+                )
 
-        return await hass.async_add_job(self.json, result)
+            # Optionally reorder the result to respect the ordering given
+            # by any entities explicitly included in the configuration.
+            if self.use_include_order:
+                sorted_result = []
+                for order_entity in self.filters.included_entities:
+                    for state_list in result:
+                        if state_list[0].entity_id == order_entity:
+                            sorted_result.append(state_list)
+                            result.remove(state_list)
+                            break
+                sorted_result.extend(result)
+                result = sorted_result
+
+            return self.json(result)
+
+        return await hass.async_add_executor_job(_sorted_significant_states_json)
 
 
 class Filters:
