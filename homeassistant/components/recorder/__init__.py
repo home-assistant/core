@@ -272,7 +272,7 @@ class Recorder(threading.Thread):
                 connected = True
                 _LOGGER.debug("Connected to recorder database")
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error(
+                _LOGGER.exception(
                     "Error during connection setup: %s (retrying in %s seconds)",
                     err,
                     self.db_retry_wait,
