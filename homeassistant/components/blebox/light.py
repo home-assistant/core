@@ -30,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add):
     create_blebox_entities(hass, config_entry, async_add, BleBoxLightEntity, "lights")
 
 
-class BleBoxLightEntity(BleBoxEntity, Light):
+class BleBoxLightEntity(BleBoxEntity, LightEntity):
     """Representation of BleBox lights."""
 
     @property
