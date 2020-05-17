@@ -113,10 +113,10 @@ class PlugwiseNodeEntity(Entity):
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self._mac)},
-            "name": "{} ({})".format(self._node.get_node_type(), self._mac),
+            "name": f"{self._node.get_node_type()} ({self._mac})",
             "manufacturer": "Plugwise",
             "model": self._node.get_node_type(),
-            "sw_version": "{}".format(self._node.get_firmware_version(),),
+            "sw_version": f"{self._node.get_firmware_version()}",
         }
 
     @property
