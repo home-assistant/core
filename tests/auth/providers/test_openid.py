@@ -77,7 +77,7 @@ async def test_login_flow_validates(hass, aiohttp_client, openid_server):
     """Test login flow."""
     assert await async_setup_component(hass, "http", {})
 
-    hass.config.api.base_url = "https://example.com"
+    hass.config.external_url = "https://example.com"
 
     manager = await auth_manager_from_config(
         hass,
