@@ -1,10 +1,6 @@
 """Const for Plugwise USB-stick."""
 
-from homeassistant.const import (
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, POWER_WATT
 
 DOMAIN = "plugwise_stick"
 CONF_USB_PATH = "usb_path"
