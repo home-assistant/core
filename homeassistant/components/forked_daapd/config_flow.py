@@ -158,7 +158,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered forked-daapd device."""
         if not (
             discovery_info.get("properties")
-            and discovery_info["properties"].get("mtd-version")
+            and float(discovery_info["properties"].get("mtd-version", 0)) >= 27.0
             and discovery_info["properties"].get("Machine Name")
         ):
             return self.async_abort(reason="not_forked_daapd")
