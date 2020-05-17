@@ -162,7 +162,7 @@ class WemoLight(LightEntity):
             xy_color = color_util.color_hs_to_xy(*hs_color)
 
         if ATTR_COLOR_TEMP in kwargs:
-            color_temp = int(kwargs.get(ATTR_COLOR_TEMP))
+            color_temp = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
