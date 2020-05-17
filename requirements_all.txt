@@ -403,6 +403,9 @@ buienradar==1.0.4
 # homeassistant.components.caldav
 caldav==0.6.1
 
+# homeassistant.components.circuit
+circuit-webhook==1.0.1
+
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.3
 
