@@ -1,5 +1,4 @@
 """The tests for the Command line sensor platform."""
-import os
 import unittest
 
 from homeassistant.components.command_line import sensor as command_line
@@ -77,15 +76,19 @@ class TestCommandSensorSensor(unittest.TestCase):
     def test_template_render_with_quote(self):
         """Ensure command with templates and quotes get rendered properly."""
         self.hass.states.set("sensor.test_state", "Works 2")
-        script_path = os.path.abspath(os.path.join(__file__, "../n_args.sh"))
-        data = command_line.CommandSensorData(
-            self.hass,
-            f'bash {script_path} "{{{{ states.sensor.test_state.state }}}}" "3 4"',
-            15,
-        )
-        data.update()
+        with patch(
+            "homeassistant.components.command_line.sensor.subprocess.check_output",
+            return_value=b"Works\n",
+        ) as check_output:
+            data = command_line.CommandSensorData(
+                self.hass, f'echo "{{{{ states.sensor.test_state.state }}}}" "3 4"', 15,
+            )
+            data.update()
 
-        assert data.value == "2"
+        assert data.value == "Works"
+        check_output.assert_called_once_with(
+            'echo "Works 2" "3 4"', shell=True, timeout=15  # nosec # shell by design
+        )
 
     def test_bad_command(self):
         """Test bad command."""
