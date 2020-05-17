@@ -44,6 +44,7 @@ from .const import (
     SUPPORTED_COMMANDS,
     VIZIO_AUDIO_SETTINGS,
     VIZIO_DEVICE_CLASSES,
+    VIZIO_MUTE_ON,
     VIZIO_SOUND_MODE,
 )
 
@@ -202,10 +203,10 @@ class VizioDevice(MediaPlayerEntity):
         audio_settings = await self._device.get_all_settings(
             VIZIO_AUDIO_SETTINGS, log_api_exception=False
         )
-        if audio_settings is not None:
+        if audio_settings:
             self._volume_level = float(audio_settings["volume"]) / self._max_volume
             if "mute" in audio_settings:
-                self._is_volume_muted = audio_settings["mute"].lower() == "on"
+                self._is_volume_muted = audio_settings["mute"].lower() == VIZIO_MUTE_ON
             else:
                 self._is_volume_muted = None
 
@@ -217,20 +218,20 @@ class VizioDevice(MediaPlayerEntity):
                         VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
                     )
             else:
-                self._supported_commands ^= SUPPORT_SELECT_SOUND_MODE
+                # Explicitly remove SUPPORT_SELECT_SOUND_MODE from supported features
+                self._supported_commands &= ~SUPPORT_SELECT_SOUND_MODE
 
         input_ = await self._device.get_current_input(log_api_exception=False)
-        if input_ is not None:
+        if input_:
             self._current_input = input_
 
-        if not self._available_inputs:
-            inputs = await self._device.get_inputs_list(log_api_exception=False)
+        inputs = await self._device.get_inputs_list(log_api_exception=False)
 
-            # If no inputs returned, end update
-            if not inputs:
-                return
+        # If no inputs returned, end update
+        if not inputs:
+            return
 
-            self._available_inputs = [input_.name for input_ in inputs]
+        self._available_inputs = [input_.name for input_ in inputs]
 
         # Return before setting app variables if INPUT_APPS isn't in available inputs
         if self._device_class == DEVICE_CLASS_SPEAKER or not any(
