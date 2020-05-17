@@ -1,6 +1,5 @@
 """Test the aftership config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.aftership.config_flow import InvalidAuth
 from homeassistant.components.aftership.const import DOMAIN
 
 from tests.async_mock import patch
