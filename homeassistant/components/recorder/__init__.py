@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import QueuePool, StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -257,7 +257,7 @@ class Recorder(threading.Thread):
                 connected = True
                 _LOGGER.debug("Connected to recorder database")
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error(
+                _LOGGER.exception(
                     "Error during connection setup: %s (retrying in %s seconds)",
                     err,
                     self.db_retry_wait,
@@ -508,6 +508,19 @@ class Recorder(threading.Thread):
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
+        elif self.db_url.startswith("sqlite://"):
+            import sqlite3  # pylint: disable=import-outside-toplevel
+
+            if sqlite3.threadsafety:
+                # https://www.sqlite.org/threadsafe.html
+                #
+                # In serialized mode, SQLite can be safely used
+                # by multiple threads with no restriction.
+                #
+                # The default mode is serialized.
+                kwargs["connect_args"] = {"check_same_thread": False}
+                kwargs["poolclass"] = QueuePool
+            kwargs["echo"] = False
         else:
             kwargs["echo"] = False
 
