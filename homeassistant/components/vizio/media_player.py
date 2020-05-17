@@ -240,8 +240,7 @@ class VizioDevice(MediaPlayerEntity):
 
         # Create list of available known apps from known app list after
         # filtering by CONF_INCLUDE/CONF_EXCLUDE
-        if not self._available_apps:
-            self._available_apps = self._apps_list(self._device.get_apps_list())
+        self._available_apps = self._sapps_list(self._device.get_apps_list())
 
         self._current_app_config = await self._device.get_current_app_config(
             log_api_exception=False
