@@ -21,7 +21,13 @@ from homeassistant.components.plex.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
-from .mock_classes import MockPlexMediaItem, MockPlexServer
+from .mock_classes import (
+    MockPlexArtist,
+    MockPlexLibrary,
+    MockPlexLibrarySection,
+    MockPlexMediaItem,
+    MockPlexServer,
+)
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -276,6 +282,27 @@ async def test_media_lookups(hass):
     server_id = mock_plex_server.machineIdentifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
 
+    # TV show searches
+    with patch.object(MockPlexLibrary, "section", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_EPISODE, library_name="Not a Library", show_name="A TV Show"
+            )
+            is None
+        )
+    with patch.object(MockPlexLibrarySection, "get", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_EPISODE, library_name="TV Shows", show_name="Not a TV Show"
+            )
+            is None
+        )
+    assert (
+        loaded_server.lookup_media(
+            MEDIA_TYPE_EPISODE, library_name="TV Shows", episode_name="An Episode"
+        )
+        is None
+    )
     assert loaded_server.lookup_media(
         MEDIA_TYPE_EPISODE, library_name="TV Shows", show_name="A TV Show"
     )
@@ -292,6 +319,35 @@ async def test_media_lookups(hass):
         season_number=2,
         episode_number=3,
     )
+    with patch.object(MockPlexMediaItem, "season", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_EPISODE,
+                library_name="TV Shows",
+                show_name="A TV Show",
+                season_number=2,
+            )
+            is None
+        )
+    with patch.object(MockPlexMediaItem, "episode", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_EPISODE,
+                library_name="TV Shows",
+                show_name="A TV Show",
+                season_number=2,
+                episode_number=1,
+            )
+            is None
+        )
+
+    # Music searches
+    assert (
+        loaded_server.lookup_media(
+            MEDIA_TYPE_MUSIC, library_name="Music", album_name="An Album"
+        )
+        is None
+    )
     assert loaded_server.lookup_media(
         MEDIA_TYPE_MUSIC, library_name="Music", artist_name="An Artist"
     )
@@ -307,6 +363,47 @@ async def test_media_lookups(hass):
         artist_name="An Artist",
         album_name="An Album",
     )
+    with patch.object(MockPlexLibrarySection, "get", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_MUSIC,
+                library_name="Music",
+                artist_name="Not an Artist",
+                album_name="An Album",
+            )
+            is None
+        )
+    with patch.object(MockPlexArtist, "album", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_MUSIC,
+                library_name="Music",
+                artist_name="An Artist",
+                album_name="Not an Album",
+            )
+            is None
+        )
+    with patch.object(MockPlexMediaItem, "track", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_MUSIC,
+                library_name="Music",
+                artist_name="An Artist",
+                album_name="An Album",
+                track_name="Not a Track",
+            )
+            is None
+        )
+    with patch.object(MockPlexArtist, "get", side_effect=NotFound):
+        assert (
+            loaded_server.lookup_media(
+                MEDIA_TYPE_MUSIC,
+                library_name="Music",
+                artist_name="An Artist",
+                track_name="Not a Track",
+            )
+            is None
+        )
     assert loaded_server.lookup_media(
         MEDIA_TYPE_MUSIC,
         library_name="Music",
@@ -331,30 +428,28 @@ async def test_media_lookups(hass):
         album_name="An Album",
         track_name="A Track",
     )
-    assert loaded_server.lookup_media(MEDIA_TYPE_PLAYLIST, playlist_name="A Playlist")
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_VIDEO, library_name="Movies", video_name="A Movie"
-    )
 
-    with patch.object(MockPlexMediaItem, "season", side_effect=NotFound):
+    # Playlist searches
+    assert loaded_server.lookup_media(MEDIA_TYPE_PLAYLIST, playlist_name="A Playlist")
+    assert loaded_server.lookup_media(MEDIA_TYPE_PLAYLIST) is None
+    with patch.object(MockPlexServer, "playlist", side_effect=NotFound):
         assert (
             loaded_server.lookup_media(
-                MEDIA_TYPE_EPISODE,
-                library_name="TV Shows",
-                show_name="A TV Show",
-                season_number=2,
+                MEDIA_TYPE_PLAYLIST, playlist_name="Not a Playlist"
             )
             is None
         )
 
-    with patch.object(MockPlexMediaItem, "episode", side_effect=NotFound):
+    # Movie searches
+    assert loaded_server.lookup_media(MEDIA_TYPE_VIDEO, video_name="A Movie") is None
+    assert loaded_server.lookup_media(MEDIA_TYPE_VIDEO, library_name="Movies") is None
+    assert loaded_server.lookup_media(
+        MEDIA_TYPE_VIDEO, library_name="Movies", video_name="A Movie"
+    )
+    with patch.object(MockPlexLibrarySection, "get", side_effect=NotFound):
         assert (
             loaded_server.lookup_media(
-                MEDIA_TYPE_EPISODE,
-                library_name="TV Shows",
-                show_name="A TV Show",
-                season_number=2,
-                episode_number=1,
+                MEDIA_TYPE_VIDEO, library_name="Movies", video_name="Not a Movie"
             )
             is None
         )

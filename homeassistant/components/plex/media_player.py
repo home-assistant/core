@@ -570,11 +570,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             shuffle = 0
         else:
             shuffle = src.pop("shuffle", 0)
-            try:
-                media = self.plex_server.lookup_media(media_type, **src)
-            except plexapi.exceptions.NotFound:
-                _LOGGER.error("Media could not be found: %s", media_id)
-                return
+            media = self.plex_server.lookup_media(media_type, **src)
 
         if media is None:
             _LOGGER.error("Media could not be found: %s", media_id)

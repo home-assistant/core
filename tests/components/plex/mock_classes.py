@@ -288,6 +288,8 @@ class MockPlexLibrarySection:
 
     def get(self, query):
         """Mock the get lookup method."""
+        if self.title == "Music":
+            return MockPlexArtist(query)
         return MockPlexMediaItem(query)
 
 
@@ -320,8 +322,17 @@ class MockPlexMediaItem:
         """Mock the season lookup method."""
         return MockPlexMediaItem(season, mediatype="season")
 
-    def searchTracks(self, track_name, maxresults):
-        """Mock the searchTracks method."""
+
+class MockPlexArtist(MockPlexMediaItem):
+    """Mock a Plex Artist instance."""
+
+    def __init__(self, artist):
+        """Initialize the object."""
+        super().__init__(artist)
+        self.type = "artist"
+
+    def get(self, track):
+        """Mock the track lookup method."""
         return MockPlexMediaTrack()
 
 
