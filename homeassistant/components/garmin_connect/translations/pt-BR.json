@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Digite suas credenciais.",
+                "title": "Garmin Connect"
+            }
+        }
+    }
+}

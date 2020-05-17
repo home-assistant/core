@@ -15,7 +15,8 @@
             },
             "user": {
                 "data": {
-                    "password": "Jelsz\u00f3"
+                    "password": "Jelsz\u00f3",
+                    "username": "E-mail"
                 },
                 "description": "Adja meg hiteles\u00edt\u0151 adatait",
                 "title": "iCloud hiteles\u00edt\u0151 adatok"

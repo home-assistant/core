@@ -17,6 +17,7 @@
         "step": {
             "manual_setup": {
                 "data": {
+                    "host": "Hoszt",
                     "port": "Port",
                     "ssl": "Haszn\u00e1ljon SSL-t"
                 }

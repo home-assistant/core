@@ -103,7 +103,7 @@ async def test_zeroconf_updates_title(hass, config_entry):
     discovery_info = {
         "host": "192.168.1.1",
         "port": 23,
-        "properties": {"mtd-version": 1, "Machine Name": "zeroconf_test"},
+        "properties": {"mtd-version": 27.0, "Machine Name": "zeroconf_test"},
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
@@ -143,7 +143,7 @@ async def test_config_flow_zeroconf_valid(hass):
         "host": "192.168.1.1",
         "port": 23,
         "properties": {
-            "mtd-version": 1,
+            "mtd-version": 27.0,
             "Machine Name": "zeroconf_test",
             "Machine ID": "5E55EEFF",
         },
