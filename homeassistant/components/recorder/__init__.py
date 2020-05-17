@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import QueuePool, StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -525,6 +525,8 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         else:
             kwargs["echo"] = False
+            kwargs["poolclass"] = QueuePool
+            kwargs["pool_timeout"] = 28
 
         if self.engine is not None:
             self.engine.dispose()
