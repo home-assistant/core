@@ -40,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
+import homeassistant.helpers.device_registry as dr
 from homeassistant.util.dt import utcnow
 
 from . import (
@@ -392,6 +393,8 @@ class SonosEntity(MediaPlayerEntity):
         speaker_info = self.soco.get_speaker_info(True)
         self._name = speaker_info["zone_name"]
         self._model = speaker_info["model_name"]
+        self._sw_version = speaker_info["software_version"]
+        self._mac_address = speaker_info["mac_address"]
 
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
@@ -427,6 +430,8 @@ class SonosEntity(MediaPlayerEntity):
             "identifiers": {(SONOS_DOMAIN, self._unique_id)},
             "name": self._name,
             "model": self._model.replace("Sonos ", ""),
+            "sw_version": self._sw_version,
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
             "manufacturer": "Sonos",
         }
 
