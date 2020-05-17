@@ -30,27 +30,23 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    def __init__(self):
-        """Initialize the Plugwise USB-stick config flow."""
-        self._list_of_ports = []
-
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
         errors = {}
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        self._list_of_ports = [
+        list_of_ports = [
             f"{p}, s/n: {p.serial_number or 'n/a'}"
             + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
         ]
-        self._list_of_ports.append(CONF_MANUAL_PATH)
+        list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
             user_selection = user_input[CONF_USB_PATH]
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_manual_path()
 
-            port = ports[self._list_of_ports.index(user_selection)]
+            port = ports[list_of_ports.index(user_selection)]
             device_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, port.device
             )
@@ -66,7 +62,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_USB_PATH): vol.In(self._list_of_ports)}
+                {vol.Required(CONF_USB_PATH): vol.In(list_of_ports)}
             ),
             errors=errors,
         )
