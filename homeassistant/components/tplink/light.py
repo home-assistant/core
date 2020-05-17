@@ -117,15 +117,14 @@ class TPLinkSmartBulb(LightEntity):
 
         self._is_setting_light_state = True
         try:
-            if brightness is not None and self.supported_features & SUPPORT_BRIGHTNESS:
-                await self.smartbulb.set_brightness(brightness)
-            if (
-                ATTR_COLOR_TEMP in kwargs
-                and self.supported_features & SUPPORT_COLOR_TEMP
-            ):
+            if brightness is not None and self.smartbulb.is_dimmable:
+                await self.smartbulb.set_brightness(
+                    brightness_to_percentage(brightness)
+                )
+            if ATTR_COLOR_TEMP in kwargs and self.smartbulb.is_variable_color_temp:
                 color_temp = int(mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP])))
                 await self.smartbulb.set_color_temp(color_temp)
-            if ATTR_HS_COLOR in kwargs and self.supported_features & SUPPORT_COLOR:
+            if ATTR_HS_COLOR in kwargs and self.smartbulb.is_color:
                 hue, sat = kwargs[ATTR_HS_COLOR]
                 if brightness is None:
                     brightness = self.brightness
