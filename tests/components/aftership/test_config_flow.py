@@ -49,17 +49,13 @@ async def test_form_invalid_auth(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.aftership.config_flow.AfterShipTest.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "name": "My AfterShip Packages",
-                "api_key": "188bdc54-30c0-407b-90fb-e6c303d7922e",
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "name": "My AfterShip Packages",
+            "api_key": "188bdc54-30c0-407b-90fb-e6c303d7922e",
+        },
+    )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
