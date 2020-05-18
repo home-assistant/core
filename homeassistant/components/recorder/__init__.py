@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.pool import QueuePool, StaticPool
+from sqlalchemy.pool import SingletonThreadPool, StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -589,7 +589,7 @@ def engine_args_for_db_url(db_url):
             return {
                 "echo": False,
                 "connect_args": {"check_same_thread": False},
-                "poolclass": QueuePool,
+                "poolclass": SingletonThreadPool,
                 "pool_timeout": SQLITE_POOL_TIMEOUT,
             }
 

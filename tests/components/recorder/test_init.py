@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import unittest
 
 import pytest
-from sqlalchemy.pool import QueuePool, StaticPool
+from sqlalchemy.pool import SingletonThreadPool, StaticPool
 
 from homeassistant.components.recorder import (
     SQLITE_POOL_TIMEOUT,
@@ -271,7 +271,7 @@ async def test_engine_args_for_db_url(hass):
         "connect_args": {"check_same_thread": False},
         "echo": False,
         "pool_timeout": SQLITE_POOL_TIMEOUT,
-        "poolclass": QueuePool,
+        "poolclass": SingletonThreadPool,
     }
 
     assert engine_args_for_db_url("sqlite://") == {
