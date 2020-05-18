@@ -814,7 +814,7 @@ spotipy==2.12.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.16
+sqlalchemy==1.3.17
 
 # homeassistant.components.starline
 starline==0.1.3
