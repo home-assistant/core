@@ -528,10 +528,14 @@ class Recorder(threading.Thread):
 
             if sqlite3.threadsafety:
                 # https://www.sqlite.org/threadsafe.html
-                # In serialized mode, SQLite can be safely used by multiple threads with no restriction.
+                #
+                # In serialized mode, SQLite can be safely used
+                # by multiple threads with no restriction.
+                #
                 # The default mode is serialized.
                 kwargs["connect_args"] = {"check_same_thread": False}
                 kwargs["poolclass"] = QueuePool
+                kwargs["pool_timeout"] = 900
             kwargs["echo"] = False
         else:
             kwargs["echo"] = False
