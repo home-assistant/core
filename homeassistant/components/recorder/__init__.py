@@ -575,21 +575,24 @@ def engine_args_for_db_url(db_url):
             "poolclass": StaticPool,
             "pool_reset_on_return": None,
         }
-    elif db_url.startswith("sqlite://"):
+
+    db_is_sqlite = db_url.startswith("sqlite://")
+
+    if db_is_sqlite:
         import sqlite3  # pylint: disable=import-outside-toplevel
 
-        dbargs = {}
-        if sqlite3.threadsafety:
-            # https://www.sqlite.org/threadsafe.html
-            #
-            # In serialized mode, SQLite can be safely used
-            # by multiple threads with no restriction.
-            #
-            # The default mode is serialized.
-            dbargs["connect_args"] = {"check_same_thread": False}
-            dbargs["poolclass"] = QueuePool
-            dbargs["pool_timeout"] = SQLITE_POOL_TIMEOUT
-        dbargs["echo"] = False
-        return dbargs
+    if not db_is_sqlite or not sqlite3.threadsafety:
+        return {"echo": False}
 
-    return {"echo": False}
+    # https://www.sqlite.org/threadsafe.html
+    #
+    # In serialized mode, SQLite can be safely used
+    # by multiple threads with no restriction.
+    #
+    # The default mode is serialized.
+    return {
+        "echo": False,
+        "connect_args": {"check_same_thread": False},
+        "poolclass": QueuePool,
+        "pool_timeout": SQLITE_POOL_TIMEOUT,
+    }
