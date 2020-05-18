@@ -370,3 +370,40 @@ async def test_extract_devices():
             ],
         }
     ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
+
+
+async def test_state_from_config(hass):
+    """Test multiple entity_ids and states."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "and",
+            "conditions": [
+                {
+                    "condition": "state",
+                    "entity_id": ["cover.door", "binary_sensor.motion"],
+                    "state": ["open", "on"],
+                },
+            ],
+        },
+    )
+
+    hass.states.async_set("cover.door", "open")
+    hass.states.async_set("binary_sensor.motion", "on")
+    assert test(hass)
+
+    hass.states.async_set("cover.door", "closed")
+    hass.states.async_set("binary_sensor.motion", "on")
+    assert test(hass)
+
+    hass.states.async_set("cover.door", "open")
+    hass.states.async_set("binary_sensor.motion", "off")
+    assert test(hass)
+
+    hass.states.async_set("cover.door", "closed")
+    hass.states.async_set("binary_sensor.motion", "off")
+    assert not test(hass)
+
+    hass.states.async_set("cover.door", "open")
+    hass.states.async_set("binary_sensor.motion", "on")
+    assert test(hass)

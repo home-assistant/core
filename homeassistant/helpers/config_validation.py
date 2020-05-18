@@ -855,8 +855,8 @@ STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_CONDITION): "state",
-            vol.Required(CONF_ENTITY_ID): entity_id,
-            vol.Required(CONF_STATE): str,
+            vol.Required(CONF_ENTITY_ID): vol.Any(entity_id, [entity_id]),
+            vol.Required(CONF_STATE): vol.Any(str, [str]),
             vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
