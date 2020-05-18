@@ -21,6 +21,12 @@ def light_data_fixture():
     return load_fixture("ozw/light_network_dump.csv")
 
 
+@pytest.fixture(name="climate_data", scope="session")
+def climate_data_fixture():
+    """Load climate MQTT data and return it."""
+    return load_fixture("ozw/climate_network_dump.csv")
+
+
 @pytest.fixture(name="sent_messages")
 def sent_messages_fixture():
     """Fixture to capture sent messages."""

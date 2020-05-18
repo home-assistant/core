@@ -14,9 +14,9 @@ from homeassistant.components.climate.const import (
 from .common import setup_ozw
 
 
-async def test_climate(hass, generic_data, sent_messages, climate_msg):
+async def test_climate(hass, climate_data, sent_messages, climate_msg):
     """Test setting up config entry."""
-    receive_message = await setup_ozw(hass, fixture=generic_data)
+    receive_message = await setup_ozw(hass, fixture=climate_data)
 
     # Test multi-setpoint thermostat (node 7 in dump)
     # mode is heat, this should be single setpoint
