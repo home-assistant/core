@@ -574,21 +574,4 @@ def engine_args_for_db_url(db_url):
             "pool_reset_on_return": None,
         }
 
-    if db_url.startswith("sqlite://"):
-        import sqlite3  # pylint: disable=import-outside-toplevel
-
-        if sqlite3.threadsafety:
-            # https://www.sqlite.org/threadsafe.html
-            #
-            # In serialized mode, SQLite can be safely used
-            # by multiple threads with no restriction.
-            #
-            # The default mode is serialized.
-            return {
-                "echo": False,
-                "connect_args": {"check_same_thread": False},
-                "poolclass": SingletonThreadPool,
-                "pool_reset_on_return": None,
-            }
-
     return {"echo": False}
