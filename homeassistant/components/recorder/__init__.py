@@ -44,8 +44,6 @@ DOMAIN = "recorder"
 
 SERVICE_PURGE = "purge"
 
-SQLITE_POOL_TIMEOUT = 3600
-
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
 
@@ -590,7 +588,6 @@ def engine_args_for_db_url(db_url):
                 "echo": False,
                 "connect_args": {"check_same_thread": False},
                 "poolclass": SingletonThreadPool,
-                "pool_timeout": SQLITE_POOL_TIMEOUT,
             }
 
     return {"echo": False}

@@ -6,11 +6,7 @@ import unittest
 import pytest
 from sqlalchemy.pool import SingletonThreadPool, StaticPool
 
-from homeassistant.components.recorder import (
-    SQLITE_POOL_TIMEOUT,
-    Recorder,
-    engine_args_for_db_url,
-)
+from homeassistant.components.recorder import Recorder, engine_args_for_db_url
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, States
 from homeassistant.components.recorder.util import session_scope
@@ -270,7 +266,6 @@ async def test_engine_args_for_db_url(hass):
     assert engine_args_for_db_url("sqlite://config/hass.db") == {
         "connect_args": {"check_same_thread": False},
         "echo": False,
-        "pool_timeout": SQLITE_POOL_TIMEOUT,
         "poolclass": SingletonThreadPool,
     }
 
