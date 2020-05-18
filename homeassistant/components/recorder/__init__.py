@@ -44,6 +44,8 @@ DOMAIN = "recorder"
 
 SERVICE_PURGE = "purge"
 
+SQLITE_POOL_TIMEOUT = 3600
+
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
 
@@ -499,7 +501,6 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        kwargs = {}
 
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
@@ -519,31 +520,12 @@ class Recorder(threading.Thread):
                 cursor.execute("SET session wait_timeout=28800")
                 cursor.close()
 
-        if self.db_url == "sqlite://" or ":memory:" in self.db_url:
-            kwargs["connect_args"] = {"check_same_thread": False}
-            kwargs["poolclass"] = StaticPool
-            kwargs["pool_reset_on_return"] = None
-        elif self.db_url.startswith("sqlite://"):
-            import sqlite3  # pylint: disable=import-outside-toplevel
-
-            if sqlite3.threadsafety:
-                # https://www.sqlite.org/threadsafe.html
-                #
-                # In serialized mode, SQLite can be safely used
-                # by multiple threads with no restriction.
-                #
-                # The default mode is serialized.
-                kwargs["connect_args"] = {"check_same_thread": False}
-                kwargs["poolclass"] = QueuePool
-                kwargs["pool_timeout"] = 900
-            kwargs["echo"] = False
-        else:
-            kwargs["echo"] = False
+        engine_args = engine_args_for_db_url(self.db_url)
 
         if self.engine is not None:
             self.engine.dispose()
 
-        self.engine = create_engine(self.db_url, **kwargs)
+        self.engine = create_engine(self.db_url, **engine_args)
 
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
@@ -583,3 +565,31 @@ class Recorder(threading.Thread):
             self.event_session.close()
 
         self.run_info = None
+
+
+def engine_args_for_db_url(db_url):
+    """Build the engine args for given db url."""
+    if db_url == "sqlite://" or ":memory:" in db_url:
+        return {
+            "connect_args": {"check_same_thread": False},
+            "poolclass": StaticPool,
+            "pool_reset_on_return": None,
+        }
+    elif db_url.startswith("sqlite://"):
+        import sqlite3  # pylint: disable=import-outside-toplevel
+
+        dbargs = {}
+        if sqlite3.threadsafety:
+            # https://www.sqlite.org/threadsafe.html
+            #
+            # In serialized mode, SQLite can be safely used
+            # by multiple threads with no restriction.
+            #
+            # The default mode is serialized.
+            dbargs["connect_args"] = {"check_same_thread": False}
+            dbargs["poolclass"] = QueuePool
+            dbargs["pool_timeout"] = SQLITE_POOL_TIMEOUT
+        dbargs["echo"] = False
+        return dbargs
+
+    return {"echo": False}

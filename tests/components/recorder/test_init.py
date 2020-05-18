@@ -4,8 +4,13 @@ from datetime import datetime, timedelta
 import unittest
 
 import pytest
+from sqlalchemy.pool import QueuePool, StaticPool
 
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import (
+    SQLITE_POOL_TIMEOUT,
+    Recorder,
+    engine_args_for_db_url,
+)
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, States
 from homeassistant.components.recorder.util import session_scope
@@ -257,3 +262,24 @@ def test_auto_purge(hass_recorder):
         assert len(purge_old_data.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
+
+
+async def test_engine_args_for_db_url(hass):
+    """Test the config defaults are set."""
+
+    assert engine_args_for_db_url("sqlite://config/hass.db") == {
+        "connect_args": {"check_same_thread": False},
+        "echo": False,
+        "pool_timeout": SQLITE_POOL_TIMEOUT,
+        "poolclass": QueuePool,
+    }
+
+    assert engine_args_for_db_url("sqlite://") == {
+        "connect_args": {"check_same_thread": False},
+        "pool_reset_on_return": None,
+        "poolclass": StaticPool,
+    }
+
+    assert engine_args_for_db_url(
+        "mysql://user:password@localhost/db_name?charset=utf8"
+    ) == {"echo": False}
