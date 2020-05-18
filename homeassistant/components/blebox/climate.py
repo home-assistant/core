@@ -13,11 +13,11 @@ from . import BleBoxEntity, create_blebox_entities
 from .const import BLEBOX_TO_CLIMATE_HVAC_MODE, BLEBOX_TO_CURRENT_HVAC_MODE
 
 
-async def async_setup_entry(hass, config_entry, async_add):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a BleBox climate entity."""
 
     create_blebox_entities(
-        hass, config_entry, async_add, BleBoxClimateEntity, "climates"
+        hass, config_entry, async_add_entities, BleBoxClimateEntity, "climates"
     )
 
 
