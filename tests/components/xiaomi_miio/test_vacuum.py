@@ -391,16 +391,6 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
-    coordinates = {"x_coord": 25500, "y_coord": 25500}
-    await hass.services.async_call(
-        XIAOMI_DOMAIN, SERVICE_GOTO, coordinates, blocking=True
-    )
-    mock_mirobo_is_on.goto.assert_has_calls(
-        [mock.call(x_coord=25500, y_coord=25500)], any_order=True
-    )
-    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
-    mock_mirobo_is_on.reset_mock()
-
 
 async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
     """Test Xiaomi vacuum fanspeeds."""
@@ -464,3 +454,30 @@ async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
         blocking=True,
     )
     assert "ERROR" in caplog.text
+
+
+async def test_xiaomi_vacuum_goto_service(hass, caplog, mock_mirobo_is_on):
+    """Test vacuum supported features."""
+    entity_name = "test_vacuum_cleaner_2"
+    entity_id = f"{DOMAIN}.{entity_name}"
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_PLATFORM: PLATFORM,
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: entity_name,
+                CONF_TOKEN: "12345678901234567890123456789012",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    data = {"entity_id": entity_id, "x_coord": 25500, "y_coord": 25500}
+    await hass.services.async_call(XIAOMI_DOMAIN, SERVICE_GOTO, data, blocking=True)
+    mock_mirobo_is_on.goto.assert_has_calls(
+        [mock.call(x_coord=data["x_coord"], y_coord=data["y_coord"])], any_order=True
+    )
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
