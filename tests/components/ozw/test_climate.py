@@ -38,7 +38,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
         blocking=True,
     )
     assert len(sent_messages) == 1
-    msg = sent_messages[0]
+    msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     # Celsius is converted to Fahrenheit here!
     assert round(msg["payload"]["Value"], 2) == 78.98
@@ -52,7 +52,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
         blocking=True,
     )
     assert len(sent_messages) == 2
-    msg = sent_messages[1]
+    msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 3, "ValueIDKey": 122683412}
 
@@ -64,7 +64,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
         blocking=True,
     )
     assert len(sent_messages) == 3
-    msg = sent_messages[2]
+    msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 1, "ValueIDKey": 122748948}
 
@@ -78,6 +78,27 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
     assert state.attributes.get(ATTR_TEMPERATURE) is None
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 21.1
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 25.6
+
+    # Test setting high/low temp on multiple setpoints
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.ct32_thermostat_mode",
+            "target_temp_low": 20,
+            "target_temp_high": 25,
+        },
+        blocking=True,
+    )
+    assert len(sent_messages) == 5  # 2 messages !
+    msg = sent_messages[-2]  # low setpoint
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert round(msg["payload"]["Value"], 2) == 68.0
+    assert msg["payload"]["ValueIDKey"] == 281475099443218
+    msg = sent_messages[-1]  # high setpoint
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert round(msg["payload"]["Value"], 2) == 77.0
+    assert msg["payload"]["ValueIDKey"] == 562950076153874
 
     # Test basic/single-setpoint thermostat (node 16 in dump)
     state = hass.states.get("climate.komforthaus_spirit_z_wave_plus_mode")
@@ -104,8 +125,8 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
         },
         blocking=True,
     )
-    assert len(sent_messages) == 4
-    msg = sent_messages[3]
+    assert len(sent_messages) == 6
+    msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {
         "Value": 28.0,
@@ -122,8 +143,8 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
         },
         blocking=True,
     )
-    assert len(sent_messages) == 5
-    msg = sent_messages[4]
+    assert len(sent_messages) == 7
+    msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {
         "Value": 11,
