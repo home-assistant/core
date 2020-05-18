@@ -1,6 +1,7 @@
 """Reads vehicle status from BMW connected drive portal."""
 import asyncio
 import logging
+import weakref
 
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name
@@ -103,7 +104,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             cd_account.update()
 
     # Add update listener for config entry changes (options)
-    entry.add_update_listener(update_listener)
+    if weakref.ref(update_listener) not in entry.update_listeners:
+        entry.add_update_listener(update_listener)
 
     # Service to manually trigger updates for all accounts.
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, _async_update_all)
