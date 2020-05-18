@@ -71,13 +71,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # For backwards compat, set unique ID
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
-    daikin_api = await daikin_api_setup(
-        hass,
-        conf[CONF_HOST],
-        conf.get(CONF_KEY),
-        conf.get(CONF_UUID),
-        conf.get(CONF_PASSWORD),
-    )
+    daikin_api = await daikin_api_setup(hass, entry)
     if not daikin_api:
         return False
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
@@ -102,26 +96,28 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-async def daikin_api_setup(hass, host, key, uuid, password):
+async def daikin_api_setup(hass, entry):
     """Create a Daikin instance only once."""
-
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
         with timeout(TIMEOUT):
             device = await Appliance.factory(
-                host, session, key=key, uuid=uuid, password=password
+                device_id=entry.data[CONF_HOST],
+                session=hass.helpers.aiohttp_client.async_get_clientsession(),
+                key=entry.data.get(CONF_KEY),
+                uuid=entry.data.get(CONF_UUID),
+                password=entry.data.get(CONF_PASSWORD),
             )
     except asyncio.TimeoutError:
-        _LOGGER.debug("Connection to %s timed out", host)
+        _LOGGER.debug("Connection to %s timed out", entry.data[CONF_HOST])
         raise ConfigEntryNotReady
     except ClientConnectionError:
-        _LOGGER.debug("ClientConnectionError to %s", host)
+        _LOGGER.debug("ClientConnectionError to %s", entry.data[CONF_HOST])
         raise ConfigEntryNotReady
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unexpected error creating device %s", host)
+        _LOGGER.error("Unexpected error creating device %s", entry.data[CONF_HOST])
         return None
 
-    api = DaikinApi(device)
+    api = DaikinApi(device, entry)
 
     return api
 
@@ -129,9 +125,10 @@ async def daikin_api_setup(hass, host, key, uuid, password):
 class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
-    def __init__(self, device: Appliance):
+    def __init__(self, device: Appliance, entry: ConfigEntry):
         """Initialize the Daikin Handle."""
         self.device = device
+        self.entry = entry
         self.name = device.values.get("name", "Daikin AC")
         self.ip_address = device.device_ip
         self._available = True

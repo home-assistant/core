@@ -62,6 +62,8 @@ SENSOR_TYPES = {
 CONF_KEY = "key"
 CONF_UUID = "uuid"
 
+CONF_TEMPERATURE_STEPS = "temperature_steps"
+
 KEY_MAC = "mac"
 KEY_IP = "ip"
 KEY_HOSTNAME = "hostname"

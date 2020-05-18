@@ -32,6 +32,7 @@ from .const import (
     ATTR_STATE_OFF,
     ATTR_STATE_ON,
     ATTR_TARGET_TEMPERATURE,
+    CONF_TEMPERATURE_STEPS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,7 +131,9 @@ class DaikinClimate(ClimateEntity):
             # temperature
             elif attr == ATTR_TEMPERATURE:
                 try:
-                    values[HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]] = str(int(value))
+                    values[HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]] = str(
+                        float(value)
+                    )
                 except ValueError:
                     _LOGGER.error("Invalid temperature %s", value)
 
@@ -170,6 +173,8 @@ class DaikinClimate(ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
+        if self._api.entry.options.get(CONF_TEMPERATURE_STEPS):
+            return 0.5
         return 1
 
     async def async_set_temperature(self, **kwargs):
