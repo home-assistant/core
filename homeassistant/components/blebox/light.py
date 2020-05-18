@@ -24,10 +24,12 @@ from . import BleBoxEntity, create_blebox_entities
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a BleBox entry."""
 
-    create_blebox_entities(hass, config_entry, async_add, BleBoxLightEntity, "lights")
+    create_blebox_entities(
+        hass, config_entry, async_add_entities, BleBoxLightEntity, "lights"
+    )
 
 
 class BleBoxLightEntity(BleBoxEntity, LightEntity):
@@ -69,9 +71,9 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
 
-        white = kwargs.get(ATTR_WHITE_VALUE, None)
-        hs_color = kwargs.get(ATTR_HS_COLOR, None)
-        brightness = kwargs.get(ATTR_BRIGHTNESS, None)
+        white = kwargs.get(ATTR_WHITE_VALUE)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         feature = self._feature
         value = feature.sensible_on_value
@@ -90,7 +92,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
             await self._feature.async_on(value)
         except BadOnValueError as ex:
             _LOGGER.error(
-                "turning on '%s' failed: Bad value %s (%s)", self.name, value, ex
+                "Turning on '%s' failed: Bad value %s (%s)", self.name, value, ex
             )
 
     async def async_turn_off(self, **kwargs):
