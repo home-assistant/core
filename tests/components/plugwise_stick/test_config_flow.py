@@ -11,7 +11,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
-from tests.async_mock import MagicMock, patch, sentinel
+from tests.async_mock import AsyncMock, MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
 
 
@@ -39,7 +39,7 @@ async def test_user_flow_show_form(hass):
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch(
     "homeassistant.components.plugwise_stick.config_flow.validate_connection",
-    return_value=None,
+    AsyncMock(return_value=None),
 )
 async def test_user_flow_select(hass):
     """Test user flow when USB-stick is selected from list."""
@@ -47,7 +47,7 @@ async def test_user_flow_select(hass):
     port = com_port()
     port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
-    result = hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: port_select},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
