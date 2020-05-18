@@ -45,10 +45,15 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_selection = user_input[CONF_USB_PATH]
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_manual_path()
-            port = ports[list_of_ports.index(user_selection)]
-            device_path = await self.hass.async_add_executor_job(
-                get_serial_by_id, port.device
-            )
+            if user_selection in list_of_ports:
+                port = ports[list_of_ports.index(user_selection)]
+                device_path = await self.hass.async_add_executor_job(
+                    get_serial_by_id, port.device
+                )
+            else:
+                device_path = await self.hass.async_add_executor_job(
+                    get_serial_by_id, user_selection
+                )
             if device_path in plugwise_stick_entries(self.hass):
                 errors["base"] = "connection_exists"
             else:

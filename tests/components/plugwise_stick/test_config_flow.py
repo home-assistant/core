@@ -39,7 +39,7 @@ async def test_user_flow_show_form(hass):
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch(
     "homeassistant.components.plugwise_stick.config_flow.validate_connection",
-    return_value={},
+    return_value=None,
 )
 async def test_user_flow_select(hass):
     """Test user flow when USB-stick is selected from list."""
