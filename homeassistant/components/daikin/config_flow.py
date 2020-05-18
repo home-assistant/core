@@ -119,7 +119,7 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_discovery(self, discovery_info):
         """Initialize step from discovery."""
-        _LOGGER.info("Discovered device: %s", discovery_info)
+        _LOGGER.debug("Discovered device: %s", discovery_info)
         await self.async_set_unique_id(discovery_info[KEY_MAC])
         self._abort_if_unique_id_configured()
         self.host = discovery_info[KEY_IP]
