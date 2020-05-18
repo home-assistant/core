@@ -152,15 +152,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             try:
                 _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
 
-                if soco not in hass.data[DATA_SONOS].discovered:
+                if soco.uid not in hass.data[DATA_SONOS].discovered:
                     _LOGGER.debug("Adding new entity")
-                    hass.data[DATA_SONOS].discovered.append(soco)
+                    hass.data[DATA_SONOS].discovered.append(soco.uid)
                     hass.add_job(async_add_entities, [SonosEntity(soco)])
                 else:
                     entity = _get_entity_from_soco_uid(hass, soco.uid)
-                    if entity:
+                    if entity and (entity.soco == soco or not entity.available):
                         _LOGGER.debug("Seen %s", entity)
-                        hass.add_job(entity.async_seen())
+                        hass.add_job(entity.async_seen(soco))
+
             except SoCoException as ex:
                 _LOGGER.debug("SoCoException, ex=%s", ex)
 
@@ -398,7 +399,7 @@ class SonosEntity(MediaPlayerEntity):
 
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
-        await self.async_seen()
+        await self.async_seen(self.soco)
 
         self.hass.data[DATA_SONOS].entities.append(self)
 
@@ -464,9 +465,11 @@ class SonosEntity(MediaPlayerEntity):
         """Return coordinator of this player."""
         return self._coordinator
 
-    async def async_seen(self):
+    async def async_seen(self, player):
         """Record that this player was seen right now."""
         was_available = self.available
+
+        self._player = player
 
         if self._seen_timer:
             self._seen_timer()
