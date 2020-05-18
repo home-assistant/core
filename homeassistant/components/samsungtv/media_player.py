@@ -20,8 +20,8 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,

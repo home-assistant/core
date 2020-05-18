@@ -13,8 +13,7 @@ from homeassistant.components.ssdp import (
 from homeassistant.components.zeroconf import ATTR_PROPERTIES
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
-    CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
@@ -77,7 +76,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == self._host or (
                 self._mac and entry.data[CONF_MAC] == self._mac
             ):
-                data = enty.data
+                data = entry.data
                 if self._manufacturer and not data[CONF_MANUFACTURER]:
                     data[CONF_MANUFACTURER] = self._manufacturer
                 if self._model and not data[CONF_MODEL]:
