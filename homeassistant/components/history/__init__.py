@@ -298,7 +298,6 @@ class HistoryPeriodView(HomeAssistantView):
 
     async def get(self, request, datetime=None):
         """Return history over a period of time."""
-        timer_start = time.perf_counter()
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
 
@@ -335,41 +334,56 @@ class HistoryPeriodView(HomeAssistantView):
 
         hass = request.app["hass"]
 
-        def _sorted_significant_states_json():
-            """Fetch significant stats from the database as json."""
+        return await hass.async_add_executor_job(
+            self._sorted_significant_states_json,
+            hass,
+            start_time,
+            end_time,
+            entity_ids,
+            include_start_time_state,
+            significant_changes_only,
+        )
 
-            result = get_significant_states(
-                hass,
-                start_time,
-                end_time,
-                entity_ids,
-                self.filters,
-                include_start_time_state,
-                significant_changes_only,
-            )
-            result = list(result.values())
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                elapsed = time.perf_counter() - timer_start
-                _LOGGER.debug(
-                    "Extracted %d states in %fs", sum(map(len, result)), elapsed
-                )
+    def _sorted_significant_states_json(
+        self,
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+        include_start_time_state,
+        significant_changes_only,
+    ):
+        """Fetch significant stats from the database as json."""
+        timer_start = time.perf_counter()
 
-            # Optionally reorder the result to respect the ordering given
-            # by any entities explicitly included in the configuration.
-            if self.use_include_order:
-                sorted_result = []
-                for order_entity in self.filters.included_entities:
-                    for state_list in result:
-                        if state_list[0].entity_id == order_entity:
-                            sorted_result.append(state_list)
-                            result.remove(state_list)
-                            break
-                sorted_result.extend(result)
-                result = sorted_result
+        result = get_significant_states(
+            hass,
+            start_time,
+            end_time,
+            entity_ids,
+            self.filters,
+            include_start_time_state,
+            significant_changes_only,
+        )
+        result = list(result.values())
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            elapsed = time.perf_counter() - timer_start
+            _LOGGER.debug("Extracted %d states in %fs", sum(map(len, result)), elapsed)
 
-            return self.json(result)
+        # Optionally reorder the result to respect the ordering given
+        # by any entities explicitly included in the configuration.
+        if self.use_include_order:
+            sorted_result = []
+            for order_entity in self.filters.included_entities:
+                for state_list in result:
+                    if state_list[0].entity_id == order_entity:
+                        sorted_result.append(state_list)
+                        result.remove(state_list)
+                        break
+            sorted_result.extend(result)
+            result = sorted_result
 
-        return await hass.async_add_executor_job(_sorted_significant_states_json)
+        return self.json(result)
 
 
 class Filters:
