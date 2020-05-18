@@ -53,16 +53,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         _LOGGER.debug("Discover Plugwise nodes")
         stick.scan(discover_finished)
     except PortError:
-        _LOGGER.debug("Connecting to Plugwise USBstick communication failed")
+        _LOGGER.error("Connecting to Plugwise USBstick communication failed")
         raise ConfigEntryNotReady
     except StickInitError:
-        _LOGGER.debug("Initializing of Plugwise USBstick communication failed")
+        _LOGGER.error("Initializing of Plugwise USBstick communication failed")
         raise ConfigEntryNotReady
     except NetworkDown:
-        _LOGGER.debug("Plugwise zigbee network down")
+        _LOGGER.warning("Plugwise zigbee network down")
         raise ConfigEntryNotReady
     except TimeoutException:
-        _LOGGER.debug("Timeout")
+        _LOGGER.warning("Timeout")
         raise ConfigEntryNotReady
     return True
 
