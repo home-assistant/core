@@ -30,6 +30,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
@@ -87,11 +88,12 @@ class SamsungTVDevice(MediaPlayerEntity):
     def __init__(self, bridge, config_entry, on_script):
         """Initialize the Samsung device."""
         self._config_entry = config_entry
+        self._mac = config_entry.data.get(CONF_MAC)
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
         self._model = config_entry.data.get(CONF_MODEL)
         self._name = config_entry.data.get(CONF_NAME)
         self._on_script = on_script
-        self._uuid = config_entry.data.get(CONF_ID)
+        self._uuid = config_entry.unique_id
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -150,12 +152,15 @@ class SamsungTVDevice(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return device specific attributes."""
-        return {
+        info = {
             "name": self.name,
             "identifiers": {(DOMAIN, self.unique_id)},
             "manufacturer": self._manufacturer,
             "model": self._model,
         }
+        if self._mac:
+            info["connections"] = {CONNECTION_NETWORK_MAC, self._mac}
+        return info
 
     @property
     def is_volume_muted(self):
