@@ -22,7 +22,6 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
@@ -237,22 +236,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         ]
 
     @property
-    def swing_mode(self):
-        """Return the swing setting."""
-        if not self.values.swing_mode:
-            return None
-        return self.values.swing_mode.value
-
-    @property
-    def swing_modes(self):
-        """Return the list of available swing modes."""
-        if not self.values.swing_mode:
-            return []
-        return [
-            entry[VALUE_LABEL] for entry in self.values.swing_mode.value[VALUE_LIST]
-        ]
-
-    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if len(self._current_mode_setpoint_values) != 1:
@@ -303,19 +286,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             return
         self.values.fan_mode.send_value(fan_mode_value)
 
-    async def async_set_swing_mode(self, swing_mode):
-        """Set new target swing mode."""
-        if not self.values.swing_mode:
-            return
-        # get id for this swing_mode
-        swing_mode_value = _get_list_id(
-            self.values.swing_mode.value[VALUE_LIST], swing_mode
-        )
-        if swing_mode_value is None:
-            _LOGGER.warning("Received an invalid swing mode: %s", swing_mode)
-            return
-        self.values.swing_mode.send_value(swing_mode_value)
-
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if not self.values.mode:
@@ -364,8 +334,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             support |= SUPPORT_FAN_MODE
         if len(self.preset_modes) > 1:
             support |= SUPPORT_PRESET_MODE
-        if self.values.swing_mode:
-            support |= SUPPORT_SWING_MODE
         return support
 
     def _get_current_mode_setpoint_values(self) -> Tuple:

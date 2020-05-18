@@ -69,11 +69,6 @@ DISCOVERY_SCHEMAS = (
                 const.DISC_COMMAND_CLASS: (CommandClass.THERMOSTAT_FAN_STATE,),
                 const.DISC_OPTIONAL: True,
             },
-            "swing_mode": {
-                const.DISC_COMMAND_CLASS: (CommandClass.CONFIGURATION,),
-                const.DISC_INDEX: (33,),
-                const.DISC_OPTIONAL: True,
-            },
             "valve_position": {
                 const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_MULTILEVEL,),
                 const.DISC_INDEX: (0,),
