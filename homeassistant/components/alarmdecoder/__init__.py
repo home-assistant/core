@@ -169,7 +169,6 @@ def setup(hass, config):
 
     def get_panel_brand():
         """Return alarm panel manufacturer from AlarmDecoder config string."""
-        nonlocal restart
         brands = {"A": BRAND_HONEYWELL, "D": BRAND_DSC}
 
         try:
