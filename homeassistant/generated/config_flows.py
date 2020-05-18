@@ -89,6 +89,7 @@ FLOWS = [
     "met",
     "meteo_france",
     "mikrotik",
+    "mill",
     "minecraft_server",
     "mobile_app",
     "monoprice",
