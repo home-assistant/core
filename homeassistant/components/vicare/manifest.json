@@ -3,5 +3,5 @@
   "name": "Viessmann ViCare",
   "documentation": "https://www.home-assistant.io/integrations/vicare",
   "codeowners": ["@oischinger"],
-  "requirements": ["PyViCare==0.1.10"]
+  "requirements": ["PyViCare==0.2.0"]
 }
