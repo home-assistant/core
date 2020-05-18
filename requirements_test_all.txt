@@ -621,7 +621,7 @@ pymailgunner==1.4
 pymelcloud==2.5.2
 
 # homeassistant.components.somfy
-pymfy==0.7.1
+pymfy==0.9.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -814,7 +814,7 @@ spotipy==2.12.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.16
+sqlalchemy==1.3.17
 
 # homeassistant.components.starline
 starline==0.1.3
