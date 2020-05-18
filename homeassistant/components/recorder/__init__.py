@@ -520,6 +520,7 @@ class Recorder(threading.Thread):
                 # The default mode is serialized.
                 kwargs["connect_args"] = {"check_same_thread": False}
                 kwargs["poolclass"] = QueuePool
+                kwargs["pool_timeout"] = 900
             kwargs["echo"] = False
         else:
             kwargs["echo"] = False
