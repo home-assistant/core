@@ -67,7 +67,7 @@ async def test_init(saunabox, hass, config):
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & SUPPORT_TARGET_TEMPERATURE
 
-    assert state.attributes[ATTR_HVAC_MODES] == (HVAC_MODE_OFF, HVAC_MODE_HEAT)
+    assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_OFF, HVAC_MODE_HEAT]
 
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_HVAC_MODE not in state.attributes

@@ -2,8 +2,6 @@
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -12,6 +10,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import BleBoxEntity, create_blebox_entities
+from .const import BLEBOX_TO_CLIMATE_HVAC_MODE, BLEBOX_TO_CURRENT_HVAC_MODE
 
 
 async def async_setup_entry(hass, config_entry, async_add):
@@ -33,9 +32,7 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateDevice):
     @property
     def hvac_mode(self):
         """Return the desired HVAC mode."""
-        return {None: None, False: HVAC_MODE_OFF, True: HVAC_MODE_HEAT}[
-            self._feature.is_on
-        ]
+        return BLEBOX_TO_CLIMATE_HVAC_MODE[self._feature.is_on]
 
     @property
     def hvac_action(self):
@@ -44,15 +41,13 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateDevice):
         if not is_on:
             return None if is_on is None else CURRENT_HVAC_OFF
 
-        states = {None: None, False: CURRENT_HVAC_IDLE, True: CURRENT_HVAC_HEAT}
-
         heating = self._feature.is_heating
-        return states[heating]
+        return BLEBOX_TO_CURRENT_HVAC_MODE[heating]
 
     @property
     def hvac_modes(self):
         """Return a list of possible HVAC modes."""
-        return (HVAC_MODE_OFF, HVAC_MODE_HEAT)
+        return [HVAC_MODE_OFF, HVAC_MODE_HEAT]
 
     @property
     def temperature_unit(self):
@@ -81,13 +76,10 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the climate entity mode."""
-        if hvac_mode == HVAC_MODE_OFF:
-            return await self._feature.async_off()
-
         if hvac_mode == HVAC_MODE_HEAT:
             return await self._feature.async_on()
 
-        raise NotImplementedError
+        return await self._feature.async_off()
 
     async def async_set_temperature(self, **kwargs):
         """Set the thermostat temperature."""

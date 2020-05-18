@@ -1,5 +1,11 @@
 """Constants for the BleBox devices integration."""
 
+from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+)
 from homeassistant.components.cover import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_GATE,
@@ -22,6 +28,14 @@ ADDRESS_ALREADY_CONFIGURED = "address_already_configured"
 CANNOT_CONNECT = "cannot_connect"
 UNSUPPORTED_VERSION = "unsupported_version"
 UNKNOWN = "unknown"
+
+
+BLEBOX_TO_CLIMATE_HVAC_MODE = {None: None, False: HVAC_MODE_OFF, True: HVAC_MODE_HEAT}
+BLEBOX_TO_CURRENT_HVAC_MODE = {
+    None: None,
+    False: CURRENT_HVAC_IDLE,
+    True: CURRENT_HVAC_HEAT,
+}
 
 BLEBOX_TO_HASS_DEVICE_CLASSES = {
     "shutter": DEVICE_CLASS_SHUTTER,
