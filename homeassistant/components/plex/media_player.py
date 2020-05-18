@@ -559,16 +559,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
             return
 
         src = json.loads(media_id)
-        if media_type == PLEX_DOMAIN and isinstance(src, int):
-            try:
-                media = self.plex_server.fetch_item(src)
-            except plexapi.exceptions.NotFound:
-                _LOGGER.error("Media for key %s not found", src)
-                return
-            shuffle = 0
-        else:
-            shuffle = src.pop("shuffle", 0)
-            media = self.plex_server.lookup_media(media_type, **src)
+        if isinstance(src, int):
+            src = {"plex_key": src}
+
+        shuffle = src.pop("shuffle", 0)
+        media = self.plex_server.lookup_media(media_type, **src)
 
         if media is None:
             _LOGGER.error("Media could not be found: %s", media_id)

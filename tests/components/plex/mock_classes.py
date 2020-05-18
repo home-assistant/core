@@ -161,6 +161,10 @@ class MockPlexServer:
         """Mock the playlist lookup method."""
         return MockPlexMediaItem(playlist, mediatype="playlist")
 
+    def fetchItem(self, item):
+        """Mock the fetchItem method."""
+        return MockPlexMediaItem("Item Name")
+
 
 class MockPlexClient:
     """Mock a PlexClient instance."""
@@ -195,7 +199,7 @@ class MockPlexClient:
     @property
     def protocolCapabilities(self):
         """Mock the protocolCapabilities attribute."""
-        return ["player"]
+        return ["playback"]
 
     @property
     def state(self):
@@ -211,6 +215,10 @@ class MockPlexClient:
     def version(self):
         """Mock the version attribute."""
         return "1.0"
+
+    def playMedia(self, item):
+        """Mock the playMedia method."""
+        pass
 
 
 class MockPlexSession:

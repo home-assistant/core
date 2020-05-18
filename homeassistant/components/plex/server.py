@@ -31,6 +31,7 @@ from .const import (
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
@@ -377,6 +378,15 @@ class PlexServer:
     def lookup_media(self, media_type, **kwargs):
         """Lookup a piece of media."""
         media_type = media_type.lower()
+
+        if media_type == DOMAIN:
+            key = kwargs["plex_key"]
+            try:
+                return self.fetch_item(key)
+            except plexapi.exceptions.NotFound:
+                _LOGGER.error("Media for key %s not found", key)
+                return None
+
         if media_type == MEDIA_TYPE_PLAYLIST:
             try:
                 playlist_name = kwargs["playlist_name"]

@@ -5,10 +5,13 @@ from plexapi.exceptions import NotFound
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_VIDEO,
+    SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.plex.const import (
     CONF_IGNORE_NEW_SHARED_USERS,
@@ -18,6 +21,7 @@ from homeassistant.components.plex.const import (
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
@@ -281,6 +285,33 @@ async def test_media_lookups(hass):
 
     server_id = mock_plex_server.machineIdentifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
+
+    # Plex Key searches
+    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    await hass.async_block_till_done()
+    media_player_id = hass.states.async_entity_ids("media_player")[0]
+    with patch("homeassistant.components.plex.PlexServer.create_playqueue"):
+        assert await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: media_player_id,
+                ATTR_MEDIA_CONTENT_TYPE: DOMAIN,
+                ATTR_MEDIA_CONTENT_ID: 123,
+            },
+            True,
+        )
+    with patch.object(MockPlexServer, "fetchItem", side_effect=NotFound):
+        assert await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: media_player_id,
+                ATTR_MEDIA_CONTENT_TYPE: DOMAIN,
+                ATTR_MEDIA_CONTENT_ID: 123,
+            },
+            True,
+        )
 
     # TV show searches
     with patch.object(MockPlexLibrary, "section", side_effect=NotFound):
