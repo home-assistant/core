@@ -588,6 +588,7 @@ def engine_args_for_db_url(db_url):
                 "echo": False,
                 "connect_args": {"check_same_thread": False},
                 "poolclass": SingletonThreadPool,
+                "pool_reset_on_return": None,
             }
 
     return {"echo": False}

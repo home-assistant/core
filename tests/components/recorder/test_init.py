@@ -267,6 +267,7 @@ async def test_engine_args_for_db_url(hass):
         "connect_args": {"check_same_thread": False},
         "echo": False,
         "poolclass": SingletonThreadPool,
+        "pool_reset_on_return": None,
     }
 
     assert engine_args_for_db_url("sqlite://") == {
