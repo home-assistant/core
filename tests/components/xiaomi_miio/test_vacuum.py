@@ -391,16 +391,6 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
-    coordinates = {"x_coord": 25500, "y_coord": 25500}
-    await hass.services.async_call(
-        XIAOMI_DOMAIN, SERVICE_GOTO, coordinates, blocking=True
-    )
-    mock_mirobo_is_on.goto.assert_has_calls(
-        [mock.call(x_coord=25500, y_coord=25500)], any_order=True
-    )
-    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
-    mock_mirobo_is_on.reset_mock()
-
 
 async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
     """Test Xiaomi vacuum fanspeeds."""
