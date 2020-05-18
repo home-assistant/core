@@ -484,7 +484,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 | SUPPORT_VOLUME_MUTE
             )
 
-        return 0
+        return SUPPORT_PLAY_MEDIA
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
