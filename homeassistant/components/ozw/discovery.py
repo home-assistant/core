@@ -16,6 +16,7 @@ DISCOVERY_SCHEMAS = (
             "off_delay": {
                 const.DISC_COMMAND_CLASS: CommandClass.CONFIGURATION,
                 const.DISC_INDEX: 9,
+                const.DISC_OPTIONAL: True,
             },
         },
     },
