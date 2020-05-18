@@ -47,7 +47,7 @@ async def test_user_flow_select(hass):
     port = com_port()
     port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
-    result = await hass.config_entries.flow.async_init(
+    result = hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: port_select},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
@@ -72,7 +72,7 @@ async def test_invalid_connection(hass):
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_USB_PATH: "cannot_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_duplicate_connection(hass):
@@ -83,7 +83,7 @@ async def test_duplicate_connection(hass):
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_USB_PATH: "connection_exists"}
+    assert result["errors"] == {"base": "connection_exists"}
 
 
 def test_get_serial_by_id_no_dir():
