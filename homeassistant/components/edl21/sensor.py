@@ -89,8 +89,12 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:76.7.0*255": "L3 active instantaneous power",
+        # C=96: Electricity-related service entries
+        "1-0:96.1.0*255": "Metering point ID 1",
     }
     _OBIS_BLACKLIST = {
+        # C=96: Electricity-related service entries
+        "1-0:96.50.1*1",  # Manufacturer specific
         # A=129: Manufacturer specific
         "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
         "129-129:199.130.5*255",  # Iskraemeco: Public Key
