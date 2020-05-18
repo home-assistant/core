@@ -6,6 +6,9 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 ZEROCONF = {
+    "_airplay._tcp.local.": [
+        "samsungtv"
+    ],
     "_axis-video._tcp.local.": [
         "axis",
         "doorbird"

@@ -11,6 +11,7 @@
       "st": "urn:samsung.com:device:RemoteControlReceiver:1"
     }
   ],
+  "zeroconf": ["_airplay._tcp.local."],
   "codeowners": ["@escoand"],
   "config_flow": true
 }
