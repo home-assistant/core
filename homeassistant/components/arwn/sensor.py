@@ -39,6 +39,10 @@ def discover_sensors(topic, payload):
             return ArwnSensor(
                 "Rain Since Midnight", "since_midnight", "in", "mdi:water"
             )
+        return (
+            ArwnSensor("Total Rainfall", "total", unit, "mdi:water"),
+            ArwnSensor("Rainfall Rate", "rate", unit, "mdi:water"),
+        )
     if domain == "barometer":
         return ArwnSensor("Barometer", "pressure", unit, "mdi:thermometer-lines")
     if domain == "wind":

@@ -521,7 +521,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.atag
-pyatag==0.3.1.1
+pyatag==0.3.1.2
 
 # homeassistant.components.netatmo
 pyatmo==3.3.1
@@ -539,7 +539,7 @@ pychromecast==5.2.0
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.0.1
+pydaikin==2.0.2
 
 # homeassistant.components.deconz
 pydeconz==70
@@ -621,7 +621,7 @@ pymailgunner==1.4
 pymelcloud==2.5.2
 
 # homeassistant.components.somfy
-pymfy==0.7.1
+pymfy==0.9.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0

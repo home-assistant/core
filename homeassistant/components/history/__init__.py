@@ -46,12 +46,12 @@ IGNORE_DOMAINS = ("zone", "scene")
 def get_significant_states(hass, *args, **kwargs):
     """Wrap _get_significant_states with a sql session."""
     with session_scope(hass=hass) as session:
-        return _get_significant_states(session, hass, *args, **kwargs)
+        return _get_significant_states(hass, session, *args, **kwargs)
 
 
 def _get_significant_states(
-    session,
     hass,
+    session,
     start_time,
     end_time=None,
     entity_ids=None,
@@ -98,8 +98,8 @@ def _get_significant_states(
         _LOGGER.debug("get_significant_states took %fs", elapsed)
 
     return _states_to_json(
-        session,
         hass,
+        session,
         states,
         start_time,
         entity_ids,
@@ -127,7 +127,7 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
 
         states = execute(query.order_by(States.last_updated))
 
-        return _states_to_json(session, hass, states, start_time, entity_ids)
+        return _states_to_json(hass, session, states, start_time, entity_ids)
 
 
 def get_last_state_changes(hass, number_of_states, entity_id):
@@ -148,8 +148,8 @@ def get_last_state_changes(hass, number_of_states, entity_id):
         )
 
         return _states_to_json(
-            session,
             hass,
+            session,
             reversed(states),
             start_time,
             entity_ids,
@@ -251,8 +251,8 @@ def _get_states_with_session(
 
 
 def _states_to_json(
-    session,
     hass,
+    session,
     states,
     start_time,
     entity_ids,
@@ -377,7 +377,7 @@ class HistoryPeriodView(HomeAssistantView):
         hass = request.app["hass"]
 
         return await hass.async_add_executor_job(
-            self._get_sorted_significant_states_as_json,
+            self._sorted_significant_states_json,
             hass,
             start_time,
             end_time,
@@ -386,7 +386,7 @@ class HistoryPeriodView(HomeAssistantView):
             significant_changes_only,
         )
 
-    def _get_sorted_significant_states_as_json(
+    def _sorted_significant_states_json(
         self,
         hass,
         start_time,
@@ -400,8 +400,8 @@ class HistoryPeriodView(HomeAssistantView):
 
         with session_scope(hass=hass) as session:
             result = _get_significant_states(
-                session,
                 hass,
+                session,
                 start_time,
                 end_time,
                 entity_ids,
