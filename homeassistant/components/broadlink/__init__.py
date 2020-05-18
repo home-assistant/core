@@ -36,7 +36,7 @@ def hostname(value):
         raise ValueError
     if host[-1] == ".":
         host = host[:-1]
-    allowed = re.compile(r"(?!-)[a-z\d-]{1,63}(?<!-)$")
+    allowed = re.compile(r"(?![_-])[a-z\d_-]{1,63}(?<![_-])$")
     if not all(allowed.match(elem) for elem in host.split(".")):
         raise ValueError
     return host
