@@ -41,9 +41,13 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
+    STATE_IDLE,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
@@ -85,6 +89,7 @@ TRAIT_VOLUME = f"{PREFIX_TRAITS}Volume"
 TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
 TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
 TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
+TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -1602,3 +1607,52 @@ class TransportControlTrait(_Trait):
             blocking=True,
             context=data.context,
         )
+
+
+@register_trait
+class MediaStateTrait(_Trait):
+    """Trait to get media playback state.
+
+    https://developers.google.com/actions/smarthome/traits/mediastate
+    """
+
+    name = TRAIT_MEDIA_STATE
+    commands = []
+
+    activity_lookup = {
+        STATE_OFF: "INACTIVE",
+        STATE_IDLE: "STANDBY",
+        STATE_PLAYING: "ACTIVE",
+        STATE_ON: "STANDBY",
+        STATE_PAUSED: "STANDBY",
+        STATE_STANDBY: "STANDBY",
+        STATE_UNAVAILABLE: "INACTIVE",
+        STATE_UNKNOWN: "INACTIVE",
+    }
+
+    playback_lookup = {
+        STATE_OFF: "STOPPED",
+        STATE_IDLE: "STOPPED",
+        STATE_PLAYING: "PLAYING",
+        STATE_ON: "STOPPED",
+        STATE_PAUSED: "PAUSED",
+        STATE_STANDBY: "STOPPED",
+        STATE_UNAVAILABLE: "STOPPED",
+        STATE_UNKNOWN: "STOPPED",
+    }
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        return domain == media_player.DOMAIN
+
+    def sync_attributes(self):
+        """Return attributes for a sync request."""
+        return {"supportActivityState": True, "supportPlaybackState": True}
+
+    def query_attributes(self):
+        """Return the attributes of this trait for this entity."""
+        return {
+            "activityState": self.activity_lookup.get(self.state.state, "INACTIVE"),
+            "playbackState": self.playback_lookup.get(self.state.state, "STOPPED"),
+        }
