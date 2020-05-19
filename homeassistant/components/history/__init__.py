@@ -337,8 +337,10 @@ def _states_to_json_no_convert(
         if ent_id.startswith("climate.") or ent_id.startswith("water_heater."):
             result[ent_id].extend([g.to_native() for g in group])
         else:
-            if not result[ent_id] and group:
-                result[ent_id].append(group.pop().to_native())
+            if not result[ent_id]:
+                state = next(group)
+                if state:
+                    result[ent_id].append(state.to_native())
 
             result[ent_id].extend(
                 [
