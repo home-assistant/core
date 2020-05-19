@@ -119,18 +119,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_service_led_off_handler(entity, service):
         """Handle set_led_off command."""
-        return device.set_indicator_led(False)
+        device = entity.device
+        device.set_indicator_led(False)
 
     async def async_service_led_on_handler(entity, service):
         """Handle set_led_on command."""
-        return device.set_indicator_led(True)
+        device = entity.device
+        device.set_indicator_led(True)
 
     async def async_service_learn_handler(entity, service):
         """Handle a learn command."""
-        if service.service != SERVICE_LEARN:
-            _LOGGER.error("We should not handle service: %s", service.service)
-            return
-
         device = entity.device
 
         slot = service.data.get(CONF_SLOT, entity.slot)
