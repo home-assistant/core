@@ -87,17 +87,13 @@ def _get_significant_states(
 
     query = query.order_by(States.last_updated)
 
-    states = (
-        state
-        for state in execute(query)
-        if (_is_significant(state) and not state.attributes.get(ATTR_HIDDEN, False))
-    )
+    states = [state for state in query]
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug("get_significant_states took %fs", elapsed)
 
-    return _states_to_json(
+    return _states_to_json_no_convert(
         hass,
         session,
         states,
@@ -292,6 +288,66 @@ def _states_to_json(
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):
         result[ent_id].extend(group)
+
+    # Filter out the empty lists if some states had 0 results.
+    return {key: val for key, val in result.items() if val}
+
+
+def _states_to_json_no_convert(
+    hass,
+    session,
+    states,
+    start_time,
+    entity_ids,
+    filters=None,
+    include_start_time_state=True,
+):
+    """Convert SQL results into JSON friendly data structure.
+
+    This takes our state list and turns it into a JSON friendly data
+    structure {'entity_id': [list of states], 'entity_id2': [list of states]}
+
+    We also need to go back and create a synthetic zero data point for
+    each list of states, otherwise our graphs won't start on the Y
+    axis correctly.
+    """
+    result = defaultdict(list)
+    # Set all entity IDs to empty lists in result set to maintain the order
+    if entity_ids is not None:
+        for ent_id in entity_ids:
+            result[ent_id] = []
+
+    # Get the states at the start time
+    timer_start = time.perf_counter()
+    if include_start_time_state:
+        run = recorder.run_information_from_instance(hass, start_time)
+        for state in _get_states_with_session(
+            session, start_time, entity_ids, run=run, filters=filters
+        ):
+            state.last_changed = start_time
+            state.last_updated = start_time
+            result[state.entity_id].append(state)
+
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        elapsed = time.perf_counter() - timer_start
+        _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
+
+    # Append all changes to it
+    for ent_id, group in groupby(states, lambda state: state.entity_id):
+        if ent_id.startswith("climate.") or ent_id.startswith("water_heater."):
+            result[ent_id].extend([g.to_native() for g in group])
+        else:
+            result[ent_id].extend(
+                [
+                    {
+                        "state": s.state,
+                        "entity_id": ent_id,
+                        "last_changed": s.last_changed,
+                        "attributes": {},
+                    }
+                    for s in group
+                ]
+            )
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
