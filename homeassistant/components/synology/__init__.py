@@ -9,7 +9,6 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    CONF_WHITELIST,
 )
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
@@ -25,7 +24,6 @@ SYNOLOGY_CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_URL): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_WHITELIST, default=[]): cv.ensure_list,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
