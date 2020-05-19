@@ -314,10 +314,7 @@ def _sorted_states_to_json(
             # in-between only provide the "state" and the
             # "last_changed".
             if not ent_results:
-                db_state = next(group)
-                if not db_state:
-                    continue
-                ent_results.append(db_state.to_native())
+                ent_results.append(next(group).to_native())
 
             initial_state = ent_results[-1]
             prev_state = ent_results[-1]
