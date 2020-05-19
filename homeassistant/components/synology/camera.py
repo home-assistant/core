@@ -7,6 +7,7 @@ from synology.surveillance_station import SurveillanceStation
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -16,11 +17,15 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONF_WHITELIST,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,34 +45,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up a Synology IP Camera."""
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-    timeout = config.get(CONF_TIMEOUT)
-
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up Synology cameras."""
     try:
         surveillance = await hass.async_add_executor_job(
             partial(
                 SurveillanceStation,
-                config.get(CONF_URL),
-                config.get(CONF_USERNAME),
-                config.get(CONF_PASSWORD),
-                verify_ssl=verify_ssl,
-                timeout=timeout,
+                entry.data[CONF_URL],
+                entry.data[CONF_USERNAME],
+                entry.data[CONF_PASSWORD],
+                verify_ssl=entry.data[CONF_VERIFY_SSL],
+                timeout=entry.data[CONF_TIMEOUT],
             )
         )
-    except (requests.exceptions.RequestException, ValueError):
-        _LOGGER.exception("Error when initializing SurveillanceStation")
-        return False
+    except requests.exceptions.RequestException as err:
+        _LOGGER.warning("Error when initializing SurveillanceStation: %s", err)
+        raise ConfigEntryNotReady
 
     cameras = surveillance.get_all_cameras()
 
     # add cameras
     devices = []
     for camera in cameras:
-        if not config[CONF_WHITELIST] or camera.name in config[CONF_WHITELIST]:
-            device = SynologyCamera(surveillance, camera.camera_id, verify_ssl)
-            devices.append(device)
+        device = SynologyCamera(
+            surveillance, camera.camera_id, entry.data[CONF_VERIFY_SSL], entry.entry_id
+        )
+        devices.append(device)
 
     async_add_entities(devices)
 
@@ -75,12 +80,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
-    def __init__(self, surveillance, camera_id, verify_ssl):
+    def __init__(self, surveillance, camera_id, verify_ssl, entry_id):
         """Initialize a Synology Surveillance Station camera."""
         super().__init__()
         self._surveillance = surveillance
         self._camera_id = camera_id
         self._verify_ssl = verify_ssl
+        self._entry_id = entry_id
         self._camera = self._surveillance.get_camera(camera_id)
         self._motion_setting = self._surveillance.get_motion_setting(camera_id)
         self.is_streaming = self._camera.is_enabled
@@ -102,6 +108,20 @@ class SynologyCamera(Camera):
     def name(self):
         """Return the name of this device."""
         return self._camera.name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the device."""
+        return f"{self._entry_id}-{self._camera_id}"
+
+    @property
+    def device_info(self):
+        """Return the device info if the device."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": "Synology",
+            "name": self.name,
+        }
 
     @property
     def is_recording(self):
