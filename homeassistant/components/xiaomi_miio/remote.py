@@ -106,11 +106,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_service_led_off_handler(entity, service):
         """Handle set_led_off command."""
-        entity.device.set_indicator_led(False)
+        await hass.async_add_executor_job(entity.device.set_indicator_led, False)
 
     async def async_service_led_on_handler(entity, service):
         """Handle set_led_on command."""
-        entity.device.set_indicator_led(True)
+        await hass.async_add_executor_job(entity.device.set_indicator_led, True)
 
     async def async_service_learn_handler(entity, service):
         """Handle a learn command."""
