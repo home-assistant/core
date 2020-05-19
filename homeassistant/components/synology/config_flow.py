@@ -72,6 +72,7 @@ class SynologyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 password = user_input[CONF_PASSWORD]
                 timeout = user_input[CONF_TIMEOUT]
 
+                # Try connect
                 await self.hass.async_add_executor_job(
                     partial(
                         SurveillanceStation,
