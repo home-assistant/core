@@ -36,14 +36,14 @@ def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
     return feature
 
 
-@pytest.fixture
-def valid_feature_mock():
+@pytest.fixture(name="valid_feature_mock")
+def valid_feature_mock_fixture():
     """Return a valid, complete BleBox feature mock."""
     return create_valid_feature_mock()
 
 
-@pytest.fixture
-def flow_feature_mock():
+@pytest.fixture(name="flow_feature_mock")
+def flow_feature_mock_fixture():
     """Return a mocked user flow feature."""
     return create_valid_feature_mock(
         "homeassistant.components.blebox.config_flow.Products"
@@ -74,8 +74,8 @@ async def test_flow_works(hass, valid_feature_mock, flow_feature_mock):
     }
 
 
-@pytest.fixture
-def product_class_mock():
+@pytest.fixture(name="product_class_mock")
+def product_class_mock_fixture():
     """Return a mocked feature."""
     path = "homeassistant.components.blebox.config_flow.Products"
     patcher = patch(path, DEFAULT, blebox_uniapi.products.Products, True, True)

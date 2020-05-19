@@ -12,5 +12,14 @@
                 "title": "\u8a2d\u5b9a WIFFI \u8a2d\u5099 TCP \u4f3a\u670d\u5668"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "\u903e\u6642\uff08\u5206\uff09"
+                }
+            }
+        }
     }
 }

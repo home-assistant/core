@@ -74,7 +74,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 @callback
-def create_blebox_entities(hass, config_entry, async_add, entity_klass, entity_type):
+def create_blebox_entities(
+    hass, config_entry, async_add_entities, entity_klass, entity_type
+):
     """Create entities from a BleBox product's features."""
 
     product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
@@ -84,7 +86,7 @@ def create_blebox_entities(hass, config_entry, async_add, entity_klass, entity_t
         for feature in product.features[entity_type]:
             entities.append(entity_klass(feature))
 
-    async_add(entities, True)
+    async_add_entities(entities, True)
 
 
 class BleBoxEntity(Entity):

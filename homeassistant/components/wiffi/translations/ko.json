@@ -12,5 +12,14 @@
                 "title": "WIFFI \uae30\uae30\uc6a9 TCP \uc11c\ubc84 \uc124\uc815\ud558\uae30"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "\uc81c\ud55c \uc2dc\uac04 (\ubd84)"
+                }
+            }
+        }
     }
 }
