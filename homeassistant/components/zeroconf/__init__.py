@@ -123,10 +123,8 @@ def setup(hass, config):
         hass.helpers.instance_id.async_get(), hass.loop
     ).result()
 
-    # Add UUID to name, to prevent collissions
-    zeroconf_name = f"{hass.config.location_name}-{uuid}.{ZEROCONF_TYPE}"
-
     params = {
+        "name": hass.config.location_name,
         "uuid": uuid,
         "version": __version__,
         "external_url": None,
@@ -160,8 +158,8 @@ def setup(hass, config):
 
     info = ServiceInfo(
         ZEROCONF_TYPE,
-        zeroconf_name,
-        None,
+        name=f"Home-Assistant-{uuid}.{ZEROCONF_TYPE}",
+        server=f"{uuid}.local.",
         addresses=[host_ip_pton],
         port=hass.http.server_port,
         properties=params,
