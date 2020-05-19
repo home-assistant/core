@@ -38,22 +38,9 @@ CONF_COMMANDS = "commands"
 DEFAULT_TIMEOUT = 10
 DEFAULT_SLOT = 1
 
-LEARN_COMMAND_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): vol.All(str),
-        vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
-        vol.Optional(CONF_SLOT, default=1): vol.All(int, vol.Range(min=1, max=1000000)),
-    }
-)
-
 COMMAND_SCHEMA = vol.Schema(
     {vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string])}
 )
-
-LED_ON_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.All(str)})
-
-LED_OFF_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.All(str)})
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -119,13 +106,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_service_led_off_handler(entity, service):
         """Handle set_led_off command."""
-        device = entity.device
-        device.set_indicator_led(False)
+        entity.device.set_indicator_led(False)
 
     async def async_service_led_on_handler(entity, service):
         """Handle set_led_on command."""
-        device = entity.device
-        device.set_indicator_led(True)
+        entity.device.set_indicator_led(True)
 
     async def async_service_learn_handler(entity, service):
         """Handle a learn command."""
@@ -164,13 +149,27 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_LEARN, LEARN_COMMAND_SCHEMA, async_service_learn_handler
+        SERVICE_LEARN,
+        vol.Schema(
+            {
+                vol.Required(ATTR_ENTITY_ID): vol.All(str),
+                vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
+                vol.Optional(CONF_SLOT, default=1): vol.All(
+                    int, vol.Range(min=1, max=1000000)
+                ),
+            }
+        ),
+        async_service_learn_handler,
     )
     platform.async_register_entity_service(
-        SERVICE_SET_LED_ON, LED_ON_SCHEMA, async_service_led_on_handler
+        SERVICE_SET_LED_ON,
+        vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.All(str)}),
+        async_service_led_on_handler,
     )
     platform.async_register_entity_service(
-        SERVICE_SET_LED_OFF, LED_OFF_SCHEMA, async_service_led_off_handler
+        SERVICE_SET_LED_OFF,
+        vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.All(str)}),
+        async_service_led_off_handler,
     )
 
 
