@@ -1525,7 +1525,6 @@ class TransportControlTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
-        # TODO: Check for all feature flags
         if domain == media_player.DOMAIN:
             for feature in MEDIA_COMMAND_SUPPORT_MAPPING.values():
                 if features & feature:
