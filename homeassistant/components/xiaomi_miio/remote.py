@@ -141,7 +141,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         if service.service == SERVICE_SET_LED_ON:
             return device.set_indicator_led(True)
-        elif service.service == SERVICE_SET_LED_OFF:
+        if service.service == SERVICE_SET_LED_OFF:
             return device.set_indicator_led(False)
 
         slot = service.data.get(CONF_SLOT, entity.slot)
