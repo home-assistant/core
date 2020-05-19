@@ -109,6 +109,7 @@ async def get_board(data: dict):
     if CONF_SLEEP_TUNE in data:
         board_data["sleep_tune"] = data[CONF_SLEEP_TUNE]
 
+    board_data["autostart"] = False
     board_data["shutdown_on_exception"] = True
     board_data["close_loop_on_shutdown"] = False
 
