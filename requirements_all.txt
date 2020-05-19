@@ -1785,6 +1785,9 @@ pywebpush==1.9.2
 # homeassistant.components.wemo
 pywemo==0.4.34
 
+# homeassistant.components.wilight
+pywilight==0.0.27
+
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
 
@@ -2150,9 +2153,6 @@ webexteamssdk==1.1.1
 
 # homeassistant.components.gpmdp
 websocket-client==0.54.0
-
-# homeassistant.components.wilight
-wilight==0.0.50
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.4.0

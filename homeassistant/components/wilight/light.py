@@ -1,4 +1,5 @@
 """Support for WiLight lights."""
+import asyncio
 import logging
 
 from homeassistant.components.light import (
@@ -8,11 +9,12 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     LightEntity,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_DEVICE_REGISTER, WiLightDevice
+from . import WiLightDevice
 from .const import (
+    DOMAIN,
+    DT_PENDING,
     ITEM_LIGHT,
     LIGHT_COLOR,
     LIGHT_DIMMER,
@@ -24,55 +26,56 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def devices_from_config(hass, discovery_info):
-    """Parse configuration and add WiLights switch devices."""
-    device_id = discovery_info[0]
-    model = discovery_info[1]
-    indexes = discovery_info[2]
-    item_names = discovery_info[3]
-    item_types = discovery_info[4]
-    item_sub_types = discovery_info[5]
-    device_client = hass.data[DATA_DEVICE_REGISTER][device_id]
+def devices_from_discovered_wilight(hass, wilight):
+    """Parse configuration and add WiLight light devices."""
     devices = []
-    for i in range(0, len(indexes)):
-        if item_types[i] != ITEM_LIGHT:
+    for item in wilight.items:
+        if item["type"] != ITEM_LIGHT:
             continue
-        if item_sub_types[i] == LIGHT_NONE:
+        if item["sub_type"] == LIGHT_NONE:
             continue
-        index = indexes[i]
-        item_name = item_names[i]
-        item_type = f"{item_types[i]}.{item_sub_types[i]}"
-        if item_sub_types[i] == LIGHT_ON_OFF:
-            device = WiLightLightOnOff(
-                item_name, index, device_id, model, item_type, device_client
-            )
-        elif item_sub_types[i] == LIGHT_DIMMER:
-            device = WiLightLightDimmer(
-                item_name, index, device_id, model, item_type, device_client
-            )
-        elif item_sub_types[i] == LIGHT_COLOR:
-            device = WiLightLightColor(
-                item_name, index, device_id, model, item_type, device_client
-            )
+        index = item["index"]
+        item_name = item["name"]
+        aux1 = item["type"]
+        aux2 = item["sub_type"]
+        item_type = f"{aux1}.{aux2}"
+        if item["sub_type"] == LIGHT_ON_OFF:
+            device = WiLightLightOnOff(wilight, index, item_name, item_type)
+        elif item["sub_type"] == LIGHT_DIMMER:
+            device = WiLightLightDimmer(wilight, index, item_name, item_type)
+        elif item["sub_type"] == LIGHT_COLOR:
+            device = WiLightLightColor(wilight, index, item_name, item_type)
         else:
             continue
         devices.append(device)
+
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the WiLights platform."""
-    async_add_entities(devices_from_config(hass, discovery_info))
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WiLights lights."""
+
+    async def _discovered_wilight(hass, device):
+        """Handle a discovered WiLight device."""
+        async_add_entities(devices_from_discovered_wilight(hass, device))
+
+    async_dispatcher_connect(hass, f"{DOMAIN}.light", _discovered_wilight)
+
+    await asyncio.gather(
+        *[
+            _discovered_wilight(hass, device)
+            for device in hass.data[DOMAIN][DT_PENDING].pop("light")
+        ]
+    )
 
 
 class WiLightLightOnOff(WiLightDevice, LightEntity):
     """Representation of a WiLights light on-off."""
 
-    @callback
-    def handle_event_callback(self, event):
-        """Propagate changes through ha."""
-        self._status = event
-        self.async_write_ha_state()
+    def __init__(self, *args, **kwargs):
+        """Initialize the device."""
+        WiLightDevice.__init__(self, *args, **kwargs)
+        self._on = False
 
     @property
     def supported_features(self):
@@ -82,7 +85,8 @@ class WiLightLightOnOff(WiLightDevice, LightEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        self._on = self._status["on"]
+        if "on" in self._status:
+            self._on = self._status["on"]
         return self._on
 
     async def async_turn_on(self, **kwargs):
@@ -93,32 +97,15 @@ class WiLightLightOnOff(WiLightDevice, LightEntity):
         """Turn the device off."""
         await self._client.turn_off(self._index)
 
-    @callback
-    def _availability_callback(self, availability):
-        """Update availability state."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Register update callback."""
-        self._client.register_status_callback(self.handle_event_callback, self._index)
-        self._status = await self._client.status(self._index)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"wilight_device_available_{self._device_id}",
-                self._availability_callback,
-            )
-        )
-
 
 class WiLightLightDimmer(WiLightDevice, LightEntity):
     """Representation of a WiLights light dimmer."""
 
-    @callback
-    def handle_event_callback(self, event):
-        """Propagate changes through ha."""
-        self._status = event
-        self.async_write_ha_state()
+    def __init__(self, *args, **kwargs):
+        """Initialize the device."""
+        WiLightDevice.__init__(self, *args, **kwargs)
+        self._on = False
+        self._brightness = 0
 
     @property
     def supported_features(self):
@@ -128,12 +115,16 @@ class WiLightLightDimmer(WiLightDevice, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return int(self._status["brightness"])
+        if "brightness" in self._status:
+            self._brightness = int(self._status["brightness"])
+        return self._brightness
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._status["on"]
+        if "on" in self._status:
+            self._on = self._status["on"]
+        return self._on
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on,set brightness if needed."""
@@ -148,23 +139,6 @@ class WiLightLightDimmer(WiLightDevice, LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         await self._client.turn_off(self._index)
-
-    @callback
-    def _availability_callback(self, availability):
-        """Update availability state."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Register update callback."""
-        self._client.register_status_callback(self.handle_event_callback, self._index)
-        self._status = await self._client.status(self._index)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"wilight_device_available_{self._device_id}",
-                self._availability_callback,
-            )
-        )
 
 
 def wilight_to_hass_hue(value):
@@ -190,11 +164,13 @@ def hass_to_wilight_saturation(value):
 class WiLightLightColor(WiLightDevice, LightEntity):
     """Representation of a WiLights light rgb."""
 
-    @callback
-    def handle_event_callback(self, event):
-        """Propagate changes through ha."""
-        self._status = event
-        self.async_write_ha_state()
+    def __init__(self, *args, **kwargs):
+        """Initialize the device."""
+        WiLightDevice.__init__(self, *args, **kwargs)
+        self._on = False
+        self._brightness = 0
+        self._hue = 0
+        self._saturation = 100
 
     @property
     def supported_features(self):
@@ -204,19 +180,27 @@ class WiLightLightColor(WiLightDevice, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return int(self._status["brightness"])
+        if "brightness" in self._status:
+            self._brightness = int(self._status["brightness"])
+        return self._brightness
 
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
-        hue = wilight_to_hass_hue(int(self._status["hue"]))
-        saturation = wilight_to_hass_saturation(int(self._status["saturation"]))
-        return [hue, saturation]
+        if "hue" in self._status:
+            self._hue = wilight_to_hass_hue(int(self._status["hue"]))
+        if "saturation" in self._status:
+            self._saturation = wilight_to_hass_saturation(
+                int(self._status["saturation"])
+            )
+        return [self._hue, self._saturation]
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._status["on"]
+        if "on" in self._status:
+            self._on = self._status["on"]
+        return self._on
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on,set brightness if needed."""
@@ -241,20 +225,3 @@ class WiLightLightColor(WiLightDevice, LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         await self._client.turn_off(self._index)
-
-    @callback
-    def _availability_callback(self, availability):
-        """Update availability state."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Register update callback."""
-        self._client.register_status_callback(self.handle_event_callback, self._index)
-        self._status = await self._client.status(self._index)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"wilight_device_available_{self._device_id}",
-                self._availability_callback,
-            )
-        )

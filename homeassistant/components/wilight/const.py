@@ -1,14 +1,15 @@
-"""Constants for wilight platform."""
-
-DATA_DEVICE_REGISTER = "wilight_device_register"
-DEFAULT_RECONNECT_INTERVAL = 15
-DEFAULT_KEEP_ALIVE_INTERVAL = 12
-CONNECTION_TIMEOUT = 15
-DEFAULT_PORT = 46000
+"""Constants for the WiLight integration."""
 
 DOMAIN = "wilight"
 
-CONF_ITEMS = "items"
+DT_CONFIG = "config"
+DT_REGISTRY = "registry"
+DT_PENDING = "pending"
+DT_SERIAL = "serialnumbers"
+
+DEFAULT_RECONNECT_INTERVAL = 15
+DEFAULT_KEEP_ALIVE_INTERVAL = 5
+CONNECTION_TIMEOUT = 15
 
 # Item types
 ITEM_NONE = "none"

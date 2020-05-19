@@ -1,7 +1,13 @@
 {
   "domain": "wilight",
   "name": "WiLight",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wilight",
-  "requirements": ["wilight==0.0.50"],
+  "requirements": ["pywilight==0.0.27"],
+  "ssdp": [
+    {
+      "manufacturer": "All Automacao Ltda"
+    }
+  ],
   "codeowners": ["@leofig-rj"]
 }
