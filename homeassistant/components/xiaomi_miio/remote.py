@@ -150,26 +150,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     platform.async_register_entity_service(
         SERVICE_LEARN,
-        vol.Schema(
-            {
-                vol.Required(ATTR_ENTITY_ID): vol.All(str),
-                vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
-                vol.Optional(CONF_SLOT, default=1): vol.All(
-                    int, vol.Range(min=1, max=1000000)
-                ),
-            }
-        ),
+        {
+            vol.Required(ATTR_ENTITY_ID): vol.All(str),
+            vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
+            vol.Optional(CONF_SLOT, default=1): vol.All(
+                int, vol.Range(min=1, max=1000000)
+            ),
+        },
         async_service_learn_handler,
     )
     platform.async_register_entity_service(
-        SERVICE_SET_LED_ON,
-        vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.All(str)}),
-        async_service_led_on_handler,
+        SERVICE_SET_LED_ON, {}, async_service_led_on_handler,
     )
     platform.async_register_entity_service(
-        SERVICE_SET_LED_OFF,
-        vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.All(str)}),
-        async_service_led_off_handler,
+        SERVICE_SET_LED_OFF, {}, async_service_led_off_handler,
     )
 
 
