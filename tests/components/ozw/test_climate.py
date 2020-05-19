@@ -19,7 +19,7 @@ from homeassistant.components.climate.const import (
 from .common import setup_ozw
 
 
-async def test_climate(hass, climate_data, sent_messages, climate_msg):
+async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     """Test setting up config entry."""
     receive_message = await setup_ozw(hass, fixture=climate_data)
 
@@ -68,7 +68,17 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 3, "ValueIDKey": 122683412}
 
-    # Test set fanmode
+    # Test set missing mode
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": "climate.ct32_thermostat_mode", "hvac_mode": "fan_only"},
+        blocking=True,
+    )
+    assert len(sent_messages) == 2
+    assert "Received an invalid hvac mode: fan_only" in caplog.text
+
+    # Test set fan mode
     await hass.services.async_call(
         "climate",
         "set_fan_mode",
@@ -79,6 +89,16 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 1, "ValueIDKey": 122748948}
+
+    # Test set invalid fan mode
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.ct32_thermostat_mode", "fan_mode": "invalid fan mode"},
+        blocking=True,
+    )
+    assert len(sent_messages) == 3
+    assert "Received an invalid fan mode: invalid fan mode" in caplog.text
 
     # Test incoming mode change to auto,
     # resulting in multiple setpoints
@@ -185,3 +205,16 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
         "Value": 1,
         "ValueIDKey": 273678356,
     }
+
+    # Test set invalid preset mode
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {
+            "entity_id": "climate.komforthaus_spirit_z_wave_plus_mode",
+            "preset_mode": "invalid preset mode",
+        },
+        blocking=True,
+    )
+    assert len(sent_messages) == 8
+    assert "Received an invalid preset mode: invalid preset mode" in caplog.text
