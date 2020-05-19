@@ -121,6 +121,7 @@ class SynologyCamera(Camera):
             "identifiers": {(DOMAIN, self.unique_id)},
             "manufacturer": "Synology",
             "name": self.name,
+            "via_device": (DOMAIN, self._entry_id),
         }
 
     @property
