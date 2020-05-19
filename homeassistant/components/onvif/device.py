@@ -54,6 +54,8 @@ class ONVIFDevice:
         self.profiles: List[Profile] = []
         self.max_resolution: int = 0
 
+        self._dt_diff_seconds: int = 0
+
     @property
     def name(self) -> str:
         """Return the name of this device."""
@@ -99,6 +101,16 @@ class ONVIFDevice:
 
             if self.capabilities.ptz:
                 self.device.create_ptz_service()
+
+            if self._dt_diff_seconds > 300 and self.capabilities.events:
+                self.capabilities.events = False
+                LOGGER.warning(
+                    "The system clock on '%s' is more than 5 minutes off. "
+                    "Although this device supports events, they will be "
+                    "disabled until the device clock is fixed as we will "
+                    "not be able to renew the subscription.",
+                    self.name,
+                )
 
             if self.capabilities.events:
                 self.events = EventManager(
@@ -179,9 +191,9 @@ class ONVIFDevice:
                 )
 
                 dt_diff = cam_date - system_date
-                dt_diff_seconds = dt_diff.total_seconds()
+                self._dt_diff_seconds = dt_diff.total_seconds()
 
-                if dt_diff_seconds > 5:
+                if self._dt_diff_seconds > 5:
                     LOGGER.warning(
                         "The date/time on the device (UTC) is '%s', "
                         "which is different from the system '%s', "
