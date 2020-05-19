@@ -184,7 +184,7 @@ class SuplaChannel(Entity):
 
     def _update(self):
         """Call to update state."""
-        _LOGGER.error("SUPLA UPDATE ")
+        _LOGGER.debug("SUPLA _update ")
         self.channel_data = self.server.get_channel(
             self.channel_data["id"], include=["connected", "state"]
         )
