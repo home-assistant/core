@@ -26,7 +26,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, SERVICE_LEARN
+from .const import DOMAIN, SERVICE_LEARN, SERVICE_SET_LED_OFF, SERVICE_SET_LED_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +49,11 @@ LEARN_COMMAND_SCHEMA = vol.Schema(
 COMMAND_SCHEMA = vol.Schema(
     {vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string])}
 )
+
+LED_ON_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.All(str)})
+
+LED_OFF_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.All(str)})
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -114,7 +119,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_service_handler(service):
         """Handle a learn command."""
-        if service.service != SERVICE_LEARN:
+        if service.service not in (
+            SERVICE_LEARN,
+            SERVICE_SET_LED_ON,
+            SERVICE_SET_LED_OFF,
+        ):
             _LOGGER.error("We should not handle service: %s", service.service)
             return
 
@@ -129,6 +138,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             return
 
         device = entity.device
+
+        if service.service == SERVICE_SET_LED_ON:
+            return device.set_indicator_led(True)
+        elif service.service == SERVICE_SET_LED_OFF:
+            return device.set_indicator_led(False)
 
         slot = service.data.get(CONF_SLOT, entity.slot)
 
@@ -162,6 +176,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hass.services.async_register(
         DOMAIN, SERVICE_LEARN, async_service_handler, schema=LEARN_COMMAND_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_LED_ON, async_service_handler, schema=LED_ON_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_LED_OFF, async_service_handler, schema=LED_OFF_SCHEMA
     )
 
 
