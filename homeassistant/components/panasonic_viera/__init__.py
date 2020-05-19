@@ -64,7 +64,7 @@ UPNP_SERVICES = [URL_EVENT_0_DMR, URL_EVENT_0_NRC]
 
 MAP_APP_NAME = {"platinum": "Browser", "Amazon": "Prime Video"}
 
-RESUBSCRIBE_INTERVAL = timedelta(minutes=2)
+RESUBSCRIBE_INTERVAL = timedelta(seconds=90)
 
 
 async def async_setup(hass, config):
@@ -242,7 +242,8 @@ class Remote:
         if self._control is not None:
             for service in UPNP_SERVICES:
                 try:
-                    self._control.upnp_service_resubscribe(service)
+                    self._control.upnp_service_unsubscribe(service)
+                    self._control.upnp_service_subscribe(service)
                 except (TimeoutError, URLError, OSError):
                     _LOGGER.debug("Could resubscribe to service %s", service)
 
