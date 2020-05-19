@@ -76,10 +76,13 @@ class DeLijnPublicTransportSensor(Entity):
     async def async_update(self):
         """Get the latest data from the De Lijn API."""
         try:
-            _LOGGER.debug("updating delijn sensor")
             await self.line.get_passages()
-
             self._name = await self.line.get_stopname()
+        except HttpException:
+            self._state = STATE_UNAVAILABLE
+            _LOGGER.error("Delijn http error")
+
+        try:
             _LOGGER.debug("stop name: %s", self._name)
             first = self.line.passages[0]
             if first["due_at_realtime"] is not None:
@@ -87,7 +90,6 @@ class DeLijnPublicTransportSensor(Entity):
             else:
                 first_passage = first["due_at_schedule"]
             self._state = first_passage
-            _LOGGER.debug("state: %s", self._state)
             self._attributes["is_realtime"] = first["is_realtime"]
             self._attributes["line_number_public"] = first["line_number_public"]
             self._attributes["line_transport_type"] = first["line_transport_type"]
@@ -95,10 +97,6 @@ class DeLijnPublicTransportSensor(Entity):
             self._attributes["due_at_schedule"] = first["due_at_schedule"]
             self._attributes["due_at_realtime"] = first["due_at_realtime"]
             self._attributes["next_passages"] = self.line.passages
-        except HttpException:
-            self._state = STATE_UNAVAILABLE
-            _LOGGER.error("Delijn http error")
-
         except (KeyError, IndexError):
             _LOGGER.error("Invalid data received from De Lijn")
             self._state = STATE_UNAVAILABLE
