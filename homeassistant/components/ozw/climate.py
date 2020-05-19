@@ -339,6 +339,5 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 def _get_list_id(value_lst, value_lbl):
     """Return the id for the value in the list."""
     return next(
-        (val[VALUE_ID] for val in value_lst if val[VALUE_LABEL] == value_lbl),
-        None
+        (val[VALUE_ID] for val in value_lst if val[VALUE_LABEL] == value_lbl), None
     )
