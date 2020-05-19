@@ -124,7 +124,7 @@ def setup(hass, config):
     ).result()
 
     params = {
-        "name": hass.config.location_name,
+        "location_name": hass.config.location_name,
         "uuid": uuid,
         "version": __version__,
         "external_url": None,
