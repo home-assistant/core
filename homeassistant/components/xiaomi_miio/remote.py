@@ -119,7 +119,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_service_led_off_handler(entity, service):
         """Handle set_led_off command."""
-        return device.set_indicator_led(False)
+        device.set_indicator_led(False)
 
     async def async_service_led_on_handler(entity, service):
         """Handle set_led_on command."""
