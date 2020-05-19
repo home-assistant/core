@@ -63,8 +63,6 @@ def _blink_startup_wrapper(entry):
     )
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
-    _LOGGER.warning("Blink refresh rate is %s", blink.refresh_rate)
-
     try:
         blink.login_response = entry.data["login_response"]
         blink.setup_params(entry.data["login_response"])
