@@ -97,7 +97,6 @@ class NukiDeviceEntity(LockEntity, ABC):
     @abstractmethod
     def is_locked(self):
         """Return true if lock is locked."""
-        pass
 
     @property
     def device_state_attributes(self):
@@ -136,17 +135,14 @@ class NukiDeviceEntity(LockEntity, ABC):
     @abstractmethod
     def lock(self, **kwargs):
         """Lock the device."""
-        pass
 
     @abstractmethod
     def unlock(self, **kwargs):
         """Unlock the device."""
-        pass
 
     @abstractmethod
     def open(self, **kwargs):
         """Open the door latch."""
-        pass
 
 
 class NukiLockEntity(NukiDeviceEntity):
