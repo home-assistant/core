@@ -4,11 +4,16 @@ from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODES,
     ATTR_PRESET_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
 )
 
 from .common import setup_ozw
@@ -23,6 +28,13 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
     state = hass.states.get("climate.ct32_thermostat_mode")
     assert state is not None
     assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVAC_MODE_OFF,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_COOL,
+        HVAC_MODE_AUTO,
+    ]
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 23.1
     assert state.attributes[ATTR_TEMPERATURE] == 21.1
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) is None
@@ -104,6 +116,10 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
     state = hass.states.get("climate.komforthaus_spirit_z_wave_plus_mode")
     assert state is not None
     assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVAC_MODE_OFF,
+        HVAC_MODE_HEAT,
+    ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 17.3
     assert round(state.attributes[ATTR_TEMPERATURE], 0) == 19
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) is None
