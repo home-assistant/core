@@ -6,10 +6,12 @@ from . import BleBoxEntity, create_blebox_entities
 from .const import BLEBOX_TO_HASS_DEVICE_CLASSES, BLEBOX_TO_UNIT_MAP
 
 
-async def async_setup_entry(hass, config_entry, async_add):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a BleBox entry."""
 
-    create_blebox_entities(hass, config_entry, async_add, BleBoxSensorEntity, "sensors")
+    create_blebox_entities(
+        hass, config_entry, async_add_entities, BleBoxSensorEntity, "sensors"
+    )
 
 
 class BleBoxSensorEntity(BleBoxEntity, Entity):

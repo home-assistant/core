@@ -163,17 +163,17 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="not_forked_daapd")
 
+        await self.async_set_unique_id(discovery_info["properties"]["Machine Name"])
+        self._abort_if_unique_id_configured()
+
         # Update title and abort if we already have an entry for this host
         for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] != discovery_info["host"]:
+            if entry.data.get(CONF_HOST) != discovery_info["host"]:
                 continue
             self.hass.config_entries.async_update_entry(
                 entry, title=discovery_info["properties"]["Machine Name"],
             )
             return self.async_abort(reason="already_configured")
-
-        await self.async_set_unique_id(discovery_info["properties"]["Machine Name"])
-        self._abort_if_unique_id_configured()
 
         zeroconf_data = {
             CONF_HOST: discovery_info["host"],
