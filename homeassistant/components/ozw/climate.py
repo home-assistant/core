@@ -180,15 +180,11 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def fan_mode(self):
         """Return the fan speed set."""
-        if not self.values.fan_mode:
-            return None
         return self.values.fan_mode.value[VALUE_SELECTED_LABEL]
 
     @property
     def fan_modes(self):
         """Return a list of available fan modes."""
-        if not self.values.fan_mode:
-            return []
         return [entry[VALUE_LABEL] for entry in self.values.fan_mode.value[VALUE_LIST]]
 
     @property
@@ -216,8 +212,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def preset_mode(self):
         """Return preset operation ie. eco, away."""
-        if not self.values.mode:
-            return None
         # Z-Wave uses mode-values > 10 for presets
         if self.values.mode.value[VALUE_SELECTED_ID] > 10:
             return self.values.mode.value[VALUE_SELECTED_LABEL]
@@ -226,8 +220,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def preset_modes(self):
         """Return the list of available preset operation modes."""
-        if not self.values.mode:
-            return []
         # Z-Wave uses mode-values > 10 for presets
         return [PRESET_NONE] + [
             val[VALUE_LABEL]
@@ -238,22 +230,16 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if len(self._current_mode_setpoint_values) != 1:
-            return None
         return self._current_mode_setpoint_values[0].value
 
     @property
     def target_temperature_low(self) -> Optional[float]:
         """Return the lowbound target temperature we try to reach."""
-        if len(self._current_mode_setpoint_values) < 2:
-            return None
         return self._current_mode_setpoint_values[0].value
 
     @property
     def target_temperature_high(self) -> Optional[float]:
         """Return the highbound target temperature we try to reach."""
-        if len(self._current_mode_setpoint_values) < 2:
-            return None
         return self._current_mode_setpoint_values[1].value
 
     async def async_set_temperature(self, **kwargs):
@@ -327,12 +313,14 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        support = SUPPORT_TARGET_TEMPERATURE
+        support = 0
+        if len(self._current_mode_setpoint_values) == 1:
+            support |= SUPPORT_TARGET_TEMPERATURE
         if len(self._current_mode_setpoint_values) > 1:
             support |= SUPPORT_TARGET_TEMPERATURE_RANGE
         if self.values.fan_mode:
             support |= SUPPORT_FAN_MODE
-        if len(self.preset_modes) > 1:
+        if self.values.mode:
             support |= SUPPORT_PRESET_MODE
         return support
 
@@ -350,7 +338,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
 def _get_list_id(value_lst, value_lbl):
     """Return the id for the value in the list."""
-    for val in value_lst:
-        if val[VALUE_LABEL] == value_lbl:
-            return val[VALUE_ID]
-    return None
+    return next(
+        (val[VALUE_ID] for val in value_lst if val[VALUE_LABEL] == value_lbl),
+        None
+    )
