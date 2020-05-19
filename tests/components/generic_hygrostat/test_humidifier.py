@@ -8,20 +8,15 @@ import voluptuous as vol
 
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.humidifier.const import (
-    ATTR_PRESET_MODE,
+    ATTR_MODE,
     ATTR_HUMIDITY,
-    ATTR_OPERATION_MODE,
     DOMAIN,
-    OPERATION_MODE_DRY,
-    OPERATION_MODE_HUMIDIFY,
-    OPERATION_MODE_OFF,
-    PRESET_AWAY,
-    PRESET_NONE,
+    MODE_AWAY,
+    MODE_NORMAL,
     SERVICE_SET_HUMIDITY,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_MODE,
 )
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 import homeassistant.core as ha
 from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
@@ -32,8 +27,8 @@ from tests.common import assert_setup_component, mock_restore_cache
 ENTITY = "humidifier.test"
 ENT_SENSOR = "sensor.test"
 ENT_SWITCH = "switch.test"
-HUMIDIFY_ENTITY = "humidifier.test_heat"
-DRY_ENTITY = "humidifier.test_cool"
+HUMIDIFY_ENTITY = "humidifier.test_humidifier"
+DRY_ENTITY = "humidifier.test_dehumidifier"
 ATTR_AWAY_MODE = "away_mode"
 MIN_HUMIDITY = 20.0
 MAX_HUMIDITY = 65.0
@@ -43,7 +38,7 @@ WET_TOLERANCE = 0.5
 
 
 async def test_setup_missing_conf(hass):
-    """Test set up heat_control with missing config values."""
+    """Test set up humidity_control with missing config values."""
     config = {
         "platform": "generic_hygrostat",
         "name": "test",
@@ -94,7 +89,7 @@ async def test_humidifier_input_boolean(hass, setup_comp_1):
                 "name": "test",
                 "humidifier": humidifier_switch,
                 "target_sensor": ENT_SENSOR,
-                "initial_operation_mode": OPERATION_MODE_HUMIDIFY,
+                "initial_state": True,
             }
         },
     )
@@ -104,7 +99,7 @@ async def test_humidifier_input_boolean(hass, setup_comp_1):
     _setup_sensor(hass, 23)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 32}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 32}, blocking=True
     )
 
     assert STATE_ON == hass.states.get(humidifier_switch).state
@@ -129,7 +124,7 @@ async def test_humidifier_switch(hass, setup_comp_1):
                 "name": "test",
                 "humidifier": humidifier_switch,
                 "target_sensor": ENT_SENSOR,
-                "initial_operation_mode": OPERATION_MODE_HUMIDIFY,
+                "initial_state": True,
             }
         },
     )
@@ -139,7 +134,7 @@ async def test_humidifier_switch(hass, setup_comp_1):
 
     _setup_sensor(hass, 23)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 32}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 32}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -168,7 +163,7 @@ def setup_comp_2(hass):
                     "humidifier": ENT_SWITCH,
                     "target_sensor": ENT_SENSOR,
                     "away_humidity": 35,
-                    "initial_operation_mode": OPERATION_MODE_HUMIDIFY,
+                    "initial_state": True,
                 }
             },
         )
@@ -193,7 +188,7 @@ async def test_setup_defaults_to_unknown(hass):
             }
         },
     )
-    assert OPERATION_MODE_OFF == hass.states.get(ENTITY).state
+    assert STATE_OFF == hass.states.get(ENTITY).state
 
 
 async def test_default_setup_params(hass, setup_comp_2):
@@ -204,23 +199,23 @@ async def test_default_setup_params(hass, setup_comp_2):
     assert 0 == state.attributes.get("humidity")
 
 
-async def test_get_operation_modes(hass, setup_comp_2):
-    """Test that the operation list returns the correct modes."""
+async def test_get_modes(hass, setup_comp_2):
+    """Test that the attributes returns the correct modes."""
     state = hass.states.get(ENTITY)
-    modes = state.attributes.get("operation_modes")
-    assert [OPERATION_MODE_HUMIDIFY, OPERATION_MODE_OFF] == modes
+    modes = state.attributes.get("available_modes")
+    assert [MODE_NORMAL, MODE_AWAY] == modes
 
 
 async def test_set_target_humidity(hass, setup_comp_2):
     """Test the setting of the target humidity."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     state = hass.states.get(ENTITY)
     assert 40 == state.attributes.get("humidity")
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: None}, blocking=True
+            DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: None}, blocking=True
         )
     state = hass.states.get(ENTITY)
     assert 40 == state.attributes.get("humidity")
@@ -229,10 +224,10 @@ async def test_set_target_humidity(hass, setup_comp_2):
 async def test_set_away_mode(hass, setup_comp_2):
     """Test the setting away mode."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_AWAY}, blocking=True
+        DOMAIN, SERVICE_SET_MODE, {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY}, blocking=True
     )
     state = hass.states.get(ENTITY)
     assert 35 == state.attributes.get("humidity")
@@ -244,15 +239,15 @@ async def test_set_away_mode_and_restore_prev_humidity(hass, setup_comp_2):
     Verify original humidity is restored.
     """
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_AWAY}, blocking=True
+        DOMAIN, SERVICE_SET_MODE, {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY}, blocking=True
     )
     state = hass.states.get(ENTITY)
     assert 35 == state.attributes.get("humidity")
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_NONE}, blocking=True
+        DOMAIN, SERVICE_SET_MODE, {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_NORMAL}, blocking=True
     )
     state = hass.states.get(ENTITY)
     assert 45 == state.attributes.get("humidity")
@@ -264,18 +259,18 @@ async def test_set_away_mode_twice_and_restore_prev_humidity(hass, setup_comp_2)
     Verify original humidity is restored.
     """
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_AWAY}, blocking=True
+        DOMAIN, SERVICE_SET_MODE, {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY}, blocking=True
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_AWAY}, blocking=True
+        DOMAIN, SERVICE_SET_MODE, {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY}, blocking=True
     )
     state = hass.states.get(ENTITY)
     assert 35 == state.attributes.get("humidity")
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_NONE}, blocking=True
+        DOMAIN, SERVICE_SET_MODE, {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_NORMAL}, blocking=True
     )
     state = hass.states.get(ENTITY)
     assert 45 == state.attributes.get("humidity")
@@ -299,7 +294,7 @@ async def test_set_target_humidity_humidifier_on(hass, setup_comp_2):
     _setup_sensor(hass, 36)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     assert 1 == len(calls)
     call = calls[0]
@@ -314,7 +309,7 @@ async def test_set_target_humidity_humidifier_off(hass, setup_comp_2):
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 36}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 36}, blocking=True
     )
     assert 2 == len(calls)
     call = calls[0]
@@ -327,7 +322,7 @@ async def test_humidity_change_humidifier_on_within_tolerance(hass, setup_comp_2
     """Test if humidity change doesn't turn on within tolerance."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 44)
     await hass.async_block_till_done()
@@ -338,7 +333,7 @@ async def test_humidity_change_humidifier_on_outside_tolerance(hass, setup_comp_
     """Test if humidity change turn humidifier on outside cold tolerance."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 42)
     await hass.async_block_till_done()
@@ -353,7 +348,7 @@ async def test_humidity_change_humidifier_off_within_tolerance(hass, setup_comp_
     """Test if humidity change doesn't turn off within tolerance."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 48)
     await hass.async_block_till_done()
@@ -364,7 +359,7 @@ async def test_humidity_change_humidifier_off_outside_tolerance(hass, setup_comp
     """Test if humidity change turn humidifier off outside hot tolerance."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 50)
     await hass.async_block_till_done()
@@ -375,63 +370,27 @@ async def test_humidity_change_humidifier_off_outside_tolerance(hass, setup_comp
     assert ENT_SWITCH == call.data["entity_id"]
 
 
-async def test_running_when_operation_mode_is_off(hass, setup_comp_2):
-    """Test that the switch turns off when enabled is set False."""
-    calls = _setup_switch(hass, True)
-    await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
-    )
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF},
-        blocking=True,
-    )
-    assert 1 == len(calls)
-    call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
-
-
-async def test_no_state_change_when_operation_mode_off(hass, setup_comp_2):
-    """Test that the switch doesn't turn on when enabled is False."""
-    calls = _setup_switch(hass, False)
-    await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
-    )
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF},
-        blocking=True,
-    )
-    _setup_sensor(hass, 40)
-    await hass.async_block_till_done()
-    assert 0 == len(calls)
-
-
-async def test_operation_mode_heat(hass, setup_comp_2):
+async def test_operation_mode_humidify(hass, setup_comp_2):
     """Test change mode from OFF to HUMIDIFY.
 
     Switch turns on when humidity below setpoint and mode changes.
     """
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF},
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_HUMIDIFY},
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     assert 1 == len(calls)
@@ -473,8 +432,8 @@ def setup_comp_3(hass):
                     "away_humidity": 30,
                     "humidifier": ENT_SWITCH,
                     "target_sensor": ENT_SENSOR,
-                    "dry_mode": True,
-                    "initial_operation_mode": OPERATION_MODE_DRY,
+                    "device_class": "dehumidifier",
+                    "initial_state": True,
                 }
             },
         )
@@ -487,7 +446,7 @@ async def test_set_target_humidity_dry_off(hass, setup_comp_3):
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     assert 2 == len(calls)
     call = calls[0]
@@ -496,42 +455,42 @@ async def test_set_target_humidity_dry_off(hass, setup_comp_3):
     assert ENT_SWITCH == call.data["entity_id"]
 
 
-async def test_turn_away_mode_on_cooling(hass, setup_comp_3):
-    """Test the setting away mode when cooling."""
+async def test_turn_away_mode_on_drying(hass, setup_comp_3):
+    """Test the setting away mode when drying."""
     _setup_switch(hass, True)
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 34}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 34}, blocking=True
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: PRESET_AWAY}, blocking=True
+        DOMAIN, SERVICE_SET_MODE, {ATTR_ENTITY_ID: ENTITY, ATTR_MODE: MODE_AWAY}, blocking=True
     )
     state = hass.states.get(ENTITY)
     assert 30 == state.attributes.get("humidity")
 
 
-async def test_operation_mode_cool(hass, setup_comp_3):
+async def test_operation_mode_dry(hass, setup_comp_3):
     """Test change mode from OFF to DRY.
 
     Switch turns on when humidity below setpoint and mode changes.
     """
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF},
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_DRY},
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     assert 1 == len(calls)
@@ -547,7 +506,7 @@ async def test_set_target_humidity_dry_on(hass, setup_comp_3):
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     assert 1 == len(calls)
     call = calls[0]
@@ -560,7 +519,7 @@ async def test_humidity_change_dry_off_within_tolerance(hass, setup_comp_3):
     """Test if humidity change doesn't turn dry off within tolerance."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 44.8)
     await hass.async_block_till_done()
@@ -571,7 +530,7 @@ async def test_set_humidity_change_dry_off_outside_tolerance(hass, setup_comp_3)
     """Test if humidity change turn dry off."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 42)
     await hass.async_block_till_done()
@@ -586,7 +545,7 @@ async def test_humidity_change_dry_on_within_tolerance(hass, setup_comp_3):
     """Test if humidity change doesn't turn dry on within tolerance."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 40.2)
     await hass.async_block_till_done()
@@ -597,7 +556,7 @@ async def test_humidity_change_dry_on_outside_tolerance(hass, setup_comp_3):
     """Test if humidity change turn dry on."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -612,12 +571,12 @@ async def test_running_when_operating_mode_is_off_2(hass, setup_comp_3):
     """Test that the switch turns off when enabled is set False."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF},
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     assert 1 == len(calls)
@@ -631,12 +590,12 @@ async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
     """Test that the switch doesn't turn on when enabled is False."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF},
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     _setup_sensor(hass, 50)
@@ -659,9 +618,9 @@ def setup_comp_4(hass):
                     "wet_tolerance": 0.3,
                     "humidifier": ENT_SWITCH,
                     "target_sensor": ENT_SENSOR,
-                    "dry_mode": True,
+                    "device_class": "dehumidifier",
                     "min_cycle_duration": datetime.timedelta(minutes=10),
-                    "initial_operation_mode": OPERATION_MODE_DRY,
+                    "initial_state": True,
                 }
             },
         )
@@ -672,7 +631,7 @@ async def test_humidity_change_dry_trigger_on_not_long_enough(hass, setup_comp_4
     """Test if humidity change turn dry on."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -689,7 +648,7 @@ async def test_humidity_change_dry_trigger_on_long_enough(hass, setup_comp_4):
     ):
         calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -704,7 +663,7 @@ async def test_humidity_change_dry_trigger_off_not_long_enough(hass, setup_comp_
     """Test if humidity change turn dry on."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
@@ -721,7 +680,7 @@ async def test_humidity_change_dry_trigger_off_long_enough(hass, setup_comp_4):
     ):
         calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
@@ -736,15 +695,15 @@ async def test_mode_change_dry_trigger_off_not_long_enough(hass, setup_comp_4):
     """Test if mode change turns dry off despite minimum cycle."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF},
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     assert 1 == len(calls)
@@ -758,15 +717,15 @@ async def test_mode_change_dry_trigger_on_not_long_enough(hass, setup_comp_4):
     """Test if mode change turns dry on despite minimum cycle."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_HUMIDIFY},
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     assert 1 == len(calls)
@@ -791,9 +750,9 @@ def setup_comp_5(hass):
                     "wet_tolerance": 0.3,
                     "humidifier": ENT_SWITCH,
                     "target_sensor": ENT_SENSOR,
-                    "dry_mode": True,
+                    "device_class": "dehumidifier",
                     "min_cycle_duration": datetime.timedelta(minutes=10),
-                    "initial_operation_mode": OPERATION_MODE_DRY,
+                    "initial_state": True,
                 }
             },
         )
@@ -804,7 +763,7 @@ async def test_humidity_change_dry_trigger_on_not_long_enough_2(hass, setup_comp
     """Test if humidity change turn dry on."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -821,7 +780,7 @@ async def test_humidity_change_dry_trigger_on_long_enough_2(hass, setup_comp_5):
     ):
         calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -836,7 +795,7 @@ async def test_humidity_change_dry_trigger_off_not_long_enough_2(hass, setup_com
     """Test if humidity change turn dry on."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
@@ -853,7 +812,7 @@ async def test_humidity_change_dry_trigger_off_long_enough_2(hass, setup_comp_5)
     ):
         calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
@@ -868,15 +827,15 @@ async def test_mode_change_dry_trigger_off_not_long_enough_2(hass, setup_comp_5)
     """Test if mode change turns dry off despite minimum cycle."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF},
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     assert 1 == len(calls)
@@ -890,15 +849,15 @@ async def test_mode_change_dry_trigger_on_not_long_enough_2(hass, setup_comp_5):
     """Test if mode change turns dry on despite minimum cycle."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_HUMIDIFY},
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     assert 1 == len(calls)
@@ -924,7 +883,7 @@ def setup_comp_6(hass):
                     "humidifier": ENT_SWITCH,
                     "target_sensor": ENT_SENSOR,
                     "min_cycle_duration": datetime.timedelta(minutes=10),
-                    "initial_operation_mode": OPERATION_MODE_HUMIDIFY,
+                    "initial_state": True,
                 }
             },
         )
@@ -937,7 +896,7 @@ async def test_humidity_change_humidifier_trigger_off_not_long_enough(
     """Test if humidity change doesn't turn humidifier off because of time."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -950,7 +909,7 @@ async def test_humidity_change_humidifier_trigger_on_not_long_enough(
     """Test if humidity change doesn't turn humidifier on because of time."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
@@ -967,7 +926,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(hass, setup_com
     ):
         calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
@@ -988,7 +947,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(hass, setup_co
     ):
         calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -1003,15 +962,15 @@ async def test_mode_change_humidifier_trigger_off_not_long_enough(hass, setup_co
     """Test if mode change turns humidifier off despite minimum cycle."""
     calls = _setup_switch(hass, True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_OFF},
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     assert 1 == len(calls)
@@ -1025,15 +984,15 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(hass, setup_com
     """Test if mode change turns humidifier on despite minimum cycle."""
     calls = _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 45}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 45}, blocking=True
     )
     _setup_sensor(hass, 40)
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_OPERATION_MODE: OPERATION_MODE_HUMIDIFY},
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY},
         blocking=True,
     )
     assert 1 == len(calls)
@@ -1059,10 +1018,10 @@ def setup_comp_7(hass):
                     "humidifier": ENT_SWITCH,
                     "target_humidity": 25,
                     "target_sensor": ENT_SENSOR,
-                    "dry_mode": True,
+                    "device_class": "dehumidifier",
                     "min_cycle_duration": datetime.timedelta(minutes=15),
                     "keep_alive": datetime.timedelta(minutes=10),
-                    "initial_operation_mode": OPERATION_MODE_DRY,
+                    "initial_state": True,
                 }
             },
         )
@@ -1076,7 +1035,7 @@ async def test_humidity_change_dry_trigger_on_long_enough_3(hass, setup_comp_7):
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     test_time = datetime.datetime.now(pytz.UTC)
     _send_time_changed(hass, test_time)
@@ -1101,7 +1060,7 @@ async def test_humidity_change_dry_trigger_off_long_enough_3(hass, setup_comp_7)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     test_time = datetime.datetime.now(pytz.UTC)
     _send_time_changed(hass, test_time)
@@ -1142,7 +1101,7 @@ def setup_comp_8(hass):
                     "target_sensor": ENT_SENSOR,
                     "min_cycle_duration": datetime.timedelta(minutes=15),
                     "keep_alive": datetime.timedelta(minutes=10),
-                    "initial_operation_mode": OPERATION_MODE_HUMIDIFY,
+                    "initial_state": True,
                 }
             },
         )
@@ -1156,7 +1115,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough_2(hass, setup_c
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     test_time = datetime.datetime.now(pytz.UTC)
     _send_time_changed(hass, test_time)
@@ -1181,7 +1140,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough_2(hass, setup_
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 40}, blocking=True
+        DOMAIN, SERVICE_SET_HUMIDITY, {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 40}, blocking=True
     )
     test_time = datetime.datetime.now(pytz.UTC)
     _send_time_changed(hass, test_time)
@@ -1230,8 +1189,8 @@ async def test_restore_state(hass):
         (
             State(
                 "humidifier.test_hygrostat",
-                OPERATION_MODE_OFF,
-                {ATTR_HUMIDITY: "40", ATTR_PRESET_MODE: PRESET_AWAY},
+                STATE_OFF,
+                {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: "40", ATTR_MODE: MODE_AWAY},
             ),
         ),
     )
@@ -1254,8 +1213,8 @@ async def test_restore_state(hass):
 
     state = hass.states.get("humidifier.test_hygrostat")
     assert state.attributes[ATTR_HUMIDITY] == 40
-    assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
-    assert state.state == OPERATION_MODE_OFF
+    assert state.attributes[ATTR_MODE] == MODE_AWAY
+    assert state.state == STATE_OFF
 
 
 async def test_no_restore_state(hass):
@@ -1268,8 +1227,8 @@ async def test_no_restore_state(hass):
         (
             State(
                 "humidifier.test_hygrostat",
-                OPERATION_MODE_OFF,
-                {ATTR_HUMIDITY: "40", ATTR_PRESET_MODE: PRESET_AWAY},
+                STATE_OFF,
+                {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: "40", ATTR_MODE: MODE_AWAY},
             ),
         ),
     )
@@ -1292,7 +1251,7 @@ async def test_no_restore_state(hass):
 
     state = hass.states.get("humidifier.test_hygrostat")
     assert state.attributes[ATTR_HUMIDITY] == 42
-    assert state.state == OPERATION_MODE_OFF
+    assert state.state == STATE_OFF
 
 
 async def test_restore_state_uncoherence_case(hass):
@@ -1311,13 +1270,13 @@ async def test_restore_state_uncoherence_case(hass):
 
     state = hass.states.get(ENTITY)
     assert 40 == state.attributes[ATTR_HUMIDITY]
-    assert OPERATION_MODE_OFF == state.state
+    assert STATE_OFF == state.state
     assert 0 == len(calls)
 
     calls = _setup_switch(hass, False)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert OPERATION_MODE_OFF == state.state
+    assert STATE_OFF == state.state
 
 
 async def _setup_humidifier(hass):
@@ -1333,20 +1292,20 @@ async def _setup_humidifier(hass):
                 "away_humidity": 32,
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "dry_mode": True,
+                "device_class": "dehumidifier",
             }
         },
     )
 
 
-def _mock_restore_cache(hass, humidity=40, operation_mode=OPERATION_MODE_OFF):
+def _mock_restore_cache(hass, humidity=40, state=STATE_OFF):
     mock_restore_cache(
         hass,
         (
             State(
                 ENTITY,
-                operation_mode,
-                {ATTR_HUMIDITY: str(humidity), ATTR_PRESET_MODE: PRESET_AWAY},
+                state,
+                {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: str(humidity), ATTR_MODE: MODE_AWAY},
             ),
         ),
     )
