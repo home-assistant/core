@@ -23,10 +23,10 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, SERVICE_LEARN, SERVICE_SET_LED_OFF, SERVICE_SET_LED_ON
+from .const import SERVICE_LEARN, SERVICE_SET_LED_OFF, SERVICE_SET_LED_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,32 +117,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities([xiaomi_miio_remote])
 
-    async def async_service_handler(service):
+    async def async_service_led_off_handler(entity, service):
+        """Handle set_led_off command."""
+        return device.set_indicator_led(False)
+
+    async def async_service_led_on_handler(entity, service):
+        """Handle set_led_on command."""
+        return device.set_indicator_led(True)
+
+    async def async_service_learn_handler(entity, service):
         """Handle a learn command."""
-        if service.service not in (
-            SERVICE_LEARN,
-            SERVICE_SET_LED_ON,
-            SERVICE_SET_LED_OFF,
-        ):
+        if service.service != SERVICE_LEARN:
             _LOGGER.error("We should not handle service: %s", service.service)
             return
 
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        entity = None
-        for remote in hass.data[DATA_KEY].values():
-            if remote.entity_id == entity_id:
-                entity = remote
-
-        if not entity:
-            _LOGGER.error("entity_id: '%s' not found", entity_id)
-            return
-
         device = entity.device
-
-        if service.service == SERVICE_SET_LED_ON:
-            return device.set_indicator_led(True)
-        if service.service == SERVICE_SET_LED_OFF:
-            return device.set_indicator_led(False)
 
         slot = service.data.get(CONF_SLOT, entity.slot)
 
@@ -174,14 +163,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
         )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_LEARN, async_service_handler, schema=LEARN_COMMAND_SCHEMA
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_LEARN, LEARN_COMMAND_SCHEMA, async_service_learn_handler
     )
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_LED_ON, async_service_handler, schema=LED_ON_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_SET_LED_ON, LED_ON_SCHEMA, async_service_led_on_handler
     )
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_LED_OFF, async_service_handler, schema=LED_OFF_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_SET_LED_OFF, LED_OFF_SCHEMA, async_service_led_off_handler
     )
 
 
