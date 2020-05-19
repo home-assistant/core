@@ -308,7 +308,7 @@ async def async_parse_last_reboot(uid: str, msg) -> Event:
                 dt_util.parse_datetime(msg.Message._value_1.Data.SimpleItem[0].Value)
             ),
         )
-    except (AttributeError, KeyError):
+    except (AttributeError, KeyError, ValueError):
         return None
 
 
@@ -331,7 +331,7 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
             ),
             entity_enabled=False,
         )
-    except (AttributeError, KeyError):
+    except (AttributeError, KeyError, ValueError):
         return None
 
 
@@ -354,5 +354,5 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event:
             ),
             entity_enabled=False,
         )
-    except (AttributeError, KeyError):
+    except (AttributeError, KeyError, ValueError):
         return None
