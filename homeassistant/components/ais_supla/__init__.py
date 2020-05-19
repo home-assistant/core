@@ -1,15 +1,18 @@
 """Support for Supla devices."""
+from datetime import timedelta
 import logging
 from typing import Optional
 
 from pysupla import SuplaAPI
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.config_entries import SOURCE_IMPORT
-from .const import DOMAIN, CONF_SERVER, CONF_SERVERS, CONF_CHANNELS
+from homeassistant.util import Throttle
+
+from .const import CONF_CHANNELS, CONF_SERVER, CONF_SERVERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,10 +113,11 @@ async def async_discover_devices(hass, config_entry):
 class SuplaChannel(Entity):
     """Base class of a Supla Channel (an equivalent of HA's Entity)."""
 
-    def __init__(self, channel_data, supla_server):
+    def __init__(self, channel_data, supla_server, scan_interval_in_sec):
         """Channel data -- raw channel information from PySupla."""
         self.channel_data = channel_data
         self.supla_server = supla_server
+        self.update = Throttle(timedelta(seconds=scan_interval_in_sec))(self._update)
 
     @property
     def device_info(self):
@@ -178,8 +182,9 @@ class SuplaChannel(Entity):
         )
         self.server.execute_action(self.channel_data["id"], action, **add_pars)
 
-    def update(self):
+    def _update(self):
         """Call to update state."""
+        _LOGGER.error("SUPLA UPDATE ")
         self.channel_data = self.server.get_channel(
             self.channel_data["id"], include=["connected", "state"]
         )

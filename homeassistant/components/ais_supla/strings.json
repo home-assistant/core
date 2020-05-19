@@ -7,7 +7,8 @@
                 "description": "We will detect your devices on a Supla Cloud server or on your Supla server.\n\n {error_info} ",
                 "data": {
                      "server": "Serwer",
-                     "access_token": "Token"
+                     "access_token": "Token",
+                     "scan_interval": "Scan interval in seconds (min 30)"
                 }
             },
            "confirm": {
@@ -16,7 +17,8 @@
            }
         },
         "error": {
-            "supla_no_connection": "Cannot connect to Supla Cloud"
+            "supla_no_connection": "Cannot connect to Supla Cloud",
+            "scan_interval_error": "Invalid scan interval value, please enter a number of seconds, min 30."
         }
     }
 }

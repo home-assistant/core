@@ -675,6 +675,12 @@ async def _flush_logs(hass, call):
             # take keep days from settings
             if "dbKeepDays" in ais_global.G_DB_SETTINGS_INFO:
                 keep_days = int(ais_global.G_DB_SETTINGS_INFO["dbKeepDays"])
+            # allow to store only 1 day in memory
+            if "dbUrl" in ais_global.G_DB_SETTINGS_INFO:
+                if ais_global.G_DB_SETTINGS_INFO["dbUrl"].startswith(
+                    "sqlite://///data"
+                ):
+                    keep_days = 1
 
         await hass.services.async_call(
             "recorder", "purge", {"keep_days": keep_days, "repack": True}
