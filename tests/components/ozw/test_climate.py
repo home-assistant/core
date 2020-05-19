@@ -166,3 +166,22 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg):
         "Value": 11,
         "ValueIDKey": 273678356,
     }
+
+    # Test set preset mode None
+    # This preset should set and return to current hvac mode
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {
+            "entity_id": "climate.komforthaus_spirit_z_wave_plus_mode",
+            "preset_mode": "none",
+        },
+        blocking=True,
+    )
+    assert len(sent_messages) == 8
+    msg = sent_messages[-1]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {
+        "Value": 1,
+        "ValueIDKey": 273678356,
+    }
