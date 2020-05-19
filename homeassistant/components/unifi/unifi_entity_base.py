@@ -69,7 +69,7 @@ class UniFiBase(Entity):
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
         entity_entry = entity_registry.async_get(self.entity_id)
         if not entity_entry:
-            await super().async_remove()
+            await self.async_remove()
             return
 
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
