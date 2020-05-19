@@ -59,7 +59,7 @@ class FirmataDigitalOut(FirmataBoardPin, SwitchEntity):
         """Return true if switch is on."""
         return self._state
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs):
         """Turn on switch."""
         _LOGGER.debug("Turning switch %s on", self._name)
         new_pin_state = not self._conf[CONF_NEGATE_STATE]
@@ -67,7 +67,7 @@ class FirmataDigitalOut(FirmataBoardPin, SwitchEntity):
         self._state = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs):
         """Turn off switch."""
         _LOGGER.debug("Turning switch %s off", self._name)
         new_pin_state = self._conf[CONF_NEGATE_STATE]
