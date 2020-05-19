@@ -276,10 +276,10 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         """Set new target hvac mode."""
         if not self.values.mode:
             return
-        hvac_mode_value = HVAC_MODE_ZW_MAPPINGS.get(hvac_mode)
-        if hvac_mode_value is None:
+        if hvac_mode not in self.hvac_modes:
             _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
             return
+        hvac_mode_value = HVAC_MODE_ZW_MAPPINGS.get(hvac_mode)
         self.values.mode.send_value(hvac_mode_value)
 
     async def async_set_preset_mode(self, preset_mode):
