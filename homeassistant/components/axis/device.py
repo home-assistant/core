@@ -8,6 +8,7 @@ import axis
 from axis.event_stream import OPERATION_CHANGED, OPERATION_INITIALIZED
 from axis.streammanager import SIGNAL_PLAYING
 
+from homeassistant.components import mqtt
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
