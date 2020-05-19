@@ -88,6 +88,7 @@ SERVICE_CLEAR_TIMER = "clear_sleep_timer"
 SERVICE_UPDATE_ALARM = "update_alarm"
 SERVICE_SET_OPTION = "set_option"
 SERVICE_PLAY_QUEUE = "play_queue"
+SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
 
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_ALARM_ID = "alarm_id"
@@ -292,6 +293,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SERVICE_PLAY_QUEUE,
         {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         "play_queue",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_REMOVE_FROM_QUEUE,
+        {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        "remove_from_queue",
     )
 
 
@@ -1251,6 +1258,11 @@ class SonosEntity(MediaPlayerEntity):
     def play_queue(self, queue_position=0):
         """Start playing the queue."""
         self.soco.play_from_queue(queue_position)
+
+    @soco_error()
+    def remove_from_queue(self, queue_position=0):
+        """Remove item from the queue."""
+        self.soco.remove_from_queue(queue_position)
 
     @property
     def device_state_attributes(self):
