@@ -1593,7 +1593,6 @@ class TransportControlTrait(_Trait):
         elif command == COMMAND_MEDIA_STOP:
             service = media_player.SERVICE_MEDIA_STOP
         else:
-            # TODO Debug, unsupported command
             _LOGGER.debug(
                 "Unsupported command called on TransportControlTrait: %s", command
             )
