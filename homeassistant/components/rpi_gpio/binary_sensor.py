@@ -71,8 +71,8 @@ class RPiGPIOBinarySensor(BinarySensorEntity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
-        return False
+        """Polling needed, in case we lose an edge."""
+        return True
 
     @property
     def name(self):
