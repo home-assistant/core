@@ -172,6 +172,7 @@ homeassistant/components/hikvisioncam/* @fbradyirl
 homeassistant/components/hisense_aehw4a1/* @bannhead
 homeassistant/components/history/* @home-assistant/core
 homeassistant/components/hive/* @Rendili @KJonline
+homeassistant/components/hlk_sw16/* @jameshilliard
 homeassistant/components/home_connect/* @DavidMStraub
 homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit/* @bdraco

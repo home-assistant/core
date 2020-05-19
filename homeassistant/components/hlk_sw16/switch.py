@@ -1,30 +1,29 @@
 """Support for HLK-SW16 switches."""
-import logging
-
 from homeassistant.components.switch import ToggleEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from . import DATA_DEVICE_REGISTER, SW16Device
 
-_LOGGER = logging.getLogger(__name__)
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the HLK-SW16 switches."""
 
 
-def devices_from_config(hass, domain_config):
+def devices_from_entities(hass, entry):
     """Parse configuration and add HLK-SW16 switch devices."""
-    switches = domain_config[0]
-    device_id = domain_config[1]
-    device_client = hass.data[DATA_DEVICE_REGISTER][device_id]
+    address = f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+    device_client = hass.data[DATA_DEVICE_REGISTER][address]
     devices = []
-    for device_port, device_config in switches.items():
-        device_name = device_config.get(CONF_NAME, device_port)
-        device = SW16Switch(device_name, device_port, device_id, device_client)
+    for i in range(16):
+        device_port = f"{i:01x}"
+        device = SW16Switch(device_port, address, device_client)
         devices.append(device)
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the HLK-SW16 platform."""
-    async_add_entities(devices_from_config(hass, discovery_info))
+    async_add_entities(devices_from_entities(hass, entry))
 
 
 class SW16Switch(SW16Device, ToggleEntity):
