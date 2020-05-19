@@ -77,7 +77,7 @@ DEVICE_PLATFORM = {
     SecurityHealthSafety_LeakSensor: {BINARY_SENSOR: [2, 4]},
     SecurityHealthSafety_MotionSensor: {BINARY_SENSOR: [1, 2, 3], ON_OFF_EVENTS: [1]},
     SecurityHealthSafety_OpenCloseSensor: {BINARY_SENSOR: [1]},
-    SecurityHealthSafety_Smokebridge: {BINARY_SENSOR: [1]},
+    SecurityHealthSafety_Smokebridge: {BINARY_SENSOR: [1, 2, 3, 4, 6, 7]},
     SensorsActuators_IOLink: {SWITCH: [1], BINARY_SENSOR: [2], ON_OFF_EVENTS: [1, 2]},
     SwitchedLightingControl: {SWITCH: [1], ON_OFF_EVENTS: [1]},
     SwitchedLightingControl_ApplianceLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
