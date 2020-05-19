@@ -90,7 +90,6 @@ class DeLijnPublicTransportSensor(Entity):
             else:
                 first_passage = first["due_at_schedule"]
             self._state = first_passage
-            self._attributes["is_realtime"] = first["is_realtime"]
             self._attributes["line_number_public"] = first["line_number_public"]
             self._attributes["line_transport_type"] = first["line_transport_type"]
             self._attributes["final_destination"] = first["final_destination"]
