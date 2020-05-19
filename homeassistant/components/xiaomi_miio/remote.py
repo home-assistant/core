@@ -15,7 +15,6 @@ from homeassistant.components.remote import (
     RemoteEntity,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_COMMAND,
     CONF_HOST,
     CONF_NAME,
@@ -151,7 +150,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform.async_register_entity_service(
         SERVICE_LEARN,
         {
-            vol.Required(ATTR_ENTITY_ID): vol.All(str),
             vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
             vol.Optional(CONF_SLOT, default=1): vol.All(
                 int, vol.Range(min=1, max=1000000)
