@@ -706,7 +706,7 @@ class SonosEntity(MediaPlayerEntity):
 
         self._media_image_url = track_info.get("album_art")
 
-        self._current_queue_position = track_info.get("playlist_position")
+        self._current_queue_position = int(track_info.get("playlist_position")) - 1
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -1267,8 +1267,7 @@ class SonosEntity(MediaPlayerEntity):
             attributes[ATTR_QUEUE] = self._queue
 
         if self._current_queue_position is not None:
-            if int(self._current_queue_position) > 0:
-                attributes[ATTR_CURRENT_QUEUE_POSITION] = self._current_queue_position
+            attributes[ATTR_CURRENT_QUEUE_POSITION] = self._current_queue_position
 
         if self._is_playing_local_queue is not None:
             attributes[ATTR_IS_PLAYING_LOCAL_QUEUE] = self._is_playing_local_queue
