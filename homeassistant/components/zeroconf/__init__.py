@@ -158,7 +158,7 @@ def setup(hass, config):
 
     info = ServiceInfo(
         ZEROCONF_TYPE,
-        name=f"Home-Assistant-{uuid}.{ZEROCONF_TYPE}",
+        name=f"{hass.config.location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
         addresses=[host_ip_pton],
         port=hass.http.server_port,
