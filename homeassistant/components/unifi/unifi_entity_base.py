@@ -43,14 +43,29 @@ class UniFiBase(Entity):
         self._item.remove_callback(self.async_update_callback)
         self.controller.entities[self.DOMAIN][self.TYPE].remove(self._item.mac)
 
-    async def async_remove(self):
-        """Clean up when removing entity.
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        LOGGER.debug(
+            "Updating %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
+        )
+        self.async_write_ha_state()
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, remove entity if option is disabled."""
+        raise NotImplementedError
+
+    async def remove_item(self, mac_addresses: set) -> None:
+        """Remove entity if MAC is part of set.
 
         Remove entity if no entry in entity registry exist.
         Remove entity registry entry if no entry in device registry exist.
         Remove device registry entry if there is only one linked entity (this entity).
         Remove entity registry entry if there are more than one entity linked to the device registry entry.
         """
+        if self._item.mac not in mac_addresses:
+            return
+
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
         entity_entry = entity_registry.async_get(self.entity_id)
         if not entity_entry:
@@ -68,23 +83,6 @@ class UniFiBase(Entity):
             return
 
         entity_registry.async_remove(self.entity_id)
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the entity's state."""
-        LOGGER.debug(
-            "Updating %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
-        )
-        self.async_write_ha_state()
-
-    async def options_updated(self) -> None:
-        """Config entry options are updated, remove entity if option is disabled."""
-        raise NotImplementedError
-
-    async def remove_item(self, mac_addresses: set) -> None:
-        """Remove entity if MAC is part of set."""
-        if self._item.mac in mac_addresses:
-            await self.async_remove()
 
     @property
     def should_poll(self) -> bool:
