@@ -342,16 +342,15 @@ def _sorted_states_to_json(
                 )
                 prev_state = db_state
 
-            if prev_state and prev_state != initial_state:
-                if len(ent_results) == initial_state_count:
-                    # There were no state changes
-                    # append the last state we have
-                    ent_results.append(prev_state.to_native())
-                else:
-                    # There was at least one state change
-                    # replace the last minimal state with
-                    # a full state
-                    ent_results[-1] = prev_state.to_native()
+            if (
+                prev_state
+                and prev_state != initial_state
+                and len(ent_results) != initial_state_count
+            ):
+                # There was at least one state change
+                # replace the last minimal state with
+                # a full state
+                ent_results[-1] = prev_state.to_native()
         else:
             ent_results.extend(
                 [
@@ -413,6 +412,7 @@ class HistoryPeriodView(HomeAssistantView):
         self, request: web.Request, datetime: Optional[str] = None
     ) -> web.Response:
         """Return history over a period of time."""
+
         if datetime:
             datetime_ = dt_util.parse_datetime(datetime)
 
