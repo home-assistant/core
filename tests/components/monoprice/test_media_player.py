@@ -1,7 +1,6 @@
 """The tests for Monoprice Media player platform."""
 from collections import defaultdict
 
-from asynctest import patch
 from serial import SerialException
 
 from homeassistant.components.media_player.const import (
@@ -18,6 +17,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.monoprice.const import (
+    CONF_NOT_FIRST_RUN,
     CONF_SOURCES,
     DOMAIN,
     SERVICE_RESTORE,
@@ -34,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_component import async_update_entity
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {CONF_PORT: "fake port", CONF_SOURCES: {"1": "one", "3": "three"}}
@@ -41,6 +42,7 @@ MOCK_OPTIONS = {CONF_SOURCES: {"2": "two", "4": "four"}}
 
 ZONE_1_ID = "media_player.zone_11"
 ZONE_2_ID = "media_player.zone_12"
+ZONE_7_ID = "media_player.zone_21"
 
 
 class AttrDict(dict):
@@ -100,8 +102,6 @@ async def test_cannot_connect(hass):
         config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-        # setup_component(self.hass, DOMAIN, MOCK_CONFIG)
-        # self.hass.async_block_till_done()
         await hass.async_block_till_done()
         assert hass.states.get(ZONE_1_ID) is None
 
@@ -113,8 +113,6 @@ async def _setup_monoprice(hass, monoprice):
         config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-        # setup_component(self.hass, DOMAIN, MOCK_CONFIG)
-        # self.hass.async_block_till_done()
         await hass.async_block_till_done()
 
 
@@ -127,8 +125,17 @@ async def _setup_monoprice_with_options(hass, monoprice):
         )
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-        # setup_component(self.hass, DOMAIN, MOCK_CONFIG)
-        # self.hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+
+async def _setup_monoprice_not_first_run(hass, monoprice):
+    with patch(
+        "homeassistant.components.monoprice.get_monoprice", new=lambda *a: monoprice,
+    ):
+        data = {**MOCK_CONFIG, CONF_NOT_FIRST_RUN: True}
+        config_entry = MockConfigEntry(domain=DOMAIN, data=data)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
 
@@ -479,3 +486,47 @@ async def test_volume_up_down(hass):
         hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
     )
     assert monoprice.zones[11].volume == 37
+
+
+async def test_first_run_with_available_zones(hass):
+    """Test first run with all zones available."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry = registry.async_get(ZONE_7_ID)
+    assert not entry.disabled
+
+
+async def test_first_run_with_failing_zones(hass):
+    """Test first run with failed zones."""
+    monoprice = MockMonoprice()
+
+    with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
+        await _setup_monoprice(hass, monoprice)
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry = registry.async_get(ZONE_1_ID)
+    assert not entry.disabled
+
+    entry = registry.async_get(ZONE_7_ID)
+    assert entry.disabled
+    assert entry.disabled_by == "integration"
+
+
+async def test_not_first_run_with_failing_zone(hass):
+    """Test first run with failed zones."""
+    monoprice = MockMonoprice()
+
+    with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
+        await _setup_monoprice_not_first_run(hass, monoprice)
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry = registry.async_get(ZONE_1_ID)
+    assert not entry.disabled
+
+    entry = registry.async_get(ZONE_7_ID)
+    assert not entry.disabled

@@ -5,7 +5,7 @@ from random import randrange
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_COOL,
@@ -129,7 +129,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         await controller.stop()
 
 
-class IntesisAC(ClimateDevice):
+class IntesisAC(ClimateEntity):
     """Represents an Intesishome air conditioning device."""
 
     def __init__(self, ih_device_id, ih_device, controller):

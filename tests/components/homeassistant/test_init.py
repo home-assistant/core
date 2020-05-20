@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 import asyncio
 import unittest
-from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -33,11 +32,11 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     async_capture_events,
     async_mock_service,
     get_test_home_assistant,
-    mock_coro,
     mock_service,
     patch_yaml_files,
 )
@@ -215,15 +214,15 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_error.called
         assert mock_process.called is False
 
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=mock_coro())
+    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
     def test_stop_homeassistant(self, mock_stop):
         """Test stop service."""
         stop(self.hass)
         self.hass.block_till_done()
         assert mock_stop.called
 
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=mock_coro())
-    @patch("homeassistant.config.async_check_ha_config_file", return_value=mock_coro())
+    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
+    @patch("homeassistant.config.async_check_ha_config_file", return_value=None)
     def test_restart_homeassistant(self, mock_check, mock_restart):
         """Test stop service."""
         restart(self.hass)
@@ -231,7 +230,7 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_restart.called
         assert mock_check.called
 
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=mock_coro())
+    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
     @patch(
         "homeassistant.config.async_check_ha_config_file",
         side_effect=HomeAssistantError("Test error"),
@@ -243,8 +242,8 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_check.called
         assert not mock_restart.called
 
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=mock_coro())
-    @patch("homeassistant.config.async_check_ha_config_file", return_value=mock_coro())
+    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
+    @patch("homeassistant.config.async_check_ha_config_file", return_value=None)
     def test_check_config(self, mock_check, mock_stop):
         """Test stop service."""
         check_config(self.hass)
@@ -271,8 +270,7 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
     service = hass.services._services["homeassistant"]["turn_on"]
 
     with patch(
-        "homeassistant.core.ServiceRegistry.async_call",
-        side_effect=lambda *args: mock_coro(),
+        "homeassistant.core.ServiceRegistry.async_call", return_value=None,
     ) as mock_call:
         await service.func(service_call)
 
@@ -296,8 +294,7 @@ async def test_entity_update(hass):
     await async_setup_component(hass, "homeassistant", {})
 
     with patch(
-        "homeassistant.helpers.entity_component.async_update_entity",
-        return_value=mock_coro(),
+        "homeassistant.helpers.entity_component.async_update_entity", return_value=None,
     ) as mock_update:
         await hass.services.async_call(
             "homeassistant",

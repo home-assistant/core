@@ -1,11 +1,10 @@
 """The tests for the Islamic prayer times sensor platform."""
-from unittest.mock import patch
-
 from homeassistant.components import islamic_prayer_times
 import homeassistant.util.dt as dt_util
 
 from . import NOW, PRAYER_TIMES, PRAYER_TIMES_TIMESTAMPS
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

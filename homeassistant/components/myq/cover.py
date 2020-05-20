@@ -2,6 +2,14 @@
 import logging
 import time
 
+from pymyq.const import (
+    DEVICE_STATE as MYQ_DEVICE_STATE,
+    DEVICE_STATE_ONLINE as MYQ_DEVICE_STATE_ONLINE,
+    DEVICE_TYPE as MYQ_DEVICE_TYPE,
+    DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE,
+    KNOWN_MODELS,
+    MANUFACTURER,
+)
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -10,7 +18,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -27,13 +35,7 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     DOMAIN,
-    KNOWN_MODELS,
-    MANUFACTURER,
     MYQ_COORDINATOR,
-    MYQ_DEVICE_STATE,
-    MYQ_DEVICE_STATE_ONLINE,
-    MYQ_DEVICE_TYPE,
-    MYQ_DEVICE_TYPE_GATE,
     MYQ_GATEWAY,
     MYQ_TO_HASS,
     TRANSITION_COMPLETE_DURATION,
@@ -80,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MyQDevice(CoverDevice):
+class MyQDevice(CoverEntity):
     """Representation of a MyQ cover."""
 
     def __init__(self, coordinator, device):

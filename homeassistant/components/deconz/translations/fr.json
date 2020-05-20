@@ -34,13 +34,15 @@
                 "data": {
                     "host": "H\u00f4te",
                     "port": "Port"
-                }
+                },
+                "title": "Configurer la passerelle deCONZ"
             }
         }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Les deux boutons",
+            "bottom_buttons": "Boutons du bas",
             "button_1": "Premier bouton",
             "button_2": "Deuxi\u00e8me bouton",
             "button_3": "Troisi\u00e8me bouton",
@@ -57,6 +59,7 @@
             "side_4": "Face 4",
             "side_5": "Face 5",
             "side_6": "Face 6",
+            "top_buttons": "Boutons du haut",
             "turn_off": "\u00c9teint",
             "turn_on": "Allumer"
         },

@@ -1,7 +1,7 @@
 """Support for Zigbee lights."""
 import voluptuous as vol
 
-from homeassistant.components.light import Light
+from homeassistant.components.light import LightEntity
 
 from . import DOMAIN, PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
 
@@ -21,5 +21,5 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ZigBeeLight(ZigBeeDigitalOutConfig(config), zigbee_device)])
 
 
-class ZigBeeLight(ZigBeeDigitalOut, Light):
+class ZigBeeLight(ZigBeeDigitalOut, LightEntity):
     """Use ZigBeeDigitalOut as light."""

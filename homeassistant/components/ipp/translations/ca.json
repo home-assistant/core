@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquesta impressora ja est\u00e0 configurada.",
-            "connection_error": "No s'ha pogut connectar amb la impressora.",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "connection_error": "No s'ha pogut connectar",
             "connection_upgrade": "No s'ha pogut connectar amb la impressora, es necessita actualitzar la connexi\u00f3.",
             "ipp_error": "S'ha produ\u00eft un error IPP.",
             "ipp_version_error": "La versi\u00f3 IPP no \u00e9s compatible amb la impressora.",
             "parse_error": "No s'ha pogut analitzar la resposta de la impressora."
         },
         "error": {
-            "connection_error": "No s'ha pogut connectar amb la impressora.",
+            "connection_error": "No s'ha pogut connectar",
             "connection_upgrade": "No s'ha pogut connectar amb la impressora. Prova-ho novament amb l'opci\u00f3 SSL/TLS activada."
         },
         "flow_title": "Impressora: {name}",
@@ -17,7 +17,7 @@
             "user": {
                 "data": {
                     "base_path": "Ruta relativa a la impressora",
-                    "host": "Amfitri\u00f3 o adre\u00e7a IP",
+                    "host": "Amfitri\u00f3",
                     "port": "Port",
                     "ssl": "La impressora \u00e9s compatible amb comunicaci\u00f3 SSL/TLS",
                     "verify_ssl": "La impressora utilitza un certificat SSL adequat"

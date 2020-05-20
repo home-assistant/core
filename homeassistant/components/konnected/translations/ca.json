@@ -11,7 +11,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Model: {model} \nAmfitri\u00f3: {host} \nPort: {port} \n\nPots configurar el comportament de les E/S (I/O) i del panell a la configuraci\u00f3 del panell d\u2019alarma Konnected.",
+                "description": "Model: {model} \nID: {id}\nAmfitri\u00f3: {host} \nPort: {port} \n\nPots configurar el comportament de les E/S (I/O) i del panell a la configuraci\u00f3 del panell d'alarma Konnected.",
                 "title": "Dispositiu Konnected llest"
             },
             "import_confirm": {

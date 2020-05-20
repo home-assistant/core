@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 109
-PATCH_VERSION = "6"
+MINOR_VERSION = 110
+PATCH_VERSION = "0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 0)
@@ -34,6 +34,7 @@ CONF_AFTER = "after"
 CONF_ALIAS = "alias"
 CONF_API_KEY = "api_key"
 CONF_API_VERSION = "api_version"
+CONF_ARMING_TIME = "arming_time"
 CONF_AT = "at"
 CONF_AUTH_MFA_MODULES = "auth_mfa_modules"
 CONF_AUTH_PROVIDERS = "auth_providers"
@@ -87,6 +88,7 @@ CONF_EVENT = "event"
 CONF_EVENT_DATA = "event_data"
 CONF_EVENT_DATA_TEMPLATE = "event_data_template"
 CONF_EXCLUDE = "exclude"
+CONF_EXTERNAL_URL = "external_url"
 CONF_FILE_PATH = "file_path"
 CONF_FILENAME = "filename"
 CONF_FOR = "for"
@@ -101,6 +103,7 @@ CONF_ICON = "icon"
 CONF_ICON_TEMPLATE = "icon_template"
 CONF_ID = "id"
 CONF_INCLUDE = "include"
+CONF_INTERNAL_URL = "internal_url"
 CONF_IP_ADDRESS = "ip_address"
 CONF_LATITUDE = "latitude"
 CONF_LIGHTS = "lights"
@@ -345,6 +348,7 @@ ATTR_TEMPERATURE = "temperature"
 # #### UNITS OF MEASUREMENT ####
 # Power units
 POWER_WATT = "W"
+POWER_KILO_WATT = f"k{POWER_WATT}"
 
 # Voltage units
 VOLT = "V"

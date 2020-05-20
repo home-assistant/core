@@ -11,14 +11,14 @@
         "step": {
             "link": {
                 "description": "Vil du konfigurere {name} ({host})?",
-                "title": "Oppsett Logitech Harmony Hub"
+                "title": "Sett opp Logitech Harmony Hub"
             },
             "user": {
                 "data": {
                     "host": "Vertsnavn eller IP-adresse",
                     "name": "Navn p\u00e5 hub"
                 },
-                "title": "Oppsett Logitech Harmony Hub"
+                "title": "Sett opp Logitech Harmony Hub"
             }
         }
     },

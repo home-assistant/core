@@ -3,9 +3,9 @@ from typing import List, Optional
 
 import voluptuous as vol
 from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
-from xknx.knx import HVACOperationMode
+from xknx.dpt import HVACOperationMode
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -192,7 +192,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     async_add_entities([KNXClimate(climate)])
 
 
-class KNXClimate(ClimateDevice):
+class KNXClimate(ClimateEntity):
     """Representation of a KNX climate device."""
 
     def __init__(self, device):
@@ -214,6 +214,11 @@ class KNXClimate(ClimateDevice):
 
         self.device.register_device_updated_cb(after_update_callback)
         self.device.mode.register_device_updated_cb(after_update_callback)
+
+    async def async_update(self):
+        """Request a state update from KNX bus."""
+        await self.device.sync()
+        await self.device.mode.sync()
 
     @property
     def name(self) -> str:
@@ -279,7 +284,8 @@ class KNXClimate(ClimateDevice):
             return OPERATION_MODES.get(
                 self.device.mode.operation_mode.value, HVAC_MODE_HEAT
             )
-        return None
+        # default to "heat"
+        return HVAC_MODE_HEAT
 
     @property
     def hvac_modes(self) -> Optional[List[str]]:
@@ -293,7 +299,9 @@ class KNXClimate(ClimateDevice):
             _operations.append(HVAC_MODE_HEAT)
             _operations.append(HVAC_MODE_OFF)
 
-        return [op for op in _operations if op is not None]
+        _modes = list(filter(None, _operations))
+        # default to ["heat"]
+        return _modes if _modes else [HVAC_MODE_HEAT]
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set operation mode."""

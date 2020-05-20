@@ -5,7 +5,7 @@ import logging
 from pyaehw4a1.aehw4a1 import AehW4a1
 import pyaehw4a1.exceptions
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -144,7 +144,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class ClimateAehW4a1(ClimateDevice):
+class ClimateAehW4a1(ClimateEntity):
     """Representation of a Hisense AEH-W4A1 module for climate device."""
 
     def __init__(self, device):

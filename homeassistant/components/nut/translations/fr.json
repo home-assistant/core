@@ -27,7 +27,8 @@
                     "password": "Mot de passe",
                     "port": "Port",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "title": "Se connecter au serveur NUT"
             }
         }
     },
@@ -35,7 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "Ressources"
+                    "resources": "Ressources",
+                    "scan_interval": "Intervalle de balayage (secondes)"
                 }
             }
         }

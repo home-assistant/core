@@ -21,18 +21,21 @@ DOMAIN = "fortigate"
 DATA_FGT = DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_DEVICES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN, invalidation_version="0.112.0"),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_API_KEY): cv.string,
+                    vol.Optional(CONF_DEVICES, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

@@ -11,11 +11,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
+                    "host": "[%key_id:common::config_flow::data::host%]",
                     "name": "Nazwa",
-                    "password": "Has\u0142o",
-                    "port": "Port",
-                    "username": "Nazwa u\u017cytkownika",
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "port": "[%key_id:common::config_flow::data::port%]",
+                    "username": "[%key_id:common::config_flow::data::username%]",
                     "verify_ssl": "U\u017cyj SSL"
                 },
                 "title": "Konfiguracja routera Mikrotik"

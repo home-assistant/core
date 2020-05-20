@@ -2,11 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato",
+            "no_local_user": "Nessun utente locale trovato, configura un account locale sul controller e riprova",
             "user_privilege": "L'utente deve essere amministratore"
         },
         "error": {
-            "faulty_credentials": "Credenziali utente non valide",
-            "service_unavailable": "Servizio non disponibile",
+            "faulty_credentials": "Autenticazione non valida",
+            "service_unavailable": "Impossibile connettersi",
             "unknown_client_mac": "Nessun client disponibile su quell'indirizzo MAC"
         },
         "step": {
@@ -51,6 +52,14 @@
                     "one": "uno",
                     "other": "altri"
                 }
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "Client controllati per l'accesso alla rete",
+                    "track_clients": "Traccia i client di rete",
+                    "track_devices": "Tracciare i dispositivi di rete (dispositivi Ubiquiti)"
+                },
+                "description": "Configurare l'integrazione UniFi"
             },
             "statistics_sensors": {
                 "data": {

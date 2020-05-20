@@ -29,6 +29,7 @@ from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.network import get_url
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -231,7 +232,7 @@ def _request_app_setup(hass, config):
         _configurator = hass.data[DOMAIN]["configuring"][DOMAIN]
         configurator.notify_errors(_configurator, error_msg)
 
-    start_url = f"{hass.config.api.base_url}{WINK_AUTH_CALLBACK_PATH}"
+    start_url = f"{get_url(hass)}{WINK_AUTH_CALLBACK_PATH}"
 
     description = f"""Please create a Wink developer app at
                      https://developer.wink.com.
@@ -269,7 +270,7 @@ def _request_oauth_completion(hass, config):
         """Call setup again."""
         setup(hass, config)
 
-    start_url = f"{hass.config.api.base_url}{WINK_AUTH_START}"
+    start_url = f"{get_url(hass)}{WINK_AUTH_START}"
 
     description = f"Please authorize Wink by visiting {start_url}"
 
@@ -349,7 +350,7 @@ def setup(hass, config):
         # Home .
         else:
 
-            redirect_uri = f"{hass.config.api.base_url}{WINK_AUTH_CALLBACK_PATH}"
+            redirect_uri = f"{get_url(hass)}{WINK_AUTH_CALLBACK_PATH}"
 
             wink_auth_start_url = pywink.get_authorization_url(
                 config_file.get(ATTR_CLIENT_ID), redirect_uri

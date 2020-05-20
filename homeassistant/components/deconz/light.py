@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_group(gateway.api.groups.values())
 
 
-class DeconzLight(DeconzDevice, Light):
+class DeconzLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
 
     def __init__(self, device, gateway):

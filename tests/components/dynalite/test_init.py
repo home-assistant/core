@@ -1,12 +1,11 @@
 """Test Dynalite __init__."""
 
 
-from asynctest import call, patch
-
 import homeassistant.components.dynalite.const as dynalite
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import call, patch
 from tests.common import MockConfigEntry
 
 
@@ -38,6 +37,7 @@ async def test_async_setup(hass):
                                 "1": {
                                     CONF_NAME: "Name1",
                                     dynalite.CONF_CHANNEL: {"4": {}},
+                                    dynalite.CONF_PRESET: {"7": {}},
                                     dynalite.CONF_NO_DEFAULT: True,
                                 },
                                 "2": {CONF_NAME: "Name2"},
