@@ -51,7 +51,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client = PrezziBenzinaPy()
     dev = []
-
     info = client.get_by_id(station)
 
     if name is None:
