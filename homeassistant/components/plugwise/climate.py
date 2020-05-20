@@ -58,11 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             DEFAULT_MAX_TEMP,
         )
 
-        if not thermostat:
-            continue
-
         entities.append(thermostat)
-        _LOGGER.info("Added climate.%s", "{}".format(device["name"]))
 
     async_add_entities(entities, True)
 
