@@ -202,6 +202,10 @@ class Store:
         """Handle writing the config."""
 
         async with self._write_lock:
+            if not self._data:
+                # Another write already consumed the data
+                return
+
             data = self._data
 
             if "data_func" in data:
