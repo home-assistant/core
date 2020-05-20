@@ -36,7 +36,7 @@
             },
             "start_website_auth": {
                 "description": "Kontynuuj, by dokona\u0107 autoryzacji w plex.tv.",
-                "title": "Po\u0142\u0105cz z serwerem Plex"
+                "title": "Po\u0142\u0105czenie z serwerem Plex"
             },
             "user": {
                 "description": "Przejd\u017a do [plex.tv](https://plex.tv), aby po\u0142\u0105czy\u0107 serwer Plex.",

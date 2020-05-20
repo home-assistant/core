@@ -224,6 +224,20 @@ remote_learn_command:
       description: "Define the timeout in seconds, before which the command must be learned."
       example: "30"
 
+remote_set_led_on:
+  description: 'Turn on blue LED.'
+  fields:
+    entity_id:
+      description: "Name of the entity to turn LED on."
+      example: "remote.xiaomi_miio"
+
+remote_set_led_off:
+  description: 'Turn off blue LED.'
+  fields:
+    entity_id:
+      description: "Name of the entity to turn LED off."
+      example: "remote.xiaomi_miio"
+
 switch_set_wifi_led_on:
   description: Turn the wifi led on.
   fields:
