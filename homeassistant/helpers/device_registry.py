@@ -359,6 +359,8 @@ class DeviceRegistry:
             for entry in self.devices.values()
         ]
 
+        _LOGGER.warning("_data_to_save: %s %s", self.devices, data)
+
         return data
 
     @callback
