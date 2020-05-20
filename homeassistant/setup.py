@@ -41,7 +41,10 @@ async def async_setup_component(
     setup_tasks = hass.data.setdefault(DATA_SETUP, {})
 
     if domain in setup_tasks:
+        _LOGGER.info("async_setup_component: setup_tasks: %s", domain)
         return await setup_tasks[domain]  # type: ignore
+
+    _LOGGER.info("_async_setup_component: %s", domain)
 
     task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config)
