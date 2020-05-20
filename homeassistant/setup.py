@@ -70,7 +70,10 @@ async def _async_process_dependencies(
     tasks = [async_setup_component(hass, dep, config) for dep in dependencies]
 
     if not tasks:
+        _LOGGER.info("NO async_setup_component tasks")
         return True
+
+    _LOGGER.info("Waiting for async_setup_component tasks")
 
     results = await asyncio.gather(*tasks)
 
@@ -132,7 +135,10 @@ async def _async_setup_component(
     try:
         await async_process_deps_reqs(hass, config, integration)
     except HomeAssistantError as err:
-        log_error(f"Processing dependencies for {integration} failed ({err})", integration.documentation)
+        log_error(
+            f"Processing dependencies for {integration} failed ({err})",
+            integration.documentation,
+        )
         return False
 
     _LOGGER.info("get_component for %s", domain)
