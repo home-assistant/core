@@ -39,17 +39,17 @@ class MagicHomeLight(MagicHomeDevice, Light):
 
     @property
     def brightness(self):
-        """Return the brightness of the light."""
+        """Return the brightness."""
         return int(self.magichome.brightness())
 
     @property
     def hs_color(self):
-        """Return the hs_color of the light."""
+        """Return the hs_color."""
         return tuple(map(int, self.magichome.hs_color()))
 
     @property
     def color_temp(self):
-        """Return the color_temp of the light."""
+        """Return the color_temp."""
         if self.magichome.color_temp() is None:
             return None
         color_temp = int(self.magichome.color_temp())
@@ -57,25 +57,25 @@ class MagicHomeLight(MagicHomeDevice, Light):
 
     @property
     def is_on(self):
-        """Return true if light is on."""
+        """Return light power status."""
         return self.magichome.state()
 
     @property
     def min_mireds(self):
-        """Return color temperature min mireds."""
+        """Min mireds."""
         return colorutil.color_temperature_kelvin_to_mired(
             self.magichome.min_color_temp()
         )
 
     @property
     def max_mireds(self):
-        """Return color temperature max mireds."""
+        """Max mireds."""
         return colorutil.color_temperature_kelvin_to_mired(
             self.magichome.max_color_temp()
         )
 
     def turn_on(self, **kwargs):
-        """Turn on or control the light."""
+        """Turn on light."""
         if (
             ATTR_BRIGHTNESS not in kwargs
             and ATTR_HS_COLOR not in kwargs
@@ -93,12 +93,12 @@ class MagicHomeLight(MagicHomeDevice, Light):
             self.magichome.set_color_temp(color_temp)
 
     def turn_off(self, **kwargs):
-        """Instruct the light to turn off."""
+        """Turn off light."""
         self.magichome.turn_off()
 
     @property
     def supported_features(self):
-        """Flag supported features."""
+        """Supported features."""
         supports = SUPPORT_BRIGHTNESS
         if self.magichome.support_color():
             supports = supports | SUPPORT_COLOR

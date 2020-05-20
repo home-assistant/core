@@ -456,7 +456,7 @@ logi_circle==0.2.2
 luftdaten==0.6.4
 
 # homeassistant.components.magichome
-magichome==0.1.49
+magichome==0.1.50
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2

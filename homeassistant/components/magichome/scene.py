@@ -1,4 +1,4 @@
-"""Platform for MagicHome scenes integration."""
+"""MagicHome scenes integration."""
 from homeassistant.components.scene import DOMAIN, Scene
 
 from . import DATA_MAGICHOME, MagicHomeDevice
@@ -29,6 +29,6 @@ class MagicHomeScene(MagicHomeDevice, Scene):
         super().__init__(magichome)
         self.entity_id = ENTITY_ID_FORMAT.format(magichome.object_id())
 
-    def activate(self):
+    def activate(self,magichome):
         """Activate the scene."""
-        self.magichome.activate(self)
+        self.magichome.activate(magichome)

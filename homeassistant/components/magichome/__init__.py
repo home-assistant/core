@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_ENTITIES,
     CONF_PASSWORD,
-    CONF_PLATFORM,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -16,10 +15,6 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
-
-_LOGGER = logging.getLogger(__name__)
-
-CONF_COMPANY = "company"
 
 DOMAIN = "magichome"
 DATA_MAGICHOME = "data_magichome"
@@ -30,7 +25,7 @@ SIGNAL_UPDATE_ENTITY = "magichome_update"
 SERVICE_FORCE_UPDATE = "force_update"
 SERVICE_PULL_DEVICES = "pull_devices"
 
-MAGICHOME_TYPE_TO_HA = ["light", "scene"]
+MAGICHOME_TYPE_TO_HASS = ["light", "scene"]
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -40,8 +35,6 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_COMPANY, default="ZG001"): cv.string,
-                vol.Optional(CONF_PLATFORM, default="ZG001"): cv.string,
             }
         )
     },
@@ -54,11 +47,9 @@ def setup(hass, config):
     magichome = MagicHomeApi()
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
-    company = config[DOMAIN][CONF_COMPANY]
-    platform = config[DOMAIN][CONF_PLATFORM]
 
     hass.data[DATA_MAGICHOME] = magichome
-    magichome.init(username, password, company, platform)
+    magichome.init(username, password)
     hass.data[DOMAIN] = {"entities": {}}
 
     def load_devices(device_list):
@@ -67,7 +58,7 @@ def setup(hass, config):
         for device in device_list:
             dev_type = device.device_type()
             if (
-                dev_type in MAGICHOME_TYPE_TO_HA
+                dev_type in MAGICHOME_TYPE_TO_HASS
                 and device.object_id() not in hass.data[DOMAIN][CONF_ENTITIES]
             ):
                 if dev_type not in device_type_dict:
@@ -83,13 +74,10 @@ def setup(hass, config):
     load_devices(device_list)
 
     def poll_devices_update(event_time):
-        """Check if accesstoken is expired and pull device list from server."""
-        _LOGGER.debug("Pull devices from MagicHome.")
+        """poll_devices_update"""
         magichome.poll_devices_update()
-        # Add new discover device.
         device_list = magichome.get_all_devices()
         load_devices(device_list)
-        # Delete not exist device.
         newlist_ids = []
         for device in device_list:
             newlist_ids.append(device.object_id())
