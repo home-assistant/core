@@ -6,11 +6,7 @@ from pydelijn.common import HttpException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    DEVICE_CLASS_TIMESTAMP,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -72,6 +68,7 @@ class DeLijnPublicTransportSensor(Entity):
         self._attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._name = None
         self._state = None
+        self._available = True
 
     async def async_update(self):
         """Get the latest data from the De Lijn API."""
@@ -79,7 +76,7 @@ class DeLijnPublicTransportSensor(Entity):
             await self.line.get_passages()
             self._name = await self.line.get_stopname()
         except HttpException:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
             _LOGGER.error("De Lijn http error")
             return
 
@@ -96,9 +93,15 @@ class DeLijnPublicTransportSensor(Entity):
             self._attributes["due_at_schedule"] = first["due_at_schedule"]
             self._attributes["due_at_realtime"] = first["due_at_realtime"]
             self._attributes["next_passages"] = self.line.passages
+            self._available = True
         except (KeyError, IndexError):
             _LOGGER.error("Invalid data received from De Lijn")
-            self._state = STATE_UNAVAILABLE
+            self._available = False
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def device_class(self):
