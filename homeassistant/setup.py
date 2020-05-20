@@ -301,6 +301,12 @@ async def async_process_deps_reqs(
     ):
         raise HomeAssistantError("Could not set up all dependencies.")
 
+    _LOGGER.info(
+        "async_process_deps_reqs: %s, requirements: %s",
+        integration.dependencies,
+        integration.requirements,
+    )
+
     if not hass.config.skip_pip and integration.requirements:
         await requirements.async_get_integration_with_requirements(
             hass, integration.domain
