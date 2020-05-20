@@ -8,7 +8,7 @@ import async_timeout
 import pysensibo
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -135,7 +135,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SensiboClimate(ClimateDevice):
+class SensiboClimate(ClimateEntity):
     """Representation of a Sensibo device."""
 
     def __init__(self, client, data, units):

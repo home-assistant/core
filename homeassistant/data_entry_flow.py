@@ -94,7 +94,12 @@ class FlowManager(abc.ABC):
     def async_progress(self) -> List[Dict]:
         """Return the flows in progress."""
         return [
-            {"flow_id": flow.flow_id, "handler": flow.handler, "context": flow.context}
+            {
+                "flow_id": flow.flow_id,
+                "handler": flow.handler,
+                "context": flow.context,
+                "step_id": flow.cur_step["step_id"],
+            }
             for flow in self._progress.values()
             if flow.cur_step is not None
         ]
@@ -252,6 +257,16 @@ class FlowHandler:
 
     # Set by developer
     VERSION = 1
+
+    @property
+    def source(self) -> Optional[str]:
+        """Source that initialized the flow."""
+        return self.context.get("source", None)
+
+    @property
+    def show_advanced_options(self) -> bool:
+        """If we should show advanced options."""
+        return self.context.get("show_advanced_options", False)
 
     @callback
     def async_show_form(

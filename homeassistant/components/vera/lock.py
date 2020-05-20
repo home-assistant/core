@@ -5,7 +5,7 @@ from typing import Callable, List
 from homeassistant.components.lock import (
     DOMAIN as PLATFORM_DOMAIN,
     ENTITY_ID_FORMAT,
-    LockDevice,
+    LockEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
@@ -36,7 +36,7 @@ async def async_setup_entry(
     )
 
 
-class VeraLock(VeraDevice, LockDevice):
+class VeraLock(VeraDevice, LockEntity):
     """Representation of a Vera lock."""
 
     def __init__(self, vera_device, controller):

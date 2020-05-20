@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "To urz\u0105dzenie Elgato Key Light jest ju\u017c skonfigurowane.",
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z urz\u0105dzeniem Elgato Key Light."
         },
         "error": {
@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "port": "Port"
+                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "port": "[%key_id:common::config_flow::data::port%]"
                 },
                 "description": "Konfiguracja Elgato Key Light w celu integracji z Home Assistant'em.",
                 "title": "Po\u0142\u0105cz swoje Elgato Key Light"

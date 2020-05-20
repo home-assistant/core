@@ -205,7 +205,7 @@ class ArestData:
                 try:
                     if str(self._pin[0]) == "A":
                         response = requests.get(
-                            f"{self._resource,}/analog/{self._pin[1:]}", timeout=10
+                            f"{self._resource}/analog/{self._pin[1:]}", timeout=10
                         )
                         self.data = {"value": response.json()["return_value"]}
                 except TypeError:

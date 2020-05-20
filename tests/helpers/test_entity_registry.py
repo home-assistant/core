@@ -1,14 +1,14 @@
 """Tests for the Entity Registry."""
 import asyncio
-from unittest.mock import patch
 
-import asynctest
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.helpers import entity_registry
 
+import tests.async_mock
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, flush_store, mock_registry
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
@@ -241,11 +241,19 @@ async def test_loading_extra_values(hass, hass_storage):
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",
                 },
+                {
+                    "entity_id": "test.invalid__entity",
+                    "platform": "super_platform",
+                    "unique_id": "invalid-hass",
+                    "disabled_by": "hass",
+                },
             ]
         },
     }
 
     registry = await entity_registry.async_get_registry(hass)
+
+    assert len(registry.entities) == 4
 
     entry_with_name = registry.async_get_or_create(
         "test", "super_platform", "with-name"
@@ -401,7 +409,7 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
 
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
-    with asynctest.patch(
+    with tests.async_mock.patch(
         "homeassistant.helpers.entity_registry.EntityRegistry.async_load"
     ) as mock_load:
         results = await asyncio.gather(

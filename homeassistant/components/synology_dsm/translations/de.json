@@ -41,5 +41,14 @@
                 "title": "Synology DSM"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minuten zwischen den Scans"
+                }
+            }
+        }
     }
 }

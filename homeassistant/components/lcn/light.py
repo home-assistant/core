@@ -6,7 +6,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_ADDRESS
 
@@ -47,7 +47,7 @@ async def async_setup_platform(
     async_add_entities(devices)
 
 
-class LcnOutputLight(LcnDevice, Light):
+class LcnOutputLight(LcnDevice, LightEntity):
     """Representation of a LCN light for output ports."""
 
     def __init__(self, config, address_connection):
@@ -135,7 +135,7 @@ class LcnOutputLight(LcnDevice, Light):
         self.async_write_ha_state()
 
 
-class LcnRelayLight(LcnDevice, Light):
+class LcnRelayLight(LcnDevice, LightEntity):
     """Representation of a LCN light for relay ports."""
 
     def __init__(self, config, address_connection):

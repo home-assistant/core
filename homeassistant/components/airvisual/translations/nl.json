@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Deze co\u00f6rdinaten of Node / Pro ID zijn al geregistreerd."
+        },
+        "error": {
+            "general_error": "Er is een onbekende fout opgetreden.",
+            "unable_to_connect": "Kan geen verbinding maken met Node / Pro-apparaat."
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad"
+                },
+                "description": "Gebruik de AirVisual cloud API om een geografische locatie te bewaken.",
+                "title": "Configureer een geografie"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "IP adres/hostname van component",
+                    "password": "Wachtwoord van component"
+                },
+                "description": "Monitor een persoonlijke AirVisual-eenheid. Het wachtwoord kan worden opgehaald uit de gebruikersinterface van het apparaat.",
+                "title": "Configureer een AirVisual Node / Pro"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "cloud_api": "Geografische ligging",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "Integratietype"
+                },
+                "description": "Kies welk type AirVisual-gegevens u wilt bewaken.",
+                "title": "Configureer AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Toon gecontroleerde geografie op de kaart"
+                },
+                "description": "Stel verschillende opties in voor de AirVisual-integratie.",
+                "title": "Configureer AirVisual"
+            }
+        }
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "not_songpal_device": "Keen Songpal Apparat"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "connection": "Feeler beim verbannen Iwwerpr\u00e9if w.e.g. den Endpunkt"
+        },
+        "flow_title": "Sony Songpal {name} ({host})",
+        "step": {
+            "init": {
+                "description": "Soll {name} ({host}) konfigur\u00e9iert ginn?",
+                "title": "Sony Songpal"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Endpunkt"
+                },
+                "title": "Sony Songpal"
+            }
+        }
+    }
+}

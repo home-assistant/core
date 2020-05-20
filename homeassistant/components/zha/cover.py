@@ -5,7 +5,7 @@ import logging
 
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverDevice
+from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -42,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @STRICT_MATCH(channel_names=CHANNEL_COVER)
-class ZhaCover(ZhaEntity, CoverDevice):
+class ZhaCover(ZhaEntity, CoverEntity):
     """Representation of a ZHA cover."""
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):

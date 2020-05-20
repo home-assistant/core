@@ -199,7 +199,10 @@ class TestUVC(unittest.TestCase):
                     "fps": 25,
                     "bitrate": 6000000,
                     "isRtspEnabled": True,
-                    "rtspUris": ["rtsp://host-a:7447/uuid_rtspchannel_0"],
+                    "rtspUris": [
+                        "rtsp://host-a:7447/uuid_rtspchannel_0",
+                        "rtsp://foo:7447/uuid_rtspchannel_0",
+                    ],
                 },
                 {
                     "id": "1",
@@ -208,7 +211,10 @@ class TestUVC(unittest.TestCase):
                     "fps": 15,
                     "bitrate": 1200000,
                     "isRtspEnabled": False,
-                    "rtspUris": ["rtsp://host-a:7447/uuid_rtspchannel_1"],
+                    "rtspUris": [
+                        "rtsp://host-a:7447/uuid_rtspchannel_1",
+                        "rtsp://foo:7447/uuid_rtspchannel_1",
+                    ],
                 },
             ],
         }
@@ -226,7 +232,7 @@ class TestUVC(unittest.TestCase):
     def test_stream(self):
         """Test the RTSP stream URI."""
         stream_source = yield from self.uvc.stream_source()
-        assert stream_source == "rtsp://host-a:7447/uuid_rtspchannel_0"
+        assert stream_source == "rtsp://foo:7447/uuid_rtspchannel_0"
 
     @mock.patch("uvcclient.store.get_info_store")
     @mock.patch("uvcclient.camera.UVCCameraClientV320")

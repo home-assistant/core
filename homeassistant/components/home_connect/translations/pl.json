@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "[%key_id:common::config_flow::abort::oauth2_missing_configuration%]"
+        },
+        "create_entry": {
+            "default": "Pomy\u015blnie uwierzytelniono z Home Connect."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "[%key_id:common::config_flow::title::oauth2_pick_implementation%]"
+            }
+        }
+    }
+}

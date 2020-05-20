@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Un compte Tibber est d\u00e9j\u00e0 configur\u00e9."
+        },
+        "error": {
+            "connection_error": "Erreur de connexion \u00e0 Tibber",
+            "timeout": "D\u00e9lai de connexion \u00e0 Tibber"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Jeton d'acc\u00e8s"
+                },
+                "title": "Tibber"
+            }
+        }
+    },
+    "title": "Tibber"
+}

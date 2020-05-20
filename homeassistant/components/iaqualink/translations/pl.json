@@ -9,8 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika/adres e-mail"
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]/adres e-mail"
                 },
                 "description": "Wprowad\u017a nazw\u0119 u\u017cytkownika i has\u0142o do konta iAqualink.",
                 "title": "Po\u0142\u0105cz z iAqualink"

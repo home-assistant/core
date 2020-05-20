@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "Integracja MQTT nie jest skonfigurowana.",
+            "one_instance_allowed": "Integracja obs\u0142uguje tylko jedn\u0105 instancj\u0119 Z-Wave."
+        },
+        "step": {
+            "user": {
+                "title": "Potwierd\u017a konfiguracj\u0119"
+            }
+        }
+    }
+}

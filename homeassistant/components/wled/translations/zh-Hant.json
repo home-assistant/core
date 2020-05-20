@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u4e3b\u6a5f\u6216 IP \u4f4d\u5740"
+                    "host": "\u4e3b\u6a5f\u7aef"
                 },
                 "description": "\u8a2d\u5b9a WLED \u4ee5\u6574\u5408\u81f3 Home Assistant\u3002",
                 "title": "\u9023\u7d50 WLED"

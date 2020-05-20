@@ -2,6 +2,8 @@
 import json
 from typing import Dict
 
+from homeassistant.requirements import DISCOVERY_INTEGRATIONS
+
 from .model import Config, Integration
 
 BASE = """
@@ -15,33 +17,50 @@ To update, run python3 -m script.hassfest
 FLOWS = {}
 """.strip()
 
+UNIQUE_ID_IGNORE = {"esphome", "fritzbox", "heos", "huawei_lte"}
 
-def validate_integration(integration: Integration):
-    """Validate we can load config flow without installing requirements."""
-    if not (integration.path / "config_flow.py").is_file():
+
+def validate_integration(config: Config, integration: Integration):
+    """Validate config flow of an integration."""
+    config_flow_file = integration.path / "config_flow.py"
+
+    if not config_flow_file.is_file():
         integration.add_error(
             "config_flow", "Config flows need to be defined in the file config_flow.py"
         )
+        return
 
-    # Currently not require being able to load config flow without
-    # installing requirements.
-    # try:
-    #     integration.import_pkg('config_flow')
-    # except ImportError as err:
-    #     integration.add_error(
-    #         'config_flow',
-    #         "Unable to import config flow: {}. Config flows should be able "
-    #         "to be imported without installing requirements.".format(err))
-    #     return
+    needs_unique_id = integration.domain not in UNIQUE_ID_IGNORE and any(
+        bool(integration.manifest.get(key))
+        for keys in DISCOVERY_INTEGRATIONS.values()
+        for key in keys
+    )
 
-    # if integration.domain not in config_entries.HANDLERS:
-    #     integration.add_error(
-    #         'config_flow',
-    #         "Importing the config flow platform did not register a config "
-    #         "flow handler.")
+    if not needs_unique_id:
+        return
+
+    config_flow = config_flow_file.read_text()
+
+    has_unique_id = (
+        "self.async_set_unique_id" in config_flow
+        or "config_entry_flow.register_discovery_flow" in config_flow
+        or "config_entry_oauth2_flow.AbstractOAuth2FlowHandler" in config_flow
+    )
+
+    if has_unique_id:
+        return
+
+    if config.specific_integrations:
+        notice_method = integration.add_warning
+    else:
+        notice_method = integration.add_error
+
+    notice_method(
+        "config_flow", "Config flows that are discoverable need to set a unique ID"
+    )
 
 
-def generate_and_validate(integrations: Dict[str, Integration]):
+def generate_and_validate(integrations: Dict[str, Integration], config: Config):
     """Validate and generate config flow data."""
     domains = []
 
@@ -56,7 +75,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         if not config_flow:
             continue
 
-        validate_integration(integration)
+        validate_integration(config, integration)
 
         domains.append(domain)
 
@@ -66,7 +85,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
 def validate(integrations: Dict[str, Integration], config: Config):
     """Validate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
-    config.cache["config_flow"] = content = generate_and_validate(integrations)
+    config.cache["config_flow"] = content = generate_and_validate(integrations, config)
 
     if config.specific_integrations:
         return

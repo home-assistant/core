@@ -4,6 +4,7 @@ import asyncio
 import logging
 
 import voluptuous as vol
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries, const as ha_const
 import homeassistant.helpers.config_validation as cv
@@ -14,6 +15,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import api
 from .core import ZHAGateway
 from .core.const import (
+    BAUD_RATES,
     COMPONENTS,
     CONF_BAUDRATE,
     CONF_DATABASE,
@@ -21,13 +23,12 @@ from .core.const import (
     CONF_ENABLE_QUIRKS,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
+    CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_CONFIG,
     DATA_ZHA_DISPATCHERS,
     DATA_ZHA_GATEWAY,
     DATA_ZHA_PLATFORM_LOADED,
-    DEFAULT_BAUDRATE,
-    DEFAULT_RADIO_TYPE,
     DOMAIN,
     SIGNAL_ADD_ENTITIES,
     RadioType,
@@ -35,23 +36,27 @@ from .core.const import (
 from .core.discovery import GROUP_PROBE
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(ha_const.CONF_TYPE): cv.string})
-
+ZHA_CONFIG_SCHEMA = {
+    vol.Optional(CONF_BAUDRATE): cv.positive_int,
+    vol.Optional(CONF_DATABASE): cv.string,
+    vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema(
+        {cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}
+    ),
+    vol.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
+    vol.Optional(CONF_ZIGPY): dict,
+    vol.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
+    vol.Optional(CONF_USB_PATH): cv.string,
+}
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_RADIO_TYPE, default=DEFAULT_RADIO_TYPE): cv.enum(
-                    RadioType
-                ),
-                CONF_USB_PATH: cv.string,
-                vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
-                vol.Optional(CONF_DATABASE): cv.string,
-                vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema(
-                    {cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}
-                ),
-                vol.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
-            }
-        )
+            vol.All(
+                cv.deprecated(CONF_USB_PATH, invalidation_version="0.112"),
+                cv.deprecated(CONF_BAUDRATE, invalidation_version="0.112"),
+                cv.deprecated(CONF_RADIO_TYPE, invalidation_version="0.112"),
+                ZHA_CONFIG_SCHEMA,
+            ),
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -67,23 +72,10 @@ async def async_setup(hass, config):
     """Set up ZHA from config."""
     hass.data[DATA_ZHA] = {}
 
-    if DOMAIN not in config:
-        return True
+    if DOMAIN in config:
+        conf = config[DOMAIN]
+        hass.data[DATA_ZHA][DATA_ZHA_CONFIG] = conf
 
-    conf = config[DOMAIN]
-    hass.data[DATA_ZHA][DATA_ZHA_CONFIG] = conf
-
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_USB_PATH: conf[CONF_USB_PATH],
-                    CONF_RADIO_TYPE: conf.get(CONF_RADIO_TYPE).value,
-                },
-            )
-        )
     return True
 
 
@@ -161,3 +153,26 @@ async def async_load_entities(hass: HomeAssistantType) -> None:
         if isinstance(res, Exception):
             _LOGGER.warning("Couldn't setup zha platform: %s", res)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistantType, config_entry: config_entries.ConfigEntry
+):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        data = {
+            CONF_RADIO_TYPE: config_entry.data[CONF_RADIO_TYPE],
+            CONF_DEVICE: {CONF_DEVICE_PATH: config_entry.data[CONF_USB_PATH]},
+        }
+
+        baudrate = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {}).get(CONF_BAUDRATE)
+        if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
+            data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    return True
