@@ -26,6 +26,8 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from homeassistant.exceptions import PlatformNotReady
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = "sources"
@@ -74,6 +76,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if pioneer.update():
         add_entities([pioneer])
+    else:
+        raise PlatformNotReady
 
 
 class PioneerDevice(MediaPlayerDevice):
