@@ -45,7 +45,6 @@ frontend:
 config:
 
 http:
-   base_url: localhost:8180
    server_port: 8180
 
 # AIS Service for AI

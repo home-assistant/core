@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.ais_supla import SuplaChannel
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from .const import CONF_CHANNELS, CONF_SERVER, DOMAIN
 
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class SuplaSwitch(SuplaChannel, SwitchDevice):
+class SuplaSwitch(SuplaChannel, SwitchEntity):
     """Representation of a Supla Switch."""
 
     def turn_on(self, **kwargs):

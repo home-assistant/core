@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
-    MediaPlayerDevice,
+    MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
@@ -357,7 +357,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices([device], True)
 
 
-class ExoPlayerDevice(MediaPlayerDevice):
+class ExoPlayerDevice(MediaPlayerEntity):
     """Representation of a ExoPlayer ."""
 
     # pylint: disable=no-member
