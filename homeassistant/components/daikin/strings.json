@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Configure Daikin AC",
-        "description": "Enter IP address of your Daikin AC.",
+        "description": "Enter IP address of your Daikin AC.\n\nNote that [%key:common::config_flow::data::api_key%] and [%key:common::config_flow::data::password%] are used by BRP072Cxx and SKYFi devices respectively.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "key": "[%key:common::config_flow::data::api_key%]",

@@ -42,3 +42,18 @@ async def test_services(hass, config_entry, config, hass_read_only_user):
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
         )
+
+
+async def test_device_registry(hass, config_entry, config, soco):
+    """Test sonos device registered in the device registry."""
+    await setup_platform(hass, config_entry, config)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    reg_device = device_registry.async_get_device(
+        identifiers={("sonos", "RINCON_test")}, connections=set(),
+    )
+    assert reg_device.model == "Model Name"
+    assert reg_device.sw_version == "49.2-64250"
+    assert reg_device.connections == {("mac", "00:11:22:33:44:55")}
+    assert reg_device.manufacturer == "Sonos"
+    assert reg_device.name == "Zone A"

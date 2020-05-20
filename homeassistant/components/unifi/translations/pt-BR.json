@@ -6,7 +6,8 @@
         },
         "error": {
             "faulty_credentials": "Credenciais do usu\u00e1rio inv\u00e1lidas",
-            "service_unavailable": "Servi\u00e7o indispon\u00edvel"
+            "service_unavailable": "Servi\u00e7o indispon\u00edvel",
+            "unknown_client_mac": "Nenhum cliente dispon\u00edvel nesse endere\u00e7o MAC"
         },
         "step": {
             "user": {
@@ -24,6 +25,14 @@
     },
     "options": {
         "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Clientes com acesso controlado \u00e0 rede",
+                    "new_client": "Adicionar novo cliente para controle de acesso \u00e0 rede"
+                },
+                "description": "Configurar controles do cliente \n\nCrie comutadores para os n\u00fameros de s\u00e9rie para os quais deseja controlar o acesso \u00e0 rede.",
+                "title": "UniFi op\u00e7\u00f5es de 2/3"
+            },
             "device_tracker": {
                 "data": {
                     "detection_time": "Tempo em segundos desde a \u00faltima vez que foi visto at\u00e9 ser considerado afastado",
