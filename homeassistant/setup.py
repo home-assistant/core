@@ -304,13 +304,20 @@ async def async_process_deps_reqs(
     elif integration.domain in processed:
         return
 
+    _LOGGER.info(
+        "async_process_deps_reqs: %s, %s, requirements: %s",
+        integration,
+        integration.dependencies,
+        integration.requirements,
+    )
+
     if integration.dependencies and not await _async_process_dependencies(
         hass, config, integration.domain, integration.dependencies
     ):
         raise HomeAssistantError("Could not set up all dependencies.")
 
     _LOGGER.info(
-        "async_process_deps_reqs: %s, %s, requirements: %s",
+        "FINISH async_process_deps_reqs: %s, %s, requirements: %s",
         integration,
         integration.dependencies,
         integration.requirements,
