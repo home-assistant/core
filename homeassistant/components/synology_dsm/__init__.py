@@ -1,6 +1,7 @@
 """The Synology DSM component."""
 import asyncio
 from datetime import timedelta
+import logging
 from typing import Dict
 
 from synology_dsm import SynologyDSM
@@ -22,6 +23,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -44,9 +46,13 @@ from .const import (
     ENTITY_NAME,
     ENTITY_UNIT,
     PLATFORMS,
+    STORAGE_DISK_BINARY_SENSORS,
+    STORAGE_DISK_SENSORS,
+    STORAGE_VOL_SENSORS,
     SYNO_API,
     TEMP_SENSORS_KEYS,
     UNDO_UPDATE_LISTENER,
+    UTILISATION_SENSORS,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -67,6 +73,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 ATTRIBUTION = "Data provided by Synology"
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
@@ -90,6 +99,65 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Synology DSM sensors."""
     api = SynoApi(hass, entry)
 
+    # Migrate old unique_id
+    @callback
+    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+        """Migrate away from ID using label."""
+        # Reject if new unique_id
+        if "SYNO." in entity_entry.unique_id:
+            return None
+
+        entries = {
+            **STORAGE_DISK_BINARY_SENSORS,
+            **STORAGE_DISK_SENSORS,
+            **STORAGE_VOL_SENSORS,
+            **UTILISATION_SENSORS,
+        }
+        infos = entity_entry.unique_id.split("_")
+        serial = infos.pop(0)
+        label = infos.pop(0)
+        device_id = "_".join(infos)
+
+        # Removed entity
+        if (
+            "Type" in entity_entry.unique_id
+            or "Device" in entity_entry.unique_id
+            or "Name" in entity_entry.unique_id
+        ):
+            return None
+
+        entity_type = None
+        for entity_key, entity_attrs in entries.items():
+            if (
+                device_id
+                and entity_attrs[ENTITY_NAME] == "Status"
+                and "Status" in entity_entry.unique_id
+                and "(Smart)" not in entity_entry.unique_id
+            ):
+                if "sd" in device_id and "disk" in entity_key:
+                    entity_type = entity_key
+                    continue
+                if "volume" in device_id and "volume" in entity_key:
+                    entity_type = entity_key
+                    continue
+
+            if entity_attrs[ENTITY_NAME] == label:
+                entity_type = entity_key
+
+        new_unique_id = "_".join([serial, entity_type])
+        if device_id:
+            new_unique_id += f"_{device_id}"
+
+        _LOGGER.info(
+            "Migrating unique_id from [%s] to [%s]",
+            entity_entry.unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+
+    # Continue setup
     await api.async_setup()
 
     undo_listener = entry.add_update_listener(_async_update_listener)
