@@ -71,6 +71,7 @@ async def async_get_integration_with_requirements(
             raise IntegrationNotFound(domain)
 
     if int_or_evt is not _UNDEF:
+        _LOGGER.info("async_get_integration_with_requirements (int_or_evt): %s", domain)
         return cast(Integration, int_or_evt)
 
     event = cache[domain] = asyncio.Event()
@@ -106,7 +107,9 @@ async def async_get_integration_with_requirements(
             deps_to_check.append(check_domain)
 
     _LOGGER.info(
-        "deps_to_check for %s async_get_integration_with_requirements: %s", domain, deps_to_check
+        "deps_to_check for %s async_get_integration_with_requirements: %s",
+        domain,
+        deps_to_check,
     )
 
     if deps_to_check:
