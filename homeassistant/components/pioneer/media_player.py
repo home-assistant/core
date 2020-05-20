@@ -1,6 +1,7 @@
 """Support for Pioneer Network Receivers."""
 import logging
 import telnetlib
+import time
 
 import voluptuous as vol
 
@@ -47,6 +48,8 @@ SUPPORT_PIONEER = (
 
 MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
+MAX_TRIES = 5
+TRY_DELAY = 0.5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -109,24 +112,38 @@ class PioneerDevice(MediaPlayerDevice):
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends command."""
-        try:
+        tries = MAX_TRIES
+        while tries > 0:
+            tries = tries -1
             try:
-                telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
-            except (ConnectionRefusedError, OSError):
-                _LOGGER.warning("Pioneer %s refused connection", self._name)
-                return
-            telnet.write(command.encode("ASCII") + b"\r")
-            telnet.read_very_eager()  # skip response
-            telnet.close()
-        except telnetlib.socket.timeout:
-            _LOGGER.debug("Pioneer %s command %s timed out", self._name, command)
+                try:
+                    telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
+                    telnet.write(command.encode("ASCII") + b"\r")
+                    telnet.read_very_eager()  # skip response
+                    telnet.close()
+                    break
+                except (ConnectionRefusedError, OSError):
+                    _LOGGER.warning("telnet_command: Pioneer %s refused connection", self._name)
+                    time.sleep(TRY_DELAY)
+                    continue
+            except telnetlib.socket.timeout:
+                _LOGGER.debug("Pioneer %s command %s timed out", self._name, command)
+        if tries == 0: _LOGGER.warning("Tried %d times, but Pioneer %s still refused connection", MAX_TRIES, self._name)
 
     def update(self):
         """Get the latest details from the device."""
-        try:
-            telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
-        except (ConnectionRefusedError, OSError):
-            _LOGGER.warning("Pioneer %s refused connection", self._name)
+        tries = MAX_TRIES
+        while tries > 0:
+            tries = tries -1
+            try:
+                telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
+                break
+            except (ConnectionRefusedError, OSError):
+                _LOGGER.debug("update: Pioneer %s refused connection", self._name)
+                time.sleep(TRY_DELAY)
+                continue
+        if tries == 0: 
+            _LOGGER.warning("Tried %d times, but Pioneer %s still refused connection", MAX_TRIES, self._name)
             return False
 
         pwstate = self.telnet_request(telnet, "?P", "PWR")
