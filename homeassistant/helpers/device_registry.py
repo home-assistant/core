@@ -267,6 +267,10 @@ class DeviceRegistry:
         if old.is_new:
             changes["is_new"] = False
 
+        _LOGGER.warning(
+            "_async_update_device - changes - device_id:%s %s", device_id, changes
+        )
+
         if not changes:
             return old
 
