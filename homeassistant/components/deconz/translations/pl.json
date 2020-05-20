@@ -22,7 +22,7 @@
             },
             "link": {
                 "description": "Odblokuj bramk\u0119 deCONZ, aby zarejestrowa\u0107 j\u0105 w Home Assistant. \n\n 1. Przejd\u017a do ustawienia deCONZ > bramka > Zaawansowane\n 2. Naci\u015bnij przycisk \"Uwierzytelnij aplikacj\u0119\"",
-                "title": "Po\u0142\u0105cz z deCONZ"
+                "title": "Po\u0142\u0105czenie z deCONZ"
             },
             "manual_confirm": {
                 "data": {
@@ -48,7 +48,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "oba przyciski",
-            "bottom_buttons": "Dolne przyciski",
+            "bottom_buttons": "dolne przyciski",
             "button_1": "pierwszy przycisk",
             "button_2": "drugi przycisk",
             "button_3": "trzeci przycisk",
@@ -65,7 +65,7 @@
             "side_4": "strona 4",
             "side_5": "strona 5",
             "side_6": "strona 6",
-            "top_buttons": "G\u00f3rne przyciski",
+            "top_buttons": "g\u00f3rne przyciski",
             "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
             "turn_on": "nast\u0105pi w\u0142\u0105czenie"
         },

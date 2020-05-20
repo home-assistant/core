@@ -2,9 +2,8 @@
     "config": {
         "step": {
             "user": {
-                "title": "Asenna Axis-laite"
+                "title": "Valitse p\u00e4\u00e4tepiste."
             }
         }
-    },
-    "title": "Axis-laite"
+    }
 }
