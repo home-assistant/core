@@ -39,8 +39,7 @@
                 },
                 "title": "Connect to the HVV API"
             }
-        },
-        "title": "HVV Departures"
+        }
     },
     "options": {
         "step": {
@@ -54,5 +53,6 @@
                 "title": "Options"
             }
         }
-    }
+    },
+    "title": "HVV Departures"
 }
