@@ -55,7 +55,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
-from homeassistant.util import color as color_util, temperature as temp_util
+from homeassistant.util import color as color_util, dt, temperature as temp_util
 
 from .const import (
     CHALLENGE_ACK_NEEDED,
@@ -1561,12 +1561,17 @@ class TransportControlTrait(_Trait):
             service = media_player.SERVICE_MEDIA_SEEK
 
             rel_position = params["relativePositionMs"] / 1000
+            now = dt.utcnow()
+            upd_at = self.state.attributes.get(
+                media_player.ATTR_MEDIA_POSITION_UPDATED_AT, now
+            )
+            seconds_since = (now - upd_at).total_seconds()
             position = self.state.attributes.get(media_player.ATTR_MEDIA_POSITION, 0)
             max_position = self.state.attributes.get(
                 media_player.ATTR_MEDIA_DURATION, 0
             )
             service_attrs[media_player.ATTR_MEDIA_SEEK_POSITION] = min(
-                max(position + rel_position, 0), max_position
+                max(position + seconds_since + rel_position, 0), max_position
             )
         elif command == COMMAND_MEDIA_SEEK_TO_POSITION:
             service = media_player.SERVICE_MEDIA_SEEK

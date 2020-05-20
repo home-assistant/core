@@ -1,4 +1,5 @@
 """Tests for the Google Assistant traits."""
+from datetime import datetime, timedelta
 import logging
 
 import pytest
@@ -1797,6 +1798,8 @@ async def test_transport_control(hass):
     for feature in trait.MEDIA_COMMAND_SUPPORT_MAPPING.values():
         assert trait.TransportControlTrait.supported(media_player.DOMAIN, feature, None)
 
+    now = datetime(2020, 1, 1)
+
     trt = trait.TransportControlTrait(
         hass,
         State(
@@ -1805,6 +1808,8 @@ async def test_transport_control(hass):
             {
                 media_player.ATTR_MEDIA_POSITION: 100,
                 media_player.ATTR_MEDIA_DURATION: 200,
+                media_player.ATTR_MEDIA_POSITION_UPDATED_AT: now
+                - timedelta(seconds=10),
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
                 ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_PLAY
                 | media_player.SUPPORT_STOP,
@@ -1822,13 +1827,20 @@ async def test_transport_control(hass):
     calls = async_mock_service(
         hass, media_player.DOMAIN, media_player.SERVICE_MEDIA_SEEK
     )
-    await trt.execute(
-        trait.COMMAND_MEDIA_SEEK_RELATIVE, BASIC_DATA, {"relativePositionMs": 10000}, {}
-    )
+
+    # Patch to avoid time ticking over during the command failing the test
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await trt.execute(
+            trait.COMMAND_MEDIA_SEEK_RELATIVE,
+            BASIC_DATA,
+            {"relativePositionMs": 10000},
+            {},
+        )
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: "media_player.bla",
-        media_player.ATTR_MEDIA_SEEK_POSITION: 110,
+        # 100s (current position) + 10s (from command) + 10s (from updated_at)
+        media_player.ATTR_MEDIA_SEEK_POSITION: 120,
     }
 
     # COMMAND_MEDIA_SEEK_TO_POSITION
