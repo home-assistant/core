@@ -263,8 +263,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        if not self.values.fan_mode:
-            return
         # get id for this fan_mode
         fan_mode_value = _get_list_id(self.values.fan_mode.value[VALUE_LIST], fan_mode)
         if fan_mode_value is None:
@@ -284,8 +282,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
-        if not self.values.mode:
-            return
         if preset_mode == PRESET_NONE:
             # try to restore to the (translated) main hvac mode
             await self.async_set_hvac_mode(self.hvac_mode)
