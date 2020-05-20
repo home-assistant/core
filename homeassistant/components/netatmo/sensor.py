@@ -127,9 +127,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     device_registry = await hass.helpers.device_registry.async_get_registry()
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    def find_entities(data_class):
+    async def find_entities(data_class):
         """Find all entities."""
+        await data_handler.register_data_class(data_class)
         all_module_infos = data_handler.data.get(data_class).getModules()
+
         entities = []
         for module in all_module_infos.values():
             _LOGGER.debug("Adding module %s %s", module["module_name"], module["id"])
@@ -139,18 +141,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 entities.append(
                     NetatmoSensor(data_handler, data_class, module, condition.lower())
                 )
+
+        await data_handler.unregister_data_class(data_class)
         return entities
 
-    def get_entities():
+    async def get_entities():
         """Retrieve Netatmo entities."""
         entities = []
 
         for data_class in ["WeatherStationData", "HomeCoachData"]:
-            entities.extend(find_entities(data_class))
+            entities.extend(await find_entities(data_class))
 
         return entities
 
-    async_add_entities(await hass.async_add_executor_job(get_entities), True)
+    async_add_entities(await get_entities(), True)
 
     @callback
     def add_public_entities():
