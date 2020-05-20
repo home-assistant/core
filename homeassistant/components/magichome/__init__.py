@@ -1,6 +1,5 @@
 """Support for MagicHome Smart devices."""
 from datetime import timedelta
-import logging
 
 from magichome import MagicHomeApi
 import voluptuous as vol
@@ -74,7 +73,7 @@ def setup(hass, config):
     load_devices(device_list)
 
     def poll_devices_update(event_time):
-        """poll_devices_update"""
+        """Poll devices update."""
         magichome.poll_devices_update()
         device_list = magichome.get_all_devices()
         load_devices(device_list)

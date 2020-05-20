@@ -41,7 +41,7 @@ async def test_setting_up_magichome(hass):
     assert await async_setup_component(
         hass,
         magichome.DOMAIN,
-        {"magichome": {"username": "test@user.com", "password": "123456",}},
+        {"magichome": {"username": "test@user.com", "password": "123456"}},
     )
     await hass.async_start()
 
