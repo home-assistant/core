@@ -77,6 +77,8 @@ async def _async_process_dependencies(
 
     results = await asyncio.gather(*tasks)
 
+    _LOGGER.info("Finished Waiting for async_setup_component tasks")
+
     failed = [dependencies[idx] for idx, res in enumerate(results) if not res]
 
     if failed:
