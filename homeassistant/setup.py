@@ -65,6 +65,8 @@ async def _async_process_dependencies(
         )
         return False
 
+    _LOGGER.info("deps for %s are %s", name, dependencies)
+
     tasks = [async_setup_component(hass, dep, config) for dep in dependencies]
 
     if not tasks:
