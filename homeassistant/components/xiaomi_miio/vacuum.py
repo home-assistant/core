@@ -459,10 +459,10 @@ class MiroboVacuum(StateVacuumEntity):
             duration=duration,
         )
 
-    async def async_goto(self, x_coord: int = 25500, y_coord: int = 25500):
+    async def async_goto(self, x_coord: int, y_coord: int):
         """Goto the specified coordinates."""
         await self._try_command(
-            "Unable to remote control the vacuum: %s",
+            "Unable to send the vacuum cleaner to the specified coordinates: %s",
             self._vacuum.goto,
             x_coord=x_coord,
             y_coord=y_coord,
