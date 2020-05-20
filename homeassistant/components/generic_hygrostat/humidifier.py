@@ -262,12 +262,14 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._state = True
         if not self._is_device_active:
             await self._async_humidifier_turn_on()
+        await self.async_update_ha_state()
 
     async def async_turn_off(self):
         """Turn hygrostat off."""
         self._state = False
         if self._is_device_active:
             await self._async_humidifier_turn_off()
+        await self.async_update_ha_state()
 
     async def async_set_humidity(self, humidity: int):
         """Set new target humidity."""
