@@ -17,7 +17,7 @@
                     "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Aby uzyska\u0107 dost\u0119p do API Flume, musisz poprosi\u0107 o 'ID klienta\u201d i 'klucz tajny klienta' na stronie https://portal.flumetech.com/settings#token",
-                "title": "Po\u0142\u0105cz z kontem Flume"
+                "title": "Po\u0142\u0105czenie z kontem Flume"
             }
         }
     }

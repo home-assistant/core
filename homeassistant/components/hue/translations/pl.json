@@ -6,7 +6,7 @@
             "already_in_progress": "Konfiguracja mostka jest ju\u017c w toku.",
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z mostkiem",
             "discover_timeout": "Nie mo\u017cna wykry\u0107 \u017cadnych mostk\u00f3w Hue",
-            "no_bridges": "Nie wykryto \u017cadnych mostk\u00f3w Hue",
+            "no_bridges": "Nie wykryto mostk\u00f3w Hue.",
             "not_hue_bridge": "To nie jest mostek Hue",
             "unknown": "Nieoczekiwany b\u0142\u0105d."
         },
@@ -35,17 +35,17 @@
             "button_4": "czwarty przycisk",
             "dim_down": "nast\u0105pi zmniejszenie jasno\u015bci",
             "dim_up": "nast\u0105pi zwi\u0119kszenie jasno\u015bci",
-            "double_buttons_1_3": "Przyciski pierwszy i trzeci",
-            "double_buttons_2_4": "Przyciski drugi i czwarty",
-            "turn_off": "Nast\u0105pi wy\u0142\u0105czenie",
-            "turn_on": "Nast\u0105pi w\u0142\u0105czenie"
+            "double_buttons_1_3": "przyciski pierwszy i trzeci",
+            "double_buttons_2_4": "przyciski drugi i czwarty",
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
             "remote_button_long_release": "\"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
             "remote_button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
             "remote_button_short_release": "\"{subtype}\" zostanie zwolniony",
-            "remote_double_button_long_press": "Obydwa \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_double_button_short_press": "Obydwa \"{subtype}\" zostanie zwolniony"
+            "remote_double_button_long_press": "oba \"{subtype}\" zostan\u0105 zwolnione po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_double_button_short_press": "oba \"{subtype}\" zostan\u0105 zwolnione"
         }
     }
 }
