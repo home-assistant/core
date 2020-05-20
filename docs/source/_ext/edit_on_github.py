@@ -12,13 +12,10 @@ __licence__ = "BSD (3 clause)"
 
 
 def get_github_url(app, view, path):
-    github_fmt = "https://github.com/{}/{}/{}/{}{}"
-    return github_fmt.format(
-        app.config.edit_on_github_project,
-        view,
-        app.config.edit_on_github_branch,
-        app.config.edit_on_github_src_path,
-        path,
+    return (
+        f"https://github.com/{app.config.edit_on_github_project}/"
+        f"{view}/{app.config.edit_on_github_branch}/"
+        f"{app.config.edit_on_github_src_path}{path}"
     )
 
 

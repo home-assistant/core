@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V omre\u017eju ni najdenih naprav Wemo.",
+            "single_instance_allowed": "Mo\u017ena je samo ena konfiguracija Wema."
+        },
+        "step": {
+            "confirm": {
+                "description": "Ali \u017eelite nastaviti Wemo?",
+                "title": "Wemo"
+            }
+        }
+    }
+}

@@ -156,7 +156,7 @@ class TestDarkSkySetup(unittest.TestCase):
         url = "https://api.darksky.net/forecast/{}/{},{}?units=auto".format(
             self.key, str(self.lat), str(self.lon)
         )
-        msg = "400 Client Error: Bad Request for url: {}".format(url)
+        msg = f"400 Client Error: Bad Request for url: {url}"
         mock_get_forecast.side_effect = HTTPError(msg)
 
         response = darksky.setup_platform(

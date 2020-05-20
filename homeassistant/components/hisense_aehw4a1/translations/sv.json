@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Inga Hisense AEH-W4A1-enheter hittades i n\u00e4tverket.",
+            "single_instance_allowed": "Endast en enda konfiguration av Hisense AEH-W4A1 \u00e4r m\u00f6jlig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vill du konfigurera Hisense AEH-W4A1?",
+                "title": "Hisense AEH-W4A1"
+            }
+        }
+    }
+}

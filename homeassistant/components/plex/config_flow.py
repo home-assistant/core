@@ -43,10 +43,10 @@ _LOGGER = logging.getLogger(__package__)
 @callback
 def configured_servers(hass):
     """Return a set of the configured Plex servers."""
-    return set(
+    return {
         entry.data[CONF_SERVER_IDENTIFIER]
         for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

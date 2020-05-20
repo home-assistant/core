@@ -352,8 +352,10 @@ class LTEEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callback."""
-        async_dispatcher_connect(
-            self.hass, DISPATCHER_NETGEAR_LTE, self.async_write_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DISPATCHER_NETGEAR_LTE, self.async_write_ha_state
+            )
         )
 
     async def async_update(self):

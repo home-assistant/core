@@ -14,11 +14,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import (
     CONST_FAN_AUTO,
     CONST_FAN_OFF,
@@ -30,42 +30,52 @@ from .const import (
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
     DATA,
+    DOMAIN,
     HA_TO_TADO_FAN_MODE_MAP,
     HA_TO_TADO_HVAC_MODE_MAP,
     ORDERED_KNOWN_TADO_MODES,
+    SIGNAL_TADO_UPDATE_RECEIVED,
     SUPPORT_PRESET,
     TADO_HVAC_ACTION_TO_HA_HVAC_ACTION,
     TADO_MODES_WITH_NO_TEMP_SETTING,
     TADO_SWING_OFF,
+    TADO_SWING_ON,
     TADO_TO_HA_FAN_MODE_MAP,
     TADO_TO_HA_HVAC_MODE_MAP,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
 )
+from .entity import TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up the Tado climate platform."""
-    if discovery_info is None:
-        return
 
-    api_list = hass.data[DOMAIN][DATA]
-    entities = []
-
-    for tado in api_list:
-        for zone in tado.zones:
-            if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
-                entity = create_climate_entity(tado, zone["name"], zone["id"])
-                if entity:
-                    entities.append(entity)
+    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    entities = await hass.async_add_executor_job(_generate_entities, tado)
 
     if entities:
-        add_entities(entities, True)
+        async_add_entities(entities, True)
 
 
-def create_climate_entity(tado, name: str, zone_id: int):
+def _generate_entities(tado):
+    """Create all climate entities."""
+    entities = []
+    for zone in tado.zones:
+        if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
+            entity = create_climate_entity(
+                tado, zone["name"], zone["id"], zone["devices"][0]
+            )
+            if entity:
+                entities.append(entity)
+    return entities
+
+
+def create_climate_entity(tado, name: str, zone_id: int, zone: dict):
     """Create a Tado climate entity."""
     capabilities = tado.get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
@@ -148,11 +158,12 @@ def create_climate_entity(tado, name: str, zone_id: int):
         supported_hvac_modes,
         supported_fan_modes,
         support_flags,
+        zone,
     )
     return entity
 
 
-class TadoClimate(ClimateDevice):
+class TadoClimate(TadoZoneEntity, ClimateDevice):
     """Representation of a Tado climate entity."""
 
     def __init__(
@@ -170,11 +181,12 @@ class TadoClimate(ClimateDevice):
         supported_hvac_modes,
         supported_fan_modes,
         support_flags,
+        device_info,
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
+        super().__init__(zone_name, device_info, tado.device_id, zone_id)
 
-        self.zone_name = zone_name
         self.zone_id = zone_id
         self.zone_type = zone_type
         self._unique_id = f"{zone_type} {zone_id} {tado.device_id}"
@@ -204,22 +216,21 @@ class TadoClimate(ClimateDevice):
         self._current_tado_hvac_action = CURRENT_HVAC_OFF
         self._current_tado_swing_mode = TADO_SWING_OFF
 
-        self._undo_dispatcher = None
         self._tado_zone_data = None
-        self._async_update_zone_data()
 
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        if self._undo_dispatcher:
-            self._undo_dispatcher()
+        self._async_update_zone_data()
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
 
-        self._undo_dispatcher = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
-            self._async_update_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_TADO_UPDATE_RECEIVED.format(
+                    self._tado.device_id, "zone", self.zone_id
+                ),
+                self._async_update_callback,
+            )
         )
 
     @property
@@ -236,11 +247,6 @@ class TadoClimate(ClimateDevice):
     def unique_id(self):
         """Return the unique id."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
 
     @property
     def current_humidity(self):
@@ -393,10 +399,7 @@ class TadoClimate(ClimateDevice):
     def swing_modes(self):
         """Swing modes for the device."""
         if self._support_flags & SUPPORT_SWING_MODE:
-            # Currently we only support off.
-            # On will be added in the future in an update
-            # to PyTado
-            return [TADO_SWING_OFF]
+            return [TADO_SWING_ON, TADO_SWING_OFF]
         return None
 
     def set_swing_mode(self, swing_mode):
@@ -410,6 +413,7 @@ class TadoClimate(ClimateDevice):
         self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
         self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
+        self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
 
     @callback
     def _async_update_callback(self):

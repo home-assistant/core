@@ -1,16 +1,18 @@
 """Support for Supla cover - curtains, rollershutters etc."""
+from datetime import timedelta
 import logging
 
+from homeassistant.components.ais_supla import SuplaChannel
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_GARAGE,
     CoverDevice,
 )
-from homeassistant.components.ais_supla import SuplaChannel
-from .const import DOMAIN, CONF_SERVER, CONF_CHANNELS
+
+from .const import CONF_CHANNELS, CONF_SERVER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
+SCAN_INTERVAL = timedelta(seconds=60)
 SUPLA_SHUTTER = "CONTROLLINGTHEROLLERSHUTTER"
 SUPLA_GATE = "CONTROLLINGTHEGATE"
 
@@ -23,12 +25,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     server = hass.data[DOMAIN][CONF_SERVER][config_entry.entry_id]
     channels = hass.data[DOMAIN][CONF_CHANNELS]["cover"]
+    scan_interval_in_sec = 60
+    if "scan_interval" in config_entry.data:
+        scan_interval_in_sec = config_entry.data["scan_interval"]
     for device in channels:
         device_name = device["function"]["name"]
         if device_name == SUPLA_SHUTTER:
-            async_add_entities([SuplaCover(device, server)])
+            async_add_entities([SuplaCover(device, server, scan_interval_in_sec)])
         elif device_name == SUPLA_GATE:
-            async_add_entities([SuplaGateDoor(device, server)])
+            async_add_entities([SuplaGateDoor(device, server, scan_interval_in_sec)])
 
 
 class SuplaCover(SuplaChannel, CoverDevice):

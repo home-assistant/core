@@ -1,20 +1,16 @@
-# -*- coding: utf-8 -*-
 """
 Support for AIS knowledge
 
 For more details about this component, please refer to the documentation at
 https://www.ai-speaker.com
 """
-import asyncio
-import logging
 import json
-import os.path
+import logging
 from operator import itemgetter
+import os.path
 
 from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
-
-aisCloud = ais_cloud.AisCloudWS()
 
 DOMAIN = "ais_gm_service"
 PERSISTENCE_GM_SONGS = "/.dom/gm_songs.json"
@@ -27,18 +23,16 @@ G_SELECTED_TRACKS = []
 G_GM_MOBILE_CLIENT_API = None
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Register the service."""
     config = config.get(DOMAIN, {})
-    yield from get_keys_async(hass)
-    # TODO
+    await async_get_keys(hass)
     if GM_USER is None:
-        return True
+        return
 
     _LOGGER.info("Initialize the authors list.")
     data = hass.data[DOMAIN] = GMusicData(hass, config)
-    yield from data.async_load_all_songs()
+    await data.async_load_all_songs()
 
     # register services
     def get_books(call):
@@ -60,28 +54,22 @@ def async_setup(hass, config):
     return True
 
 
-@asyncio.coroutine
-def get_keys_async(hass):
-    def load():
-        global GM_DEV_KEY, GM_USER, GM_PASS
+async def async_get_keys(hass):
+    global GM_DEV_KEY, GM_USER, GM_PASS
+    aisCloud = ais_cloud.AisCloudWS(hass)
+    try:
+        json_ws_resp = await aisCloud.async_key("gm_user_key")
+        GM_USER = json_ws_resp["key"]
+        json_ws_resp = await aisCloud.async_key("gm_pass_key")
+        GM_PASS = json_ws_resp["key"]
         try:
-            ws_resp = aisCloud.key("gm_user_key")
-            json_ws_resp = ws_resp.json()
-            GM_USER = json_ws_resp["key"]
-            ws_resp = aisCloud.key("gm_pass_key")
-            json_ws_resp = ws_resp.json()
-            GM_PASS = json_ws_resp["key"]
-            try:
-                ws_resp = aisCloud.key("gm_dev_key")
-                json_ws_resp = ws_resp.json()
-                GM_DEV_KEY = json_ws_resp["key"]
-            except:
-                GM_DEV_KEY = None
-                _LOGGER.warning("No GM device key we will use MAC address of gate.")
-        except Exception as e:
-            _LOGGER.error("No credentials to Google Music: " + str(e))
-
-    yield from hass.async_add_job(load)
+            json_ws_resp = await aisCloud.async_key("gm_dev_key")
+            GM_DEV_KEY = json_ws_resp["key"]
+        except:
+            GM_DEV_KEY = None
+            _LOGGER.warning("No GM device key we will use MAC address of gate.")
+    except Exception as e:
+        _LOGGER.error("No credentials to Google Music: " + str(e))
 
 
 class GMusicData:
@@ -262,49 +250,45 @@ class GMusicData:
                 },
             )
 
-    @asyncio.coroutine
-    def async_load_all_songs(self):
+    async def async_load_all_songs(self):
         """Load all the songs and cache the JSON."""
 
-        def load():
-            """Load the items synchronously."""
-            items = []
-            path = self.hass.config.path() + PERSISTENCE_GM_SONGS
-            if not os.path.isfile(path):
-                items = G_GM_MOBILE_CLIENT_API.get_all_songs()
-                with open(path, "w+") as myfile:
-                    myfile.write(json.dumps(items))
-            else:
-                with open(path) as file:
-                    items = json.loads(file.read())
+        """Load the items synchronously."""
+        items = []
+        path = self.hass.config.path() + PERSISTENCE_GM_SONGS
+        if not os.path.isfile(path):
+            items = G_GM_MOBILE_CLIENT_API.get_all_songs()
+            with open(path, "w+") as myfile:
+                myfile.write(json.dumps(items))
+        else:
+            with open(path) as file:
+                items = json.loads(file.read())
 
-            for track in items:
-                t = {}
-                track_id = track.get("id", track.get("nid"))
-                if track_id is not None:
-                    t["id"] = track_id
-                    t["name"] = track.get("title")
-                    t["artist"] = track.get("artist", "")
-                    t["book"] = track.get("album", "")
-                    t["track_no"] = track.get("trackNumber", 1)
-                    t["length"] = track.get("durationMillis")
-                    t["image"] = track.get("albumArtRef")
-                    if t["image"]:
-                        try:
-                            t["image"] = t["image"][0]["url"]
-                        except Exception as e:
-                            _LOGGER.info("albumArtRef: " + t["image"])
+        for track in items:
+            t = {}
+            track_id = track.get("id", track.get("nid"))
+            if track_id is not None:
+                t["id"] = track_id
+                t["name"] = track.get("title")
+                t["artist"] = track.get("artist", "")
+                t["book"] = track.get("album", "")
+                t["track_no"] = track.get("trackNumber", 1)
+                t["length"] = track.get("durationMillis")
+                t["image"] = track.get("albumArtRef")
+                if t["image"]:
+                    try:
+                        t["image"] = t["image"][0]["url"]
+                    except Exception as e:
+                        _LOGGER.info("albumArtRef: " + t["image"])
 
-                self.all_gm_tracks.append(t)
-            authors = [ais_global.G_EMPTY_OPTION]
-            for chapters in self.all_gm_tracks:
-                if chapters["artist"] not in authors:
-                    if len(chapters["artist"]) > 0:
-                        authors.append(chapters["artist"])
-            self.hass.services.call(
-                "input_select",
-                "set_options",
-                {"entity_id": "input_select.book_autor", "options": sorted(authors)},
-            )
-
-        yield from self.hass.async_add_job(load)
+            self.all_gm_tracks.append(t)
+        authors = [ais_global.G_EMPTY_OPTION]
+        for chapters in self.all_gm_tracks:
+            if chapters["artist"] not in authors:
+                if len(chapters["artist"]) > 0:
+                    authors.append(chapters["artist"])
+        self.hass.services.async_call(
+            "input_select",
+            "set_options",
+            {"entity_id": "input_select.book_autor", "options": sorted(authors)},
+        )

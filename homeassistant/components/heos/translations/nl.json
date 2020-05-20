@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "U kunt alleen een enkele Heos-verbinding configureren, omdat deze alle apparaten in het netwerk ondersteunt."
+        },
+        "error": {
+            "connection_failure": "Kan geen verbinding maken met de opgegeven host."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Host",
+                    "host": "Host"
+                },
+                "description": "Voer de hostnaam of het IP-adres van een Heos-apparaat in (bij voorkeur een die via een kabel is verbonden met het netwerk).",
+                "title": "Verbinding maken met Heos"
+            }
+        }
+    }
+}

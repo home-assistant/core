@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Uw Home Assistant-instantie moet via internet toegankelijk zijn om berichten van de Plateo Airlock te ontvangen.",
+            "one_instance_allowed": "Slechts \u00e9\u00e9n instantie is nodig."
+        },
+        "create_entry": {
+            "default": "Om evenementen naar de Home Assistant te sturen, moet u de webhook-functie instellen in Plaato Airlock. \n\n Vul de volgende info in: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n\n Zie [de documentatie] ( {docs_url} ) voor meer informatie."
+        },
+        "step": {
+            "user": {
+                "description": "Weet u zeker dat u de Plaato-airlock wilt instellen?",
+                "title": "Stel de Plaato Webhook in"
+            }
+        }
+    }
+}

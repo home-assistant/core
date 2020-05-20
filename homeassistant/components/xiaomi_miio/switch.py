@@ -429,7 +429,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         name = f"{name} USB" if channel_usb else name
 
         if unique_id is not None and channel_usb:
-            unique_id = "{}-{}".format(unique_id, "usb")
+            unique_id = f"{unique_id}-usb"
 
         super().__init__(name, plug, model, unique_id)
         self._channel_usb = channel_usb

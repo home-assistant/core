@@ -38,7 +38,7 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit this state is expressed in."""
-        if self._module.get_unit(self._channel) == "°C":
+        if self._module.get_unit(self._channel) == TEMP_CELSIUS:
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
@@ -82,4 +82,3 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        pass

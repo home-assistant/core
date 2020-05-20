@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -186,11 +185,8 @@ class HiveEntity(Entity):
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
+        )
         if self.device_type in SERVICES:
             self.session.entity_lookup[self.entity_id] = self.node_id
-
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state()

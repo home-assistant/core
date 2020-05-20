@@ -1,15 +1,18 @@
 """Config flow to configure the AIS Drive Service component."""
 
-import voluptuous as vol
-import logging
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_ACCESS_TOKEN
-from homeassistant.core import callback
-from .const import DOMAIN, CONF_OAUTH_JSON
 import json
-from homeassistant.components import ais_cloud
+import logging
 
-aisCloudWS = ais_cloud.AisCloudWS()
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.components import ais_cloud
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
+from homeassistant.core import callback
+
+from .const import CONF_OAUTH_JSON, DOMAIN
+
+aisCloudWS = None
 
 _LOGGER = logging.getLogger(__name__)
 DRIVE_NAME_INPUT = None
@@ -20,9 +23,9 @@ AUTH_URL = None
 @callback
 def configured_google_homes(hass):
     """Return a set of configured Google Homes instances."""
-    return set(
+    return {
         entry.data.get(CONF_NAME) for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -33,8 +36,9 @@ class DriveFlowHandler(config_entries.ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
-        """Initialize zone configuration flow."""
-        pass
+        """Initialize google home configuration flow."""
+        global aisCloudWS
+        aisCloudWS = ais_cloud.AisCloudWS(self.hass)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""

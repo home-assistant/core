@@ -15,7 +15,7 @@
                     ],
                     "cards": [
                         {
-                            "content": "# Super [[ {user} ]]!\n\n## Masz nowy pulpit <ha-icon icon=\"mdi:desktop-mac-dashboard\" ></ha-icon> \n\nMo\u017cesz go teraz skonfigurowa\u0107, je\u015bli nie wiesz jak, to sprawd\u017a jak to dzia\u0142a w [<ha-icon icon=\"mdi:information-outline\" ></ha-icon> instrukcji](https://www.ai-speaker.com/docs/ais_app_ui_config). \n\nTa funkcjonalno\u015b\u0107 jest jeszcze rozwijana, do wersji 1.0 dodamy mo\u017cliwo\u015b\u0107 przeci\u0105gania i upuszczania kart - b\u0119dzie jeszcze \u0142atwiej.<ha-icon icon=\"mdi:emoticon-cool-outline\" ></ha-icon>\n",
+                            "content": "# Super  {{user}}!\n\n## Masz nowy pulpit <ha-icon icon=\"mdi:desktop-mac-dashboard\" ></ha-icon> \n\nMo\u017cesz go teraz skonfigurowa\u0107, je\u015bli nie wiesz jak, to sprawd\u017a jak to dzia\u0142a w [<ha-icon icon=\"mdi:information-outline\" ></ha-icon> instrukcji](https://www.ai-speaker.com/docs/ais_app_ui_config). \n\nTa funkcjonalno\u015b\u0107 jest jeszcze rozwijana, do wersji 1.0 dodamy mo\u017cliwo\u015b\u0107 przeci\u0105gania i upuszczania kart - b\u0119dzie jeszcze \u0142atwiej.<ha-icon icon=\"mdi:emoticon-cool-outline\" ></ha-icon>\n",
                             "type": "markdown"
                         }
                     ],

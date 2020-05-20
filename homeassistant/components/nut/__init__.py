@@ -1,7 +1,9 @@
 """The nut component."""
 import asyncio
+from datetime import timedelta
 import logging
 
+import async_timeout
 from pynut2.nut2 import PyNUTClient, PyNUTError
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,20 +13,25 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RESOURCES,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    COORDINATOR,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
     PYNUT_DATA,
     PYNUT_FIRMWARE,
     PYNUT_MANUFACTURER,
     PYNUT_MODEL,
-    PYNUT_STATUS,
+    PYNUT_NAME,
     PYNUT_UNIQUE_ID,
+    UNDO_UPDATE_LISTENER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,10 +54,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     alias = config.get(CONF_ALIAS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     data = PyNUTData(host, port, alias, username, password)
 
-    status = await hass.async_add_executor_job(pynutdata_status, data)
+    async def async_update_data():
+        """Fetch data from NUT."""
+        async with async_timeout.timeout(10):
+            return await hass.async_add_executor_job(data.update)
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="NUT resource status",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=scan_interval),
+    )
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
+    status = data.status
 
     if not status:
         _LOGGER.error("NUT Sensor has no data, unable to set up")
@@ -58,21 +81,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
+    undo_listener = entry.add_update_listener(_async_update_listener)
+
     unique_id = _unique_id_from_status(status)
 
     if unique_id is None:
         unique_id = entry.entry_id
 
     hass.data[DOMAIN][entry.entry_id] = {
+        COORDINATOR: coordinator,
         PYNUT_DATA: data,
-        PYNUT_STATUS: status,
         PYNUT_UNIQUE_ID: unique_id,
         PYNUT_MANUFACTURER: _manufacturer_from_status(status),
         PYNUT_MODEL: _model_from_status(status),
         PYNUT_FIRMWARE: _firmware_from_status(status),
+        PYNUT_NAME: data.name,
+        UNDO_UPDATE_LISTENER: undo_listener,
     }
-
-    entry.add_update_listener(_async_update_listener)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -146,11 +171,6 @@ def find_resources_in_config_entry(config_entry):
     return config_entry.data[CONF_RESOURCES]
 
 
-def pynutdata_status(data):
-    """Wrap for data update as a callable."""
-    return data.status
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
@@ -161,6 +181,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -183,21 +206,33 @@ class PyNUTData:
         # Establish client with persistent=False to open/close connection on
         # each update call.  This is more reliable with async.
         self._client = PyNUTClient(self._host, port, username, password, 5, False)
+        self.ups_list = None
         self._status = None
 
     @property
     def status(self):
         """Get latest update if throttle allows. Return status."""
-        self.update()
         return self._status
+
+    @property
+    def name(self):
+        """Return the name of the ups."""
+        return self._alias
 
     def _get_alias(self):
         """Get the ups alias from NUT."""
         try:
-            return next(iter(self._client.list_ups()))
+            ups_list = self._client.list_ups()
         except PyNUTError as err:
             _LOGGER.error("Failure getting NUT ups alias, %s", err)
             return None
+
+        if not ups_list:
+            _LOGGER.error("Empty list while getting NUT ups aliases")
+            return None
+
+        self.ups_list = ups_list
+        return list(ups_list)[0]
 
     def _get_status(self):
         """Get the ups status from NUT."""

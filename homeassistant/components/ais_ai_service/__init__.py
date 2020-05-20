@@ -10,12 +10,25 @@ import re
 import warnings
 
 from aiohttp.web import json_response
+import async_timeout
 import requests
 import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import ais_cloud, ais_drives_service, conversation
 import homeassistant.components.ais_dom.ais_global as ais_global
+from homeassistant.components.conversation.default_agent import (
+    DefaultAgent,
+    async_register,
+)
+from homeassistant.components.mobile_app.const import (
+    ATTR_APP_DATA,
+    ATTR_APP_ID,
+    ATTR_APP_VERSION,
+    ATTR_OS_VERSION,
+    ATTR_PUSH_TOKEN,
+    ATTR_PUSH_URL,
+)
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -53,17 +66,14 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-from homeassistant.helpers import config_validation as cv, event
+from homeassistant.helpers import config_validation as cv, event, intent
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
-from homeassistant.helpers import intent
-from .ais_agent import AisAgent
-from homeassistant.components.conversation.default_agent import (
-    DefaultAgent,
-    async_register,
-)
 
-aisCloudWS = ais_cloud.AisCloudWS()
+from .ais_agent import AisAgent
+
+aisCloudWS = None
 
 
 ATTR_TEXT = "text"
@@ -271,7 +281,7 @@ G_INPUT_CURRENT_HOUR = None
 G_INPUT_CURRENT_MINNUTE = None
 
 
-def isSwitch(entity_id):
+def is_switch(entity_id):
     global ALL_SWITCHES
     # problem with startswith and tuple of strings
     for s in ALL_SWITCHES:
@@ -1158,7 +1168,7 @@ def say_curr_entity(hass):
     info_data = translate_state(state)
     if not info_unit:
         info_unit = ""
-    info = "%s %s %s" % (info_name, info_data, info_unit)
+    info = f"{info_name} {info_data} {info_unit}"
     _say_it(hass, info)
 
 
@@ -2258,7 +2268,9 @@ async def async_process_json_from_frame(hass, json_req):
     elif topic == "ais/speech_command":
         try:
             # TODO add info if the intent is media player type - to publish
-            intent_resp = await _process(hass, payload, ais_gate_client_id, hot_word_on)
+            intent_resp = await _async_process(
+                hass, payload, ais_gate_client_id, hot_word_on
+            )
             resp_text = intent_resp.speech["plain"]["speech"]
             res = {"ais": "ok", "say_it": resp_text}
         except Exception as e:
@@ -2286,9 +2298,10 @@ async def async_process_json_from_frame(hass, json_req):
     return json_response(res)
 
 
-@asyncio.coroutine
 async def async_setup(hass, config):
     """Register the process service."""
+    global aisCloudWS
+    aisCloudWS = ais_cloud.AisCloudWS(hass)
     warnings.filterwarnings("ignore", module="fuzzywuzzy")
     config = config.get(DOMAIN, {})
     intents = hass.data.get(DOMAIN)
@@ -2301,11 +2314,10 @@ async def async_setup(hass, config):
             conf = intents[intent_type] = []
         conf.extend(_create_matcher(utterance) for utterance in utterances)
 
-    @asyncio.coroutine
     async def process(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
-        await _process(hass, text)
+        await _async_process(hass, text)
 
     def process_code(service):
         """Parse remote code into action."""
@@ -2355,8 +2367,7 @@ async def async_setup(hass, config):
         # set the flag to info that the AIS start part is done - this is needed to don't say some info before this flag
         ais_global.G_AIS_START_IS_DONE = True
 
-    @asyncio.coroutine
-    def set_context(service):
+    async def set_context(service):
         """Set the context in app."""
         context = service.data[ATTR_TEXT]
         for idx, menu in enumerate(GROUP_ENTITIES, start=0):
@@ -2367,7 +2378,7 @@ async def async_setup(hass, config):
                     set_curr_group(hass, menu)
                     set_curr_entity(hass, None)
                     if context == "spotify":
-                        yield from hass.services.async_call(
+                        await hass.services.async_call(
                             "input_select",
                             "select_option",
                             {
@@ -2376,7 +2387,7 @@ async def async_setup(hass, config):
                             },
                         )
                     elif context == "youtube":
-                        yield from hass.services.async_call(
+                        await hass.services.async_call(
                             "input_select",
                             "select_option",
                             {
@@ -2386,8 +2397,7 @@ async def async_setup(hass, config):
                         )
                     break
 
-    @asyncio.coroutine
-    def check_local_ip(service):
+    async def check_local_ip(service):
         """Set the local ip in app."""
         ip = ais_global.get_my_global_ip()
         hass.states.async_set(
@@ -2396,12 +2406,11 @@ async def async_setup(hass, config):
             {"friendly_name": "Lokalny adres IP", "icon": "mdi:access-point-network"},
         )
 
-    @asyncio.coroutine
-    def switch_ui(service):
+    async def switch_ui(service):
         mode = service.data["mode"]
         if mode in ("YouTube", "Spotify"):
             hass.states.async_set("sensor.ais_player_mode", "music_player")
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "input_select",
                 "select_option",
                 {"entity_id": "input_select.ais_music_service", "option": mode},
@@ -2411,15 +2420,14 @@ async def async_setup(hass, config):
         elif mode == "Podcast":
             hass.states.async_set("sensor.ais_player_mode", "podcast_player")
 
-    @asyncio.coroutine
-    def publish_command_to_frame(service):
+    async def publish_command_to_frame(service):
         key = service.data["key"]
         val = service.data["val"]
         ip = "localhost"
         if "ip" in service.data:
             if service.data["ip"] is not None:
                 ip = service.data["ip"]
-        _publish_command_to_frame(hass, key, val, ip)
+        await _publish_command_to_frame(hass, key, val, ip)
 
     # old
     def process_command_from_frame(service):
@@ -2487,8 +2495,83 @@ async def async_setup(hass, config):
                         },
                     )
 
-    @asyncio.coroutine
-    def check_night_mode(service):
+    async def async_mob_notify(service):
+        session = async_get_clientsession(hass)
+
+        device_id = service.data["device_id"]
+        entry_data = None
+        data = {"message": service.data["message"]}
+        if "title" in service.data:
+            data["title"] = service.data["title"]
+        else:
+            data["title"] = "Powiadomienie z AI-Speaker"
+        if "image" in service.data:
+            data["image"] = service.data["image"]
+        if "say" in service.data:
+            data["say"] = service.data["say"]
+        else:
+            data["say"] = False
+        if "priority" in service.data:
+            data["priority"] = service.data["priority"]
+        else:
+            data["priority"] = "normal"
+        if "notification_id" in service.data:
+            data["notification_id"] = service.data["notification_id"]
+        else:
+            data["notification_id"] = 0
+        if "data" in service.data:
+            data["data"] = service.data["data"]
+        else:
+            data["data"] = {}
+
+        # entry = hass.data["mobile_app"]["config_entries"]
+        # entry = hass.config_entries.async_entries("mobile_app")[device_id]
+        for entry in hass.config_entries.async_entries("mobile_app"):
+            if entry.data["device_name"] == device_id:
+                entry_data = entry.data
+
+        if entry_data is None:
+            _LOGGER.error("No mob id from " + device_id)
+            return
+
+        app_data = entry_data[ATTR_APP_DATA]
+        push_token = app_data[ATTR_PUSH_TOKEN]
+        push_url = app_data[ATTR_PUSH_URL]
+
+        data[ATTR_PUSH_TOKEN] = push_token
+
+        reg_info = {
+            ATTR_APP_ID: entry_data[ATTR_APP_ID],
+            ATTR_APP_VERSION: entry_data[ATTR_APP_VERSION],
+        }
+        if ATTR_OS_VERSION in entry_data:
+            reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
+
+        data["registration_info"] = reg_info
+
+        try:
+            with async_timeout.timeout(10):
+                response = await session.post(push_url, json=data)
+                result = await response.json()
+
+            if response.status in [200, 201, 202]:
+                return
+
+            fallback_error = result.get("errorMessage", "Unknown error")
+            fallback_message = (
+                f"Internal server error, please try again later: {fallback_error}"
+            )
+            message = result.get("message", fallback_message)
+            _LOGGER.error(message)
+
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timeout sending notification to %s", push_url)
+
+        # await hass.services.async_call(
+        #     "notify", device_id, {"message": message, "title": title, "data": data}
+        # )
+
+    async def check_night_mode(service):
         # check the night / quiet mode
         timer = False
         if "timer" in service.data:
@@ -2626,6 +2709,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "check_local_ip", check_local_ip)
     hass.services.async_register(DOMAIN, "switch_ui", switch_ui)
     hass.services.async_register(DOMAIN, "check_night_mode", check_night_mode)
+    hass.services.async_register(DOMAIN, "mob_notify", async_mob_notify)
 
     # register intents
     hass.helpers.intent.async_register(GetTimeIntent())
@@ -2871,7 +2955,7 @@ async def async_setup(hass, config):
     return True
 
 
-def _publish_command_to_frame(hass, key, val, ip):
+async def _publish_command_to_frame(hass, key, val, ip):
     # sent the command to the android frame via http
     url = ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(ip)
 
@@ -2890,17 +2974,13 @@ def _publish_command_to_frame(hass, key, val, ip):
 
         wifi_type = val.split(";")[-3]
         bssid = val.split(";")[-1].replace("MAC:", "").strip()
-        requests.post(
-            url + "/command",
-            json={
-                key: ssid,
-                "ip": ip,
-                "WifiNetworkPass": password,
-                "WifiNetworkType": wifi_type,
-                "bssid": bssid,
-            },
-            timeout=2,
-        )
+        requests_json = {
+            key: ssid,
+            "ip": ip,
+            "WifiNetworkPass": password,
+            "WifiNetworkType": wifi_type,
+            "bssid": bssid,
+        }
 
     elif key == "WifiConnectTheDevice":
         iot = val.split(";")[0]
@@ -2943,23 +3023,20 @@ def _publish_command_to_frame(hass, key, val, ip):
 
         ais_global.G_AIS_NEW_DEVICE_NAME = name
         ais_global.G_AIS_NEW_DEVICE_START_ADD_TIME = time.time()
-        requests.post(
-            url + "/command",
-            json={
-                key: iot,
-                "ip": ip,
-                "WifiNetworkPass": password,
-                "WifiNetworkSsid": ssid,
-                "IotName": name,
-                "bsssid": bssid,
-            },
-            timeout=2,
-        )
+        requests_json = {
+            key: iot,
+            "ip": ip,
+            "WifiNetworkPass": password,
+            "WifiNetworkSsid": ssid,
+            "IotName": name,
+            "bsssid": bssid,
+        }
     else:
-        try:
-            requests.post(url + "/command", json={key: val, "ip": ip}, timeout=2)
-        except Exception as e:
-            pass
+        requests_json = {key: val, "ip": ip}
+    try:
+        requests.post(url + "/command", json=requests_json, timeout=2)
+    except Exception as e:
+        pass
 
 
 def _wifi_rssi_to_info(rssi):
@@ -3327,31 +3404,6 @@ def _process_command_from_frame(hass, service):
 
 def _post_message(message, hass, exclude_say_it=None):
     """Post the message to TTS service."""
-    # message = message.replace("°C", "stopni Celsjusza")
-    # message = message.replace("(Pobrane z Google)", "")
-    # replace emoticons
-    # emoji_pattern = re.compile(
-    #     "["
-    #     "\U0001F600-\U0001F64F"  # emoticons
-    #     "\U0001F300-\U0001F5FF"  # symbols & pictographs
-    #     "\U0001F680-\U0001F6FF"  # transport & map symbols
-    #     "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-    #     "\U0001F1F2-\U0001F1F4"  # Macau flag
-    #     "\U0001F1E6-\U0001F1FF"  # flags
-    #     "\U0001F600-\U0001F64F"
-    #     "\U00002702-\U000027B0"
-    #     "\U000024C2-\U0001F251"
-    #     "\U0001f926-\U0001f937"
-    #     "\U0001F1F2"
-    #     "\U0001F1F4"
-    #     "\U0001F620"
-    #     "\u200d"
-    #     "\u2640-\u2642"
-    #     "]+",
-    #     flags=re.UNICODE,
-    # )
-    #
-    # text = emoji_pattern.sub(r"", message)
     j_data = {
         "text": message,
         "pitch": ais_global.GLOBAL_TTS_PITCH,
@@ -3581,8 +3633,7 @@ def get_context_suffix(hass):
     return context_suffix
 
 
-@asyncio.coroutine
-def _process(hass, text, calling_client_id=None, hot_word_on=False):
+async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
     """Process a line of text."""
     global CURR_VIRTUAL_KEYBOARD_VALUE
     # clear text
@@ -3592,7 +3643,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
     #  binary_sensor.selected_entity / binary_sensor.ais_remote_button
     if CURR_ENTITIE_ENTERED and CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("input_text."):
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "input_text", "set_value", {"entity_id": CURR_ENTITIE, "value": text}
             )
             # return response to the hass conversation
@@ -3612,7 +3663,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
     ha_agent = hass.data.get("ha_conversation_agent")
     if ha_agent is None:
         ha_agent = hass.data["ha_conversation_agent"] = DefaultAgent(hass)
-        yield from ha_agent.async_initialize(hass.data.get("conversation_config"))
+        await ha_agent.async_initialize(hass.data.get("conversation_config"))
 
     # first check the conversation intents
     conv_intents = hass.data.get("conversation", {})
@@ -3621,7 +3672,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
             match = matcher.match(text)
             if not match:
                 continue
-            response = yield from hass.helpers.intent.async_handle(
+            response = await hass.helpers.intent.async_handle(
                 "conversation",
                 intent_type,
                 {key: {"value": value} for key, value in match.groupdict().items()},
@@ -3640,7 +3691,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
                 if match:
                     # we have a match
                     found_intent = intent_type
-                    m, s = yield from hass.helpers.intent.async_handle(
+                    m, s = await hass.helpers.intent.async_handle(
                         DOMAIN,
                         intent_type,
                         {
@@ -3653,14 +3704,14 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
         # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
         if s is False and found_intent == INTENT_TURN_ON:
             m_org = m
-            m, s = yield from hass.helpers.intent.async_handle(
+            m, s = await hass.helpers.intent.async_handle(
                 DOMAIN,
                 INTENT_PLAY_RADIO,
                 {key: {"value": value} for key, value in match.groupdict().items()},
                 text.replace("włącz", "włącz radio"),
             )
             if s is False:
-                m, s = yield from hass.helpers.intent.async_handle(
+                m, s = await hass.helpers.intent.async_handle(
                     DOMAIN,
                     INTENT_PLAY_PODCAST,
                     {key: {"value": value} for key, value in match.groupdict().items()},
@@ -3671,7 +3722,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
         # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is climate???
         if s is False and found_intent == INTENT_TURN_ON and "ogrzewanie" in text:
             m_org = m
-            m, s = yield from hass.helpers.intent.async_handle(
+            m, s = await hass.helpers.intent.async_handle(
                 DOMAIN,
                 INTENT_CLIMATE_SET_ALL_ON,
                 {key: {"value": value} for key, value in match.groupdict().items()},
@@ -3682,7 +3733,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
         # the item was match as INTENT_TURN_OFF but we don't have such device - maybe it is climate???
         if s is False and found_intent == INTENT_TURN_OFF and "ogrzewanie" in text:
             m_org = m
-            m, s = yield from hass.helpers.intent.async_handle(
+            m, s = await hass.helpers.intent.async_handle(
                 DOMAIN,
                 INTENT_CLIMATE_SET_ALL_OFF,
                 {key: {"value": value} for key, value in match.groupdict().items()},
@@ -3715,7 +3766,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
                         if match:
                             # we have a match
                             found_intent = intent_type
-                            m, s = yield from hass.helpers.intent.async_handle(
+                            m, s = await hass.helpers.intent.async_handle(
                                 DOMAIN,
                                 intent_type,
                                 {
@@ -3766,10 +3817,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
                                     if match:
                                         # we have a match
                                         found_intent = intent_type
-                                        (
-                                            m,
-                                            s,
-                                        ) = yield from hass.helpers.intent.async_handle(
+                                        (m, s) = await hass.helpers.intent.async_handle(
                                             DOMAIN,
                                             intent_type,
                                             {
@@ -3832,8 +3880,7 @@ class TurnOnIntent(intent.IntentHandler):
     intent_type = INTENT_TURN_ON
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle turn on intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3845,7 +3892,7 @@ class TurnOnIntent(intent.IntentHandler):
             message = "Nie znajduję urządzenia do włączenia, o nazwie: " + name
         else:
             # check if we can turn_on on this device
-            if isSwitch(entity.entity_id):
+            if is_switch(entity.entity_id):
                 assumed_state = entity.attributes.get(ATTR_ASSUMED_STATE, False)
                 if assumed_state is False:
                     if entity.state == "on":
@@ -3856,13 +3903,10 @@ class TurnOnIntent(intent.IntentHandler):
                     else:
                         assumed_state = True
                 if assumed_state:
-                    yield from hass.services.async_call(
-                        core.DOMAIN,
-                        SERVICE_TURN_ON,
-                        {ATTR_ENTITY_ID: entity.entity_id},
-                        blocking=True,
+                    await hass.services.async_call(
+                        core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity.entity_id}
                     )
-                    message = "OK, włączono {}".format(entity.name)
+                    message = f"OK, włączono {entity.name}"
                 success = True
             else:
                 message = "Urządzenia " + name + " nie można włączyć"
@@ -3875,8 +3919,7 @@ class TurnOffIntent(intent.IntentHandler):
     intent_type = INTENT_TURN_OFF
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle turn off intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3887,24 +3930,23 @@ class TurnOffIntent(intent.IntentHandler):
             msg = "Nie znajduję urządzenia do wyłączenia, o nazwie: " + name
         else:
             # check if we can turn_off on this device
-            if isSwitch(entity.entity_id):
+            if is_switch(entity.entity_id):
                 assumed_state = entity.attributes.get(ATTR_ASSUMED_STATE, False)
                 if assumed_state is False:
                     # check if the device is already off
                     if entity.state == "off":
-                        msg = "Urządzenie {} jest już wyłączone".format(entity.name)
+                        msg = f"Urządzenie {entity.name} jest już wyłączone"
                     elif entity.state == "unavailable":
                         msg = "Urządzenie {}} jest niedostępne".format(entity.name)
                     else:
                         assumed_state = True
                 if assumed_state:
-                    yield from hass.services.async_call(
+                    await hass.services.async_call(
                         core.DOMAIN,
                         SERVICE_TURN_OFF,
                         {ATTR_ENTITY_ID: entity.entity_id},
-                        blocking=True,
                     )
-                    msg = "OK, wyłączono {}".format(entity.name)
+                    msg = f"OK, wyłączono {entity.name}"
                     success = True
             else:
                 msg = "Urządzenia " + name + " nie można wyłączyć"
@@ -3917,8 +3959,7 @@ class StatusIntent(intent.IntentHandler):
     intent_type = INTENT_STATUS
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle status intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3935,7 +3976,7 @@ class StatusIntent(intent.IntentHandler):
             if unit is None:
                 value = state
             else:
-                value = "{} {}".format(state, unit)
+                value = f"{state} {unit}"
             message = format(entity.name) + ": " + value
             success = True
         return message, success
@@ -3947,8 +3988,7 @@ class SpellStatusIntent(intent.IntentHandler):
     intent_type = INTENT_SPELL_STATUS
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle status intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3965,7 +4005,7 @@ class SpellStatusIntent(intent.IntentHandler):
             if unit is None:
                 value = state
             else:
-                value = "{} {}".format(state, unit)
+                value = f"{state} {unit}"
             message = "; ".join(value)
             success = True
         return message, success
@@ -3977,8 +4017,7 @@ class PlayRadioIntent(intent.IntentHandler):
     intent_type = INTENT_PLAY_RADIO
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3997,9 +4036,7 @@ class PlayRadioIntent(intent.IntentHandler):
             if len(name.replace(" ", "")) == 0:
                 message = "Niestety nie znajduję radia " + station
             else:
-                yield from hass.services.async_call(
-                    "ais_cloud", "play_audio", json_ws_resp
-                )
+                await hass.services.async_call("ais_cloud", "play_audio", json_ws_resp)
                 message = "OK, gramy radio " + name
                 success = True
         return message, success
@@ -4011,8 +4048,7 @@ class AisPlayPodcastIntent(intent.IntentHandler):
     intent_type = INTENT_PLAY_PODCAST
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4031,9 +4067,7 @@ class AisPlayPodcastIntent(intent.IntentHandler):
             if len(name.replace(" ", "")) == 0:
                 message = "Niestety nie znajduję podcasta " + item
             else:
-                yield from hass.services.async_call(
-                    "ais_cloud", "play_audio", json_ws_resp
-                )
+                await hass.services.async_call("ais_cloud", "play_audio", json_ws_resp)
                 message = "OK, pobieram odcinki audycji " + item
                 success = True
         return message, success
@@ -4045,8 +4079,7 @@ class AisPlayYtMusicIntent(intent.IntentHandler):
     intent_type = INTENT_PLAY_YT_MUSIC
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4056,11 +4089,9 @@ class AisPlayYtMusicIntent(intent.IntentHandler):
         if not item:
             message = "Nie wiem jaką muzykę mam szukać "
         else:
-            yield from hass.services.async_call(
-                "ais_yt_service", "search", {"query": item}
-            )
+            await hass.services.async_call("ais_yt_service", "search", {"query": item})
             # switch UI to YT
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "ais_ai_service", "switch_ui", {"mode": "YouTube"}
             )
             #
@@ -4075,23 +4106,28 @@ class AisPlaySpotifyIntent(intent.IntentHandler):
     intent_type = INTENT_PLAY_SPOTIFY
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots["item"]["value"]
         success = False
-        # TODO check if we have Spotify enabled
+        # check if we have Spotify enabled
+        if not hass.services.has_service("ais_spotify_service", "search"):
+            message = (
+                "Żeby odtwarzać muzykę z serwisu Spotify, dodaj integrację AIS Spotify. Więcej informacji "
+                "znajdziesz w dokumentacji [Asystenta domowego](https://www.ai-speaker.com)"
+            )
+            return message, True
 
         if not item:
             message = "Nie wiem jaką muzykę mam szukać "
         else:
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "ais_spotify_service", "search", {"query": item}
             )
             # switch UI to Spotify
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "ais_ai_service", "switch_ui", {"mode": "Spotify"}
             )
             #
@@ -4106,8 +4142,7 @@ class AskQuestionIntent(intent.IntentHandler):
     intent_type = INTENT_ASK_QUESTION
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4119,7 +4154,7 @@ class AskQuestionIntent(intent.IntentHandler):
         else:
             from homeassistant.components import ais_knowledge_service
 
-            message = yield from ais_knowledge_service.process_ask_async(hass, question)
+            message = await ais_knowledge_service.process_ask_async(hass, question)
         return "DO_NOT_SAY " + message, True
 
 
@@ -4129,8 +4164,7 @@ class AskWikiQuestionIntent(intent.IntentHandler):
     intent_type = INTENT_ASKWIKI_QUESTION
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4142,9 +4176,7 @@ class AskWikiQuestionIntent(intent.IntentHandler):
         else:
             from homeassistant.components import ais_knowledge_service
 
-            message = yield from ais_knowledge_service.process_ask_wiki_async(
-                hass, question
-            )
+            message = await ais_knowledge_service.process_ask_wiki_async(hass, question)
 
         return "DO_NOT_SAY " + message, True
 
@@ -4154,8 +4186,7 @@ class ChangeContextIntent(intent.IntentHandler):
 
     intent_type = INTENT_CHANGE_CONTEXT
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         if len(GROUP_ENTITIES) == 0:
@@ -4171,7 +4202,7 @@ class ChangeContextIntent(intent.IntentHandler):
                     message = menu["context_answer"]
                     # special case spotify and youtube
                     if text == "spotify":
-                        yield from hass.services.async_call(
+                        await hass.services.async_call(
                             "input_select",
                             "select_option",
                             {
@@ -4180,7 +4211,7 @@ class ChangeContextIntent(intent.IntentHandler):
                             },
                         )
                     elif text == "youtube":
-                        yield from hass.services.async_call(
+                        await hass.services.async_call(
                             "input_select",
                             "select_option",
                             {
@@ -4199,8 +4230,7 @@ class GetTimeIntent(intent.IntentHandler):
 
     intent_type = INTENT_GET_TIME
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         import babel.dates
 
@@ -4214,8 +4244,7 @@ class AisGetWeather(intent.IntentHandler):
 
     intent_type = INTENT_GET_WEATHER
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         # weather = hass.states.get('sensor.pogoda_info').state
@@ -4246,8 +4275,7 @@ class AisGetWeather48(intent.IntentHandler):
 
     intent_type = INTENT_GET_WEATHER_48
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         weather = hass.states.get("sensor.dark_sky_daily_summary").state
@@ -4259,11 +4287,10 @@ class AisLampsOn(intent.IntentHandler):
 
     intent_type = INTENT_LAMPS_ON
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "light", "turn_on", {"entity_id": "group.all_lights"}
         )
         return "ok", True
@@ -4274,11 +4301,10 @@ class AisLampsOff(intent.IntentHandler):
 
     intent_type = INTENT_LAMPS_OFF
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "light", "turn_off", {"entity_id": "group.all_lights"}
         )
         return "ok", True
@@ -4289,11 +4315,10 @@ class AisSwitchesOn(intent.IntentHandler):
 
     intent_type = INTENT_SWITCHES_ON
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "switch", "turn_on", {"entity_id": "group.all_switches"}
         )
         return "ok", True
@@ -4304,11 +4329,10 @@ class AisSwitchesOff(intent.IntentHandler):
 
     intent_type = INTENT_SWITCHES_OFF
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "switch", "turn_off", {"entity_id": "group.all_switches"}
         )
         return "ok", True
@@ -4319,8 +4343,7 @@ class GetDateIntent(intent.IntentHandler):
 
     intent_type = INTENT_GET_DATE
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         import babel.dates
 
@@ -4335,8 +4358,7 @@ class AisOpenCover(intent.IntentHandler):
     intent_type = INTENT_OPEN_COVER
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4355,13 +4377,13 @@ class AisOpenCover(intent.IntentHandler):
                 elif entity.state == "unavailable":
                     message = "Urządzenie " + name + " jest niedostępne"
                 else:
-                    yield from hass.services.async_call(
+                    await hass.services.async_call(
                         "cover",
                         SERVICE_OPEN_COVER,
                         {ATTR_ENTITY_ID: entity.entity_id},
                         blocking=True,
                     )
-                    message = "OK, otwieram {}".format(entity.name)
+                    message = f"OK, otwieram {entity.name}"
                 success = True
             else:
                 message = "Urządzenia " + name + " nie można otworzyć"
@@ -4374,8 +4396,7 @@ class AisCloseCover(intent.IntentHandler):
     intent_type = INTENT_CLOSE_COVER
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle turn off intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4389,17 +4410,17 @@ class AisCloseCover(intent.IntentHandler):
             if entity.entity_id.startswith("cover."):
                 # check if the device is already closed
                 if entity.state == "off":
-                    msg = "Urządzenie {} jest już zamknięte".format(entity.name)
+                    msg = f"Urządzenie {entity.name} jest już zamknięte"
                 elif entity.state == "unavailable":
-                    msg = "Urządzenie {} jest niedostępne".format(entity.name)
+                    msg = f"Urządzenie {entity.name} jest niedostępne"
                 else:
-                    yield from hass.services.async_call(
+                    await hass.services.async_call(
                         "cover",
                         SERVICE_CLOSE_COVER,
                         {ATTR_ENTITY_ID: entity.entity_id},
                         blocking=True,
                     )
-                    msg = "OK, zamykam {}".format(entity.name)
+                    msg = f"OK, zamykam {entity.name}"
                     success = True
             else:
                 msg = "Urządzenia " + name + " nie można zamknąć"
@@ -4411,11 +4432,10 @@ class AisStop(intent.IntentHandler):
 
     intent_type = INTENT_STOP
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "media_player", "media_stop", {"entity_id": "all"}
         )
         message = "ok, stop"
@@ -4427,11 +4447,10 @@ class AisPlay(intent.IntentHandler):
 
     intent_type = INTENT_PLAY
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "media_play",
             {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
@@ -4445,11 +4464,10 @@ class AisNext(intent.IntentHandler):
 
     intent_type = INTENT_NEXT
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "media_next_track",
             {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
@@ -4463,11 +4481,10 @@ class AisPrev(intent.IntentHandler):
 
     intent_type = INTENT_PREV
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "media_previous_track",
             {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
@@ -4482,8 +4499,7 @@ class AisSceneActive(intent.IntentHandler):
     intent_type = INTENT_SCENE
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4496,13 +4512,10 @@ class AisSceneActive(intent.IntentHandler):
         else:
             # check if we can open on this device
             if entity.entity_id.startswith("scene."):
-                yield from hass.services.async_call(
-                    "scene",
-                    "turn_on",
-                    {ATTR_ENTITY_ID: entity.entity_id},
-                    blocking=True,
+                await hass.services.async_call(
+                    "scene", "turn_on", {ATTR_ENTITY_ID: entity.entity_id}
                 )
-                message = "OK, aktywuję {}".format(entity.name)
+                message = f"OK, aktywuję {entity.name}"
                 success = True
             else:
                 message = name + " nie można aktywować"
@@ -4515,8 +4528,7 @@ class AisRunAutomation(intent.IntentHandler):
     intent_type = INTENT_RUN_AUTOMATION
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4529,10 +4541,10 @@ class AisRunAutomation(intent.IntentHandler):
         else:
             # check if we can open on this device
             if entity.entity_id.startswith("automation."):
-                yield from hass.services.async_call(
+                await hass.services.async_call(
                     "automation", "trigger", {ATTR_ENTITY_ID: entity.entity_id}
                 )
-                message = "OK, uruchamiam {}".format(entity.name)
+                message = f"OK, uruchamiam {entity.name}"
                 success = True
             else:
                 message = name + " nie można uruchomić"
@@ -4545,15 +4557,14 @@ class AisAskGoogle(intent.IntentHandler):
     intent_type = INTENT_ASK_GOOGLE
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         hass = intent_obj.hass
         command = slots["item"]["value"]
 
         if hass.services.has_service("ais_google_home", "command"):
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "ais_google_home", "command", {"text": command}
             )
             m = ""
@@ -4574,8 +4585,7 @@ class AisSayIt(intent.IntentHandler):
     intent_type = INTENT_SAY_IT
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         try:
             slots = self.async_validate_slots(intent_obj.slots)
@@ -4608,8 +4618,7 @@ class AisClimateSetTemperature(intent.IntentHandler):
     intent_type = INTENT_CLIMATE_SET_TEMPERATURE
     slot_schema = {"temp": cv.string, "item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         try:
             hass = intent_obj.hass
@@ -4640,11 +4649,10 @@ class AisClimateSetTemperature(intent.IntentHandler):
                         entity.name, temp, "stopni"
                     )
                 else:
-                    yield from hass.services.async_call(
+                    await hass.services.async_call(
                         "climate",
                         "set_temperature",
                         {ATTR_ENTITY_ID: entity.entity_id, "temperature": temp},
-                        blocking=True,
                     )
                     msg = "OK, ustawiono temperaturę {} {} w {}".format(
                         temp, "stopni", entity.name
@@ -4661,8 +4669,7 @@ class AisClimateSetPresentMode(intent.IntentHandler):
     intent_type = INTENT_CLIMATE_SET_PRESENT_MODE
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         hass = intent_obj.hass
@@ -4692,7 +4699,7 @@ class AisClimateSetPresentMode(intent.IntentHandler):
             present_mode = "activity"
 
         if present_mode != "":
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "climate",
                 "set_preset_mode",
                 {"entity_id": "all", "preset_mode": present_mode},
@@ -4708,11 +4715,10 @@ class AisClimateSetAllOn(intent.IntentHandler):
 
     intent_type = INTENT_CLIMATE_SET_ALL_ON
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "heat"}
         )
         message = "ok, całe ogrzewanie włączone"
@@ -4724,92 +4730,11 @@ class AisClimateSetAllOff(intent.IntentHandler):
 
     intent_type = INTENT_CLIMATE_SET_ALL_OFF
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "off"}
         )
         message = "ok, całe ogrzewanie wyłączone"
         return message, True
-
-
-# class AisClimateSetOff(intent.IntentHandler):
-#     """Handle AisClimateSetOff intents."""
-#     intent_type = INTENT_CLIMATE_SET_OFF
-#     slot_schema = {
-#         'item': cv.string,
-#     }
-#
-#     @asyncio.coroutine
-#     def async_handle(self, intent_obj):
-#         """Handle the intent."""
-#         try:
-#             hass = intent_obj.hass
-#             slots = self.async_validate_slots(intent_obj.slots)
-#             name = slots['item']['value']
-#             entity = _match_entity(hass, name)
-#         except Exception:
-#             text = None
-#         success = False
-#         if not entity:
-#             msg = 'Nie znajduję grzejnika, o nazwie: ' + name
-#         else:
-#             # check if we can close on this device
-#             if entity.entity_id.startswith('climate.'):
-#             # check if the device already is off
-#                 if entity.state == 'off':
-#                     msg = '{} jest już wyłączony'.format(entity.name)
-#                 elif entity.state == 'unavailable':
-#                     msg = '{} jest niedostępny'.format(entity.name)
-#                 else:
-#                     yield from hass.services.async_call(
-#                         'climate', 'turn_off', {
-#                             ATTR_ENTITY_ID: entity.entity_id
-#                         }, blocking=True)
-#                     msg = 'OK, wyłączono ogrzewanie {} '.format(entity.name)
-#                     success = True
-#             else:
-#                 msg = 'Na urządzeniu ' + name + ' nie można wyłączyć ogrzwania.'
-#             return msg, success
-#
-#
-# class AisClimateSetOn(intent.IntentHandler):
-#     """Handle AisClimateSetOn intents."""
-#     intent_type = INTENT_CLIMATE_SET_ON
-#     slot_schema = {
-#         'item': cv.string,
-#     }
-#
-#     @asyncio.coroutine
-#     def async_handle(self, intent_obj):
-#         """Handle the intent."""
-#         try:
-#             hass = intent_obj.hass
-#             slots = self.async_validate_slots(intent_obj.slots)
-#             name = slots['item']['value']
-#             entity = _match_entity(hass, name)
-#         except Exception:
-#             text = None
-#         success = False
-#         if not entity:
-#             msg = 'Nie znajduję grzejnika, o nazwie: ' + name
-#         else:
-#             # check if we can close on this device
-#             if entity.entity_id.startswith('climate.'):
-#                 # check if the device already is heat
-#                 if entity.state == 'heat':
-#                     msg = '{} jest już włączony'.format(entity.name)
-#                 elif entity.state == 'unavailable':
-#                     msg = '{} jest niedostępny'.format(entity.name)
-#                 else:
-#                     yield from hass.services.async_call(
-#                         'climate', 'turn_on', {
-#                             ATTR_ENTITY_ID: entity.entity_id
-#                         }, blocking=True)
-#                     msg = 'OK, wyłączono ogrzewanie {} '.format(entity.name)
-#                     success = True
-#             else:
-#                 msg = 'Na urządzeniu ' + name + ' nie można wyłączyć ogrzwania.'
-#             return msg, success

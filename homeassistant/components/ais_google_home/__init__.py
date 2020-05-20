@@ -1,43 +1,40 @@
-# -*- coding: utf-8 -*-
 """
 Support for AIS Google Home
 
 For more details about this component, please refer to the documentation at
 https://www.ai-speaker.com
 """
-import asyncio
-import logging
 import json
+import logging
+
 from homeassistant.components import ais_cloud
-from .const import DOMAIN
-from .config_flow import configured_google_homes
 from homeassistant.components.ais_dom import ais_global
 
-aisCloud = ais_cloud.AisCloudWS()
-aisCloudWS = ais_cloud.AisCloudWS()
+from .config_flow import configured_google_homes
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
+aisCloudWS = None
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Register the service."""
+    global aisCloudWS
 
-    @asyncio.coroutine
-    def command(service):
+    async def command(service):
         """ask service about info"""
-        yield from _process_command(hass, service)
+        await _process_command(hass, service)
 
     hass.services.async_register(DOMAIN, "command", command)
+    aisCloudWS = ais_cloud.AisCloudWS(hass)
 
     return True
 
 
-@asyncio.coroutine
-def _process_command(hass, call):
+async def _process_command(hass, call):
     try:
         question = call.data["text"]
-        ws_ret = aisCloudWS.ask_json_gh(question)
-        ret = ws_ret.json()
+        ret = await aisCloudWS.async_ask_json_gh(question, hass)
         if ret["success"]:
             # play audio returned by Google Assistant
             if "audio" in ret:
@@ -48,7 +45,7 @@ def _process_command(hass, call):
                     "media_content_id": "https://powiedz.co" + ret["audio"],
                 }
                 _audio_info = json.dumps(_audio_info)
-                yield from hass.services.async_call(
+                await hass.services.async_call(
                     "media_player",
                     "play_media",
                     {
@@ -68,12 +65,12 @@ def _process_command(hass, call):
                 else:
                     hass.states.async_set("sensor.aisknowledgeanswer", m, {"text": m})
         else:
-            _LOGGER.error("Google answer: " + str(ws_ret))
+            _LOGGER.error("Google answer: " + str(ret))
             try:
-                _LOGGER.error("Google answer: " + str(ws_ret.text))
+                _LOGGER.error("Google answer: " + str(ret.text))
             except:
                 pass
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "ais_ai_service",
                 "say_it",
                 {
@@ -82,7 +79,7 @@ def _process_command(hass, call):
             )
     except Exception as e:
         _LOGGER.error("e " + str(e))
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Brak odpowiedzi z Google."}
         )
         return

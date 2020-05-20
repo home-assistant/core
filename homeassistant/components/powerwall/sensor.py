@@ -1,6 +1,8 @@
 """Support for August sensors."""
 import logging
 
+from tesla_powerwall import MeterType, convert_to_kw
+
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_POWER,
@@ -12,11 +14,13 @@ from .const import (
     ATTR_ENERGY_IMPORTED,
     ATTR_FREQUENCY,
     ATTR_INSTANT_AVERAGE_VOLTAGE,
+    ATTR_IS_ACTIVE,
     DOMAIN,
     ENERGY_KILO_WATT,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_METERS,
+    POWERWALL_API_SERIAL_NUMBERS,
     POWERWALL_API_SITE_INFO,
     POWERWALL_API_STATUS,
     POWERWALL_COORDINATOR,
@@ -35,14 +39,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     site_info = powerwall_data[POWERWALL_API_SITE_INFO]
     device_type = powerwall_data[POWERWALL_API_DEVICE_TYPE]
     status = powerwall_data[POWERWALL_API_STATUS]
+    powerwalls_serial_numbers = powerwall_data[POWERWALL_API_SERIAL_NUMBERS]
 
     entities = []
-    for meter in coordinator.data[POWERWALL_API_METERS]:
+    for meter in MeterType:
         entities.append(
-            PowerWallEnergySensor(meter, coordinator, site_info, status, device_type)
+            PowerWallEnergySensor(
+                meter,
+                coordinator,
+                site_info,
+                status,
+                device_type,
+                powerwalls_serial_numbers,
+            )
         )
 
-    entities.append(PowerWallChargeSensor(coordinator, site_info, status, device_type))
+    entities.append(
+        PowerWallChargeSensor(
+            coordinator, site_info, status, device_type, powerwalls_serial_numbers
+        )
+    )
 
     async_add_entities(entities, True)
 
@@ -73,15 +89,25 @@ class PowerWallChargeSensor(PowerWallEntity):
     @property
     def state(self):
         """Get the current value in percentage."""
-        return round(self._coordinator.data[POWERWALL_API_CHARGE], 3)
+        return self._coordinator.data[POWERWALL_API_CHARGE]
 
 
 class PowerWallEnergySensor(PowerWallEntity):
     """Representation of an Powerwall Energy sensor."""
 
-    def __init__(self, meter, coordinator, site_info, status, device_type):
+    def __init__(
+        self,
+        meter: MeterType,
+        coordinator,
+        site_info,
+        status,
+        device_type,
+        powerwalls_serial_numbers,
+    ):
         """Initialize the sensor."""
-        super().__init__(coordinator, site_info, status, device_type)
+        super().__init__(
+            coordinator, site_info, status, device_type, powerwalls_serial_numbers
+        )
         self._meter = meter
 
     @property
@@ -92,7 +118,7 @@ class PowerWallEnergySensor(PowerWallEntity):
     @property
     def name(self):
         """Device Name."""
-        return f"Powerwall {self._meter.title()} Now"
+        return f"Powerwall {self._meter.value.title()} Now"
 
     @property
     def device_class(self):
@@ -102,21 +128,25 @@ class PowerWallEnergySensor(PowerWallEntity):
     @property
     def unique_id(self):
         """Device Uniqueid."""
-        return f"{self.base_unique_id}_{self._meter}_instant_power"
+        return f"{self.base_unique_id}_{self._meter.value}_instant_power"
 
     @property
     def state(self):
         """Get the current value in kW."""
-        meter = self._coordinator.data[POWERWALL_API_METERS][self._meter]
-        return round(float(meter.instant_power / 1000), 3)
+        return (
+            self._coordinator.data[POWERWALL_API_METERS]
+            .get(self._meter)
+            .get_power(precision=3)
+        )
 
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        meter = self._coordinator.data[POWERWALL_API_METERS][self._meter]
+        meter = self._coordinator.data[POWERWALL_API_METERS].get(self._meter)
         return {
-            ATTR_FREQUENCY: meter.frequency,
-            ATTR_ENERGY_EXPORTED: meter.energy_exported,
-            ATTR_ENERGY_IMPORTED: meter.energy_imported,
-            ATTR_INSTANT_AVERAGE_VOLTAGE: meter.instant_average_voltage,
+            ATTR_FREQUENCY: round(meter.frequency, 1),
+            ATTR_ENERGY_EXPORTED: convert_to_kw(meter.energy_exported),
+            ATTR_ENERGY_IMPORTED: convert_to_kw(meter.energy_imported),
+            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.instant_average_voltage, 1),
+            ATTR_IS_ACTIVE: meter.is_active(),
         }

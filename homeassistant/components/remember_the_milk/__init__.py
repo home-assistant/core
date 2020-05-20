@@ -137,10 +137,12 @@ def _register_new_account(
     request_id = configurator.async_request_config(
         f"{DOMAIN} - {account_name}",
         callback=register_account_callback,
-        description="You need to log in to Remember The Milk to"
-        + "connect your account. \n\n"
-        + 'Step 1: Click on the link "Remember The Milk login"\n\n'
-        + 'Step 2: Click on "login completed"',
+        description=(
+            "You need to log in to Remember The Milk to"
+            "connect your account. \n\n"
+            "Step 1: Click on the link 'Remember The Milk login'\n\n"
+            "Step 2: Click on 'login completed'"
+        ),
         link_name="Remember The Milk login",
         link_url=url,
         submit_caption="login completed",
@@ -157,18 +159,18 @@ class RememberTheMilkConfiguration:
         """Create new instance of configuration."""
         self._config_file_path = hass.config.path(CONFIG_FILE_NAME)
         if not os.path.isfile(self._config_file_path):
-            self._config = dict()
+            self._config = {}
             return
         try:
             _LOGGER.debug("Loading configuration from file: %s", self._config_file_path)
-            with open(self._config_file_path, "r") as config_file:
+            with open(self._config_file_path) as config_file:
                 self._config = json.load(config_file)
         except ValueError:
             _LOGGER.error(
                 "Failed to load configuration file, creating a new one: %s",
                 self._config_file_path,
             )
-            self._config = dict()
+            self._config = {}
 
     def save_config(self):
         """Write the configuration to a file."""
@@ -198,9 +200,9 @@ class RememberTheMilkConfiguration:
     def _initialize_profile(self, profile_name):
         """Initialize the data structures for a profile."""
         if profile_name not in self._config:
-            self._config[profile_name] = dict()
+            self._config[profile_name] = {}
         if CONF_ID_MAP not in self._config[profile_name]:
-            self._config[profile_name][CONF_ID_MAP] = dict()
+            self._config[profile_name][CONF_ID_MAP] = {}
 
     def get_rtm_id(self, profile_name, hass_id):
         """Get the RTM ids for a Home Assistant task ID.

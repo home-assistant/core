@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Plaato Airlock",
     "step": {
       "user": {
         "title": "Set up the Plaato Webhook",

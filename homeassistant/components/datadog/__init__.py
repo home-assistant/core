@@ -45,10 +45,10 @@ def setup(hass, config):
     """Set up the Datadog component."""
 
     conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    sample_rate = conf.get(CONF_RATE)
-    prefix = conf.get(CONF_PREFIX)
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
+    sample_rate = conf[CONF_RATE]
+    prefix = conf[CONF_PREFIX]
 
     initialize(statsd_host=host, statsd_port=port)
 

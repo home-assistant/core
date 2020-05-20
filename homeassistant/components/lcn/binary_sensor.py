@@ -68,7 +68,7 @@ class LcnRegulatorLockSensor(LcnDevice, BinarySensorDevice):
             return
 
         self._value = input_obj.get_value().is_locked_regulator()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class LcnBinarySensor(LcnDevice, BinarySensorDevice):
@@ -100,7 +100,7 @@ class LcnBinarySensor(LcnDevice, BinarySensorDevice):
             return
 
         self._value = input_obj.get_state(self.bin_sensor_port.value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class LcnLockKeysSensor(LcnDevice, BinarySensorDevice):
@@ -135,4 +135,4 @@ class LcnLockKeysSensor(LcnDevice, BinarySensorDevice):
         key_id = int(self.source.name[1]) - 1
 
         self._value = input_obj.get_state(table_id, key_id)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

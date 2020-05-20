@@ -82,7 +82,7 @@ class RingLight(RingEntityMixin, Light):
 
         self._light_on = new_state == ON_STATE
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def turn_on(self, **kwargs):
         """Turn the light on for 30 seconds."""

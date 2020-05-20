@@ -13,6 +13,7 @@ from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __versio
 
 def set_loop() -> None:
     """Attempt to use different loop."""
+    # pylint: disable=import-outside-toplevel
     from asyncio.events import BaseDefaultEventLoopPolicy
 
     if sys.platform == "win32":
@@ -35,15 +36,15 @@ def validate_python() -> None:
     """Validate that the right Python version is running."""
     if sys.version_info[:3] < REQUIRED_PYTHON_VER:
         print(
-            "Home Assistant requires at least Python {}.{}.{}".format(
-                *REQUIRED_PYTHON_VER
-            )
+            "Home Assistant requires at least Python "
+            f"{REQUIRED_PYTHON_VER[0]}.{REQUIRED_PYTHON_VER[1]}.{REQUIRED_PYTHON_VER[2]}"
         )
         sys.exit(1)
 
 
 def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
+    # pylint: disable=import-outside-toplevel
     import homeassistant.config as config_util
 
     lib_dir = os.path.join(config_dir, "deps")
@@ -77,6 +78,7 @@ def ensure_config_path(config_dir: str) -> None:
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
+    # pylint: disable=import-outside-toplevel
     import homeassistant.config as config_util
 
     parser = argparse.ArgumentParser(
@@ -164,7 +166,7 @@ def daemonize() -> None:
         sys.exit(0)
 
     # redirect standard file descriptors to devnull
-    infd = open(os.devnull, "r")
+    infd = open(os.devnull)
     outfd = open(os.devnull, "a+")
     sys.stdout.flush()
     sys.stderr.flush()
@@ -177,7 +179,7 @@ def check_pid(pid_file: str) -> None:
     """Check that Home Assistant is not already running."""
     # Check pid file
     try:
-        with open(pid_file, "r") as file:
+        with open(pid_file) as file:
             pid = int(file.readline())
     except OSError:
         # PID File does not exist
@@ -214,6 +216,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
     are guarded. But we can set the close-on-exec flag on everything we want to
     get rid of.
     """
+    # pylint: disable=import-outside-toplevel
     from fcntl import fcntl, F_GETFD, F_SETFD, FD_CLOEXEC
 
     for _fd in range(min_fd, max_fd):
@@ -237,6 +240,7 @@ def cmdline() -> List[str]:
 
 async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
     """Set up Home Assistant and run."""
+    # pylint: disable=import-outside-toplevel
     from homeassistant import bootstrap
 
     hass = await bootstrap.async_setup_hass(
@@ -253,7 +257,7 @@ async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
         return 1
 
     if args.open_ui and hass.config.api is not None:
-        import webbrowser
+        import webbrowser  # pylint: disable=import-outside-toplevel
 
         hass.add_job(webbrowser.open, hass.config.api.base_url)
 
@@ -324,6 +328,7 @@ def main() -> int:
     args = get_arguments()
 
     if args.script is not None:
+        # pylint: disable=import-outside-toplevel
         from homeassistant import scripts
 
         return scripts.run(args.script)

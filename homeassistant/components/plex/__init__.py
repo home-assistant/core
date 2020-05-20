@@ -75,7 +75,13 @@ SERVER_CONFIG_SCHEMA = vol.Schema(
     )
 )
 
-CONFIG_SCHEMA = vol.Schema({PLEX_DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    vol.All(
+        cv.deprecated(PLEX_DOMAIN, invalidation_version="0.111"),
+        {PLEX_DOMAIN: SERVER_CONFIG_SCHEMA},
+    ),
+    extra=vol.ALLOW_EXTRA,
+)
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -100,10 +106,10 @@ def _async_setup_plex(hass, config):
     if MP_DOMAIN in server_config:
         hass.data.setdefault(PLEX_MEDIA_PLAYER_OPTIONS, server_config.pop(MP_DOMAIN))
     if CONF_HOST in server_config:
-        prefix = "https" if server_config.pop(CONF_SSL) else "http"
+        protocol = "https" if server_config.pop(CONF_SSL) else "http"
         server_config[
             CONF_URL
-        ] = f"{prefix}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
+        ] = f"{protocol}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             PLEX_DOMAIN,

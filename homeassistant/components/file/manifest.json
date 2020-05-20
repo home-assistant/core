@@ -2,7 +2,5 @@
   "domain": "file",
   "name": "File",
   "documentation": "https://www.home-assistant.io/integrations/file",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

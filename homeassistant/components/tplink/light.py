@@ -55,23 +55,11 @@ LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP = "is_variable_color_temp"
 LIGHT_SYSINFO_IS_COLOR = "is_color"
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning(
-        "Loading as a platform is no longer supported, "
-        "convert to use the tplink component."
-    )
-
-
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
     await async_add_entities_retry(
         hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], add_entity
     )
-
     return True
 
 
@@ -87,12 +75,12 @@ def add_entity(device: SmartBulb, async_add_entities):
 
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""
-    return int((byt * 100.0) / 255.0)
+    return round((byt * 100.0) / 255.0)
 
 
 def brightness_from_percentage(percent):
     """Convert percentage to absolute value 0..255."""
-    return (percent * 255.0) / 100.0
+    return round((percent * 255.0) / 100.0)
 
 
 class LightState(NamedTuple):

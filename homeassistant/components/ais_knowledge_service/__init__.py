@@ -1,18 +1,18 @@
-# -*- coding: utf-8 -*-
 """
 Support for AIS knowledge
 
 For more details about this component, please refer to the documentation at
 https://www.ai-speaker.com
 """
-import asyncio
 import logging
+
 import voluptuous as vol
+
+from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.helpers import config_validation as cv
-from homeassistant.components import ais_cloud
 
-aisCloud = ais_cloud.AisCloudWS()
+aisCloud = None
 
 DOMAIN = "ais_knowledge_service"
 SERVICE_ASK = "ask"
@@ -27,36 +27,35 @@ GKS_URL = "https://kgsearch.googleapis.com/v1/entities:search"
 G_GKS_KEY = None
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Register the service."""
-    config = config.get(DOMAIN, {})
-    yield from get_key_async(hass)
+    global aisCloud
+    aisCloud = ais_cloud.AisCloudWS(hass)
+    await async_get_key(hass)
 
-    @asyncio.coroutine
-    def ask(service):
+    async def async_ask(service):
         """ask service about info"""
         query = service.data[ATTR_TEXT]
-        yield from process_ask_async(hass, query)
+        await async_process_ask(hass, query)
 
-    @asyncio.coroutine
-    def ask_wiki(service):
+    async def async_ask_wiki(service):
         """ask wikipedia service about info"""
         query = service.data[ATTR_TEXT]
-        yield from process_ask_wiki_async(hass, query)
+        await async_process_ask_wiki(hass, query)
 
     # register services
-    hass.services.async_register(DOMAIN, SERVICE_ASK, ask, schema=SERVICE_ASK_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_ASK, async_ask, schema=SERVICE_ASK_SCHEMA
+    )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_ASK_WIKI, ask_wiki, schema=SERVICE_ASK_SCHEMA
+        DOMAIN, SERVICE_ASK_WIKI, async_ask_wiki, schema=SERVICE_ASK_SCHEMA
     )
 
     return True
 
 
-@asyncio.coroutine
-def process_ask_async(hass, query):
+async def async_process_ask(hass, query):
     import requests
 
     global G_GKS_KEY
@@ -66,15 +65,10 @@ def process_ask_async(hass, query):
     image_url = None
     if G_GKS_KEY is None:
         try:
-            ws_resp = aisCloud.key("kgsearch")
-            json_ws_resp = ws_resp.json()
+            json_ws_resp = await aisCloud.async_key("kgsearch")
             G_GKS_KEY = json_ws_resp["key"]
-        except:
-            yield from hass.services.async_call(
-                "ais_ai_service",
-                "say_it",
-                {"text": "Nie udało się wykonać, sprawdź połączenie z Intenetem"},
-            )
+        except Exception as e:
+            _LOGGER.error("search error: " + str(e))
             return
 
     req = requests.get(
@@ -108,15 +102,14 @@ def process_ask_async(hass, query):
     except Exception:
         full_message = "Brak wyników"
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         "ais_ai_service", "say_it", {"text": full_message, "img": image_url}
     )
 
     return full_message
 
 
-@asyncio.coroutine
-def process_ask_wiki_async(hass, query):
+async def async_process_ask_wiki(hass, query):
     import wikipedia
 
     wikipedia.set_lang("pl")
@@ -136,22 +129,17 @@ def process_ask_wiki_async(hass, query):
     except Exception:
         full_message = "Brak wyników"
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         "ais_ai_service", "say_it", {"text": full_message, "img": image_url}
     )
 
     return full_message
 
 
-@asyncio.coroutine
-def get_key_async(hass):
-    def load():
-        global G_GKS_KEY
-        try:
-            ws_resp = aisCloud.key("kgsearch")
-            json_ws_resp = ws_resp.json()
-            G_GKS_KEY = json_ws_resp["key"]
-        except:
-            ais_global.G_OFFLINE_MODE = True
-
-    yield from hass.async_add_job(load)
+async def async_get_key(hass):
+    global G_GKS_KEY
+    try:
+        json_ws_resp = await aisCloud.async_key("kgsearch")
+        G_GKS_KEY = json_ws_resp["key"]
+    except:
+        ais_global.G_OFFLINE_MODE = True

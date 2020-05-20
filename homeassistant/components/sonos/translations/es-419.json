@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No se encontraron dispositivos Sonos en la red.",
+            "single_instance_allowed": "S\u00f3lo se necesita una \u00fanica configuraci\u00f3n de Sonos."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u00bfDesea configurar Sonos?",
+                "title": "Sonos"
+            }
+        }
+    }
+}

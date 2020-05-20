@@ -79,7 +79,7 @@ def validate_services(integration: Integration):
         SERVICES_SCHEMA(data)
     except vol.Invalid as err:
         integration.add_error(
-            "services", "Invalid services.yaml: {}".format(humanize_error(data, err))
+            "services", f"Invalid services.yaml: {humanize_error(data, err)}"
         )
 
 

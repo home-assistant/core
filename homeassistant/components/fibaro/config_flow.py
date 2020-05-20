@@ -1,29 +1,18 @@
 """Config flow to configure the AIS Drive Service component."""
 
-import voluptuous as vol
 import logging
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_URL
-from homeassistant.core import callback
-from homeassistant.components import ais_cloud
+
 from fiblary3.client.v4.client import Client as FibaroClient
+import voluptuous as vol
 
-
-aisCloudWS = ais_cloud.AisCloudWS()
+from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 DRIVE_NAME_INPUT = None
 DRIVE_TYPE_INPUT = None
 DOMAIN = "fibaro"
 CONF_OAUTH_JSON = ""
-
-
-@callback
-def configured_google_homes(hass):
-    """Return a set of configured Google Homes instances."""
-    return set(
-        entry.data.get(CONF_NAME) for entry in hass.config_entries.async_entries(DOMAIN)
-    )
 
 
 @config_entries.HANDLERS.register(DOMAIN)

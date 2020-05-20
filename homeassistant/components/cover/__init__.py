@@ -162,7 +162,6 @@ class CoverDevice(Entity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pass
 
     @property
     def current_cover_tilt_position(self):
@@ -170,7 +169,6 @@ class CoverDevice(Entity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pass
 
     @property
     def state(self):
@@ -223,12 +221,10 @@ class CoverDevice(Entity):
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        pass
 
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        pass
 
     @property
     def is_closed(self):
@@ -267,7 +263,6 @@ class CoverDevice(Entity):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        pass
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -275,7 +270,6 @@ class CoverDevice(Entity):
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        pass
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -283,7 +277,6 @@ class CoverDevice(Entity):
 
     def open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        pass
 
     async def async_open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
@@ -291,7 +284,6 @@ class CoverDevice(Entity):
 
     def close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        pass
 
     async def async_close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
@@ -299,7 +291,6 @@ class CoverDevice(Entity):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        pass
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
@@ -309,7 +300,6 @@ class CoverDevice(Entity):
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
-        pass
 
     async def async_stop_cover_tilt(self, **kwargs):
         """Stop the cover."""

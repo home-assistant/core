@@ -22,5 +22,9 @@ class LoginRequired(UnifiException):
     """Component got logged out."""
 
 
+class NoLocalUser(UnifiException):
+    """No local user."""
+
+
 class UserLevel(UnifiException):
     """User level too low."""

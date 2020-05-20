@@ -94,7 +94,7 @@ class TestScriptComponent(unittest.TestCase):
         ):
             assert not setup_component(
                 self.hass, "script", {"script": value}
-            ), "Script loaded with wrong config {}".format(value)
+            ), f"Script loaded with wrong config {value}"
 
             assert 0 == len(self.hass.states.entity_ids("script"))
 

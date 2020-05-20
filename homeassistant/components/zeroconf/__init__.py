@@ -53,7 +53,7 @@ def setup(hass, config):
 
     try:
         host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
-    except socket.error:
+    except OSError:
         host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
 
     info = ServiceInfo(
@@ -134,8 +134,8 @@ def handle_homekit(hass, info) -> bool:
     for test_model in HOMEKIT:
         if (
             model != test_model
-            and not model.startswith(test_model + " ")
-            and not model.startswith(test_model + "-")
+            and not model.startswith(f"{test_model} ")
+            and not model.startswith(f"{test_model}-")
         ):
             continue
 
@@ -157,7 +157,14 @@ def info_from_service(service):
         # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
         # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
         # for property keys and values
-        key = key.decode("ascii")
+        try:
+            key = key.decode("ascii")
+        except UnicodeDecodeError:
+            _LOGGER.debug(
+                "Ignoring invalid key provided by [%s]: %s", service.name, key
+            )
+            continue
+
         properties["_raw"][key] = value
 
         try:

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Solo puedes configurar una sola cuenta Nest.",
+            "authorize_url_fail": "Error desconocido al generar una URL de autorizaci\u00f3n.",
+            "no_flows": "Debe configurar Nest antes de poder autenticarse con \u00e9l. [Lea las instrucciones] (https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "invalid_code": "Codigo invalido",
+            "unknown": "Error desconocido al validar el c\u00f3digo"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Proveedor"
+                },
+                "description": "Seleccione a trav\u00e9s de qu\u00e9 proveedor de autenticaci\u00f3n desea autenticarse con Nest.",
+                "title": "Proveedor de autenticaci\u00f3n"
+            },
+            "link": {
+                "data": {
+                    "code": "C\u00f3digo PIN"
+                },
+                "description": "Para vincular su cuenta Nest, [autorice su cuenta] ( {url} ). \n\n Despu\u00e9s de la autorizaci\u00f3n, copie y pegue el c\u00f3digo pin proporcionado a continuaci\u00f3n.",
+                "title": "Enlazar cuenta Nest"
+            }
+        }
+    }
+}

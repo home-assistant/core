@@ -1,0 +1,50 @@
+{
+    "config": {
+        "title": "AIS Serwis Dyski",
+        "step": {
+            "confirm": {
+                  "description": "![AIS logo](/static/icons/cloud_drive.png)\n\nCzy chcesz skonfigurować nowy dysk zdalny?",
+                  "title": "Dyski zdalne"
+             },
+            "drive_name": {
+                "description": "Wybierz dostawcę oraz podaj nazwę dysku\n(nazwa dysku nie może zawierać spacji i znaków specjalnych)\n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "title": "Nazwa dysku",
+                "data": {
+                    "type": "Serwis",
+                    "name": "Nazwa dysku"
+                }
+            },
+            "token": {
+                "description": "Aby dołączyć zdalny dysk [Google Drive](https://www.google.com/drive/) do Asystenta domowego: \n 1. Kliknij poniższy link \n 2. Zaloguj się u dostawcy dysku \n 3. Autoryzuj **Asystenta domowego**. \n 4. Wróć tutaj, wpisz kod który otrzymałeś od dostawcy i kliknij **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png) [Uwierzytelnienie  u dostawcy]({auth_url})",
+                "title": "Uwierzytelnienie dysku",
+                "data": {
+                    "token_key": "kod uwierzytelniający"
+                }
+            },
+            "passwd": {
+                "description": "Aby dołączyć zdalny dysk [MEGA](https://mega.nz/) do Asystenta domowego: \n 1. Załóż konto / zaloguj się u dostawcy dysku \n 2. Wpisz swoją nazwę użytkownika oraz hasło a następnie kliknij **ZATWIERDŹ**. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "title": "Uwierzytelnienie dysku",
+                "data": {
+                    "email": "login - email",
+                    "password": "hasło"
+                }
+            },
+            "ftp": {
+                "description": "Aby dodać dysk FTP do Asystenta domowego: \n Wypełnij i zatwierdz poniższy formularz. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "title": "Dodawanie zdalengo dysku FTP do Asystenta domowego",
+                "data": {
+                    "host": "host",
+                    "port": "port",
+                    "username": "login",
+                    "password": "hasło"
+                }
+            }
+        },
+        "error": {
+            "identifier_exists": "Dysk z taką nazwą jest już dodany",
+            "drive_name_error": "Nazwa dysku nie może zawierać tylko małe litery i cyfry (bez spacji i znaków specjalnych)",
+            "token_error": "Błędny token",
+            "rclone_error": "Błąd połączenia"
+        }
+    }
+}

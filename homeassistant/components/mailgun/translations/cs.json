@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Va\u0161e Home Assistant instance mus\u00ed b\u00fdt p\u0159\u00edstupn\u00e1 z internetu aby mohla p\u0159ij\u00edmat zpr\u00e1vy Mailgun.",
+            "one_instance_allowed": "Povolena je pouze jedna instance."
+        },
+        "create_entry": {
+            "default": "Chcete-li odeslat ud\u00e1losti do aplikace Home Assistant, budete muset nastavit [Webhooks with Mailgun]({mailgun_url}). \n\n Vypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: `{webhook_url}' \n - Metoda: POST \n - Typ obsahu: aplikace / json \n\n Viz [dokumentace]({docs_url}), jak konfigurovat automatizace pro zpracov\u00e1n\u00ed p\u0159\u00edchoz\u00edch dat."
+        },
+        "step": {
+            "user": {
+                "description": "Opravdu chcete nastavit slu\u017ebu Mailgun?",
+                "title": "Nastavit Mailgun Webhook"
+            }
+        }
+    }
+}

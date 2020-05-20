@@ -2,7 +2,6 @@
   "domain": "mychevy",
   "name": "myChevrolet",
   "documentation": "https://www.home-assistant.io/integrations/mychevy",
-  "requirements": ["mychevy==1.2.0"],
-  "dependencies": [],
+  "requirements": ["mychevy==2.0.1"],
   "codeowners": []
 }

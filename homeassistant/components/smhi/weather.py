@@ -51,15 +51,6 @@ RETRY_TIMEOUT = 5 * 60
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up components.
-
-    Can only be called when a user accidentally mentions smhi in the
-    config. In that case it will be ignored.
-    """
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, config_entries
 ) -> bool:

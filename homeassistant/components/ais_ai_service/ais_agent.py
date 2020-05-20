@@ -1,7 +1,8 @@
 from typing import Optional
+
+from homeassistant.components.conversation import agent
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
-from homeassistant.components.conversation import agent
 
 
 class AisAgent(agent.AbstractConversationAgent):
@@ -41,7 +42,7 @@ class AisAgent(agent.AbstractConversationAgent):
         """Process a sentence."""
         from homeassistant.components import ais_ai_service as ais_ai
 
-        intent_result = await ais_ai._process(self.hass, text)
+        intent_result = await ais_ai._async_process(self.hass, text)
         if intent_result is None:
             intent_result = intent.IntentResponse()
             intent_result.async_set_speech(

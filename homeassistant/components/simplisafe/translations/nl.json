@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Account bestaat al",
+            "invalid_credentials": "Ongeldige gebruikersgegevens"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mailadres"
+                },
+                "title": "Vul uw gegevens in"
+            }
+        }
+    }
+}

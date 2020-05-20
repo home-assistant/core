@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Konfigurirate lahko samo eno povezavo iAqualink."
+        },
+        "error": {
+            "connection_failure": "Ne morete vzpostaviti povezave z iAqualink. Preverite va\u0161e uporabni\u0161ko ime in geslo."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime / e-po\u0161tni naslov"
+                },
+                "description": "Prosimo, vnesite uporabni\u0161ko ime in geslo za iAqualink ra\u010dun.",
+                "title": "Pove\u017eite se z iAqualink"
+            }
+        }
+    }
+}

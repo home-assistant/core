@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Beaglebone Black GPIO devices."""
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
 
     binary_sensors = []
 
@@ -50,10 +50,10 @@ class BBBGPIOBinarySensor(BinarySensorDevice):
     def __init__(self, pin, params):
         """Initialize the Beaglebone Black binary sensor."""
         self._pin = pin
-        self._name = params.get(CONF_NAME) or DEVICE_DEFAULT_NAME
-        self._bouncetime = params.get(CONF_BOUNCETIME)
-        self._pull_mode = params.get(CONF_PULL_MODE)
-        self._invert_logic = params.get(CONF_INVERT_LOGIC)
+        self._name = params[CONF_NAME] or DEVICE_DEFAULT_NAME
+        self._bouncetime = params[CONF_BOUNCETIME]
+        self._pull_mode = params[CONF_PULL_MODE]
+        self._invert_logic = params[CONF_INVERT_LOGIC]
 
         bbb_gpio.setup_input(self._pin, self._pull_mode)
         self._state = bbb_gpio.read_input(self._pin)

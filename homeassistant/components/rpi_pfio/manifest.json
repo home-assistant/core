@@ -3,6 +3,5 @@
   "name": "PiFace Digital I/O (PFIO)",
   "documentation": "https://www.home-assistant.io/integrations/rpi_pfio",
   "requirements": ["pifacecommon==4.2.2", "pifacedigitalio==3.0.5"],
-  "dependencies": [],
   "codeowners": []
 }

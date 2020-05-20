@@ -29,8 +29,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
-    ads_var = config.get(CONF_ADS_VAR)
-    name = config.get(CONF_NAME)
+    ads_var = config[CONF_ADS_VAR]
+    name = config[CONF_NAME]
     device_class = config.get(CONF_DEVICE_CLASS)
 
     ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)

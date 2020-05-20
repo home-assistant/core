@@ -7,9 +7,9 @@ https://www.ai-speaker.com
 import asyncio
 import logging
 import os
+import platform
 import re
 import subprocess
-import platform
 
 import pyinotify
 
@@ -28,6 +28,19 @@ G_USB_DRIVES_PATH = "/mnt/media_rw"
 if platform.machine() == "x86_64":
     # local test
     G_USB_DRIVES_PATH = "/media/andrzej"
+
+
+async def _run(cmd):
+    cmd_process = await asyncio.create_subprocess_shell(
+        cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+
+    stdout, stderr = await cmd_process.communicate()
+
+    if stdout:
+        _LOGGER.info(f"[stdout]\n{stdout.decode()}")
+    if stderr:
+        _LOGGER.info(f"[stderr]\n{stderr.decode()}")
 
 
 # check if usb is valid external drive
@@ -54,9 +67,8 @@ def get_device_info(pathname):
     return None
 
 
-def prepare_usb_device(hass, device_info):
+async def prepare_usb_device(hass, device_info):
     # start zigbee2mqtt service
-
     # add info in app
     if device_info["id"] == G_ZIGBEE_ID:
         # Register the built-in zigbee panel
@@ -71,38 +83,34 @@ def prepare_usb_device(hass, device_info):
         # check if zigbee already exists
         if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
             # download
-            hass.async_add_job(
-                hass.services.async_call(
-                    "ais_ai_service",
-                    "say_it",
-                    {
-                        "text": "Nie znaleziono pakietu Zigbee2Mqtt zainstaluj go przed pierwszym uruchomieniem usługi "
-                        "Zigbee. Szczegóły w dokumentacji Asystenta domowego."
-                    },
-                )
+            await hass.services.async_call(
+                "ais_ai_service",
+                "say_it",
+                {
+                    "text": "Nie znaleziono pakietu Zigbee2Mqtt zainstaluj go przed pierwszym uruchomieniem usługi "
+                    "Zigbee. Szczegóły w dokumentacji Asystenta domowego."
+                },
             )
             return
 
         # start pm2 zigbee service
-        os.system("pm2 stop zigbee")
-        os.system("pm2 delete zigbee")
-        os.system(
+        await _run("pm2 stop zigbee")
+        await _run("pm2 delete zigbee")
+        await _run(
             "cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt && pm2 start npm --name zigbee --output NULL "
             "--error NULL --restart-delay=30000 -- run start "
         )
-        os.system("pm2 save")
+        await _run("pm2 save")
         # TODO check the /dev/ttyACM..
-        os.system("su -c 'chmod 777 /dev/ttyACM0'")
+        await _run("su -c 'chmod 777 /dev/ttyACM0'")
         #
         if ais_global.G_AIS_START_IS_DONE:
-            hass.async_add_job(
-                hass.services.async_call(
-                    "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
-                )
+            await hass.services.async_call(
+                "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
             )
 
 
-def remove_usb_device(hass, device_info):
+async def remove_usb_device(hass, device_info):
     # stop service and remove device from dict
     ais_global.G_USB_DEVICES.remove(device_info)
 
@@ -110,17 +118,14 @@ def remove_usb_device(hass, device_info):
         # Unregister the built-in zigbee panel
         hass.components.frontend.async_remove_panel("lovelace/ais_zigbee")
         # stop pm2 zigbee service
-        os.system("pm2 stop zigbee")
-        os.system("pm2 delete zigbee")
-        os.system("pm2 save")
-        hass.async_add_job(
-            hass.services.async_call(
-                "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zigbee"}
-            )
+        await _run("pm2 stop zigbee")
+        await _run("pm2 delete zigbee")
+        await _run("pm2 save")
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zigbee"}
         )
 
 
-@asyncio.coroutine
 async def async_setup(hass, config):
     """Set up the usb events component."""
 
@@ -173,7 +178,7 @@ async def async_setup(hass, config):
                     # reset flag
                     ais_global.G_USB_INTERNAL_MIC_RESET = False
                     # prepare device
-                    prepare_usb_device(hass, device_info)
+                    hass.async_add_job(prepare_usb_device(hass, device_info))
 
         def process_IN_DELETE(self, event):
             if event.pathname.startswith(G_USB_DRIVES_PATH):
@@ -227,7 +232,6 @@ async def async_setup(hass, config):
                                             hass.bus.async_fire("ais_stop_logs_event")
                                 # 2. check the if recorder db file exists, if not then stop recorder
                                 if ais_global.G_DB_SETTINGS_INFO is not None:
-                                    db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
                                     if (
                                         "dbUrl" in ais_global.G_DB_SETTINGS_INFO
                                         and ais_global.G_REMOTE_DRIVES_DOM_PATH
@@ -281,7 +285,7 @@ async def async_setup(hass, config):
                                 )
                             )
                     # remove device
-                    remove_usb_device(hass, device_info)
+                    hass.async_add_job(remove_usb_device(hass, device_info))
 
     # USB
     async def usb_load_notifiers():
@@ -296,9 +300,9 @@ async def async_setup(hass, config):
 
     async def stop_devices(call):
         # remove zigbee service on start - to prevent pm2 for restarting when usb is not connected
-        os.system("pm2 stop zigbee")
-        os.system("pm2 delete zigbee")
-        os.system("pm2 save")
+        await _run("pm2 stop zigbee")
+        await _run("pm2 delete zigbee")
+        await _run("pm2 save")
         #
 
     async def lsusb(call):
@@ -307,12 +311,12 @@ async def async_setup(hass, config):
         for device in ais_global.G_USB_DEVICES:
             if device["id"] == G_ZIGBEE_ID:
                 # USB zigbee dongle
-                prepare_usb_device(hass, device)
+                await prepare_usb_device(hass, device)
 
     async def mount_external_drives(call):
         """mount_external_drives."""
         try:
-            os.system("rm " + ais_global.G_REMOTE_DRIVES_DOM_PATH + "/*")
+            await _run("rm " + ais_global.G_REMOTE_DRIVES_DOM_PATH + "/*")
             dirs = os.listdir(G_USB_DRIVES_PATH)
             for d in dirs:
                 os.symlink(
@@ -328,15 +332,13 @@ async def async_setup(hass, config):
         for d in dirs:
             ais_usb_flash_drives.append(d)
         # set drives on list
-        hass.async_add_job(
-            hass.services.async_call(
-                "input_select",
-                "set_options",
-                {
-                    "entity_id": "input_select.ais_usb_flash_drives",
-                    "options": ais_usb_flash_drives,
-                },
-            )
+        await hass.services.async_call(
+            "input_select",
+            "set_options",
+            {
+                "entity_id": "input_select.ais_usb_flash_drives",
+                "options": ais_usb_flash_drives,
+            },
         )
 
     hass.services.async_register(DOMAIN, "stop_devices", stop_devices)
@@ -350,7 +352,7 @@ async def async_setup(hass, config):
 
 def _lsusb():
     device_re = re.compile(
-        "Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)", re.I
+        r"Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)", re.I
     )
     df = subprocess.check_output("lsusb")
     devices = []
@@ -362,7 +364,7 @@ def _lsusb():
                 if dinfo["id"] not in G_AIS_INTERNAL_DEVICES_ID:
                     devices.append(dinfo)
 
-    di = subprocess.check_output("ls /sys/bus/usb/devices", shell=True)
+    di = subprocess.check_output("ls /sys/bus/usb/devices", shell=True)  # nosec
     for d in di.decode("utf-8").split("\n"):
         manufacturer = ""
         product = ""
@@ -371,14 +373,16 @@ def _lsusb():
             try:
                 id_vendor = (
                     subprocess.check_output(
-                        "cat /sys/bus/usb/devices/" + d + "/idVendor", shell=True
+                        "cat /sys/bus/usb/devices/" + d + "/idVendor",
+                        shell=True,  # nosec
                     )
                     .decode("utf-8")
                     .strip()
                 )
                 id_product = (
                     subprocess.check_output(
-                        "cat /sys/bus/usb/devices/" + d + "/idProduct", shell=True
+                        "cat /sys/bus/usb/devices/" + d + "/idProduct",
+                        shell=True,  # nosec
                     )
                     .decode("utf-8")
                     .strip()
@@ -394,7 +398,8 @@ def _lsusb():
                     ]:
                         product = (
                             subprocess.check_output(
-                                "cat /sys/bus/usb/devices/" + d + "/product", shell=True
+                                "cat /sys/bus/usb/devices/" + d + "/product",
+                                shell=True,  # nosec
                             )
                             .decode("utf-8")
                             .strip()
@@ -405,7 +410,7 @@ def _lsusb():
                             manufacturer = (
                                 subprocess.check_output(
                                     "cat /sys/bus/usb/devices/" + d + "/manufacturer",
-                                    shell=True,
+                                    shell=True,  # nosec
                                 )
                                 .decode("utf-8")
                                 .strip()

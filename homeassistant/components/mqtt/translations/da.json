@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Kun en enkelt konfiguration af MQTT er tilladt."
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke oprette forbindelse til broker"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Aktiv\u00e9r automatisk fund",
+                    "password": "Adgangskode",
+                    "port": "Port",
+                    "username": "Brugernavn"
+                },
+                "description": "Indtast venligst forbindelsesindstillinger for din MQTT-broker.",
+                "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Aktiv\u00e9r opdagelse"
+                },
+                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til MQTT-brokeren, der leveres af hass.io-tilf\u00f8jelsen {addon}?",
+                "title": "MQTT-broker via Hass.io-tilf\u00f8jelse"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f8rste knap",
+            "button_2": "Anden knap",
+            "button_3": "Tredje knap",
+            "button_4": "Fjerde knap",
+            "button_5": "Femte knap",
+            "button_6": "Sjette knap",
+            "turn_off": "Sluk",
+            "turn_on": "T\u00e6nd"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" dobbeltklikket",
+            "button_long_press": "\"{subtype}\" trykket p\u00e5 konstant",
+            "button_long_release": "\"{subtype}\" sluppet efter langt tryk",
+            "button_quadruple_press": "\"{subtype}\" firedobbelt-klikket",
+            "button_quintuple_press": "\"{subtype}\" femdobbelt-klikket",
+            "button_short_press": "\"{subtype}\" trykket p\u00e5",
+            "button_short_release": "\"{subtype}\" sluppet",
+            "button_triple_press": "\"{subtype}\" tredobbeltklikket"
+        }
+    }
+}

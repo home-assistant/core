@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT, UNIT_PERCENTAGE
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT, HTTP_OK, UNIT_PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -238,7 +238,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         try:
             _LOGGER.debug("Payload: %s", str(payload))
             response = requests.post(self._target, files=payload, timeout=self._timeout)
-            if response.status_code != 200:
+            if response.status_code != HTTP_OK:
                 _LOGGER.error("Error sending message: %s", str(response))
         except requests.exceptions.ConnectionError as err:
             _LOGGER.error("Error communicating with %s: %s", self._target, str(err))

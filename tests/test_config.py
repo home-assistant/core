@@ -1,6 +1,5 @@
 """Test config utils."""
 # pylint: disable=protected-access
-import asyncio
 from collections import OrderedDict
 import copy
 import os
@@ -111,8 +110,8 @@ async def test_ensure_config_exists_uses_existing_config(hass):
     create_file(YAML_PATH)
     await config_util.async_ensure_config_exists(hass)
 
-    with open(YAML_PATH) as f:
-        content = f.read()
+    with open(YAML_PATH) as fp:
+        content = fp.read()
 
     # File created with create_file are empty
     assert content == ""
@@ -127,8 +126,8 @@ def test_load_yaml_config_converts_empty_files_to_dict():
 
 def test_load_yaml_config_raises_error_if_not_dict():
     """Test error raised when YAML file is not a dict."""
-    with open(YAML_PATH, "w") as f:
-        f.write("5")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("5")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -136,8 +135,8 @@ def test_load_yaml_config_raises_error_if_not_dict():
 
 def test_load_yaml_config_raises_error_if_malformed_yaml():
     """Test error raised if invalid YAML."""
-    with open(YAML_PATH, "w") as f:
-        f.write(":")
+    with open(YAML_PATH, "w") as fp:
+        fp.write(":")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -145,8 +144,8 @@ def test_load_yaml_config_raises_error_if_malformed_yaml():
 
 def test_load_yaml_config_raises_error_if_unsafe_yaml():
     """Test error raised if unsafe YAML."""
-    with open(YAML_PATH, "w") as f:
-        f.write("hello: !!python/object/apply:os.system")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("hello: !!python/object/apply:os.system")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -154,9 +153,9 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml():
 
 def test_load_yaml_config_preserves_key_order():
     """Test removal of library."""
-    with open(YAML_PATH, "w") as f:
-        f.write("hello: 2\n")
-        f.write("world: 1\n")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("hello: 2\n")
+        fp.write("world: 1\n")
 
     assert [("hello", 2), ("world", 1)] == list(
         config_util.load_yaml_config_file(YAML_PATH).items()
@@ -740,8 +739,7 @@ async def test_merge_duplicate_keys(merge_log_err, hass):
     assert len(config["input_select"]) == 1
 
 
-@asyncio.coroutine
-def test_merge_customize(hass):
+async def test_merge_customize(hass):
     """Test loading core config onto hass object."""
     core_config = {
         "latitude": 60,
@@ -755,7 +753,7 @@ def test_merge_customize(hass):
             "pkg1": {"homeassistant": {"customize": {"b.b": {"friendly_name": "BB"}}}}
         },
     }
-    yield from config_util.async_process_ha_core_config(hass, core_config)
+    await config_util.async_process_ha_core_config(hass, core_config)
 
     assert hass.data[config_util.DATA_CUSTOMIZE].get("b.b") == {"friendly_name": "BB"}
 
@@ -1014,6 +1012,7 @@ async def test_component_config_exceptions(hass, caplog):
         ("not_existing", vol.Schema({vol.Optional("zone", default=dict): dict}), None,),
         ("non_existing", vol.Schema({"zone": int}), None),
         ("zone", vol.Schema({}), None),
+        ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),
     ],
 )
 def test_identify_config_schema(domain, schema, expected):

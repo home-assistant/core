@@ -29,8 +29,10 @@ class AlarmDecoderSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_PANEL_MESSAGE, self._message_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_PANEL_MESSAGE, self._message_callback
+            )
         )
 
     def _message_callback(self, message):

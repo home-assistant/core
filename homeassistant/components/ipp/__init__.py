@@ -128,17 +128,18 @@ class IPPEntity(Entity):
         self,
         *,
         entry_id: str,
+        device_id: str,
         coordinator: IPPDataUpdateCoordinator,
         name: str,
         icon: str,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the IPP entity."""
+        self._device_id = device_id
         self._enabled_default = enabled_default
         self._entry_id = entry_id
         self._icon = icon
         self._name = name
-        self._unsub_dispatcher = None
         self.coordinator = coordinator
 
     @property
@@ -168,11 +169,9 @@ class IPPEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
-        self.coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from update signal."""
-        self.coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_update(self) -> None:
         """Update an IPP entity."""
@@ -181,8 +180,11 @@ class IPPEntity(Entity):
     @property
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this IPP device."""
+        if self._device_id is None:
+            return None
+
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.uuid)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
             ATTR_NAME: self.coordinator.data.info.name,
             ATTR_MANUFACTURER: self.coordinator.data.info.manufacturer,
             ATTR_MODEL: self.coordinator.data.info.model,

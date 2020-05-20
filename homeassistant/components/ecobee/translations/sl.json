@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_only": "Ta integracija trenutno podpira samo en primerek ecobee."
+        },
+        "error": {
+            "pin_request_failed": "Napaka pri zahtevi PIN-a od ecobee; preverite, ali je klju\u010d API pravilen.",
+            "token_request_failed": "Napaka pri zahtevanju \u017eetonov od ecobeeja; prosim poskusite ponovno."
+        },
+        "step": {
+            "authorize": {
+                "description": "Prosimo, pooblastite to aplikacijo na https://www.ecobee.com/consumerportal/index.html s kodo PIN:\n\n{pin}\n\nNato pritisnite Po\u0161lji.",
+                "title": "Pooblasti aplikacijo na ecobee.com"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Klju\u010d"
+                },
+                "description": "Prosimo vnesite API klju\u010d, pridobljen iz ecobee.com.",
+                "title": "ecobee API klju\u010d"
+            }
+        }
+    }
+}

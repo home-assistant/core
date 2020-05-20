@@ -1,0 +1,24 @@
+{
+    "config": {
+        "title": "AIS SUPLA",
+        "step": {
+            "init": {
+                "title": "Podaj parametry połączenia z serwerem Supla",
+                "description": "Wykryjemy Twoje urządzenia na serwerze Supla Cloud lub na Twoim serwerze Supla.\nSzczegóły w dokumentacji [Integracja AIS SUPLA](https://www.ai-speaker.com/docs/ais_app_supla)\n {error_info} ",
+                "data": {
+                     "server": "Serwer",
+                     "access_token": "Token",
+                     "scan_interval": "Interwał skanowania w sekundach (min 30)"
+                }
+            },
+           "confirm": {
+                "description": "![Supla logo](/static/icons/supla_zamel_logo.png)\n\nCzy chcesz połączyć się z serwerem Supla by wykryć swoje urządzenia?",
+                "title": "Połączenie z Supla Cloud"
+           }
+        },
+        "error": {
+            "supla_no_connection": "Nie można połączyć z Supla Cloud",
+            "scan_interval_error": "Niepoprawna wartość interwału skanowania, podaj ilość sekund, min 30."
+        }
+    }
+}

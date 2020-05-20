@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ja est\u00e0 configurada un integraci\u00f3 Airly amb aquestes coordenades."
+        },
+        "error": {
+            "auth": "La clau API no \u00e9s correcta.",
+            "wrong_location": "No hi ha estacions de mesura Airly en aquesta zona."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API d'Airly",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nom de la integraci\u00f3"
+                },
+                "description": "Configura una integraci\u00f3 de qualitat d\u2019aire Airly. Per generar la clau API, v\u00e9s a https://developer.airly.eu/register",
+                "title": "Airly"
+            }
+        }
+    }
+}

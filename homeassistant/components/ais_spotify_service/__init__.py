@@ -4,13 +4,15 @@ Support for interacting with Spotify.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.spotify/
 """
-import logging
 import asyncio
-from homeassistant.components.ais_dom import ais_global
+import logging
+
 from homeassistant.components import ais_cloud
+from homeassistant.components.ais_dom import ais_global
+
 from .config_flow import configured_service, setUrl
 
-aisCloud = ais_cloud.AisCloudWS()
+aisCloud = None
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +41,10 @@ SCOPE = "app-remote-control streaming user-read-email"
 _CONFIGURING = {}
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Spotify platform."""
+    global aisCloud
+    aisCloud = ais_cloud.AisCloudWS(hass)
     import spotipy.oauth2
     import json
 
@@ -56,15 +59,14 @@ def async_setup(hass, config):
         await hass.async_block_till_done()
 
     try:
-        ws_resp = aisCloud.key("spotify_oauth")
-        json_ws_resp = ws_resp.json()
+        json_ws_resp = await aisCloud.async_key("spotify_oauth")
         spotify_redirect_url = json_ws_resp["SPOTIFY_REDIRECT_URL"]
         spotify_client_id = json_ws_resp["SPOTIFY_CLIENT_ID"]
         spotify_client_secret = json_ws_resp["SPOTIFY_CLIENT_SECRET"]
         spotify_scope = json_ws_resp["SPOTIFY_SCOPE"]
         try:
-            ws_resp = aisCloud.key("spotify_token")
-            key = ws_resp.json()["key"]
+            json_ws_resp = await aisCloud.async_key("spotify_token")
+            key = json_ws_resp["key"]
             AIS_SPOTIFY_TOKEN = json.loads(key)
         except:
             AIS_SPOTIFY_TOKEN = None
@@ -74,9 +76,7 @@ def async_setup(hass, config):
         return True
 
     cache = hass.config.path(DEFAULT_CACHE_PATH)
-    _LOGGER.info("take gate_id")
     gate_id = ais_global.get_sercure_android_id_dom()
-    _LOGGER.info("gate_id: " + str(gate_id))
 
     j_state = json.dumps(
         {"gate_id": gate_id, "real_ip": "real_ip_place", "flow_id": "flow_id_place"}
@@ -107,14 +107,12 @@ def async_setup(hass, config):
 
     data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
 
-    @asyncio.coroutine
-    def search(call):
+    async def async_search(call):
         _LOGGER.info("search " + str(call))
-        yield from data.process_search_async(call)
+        await data.async_process_search(call)
 
-    @asyncio.coroutine
-    def get_favorites(call):
-        yield from data.process_get_favorites_async(call)
+    async def async_get_favorites(call):
+        await data.async_process_get_favorites(call)
 
     def select_search_uri(call):
         _LOGGER.info("select_search_uri")
@@ -128,8 +126,8 @@ def async_setup(hass, config):
         _LOGGER.info("change_play_queue")
         data.change_play_queue(call)
 
-    hass.services.async_register(DOMAIN, "search", search)
-    hass.services.async_register(DOMAIN, "get_favorites", get_favorites)
+    hass.services.async_register(DOMAIN, "search", async_search)
+    hass.services.async_register(DOMAIN, "get_favorites", async_get_favorites)
     hass.services.async_register(DOMAIN, "select_search_uri", select_search_uri)
     hass.services.async_register(DOMAIN, "select_track_uri", select_track_uri)
     hass.services.async_register(DOMAIN, "change_play_queue", change_play_queue)
@@ -141,7 +139,7 @@ async def async_setup_entry(hass, config_entry):
     """Set up spotify token as config entry."""
     # setup the Spotify
     if AIS_SPOTIFY_TOKEN is None:
-        await async_setup(hass, hass.config)
+        return await async_setup(hass, hass.config)
 
     return True
 
@@ -249,8 +247,9 @@ class SpotifyData:
 
         return list_info
 
-    @asyncio.coroutine
-    def get_tracks_list_async(self, item_uri, item_type, item_owner_id, item_image_url):
+    async def async_get_tracks_list(
+        self, item_uri, item_type, item_owner_id, item_image_url
+    ):
         items_info = {}
         idx = 0
         if item_type == "album":
@@ -310,13 +309,12 @@ class SpotifyData:
         #     ais_ai.set_curr_entity(self.hass, 'sensor.spotifylist')
         #     ais_ai.CURR_ENTITIE_ENTERED = True
         #     text = "Mamy %s utworów na liście, wybierz który mam włączyć" % (str(len(items_info)))
-        #     yield from self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
+        #     await self.hass.services.async_call('ais_ai_service', 'say_it', {"text": text})
         # else:
         #     # play the first one
-        #     yield from self.hass.services.async_call('ais_spotify_service', 'select_track_uri', {"id": 0})
+        #     await self.hass.services.async_call('ais_spotify_service', 'select_track_uri', {"id": 0})
 
-    @asyncio.coroutine
-    def process_get_favorites_async(self, call):
+    async def async_process_get_favorites(self, call):
         """Get favorites from Spotify."""
         self.refresh_spotify_instance()
 
@@ -356,15 +354,14 @@ class SpotifyData:
         self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
         self.hass.states.async_set("sensor.spotifylist", -1, {})
 
-    @asyncio.coroutine
-    def process_search_async(self, call):
+    async def async_process_search(self, call):
         """Search album on Spotify."""
         search_text = None
         if "query" in call.data:
             search_text = call.data["query"]
         if search_text is None or len(search_text.strip()) == 0:
             # get tracks from favorites
-            yield from self.hass.services.async_call(
+            await self.hass.services.async_call(
                 "ais_bookmarks",
                 "get_favorites",
                 {"audio_source": ais_global.G_AN_SPOTIFY},
@@ -398,21 +395,17 @@ class SpotifyData:
         self.hass.states.async_set("sensor.spotifylist", -1, {})
 
         if len(list_info) > 0:
-            text = "Znaleziono: %s, włączam utwory %s" % (
-                str(len(list_info)),
-                list_info[0]["title"],
+            text = "Znaleziono: {}, włączam utwory {}".format(
+                str(len(list_info)), list_info[0]["title"]
             )
-            yield from self.hass.services.async_call(
+            await self.hass.services.async_call(
                 "ais_spotify_service", "select_search_uri", {"id": 0}
             )
         else:
             text = "Brak wyników na Spotify dla zapytania %s" % search_text
-        yield from self.hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": text}
-        )
+        await self.hass.services.async_call("ais_ai_service", "say_it", {"text": text})
 
     def select_search_uri(self, call):
-        _LOGGER.info("select_search_uri")
         import json
 
         call_id = call.data["id"]
@@ -443,7 +436,7 @@ class SpotifyData:
 
         # get track list
         return asyncio.run_coroutine_threadsafe(
-            self.get_tracks_list_async(
+            self.async_get_tracks_list(
                 track["uri"], track["type"], track["item_owner_id"], track["thumbnail"]
             ),
             self.hass.loop,

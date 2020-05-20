@@ -15,8 +15,10 @@ def hk_driver():
         "pyhap.accessory_driver.AccessoryEncoder"
     ), patch("pyhap.accessory_driver.HAPServer"), patch(
         "pyhap.accessory_driver.AccessoryDriver.publish"
+    ), patch(
+        "pyhap.accessory_driver.AccessoryDriver.persist"
     ):
-        return AccessoryDriver(pincode=b"123-45-678", address="127.0.0.1")
+        yield AccessoryDriver(pincode=b"123-45-678", address="127.0.0.1")
 
 
 @pytest.fixture

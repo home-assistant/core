@@ -21,8 +21,11 @@ def log_messages(hass: HomeAssistantType, entity_id: str) -> MessageCallbackType
     def _log_message(msg):
         """Log message."""
         debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
-        messages = debug_info["entities"][entity_id]["topics"][msg.subscribed_topic]
-        messages.append(msg.payload)
+        messages = debug_info["entities"][entity_id]["subscriptions"][
+            msg.subscribed_topic
+        ]["messages"]
+        if msg not in messages:
+            messages.append(msg)
 
     def _decorator(msg_callback: MessageCallbackType):
         @wraps(msg_callback)
@@ -37,24 +40,37 @@ def log_messages(hass: HomeAssistantType, entity_id: str) -> MessageCallbackType
     return _decorator
 
 
-def add_topic(hass, message_callback, topic):
-    """Prepare debug data for topic."""
+def add_subscription(hass, message_callback, subscription):
+    """Prepare debug data for subscription."""
     entity_id = getattr(message_callback, "__entity_id", None)
     if entity_id:
         debug_info = hass.data.setdefault(
             DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
         )
         entity_info = debug_info["entities"].setdefault(
-            entity_id, {"topics": {}, "discovery_data": {}}
+            entity_id, {"subscriptions": {}, "discovery_data": {}}
         )
-        entity_info["topics"][topic] = deque([], STORED_MESSAGES)
+        if subscription not in entity_info["subscriptions"]:
+            entity_info["subscriptions"][subscription] = {
+                "count": 0,
+                "messages": deque([], STORED_MESSAGES),
+            }
+        entity_info["subscriptions"][subscription]["count"] += 1
 
 
-def remove_topic(hass, message_callback, topic):
-    """Remove debug data for topic."""
+def remove_subscription(hass, message_callback, subscription):
+    """Remove debug data for subscription if it exists."""
     entity_id = getattr(message_callback, "__entity_id", None)
     if entity_id and entity_id in hass.data[DATA_MQTT_DEBUG_INFO]["entities"]:
-        hass.data[DATA_MQTT_DEBUG_INFO]["entities"][entity_id]["topics"].pop(topic)
+        hass.data[DATA_MQTT_DEBUG_INFO]["entities"][entity_id]["subscriptions"][
+            subscription
+        ]["count"] -= 1
+        if not hass.data[DATA_MQTT_DEBUG_INFO]["entities"][entity_id]["subscriptions"][
+            subscription
+        ]["count"]:
+            hass.data[DATA_MQTT_DEBUG_INFO]["entities"][entity_id]["subscriptions"].pop(
+                subscription
+            )
 
 
 def add_entity_discovery_data(hass, discovery_data, entity_id):
@@ -63,7 +79,7 @@ def add_entity_discovery_data(hass, discovery_data, entity_id):
         DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
     )
     entity_info = debug_info["entities"].setdefault(
-        entity_id, {"topics": {}, "discovery_data": {}}
+        entity_id, {"subscriptions": {}, "discovery_data": {}}
     )
     entity_info["discovery_data"] = discovery_data
 
@@ -117,9 +133,15 @@ async def info_for_device(hass, device_id):
             continue
 
         entity_info = mqtt_debug_info["entities"][entry.entity_id]
-        topics = [
-            {"topic": topic, "messages": list(messages)}
-            for topic, messages in entity_info["topics"].items()
+        subscriptions = [
+            {
+                "topic": topic,
+                "messages": [
+                    {"payload": msg.payload, "time": msg.timestamp, "topic": msg.topic}
+                    for msg in list(subscription["messages"])
+                ],
+            }
+            for topic, subscription in entity_info["subscriptions"].items()
         ]
         discovery_data = {
             "topic": entity_info["discovery_data"].get(ATTR_DISCOVERY_TOPIC, ""),
@@ -128,7 +150,7 @@ async def info_for_device(hass, device_id):
         mqtt_info["entities"].append(
             {
                 "entity_id": entry.entity_id,
-                "topics": topics,
+                "subscriptions": subscriptions,
                 "discovery_data": discovery_data,
             }
         )

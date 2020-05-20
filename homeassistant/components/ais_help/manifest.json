@@ -1,6 +1,6 @@
 {
   "domain": "ais_help",
-  "name": "Pomoc",
+  "name": "AIS help",
   "documentation": "https://www.ai-speaker.com",
   "requirements": [],
   "dependencies": [

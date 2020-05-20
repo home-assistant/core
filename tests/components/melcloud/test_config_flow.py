@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.melcloud.const import DOMAIN
+from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +51,7 @@ async def test_form(hass, mock_login, mock_get_devices):
     with patch(
         "homeassistant.components.melcloud.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.melcloud.async_setup_entry", return_value=True,
+        "homeassistant.components.melcloud.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -89,7 +90,11 @@ async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
 
 @pytest.mark.parametrize(
     "error,message",
-    [(401, "invalid_auth"), (403, "invalid_auth"), (500, "cannot_connect")],
+    [
+        (401, "invalid_auth"),
+        (HTTP_FORBIDDEN, "invalid_auth"),
+        (HTTP_INTERNAL_SERVER_ERROR, "cannot_connect"),
+    ],
 )
 async def test_form_response_errors(
     hass, mock_login, mock_get_devices, mock_request_info, error, message
@@ -112,7 +117,7 @@ async def test_import_with_token(hass, mock_login, mock_get_devices):
     with patch(
         "homeassistant.components.melcloud.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.melcloud.async_setup_entry", return_value=True,
+        "homeassistant.components.melcloud.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -135,10 +140,7 @@ async def test_token_refresh(hass, mock_login, mock_get_devices):
     """Re-configuration with existing username should refresh token."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            "username": "test-email@test-domain.com",
-            "token": "test-original-token",
-        },
+        data={"username": "test-email@test-domain.com", "token": "test-original-token"},
         unique_id="test-email@test-domain.com",
     )
     mock_entry.add_to_hass(hass)
@@ -146,7 +148,7 @@ async def test_token_refresh(hass, mock_login, mock_get_devices):
     with patch(
         "homeassistant.components.melcloud.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.melcloud.async_setup_entry", return_value=True,
+        "homeassistant.components.melcloud.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

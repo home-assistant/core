@@ -3,6 +3,5 @@
   "name": "NOAA Tides",
   "documentation": "https://www.home-assistant.io/integrations/noaa_tides",
   "requirements": ["py_noaa==0.3.0"],
-  "dependencies": [],
   "codeowners": []
 }

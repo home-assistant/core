@@ -919,7 +919,6 @@ def test_fan_action_value_changed(device):
 
 def test_aux_heat_unsupported_set(device):
     """Test aux heat for climate device."""
-    device = device
     assert device.values.primary.data == HVAC_MODE_HEAT
     device.turn_aux_heat_on()
     assert device.values.primary.data == HVAC_MODE_HEAT
@@ -929,7 +928,6 @@ def test_aux_heat_unsupported_set(device):
 
 def test_aux_heat_unsupported_value_changed(device):
     """Test aux heat for climate device."""
-    device = device
     assert device.is_aux_heat is None
     device.values.primary.data = HVAC_MODE_HEAT
     value_changed(device.values.primary)

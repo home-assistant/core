@@ -102,10 +102,12 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         tag_id = self.tag_id
         event_type = self.device_class
         mac = self.tag_manager_mac
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
-            self._on_binary_event_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
+                self._on_binary_event_callback,
+            )
         )
 
     @property
@@ -140,4 +142,4 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         """Update state from arrived push notification."""
         # state should be 'on' or 'off'
         self._state = event.data.get("state")
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

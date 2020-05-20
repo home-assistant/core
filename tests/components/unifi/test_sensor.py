@@ -1,6 +1,9 @@
 """UniFi sensor platform tests."""
 from copy import deepcopy
 
+from aiounifi.controller import MESSAGE_CLIENT_REMOVED
+from aiounifi.websocket import SIGNAL_DATA
+
 from homeassistant.components import unifi
 import homeassistant.components.sensor as sensor
 from homeassistant.setup import async_setup_component
@@ -123,3 +126,44 @@ async def test_sensors(hass):
 
     wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
     assert wireless_client_tx.state == "6789.0"
+
+
+async def test_remove_sensors(hass):
+    """Test the remove_items function with some clients."""
+    controller = await setup_unifi_integration(
+        hass,
+        options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True},
+        clients_response=CLIENTS,
+    )
+    assert len(hass.states.async_entity_ids("sensor")) == 4
+    assert len(hass.states.async_entity_ids("device_tracker")) == 2
+
+    wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
+    assert wired_client_rx is not None
+    wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
+    assert wired_client_tx is not None
+
+    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
+    assert wireless_client_rx is not None
+    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
+    assert wireless_client_tx is not None
+
+    controller.api.websocket._data = {
+        "meta": {"message": MESSAGE_CLIENT_REMOVED},
+        "data": [CLIENTS[0]],
+    }
+    controller.api.session_handler(SIGNAL_DATA)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("sensor")) == 2
+    assert len(hass.states.async_entity_ids("device_tracker")) == 1
+
+    wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
+    assert wired_client_rx is None
+    wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
+    assert wired_client_tx is None
+
+    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
+    assert wireless_client_rx is not None
+    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
+    assert wireless_client_tx is not None

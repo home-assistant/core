@@ -28,6 +28,7 @@ from tests.common import (
     get_test_home_assistant,
     mock_coro,
     mock_registry,
+    mock_storage,
 )
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
 
@@ -703,7 +704,7 @@ async def test_power_schemes(hass, mock_openzwave):
         genre=const.GENRE_USER,
         type=const.TYPE_BOOL,
     )
-    hass.async_add_job(mock_receivers[0], node, switch)
+    await hass.async_add_job(mock_receivers[0], node, switch)
 
     await hass.async_block_till_done()
 
@@ -725,8 +726,9 @@ async def test_power_schemes(hass, mock_openzwave):
             index=const.INDEX_SENSOR_MULTILEVEL_POWER,
             instance=13,
             command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL,
+            genre=const.GENRE_USER,  # to avoid exception
         )
-        hass.async_add_job(mock_receivers[0], node, power)
+        await hass.async_add_job(mock_receivers[0], node, power)
         await hass.async_block_till_done()
 
     assert (
@@ -827,6 +829,8 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
         self.hass.start()
         self.registry = mock_registry(self.hass)
 
@@ -862,6 +866,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     @patch.object(zwave, "import_module")
     @patch.object(zwave, "discovery")
@@ -1194,6 +1199,8 @@ class TestZWaveServices(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
         self.hass.start()
 
         # Initialize zwave
@@ -1209,6 +1216,7 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.services.call("zwave", "stop_network", {})
         self.hass.block_till_done()
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     def test_add_node(self):
         """Test zwave add_node service."""

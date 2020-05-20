@@ -456,10 +456,12 @@ class YeelightGenericLight(Light):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_dispatcher_connect(
-            self.hass,
-            DATA_UPDATED.format(self._device.ipaddr),
-            self._schedule_immediate_update,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                DATA_UPDATED.format(self._device.ipaddr),
+                self._schedule_immediate_update,
+            )
         )
 
     @property
@@ -677,7 +679,7 @@ class YeelightGenericLight(Light):
 
             red, green, blue = color_util.color_hs_to_RGB(*self._hs)
 
-            transitions = list()
+            transitions = []
             transitions.append(
                 RGBTransition(255, 0, 0, brightness=10, duration=duration)
             )

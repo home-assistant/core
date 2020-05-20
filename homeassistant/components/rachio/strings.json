@@ -1,13 +1,10 @@
 {
   "config": {
-    "title": "Rachio",
     "step": {
       "user": {
         "title": "Connect to your Rachio device",
-        "description" : "You will need the API Key from https://app.rach.io/. Select 'Account Settings, and then click on 'GET API KEY'.",
-        "data": {
-          "api_key": "The API key for the Rachio account."
-        }
+        "description": "You will need the API Key from https://app.rach.io/. Select 'Account Settings, and then click on 'GET API KEY'.",
+        "data": { "api_key": "The API key for the Rachio account." }
       }
     },
     "error": {
@@ -15,9 +12,7 @@
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error"
     },
-    "abort": {
-      "already_configured": "Device is already configured"
-    }
+    "abort": { "already_configured": "Device is already configured" }
   },
   "options": {
     "step": {

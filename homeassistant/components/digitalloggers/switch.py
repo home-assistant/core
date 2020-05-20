@@ -47,12 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return DIN III Relay switch."""
 
-    host = config.get(CONF_HOST)
-    controller_name = config.get(CONF_NAME)
-    user = config.get(CONF_USERNAME)
-    pswd = config.get(CONF_PASSWORD)
-    tout = config.get(CONF_TIMEOUT)
-    cycl = config.get(CONF_CYCLETIME)
+    host = config[CONF_HOST]
+    controller_name = config[CONF_NAME]
+    user = config[CONF_USERNAME]
+    pswd = config[CONF_PASSWORD]
+    tout = config[CONF_TIMEOUT]
+    cycl = config[CONF_CYCLETIME]
 
     power_switch = dlipower.PowerSwitch(
         hostname=host, userid=user, password=pswd, timeout=tout, cycletime=cycl

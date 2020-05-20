@@ -59,7 +59,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 )
                 continue
             sensor = FuelPriceSensor(
-                fuel, station, coordinator, f"{NAME}_{station['name']}_{fuel}"
+                fuel,
+                station,
+                coordinator,
+                f"{NAME}_{station['name']}_{fuel}",
+                tankerkoenig.show_on_map,
             )
             entities.append(sensor)
     _LOGGER.debug("Added sensors %s", entities)
@@ -70,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FuelPriceSensor(Entity):
     """Contains prices for fuel in a given station."""
 
-    def __init__(self, fuel_type, station, coordinator, name):
+    def __init__(self, fuel_type, station, coordinator, name, show_on_map):
         """Initialize the sensor."""
         self._station = station
         self._station_id = station["id"]
@@ -84,6 +88,7 @@ class FuelPriceSensor(Entity):
         self._postcode = station["postCode"]
         self._street = station["street"]
         self._price = station[fuel_type]
+        self._show_on_map = show_on_map
 
     @property
     def name(self):
@@ -112,6 +117,11 @@ class FuelPriceSensor(Entity):
         return self._coordinator.data[self._station_id].get(self._fuel_type)
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
+        return f"{self._station_id}_{self._fuel_type}"
+
+    @property
     def device_state_attributes(self):
         """Return the attributes of the device."""
         data = self._coordinator.data[self._station_id]
@@ -125,9 +135,12 @@ class FuelPriceSensor(Entity):
             ATTR_HOUSE_NUMBER: self._house_number,
             ATTR_POSTCODE: self._postcode,
             ATTR_CITY: self._city,
-            ATTR_LATITUDE: self._latitude,
-            ATTR_LONGITUDE: self._longitude,
         }
+
+        if self._show_on_map:
+            attrs[ATTR_LATITUDE] = self._latitude
+            attrs[ATTR_LONGITUDE] = self._longitude
+
         if data is not None and "status" in data:
             attrs[ATTR_IS_OPEN] = data["status"] == "open"
         return attrs

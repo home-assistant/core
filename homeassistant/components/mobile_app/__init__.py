@@ -57,13 +57,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     hass.http.register_view(RegistrationsView())
 
-    for deleted_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
-        try:
-            webhook_register(
-                hass, DOMAIN, "Deleted Webhook", deleted_id, handle_webhook
-            )
-        except ValueError:
-            pass
+    # AIS fix - no need to display this... TODO clear this list
+    # for deleted_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
+    #     try:
+    #         webhook_register(
+    #             hass, DOMAIN, "Deleted Webhook", deleted_id, handle_webhook
+    #         )
+    #     except ValueError:
+    #         pass
 
     hass.async_create_task(
         discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)

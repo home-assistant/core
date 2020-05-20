@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Kun en enkelt forekomst er n\u00f8dvendig."
+        },
+        "step": {
+            "user": {
+                "description": "Vil du sette opp islamske b\u00f8nnetider?",
+                "title": "Sett opp islamske b\u00f8nnetider"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Metode for beregning av b\u00f8nn"
+                }
+            }
+        }
+    },
+    "title": "Islamske b\u00f8nnetider"
+}

@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_ROOM,
     CONF_SENDER,
+    HTTP_BAD_REQUEST,
 )
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
@@ -262,7 +263,7 @@ async def async_send_message(
 
             result = await hass.async_add_executor_job(get_url, url)
 
-            if result.status_code >= 400:
+            if result.status_code >= HTTP_BAD_REQUEST:
                 _LOGGER.error("Could not load file from %s", url)
                 return None
 

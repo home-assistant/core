@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Support for AIS AudioBooks
 
@@ -6,15 +5,14 @@ For more details about this component, please refer to the documentation at
 https://www.ai-speaker.com
 """
 import asyncio
-import logging
-import requests
 import json
+import logging
 import os.path
 import time
-from homeassistant.components import ais_cloud
-from homeassistant.components.ais_dom import ais_global
 
-aisCloud = ais_cloud.AisCloudWS()
+import requests
+
+from homeassistant.components.ais_dom import ais_global
 
 DOMAIN = "ais_audiobooks_service"
 PERSISTENCE_AUDIOBOOKS = "/.dom/audiobboks.json"

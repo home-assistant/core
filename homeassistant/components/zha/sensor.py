@@ -158,7 +158,6 @@ class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
     SENSOR_ATTR = "present_value"
-    pass
 
 
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)

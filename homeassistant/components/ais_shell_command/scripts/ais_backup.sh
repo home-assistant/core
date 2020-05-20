@@ -78,18 +78,21 @@ rm -rf /data/data/pl.sviete.dom/files/home/AIS/www/img/*
 # 13. backup old bootstrap
 mv /sdcard/files.tar.7z /sdcard/files.tar.7z.old
 
-# 14. create new bootstrap
+
+# 14. rm links to drives
+rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*
+rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-zewnętrzne/*
+rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-zdalne/*
+
+# 15. rm temps
+rm -rf /data/data/pl.sviete.dom/files/home/dom/.temp
+rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*
+
+
+# ON THE END -> create new bootstrap
 cd /data/data/pl.sviete.dom
 # su -c "tar -cvzf /sdcard/files.tar files"
 # to prevent the kill form Android, 7z have to be limited to 2 threads only (mmt=2)
 7za a -m0=lzma2 /sdcard/files.tar.7z /data/data/pl.sviete.dom/files -mmt=2
 
 
-# 15. rm links to drives
-rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*
-rm /data/data/pl.sviete.dom/files/home/dom/dyski-zewnętrzne/*
-rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-zewnętrzne/*
-
-# 16. temp for rclone
-rm -rf /data/data/pl.sviete.dom/files/home/dom/.temp
-rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*

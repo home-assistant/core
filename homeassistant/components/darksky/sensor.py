@@ -15,12 +15,17 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    DEGREE,
+    LENGTH_CENTIMETERS,
+    LENGTH_KILOMETERS,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     TIME_HOURS,
     UNIT_PERCENTAGE,
-    UNIT_UV_INDEX,
+    UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -37,7 +42,7 @@ CONF_UNITS = "units"
 
 DEFAULT_LANGUAGE = "en"
 DEFAULT_NAME = "Dark Sky"
-SCAN_INTERVAL = timedelta(seconds=300)
+SCAN_INTERVAL = timedelta(seconds=360)
 
 DEPRECATED_SENSOR_TYPES = {
     "apparent_temperature_max",
@@ -74,21 +79,21 @@ SENSOR_TYPES = {
     ],
     "nearest_storm_distance": [
         "Nearest Storm Distance",
-        "km",
+        LENGTH_KILOMETERS,
         "mi",
-        "km",
-        "km",
+        LENGTH_KILOMETERS,
+        LENGTH_KILOMETERS,
         "mi",
         "mdi:weather-lightning",
         ["currently"],
     ],
     "nearest_storm_bearing": [
         "Nearest Storm Bearing",
-        "°",
-        "°",
-        "°",
-        "°",
-        "°",
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
         "mdi:weather-lightning",
         ["currently"],
     ],
@@ -124,41 +129,41 @@ SENSOR_TYPES = {
     ],
     "precip_accumulation": [
         "Precip Accumulation",
-        "cm",
+        LENGTH_CENTIMETERS,
         "in",
-        "cm",
-        "cm",
-        "cm",
+        LENGTH_CENTIMETERS,
+        LENGTH_CENTIMETERS,
+        LENGTH_CENTIMETERS,
         "mdi:weather-snowy",
         ["hourly", "daily"],
     ],
     "temperature": [
         "Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["currently", "hourly"],
     ],
     "apparent_temperature": [
         "Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["currently", "hourly"],
     ],
     "dew_point": [
         "Dew Point",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["currently", "hourly", "daily"],
     ],
@@ -174,11 +179,11 @@ SENSOR_TYPES = {
     ],
     "wind_bearing": [
         "Wind Bearing",
-        "°",
-        "°",
-        "°",
-        "°",
-        "°",
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
+        DEGREE,
         "mdi:compass",
         ["currently", "hourly", "daily"],
     ],
@@ -224,10 +229,10 @@ SENSOR_TYPES = {
     ],
     "visibility": [
         "Visibility",
-        "km",
+        LENGTH_KILOMETERS,
         "mi",
-        "km",
-        "km",
+        LENGTH_KILOMETERS,
+        LENGTH_KILOMETERS,
         "mi",
         "mdi:eye",
         ["currently", "hourly", "daily"],
@@ -244,81 +249,81 @@ SENSOR_TYPES = {
     ],
     "apparent_temperature_max": [
         "Daily High Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "apparent_temperature_high": [
         "Daytime High Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "apparent_temperature_min": [
         "Daily Low Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "apparent_temperature_low": [
         "Overnight Low Apparent Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "temperature_max": [
         "Daily High Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "temperature_high": [
         "Daytime High Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "temperature_min": [
         "Daily Low Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
     "temperature_low": [
         "Overnight Low Temperature",
-        "°C",
-        "°F",
-        "°C",
-        "°C",
-        "°C",
+        TEMP_CELSIUS,
+        TEMP_FAHRENHEIT,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
+        TEMP_CELSIUS,
         "mdi:thermometer",
         ["daily"],
     ],
@@ -334,11 +339,11 @@ SENSOR_TYPES = {
     ],
     "uv_index": [
         "UV Index",
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
         "mdi:weather-sunny",
         ["currently", "hourly", "daily"],
     ],
@@ -492,12 +497,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         units = "us"
 
     forecast_data = DarkSkyData(
-        api_key=config.get(CONF_API_KEY, None),
+        api_key=config.get(CONF_API_KEY),
         latitude=latitude,
         longitude=longitude,
         units=units,
         language=language,
         interval=interval,
+        hass=hass,
     )
     forecast_data.update()
     forecast_data.update_currently()
@@ -771,13 +777,14 @@ def convert_to_camel(data):
     This is not pythonic, but needed for certain situations.
     """
     components = data.split("_")
-    return components[0] + "".join(x.title() for x in components[1:])
+    capital_components = "".join(x.title() for x in components[1:])
+    return f"{components[0]}{capital_components}"
 
 
 class DarkSkyData:
     """Get the latest data from Darksky."""
 
-    def __init__(self, api_key, latitude, longitude, units, language, interval):
+    def __init__(self, api_key, latitude, longitude, units, language, interval, hass):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
@@ -800,25 +807,20 @@ class DarkSkyData:
         self.update_hourly = Throttle(interval)(self._update_hourly)
         self.update_daily = Throttle(interval)(self._update_daily)
         self.update_alerts = Throttle(interval)(self._update_alerts)
-
-    def ais_dom_api(self):
         # aid-dom part
         if self._api_key == "use_ais_dom_api_key":
             try:
                 from homeassistant.components import ais_cloud
 
-                aiscloud = ais_cloud.AisCloudWS()
-                ws_resp = aiscloud.key("darksky_sensor")
-                json_ws_resp = ws_resp.json()
+                aiscloud = ais_cloud.AisCloudWS(hass)
+                json_ws_resp = aiscloud.key("darksky_sensor")
                 self._api_key = json_ws_resp["key"]
             except Exception as error:
                 _LOGGER.error(
-                    "Unable to get the API Key to OpenWeatherMap from AIS dom. %s",
-                    error,
+                    "Unable to get the API Key to DarkSky from AIS dom. %s", error,
                 )
 
     def _update(self):
-        self.ais_dom_api()
         """Get the latest data from Dark Sky."""
         try:
             self.data = forecastio.load_forecast(

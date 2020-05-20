@@ -1,7 +1,10 @@
 """Collection of useful functions for the HomeKit component."""
 from collections import OrderedDict, namedtuple
+import io
 import logging
+import secrets
 
+import pyqrcode
 import voluptuous as vol
 
 from homeassistant.components import fan, media_player, sensor
@@ -27,6 +30,8 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_NOTIFY_ID,
+    HOMEKIT_PAIRING_QR,
+    HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -91,6 +96,40 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
 )
 
 
+HOMEKIT_CHAR_TRANSLATIONS = {
+    0: " ",  # nul
+    10: " ",  # nl
+    13: " ",  # cr
+    33: "-",  # !
+    34: " ",  # "
+    36: "-",  # $
+    37: "-",  # %
+    40: "-",  # (
+    41: "-",  # )
+    42: "-",  # *
+    43: "-",  # +
+    47: "-",  # /
+    58: "-",  # :
+    59: "-",  # ;
+    60: "-",  # <
+    61: "-",  # =
+    62: "-",  # >
+    63: "-",  # ?
+    64: "-",  # @
+    91: "-",  # [
+    92: "-",  # \
+    93: "-",  # ]
+    94: "-",  # ^
+    95: " ",  # _
+    96: "-",  # `
+    123: "-",  # {
+    124: "-",  # |
+    125: "-",  # }
+    126: "-",  # ~
+    127: "-",  # del
+}
+
+
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
     if not isinstance(values, dict):
@@ -128,8 +167,8 @@ def validate_entity_config(values):
     return entities
 
 
-def validate_media_player_features(state, feature_list):
-    """Validate features for media players."""
+def get_media_player_features(state):
+    """Determine features for media players."""
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     supported_modes = []
@@ -143,6 +182,20 @@ def validate_media_player_features(state, feature_list):
         supported_modes.append(FEATURE_PLAY_STOP)
     if features & media_player.const.SUPPORT_VOLUME_MUTE:
         supported_modes.append(FEATURE_TOGGLE_MUTE)
+    return supported_modes
+
+
+def validate_media_player_features(state, feature_list):
+    """Validate features for media players."""
+    supported_modes = get_media_player_features(state)
+
+    if not supported_modes:
+        _LOGGER.error("%s does not support any media_player features", state.entity_id)
+        return False
+
+    if not feature_list:
+        # Auto detected
+        return True
 
     error_list = []
     for feature in feature_list:
@@ -150,7 +203,9 @@ def validate_media_player_features(state, feature_list):
             error_list.append(feature)
 
     if error_list:
-        _LOGGER.error("%s does not support features: %s", state.entity_id, error_list)
+        _LOGGER.error(
+            "%s does not support media_player features: %s", state.entity_id, error_list
+        )
         return False
     return True
 
@@ -195,7 +250,7 @@ class HomeKitSpeedMapping:
         if speed is None:
             return None
         speed_range = self.speed_ranges[speed]
-        return speed_range.target
+        return round(speed_range.target)
 
     def speed_to_states(self, speed):
         """Map HomeKit speed to Home Assistant speed state."""
@@ -205,13 +260,24 @@ class HomeKitSpeedMapping:
         return list(self.speed_ranges.keys())[0]
 
 
-def show_setup_message(hass, pincode):
+def show_setup_message(hass, pincode, uri):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
     _LOGGER.info("Pincode: %s", pin)
+
+    buffer = io.BytesIO()
+    url = pyqrcode.create(uri)
+    url.svg(buffer, scale=5)
+    pairing_secret = secrets.token_hex(32)
+
+    hass.data[HOMEKIT_PAIRING_QR] = buffer.getvalue()
+    hass.data[HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
+
     message = (
-        f"To set up Home Assistant in the Home App, enter the "
-        f"following code:\n### {pin}"
+        f"To set up Home Assistant in the Home App, "
+        f"scan the QR code or enter the following code:\n"
+        f"### {pin}\n"
+        f"![image](/api/homekit/pairingqr?{pairing_secret})"
     )
     hass.components.persistent_notification.create(
         message, "HomeKit Setup", HOMEKIT_NOTIFY_ID
@@ -229,6 +295,16 @@ def convert_to_float(state):
         return float(state)
     except (ValueError, TypeError):
         return None
+
+
+def cleanup_name_for_homekit(name):
+    """Ensure the name of the device will not crash homekit."""
+    #
+    # This is not a security measure.
+    #
+    # UNICODE_EMOJI is also not allowed but that
+    # likely isn't a problem
+    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)
 
 
 def temperature_to_homekit(temperature, unit):

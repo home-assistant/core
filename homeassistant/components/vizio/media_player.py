@@ -9,6 +9,7 @@ from pyvizio.const import APP_HOME, APPS, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_AP
 
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
+    SUPPORT_SELECT_SOUND_MODE,
     MediaPlayerDevice,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,7 +42,9 @@ from .const import (
     DOMAIN,
     ICON,
     SUPPORTED_COMMANDS,
+    VIZIO_AUDIO_SETTINGS,
     VIZIO_DEVICE_CLASSES,
+    VIZIO_SOUND_MODE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -129,10 +132,12 @@ class VizioDevice(MediaPlayerDevice):
         self._state = None
         self._volume_level = None
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
-        self._is_muted = None
+        self._is_volume_muted = None
         self._current_input = None
         self._current_app = None
         self._current_app_config = None
+        self._current_sound_mode = None
+        self._available_sound_modes = None
         self._available_inputs = []
         self._available_apps = []
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
@@ -185,22 +190,37 @@ class VizioDevice(MediaPlayerDevice):
         if not is_on:
             self._state = STATE_OFF
             self._volume_level = None
-            self._is_muted = None
+            self._is_volume_muted = None
             self._current_input = None
             self._available_inputs = None
             self._current_app = None
             self._current_app_config = None
             self._available_apps = None
+            self._current_sound_mode = None
+            self._available_sound_modes = None
             return
 
         self._state = STATE_ON
 
-        audio_settings = await self._device.get_all_audio_settings(
-            log_api_exception=False
+        audio_settings = await self._device.get_all_settings(
+            VIZIO_AUDIO_SETTINGS, log_api_exception=False
         )
         if audio_settings is not None:
             self._volume_level = float(audio_settings["volume"]) / self._max_volume
-            self._is_muted = audio_settings["mute"].lower() == "on"
+            if "mute" in audio_settings:
+                self._is_volume_muted = audio_settings["mute"].lower() == "on"
+            else:
+                self._is_volume_muted = None
+
+            if VIZIO_SOUND_MODE in audio_settings:
+                self._supported_commands |= SUPPORT_SELECT_SOUND_MODE
+                self._current_sound_mode = audio_settings[VIZIO_SOUND_MODE]
+                if self._available_sound_modes is None:
+                    self._available_sound_modes = await self._device.get_setting_options(
+                        VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
+                    )
+            else:
+                self._supported_commands ^= SUPPORT_SELECT_SOUND_MODE
 
         input_ = await self._device.get_current_input(log_api_exception=False)
         if input_ is not None:
@@ -307,7 +327,7 @@ class VizioDevice(MediaPlayerDevice):
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._is_muted
+        return self._is_volume_muted
 
     @property
     def source(self) -> str:
@@ -367,7 +387,7 @@ class VizioDevice(MediaPlayerDevice):
         return self._config_entry.unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},
@@ -378,9 +398,26 @@ class VizioDevice(MediaPlayerDevice):
         }
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return device class for entity."""
         return self._device_class
+
+    @property
+    def sound_mode(self) -> Optional[str]:
+        """Name of the current sound mode."""
+        return self._current_sound_mode
+
+    @property
+    def sound_mode_list(self) -> Optional[List[str]]:
+        """List of available sound modes."""
+        return self._available_sound_modes
+
+    async def async_select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        if sound_mode in self._available_sound_modes:
+            await self._device.set_setting(
+                VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode
+            )
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
@@ -394,10 +431,10 @@ class VizioDevice(MediaPlayerDevice):
         """Mute the volume."""
         if mute:
             await self._device.mute_on()
-            self._is_muted = True
+            self._is_volume_muted = True
         else:
             await self._device.mute_off()
-            self._is_muted = False
+            self._is_volume_muted = False
 
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
