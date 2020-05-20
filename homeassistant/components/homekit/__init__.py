@@ -527,6 +527,9 @@ class HomeKit:
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
         self._async_purge_old_bridges(dev_reg, identifier, connection)
 
+        existing_dev = dev_reg.async_get_device({identifier}, {connection})
+        _LOGGER.debug("existing_dev device: %s", existing_dev)
+
         new_dev = dev_reg.async_get_or_create(
             # identifiers will be stable for the life of the config entry
             identifiers={identifier},

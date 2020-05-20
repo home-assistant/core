@@ -207,6 +207,9 @@ class DeviceRegistry:
         name_by_user=_UNDEF,
     ):
         """Update device attributes."""
+
+        _LOGGER.warning("_async_update_device - device_id:%s", device_id)
+
         old = self.devices[device_id]
 
         changes = {}
