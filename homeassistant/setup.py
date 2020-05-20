@@ -252,7 +252,7 @@ async def async_prepare_setup_platform(
     try:
         await async_process_deps_reqs(hass, hass_config, integration)
     except HomeAssistantError as err:
-        log_error(str(err))
+        log_error(f"Processing dependencies for {integration} failed ({err})")
         return None
 
     try:
