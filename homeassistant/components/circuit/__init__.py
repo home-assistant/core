@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "circuit"
 CONF_WEBHOOK = "webhook"
 
-_WEBHOOK_SCHEMA = vol.Schema(
+WEBHOOK_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_URL): vol.All(cv.ensure_list, [cv.string]),
@@ -21,18 +21,15 @@ _WEBHOOK_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Optional(CONF_WEBHOOK): vol.All(
-                            cv.ensure_list, [_WEBHOOK_SCHEMA]
-                        ),
-                    }
-                )
-            ],
-        )
+        DOMAIN: [
+            vol.Schema(
+                {
+                    vol.Optional(CONF_WEBHOOK, default=[]): vol.All(
+                        cv.ensure_list, [WEBHOOK_SCHEMA]
+                    ),
+                }
+            )
+        ],
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -40,10 +37,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Unify Circuit component."""
-    domain_config = config.get(DOMAIN, [])
+    domain_config = config.get(DOMAIN)
 
     for conf in domain_config:
-        for webhook_conf in conf.get(CONF_WEBHOOK, []):
+        for webhook_conf in conf.get(CONF_WEBHOOK):
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, "notify", DOMAIN, webhook_conf, config
