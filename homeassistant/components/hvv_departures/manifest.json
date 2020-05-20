@@ -1,0 +1,16 @@
+{
+  "domain": "hvv_departures",
+  "name": "HVV",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hvv",
+  "requirements": [
+    "pygti==0.2.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@vigonotion"
+  ]
+}

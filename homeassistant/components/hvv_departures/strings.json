@@ -1,0 +1,49 @@
+{
+  "title": "HVV Departures",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the HVV API",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "station": {
+        "title": "Enter Station/Address",
+        "data": {
+          "station": "Station/Address"
+        }
+      },
+      "station_select": {
+        "title": "Select Station/Address",
+        "data": {
+          "station": "Station/Address"
+        }
+      },
+      "filter": {
+        "title": "Filter lines",
+        "data": {
+          "filter": "Filter"
+        }
+      },
+      "finish": {
+        "title": "Departure settings",
+        "data": {
+          "offset": "Offset (minutes)",
+          "realtime": "Use realtime data"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error",
+      "cn_too_many": "Too many results. Please precise your query"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
