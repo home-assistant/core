@@ -46,7 +46,7 @@ class RoombaBattery(IRobotEntity):
     @property
     def icon(self):
         """Return the icon for the battery."""
-        charging = bool(self._state == STATE_DOCKED)
+        charging = bool(self._robot_state == STATE_DOCKED)
 
         return icon_for_battery_level(
             battery_level=self._battery_level, charging=charging

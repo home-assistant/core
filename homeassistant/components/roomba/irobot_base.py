@@ -104,7 +104,7 @@ class IRobotEntity(Entity):
         return self.vacuum_state.get("batPct")
 
     @property
-    def _state(self):
+    def _robot_state(self):
         """Return the state of the vacuum cleaner."""
         clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
         cycle = clean_mission_status.get("cycle")
@@ -163,7 +163,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     @property
     def state(self):
         """Return the state of the vacuum cleaner."""
-        return self._state
+        return self._robot_state
 
     @property
     def available(self) -> bool:
