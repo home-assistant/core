@@ -162,6 +162,7 @@ FLOWS = [
     "vizio",
     "wemo",
     "wiffi",
+    "wilight",
     "withings",
     "wled",
     "wwlln",
