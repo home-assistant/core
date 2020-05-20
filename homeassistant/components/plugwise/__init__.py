@@ -44,6 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Unable to connect to Smile")
             raise ConfigEntryNotReady
 
+    except Smile.InvalidAuthentication:
+        _LOGGER.error("Invalid Smile ID")
+        return False
+
     except Smile.PlugwiseError:
         _LOGGER.error("Error while communicating to device")
         raise ConfigEntryNotReady
@@ -127,6 +131,12 @@ class SmileGateway(Entity):
         """Initialise the sensor."""
         self._api = api
         self._coordinator = coordinator
+        self._unique_id = None
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def should_poll(self):

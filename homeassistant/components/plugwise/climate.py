@@ -102,12 +102,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
         self._schedule_temp = None
         self._hvac_mode = None
         self._single_thermostat = self._api.single_master_thermostat()
-        self._unique_id = f"cl-{dev_id}-{self._name}"
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
+        self._unique_id = f"{dev_id}-climate"
 
     @property
     def hvac_action(self):
@@ -141,7 +136,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
             "name": self._name,
             "manufacturer": "Plugwise",
             "model": self._model.replace("_", " ").title(),
-            "via_device": via_device,
+            "via_device": (DOMAIN, via_device),
         }
 
     @property
