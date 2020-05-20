@@ -76,7 +76,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _abort_if_already_configured(self):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
-                entry.data[CONF_HOST] == self._host
+                self._host == entry.data[CONF_HOST]
                 or (self._id and self._id == entry.unique_id)
                 or (self._mac and self._mac == entry.data[CONF_MAC])
             ):
