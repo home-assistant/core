@@ -13,6 +13,7 @@ CONF_DESCRIPTION = "description"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
 CONF_ON_ACTION = "turn_on_action"
+CONF_SERIALNO = "serialno"
 
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_SUCCESS = "success"
