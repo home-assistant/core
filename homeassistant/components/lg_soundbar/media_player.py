@@ -139,8 +139,9 @@ class LGDevice(MediaPlayerEntity):
     @property
     def sound_mode(self):
         """Return the current sound mode."""
-
         if self._equaliser == -1:
+            return ""
+        if self._equaliser >= len(temescal.equalisers):
             return ""
         return temescal.equalisers[self._equaliser]
 
@@ -149,6 +150,8 @@ class LGDevice(MediaPlayerEntity):
         """Return the available sound modes."""
         modes = []
         for equaliser in self._equalisers:
+            if equaliser >= len(temescal.equalisers):
+                temescal.equalisers.append("unknown " + str(equaliser))
             modes.append(temescal.equalisers[equaliser])
         return sorted(modes)
 
