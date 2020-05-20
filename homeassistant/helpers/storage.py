@@ -202,7 +202,7 @@ class Store:
         """Handle writing the config."""
 
         async with self._write_lock:
-            if not self._data:
+            if self._data is None:
                 # Another write already consumed the data
                 return
 
