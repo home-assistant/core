@@ -75,10 +75,20 @@ async def async_get_integration_with_requirements(
 
     event = cache[domain] = asyncio.Event()
 
+    _LOGGER.info(
+        "async_get_integration_with_requirements: call async_process_requirements %s",
+        domain,
+    )
+
     if integration.requirements:
         await async_process_requirements(
             hass, integration.domain, integration.requirements
         )
+
+    _LOGGER.info(
+        "async_get_integration_with_requirements: done async_process_requirements %s",
+        domain,
+    )
 
     deps_to_check = [
         dep
