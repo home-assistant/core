@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PrezziBenzina sensor platform."""
 
     station = config[CONF_STATION]
@@ -51,6 +51,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     client = PrezziBenzinaPy()
     dev = []
+
     info = client.get_by_id(station)
 
     if name is None:
@@ -65,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(dev, True)
+    add_entities(dev, True)
 
 
 class PrezziBenzinaSensor(Entity):
@@ -114,6 +115,6 @@ class PrezziBenzinaSensor(Entity):
         }
         return attrs
 
-    async def async_update(self):
+    def update(self):
         """Get the latest data and updates the states."""
         self._data = self._client.get_by_id(self._station)[self._index]
