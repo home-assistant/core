@@ -73,11 +73,11 @@ async def _async_process_dependencies(
         _LOGGER.info("NO async_setup_component tasks")
         return True
 
-    _LOGGER.info("Waiting for async_setup_component tasks")
+    _LOGGER.info("Waiting for async_setup_component tasks: %s", tasks)
 
     results = await asyncio.gather(*tasks)
 
-    _LOGGER.info("Finished Waiting for async_setup_component tasks")
+    _LOGGER.info("Finished Waiting for async_setup_component tasks: %s", results)
 
     failed = [dependencies[idx] for idx, res in enumerate(results) if not res]
 
