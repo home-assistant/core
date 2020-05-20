@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 def get_service(hass, config, discovery_info=None):
     """Get the Unify Circuit notification service."""
     if discovery_info is None:
-        return
+        return None
 
     try:
         return CircuitNotificationService(hass, discovery_info)
