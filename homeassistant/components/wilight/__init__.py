@@ -211,9 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 def validate_static_config(host, port):
     """Handle a static config."""
-    _LOGGER.warning("WiLight validate_static_config : %s", host)
     url = f"http://{host}:45995/wilight.xml"
-    _LOGGER.warning("WiLight config url : %s", url)
 
     if not url:
         _LOGGER.error(
@@ -223,28 +221,11 @@ def validate_static_config(host, port):
 
     try:
         device = pywilight.discovery.device_from_description(url, None)
-        _LOGGER.warning("WiLight device : %s", device)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,) as err:
         _LOGGER.error("Unable to access WiLight at %s (%s)", url, err)
         return None
 
     return device
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
 
 
 class WiLightDevice(Entity):
@@ -258,6 +239,7 @@ class WiLightDevice(Entity):
         # WiLight specific attributes for every component type
         self._wilight = wilight
         self._device_id = wilight.device_id
+        self._swversion = wilight.swversion
         self._client = wilight.client
         self._model = wilight.type
         self._name = item_name
@@ -289,6 +271,8 @@ class WiLightDevice(Entity):
             "identifiers": {(DOMAIN, self._unique_id)},
             "model": self._model,
             "manufacturer": "WiLight",
+            "sw_version": self._swversion,
+            "via_device": (DOMAIN, self._device_id),
         }
 
     @property

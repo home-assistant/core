@@ -707,7 +707,7 @@ pyvizio==0.1.47
 pywebpush==1.9.2
 
 # homeassistant.components.wilight
-pywilight==0.0.27
+pywilight==0.0.29
 
 # homeassistant.components.rachio
 rachiopy==0.1.3
