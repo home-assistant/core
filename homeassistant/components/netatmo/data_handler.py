@@ -1,5 +1,4 @@
 """The Netatmo data handler."""
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -54,18 +53,11 @@ class NetatmoDataHandler:
         self.data = {}
         self._intervals = {}
         self._queue: List = []
-        self._parallel = 2
-        self._wait = 20
+        self._parallel = 6
+        self._wait = 150
 
     async def async_setup(self):
         """Set up a UniFi controller."""
-        for data_class_name in [
-            "WeatherStationData",
-            "HomeCoachData",
-            "CameraData",
-            "HomeData",
-        ]:
-            await self.register_data_class(data_class_name)
 
         async def async_update(event_time):
             """Update device."""
@@ -73,22 +65,19 @@ class NetatmoDataHandler:
             for _ in queue:
                 self._queue.append(self._queue.pop(0))
 
-            try:
-                results = await asyncio.gather(
-                    *[
-                        self.hass.async_add_executor_job(
-                            partial(data_class["class"], **data_class["kwargs"],),
-                            self._auth,
-                        )
-                        for data_class in queue
-                    ]
-                )
-            except pyatmo.NoDevice as err:
-                _LOGGER.debug(err)
-
-            for data_class, result in zip(queue, results):
-                self.data[data_class["name"]] = result
-                async_dispatcher_send(self.hass, f"netatmo-update-{data_class['name']}")
+            for data_class in queue:
+                try:
+                    self.data[
+                        data_class["name"]
+                    ] = await self.hass.async_add_executor_job(
+                        partial(data_class["class"], **data_class["kwargs"],),
+                        self._auth,
+                    )
+                    async_dispatcher_send(
+                        self.hass, f"netatmo-update-{data_class['name']}"
+                    )
+                except (pyatmo.NoDevice, pyatmo.ApiError) as err:
+                    _LOGGER.debug(err)
 
         async_track_time_interval(
             self.hass, async_update, timedelta(seconds=self._wait)
