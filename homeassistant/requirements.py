@@ -94,6 +94,10 @@ async def async_get_integration_with_requirements(
         ):
             deps_to_check.append(check_domain)
 
+    _LOGGER.info(
+        "deps_to_check async_get_integration_with_requirements: %s", deps_to_check
+    )
+
     if deps_to_check:
         await asyncio.gather(
             *[
