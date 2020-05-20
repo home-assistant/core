@@ -3100,10 +3100,16 @@ DEVICES = [
             },
         },
         "entities": [
+            "climate.sinope_technologies_th1123zb_77665544_thermostat",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement",
             "sensor.sinope_technologies_th1123zb_77665544_temperature",
         ],
         "entity_map": {
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat"],
+                "entity_class": "Thermostat",
+                "entity_id": "climate.sinope_technologies_th1123zb_77665544_thermostat",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 "channels": ["temperature"],
                 "entity_class": "Temperature",
@@ -3142,8 +3148,14 @@ DEVICES = [
         "entities": [
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement",
             "sensor.sinope_technologies_th1124zb_77665544_temperature",
+            "climate.sinope_technologies_th1124zb_77665544_thermostat",
         ],
         "entity_map": {
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat"],
+                "entity_class": "Thermostat",
+                "entity_id": "climate.sinope_technologies_th1124zb_77665544_thermostat",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 "channels": ["temperature"],
                 "entity_class": "Temperature",
@@ -3326,7 +3338,7 @@ DEVICES = [
             }
         },
         "entities": [
-            "fan.zen_within_zen_01_77665544_fan",
+            "climate.zen_within_zen_01_77665544_fan_thermostat",
             "sensor.zen_within_zen_01_77665544_power",
         ],
         "entity_map": {
@@ -3335,10 +3347,10 @@ DEVICES = [
                 "entity_class": "Battery",
                 "entity_id": "sensor.zen_within_zen_01_77665544_power",
             },
-            ("fan", "00:11:22:33:44:55:66:77-1-514"): {
-                "channels": ["fan"],
-                "entity_class": "ZhaFan",
-                "entity_id": "fan.zen_within_zen_01_77665544_fan",
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat", "fan"],
+                "entity_class": "Thermostat",
+                "entity_id": "climate.zen_within_zen_01_77665544_fan_thermostat",
             },
         },
         "event_channels": ["1:0x0019"],
