@@ -3,7 +3,7 @@
   "name": "forked-daapd",
   "documentation": "https://www.home-assistant.io/integrations/forked-daapd",
   "codeowners": ["@uvjustin"],
-  "requirements": ["pyforked-daapd==0.1.8", "pylibrespot-java==0.1.0"],
+  "requirements": ["pyforked-daapd==0.1.9", "pylibrespot-java==0.1.0"],
   "config_flow": true,
   "zeroconf": ["_daap._tcp.local."]
 }
