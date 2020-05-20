@@ -123,6 +123,8 @@ async def _async_setup_component(
         )
         return False
 
+    _LOGGER.info("Processing deps for %s", domain)
+
     # Process requirements as soon as possible, so we can import the component
     # without requiring imports to be in functions.
     try:
@@ -130,6 +132,8 @@ async def _async_setup_component(
     except HomeAssistantError as err:
         log_error(str(err), integration.documentation)
         return False
+
+    _LOGGER.info("get_component for %s", domain)
 
     # Some integrations fail on import because they call functions incorrectly.
     # So we do it before validating config to catch these errors.
@@ -141,6 +145,8 @@ async def _async_setup_component(
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Setup failed for %s: unknown error", domain)
         return False
+
+    _LOGGER.info("async_process_component_config for %s", domain)
 
     processed_config = await conf_util.async_process_component_config(
         hass, config, integration
