@@ -63,7 +63,10 @@ class MobileAppSensor(MobileAppEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._config[ATTR_SENSOR_STATE]
+        try:
+            return self._config[ATTR_SENSOR_STATE]
+        except KeyError:
+            pass
 
     @property
     def unit_of_measurement(self):

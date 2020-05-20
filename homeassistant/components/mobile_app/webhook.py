@@ -126,7 +126,10 @@ def validate_schema(schema):
             except vol.Invalid as ex:
                 err = vol.humanize.humanize_error(data, ex)
                 _LOGGER.error("Received invalid webhook payload: %s", err)
-                return empty_okay_response()
+                if 'state' not in data:
+                    pass
+                else:
+                    return empty_okay_response()
 
             return await func(hass, config_entry, data)
 
