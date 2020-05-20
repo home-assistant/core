@@ -331,6 +331,13 @@ async def async_process_deps_reqs(
             hass, integration.domain
         )
 
+    _LOGGER.info(
+        "FINISH2 async_process_deps_reqs: %s, %s, requirements: %s",
+        integration.domain,
+        integration.dependencies,
+        integration.requirements,
+    )
+
     processed.add(integration.domain)
 
 
