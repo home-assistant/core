@@ -2,6 +2,7 @@
   "domain": "ais_supla",
   "name": "AIS Supla",
   "documentation": "https://www.home-assistant.io/components/supla",
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "config_flow": true,
   "requirements": [
     "pysupla==0.0.3"

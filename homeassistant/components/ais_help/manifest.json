@@ -2,6 +2,7 @@
   "domain": "ais_help",
   "name": "AIS help",
   "documentation": "https://www.ai-speaker.com",
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "requirements": [],
   "dependencies": [
     "frontend"

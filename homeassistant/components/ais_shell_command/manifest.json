@@ -3,6 +3,7 @@
   "name": "AIS Shell command",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "requirements": ["requests_futures==1.0.0"],
   "dependencies": [],
   "codeowners": []

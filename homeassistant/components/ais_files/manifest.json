@@ -2,6 +2,7 @@
     "domain": "ais_files",
     "name": "Files in a Folder",
     "documentation": "https://www.ai-speaker.com",
+    "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
     "dependencies": [],
     "codeowners": [],
      "requirements": [

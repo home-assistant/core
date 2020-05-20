@@ -2,6 +2,7 @@
   "domain": "ais_tauron",
   "name": "AIS TAURON",
   "documentation": "https://www.ai-speaker.com",
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "config_flow": true,
   "requirements": [],
   "dependencies": [],
