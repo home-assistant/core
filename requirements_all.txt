@@ -1332,7 +1332,7 @@ pyflunearyou==1.0.7
 pyfnip==0.2
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.8
+pyforked-daapd==0.1.9
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
