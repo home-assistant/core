@@ -51,9 +51,9 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
 )
+from homeassistant.core import callback
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_COOLING_THRESHOLD_TEMPERATURE,
     CHAR_CURRENT_HEATING_COOLING,
@@ -221,7 +221,7 @@ class Thermostat(HomeAccessory):
                 CHAR_CURRENT_HUMIDITY, value=50
             )
 
-        self._update_state(state)
+        self._async_update_state(state)
 
         serv_thermostat.setter_callback = self._set_chars
 
@@ -392,7 +392,8 @@ class Thermostat(HomeAccessory):
             DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{UNIT_PERCENTAGE}"
         )
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update thermostat state after state changed."""
         if self._state_updates < 3:
             # When we get the first state updates
@@ -415,9 +416,10 @@ class Thermostat(HomeAccessory):
                 )
             self._state_updates += 1
 
-        self._update_state(new_state)
+        self._async_update_state(new_state)
 
-    def _update_state(self, new_state):
+    @callback
+    def _async_update_state(self, new_state):
         """Update state without rechecking the device features."""
         features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
@@ -545,7 +547,7 @@ class WaterHeater(HomeAccessory):
         )
 
         state = self.hass.states.get(self.entity_id)
-        self.update_state(state)
+        self.async_update_state(state)
 
     def get_temperature_range(self):
         """Return min and max temperature range."""
@@ -587,7 +589,8 @@ class WaterHeater(HomeAccessory):
             f"{temperature}{self._unit}",
         )
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update water_heater state after state change."""
         # Update current and target temperature
         temperature = new_state.attributes.get(ATTR_TEMPERATURE)

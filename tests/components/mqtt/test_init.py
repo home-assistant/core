@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import json
 import ssl
 import unittest
-from unittest import mock
 
 import pytest
 import voluptuous as vol
@@ -24,6 +23,7 @@ from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import AsyncMock, MagicMock, call, mock_open, patch
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
@@ -31,14 +31,17 @@ from tests.common import (
     async_mock_mqtt_component,
     fire_mqtt_message,
     get_test_home_assistant,
-    mock_coro,
     mock_device_registry,
     mock_mqtt_component,
     mock_registry,
-    mock_storage,
     threadsafe_coroutine_factory,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
+
+
+@pytest.fixture(autouse=True)
+def mock_storage(hass_storage):
+    """Autouse hass_storage for the TestCase tests."""
 
 
 @pytest.fixture
@@ -56,9 +59,9 @@ def entity_reg(hass):
 @pytest.fixture
 def mock_mqtt():
     """Make sure connection is established."""
-    with mock.patch("homeassistant.components.mqtt.MQTT") as mock_mqtt:
-        mock_mqtt.return_value.async_connect.return_value = mock_coro(True)
-        mock_mqtt.return_value.async_disconnect.return_value = mock_coro(True)
+    with patch("homeassistant.components.mqtt.MQTT") as mock_mqtt:
+        mock_mqtt.return_value.async_connect = AsyncMock(return_value=True)
+        mock_mqtt.return_value.async_disconnect = AsyncMock(return_value=True)
         yield mock_mqtt
 
 
@@ -67,7 +70,7 @@ async def async_mock_mqtt_client(hass, config=None):
     if config is None:
         config = {mqtt.CONF_BROKER: "mock-broker"}
 
-    with mock.patch("paho.mqtt.client.Client") as mock_client:
+    with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect.return_value = 0
         mock_client().subscribe.return_value = (0, 0)
         mock_client().unsubscribe.return_value = (0, 0)
@@ -88,15 +91,12 @@ class TestMQTTComponent(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
         mock_mqtt_component(self.hass)
         self.calls = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
-        self.mock_storage.__exit__(None, None, None)
 
     @callback
     def record_calls(self, *args):
@@ -306,15 +306,12 @@ class TestMQTTCallbacks(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
         mock_mqtt_client(self.hass)
         self.calls = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
-        self.mock_storage.__exit__(None, None, None)
 
     @callback
     def record_calls(self, *args):
@@ -583,12 +580,12 @@ class TestMQTTCallbacks(unittest.TestCase):
         # Fake that the client is connected
         self.hass.data["mqtt"].connected = True
 
-        calls_a = mock.MagicMock()
+        calls_a = MagicMock()
         mqtt.subscribe(self.hass, "test/state", calls_a)
         self.hass.block_till_done()
         assert calls_a.called
 
-        calls_b = mock.MagicMock()
+        calls_b = MagicMock()
         mqtt.subscribe(self.hass, "test/state", calls_b)
         self.hass.block_till_done()
         assert calls_b.called
@@ -639,9 +636,9 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass.block_till_done()
 
         expected = [
-            mock.call("test/state", 2),
-            mock.call("test/state", 0),
-            mock.call("test/state", 1),
+            call("test/state", 2),
+            call("test/state", 0),
+            call("test/state", 1),
         ]
         assert self.hass.data["mqtt"]._mqttc.subscribe.mock_calls == expected
 
@@ -653,7 +650,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass.data["mqtt"]._mqtt_on_connect(None, None, None, 0)
         self.hass.block_till_done()
 
-        expected.append(mock.call("test/state", 1))
+        expected.append(call("test/state", 1))
         assert self.hass.data["mqtt"]._mqttc.subscribe.mock_calls == expected
 
 
@@ -661,9 +658,9 @@ async def test_setup_embedded_starts_with_no_config(hass):
     """Test setting up embedded server with no config."""
     client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
 
-    with mock.patch(
+    with patch(
         "homeassistant.components.mqtt.server.async_start",
-        return_value=mock_coro(return_value=(True, client_config)),
+        return_value=(True, client_config),
     ) as _start:
         await async_mock_mqtt_client(hass, {})
         assert _start.call_count == 1
@@ -673,11 +670,10 @@ async def test_setup_embedded_with_embedded(hass):
     """Test setting up embedded server with no config."""
     client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
 
-    with mock.patch(
+    with patch(
         "homeassistant.components.mqtt.server.async_start",
-        return_value=mock_coro(return_value=(True, client_config)),
+        return_value=(True, client_config),
     ) as _start:
-        _start.return_value = mock_coro(return_value=(True, client_config))
         await async_mock_mqtt_client(hass, {"embedded": None})
         assert _start.call_count == 1
 
@@ -686,7 +682,7 @@ async def test_setup_fails_if_no_connect_broker(hass):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
-    with mock.patch("paho.mqtt.client.Client") as mock_client:
+    with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = lambda *args: 1
         assert not await mqtt.async_setup_entry(hass, entry)
 
@@ -695,8 +691,8 @@ async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
-    with mock.patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = mock.Mock(side_effect=OSError("Connection error"))
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = MagicMock(side_effect=OSError("Connection error"))
         with pytest.raises(ConfigEntryNotReady):
             await mqtt.async_setup_entry(hass, entry)
 
@@ -808,7 +804,7 @@ async def test_mqtt_subscribes_topics_on_connect(hass):
         mqtt.Subscription("still/pending", None, 1),
     ]
 
-    hass.add_job = mock.MagicMock()
+    hass.add_job = MagicMock()
     hass.data["mqtt"]._mqtt_on_connect(None, None, 0, 0)
 
     await hass.async_block_till_done()
@@ -825,6 +821,7 @@ async def test_setup_fails_without_config(hass):
     assert not await async_setup_component(hass, mqtt.DOMAIN, {})
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_message_callback_exception_gets_logged(hass, caplog):
     """Test exception raised by message handler."""
     await async_mock_mqtt_component(hass)
@@ -874,7 +871,7 @@ async def test_dump_service(hass):
     """Test that we can dump a topic."""
     await async_mock_mqtt_component(hass)
 
-    mock_open = mock.mock_open()
+    mopen = mock_open()
 
     await hass.services.async_call(
         "mqtt", "dump", {"topic": "bla/#", "duration": 3}, blocking=True
@@ -882,11 +879,11 @@ async def test_dump_service(hass):
     async_fire_mqtt_message(hass, "bla/1", "test1")
     async_fire_mqtt_message(hass, "bla/2", "test2")
 
-    with mock.patch("homeassistant.components.mqtt.open", mock_open):
+    with patch("homeassistant.components.mqtt.open", mopen):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
-    writes = mock_open.return_value.write.mock_calls
+    writes = mopen.return_value.write.mock_calls
     assert len(writes) == 2
     assert writes[0][1][0] == "bla/1,test1\n"
     assert writes[1][1][0] == "bla/2,test2\n"
@@ -1287,7 +1284,7 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
     ]
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/abc", "123")
 
@@ -1295,7 +1292,15 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {
         "topic": "sensor/#",
-        "messages": [{"topic": "sensor/abc", "payload": "123", "time": start_dt}],
+        "messages": [
+            {
+                "payload": "123",
+                "qos": 0,
+                "retain": False,
+                "time": start_dt,
+                "topic": "sensor/abc",
+            }
+        ],
     } in debug_info_data["entities"][0]["subscriptions"]
 
 
@@ -1329,7 +1334,7 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
 
     dt1 = datetime(2019, 1, 1, 0, 0, 0)
     dt2 = datetime(2019, 1, 1, 0, 0, 1)
-    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = dt1
         async_fire_mqtt_message(hass, "sensor/abc", "123")
         async_fire_mqtt_message(hass, "sensor/abc", "123")
@@ -1342,8 +1347,20 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
     assert {
         "topic": "sensor/#",
         "messages": [
-            {"payload": "123", "time": dt1, "topic": "sensor/abc"},
-            {"payload": "123", "time": dt2, "topic": "sensor/abc"},
+            {
+                "payload": "123",
+                "qos": 0,
+                "retain": False,
+                "time": dt1,
+                "topic": "sensor/abc",
+            },
+            {
+                "payload": "123",
+                "qos": 0,
+                "retain": False,
+                "time": dt2,
+                "topic": "sensor/abc",
+            },
         ],
     } == debug_info_data["entities"][0]["subscriptions"][0]
 
@@ -1378,7 +1395,7 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
     ]
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
 
@@ -1386,6 +1403,8 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {
         "payload": "123",
+        "qos": 0,
+        "retain": False,
         "time": start_dt,
         "topic": "sensor/status",
     } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
@@ -1396,6 +1415,66 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
+
+
+async def test_debug_info_qos_retain(hass, mqtt_mock):
+    """Test debug info."""
+    config = {
+        "device": {"identifiers": ["helloworld"]},
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "sensor/#",
+        "unique_id": "veryunique",
+    }
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
+        "subscriptions"
+    ]
+
+    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+        dt_utcnow.return_value = start_dt
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=0, retain=False)
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=1, retain=True)
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=2, retain=False)
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
+    assert {
+        "payload": "123",
+        "qos": 0,
+        "retain": False,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    assert {
+        "payload": "123",
+        "qos": 1,
+        "retain": True,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    assert {
+        "payload": "123",
+        "qos": 2,
+        "retain": False,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]

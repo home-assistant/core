@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This Home Control Central Unit is already in use."
+        },
+        "error": {
+            "invalid_credentials": "Incorrect user name and/or password."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "Home_Control_URL": "Home Control URL",
+                    "Mydevolo_URL": "mydevolo URL",
+                    "home_control_url": "Home Control URL",
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Password",
+                    "username": "E-Mail-Address / devolo ID"
+                },
+                "description": "Set up your devolo Home Control.",
+                "title": "devolo Home Control"
+            }
+        }
+    },
+    "title": "devolo Home Control"
+}

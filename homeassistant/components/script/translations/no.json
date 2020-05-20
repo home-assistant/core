@@ -1,3 +1,9 @@
 {
-    "title": "Script"
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        }
+    },
+    "title": ""
 }

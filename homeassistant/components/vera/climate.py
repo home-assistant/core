@@ -5,7 +5,7 @@ from typing import Callable, List
 from homeassistant.components.climate import (
     DOMAIN as PLATFORM_DOMAIN,
     ENTITY_ID_FORMAT,
-    ClimateDevice,
+    ClimateEntity,
 )
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -49,7 +49,7 @@ async def async_setup_entry(
     )
 
 
-class VeraThermostat(VeraDevice, ClimateDevice):
+class VeraThermostat(VeraDevice, ClimateEntity):
     """Representation of a Vera Thermostat."""
 
     def __init__(self, vera_device, controller):

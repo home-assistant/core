@@ -5,12 +5,12 @@
             "devices_configured": "Alle enheter som ble funnet er allerede konfigurert.",
             "no_devices_found": "Ingen PlayStation 4 enheter funnet p\u00e5 nettverket.",
             "port_987_bind_error": "Kunne ikke binde til port 987. Se [dokumentasjonen](https://www.home-assistant.io/components/ps4/) for mer info.",
-            "port_997_bind_error": "Kunne ikke binde til port 997. Se [dokumentasjonen] (https://www.home-assistant.io/components/ps4/) for videre informasjon."
+            "port_997_bind_error": "Kunne ikke binde til port 997. Se [dokumentasjonen](https://www.home-assistant.io/components/ps4/) for videre informasjon."
         },
         "error": {
             "credential_timeout": "Legitimasjonstjenesten ble tidsavbrutt. Trykk send for \u00e5 starte p\u00e5 nytt.",
             "login_failed": "Klarte ikke \u00e5 koble til PlayStation 4. Bekreft at PIN koden er riktig.",
-            "no_ipaddress": "Angi IP adressen til din PlayStation 4 som du \u00f8nsker konfigurere.",
+            "no_ipaddress": "Fyll inn IP adressen til din PlayStation 4 som du \u00f8nsker konfigurere.",
             "not_ready": "PlayStation 4 er ikke p\u00e5sl\u00e5tt eller koblet til nettverk."
         },
         "step": {
@@ -20,20 +20,20 @@
             },
             "link": {
                 "data": {
-                    "code": "PIN",
+                    "code": "",
                     "ip_address": "IP adresse",
                     "name": "Navn",
-                    "region": "Region"
+                    "region": ""
                 },
-                "description": "Skriv inn PlayStation 4-informasjonen. For 'PIN', naviger til 'Innstillinger' p\u00e5 PlayStation 4-konsollen. Naviger deretter til 'Mobile App Connection Settings' og velg 'Add Device'. Tast inn PIN-koden som vises. Se [dokumentasjonen] (https://www.home-assistant.io/components/ps4/) for mer informasjon.",
+                "description": "Fyll inn PlayStation 4-informasjonen. For 'PIN', naviger til 'Innstillinger' p\u00e5 PlayStation 4-konsoll. Naviger deretter til 'Mobile App Connection Settings' og velg 'Add Device'. Fyll inn PIN-koden som vises. Se [dokumentasjonen](https://www.home-assistant.io/components/ps4/) for mer informasjon.",
                 "title": ""
             },
             "mode": {
                 "data": {
-                    "ip_address": "IP- adresse (Ikke fyll ut hvis du bruker Auto Discovery).",
+                    "ip_address": "IP-adresse (La st\u00e5 tom hvis du bruker Automatisk Oppdagelse).",
                     "mode": "Konfigureringsmodus"
                 },
-                "description": "Velg modus for konfigurasjon. Feltet IP-adresse kan st\u00e5 tomt dersom du velger Auto Discovery, da enheter vil bli oppdaget automatisk.",
+                "description": "Velg modus for konfigurasjon. Feltet IP-adresse kan st\u00e5 tomt dersom du velger Automatisk Oppdagelse, da enheter vil bli oppdaget automatisk.",
                 "title": ""
             }
         }

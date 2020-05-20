@@ -26,8 +26,8 @@
             "sleeping": "Slaapt"
         },
         "query_stage": {
-            "dead": "Onbereikbaar ({query_stage})",
-            "initializing": "Initialiseren ( {query_stage} )"
+            "dead": "Onbereikbaar",
+            "initializing": "Initialiseren"
         }
     }
 }

@@ -34,11 +34,20 @@
                     "api_version": "Versi\u00f3n del DSM",
                     "host": "Host",
                     "password": "Contrase\u00f1a",
-                    "port": "Puerto",
+                    "port": "Puerto (opcional)",
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
                     "username": "Usuario"
                 },
                 "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minutos entre escaneos"
+                }
             }
         }
     }

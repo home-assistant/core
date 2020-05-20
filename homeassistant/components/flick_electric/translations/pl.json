@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_account%]"
+        },
+        "error": {
+            "invalid_auth": "[%key_id:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                }
+            }
+        }
+    }
+}

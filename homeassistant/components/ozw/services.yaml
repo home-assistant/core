@@ -1,0 +1,14 @@
+# Describes the format for available Z-Wave services
+add_node:
+  description: Add a new node to the Z-Wave network.
+  fields:
+    secure:
+      description: Add the new node with secure communications. Secure network key must be set, this process will fallback to add_node (unsecure) for unsupported devices. Note that unsecure devices can't directly talk to secure devices.
+    instance_id:
+      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
+
+remove_node:
+  description: Remove a node from the Z-Wave network. Will set the controller into exclusion mode.
+  fields:
+    instance_id:
+      description: (Optional) The OZW Instance/Controller to use, defaults to 1.

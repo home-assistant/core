@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "La integraci\u00f3 MQTT no est\u00e0 configurada",
+            "one_instance_allowed": "La integraci\u00f3 nom\u00e9s admet una inst\u00e0ncia Z-Wave"
+        },
+        "step": {
+            "user": {
+                "title": "Confirmaci\u00f3 de configuraci\u00f3"
+            }
+        }
+    }
+}

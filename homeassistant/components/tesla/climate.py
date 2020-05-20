@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from teslajsonpy.exceptions import UnknownPresetMode
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TeslaThermostat(TeslaDevice, ClimateDevice):
+class TeslaThermostat(TeslaDevice, ClimateEntity):
     """Representation of a Tesla climate."""
 
     def __init__(self, tesla_device, controller, config_entry):

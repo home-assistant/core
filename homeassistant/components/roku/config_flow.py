@@ -1,11 +1,9 @@
 """Config flow for Roku."""
 import logging
-from socket import gaierror as SocketGIAError
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
-from requests.exceptions import RequestException
-from roku import Roku, RokuException
+from rokuecp import Roku, RokuError
 import voluptuous as vol
 
 from homeassistant.components.ssdp import (
@@ -16,7 +14,8 @@ from homeassistant.components.ssdp import (
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN  # pylint: disable=unused-import
 
@@ -28,24 +27,18 @@ ERROR_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(data: Dict) -> Dict:
+async def validate_input(hass: HomeAssistantType, data: Dict) -> Dict:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-
-    try:
-        roku = Roku(data["host"])
-        device_info = roku.device_info
-    except (SocketGIAError, RequestException, RokuException) as exception:
-        raise CannotConnect from exception
-    except Exception as exception:  # pylint: disable=broad-except
-        raise UnknownError from exception
+    session = async_get_clientsession(hass)
+    roku = Roku(data[CONF_HOST], session=session)
+    device = await roku.update()
 
     return {
-        "title": data["host"],
-        "host": data["host"],
-        "serial_num": device_info.serial_num,
+        "title": device.info.name,
+        "serial_number": device.info.serial_number,
     }
 
 
@@ -54,6 +47,10 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
+
+    def __init__(self):
+        """Set up the instance."""
+        self.discovery_info = {}
 
     @callback
     def _show_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
@@ -78,16 +75,17 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            info = await self.hass.async_add_executor_job(validate_input, user_input)
-        except CannotConnect:
+            info = await validate_input(self.hass, user_input)
+        except RokuError:
+            _LOGGER.debug("Roku Error", exc_info=True)
             errors["base"] = ERROR_CANNOT_CONNECT
             return self._show_form(errors)
-        except UnknownError:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
-        await self.async_set_unique_id(info["serial_num"])
-        self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(info["serial_number"])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
         return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -97,15 +95,24 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         name = discovery_info[ATTR_UPNP_FRIENDLY_NAME]
-        serial_num = discovery_info[ATTR_UPNP_SERIAL]
+        serial_number = discovery_info[ATTR_UPNP_SERIAL]
 
-        await self.async_set_unique_id(serial_num)
+        await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update(
-            {CONF_HOST: host, CONF_NAME: name, "title_placeholders": {"name": host}}
-        )
+        self.context.update({"title_placeholders": {"name": name}})
+
+        self.discovery_info.update({CONF_HOST: host, CONF_NAME: name})
+
+        try:
+            await validate_input(self.hass, self.discovery_info)
+        except RokuError:
+            _LOGGER.debug("Roku Error", exc_info=True)
+            return self.async_abort(reason=ERROR_CANNOT_CONNECT)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unknown error trying to connect")
+            return self.async_abort(reason=ERROR_UNKNOWN)
 
         return await self.async_step_ssdp_confirm()
 
@@ -114,30 +121,13 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle user-confirmation of discovered device."""
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        name = self.context.get(CONF_NAME)
+        if user_input is None:
+            return self.async_show_form(
+                step_id="ssdp_confirm",
+                description_placeholders={"name": self.discovery_info[CONF_NAME]},
+                errors={},
+            )
 
-        if user_input is not None:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            user_input[CONF_HOST] = self.context.get(CONF_HOST)
-            user_input[CONF_NAME] = name
-
-            try:
-                await self.hass.async_add_executor_job(validate_input, user_input)
-                return self.async_create_entry(title=name, data=user_input)
-            except CannotConnect:
-                return self.async_abort(reason=ERROR_CANNOT_CONNECT)
-            except UnknownError:
-                _LOGGER.exception("Unknown error trying to connect")
-                return self.async_abort(reason=ERROR_UNKNOWN)
-
-        return self.async_show_form(
-            step_id="ssdp_confirm", description_placeholders={"name": name},
+        return self.async_create_entry(
+            title=self.discovery_info[CONF_NAME], data=self.discovery_info,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class UnknownError(HomeAssistantError):
-    """Error to indicate we encountered an unknown error."""

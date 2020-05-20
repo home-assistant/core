@@ -26,8 +26,8 @@
         "step": {
             "init": {
                 "data": {
-                    "activity": "Activitat predeterminada a executar quan no se n\u2019especifica cap.",
-                    "delay_secs": "Retard entre l\u2019enviament d\u2019ordres."
+                    "activity": "Activitat predeterminada a executar quan no se n'especifica cap.",
+                    "delay_secs": "Retard entre l'enviament d'ordres."
                 },
                 "description": "Ajusta les opcions de Harmony Hub"
             }

@@ -1,5 +1,5 @@
 """Support for StarLine switch."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
@@ -30,7 +30,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class StarlineSwitch(StarlineEntity, SwitchDevice):
+class StarlineSwitch(StarlineEntity, SwitchEntity):
     """Representation of a StarLine switch."""
 
     def __init__(

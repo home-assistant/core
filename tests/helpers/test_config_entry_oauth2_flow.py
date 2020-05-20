@@ -2,13 +2,14 @@
 import asyncio
 import logging
 import time
-from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
@@ -124,7 +125,9 @@ async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
 
 async def test_step_discovery(hass, flow_handler, local_impl):
     """Check flow triggers from discovery."""
-    hass.config.api.base_url = "https://example.com"
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -140,7 +143,10 @@ async def test_step_discovery(hass, flow_handler, local_impl):
 
 async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
     """Test if aborts when discovered multiple times."""
-    hass.config.api.base_url = "https://example.com"
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
+
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -163,7 +169,9 @@ async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
 
 async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl):
     """Test if abort discovery when entries exists."""
-    hass.config.api.base_url = "https://example.com"
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -184,7 +192,10 @@ async def test_full_flow(
     hass, flow_handler, local_impl, aiohttp_client, aioclient_mock
 ):
     """Check full flow."""
-    hass.config.api.base_url = "https://example.com"
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
+
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()

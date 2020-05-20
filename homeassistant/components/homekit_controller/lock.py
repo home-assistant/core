@@ -3,7 +3,7 @@ import logging
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import callback
 
@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn.add_listener(async_add_service)
 
 
-class HomeKitLock(HomeKitEntity, LockDevice):
+class HomeKitLock(HomeKitEntity, LockEntity):
     """Representation of a HomeKit Controller Lock."""
 
     def get_characteristic_types(self):

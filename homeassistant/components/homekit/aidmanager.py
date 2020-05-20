@@ -15,13 +15,13 @@ from zlib import adler32
 
 from fnvhash import fnv1a_32
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .util import get_aid_storage_filename_for_entry_id
 
-AID_MANAGER_STORAGE_KEY = f"{DOMAIN}.aids"
 AID_MANAGER_STORAGE_VERSION = 1
 AID_MANAGER_SAVE_DELAY = 2
 
@@ -74,13 +74,13 @@ class AccessoryAidStorage:
     persist over reboots.
     """
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         """Create a new entity map store."""
         self.hass = hass
-        self.store = Store(hass, AID_MANAGER_STORAGE_VERSION, AID_MANAGER_STORAGE_KEY)
         self.allocations = {}
         self.allocated_aids = set()
-
+        self._entry = entry
+        self.store = None
         self._entity_registry = None
 
     async def async_initialize(self):
@@ -88,6 +88,8 @@ class AccessoryAidStorage:
         self._entity_registry = (
             await self.hass.helpers.entity_registry.async_get_registry()
         )
+        aidstore = get_aid_storage_filename_for_entry_id(self._entry)
+        self.store = Store(self.hass, AID_MANAGER_STORAGE_VERSION, aidstore)
 
         raw_storage = await self.store.async_load()
         if not raw_storage:

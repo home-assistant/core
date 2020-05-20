@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC,
@@ -71,6 +71,8 @@ CONF_EFFECT_VALUE_TEMPLATE = "effect_value_template"
 CONF_HS_COMMAND_TOPIC = "hs_command_topic"
 CONF_HS_STATE_TOPIC = "hs_state_topic"
 CONF_HS_VALUE_TEMPLATE = "hs_value_template"
+CONF_MAX_MIREDS = "max_mireds"
+CONF_MIN_MIREDS = "min_mireds"
 CONF_RGB_COMMAND_TEMPLATE = "rgb_command_template"
 CONF_RGB_COMMAND_TOPIC = "rgb_command_topic"
 CONF_RGB_STATE_TOPIC = "rgb_state_topic"
@@ -86,7 +88,7 @@ CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_ON_COMMAND_TYPE = "on_command_type"
 
 DEFAULT_BRIGHTNESS_SCALE = 255
-DEFAULT_NAME = "MQTT Light"
+DEFAULT_NAME = "MQTT LightEntity"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -116,6 +118,8 @@ PLATFORM_SCHEMA_BASIC = (
             vol.Optional(CONF_HS_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_HS_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
+            vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
@@ -160,7 +164,7 @@ class MqttLight(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    Light,
+    LightEntity,
     RestoreEntity,
 ):
     """Representation of a MQTT light."""
@@ -565,6 +569,16 @@ class MqttLight(
         return self._color_temp
 
     @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._config.get(CONF_MIN_MIREDS, super().min_mireds)
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._config.get(CONF_MAX_MIREDS, super().max_mireds)
+
+    @property
     def white_value(self):
         """Return the white property."""
         white_value = self._white_value
@@ -732,11 +746,13 @@ class MqttLight(
             ATTR_BRIGHTNESS in kwargs
             and self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None
         ):
-            percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
+            brightness_normalized = kwargs[ATTR_BRIGHTNESS] / 255
             brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
             device_brightness = min(
-                round(percent_bright * brightness_scale), brightness_scale
+                round(brightness_normalized * brightness_scale), brightness_scale
             )
+            # Make sure the brightness is not rounded down to 0
+            device_brightness = max(device_brightness, 1)
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],

@@ -1,12 +1,10 @@
 """The tests for the Geofency device tracker platform."""
-# pylint: disable=redefined-outer-name
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import zone
 from homeassistant.components.geofency import CONF_MOBILE_BEACONS, DOMAIN
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     HTTP_OK,
     HTTP_UNPROCESSABLE_ENTITY,
@@ -15,6 +13,9 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
+
+# pylint: disable=redefined-outer-name
+from tests.async_mock import patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -148,7 +149,9 @@ async def setup_zones(loop, hass):
 @pytest.fixture
 async def webhook_id(hass, geofency_client):
     """Initialize the Geofency component and get the webhook_id."""
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )

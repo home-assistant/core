@@ -8,12 +8,13 @@ from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
+    PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 from . import SynoApi
 from .const import (
@@ -22,6 +23,7 @@ from .const import (
     DOMAIN,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
+    SYNO_API,
     TEMP_SENSORS_KEYS,
     UTILISATION_SENSORS,
 )
@@ -34,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Synology NAS Sensor."""
 
-    api = hass.data[DOMAIN][entry.unique_id]
+    api = hass.data[DOMAIN][entry.unique_id][SYNO_API]
 
     sensors = [
         SynoNasUtilSensor(api, sensor_type, UTILISATION_SENSORS[sensor_type])
@@ -61,7 +63,7 @@ async def async_setup_entry(
                 for sensor_type in STORAGE_DISK_SENSORS
             ]
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class SynoNasSensor(Entity):
@@ -108,7 +110,7 @@ class SynoNasSensor(Entity):
     def unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
         if self.sensor_type in TEMP_SENSORS_KEYS:
-            return self._api.temp_unit
+            return self.hass.config.units.temperature_unit
         return self._unit
 
     @property
@@ -131,6 +133,10 @@ class SynoNasSensor(Entity):
     def should_poll(self) -> bool:
         """No polling needed."""
         return False
+
+    async def async_update(self):
+        """Only used by the generic entity update service."""
+        await self._api.update()
 
     async def async_added_to_hass(self):
         """Register state update callback."""
@@ -181,12 +187,8 @@ class SynoNasStorageSensor(SynoNasSensor):
             return round(attr / 1024.0 ** 4, 2)
 
         # Temperature
-        if self._api.temp_unit == TEMP_CELSIUS:
-            # Celsius
-            return attr
         if self.sensor_type in TEMP_SENSORS_KEYS:
-            # Fahrenheit
-            return celsius_to_fahrenheit(attr)
+            return display_temp(self.hass, attr, TEMP_CELSIUS, PRECISION_TENTHS)
 
         return attr
 

@@ -16,15 +16,15 @@
                     "host": "Vertsnavn eller IP-adresse til skriveren",
                     "type": "Skriver type"
                 },
-                "description": "Konfigurer Brother skriver integrasjonen. Hvis du har problemer med konfigurasjonen, bes\u00f8k dokumentasjonen her: https://www.home-assistant.io/integrations/brother",
+                "description": "Sett opp Brother skriver integrasjonen. Hvis du har problemer med konfigurasjonen, bes\u00f8k dokumentasjonen her: [https://www.home-assistant.io/integrations/brother](https://www.home-assistant.io/integrations/brother)",
                 "title": "Brother skriver"
             },
             "zeroconf_confirm": {
                 "data": {
                     "type": "Type skriver"
                 },
-                "description": "Vil du legge til Brother-skriveren {Model} med serienummeret {serial_number} til Home Assistant?",
-                "title": "Oppdaget Brother-Skriveren"
+                "description": "Vil du legge til Brother-skriveren {model} med serienummeret `{serial_number}` til Home Assistant?",
+                "title": "Oppdaget Brother Skriver"
             }
         }
     }

@@ -23,7 +23,7 @@
                     "exclude": "Vera-enhets-ID-er som skal ekskluderes fra Home Assistant.",
                     "lights": "Vera bytter enhets-ID-er for \u00e5 behandle som lys i Home Assistant."
                 },
-                "description": "Se vera dokumentasjonen for detaljer om valgfrie parametere: https://www.home-assistant.io/integrations/vera/. Merk: Eventuelle endringer her vil trenge en omstart til home assistant-serveren. For \u00e5 fjerne verdier, gi et rom.",
+                "description": "Se Vera dokumentasjonen for detaljer om valgfrie parametere: https://www.home-assistant.io/integrations/vera/. Merk: Eventuelle endringer her vil trenge en omstart av Home Assistant-serveren. For \u00e5 fjerne verdier, gi et rom.",
                 "title": "Alternativer for Vera-kontroller"
             }
         }
