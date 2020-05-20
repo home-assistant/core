@@ -29,6 +29,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    ATTR_HEATING_POWER_REQUEST,
     ATTR_HOME_NAME,
     ATTR_SCHEDULE_NAME,
     DATA_HANDLER,
@@ -154,6 +155,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         return entities
 
+    await data_handler.unregister_data_class(data_class)
     async_add_entities(await get_entities(), True)
 
     def _service_setschedule(service):
@@ -191,6 +193,11 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
         self._room_status = self._home_status.rooms[room_id]
         self._room_data = self._data.rooms[home_id][room_id]
 
+        self._module_type = NA_VALVE
+        for module in self._room_data.get("module_ids"):
+            if self._home_status.thermostats.get(module):
+                self._module_type = NA_THERM
+
         self._state = None
         self._room_id = room_id
         self._home_id = home_id
@@ -205,10 +212,6 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
         self._hvac_mode = None
         self._battery_level = None
         self._connected = None
-        self.update_without_throttle = False
-        self._module_type = self._room_status.get(room_id, {}).get(
-            "module_type", NA_VALVE
-        )
 
         self._away_temperature = None
         self._hg_temperature = None
@@ -320,7 +323,6 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 
-        self.update_without_throttle = True
         self.schedule_update_ha_state()
 
     @property
@@ -340,7 +342,6 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
             return
         self._home_status.setroomThermpoint(self._room_id, STATE_NETATMO_MANUAL, temp)
 
-        self.update_without_throttle = True
         self.schedule_update_ha_state()
 
     @property
@@ -350,6 +351,11 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
 
         if self._battery_level is not None:
             attr[ATTR_BATTERY_LEVEL] = self._battery_level
+
+        if self._module_type == NA_VALVE:
+            attr[ATTR_HEATING_POWER_REQUEST] = self._room_status.get(
+                "heating_power_request", 0
+            )
 
         return attr
 
@@ -361,13 +367,11 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
             )
         elif self.hvac_mode != HVAC_MODE_OFF:
             self._home_status.setroomThermpoint(self._room_id, STATE_NETATMO_OFF)
-        self.update_without_throttle = True
         self.schedule_update_ha_state()
 
     def turn_on(self):
         """Turn the entity on."""
         self._home_status.setroomThermpoint(self._room_id, STATE_NETATMO_HOME)
-        self.update_without_throttle = True
         self.schedule_update_ha_state()
 
     @property
