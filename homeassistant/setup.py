@@ -310,7 +310,8 @@ async def async_process_deps_reqs(
         raise HomeAssistantError("Could not set up all dependencies.")
 
     _LOGGER.info(
-        "async_process_deps_reqs: %s, requirements: %s",
+        "async_process_deps_reqs: %s, %s, requirements: %s",
+        integration,
         integration.dependencies,
         integration.requirements,
     )
