@@ -29,6 +29,6 @@ class MagicHomeScene(MagicHomeDevice, Scene):
         super().__init__(magichome)
         self.entity_id = ENTITY_ID_FORMAT.format(magichome.object_id())
 
-    def activate(self,magichome):
+    def activate(self, magichome):
         """Activate the scene."""
         self.magichome.activate(magichome)
