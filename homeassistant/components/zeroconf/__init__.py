@@ -1,4 +1,5 @@
 """Support for exposing Home Assistant via Zeroconf."""
+import asyncio
 import ipaddress
 import logging
 import socket
@@ -116,9 +117,15 @@ def setup(hass, config):
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
     )
-    zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
+
+    # Get instance UUID
+    uuid = asyncio.run_coroutine_threadsafe(
+        hass.helpers.instance_id.async_get(), hass.loop
+    ).result()
 
     params = {
+        "location_name": hass.config.location_name,
+        "uuid": uuid,
         "version": __version__,
         "external_url": None,
         "internal_url": None,
@@ -128,6 +135,7 @@ def setup(hass, config):
         "requires_api_password": True,
     }
 
+    # Get instance URL's
     try:
         params["external_url"] = get_url(hass, allow_internal=False)
     except NoURLAvailableError:
@@ -150,8 +158,8 @@ def setup(hass, config):
 
     info = ServiceInfo(
         ZEROCONF_TYPE,
-        zeroconf_name,
-        None,
+        name=f"{hass.config.location_name}.{ZEROCONF_TYPE}",
+        server=f"{uuid}.local.",
         addresses=[host_ip_pton],
         port=hass.http.server_port,
         properties=params,
