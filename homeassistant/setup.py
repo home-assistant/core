@@ -142,6 +142,12 @@ async def _async_setup_component(
             integration.documentation,
         )
         return False
+    except RequirementsNotFound as err:
+        log_error(
+            f"Processing requires for {integration} failed ({err})",
+            integration.documentation,
+        )
+        return False
 
     _LOGGER.info("get_component for %s", domain)
 
