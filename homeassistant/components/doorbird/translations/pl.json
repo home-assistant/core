@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "BoorBird jest ju\u017c skonfigurowany.",
-            "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane",
-            "not_doorbird_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem DoorBird"
+            "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane.",
+            "not_doorbird_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem DoorBird."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
