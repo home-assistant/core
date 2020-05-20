@@ -132,7 +132,7 @@ async def _async_setup_component(
     try:
         await async_process_deps_reqs(hass, config, integration)
     except HomeAssistantError as err:
-        log_error(str(err), integration.documentation)
+        log_error(f"Processing dependencies for {integration} failed ({err})", integration.documentation)
         return False
 
     _LOGGER.info("get_component for %s", domain)
