@@ -1,7 +1,7 @@
 """Switches for the Elexa Guardian integration."""
 from aioguardian.errors import GuardianError
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 
 from . import Guardian, GuardianEntity
@@ -19,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([GuardianSwitch(guardian)], True)
 
 
-class GuardianSwitch(GuardianEntity, SwitchDevice):
+class GuardianSwitch(GuardianEntity, SwitchEntity):
     """Define a switch to open/close the Guardian valve."""
 
     def __init__(self, guardian: Guardian):

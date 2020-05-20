@@ -1,5 +1,5 @@
 """Binary sensors for the Elexa Guardian integration."""
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 
 from . import GuardianEntity
@@ -32,7 +32,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class GuardianBinarySensor(GuardianEntity, BinarySensorDevice):
+class GuardianBinarySensor(GuardianEntity, BinarySensorEntity):
     """Define a generic Guardian sensor."""
 
     def __init__(self, guardian, kind, name, device_class):
