@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import config_flow  # noqa: F401
-from .const import CONF_KEY, CONF_UUID, TIMEOUT
+from .const import CONF_KEY, CONF_UUID, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +61,9 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with Daikin."""
     conf = entry.data
+    # For backwards compat, set unique ID
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
     daikin_api = await daikin_api_setup(
         hass,
         conf[CONF_HOST],
