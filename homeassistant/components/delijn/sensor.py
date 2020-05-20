@@ -75,16 +75,17 @@ class DeLijnPublicTransportSensor(Entity):
         try:
             await self.line.get_passages()
             self._name = await self.line.get_stopname()
-            self._attributes["stopname"] = self._name
         except HttpException:
             self._available = False
             _LOGGER.error("De Lijn http error")
             return
 
+        self._attributes["stopname"] = self._name
+        for passage in self.line.passages:
+            passage["stopname"] = self._name
+
         try:
             first = self.line.passages[0]
-            for passage in self.line.passages:
-                passage["stopname"] = self._name
             if first["due_at_realtime"] is not None:
                 first_passage = first["due_at_realtime"]
             else:
