@@ -306,7 +306,7 @@ async def async_process_deps_reqs(
 
     _LOGGER.info(
         "async_process_deps_reqs: %s, %s, requirements: %s",
-        integration,
+        integration.domain,
         integration.dependencies,
         integration.requirements,
     )
@@ -318,7 +318,7 @@ async def async_process_deps_reqs(
 
     _LOGGER.info(
         "FINISH async_process_deps_reqs: %s, %s, requirements: %s",
-        integration,
+        integration.domain,
         integration.dependencies,
         integration.requirements,
     )
