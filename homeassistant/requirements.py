@@ -52,6 +52,8 @@ async def async_get_integration_with_requirements(
     if hass.config.skip_pip:
         return integration
 
+    _LOGGER.info("async_get_integration_with_requirements: %s", domain)
+
     cache = hass.data.get(DATA_INTEGRATIONS_WITH_REQS)
     if cache is None:
         cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
@@ -99,6 +101,8 @@ async def async_get_integration_with_requirements(
                 for dep in deps_to_check
             ]
         )
+
+    _LOGGER.info("finished async_get_integration_with_requirements: %s", domain)
 
     cache[domain] = integration
     event.set()
