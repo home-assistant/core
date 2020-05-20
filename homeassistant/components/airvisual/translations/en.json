@@ -1,13 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "These coordinates have already been registered."
+            "already_configured": "These coordinates or Node/Pro ID are already registered."
         },
         "error": {
-            "invalid_api_key": "Invalid API key"
+            "general_error": "There was an unknown error.",
+            "invalid_api_key": "Invalid API key provided.",
+            "unable_to_connect": "Unable to connect to Node/Pro unit."
         },
         "step": {
-            "user": {
+            "geography": {
                 "data": {
                     "api_key": "API Key",
                     "latitude": "Latitude",
@@ -19,7 +21,7 @@
             "node_pro": {
                 "data": {
                     "ip_address": "Unit IP Address/Hostname",
-                    "password": "Unit Password"
+                    "password": "Password"
                 },
                 "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
                 "title": "Configure an AirVisual Node/Pro"

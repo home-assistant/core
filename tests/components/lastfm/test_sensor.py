@@ -1,12 +1,12 @@
 """Tests for the lastfm sensor."""
-from unittest.mock import patch
-
 from pylast import Track
 import pytest
 
 from homeassistant.components import sensor
 from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 
 class MockUser:

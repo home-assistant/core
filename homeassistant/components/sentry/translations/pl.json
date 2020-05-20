@@ -5,7 +5,7 @@
         },
         "error": {
             "bad_dsn": "Nieprawid\u0142owy DSN",
-            "unknown": "Niespodziewany b\u0142\u0105d"
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {

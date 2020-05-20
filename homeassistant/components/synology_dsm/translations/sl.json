@@ -4,10 +4,20 @@
             "already_configured": "Gostitelj je \u017ee konfiguriran"
         },
         "error": {
-            "login": "Napaka pri prijavi: preverite svoje uporabni\u0161ko ime in geslo"
+            "connection": "Napaka pri povezavi: preverite gostitelja, vrata in ssl",
+            "login": "Napaka pri prijavi: preverite svoje uporabni\u0161ko ime in geslo",
+            "missing_data": "Manjkajo\u010di podatki: poskusite pozneje ali v drugi konfiguraciji",
+            "otp_failed": "Dvostopenjska avtentikacija ni uspela. Poskusite z novim geslom",
+            "unknown": "Neznana napaka: za ve\u010d podrobnosti preverite dnevnike"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Koda"
+                },
+                "title": "Synology DSM: dvostopenjska avtentikacija"
+            },
             "link": {
                 "data": {
                     "api_version": "Razli\u010dica DSM",

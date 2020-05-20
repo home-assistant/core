@@ -1,15 +1,14 @@
 """Tests for the Config Entry Flow helper."""
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -46,6 +45,7 @@ async def test_single_entry_allowed(hass, discovery_flow_conf):
     """Test only a single entry is allowed."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
 
     MockConfigEntry(domain="test").add_to_hass(hass)
     result = await flow.async_step_user()
@@ -69,6 +69,7 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
     """Test user requires no confirmation to setup."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
     discovery_flow_conf["discovered"] = True
 
     result = await flow.async_step_user()
@@ -95,7 +96,7 @@ async def test_discovery_confirmation(hass, discovery_flow_conf, source):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
-    flow.context = {}
+    flow.context = {"source": source}
 
     result = await getattr(flow, f"async_step_{source}")({})
 
@@ -152,6 +153,7 @@ async def test_import_no_confirmation(hass, discovery_flow_conf):
     """Test import requires no confirmation to set up."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
     discovery_flow_conf["discovered"] = True
 
     result = await flow.async_step_import(None)
@@ -162,10 +164,43 @@ async def test_import_single_instance(hass, discovery_flow_conf):
     """Test import doesn't create second instance."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
     discovery_flow_conf["discovered"] = True
     MockConfigEntry(domain="test").add_to_hass(hass)
 
     result = await flow.async_step_import(None)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+async def test_ignored_discoveries(hass, discovery_flow_conf):
+    """Test we can ignore discovered entries."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    result = await hass.config_entries.flow.async_init(
+        "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    flow = next(
+        (
+            flw
+            for flw in hass.config_entries.flow.async_progress()
+            if flw["flow_id"] == result["flow_id"]
+        ),
+        None,
+    )
+
+    # Ignore it.
+    await hass.config_entries.flow.async_init(
+        flow["handler"],
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": flow["context"]["unique_id"]},
+    )
+
+    # Second discovery should be aborted
+    result = await hass.config_entries.flow.async_init(
+        "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
@@ -198,7 +233,9 @@ async def test_webhook_config_flow_registers_webhook(hass, webhook_flow_conf):
     flow = config_entries.HANDLERS["test_single"]()
     flow.hass = hass
 
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     result = await flow.async_step_user(user_input={})
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -209,8 +246,8 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     """Test only a single entry is allowed."""
     assert await setup.async_setup_component(hass, "cloud", {})
 
-    async_setup_entry = Mock(return_value=mock_coro(True))
-    async_unload_entry = Mock(return_value=mock_coro(True))
+    async_setup_entry = Mock(return_value=True)
+    async_unload_entry = Mock(return_value=True)
 
     mock_integration(
         hass,
@@ -228,10 +265,9 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    coro = mock_coro({"cloudhook_url": "https://example.com"})
-
     with patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_create", return_value=coro
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+        return_value={"cloudhook_url": "https://example.com"},
     ) as mock_create, patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
@@ -246,7 +282,8 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     assert len(async_setup_entry.mock_calls) == 1
 
     with patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_delete", return_value=coro
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_delete",
+        return_value={"cloudhook_url": "https://example.com"},
     ) as mock_delete:
 
         result = await hass.config_entries.async_remove(result["result"].entry_id)

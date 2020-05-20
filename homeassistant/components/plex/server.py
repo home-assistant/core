@@ -3,6 +3,7 @@ import logging
 import ssl
 from urllib.parse import urlparse
 
+from plexapi.exceptions import Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -18,6 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     CONF_CLIENT_IDENTIFIER,
     CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_USE_EPISODE_ART,
@@ -49,6 +51,7 @@ class PlexServer:
         """Initialize a Plex server instance."""
         self.hass = hass
         self._plex_server = None
+        self._created_clients = set()
         self._known_clients = set()
         self._known_idle = set()
         self._url = server_config.get(CONF_URL)
@@ -131,26 +134,31 @@ class PlexServer:
                         )
                         _update_plexdirect_hostname()
                         config_entry_update_needed = True
+                    else:
+                        raise
                 else:
                     raise
         else:
             _connect_with_token()
 
-        self._accounts = [
-            account.name
-            for account in self._plex_server.systemAccounts()
-            if account.name
-        ]
-        _LOGGER.debug("Linked accounts: %s", self.accounts)
+        try:
+            system_accounts = self._plex_server.systemAccounts()
+        except Unauthorized:
+            _LOGGER.warning(
+                "Plex account has limited permissions, shared account filtering will not be available."
+            )
+        else:
+            self._accounts = [
+                account.name for account in system_accounts if account.name
+            ]
+            _LOGGER.debug("Linked accounts: %s", self.accounts)
 
-        owner_account = [
-            account.name
-            for account in self._plex_server.systemAccounts()
-            if account.accountID == 1
-        ]
-        if owner_account:
-            self._owner_username = owner_account[0]
-            _LOGGER.debug("Server owner found: '%s'", self._owner_username)
+            owner_account = [
+                account.name for account in system_accounts if account.accountID == 1
+            ]
+            if owner_account:
+                self._owner_username = owner_account[0]
+                _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
 
@@ -207,35 +215,52 @@ class PlexServer:
             )
             return
 
-        for device in devices:
+        def process_device(source, device):
             self._known_idle.discard(device.machineIdentifier)
-            available_clients[device.machineIdentifier] = {"device": device}
+            available_clients.setdefault(device.machineIdentifier, {"device": device})
 
-            if device.machineIdentifier not in self._known_clients:
+            if device.machineIdentifier not in ignored_clients:
+                if self.option_ignore_plexweb_clients and device.product == "Plex Web":
+                    ignored_clients.add(device.machineIdentifier)
+                    if device.machineIdentifier not in self._known_clients:
+                        _LOGGER.debug(
+                            "Ignoring %s %s: %s",
+                            "Plex Web",
+                            source,
+                            device.machineIdentifier,
+                        )
+                    return
+
+            if (
+                device.machineIdentifier not in self._created_clients
+                and device.machineIdentifier not in ignored_clients
+                and device.machineIdentifier not in new_clients
+            ):
                 new_clients.add(device.machineIdentifier)
-                _LOGGER.debug("New device: %s", device.machineIdentifier)
+                _LOGGER.debug(
+                    "New %s %s: %s", device.product, source, device.machineIdentifier
+                )
+
+        for device in devices:
+            process_device("device", device)
 
         for session in sessions:
             if session.TYPE == "photo":
                 _LOGGER.debug("Photo session detected, skipping: %s", session)
                 continue
+
             session_username = session.usernames[0]
             for player in session.players:
                 if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
                     _LOGGER.debug(
-                        "Ignoring Plex client owned by '%s'", session_username
+                        "Ignoring %s client owned by '%s'",
+                        player.product,
+                        session_username,
                     )
                     continue
-                self._known_idle.discard(player.machineIdentifier)
-                available_clients.setdefault(
-                    player.machineIdentifier, {"device": player}
-                )
+                process_device("session", player)
                 available_clients[player.machineIdentifier]["session"] = session
-
-                if player.machineIdentifier not in self._known_clients:
-                    new_clients.add(player.machineIdentifier)
-                    _LOGGER.debug("New session: %s", player.machineIdentifier)
 
         new_entity_configs = []
         for client_id, client_data in available_clients.items():
@@ -243,6 +268,7 @@ class PlexServer:
                 continue
             if client_id in new_clients:
                 new_entity_configs.append(client_data)
+                self._created_clients.add(client_id)
             else:
                 self.async_refresh_entity(
                     client_id, client_data["device"], client_data.get("session")
@@ -319,6 +345,11 @@ class PlexServer:
     def option_monitored_users(self):
         """Return dict of monitored users option."""
         return self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, {})
+
+    @property
+    def option_ignore_plexweb_clients(self):
+        """Return ignore_plex_web_clients option."""
+        return self.options[MP_DOMAIN].get(CONF_IGNORE_PLEX_WEB_CLIENTS, False)
 
     @property
     def library(self):

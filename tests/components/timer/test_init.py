@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 from datetime import timedelta
 import logging
-from unittest.mock import patch
 
 import pytest
 
@@ -42,6 +41,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)

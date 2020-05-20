@@ -10,11 +10,24 @@
             "unknown": "Failed for unknown reason"
         },
         "error": {
-            "faulty_credentials": "Authorization failed",
-            "no_servers": "No servers linked to account",
-            "not_found": "Plex server not found"
+            "faulty_credentials": "Authorization failed, verify Token",
+            "host_or_token": "Must provide at least one of Host or Token",
+            "no_servers": "No servers linked to Plex account",
+            "not_found": "Plex server not found",
+            "ssl_error": "SSL certificate issue"
         },
+        "flow_title": "{name} ({host})",
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Use SSL",
+                    "token": "Token (Optional)",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "title": "Manual Plex Configuration"
+            },
             "select_server": {
                 "data": {
                     "server": "Server"
@@ -25,6 +38,16 @@
             "start_website_auth": {
                 "description": "Continue to authorize at plex.tv.",
                 "title": "Connect Plex server"
+            },
+            "user": {
+                "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server.",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Setup method"
+                },
+                "title": "Plex Media Server"
             }
         }
     },
@@ -33,6 +56,7 @@
             "plex_mp_settings": {
                 "data": {
                     "ignore_new_shared_users": "Ignore new managed/shared users",
+                    "ignore_plex_web_clients": "Ignore Plex Web clients",
                     "monitored_users": "Monitored users",
                     "use_episode_art": "Use episode art"
                 },

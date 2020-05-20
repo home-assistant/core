@@ -10,7 +10,7 @@ from homeassistant.components.adguard.const import (
     DATA_ADGUARD_VERION,
     DOMAIN,
 )
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
@@ -45,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(switches, True)
 
 
-class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchDevice):
+class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
     """Defines a AdGuard Home switch."""
 
     def __init__(

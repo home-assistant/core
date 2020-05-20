@@ -2,7 +2,6 @@
 from uuid import uuid4
 
 from aiohttp import ClientResponseError
-from asynctest import Mock, patch
 from pysmartthings import APIResponseError
 from pysmartthings.installedapp import format_install_url
 
@@ -16,6 +15,7 @@ from homeassistant.components.smartthings.const import (
     CONF_OAUTH_CLIENT_SECRET,
     DOMAIN,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     HTTP_FORBIDDEN,
@@ -23,7 +23,8 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import AsyncMock, Mock, patch
+from tests.common import MockConfigEntry
 
 
 async def test_import_shows_user_step(hass):
@@ -342,8 +343,8 @@ async def test_entry_created_with_cloudhook(
     installed_app_id = str(uuid4())
     refresh_token = str(uuid4())
     smartthings_mock.apps.return_value = []
-    smartthings_mock.create_app.return_value = (app, app_oauth_client)
-    smartthings_mock.locations.return_value = [location]
+    smartthings_mock.create_app = AsyncMock(return_value=(app, app_oauth_client))
+    smartthings_mock.locations = AsyncMock(return_value=[location])
     request = Mock()
     request.installed_app_id = installed_app_id
     request.auth_token = token
@@ -351,11 +352,11 @@ async def test_entry_created_with_cloudhook(
     request.refresh_token = refresh_token
 
     with patch.object(
-        hass.components.cloud, "async_active_subscription", return_value=True
+        hass.components.cloud, "async_active_subscription", Mock(return_value=True)
     ), patch.object(
         hass.components.cloud,
         "async_create_cloudhook",
-        return_value=mock_coro("http://cloud.test"),
+        AsyncMock(return_value="http://cloud.test"),
     ) as mock_create_cloudhook:
 
         await smartapp.setup_smartapp_endpoint(hass)
@@ -417,9 +418,10 @@ async def test_entry_created_with_cloudhook(
 
 async def test_invalid_webhook_aborts(hass):
     """Test flow aborts if webhook is invalid."""
-    hass.config.api.base_url = "http://0.0.0.0"
-
     # Webhook confirmation shown
+    await async_process_ha_core_config(
+        hass, {"external_url": "http://example.local:8123"},
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )

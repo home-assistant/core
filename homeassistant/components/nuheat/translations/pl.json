@@ -5,16 +5,16 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
-            "invalid_auth": "Niepoprawne uwierzytelnienie.",
+            "invalid_auth": "[%key_id:common::config_flow::error::invalid_auth%]",
             "invalid_thermostat": "Numer seryjny termostatu jest nieprawid\u0142owy.",
-            "unknown": "Niespodziewany b\u0142\u0105d."
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Has\u0142o",
+                    "password": "[%key_id:common::config_flow::data::password%]",
                     "serial_number": "Numer seryjny termostatu",
-                    "username": "Nazwa u\u017cytkownika"
+                    "username": "[%key_id:common::config_flow::data::username%]"
                 },
                 "description": "Musisz uzyska\u0107 numeryczny numer seryjny lub identyfikator termostatu, loguj\u0105c si\u0119 na https://MyNuHeat.com i wybieraj\u0105c termostat(y).",
                 "title": "Po\u0142\u0105cz z NuHeat"

@@ -83,11 +83,11 @@ async def test_if_fires_on_zone_enter(hass, calls):
     )
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
     assert (
-        "geo_location - geo_location.entity - hello - hello - test"
-        == calls[0].data["some"]
+        calls[0].data["some"]
+        == "geo_location - geo_location.entity - hello - hello - test"
     )
 
     # Set out of zone again so we can trigger call
@@ -108,7 +108,7 @@ async def test_if_fires_on_zone_enter(hass, calls):
     )
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_for_enter_on_zone_leave(hass, calls):
@@ -143,7 +143,7 @@ async def test_if_not_fires_for_enter_on_zone_leave(hass, calls):
     )
     await hass.async_block_till_done()
 
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_zone_leave(hass, calls):
@@ -178,7 +178,7 @@ async def test_if_fires_on_zone_leave(hass, calls):
     )
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_for_leave_on_zone_enter(hass, calls):
@@ -213,7 +213,7 @@ async def test_if_not_fires_for_leave_on_zone_enter(hass, calls):
     )
     await hass.async_block_till_done()
 
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_zone_appear(hass, calls):
@@ -258,10 +258,10 @@ async def test_if_fires_on_zone_appear(hass, calls):
     )
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
     assert (
-        "geo_location - geo_location.entity -  - hello - test" == calls[0].data["some"]
+        calls[0].data["some"] == "geo_location - geo_location.entity -  - hello - test"
     )
 
 
@@ -308,7 +308,7 @@ async def test_if_fires_on_zone_disappear(hass, calls):
     hass.states.async_remove("geo_location.entity")
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert (
-        "geo_location - geo_location.entity - hello -  - test" == calls[0].data["some"]
+        calls[0].data["some"] == "geo_location - geo_location.entity - hello -  - test"
     )

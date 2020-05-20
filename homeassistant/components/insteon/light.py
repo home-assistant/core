@@ -1,7 +1,11 @@
 """Support for Insteon lights via PowerLinc Modem."""
 import logging
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 
 from .insteon_entity import InsteonEntity
 
@@ -29,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([new_entity])
 
 
-class InsteonDimmerDevice(InsteonEntity, Light):
+class InsteonDimmerDevice(InsteonEntity, LightEntity):
     """A Class for an Insteon device."""
 
     @property

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne Home Control Central er allerede konfigurert."
+        },
+        "error": {
+            "invalid_credentials": "Ugyldig brukernavn og/eller passord"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "Home_Control_URL": "",
+                    "Mydevolo_URL": "",
+                    "home_control_url": "Home Control URL",
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Sett opp din devolo Home Control.",
+                "title": ""
+            }
+        }
+    },
+    "title": ""
+}

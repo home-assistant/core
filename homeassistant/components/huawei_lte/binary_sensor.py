@@ -8,7 +8,7 @@ from huawei_lte_api.enums.cradle import ConnectionStatusEnum
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_URL
 
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @attr.s
-class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntity, BinarySensorDevice):
+class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntity, BinarySensorEntity):
     """Huawei LTE binary sensor device base class."""
 
     key: str

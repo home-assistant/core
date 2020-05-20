@@ -11,22 +11,22 @@
                     "app_id": "App-ID",
                     "app_secret": "Hemmelig"
                 },
-                "description": "S\u00f8knads-ID og hemmelig kode fra <a href=\"https://my.starline.ru/developer\" target=\"_blank\"> StarLine utviklerkonto </a>",
-                "title": "Bruksanvisning"
+                "description": "Applikasjons-ID og hemmelig kode fra <a href=\"https://my.starline.ru/developer\" target=\"_blank\"> StarLine utviklerkonto </a>",
+                "title": "Programlegitimasjon"
             },
             "auth_captcha": {
                 "data": {
                     "captcha_code": "Kode fra bilde"
                 },
-                "description": "{captcha_img}",
-                "title": "Captcha"
+                "description": "",
+                "title": ""
             },
             "auth_mfa": {
                 "data": {
                     "mfa_code": "SMS-kode"
                 },
-                "description": "Skriv inn koden som er sendt til telefonen {phone_number}",
-                "title": "Tofaktorautentisering"
+                "description": "Angi koden som er sendt til telefonen {phone_number}",
+                "title": "Totrinnsbekreftelse"
             },
             "auth_user": {
                 "data": {

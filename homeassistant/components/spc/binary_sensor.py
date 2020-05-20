@@ -3,7 +3,7 @@ import logging
 
 from pyspcwebgw.const import ZoneInput, ZoneType
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -35,7 +35,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SpcBinarySensor(BinarySensorDevice):
+class SpcBinarySensor(BinarySensorEntity):
     """Representation of a sensor based on a SPC zone."""
 
     def __init__(self, zone):

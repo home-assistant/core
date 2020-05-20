@@ -1,6 +1,5 @@
 """Tests for the Synology DSM config flow."""
 import logging
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from synology_dsm.exceptions import (
@@ -18,6 +17,7 @@ from homeassistant.components.synology_dsm.const import (
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
     DOMAIN,
 )
@@ -28,11 +28,13 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -307,7 +309,7 @@ async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
 
 async def test_unknown_failed(hass: HomeAssistantType, service: MagicMock):
     """Test when we have an unknown error."""
-    service.return_value.login = Mock(side_effect=SynologyDSMException)
+    service.return_value.login = Mock(side_effect=SynologyDSMException(None, None))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -394,3 +396,40 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
     assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
+
+
+async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS,
+        },
+        unique_id=SERIAL,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.options == {}
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    # Scan interval
+    # Default
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+
+    # Manual
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 2},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options[CONF_SCAN_INTERVAL] == 2

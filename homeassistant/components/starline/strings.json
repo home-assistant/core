@@ -3,23 +3,33 @@
     "step": {
       "auth_app": {
         "title": "Application credentials",
-        "description": "Application ID and secret code from <a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine developer account</a>",
-        "data": { "app_id": "App ID", "app_secret": "Secret" }
+        "description": "Application ID and secret code from [StarLine developer account](https://my.starline.ru/developer)",
+        "data": {
+          "app_id": "App ID",
+          "app_secret": "Secret"
+        }
       },
       "auth_user": {
         "title": "User credentials",
         "description": "StarLine account email and password",
-        "data": { "username": "Username", "password": "Password" }
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       },
       "auth_mfa": {
         "title": "Two-factor authorization",
         "description": "Enter the code sent to phone {phone_number}",
-        "data": { "mfa_code": "SMS code" }
+        "data": {
+          "mfa_code": "SMS code"
+        }
       },
       "auth_captcha": {
         "title": "Captcha",
         "description": "{captcha_img}",
-        "data": { "captcha_code": "Code from image" }
+        "data": {
+          "captcha_code": "Code from image"
+        }
       }
     },
     "error": {
