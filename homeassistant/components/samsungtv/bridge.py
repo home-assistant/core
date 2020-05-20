@@ -58,6 +58,10 @@ class SamsungTVBridge(ABC):
     def try_connect(self):
         """Try to connect to the TV."""
 
+    @abstractmethod
+    def device_info(self):
+        """Try to gather infos of this TV."""
+
     def is_on(self):
         """Tells if the TV is on."""
         self.close_remote()
@@ -166,6 +170,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_NOT_SUCCESSFUL
 
+    def get_info(self):
+        """Try to gather infos of this device."""
+        return None
+
     def _get_remote(self):
         """Create or return a remote control instance."""
         if self._remote is None:
@@ -233,6 +241,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 return result
 
         return RESULT_NOT_SUCCESSFUL
+
+    def device_info(self):
+        """Try to gather infos of this TV."""
+        return self._get_remote().rest_device_info()
 
     def _send_key(self, key):
         """Send the key using websocket protocol."""

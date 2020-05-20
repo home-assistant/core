@@ -1,6 +1,7 @@
 """Config flow for Samsung TV."""
 from urllib.parse import urlparse
 
+from samsungtvws.exceptions import HttpApiError
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -73,8 +74,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _abort_if_already_configured(self):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == self._host or (
-                self._mac and entry.data[CONF_MAC] == self._mac
+            if (
+                entry.data[CONF_HOST] == self._host
+                or (self._id and self._id == entry.unique_id)
+                or (self._mac and self._mac == entry.data[CONF_MAC])
             ):
                 data = entry.data
                 if self._manufacturer and not data[CONF_MANUFACTURER]:
@@ -119,7 +122,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
     async def async_step_ssdp(self, user_input=None):
-        """Handle a flow initialized by discovery."""
+        """Handle a flow initialized by ssdp discovery."""
         self._host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
         self._id = user_input.get(ATTR_UPNP_UDN)
         self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
@@ -144,19 +147,28 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(self, user_input=None):
-        """Handle a flow initialized by discovery."""
-        self._host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
-        self._id = user_input[ATTR_PROPERTIES]["uuid"]
+        """Handle a flow initialized by zeroconf discovery."""
+        self._host = user_input[CONF_HOST]
+        self._id = user_input[ATTR_PROPERTIES].get("serialNumber")
+
+        if self._id:
+            await self.async_set_unique_id(self._id)
+
+        try:
+            device_info = await self.hass.async_add_executor_job(
+                SamsungTVBridge.get_bridge, METHOD_WEBSOCKET, self._host
+            )
+            self._model = device_info.get("device", {}).get("modelName")
+        except HttpApiError:
+            # ignore
+            pass
+
         self._mac = user_input[ATTR_PROPERTIES].get("deviceid")
         self._manufacturer = user_input[ATTR_PROPERTIES].get("manufacturer")
-        self._model = user_input[ATTR_PROPERTIES].get("model")
+        if not self._model:
+            self._model = user_input[ATTR_PROPERTIES].get("model")
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
-
-        await self.async_set_unique_id(self._id)
-        self._abort_if_unique_id_configured(
-            {CONF_MANUFACTURER: self._manufacturer, CONF_MODEL: self._model}
-        )
 
         self._abort_if_already_configured()
 

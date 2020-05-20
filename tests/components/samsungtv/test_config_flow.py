@@ -16,7 +16,15 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_UDN,
 )
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_METHOD, CONF_NAME, CONF_TOKEN
+from homeassistant.components.zeroconf import ATTR_PROPERTIES
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_ID,
+    CONF_MAC,
+    CONF_METHOD,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 
 from tests.async_mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
 
@@ -34,6 +42,15 @@ MOCK_SSDP_DATA_NOPREFIX = {
     ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
     ATTR_UPNP_MODEL_NAME: "fake2_model",
     ATTR_UPNP_UDN: "fake2_uuid",
+}
+MOCK_ZEROCONF_DATA = {
+    CONF_HOST: "fake_host",
+    ATTR_PROPERTIES: {
+        "deviceid": "fake_mac",
+        "manufacturer": "fake_manufacturer",
+        "model": "fake_model",
+        "serialNumber": "fake_serial",
+    },
 }
 
 AUTODETECT_LEGACY = {
@@ -455,6 +472,30 @@ async def test_ssdp_already_configured(hass, remote):
     assert entry.data[CONF_MANUFACTURER] == "fake_manufacturer"
     assert entry.data[CONF_MODEL] == "fake_model"
     assert entry.data[CONF_ID] == "fake_uuid"
+
+
+async def test_zeroconf(hass, remote):
+    """Test starting a flow from discovery."""
+
+    # confirm to add the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "zeroconf"}, data=MOCK_ZEROCONF_DATA
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
+    # entry was added
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input="whatever"
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "fake_model"
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "fake_manufacturer fake_model"
+    assert result["data"][CONF_MAC] == "fake_mac"
+    assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
+    assert result["data"][CONF_MODEL] == "fake_model"
+    assert result["data"][CONF_ID] == "fake_serial"
 
 
 async def test_autodetect_websocket(hass, remote, remotews):
