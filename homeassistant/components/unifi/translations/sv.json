@@ -6,7 +6,8 @@
         },
         "error": {
             "faulty_credentials": "Felaktiga anv\u00e4ndaruppgifter",
-            "service_unavailable": "Ingen tj\u00e4nst tillg\u00e4nglig"
+            "service_unavailable": "Ingen tj\u00e4nst tillg\u00e4nglig",
+            "unknown_client_mac": "Ingen klient tillg\u00e4nglig p\u00e5 den MAC-adressen"
         },
         "step": {
             "user": {

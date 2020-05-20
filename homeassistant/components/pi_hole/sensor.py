@@ -1,6 +1,7 @@
 """Support for getting statistical data from a Pi-hole system."""
 import logging
 
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -13,29 +14,25 @@ from .const import (
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the pi-hole sensor."""
-    if discovery_info is None:
-        return
-
-    sensors = []
-    for pi_hole in hass.data[PIHOLE_DOMAIN].values():
-        for sensor in [
-            PiHoleSensor(pi_hole, sensor_name) for sensor_name in SENSOR_LIST
-        ]:
-            sensors.append(sensor)
-
+    pi_hole = hass.data[PIHOLE_DOMAIN][entry.data[CONF_NAME]]
+    sensors = [
+        PiHoleSensor(pi_hole, sensor_name, entry.entry_id)
+        for sensor_name in SENSOR_LIST
+    ]
     async_add_entities(sensors, True)
 
 
 class PiHoleSensor(Entity):
     """Representation of a Pi-hole sensor."""
 
-    def __init__(self, pi_hole, sensor_name):
+    def __init__(self, pi_hole, sensor_name, server_unique_id):
         """Initialize a Pi-hole sensor."""
         self.pi_hole = pi_hole
         self._name = pi_hole.name
         self._condition = sensor_name
+        self._server_unique_id = server_unique_id
 
         variable_info = SENSOR_DICT[sensor_name]
         self._condition_name = variable_info[0]
@@ -47,6 +44,20 @@ class PiHoleSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return f"{self._name} {self._condition_name}"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return f"{self._server_unique_id}/{self._condition_name}"
+
+    @property
+    def device_info(self):
+        """Return the device information of the sensor."""
+        return {
+            "identifiers": {(PIHOLE_DOMAIN, self._server_unique_id)},
+            "name": self._name,
+            "manufacturer": "Pi-hole",
+        }
 
     @property
     def icon(self):

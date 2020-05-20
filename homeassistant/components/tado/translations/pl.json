@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
-            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "invalid_auth": "[%key_id:common::config_flow::error::invalid_auth%]",
             "no_homes": "Brak dom\u00f3w powi\u0105zanych z tym kontem Tado.",
-            "unknown": "Niespodziewany b\u0142\u0105d."
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
                 },
                 "title": "Po\u0142\u0105cz z kontem Tado"
             }
@@ -22,6 +22,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "fallback": "W\u0142\u0105cz tryb awaryjny."
+                },
+                "description": "Tryb rezerwowy prze\u0142\u0105czy si\u0119 na inteligentny harmonogram przy nast\u0119pnym prze\u0142\u0105czeniu z harmonogramu po r\u0119cznym dostosowaniu strefy.",
                 "title": "Dostosuj opcje Tado"
             }
         }

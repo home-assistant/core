@@ -3,19 +3,19 @@
         "abort": {
             "access_token": "Ukjent feil ved oppretting av tilgangstoken.",
             "already_setup": "Ambiclimate-kontoen er konfigurert.",
-            "no_config": "Du m\u00e5 konfigurere Ambiclimate f\u00f8r du kan autentisere med den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/ambiclimate/)."
+            "no_config": "Du m\u00e5 konfigurere Ambiclimate f\u00f8r du kan godkjenne den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/ambiclimate/)."
         },
         "create_entry": {
-            "default": "Vellykket autentisering med Ambiclimate"
+            "default": "Vellykket godkjenning med Ambiclimate"
         },
         "error": {
             "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker p\u00e5 Send",
-            "no_token": "Ikke autentisert med Ambiclimate"
+            "no_token": "Ikke godkjent med Ambiclimate"
         },
         "step": {
             "auth": {
                 "description": "Vennligst f\u00f8lg denne [linken]({authorization_url}) og <b>Tillat</b> tilgang til din Ambiclimate konto, kom deretter tilbake og trykk <b>Send</b> nedenfor.\n(Kontroller at den angitte URL-adressen for tilbakeringing er {cb_url})",
-                "title": "Autensiere Ambiclimate"
+                "title": "Godkjenn Ambiclimate"
             }
         }
     }

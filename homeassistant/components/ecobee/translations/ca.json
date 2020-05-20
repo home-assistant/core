@@ -5,7 +5,7 @@
         },
         "error": {
             "pin_request_failed": "Error al sol\u00b7licitar els PIN d'ecobee; verifica que la clau API \u00e9s correcta.",
-            "token_request_failed": "Error al sol\u00b7licitar els testimonis d'autenticaci\u00f3 d'ecobee; torna-ho a provar."
+            "token_request_failed": "Error al sol\u00b7licitar els tokens d'autenticaci\u00f3 d'ecobee; torna-ho a provar."
         },
         "step": {
             "authorize": {

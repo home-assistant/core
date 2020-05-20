@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "\u4e3b\u6a5f\u6216 IP \u4f4d\u5740",
+                    "host": "\u4e3b\u6a5f\u7aef",
                     "name": "\u540d\u7a31"
                 },
                 "description": "\u8f38\u5165\u4e09\u661f\u96fb\u8996\u8cc7\u8a0a\u3002\u5047\u5982\u60a8\u4e4b\u524d\u672a\u66fe\u9023\u7dda\u81f3 Home Assistant\uff0c\u61c9\u8a72\u6703\u65bc\u96fb\u8996\u4e0a\u6536\u5230\u9a57\u8b49\u8a0a\u606f\u3002",

@@ -1,7 +1,6 @@
 """Tests for the smartapp module."""
 from uuid import uuid4
 
-from asynctest import CoroutineMock, Mock, patch
 from pysmartthings import AppEntity, Capability
 
 from homeassistant.components.smartthings import smartapp
@@ -11,6 +10,7 @@ from homeassistant.components.smartthings.const import (
     DOMAIN,
 )
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -76,11 +76,11 @@ async def test_smartapp_uninstall(hass, config_entry):
 async def test_smartapp_webhook(hass):
     """Test the smartapp webhook calls the manager."""
     manager = Mock()
-    manager.handle_request = CoroutineMock(return_value={})
+    manager.handle_request = AsyncMock(return_value={})
     hass.data[DOMAIN][DATA_MANAGER] = manager
     request = Mock()
     request.headers = []
-    request.json = CoroutineMock(return_value={})
+    request.json = AsyncMock(return_value={})
     result = await smartapp.smartapp_webhook(hass, "", request)
 
     assert result.body == b"{}"

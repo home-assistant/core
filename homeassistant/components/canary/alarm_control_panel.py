@@ -3,7 +3,7 @@ import logging
 
 from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class CanaryAlarm(AlarmControlPanel):
+class CanaryAlarm(AlarmControlPanelEntity):
     """Representation of a Canary alarm control panel."""
 
     def __init__(self, data, location_id):

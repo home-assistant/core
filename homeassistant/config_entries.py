@@ -22,6 +22,7 @@ _UNDEF: dict = {}
 
 SOURCE_DISCOVERY = "discovery"
 SOURCE_IMPORT = "import"
+SOURCE_INTEGRATION_DISCOVERY = "integration_discovery"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
@@ -851,8 +852,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 if progress["context"].get("unique_id") == unique_id:
                     raise data_entry_flow.AbortFlow("already_in_progress")
 
-        # pylint: disable=no-member
-        self.context["unique_id"] = unique_id
+        self.context["unique_id"] = unique_id  # pylint: disable=no-member
 
         for entry in self._async_current_entries():
             if entry.unique_id == unique_id:

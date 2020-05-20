@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICES, CONF_NAME
 from homeassistant.core import callback
@@ -64,7 +64,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(binary_sensors)
 
 
-class W800rf32BinarySensor(BinarySensorDevice):
+class W800rf32BinarySensor(BinarySensorEntity):
     """A representation of a w800rf32 binary sensor."""
 
     def __init__(self, device_id, name, device_class=None, off_delay=None):

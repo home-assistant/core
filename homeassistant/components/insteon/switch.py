@@ -1,7 +1,7 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from .insteon_entity import InsteonEntity
 
@@ -32,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_add_entities([new_entity])
 
 
-class InsteonSwitchDevice(InsteonEntity, SwitchDevice):
+class InsteonSwitchDevice(InsteonEntity, SwitchEntity):
     """A Class for an Insteon device."""
 
     @property
@@ -49,7 +49,7 @@ class InsteonSwitchDevice(InsteonEntity, SwitchDevice):
         self._insteon_device_state.off()
 
 
-class InsteonOpenClosedDevice(InsteonEntity, SwitchDevice):
+class InsteonOpenClosedDevice(InsteonEntity, SwitchEntity):
     """A Class for an Insteon device."""
 
     @property

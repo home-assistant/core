@@ -189,6 +189,8 @@ class NUTSensor(Entity):
     @property
     def state(self):
         """Return entity state from ups."""
+        if not self._data.status:
+            return None
         if self._type == KEY_STATUS_DISPLAY:
             return _format_display_state(self._data.status)
         return self._data.status.get(self._type)

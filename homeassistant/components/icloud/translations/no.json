@@ -20,17 +20,16 @@
             "user": {
                 "data": {
                     "password": "Passord",
-                    "username": "E-post",
                     "with_family": "Med familie"
                 },
-                "description": "Angi legitimasjonsbeskrivelsen",
+                "description": "Fyll inn legitimasjonen din",
                 "title": "iCloud-legitimasjon"
             },
             "verification_code": {
                 "data": {
                     "verification_code": "iCloud-bekreftelseskode"
                 },
-                "description": "Vennligst skriv inn bekreftelseskoden du nettopp har f\u00e5tt fra iCloud",
+                "description": "Vennligst fyll inn bekreftelseskoden du nettopp har mottatt fra iCloud",
                 "title": "iCloud-bekreftelseskode"
             }
         }

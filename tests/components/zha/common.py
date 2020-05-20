@@ -1,8 +1,6 @@
 """Common test objects."""
 import time
-from unittest.mock import Mock
 
-from asynctest import CoroutineMock
 from zigpy.device import Device as zigpy_dev
 from zigpy.endpoint import Endpoint as zigpy_ep
 import zigpy.profiles.zha
@@ -14,6 +12,8 @@ import zigpy.zdo.types
 
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.util import slugify
+
+from tests.async_mock import AsyncMock, Mock
 
 
 class FakeEndpoint:
@@ -32,7 +32,7 @@ class FakeEndpoint:
         self.model = model
         self.profile_id = zigpy.profiles.zha.PROFILE_ID
         self.device_type = None
-        self.request = CoroutineMock()
+        self.request = AsyncMock(return_value=[0])
 
     def add_input_cluster(self, cluster_id):
         """Add an input cluster."""
@@ -48,6 +48,9 @@ class FakeEndpoint:
         patch_cluster(cluster)
         self.out_clusters[cluster_id] = cluster
 
+    reply = AsyncMock(return_value=[0])
+    request = AsyncMock(return_value=[0])
+
     @property
     def __class__(self):
         """Fake being Zigpy endpoint."""
@@ -60,20 +63,21 @@ class FakeEndpoint:
 
 
 FakeEndpoint.add_to_group = zigpy_ep.add_to_group
+FakeEndpoint.remove_from_group = zigpy_ep.remove_from_group
 
 
 def patch_cluster(cluster):
     """Patch a cluster for testing."""
-    cluster.bind = CoroutineMock(return_value=[0])
-    cluster.configure_reporting = CoroutineMock(return_value=[0])
+    cluster.bind = AsyncMock(return_value=[0])
+    cluster.configure_reporting = AsyncMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
-    cluster.read_attributes = CoroutineMock(return_value=[{}, {}])
+    cluster.read_attributes = AsyncMock(return_value=[{}, {}])
     cluster.read_attributes_raw = Mock()
-    cluster.unbind = CoroutineMock(return_value=[0])
-    cluster.write_attributes = CoroutineMock(return_value=[0])
+    cluster.unbind = AsyncMock(return_value=[0])
+    cluster.write_attributes = AsyncMock(return_value=[0])
     if cluster.cluster_id == 4:
-        cluster.add = CoroutineMock(return_value=[0])
+        cluster.add = AsyncMock(return_value=[0])
 
 
 class FakeDevice:
@@ -96,7 +100,7 @@ class FakeDevice:
         self.manufacturer = manufacturer
         self.model = model
         self.node_desc = zigpy.zdo.types.NodeDescriptor()
-        self.remove_from_group = CoroutineMock()
+        self.remove_from_group = AsyncMock()
         if node_desc is None:
             node_desc = b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00"
         self.node_desc = zigpy.zdo.types.NodeDescriptor.deserialize(node_desc)[0]
@@ -135,6 +139,7 @@ async def send_attributes_report(hass, cluster: int, attributes: dict):
     """
     attrs = [make_attribute(attrid, value) for attrid, value in attributes.items()]
     hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    hdr.frame_control.disable_default_response = True
     cluster.handle_message(hdr, [attrs])
     await hass.async_block_till_done()
 

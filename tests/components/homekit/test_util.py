@@ -7,9 +7,10 @@ from homeassistant.components.homekit.const import (
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    DEFAULT_CONFIG_FLOW_PORT,
+    DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
-    HOMEKIT_NOTIFY_ID,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
@@ -26,6 +27,9 @@ from homeassistant.components.homekit.util import (
     convert_to_float,
     density_to_air_quality,
     dismiss_setup_message,
+    find_next_available_port,
+    format_sw_version,
+    port_is_available,
     show_setup_message,
     temperature_to_homekit,
     temperature_to_states,
@@ -35,7 +39,7 @@ from homeassistant.components.homekit.util import (
 from homeassistant.components.persistent_notification import (
     ATTR_MESSAGE,
     ATTR_NOTIFICATION_ID,
-    DOMAIN,
+    DOMAIN as PERSISTENT_NOTIFICATION_DOMAIN,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -47,6 +51,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import State
+
+from .util import async_init_integration
 
 from tests.common import async_mock_service
 
@@ -213,27 +219,36 @@ async def test_show_setup_msg(hass):
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
-    call_create_notification = async_mock_service(hass, DOMAIN, "create")
+    entry = await async_init_integration(hass)
+    assert entry
 
-    await hass.async_add_executor_job(show_setup_message, hass, pincode, "X-HM://0")
+    call_create_notification = async_mock_service(
+        hass, PERSISTENT_NOTIFICATION_DOMAIN, "create"
+    )
+
+    await hass.async_add_executor_job(
+        show_setup_message, hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
+    )
     await hass.async_block_till_done()
-    assert hass.data[HOMEKIT_PAIRING_QR_SECRET]
-    assert hass.data[HOMEKIT_PAIRING_QR]
+    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR_SECRET]
+    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR]
 
     assert call_create_notification
-    assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == HOMEKIT_NOTIFY_ID
+    assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == entry.entry_id
     assert pincode.decode() in call_create_notification[0].data[ATTR_MESSAGE]
 
 
 async def test_dismiss_setup_msg(hass):
     """Test dismiss setup message."""
-    call_dismiss_notification = async_mock_service(hass, DOMAIN, "dismiss")
+    call_dismiss_notification = async_mock_service(
+        hass, PERSISTENT_NOTIFICATION_DOMAIN, "dismiss"
+    )
 
-    await hass.async_add_executor_job(dismiss_setup_message, hass)
+    await hass.async_add_executor_job(dismiss_setup_message, hass, "entry_id")
     await hass.async_block_till_done()
 
     assert call_dismiss_notification
-    assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == HOMEKIT_NOTIFY_ID
+    assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == "entry_id"
 
 
 def test_homekit_speed_mapping():
@@ -291,3 +306,22 @@ def test_speed_to_states():
     assert speed_mapping.speed_to_states(66) == "low"
     assert speed_mapping.speed_to_states(67) == "high"
     assert speed_mapping.speed_to_states(100) == "high"
+
+
+async def test_port_is_available(hass):
+    """Test we can get an available port and it is actually available."""
+    next_port = await hass.async_add_executor_job(
+        find_next_available_port, DEFAULT_CONFIG_FLOW_PORT
+    )
+    assert next_port
+
+    assert await hass.async_add_executor_job(port_is_available, next_port)
+
+
+async def test_format_sw_version():
+    """Test format_sw_version method."""
+    assert format_sw_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
+    assert format_sw_version("undefined-undefined-1.6.8") == "1.6.8"
+    assert format_sw_version("56.0-76060") == "56.0.76060"
+    assert format_sw_version(3.6) == "3.6"
+    assert format_sw_version("unknown") is None

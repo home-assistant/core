@@ -1,6 +1,8 @@
 """The tests for mqtt camera component."""
 import json
 
+import pytest
+
 from homeassistant.components import camera, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
@@ -155,6 +157,7 @@ async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)

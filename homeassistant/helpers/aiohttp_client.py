@@ -1,5 +1,6 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
+import logging
 from ssl import SSLContext
 import sys
 from typing import Any, Awaitable, Optional, Union, cast
@@ -12,9 +13,12 @@ import async_timeout
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, callback
+from homeassistant.helpers.frame import MissingIntegrationFrame, get_integration_frame
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
@@ -64,11 +68,37 @@ def async_create_clientsession(
     connector = _async_get_connector(hass, verify_ssl)
 
     clientsession = aiohttp.ClientSession(
-        loop=hass.loop,
-        connector=connector,
-        headers={USER_AGENT: SERVER_SOFTWARE},
-        **kwargs,
+        connector=connector, headers={USER_AGENT: SERVER_SOFTWARE}, **kwargs,
     )
+
+    async def patched_close() -> None:
+        """Mock close to avoid integrations closing our session."""
+        try:
+            found_frame, integration, path = get_integration_frame()
+        except MissingIntegrationFrame:
+            # Did not source from an integration? Hard error.
+            raise RuntimeError(
+                "Detected closing of the Home Assistant aiohttp session in the Home Assistant core. "
+                "Please report this issue."
+            )
+
+        index = found_frame.filename.index(path)
+        if path == "custom_components/":
+            extra = " to the custom component author"
+        else:
+            extra = ""
+
+        _LOGGER.warning(
+            "Detected integration that closes the Home Assistant aiohttp session. "
+            "Please report issue%s for %s using this method at %s, line %s: %s",
+            extra,
+            integration,
+            found_frame.filename[index:],
+            found_frame.lineno,
+            found_frame.line.strip(),
+        )
+
+    clientsession.close = patched_close  # type: ignore
 
     if auto_cleanup:
         _async_register_clientsession_shutdown(hass, clientsession)
@@ -174,9 +204,7 @@ def _async_get_connector(
     else:
         ssl_context = False
 
-    connector = aiohttp.TCPConnector(
-        loop=hass.loop, enable_cleanup_closed=True, ssl=ssl_context
-    )
+    connector = aiohttp.TCPConnector(enable_cleanup_closed=True, ssl=ssl_context)
     hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:

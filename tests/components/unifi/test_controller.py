@@ -4,15 +4,27 @@ from copy import deepcopy
 from datetime import timedelta
 
 import aiounifi
-from asynctest import patch
 import pytest
 
-from homeassistant.components import unifi
+from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_CONTROLLER,
     CONF_SITE_ID,
+    DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+    DEFAULT_DETECTION_TIME,
+    DEFAULT_TRACK_CLIENTS,
+    DEFAULT_TRACK_DEVICES,
+    DEFAULT_TRACK_WIRED_CLIENTS,
+    DOMAIN as UNIFI_DOMAIN,
     UNIFI_WIRELESS_CLIENTS,
 )
+from homeassistant.components.unifi.controller import (
+    SUPPORTED_PLATFORMS,
+    get_controller,
+)
+from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -22,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONTROLLER_HOST = {
@@ -53,6 +66,7 @@ ENTRY_OPTIONS = {}
 CONFIGURATION = []
 
 SITES = {"Site name": {"desc": "Site name", "name": "site_id", "role": "admin"}}
+DESCRIPTION = [{"name": "username", "site_name": "site_id", "site_role": "admin"}]
 
 
 async def setup_unifi_integration(
@@ -60,6 +74,7 @@ async def setup_unifi_integration(
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
     sites=SITES,
+    site_description=DESCRIPTION,
     clients_response=None,
     devices_response=None,
     clients_all_response=None,
@@ -68,10 +83,10 @@ async def setup_unifi_integration(
     controllers=None,
 ):
     """Create the UniFi controller."""
-    assert await async_setup_component(hass, unifi.DOMAIN, {})
+    assert await async_setup_component(hass, UNIFI_DOMAIN, {})
 
     config_entry = MockConfigEntry(
-        domain=unifi.DOMAIN,
+        domain=UNIFI_DOMAIN,
         data=deepcopy(config),
         options=deepcopy(options),
         entry_id=1,
@@ -117,6 +132,8 @@ async def setup_unifi_integration(
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", return_value=True,
     ), patch("aiounifi.Controller.sites", return_value=sites), patch(
+        "aiounifi.Controller.site_description", return_value=site_description
+    ), patch(
         "aiounifi.Controller.request", new=mock_request
     ), patch.object(
         aiounifi.websocket.WSClient, "start", return_value=True
@@ -124,10 +141,9 @@ async def setup_unifi_integration(
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    controller_id = unifi.get_controller_id_from_config_entry(config_entry)
-    if controller_id not in hass.data[unifi.DOMAIN]:
+    if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
         return None
-    controller = hass.data[unifi.DOMAIN][controller_id]
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     controller.mock_client_responses = mock_client_responses
     controller.mock_device_responses = mock_device_responses
@@ -147,31 +163,22 @@ async def test_controller_setup(hass):
         controller = await setup_unifi_integration(hass)
 
     entry = controller.config_entry
-    assert len(forward_entry_setup.mock_calls) == len(
-        unifi.controller.SUPPORTED_PLATFORMS
-    )
-    assert forward_entry_setup.mock_calls[0][1] == (entry, "device_tracker")
-    assert forward_entry_setup.mock_calls[1][1] == (entry, "sensor")
-    assert forward_entry_setup.mock_calls[2][1] == (entry, "switch")
+    assert len(forward_entry_setup.mock_calls) == len(SUPPORTED_PLATFORMS)
+    assert forward_entry_setup.mock_calls[0][1] == (entry, TRACKER_DOMAIN)
+    assert forward_entry_setup.mock_calls[1][1] == (entry, SENSOR_DOMAIN)
+    assert forward_entry_setup.mock_calls[2][1] == (entry, SWITCH_DOMAIN)
 
     assert controller.host == CONTROLLER_DATA[CONF_HOST]
     assert controller.site == CONTROLLER_DATA[CONF_SITE_ID]
     assert controller.site_name in SITES
     assert controller.site_role == SITES[controller.site_name]["role"]
 
-    assert (
-        controller.option_allow_bandwidth_sensors
-        == unifi.const.DEFAULT_ALLOW_BANDWIDTH_SENSORS
-    )
+    assert controller.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
     assert isinstance(controller.option_block_clients, list)
-    assert controller.option_track_clients == unifi.const.DEFAULT_TRACK_CLIENTS
-    assert controller.option_track_devices == unifi.const.DEFAULT_TRACK_DEVICES
-    assert (
-        controller.option_track_wired_clients == unifi.const.DEFAULT_TRACK_WIRED_CLIENTS
-    )
-    assert controller.option_detection_time == timedelta(
-        seconds=unifi.const.DEFAULT_DETECTION_TIME
-    )
+    assert controller.option_track_clients == DEFAULT_TRACK_CLIENTS
+    assert controller.option_track_devices == DEFAULT_TRACK_DEVICES
+    assert controller.option_track_wired_clients == DEFAULT_TRACK_WIRED_CLIENTS
+    assert controller.option_detection_time == timedelta(seconds=DEFAULT_DETECTION_TIME)
     assert isinstance(controller.option_ssid_filter, list)
 
     assert controller.mac is None
@@ -184,23 +191,27 @@ async def test_controller_setup(hass):
 async def test_controller_mac(hass):
     """Test that it is possible to identify controller mac."""
     controller = await setup_unifi_integration(hass, clients_response=[CONTROLLER_HOST])
-    assert controller.mac == "10:00:00:00:00:01"
+    assert controller.mac == CONTROLLER_HOST["mac"]
 
 
 async def test_controller_not_accessible(hass):
     """Retry to login gets scheduled when connection fails."""
-    with patch.object(
-        unifi.controller, "get_controller", side_effect=unifi.errors.CannotConnect
+    with patch(
+        "homeassistant.components.unifi.controller.get_controller",
+        side_effect=CannotConnect,
     ):
         await setup_unifi_integration(hass)
-    assert hass.data[unifi.DOMAIN] == {}
+    assert hass.data[UNIFI_DOMAIN] == {}
 
 
 async def test_controller_unknown_error(hass):
     """Unknown errors are handled."""
-    with patch.object(unifi.controller, "get_controller", side_effect=Exception):
+    with patch(
+        "homeassistant.components.unifi.controller.get_controller",
+        side_effect=Exception,
+    ):
         await setup_unifi_integration(hass)
-    assert hass.data[unifi.DOMAIN] == {}
+    assert hass.data[UNIFI_DOMAIN] == {}
 
 
 async def test_reset_after_successful_setup(hass):
@@ -245,7 +256,7 @@ async def test_get_controller(hass):
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", return_value=True
     ):
-        assert await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
+        assert await get_controller(hass, **CONTROLLER_DATA)
 
 
 async def test_get_controller_verify_ssl_false(hass):
@@ -255,28 +266,28 @@ async def test_get_controller_verify_ssl_false(hass):
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", return_value=True
     ):
-        assert await unifi.controller.get_controller(hass, **controller_data)
+        assert await get_controller(hass, **controller_data)
 
 
 async def test_get_controller_login_failed(hass):
     """Check that get_controller can handle a failed login."""
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.Unauthorized
-    ), pytest.raises(unifi.errors.AuthenticationRequired):
-        await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
+    ), pytest.raises(AuthenticationRequired):
+        await get_controller(hass, **CONTROLLER_DATA)
 
 
 async def test_get_controller_controller_unavailable(hass):
     """Check that get_controller can handle controller being unavailable."""
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.RequestError
-    ), pytest.raises(unifi.errors.CannotConnect):
-        await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
+    ), pytest.raises(CannotConnect):
+        await get_controller(hass, **CONTROLLER_DATA)
 
 
 async def test_get_controller_unknown_error(hass):
     """Check that get_controller can handle unknown errors."""
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.AiounifiException
-    ), pytest.raises(unifi.errors.AuthenticationRequired):
-        await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
+    ), pytest.raises(AuthenticationRequired):
+        await get_controller(hass, **CONTROLLER_DATA)

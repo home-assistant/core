@@ -1,22 +1,21 @@
 """Support for MyQ gateways."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    BinarySensorDevice,
-)
-
-from .const import (
-    DOMAIN,
+from pymyq.const import (
+    DEVICE_FAMILY as MYQ_DEVICE_FAMILY,
+    DEVICE_FAMILY_GATEWAY as MYQ_DEVICE_FAMILY_GATEWAY,
+    DEVICE_STATE as MYQ_DEVICE_STATE,
+    DEVICE_STATE_ONLINE as MYQ_DEVICE_STATE_ONLINE,
     KNOWN_MODELS,
     MANUFACTURER,
-    MYQ_COORDINATOR,
-    MYQ_DEVICE_FAMILY,
-    MYQ_DEVICE_FAMILY_GATEWAY,
-    MYQ_DEVICE_STATE,
-    MYQ_DEVICE_STATE_ONLINE,
-    MYQ_GATEWAY,
 )
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorEntity,
+)
+
+from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,12 +30,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for device in myq.devices.values():
         if device.device_json[MYQ_DEVICE_FAMILY] == MYQ_DEVICE_FAMILY_GATEWAY:
-            entities.append(MyQBinarySensorDevice(coordinator, device))
+            entities.append(MyQBinarySensorEntity(coordinator, device))
 
     async_add_entities(entities, True)
 
 
-class MyQBinarySensorDevice(BinarySensorDevice):
+class MyQBinarySensorEntity(BinarySensorEntity):
     """Representation of a MyQ gateway."""
 
     def __init__(self, coordinator, device):

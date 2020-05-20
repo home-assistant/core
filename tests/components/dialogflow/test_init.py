@@ -1,12 +1,12 @@
 """The tests for the Dialogflow component."""
 import copy
 import json
-from unittest.mock import Mock
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import dialogflow, intent_script
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
@@ -78,7 +78,10 @@ async def fixture(hass, aiohttp_client):
         },
     )
 
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
+
     result = await hass.config_entries.flow.async_init(
         "dialogflow", context={"source": "user"}
     )

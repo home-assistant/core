@@ -137,6 +137,32 @@ async def async_or_from_config(
     return if_or_condition
 
 
+async def async_not_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
+    """Create multi condition matcher using 'NOT'."""
+    if config_validation:
+        config = cv.NOT_CONDITION_SCHEMA(config)
+    checks = [
+        await async_from_config(hass, entry, False) for entry in config["conditions"]
+    ]
+
+    def if_not_condition(
+        hass: HomeAssistant, variables: TemplateVarsType = None
+    ) -> bool:
+        """Test not condition."""
+        try:
+            for check in checks:
+                if check(hass, variables):
+                    return False
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning("Error during not-condition: %s", ex)
+
+        return True
+
+    return if_not_condition
+
+
 def numeric_state(
     hass: HomeAssistant,
     entity: Union[None, str, State],
@@ -510,7 +536,7 @@ async def async_validate_condition_config(
 ) -> ConfigType:
     """Validate config."""
     condition = config[CONF_CONDITION]
-    if condition in ("and", "or"):
+    if condition in ("and", "not", "or"):
         conditions = []
         for sub_cond in config["conditions"]:
             sub_cond = await async_validate_condition_config(hass, sub_cond)
@@ -537,7 +563,7 @@ def async_extract_entities(config: ConfigType) -> Set[str]:
         config = to_process.popleft()
         condition = config[CONF_CONDITION]
 
-        if condition in ("and", "or"):
+        if condition in ("and", "not", "or"):
             to_process.extend(config["conditions"])
             continue
 
@@ -559,7 +585,7 @@ def async_extract_devices(config: ConfigType) -> Set[str]:
         config = to_process.popleft()
         condition = config[CONF_CONDITION]
 
-        if condition in ("and", "or"):
+        if condition in ("and", "not", "or"):
             to_process.extend(config["conditions"])
             continue
 

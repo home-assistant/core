@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El termostato ya est\u00e1 configurado."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, intente nuevamente",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "invalid_thermostat": "El n\u00famero de serie del termostato no es v\u00e1lido.",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "serial_number": "N\u00famero de serie del termostato.",
+                    "username": "Nombre de usuario"
+                },
+                "description": "Deber\u00e1 obtener el n\u00famero de serie o ID num\u00e9rico de su termostato iniciando sesi\u00f3n en https://MyNuHeat.com y seleccionando su (s) termostato (s).",
+                "title": "Con\u00e9ctese a NuHeat"
+            }
+        }
+    }
+}

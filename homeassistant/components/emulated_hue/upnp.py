@@ -42,7 +42,7 @@ class DescriptionXmlView(HomeAssistantView):
 <modelName>Philips hue bridge 2015</modelName>
 <modelNumber>BSB002</modelNumber>
 <modelURL>http://www.meethue.com</modelURL>
-<serialNumber>1234</serialNumber>
+<serialNumber>001788FFFE23BFC2</serialNumber>
 <UDN>uuid:2f402f80-da50-11e1-9b23-001788255acc</UDN>
 </device>
 </root>
@@ -77,10 +77,10 @@ class UPNPResponderThread(threading.Thread):
 CACHE-CONTROL: max-age=60
 EXT:
 LOCATION: http://{advertise_ip}:{advertise_port}/description.xml
-SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/0.1
-hue-bridgeid: 1234
-ST: urn:schemas-upnp-org:device:basic:1
-USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
+SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/1.16.0
+hue-bridgeid: 001788FFFE23BFC2
+ST: upnp:rootdevice
+USN: uuid:2f402f80-da50-11e1-9b23-00178829d301::upnp:rootdevice
 
 """
 

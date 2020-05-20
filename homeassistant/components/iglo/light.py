@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([IGloLamp(name, host, port)], True)
 
 
-class IGloLamp(Light):
+class IGloLamp(LightEntity):
     """Representation of an iGlo light."""
 
     def __init__(self, name, host, port):

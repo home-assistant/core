@@ -7,7 +7,6 @@ import logging
 import os
 from tempfile import TemporaryDirectory
 import unittest
-from unittest.mock import MagicMock, patch
 
 import pytest
 import pytz
@@ -22,6 +21,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
@@ -35,6 +35,7 @@ from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from tests.async_mock import MagicMock, Mock, patch
 from tests.common import async_mock_service, get_test_home_assistant
 
 PST = pytz.timezone("America/Los_Angeles")
@@ -913,6 +914,8 @@ class TestConfig(unittest.TestCase):
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
+            "external_url": None,
+            "internal_url": None,
         }
 
         assert expected == self.config.as_dict()
@@ -948,7 +951,7 @@ class TestConfig(unittest.TestCase):
                 self.config.is_allowed_path(None)
 
 
-async def test_event_on_update(hass, hass_storage):
+async def test_event_on_update(hass):
     """Test that event is fired on update."""
     events = []
 
@@ -1281,3 +1284,49 @@ def test_valid_entity_id():
         "light.something_yoo",
     ]:
         assert ha.valid_entity_id(valid), valid
+
+
+async def test_migration_base_url(hass, hass_storage):
+    """Test that we migrate base url to internal/external url."""
+    config = ha.Config(hass)
+    stored = {"version": 1, "data": {}}
+    hass_storage[ha.CORE_STORAGE_KEY] = stored
+    with patch.object(hass.bus, "async_listen_once") as mock_listen:
+        # Empty config
+        await config.async_load()
+        assert len(mock_listen.mock_calls) == 0
+
+        # With just a name
+        stored["data"] = {"location_name": "Test Name"}
+        await config.async_load()
+        assert len(mock_listen.mock_calls) == 1
+
+        # With external url
+        stored["data"]["external_url"] = "https://example.com"
+        await config.async_load()
+        assert len(mock_listen.mock_calls) == 1
+
+    # Test that the event listener works
+    assert mock_listen.mock_calls[0][1][0] == EVENT_HOMEASSISTANT_START
+
+    # External
+    hass.config.api = Mock(deprecated_base_url="https://loaded-example.com")
+    await mock_listen.mock_calls[0][1][1](None)
+    assert config.external_url == "https://loaded-example.com"
+
+    # Internal
+    for internal in ("http://hass.local", "http://192.168.1.100:8123"):
+        hass.config.api = Mock(deprecated_base_url=internal)
+        await mock_listen.mock_calls[0][1][1](None)
+        assert config.internal_url == internal
+
+
+async def test_additional_data_in_core_config(hass, hass_storage):
+    """Test that we can handle additional data in core configuration."""
+    config = ha.Config(hass)
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {"location_name": "Test Name", "additional_valid_key": "value"},
+    }
+    await config.async_load()
+    assert config.location_name == "Test Name"

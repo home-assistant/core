@@ -5,13 +5,13 @@
         },
         "error": {
             "general_error": "S'ha produ\u00eft un error desconegut.",
-            "invalid_api_key": "Clau API inv\u00e0lida",
+            "invalid_api_key": "Clau API proporiconada no v\u00e0lida.",
             "unable_to_connect": "No s'ha pogut connectar a la unitat Node/Pro."
         },
         "step": {
             "geography": {
                 "data": {
-                    "api_key": "Clau API",
+                    "api_key": "[%key::common::config_flow::data::api_key%]",
                     "latitude": "Latitud",
                     "longitude": "Longitud"
                 },
