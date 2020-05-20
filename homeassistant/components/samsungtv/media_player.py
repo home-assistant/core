@@ -20,7 +20,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
@@ -55,15 +54,15 @@ SUPPORT_SAMSUNGTV = (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    ip_address = config_entry.data[CONF_IP_ADDRESS]
+    host = config_entry.data[CONF_HOST]
     on_script = None
     if (
         DOMAIN in hass.data
-        and ip_address in hass.data[DOMAIN]
-        and CONF_ON_ACTION in hass.data[DOMAIN][ip_address]
-        and hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
+        and host in hass.data[DOMAIN]
+        and CONF_ON_ACTION in hass.data[DOMAIN][host]
+        and hass.data[DOMAIN][host][CONF_ON_ACTION]
     ):
-        turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
+        turn_on_action = hass.data[DOMAIN][host][CONF_ON_ACTION]
         on_script = Script(hass, turn_on_action)
 
     # Initialize bridge

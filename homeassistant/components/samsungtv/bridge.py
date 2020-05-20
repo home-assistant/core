@@ -27,6 +27,7 @@ from .const import (
     RESULT_SUCCESS,
     VALUE_CONF_ID,
     VALUE_CONF_NAME,
+    WEBSOCKET_PORTS,
 )
 
 
@@ -170,7 +171,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_NOT_SUCCESSFUL
 
-    def get_info(self):
+    def device_info(self):
         """Try to gather infos of this device."""
         return None
 
@@ -204,7 +205,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def try_connect(self):
         """Try to connect to the Websocket TV."""
-        for self.port in (8001, 8002):
+        for self.port in WEBSOCKET_PORTS:
             config = {
                 CONF_NAME: VALUE_CONF_NAME,
                 CONF_HOST: self.host,
@@ -244,7 +245,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def device_info(self):
         """Try to gather infos of this TV."""
-        return self._get_remote().rest_device_info()
+        remote = self._get_remote()
+        if remote:
+            return remote.rest_device_info()
+        return None
 
     def _send_key(self, key):
         """Send the key using websocket protocol."""

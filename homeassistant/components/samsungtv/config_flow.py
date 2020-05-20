@@ -1,7 +1,6 @@
 """Config flow for Samsung TV."""
 from urllib.parse import urlparse
 
-from samsungtvws.exceptions import HttpApiError
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -33,6 +32,7 @@ from .const import (
     RESULT_AUTH_MISSING,
     RESULT_NOT_SUCCESSFUL,
     RESULT_SUCCESS,
+    WEBSOCKET_PORTS,
 )
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
@@ -57,6 +57,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title = None
         self._id = None
         self._bridge = None
+        self._device_info = None
 
     def _get_entry(self):
         data = {
@@ -79,7 +80,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 or (self._id and self._id == entry.unique_id)
                 or (self._mac and self._mac == entry.data[CONF_MAC])
             ):
-                data = entry.data
+                data = dict(entry.data)
                 if self._manufacturer and not data[CONF_MANUFACTURER]:
                     data[CONF_MANUFACTURER] = self._manufacturer
                 if self._model and not data[CONF_MODEL]:
@@ -99,6 +100,19 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return result
         LOGGER.debug("No working config found")
         return RESULT_NOT_SUCCESSFUL
+
+    def _get_device_info(self):
+        """Try to get the device info."""
+        for port in WEBSOCKET_PORTS:
+            try:
+                self._device_info = SamsungTVBridge.get_bridge(
+                    METHOD_WEBSOCKET, self._host, port
+                ).device_info()
+                if self._device_info:
+                    break
+            except Exception:
+                # ignore any error
+                pass
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -154,19 +168,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._id:
             await self.async_set_unique_id(self._id)
 
-        try:
-            device_info = await self.hass.async_add_executor_job(
-                SamsungTVBridge.get_bridge, METHOD_WEBSOCKET, self._host
-            )
-            self._model = device_info.get("device", {}).get("modelName")
-        except HttpApiError:
-            # ignore
-            pass
+        await self.hass.async_add_executor_job(self._get_device_info)
+        if self._device_info:
+            self._model = self._device_info.get("device", {}).get("modelName")
+        if not self._model:
+            self._model = user_input[ATTR_PROPERTIES].get("model")
 
         self._mac = user_input[ATTR_PROPERTIES].get("deviceid")
         self._manufacturer = user_input[ATTR_PROPERTIES].get("manufacturer")
-        if not self._model:
-            self._model = user_input[ATTR_PROPERTIES].get("model")
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
 

@@ -112,39 +112,23 @@ MOCK_CONFIG_NOTURNON = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ) as socket1, patch(
-        "homeassistant.components.samsungtv.socket"
-    ) as socket2:
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
         remote = Mock()
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
         remote_class.return_value = remote
-        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
 
 
 @pytest.fixture(name="remotews")
 def remotews_fixture():
     """Patch the samsungtvws SamsungTVWS."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ) as socket1, patch(
-        "homeassistant.components.samsungtv.socket"
-    ) as socket2:
+    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
         remote = Mock()
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
         remote_class.return_value = remote
         remote_class().__enter__().token = "FAKE_TOKEN"
-        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
 
 

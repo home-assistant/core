@@ -22,3 +22,5 @@ RESULT_NOT_SUPPORTED = "not_supported"
 
 METHOD_LEGACY = "legacy"
 METHOD_WEBSOCKET = "websocket"
+
+WEBSOCKET_PORTS = (8001, 8002)
