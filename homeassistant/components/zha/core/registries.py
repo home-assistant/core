@@ -8,6 +8,7 @@ import zigpy.profiles.zll
 import zigpy.zcl as zcl
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
@@ -84,11 +85,13 @@ BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
 
 BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
+CLIMATE_CLUSTERS = SetRegistry()
 CUSTOM_CLUSTER_MAPPINGS = {}
 
 DEVICE_CLASS = {
     zigpy.profiles.zha.PROFILE_ID: {
         SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE: DEVICE_TRACKER,
+        zigpy.profiles.zha.DeviceType.THERMOSTAT: CLIMATE,
         zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
         zigpy.profiles.zha.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
         zigpy.profiles.zha.DeviceType.DIMMABLE_BALLAST: LIGHT,
@@ -120,6 +123,7 @@ CLIENT_CHANNELS_REGISTRY = DictRegistry()
 
 COMPONENT_CLUSTERS = {
     BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
+    CLIMATE: CLIMATE_CLUSTERS,
     DEVICE_TRACKER: DEVICE_TRACKER_CLUSTERS,
     LIGHT: LIGHT_CLUSTERS,
     SWITCH: SWITCH_CLUSTERS,
