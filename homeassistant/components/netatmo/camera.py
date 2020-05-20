@@ -46,8 +46,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_class = "CameraData"
 
-    def get_entities():
+    async def get_entities():
         """Retrieve Netatmo entities."""
+        await data_handler.register_data_class(data_class)
+
         entities = []
         try:
             all_cameras = []
@@ -74,9 +76,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 )
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
+
+        await data_handler.unregister_data_class(data_class)
         return entities
 
-    async_add_entities(await hass.async_add_executor_job(get_entities), True)
+    async_add_entities(await get_entities(), True)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -160,6 +164,7 @@ class NetatmoCamera(Camera, NetatmoBase):
         attr["alim_status"] = self._alim_status
         attr["is_local"] = self._is_local
         attr["vpn_url"] = self._vpnurl
+        attr["local_url"] = self._localurl
 
         return attr
 
@@ -203,11 +208,7 @@ class NetatmoCamera(Camera, NetatmoBase):
     @property
     def model(self):
         """Return the camera model."""
-        if self._camera_type == "NOC":
-            return "Presence"
-        if self._camera_type == "NACamera":
-            return "Welcome"
-        return None
+        return MODELS[self._camera_type]
 
     @property
     def unique_id(self):
@@ -217,9 +218,8 @@ class NetatmoCamera(Camera, NetatmoBase):
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
-        camera = self._data.get_camera(cid=self._camera_id)
-
-        self._vpnurl, self._localurl = self._data.camera_urls(cid=self._camera_id)
+        camera = self._data.get_camera(self._camera_id)
+        self._vpnurl, self._localurl = self._data.camera_urls(self._camera_id)
         self._status = camera.get("status")
         self._sd_status = camera.get("sd_status")
         self._alim_status = camera.get("alim_status")
