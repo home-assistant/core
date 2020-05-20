@@ -78,7 +78,7 @@ async def async_get_integration_with_requirements(
     _LOGGER.info(
         "async_get_integration_with_requirements: call async_process_requirements %s requirements: %s",
         domain,
-        integration.requirement,
+        integration.requirements,
     )
 
     if integration.requirements:
