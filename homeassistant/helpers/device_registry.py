@@ -300,6 +300,8 @@ class DeviceRegistry:
         """Load the device registry."""
         async_setup_cleanup(self.hass, self)
 
+        _LOGGER.warning("Device registry loaded!")
+
         data = await self._store.async_load()
 
         devices = OrderedDict()

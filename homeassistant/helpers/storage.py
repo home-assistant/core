@@ -214,7 +214,8 @@ class Store:
 
             self._data = None
 
-            _LOGGER.warning("About to write data: %s", data)
+            if self.key == "core.device_registry":
+                _LOGGER.warning("About to write data: %s", data)
 
             try:
                 await self.hass.async_add_executor_job(
