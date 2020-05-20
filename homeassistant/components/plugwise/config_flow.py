@@ -29,7 +29,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     )
 
     try:
-        api.connect()
+        await api.connect()
     except Smile.InvalidAuthentication:
         raise InvalidAuth
     except Smile.ConnectionFailedError:
