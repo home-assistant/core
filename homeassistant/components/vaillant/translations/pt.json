@@ -1,0 +1,23 @@
+{
+  "title": "Vaillant",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Username",
+          "serial_number": "Serial number"
+        },
+        "title": "Connection information (same as multiMATIC application)"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Only one configuration is allowed"
+    }
+  }
+}

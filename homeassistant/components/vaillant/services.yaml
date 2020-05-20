@@ -1,0 +1,48 @@
+remove_quick_mode:
+  description: Remove quick mode
+
+remove_holiday_mode:
+  description: Remove holiday mode
+
+set_quick_mode:
+  description: Set a quick mode to vaillant system.
+  fields:
+    quick_mode:
+      description: Name of the quick mode (required)
+      example: QM_HOTWATER_BOOST, QM_VENTILATION_BOOST, QM_ONE_DAY_AWAY, QM_SYSTEM_OFF, QM_ONE_DAY_AT_HOME, QM_PARTY
+
+set_holiday_mode:
+  description: Set holiday mode
+  fields:
+    start_date:
+      description: Start date of the holiday mode YYYY-MM-DD format (required)
+      example: "2019-11-25"
+    end_date:
+      description: End date of the holiday mode, YYYY-MM-DD format (required)
+      example: "2019-11-26"
+    temperature:
+      description: temperature to maintin while holiday mode is active (required)
+      example: 15
+
+set_quick_veto:
+  description: Set a quick veto for a climate entity
+  fields:
+    entity_id:
+      description: Entity id from where to set a quick veto
+      example: climate.vaillant_bathroom
+    temperature:
+      description: Target temperature to be applied while quick veto is running on
+      example: 25
+    duration:
+      description: Duration (in minutes) of the quick veto. Min 30min, max 1440 (24 hours). If not specified, the default (configured) duration is applied.
+      example: "60"
+
+remove_quick_veto:
+  description: Remove a quick veto for a climate entity
+  fields:
+    entity_id:
+      description: Entity id from where to remove quick veto
+      example: climate.vaillant_bathroom
+
+request_hvac_update:
+  description: Ask vaillant API to get data from your installation.

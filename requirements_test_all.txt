@@ -632,6 +632,9 @@ pymodbus==2.3.0
 # homeassistant.components.monoprice
 pymonoprice==0.3
 
+# homeassistant.components.vaillant
+pymultimatic==0.1.2
+
 # homeassistant.components.myq
 pymyq==2.0.2
 

@@ -1,0 +1,16 @@
+{
+  "domain": "vaillant",
+  "name": "Vaillant",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/vaillant",
+  "requirements": [
+    "pymultimatic==0.1.2"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@thomasgermain"
+  ]
+}

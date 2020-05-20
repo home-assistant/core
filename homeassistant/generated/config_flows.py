@@ -154,6 +154,7 @@ FLOWS = [
     "unifi",
     "upb",
     "upnp",
+    "vaillant",
     "velbus",
     "vera",
     "vesync",
