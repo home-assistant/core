@@ -1,12 +1,10 @@
 """Support for Synology DSM binary sensors."""
-from typing import Dict
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import SynologyDSMEntity
+from . import SynologyDSMDeviceEntity, SynologyDSMEntity
 from .const import (
     DOMAIN,
     SECURITY_BINARY_SENSORS,
@@ -56,7 +54,7 @@ class SynoDSMSecurityBinarySensor(SynologyDSMEntity, BinarySensorEntity):
         return self._api.security
 
 
-class SynoDSMStorageBinarySensor(SynologyDSMEntity, BinarySensorEntity):
+class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
     """Representation a Synology Storage binary sensor."""
 
     @property
@@ -66,15 +64,3 @@ class SynoDSMStorageBinarySensor(SynologyDSMEntity, BinarySensorEntity):
         if attr is None:
             return None
         return attr
-
-    @property
-    def device_info(self) -> Dict[str, any]:
-        """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},
-            "name": f"Synology NAS ({self._device_name} {self._device_type})",
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "sw_version": self._device_firmware,
-            "via_device": (DOMAIN, self._api.information.serial),
-        }

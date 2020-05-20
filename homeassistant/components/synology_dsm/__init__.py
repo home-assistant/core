@@ -337,53 +337,17 @@ class SynologyDSMEntity(Entity):
     """Representation of a Synology NAS entry."""
 
     def __init__(
-        self,
-        api: SynoApi,
-        entity_type: str,
-        entity_info: Dict[str, str],
-        device_id: str = None,
+        self, api: SynoApi, entity_type: str, entity_info: Dict[str, str],
     ):
         """Initialize the Synology DSM entity."""
         self._api = api
         self.entity_type = entity_type.split(":")[-1]
-        self._name = BASE_NAME
+        self._name = f"{BASE_NAME} {entity_info[ENTITY_NAME]}"
         self._class = entity_info[ENTITY_CLASS]
         self._enable_default = entity_info[ENTITY_ENABLE]
         self._icon = entity_info[ENTITY_ICON]
         self._unit = entity_info[ENTITY_UNIT]
         self._unique_id = f"{self._api.information.serial}_{entity_type}"
-        self._device_id = device_id
-        self._device_name = None
-        self._device_manufacturer = None
-        self._device_model = None
-        self._device_firmware = None
-        self._device_type = None
-
-        if self._device_id:
-            if "volume" in entity_type:
-                volume = self._api.storage._get_volume(self._device_id)
-                # Volume does not have a name
-                self._device_name = volume["id"].replace("_", " ").capitalize()
-                self._device_manufacturer = "Synology"
-                self._device_model = self._api.information.model
-                self._device_firmware = self._api.information.version_string
-                self._device_type = (
-                    volume["device_type"]
-                    .replace("_", " ")
-                    .replace("raid", "RAID")
-                    .replace("shr", "SHR")
-                )
-            elif "disk" in entity_type:
-                disk = self._api.storage._get_disk(self._device_id)
-                self._device_name = disk["name"]
-                self._device_manufacturer = disk["vendor"]
-                self._device_model = disk["model"].strip()
-                self._device_firmware = disk["firm"]
-                self._device_type = disk["diskType"]
-            self._name += f" {self._device_name}"
-            self._unique_id += f"_{self._device_id}"
-
-        self._name += f" {entity_info[ENTITY_NAME]}"
 
     @property
     def unique_id(self) -> str:
@@ -452,3 +416,63 @@ class SynologyDSMEntity(Entity):
                 self.hass, self._api.signal_sensor_update, self.async_write_ha_state
             )
         )
+
+
+class SynologyDSMDeviceEntity(SynologyDSMEntity):
+    """Representation of a Synology NAS disk or volume entry."""
+
+    def __init__(
+        self,
+        api: SynoApi,
+        entity_type: str,
+        entity_info: Dict[str, str],
+        device_id: str = None,
+    ):
+        """Initialize the Synology DSM disk or volume entity."""
+        super().__init__(api, entity_type, entity_info)
+        self._device_id = device_id
+        self._device_name = None
+        self._device_manufacturer = None
+        self._device_model = None
+        self._device_firmware = None
+        self._device_type = None
+
+        if "volume" in entity_type:
+            volume = self._api.storage._get_volume(self._device_id)
+            # Volume does not have a name
+            self._device_name = volume["id"].replace("_", " ").capitalize()
+            self._device_manufacturer = "Synology"
+            self._device_model = self._api.information.model
+            self._device_firmware = self._api.information.version_string
+            self._device_type = (
+                volume["device_type"]
+                .replace("_", " ")
+                .replace("raid", "RAID")
+                .replace("shr", "SHR")
+            )
+        elif "disk" in entity_type:
+            disk = self._api.storage._get_disk(self._device_id)
+            self._device_name = disk["name"]
+            self._device_manufacturer = disk["vendor"]
+            self._device_model = disk["model"].strip()
+            self._device_firmware = disk["firm"]
+            self._device_type = disk["diskType"]
+        self._name = f"{BASE_NAME} {self._device_name} {entity_info[ENTITY_NAME]}"
+        self._unique_id += f"_{self._device_id}"
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._api.storage
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},
+            "name": f"Synology NAS ({self._device_name} {self._device_type})",
+            "manufacturer": self._device_manufacturer,
+            "model": self._device_model,
+            "sw_version": self._device_firmware,
+            "via_device": (DOMAIN, self._api.information.serial),
+        }

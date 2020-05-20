@@ -1,6 +1,4 @@
 """Support for Synology DSM sensors."""
-from typing import Dict
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
@@ -13,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import SynologyDSMEntity
+from . import SynologyDSMDeviceEntity, SynologyDSMEntity
 from .const import (
     CONF_VOLUMES,
     DOMAIN,
@@ -82,8 +80,13 @@ class SynoDSMUtilSensor(SynologyDSMEntity):
 
         return attr
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._api.utilisation
 
-class SynoDSMStorageSensor(SynologyDSMEntity):
+
+class SynoDSMStorageSensor(SynologyDSMDeviceEntity):
     """Representation a Synology Storage sensor."""
 
     @property
@@ -102,15 +105,3 @@ class SynoDSMStorageSensor(SynologyDSMEntity):
             return display_temp(self.hass, attr, TEMP_CELSIUS, PRECISION_TENTHS)
 
         return attr
-
-    @property
-    def device_info(self) -> Dict[str, any]:
-        """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},
-            "name": f"Synology NAS ({self._device_name} {self._device_type})",
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "sw_version": self._device_firmware,
-            "via_device": (DOMAIN, self._api.information.serial),
-        }
