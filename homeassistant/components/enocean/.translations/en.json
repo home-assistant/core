@@ -1,6 +1,6 @@
 {
+  "title": "EnOcean",
   "config": {
-    "title": "ENOcean",
     "flow_title": "ENOcean setup",
     "step": {
       "init": {
