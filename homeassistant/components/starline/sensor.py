@@ -1,6 +1,6 @@
 """Reads vehicle status from StarLine API."""
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE, VOLT
+from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE, VOLT, VOLUME_LITERS, LENGTH_KILOMETERS, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
@@ -14,6 +14,9 @@ SENSOR_TYPES = {
     "ctemp": ["Interior Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
     "etemp": ["Engine Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
     "gsm_lvl": ["GSM Signal", None, UNIT_PERCENTAGE, None],
+    "fuel": ["Fuel Volume", None, None, "mdi:fuel"],
+    "errors": ["Engine errors", None, None, "mdi:alert-octagon"],
+    "mileage": ["Mileage", None, LENGTH_KILOMETERS, "mdi:counter"]
 }
 
 
@@ -73,6 +76,12 @@ class StarlineSensor(StarlineEntity, Entity):
             return self._device.temp_engine
         if self._key == "gsm_lvl":
             return self._device.gsm_level_percent
+        if self._key == "fuel" and self._device.fuel:
+            return self._device.fuel.get("val")
+        if self._key == "errors" and self._device.errors:
+            return self._device.errors.get("val")
+        if self._key == "mileage" and self._device.mileage:
+            return self._device.mileage.get("val")
         return None
 
     @property
@@ -80,6 +89,14 @@ class StarlineSensor(StarlineEntity, Entity):
         """Get the unit of measurement."""
         if self._key == "balance":
             return self._device.balance.get("currency") or "₽"
+        if self._key == "fuel":
+            type_value = self._device.errors.get("type")
+            if type_value == "percents":
+                return UNIT_PERCENTAGE
+            elif type_value == "liters":
+                return VOLUME_LITERS
+            else:
+                return STATE_UNKNOWN
         return self._unit
 
     @property
@@ -94,4 +111,6 @@ class StarlineSensor(StarlineEntity, Entity):
             return self._account.balance_attrs(self._device)
         if self._key == "gsm_lvl":
             return self._account.gsm_attrs(self._device)
+        if self._key == "errors":
+            return self._account.errors_attrs(self._device)
         return None

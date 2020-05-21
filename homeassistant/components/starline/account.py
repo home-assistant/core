@@ -134,6 +134,13 @@ class StarlineAccount:
         }
 
     @staticmethod
+    def errors_attrs(device: StarlineDevice) -> Dict[str, Any]:
+        """Attributes for Errors sensor."""
+        return {
+            "errors": device.errors.get("errors")
+        }
+
+    @staticmethod
     def engine_attrs(device: StarlineDevice) -> Dict[str, Any]:
         """Attributes for engine switch."""
         return {
