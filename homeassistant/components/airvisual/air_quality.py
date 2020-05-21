@@ -4,7 +4,12 @@ from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import callback
 
 from . import AirVisualEntity
-from .const import DATA_CLIENT, DOMAIN, INTEGRATION_TYPE_GEOGRAPHY
+from .const import (
+    CONF_INTEGRATION_TYPE,
+    DATA_COORDINATOR,
+    DOMAIN,
+    INTEGRATION_TYPE_GEOGRAPHY,
+)
 
 ATTR_HUMIDITY = "humidity"
 ATTR_SENSOR_LIFE = "{0}_sensor_life"
@@ -13,13 +18,13 @@ ATTR_VOC = "voc"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual air quality entities based on a config entry."""
-    airvisual = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
     # Geography-based AirVisual integrations don't utilize this platform:
-    if airvisual.integration_type == INTEGRATION_TYPE_GEOGRAPHY:
+    if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
         return
 
-    async_add_entities([AirVisualNodeProSensor(airvisual)], True)
+    async_add_entities([AirVisualNodeProSensor(coordinator)], True)
 
 
 class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
@@ -35,69 +40,71 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
     @property
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
-        if self._airvisual.data["current"]["settings"]["is_aqi_usa"]:
-            return self._airvisual.data["current"]["measurements"]["aqi_us"]
-        return self._airvisual.data["current"]["measurements"]["aqi_cn"]
+        if self.coordinator.data["current"]["settings"]["is_aqi_usa"]:
+            return self.coordinator.data["current"]["measurements"]["aqi_us"]
+        return self.coordinator.data["current"]["measurements"]["aqi_cn"]
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self._airvisual.data)
+        return bool(self.coordinator.data)
 
     @property
     def carbon_dioxide(self):
         """Return the CO2 (carbon dioxide) level."""
-        return self._airvisual.data["current"]["measurements"].get("co2_ppm")
+        return self.coordinator.data["current"]["measurements"].get("co2")
 
     @property
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {(DOMAIN, self._airvisual.data["current"]["serial_number"])},
-            "name": self._airvisual.data["current"]["settings"]["node_name"],
+            "identifiers": {
+                (DOMAIN, self.coordinator.data["current"]["serial_number"])
+            },
+            "name": self.coordinator.data["current"]["settings"]["node_name"],
             "manufacturer": "AirVisual",
-            "model": f'{self._airvisual.data["current"]["status"]["model"]}',
+            "model": f'{self.coordinator.data["current"]["status"]["model"]}',
             "sw_version": (
-                f'Version {self._airvisual.data["current"]["status"]["system_version"]}'
-                f'{self._airvisual.data["current"]["status"]["app_version"]}'
+                f'Version {self.coordinator.data["current"]["status"]["system_version"]}'
+                f'{self.coordinator.data["current"]["status"]["app_version"]}'
             ),
         }
 
     @property
     def name(self):
         """Return the name."""
-        node_name = self._airvisual.data["current"]["settings"]["node_name"]
+        node_name = self.coordinator.data["current"]["settings"]["node_name"]
         return f"{node_name} Node/Pro: Air Quality"
 
     @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        return self._airvisual.data["current"]["measurements"].get("pm2_5")
+        return self.coordinator.data["current"]["measurements"].get("pm2_5")
 
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        return self._airvisual.data["current"]["measurements"].get("pm1_0")
+        return self.coordinator.data["current"]["measurements"].get("pm1_0")
 
     @property
     def particulate_matter_0_1(self):
         """Return the particulate matter 0.1 level."""
-        return self._airvisual.data["current"]["measurements"].get("pm0_1")
+        return self.coordinator.data["current"]["measurements"].get("pm0_1")
 
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._airvisual.data["current"]["serial_number"]
+        return self.coordinator.data["current"]["serial_number"]
 
     @callback
     def update_from_latest_data(self):
-        """Update from the Node/Pro's data."""
+        """Update the entity from the latest data."""
         self._attrs.update(
             {
-                ATTR_VOC: self._airvisual.data["current"]["measurements"].get("voc"),
+                ATTR_VOC: self.coordinator.data["current"]["measurements"].get("voc"),
                 **{
                     ATTR_SENSOR_LIFE.format(pollutant): lifespan
-                    for pollutant, lifespan in self._airvisual.data["current"][
+                    for pollutant, lifespan in self.coordinator.data["current"][
                         "status"
                     ]["sensor_life"].items()
                 },

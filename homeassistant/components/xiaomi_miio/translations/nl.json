@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
-        },
         "error": {
             "connect_error": "Verbinding mislukt, probeer het opnieuw",
             "no_device_selected": "Geen apparaat geselecteerd, selecteer 1 apparaat alstublieft"

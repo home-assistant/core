@@ -5,8 +5,9 @@
             "updated_entry": "This entry has already been setup but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
         },
         "error": {
-            "cant_connect": "Could not connect to the device. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and re-verify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit.",
+            "cant_connect": "Failed to connect",
             "complete_pairing failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
+            "complete_pairing_failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
             "host_exists": "VIZIO device with specified host already configured.",
             "name_exists": "VIZIO device with specified name already configured."
         },
@@ -30,7 +31,7 @@
                 "data": {
                     "access_token": "Access Token",
                     "device_class": "Device Type",
-                    "host": "<Host/IP>:<Port>",
+                    "host": "Host",
                     "name": "Name"
                 },
                 "description": "An Access Token is only needed for TVs. If you are configuring a TV and do not have an Access Token yet, leave it blank to go through a pairing process.",

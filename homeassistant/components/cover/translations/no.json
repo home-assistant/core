@@ -27,7 +27,9 @@
     },
     "state": {
         "_": {
+            "closed": "Lukket",
             "closing": "Lukker",
+            "open": "\u00c5pen",
             "opening": "\u00c5pner",
             "stopped": "Stoppet"
         }

@@ -4,7 +4,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "connect_error": "Impossibile connettersi, si prega di riprovare",
+            "connect_error": "Impossibile connettersi",
             "no_device_selected": "Nessun dispositivo selezionato, selezionare un dispositivo."
         },
         "step": {

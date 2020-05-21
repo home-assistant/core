@@ -3,7 +3,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Router hostname vagy IP"
+                    "access_token": "Hozz\u00e1f\u00e9r\u00e9si token",
+                    "host": "Hoszt"
                 },
                 "title": "Csatlakoz\u00e1s a Vilfo routerhez"
             }

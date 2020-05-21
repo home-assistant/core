@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ONVIF device is already configured.",
+            "already_in_progress": "Config flow for ONVIF device is already in progress.",
+            "no_h264": "There were no H264 streams available.  Check the profile configuration on your device.",
+            "no_mac": "Could not configure unique ID for ONVIF device.",
+            "onvif_error": "Error setting up ONVIF device.  Check logs for more information."
+        },
+        "error": {
+            "connection_failed": "Could not connect to ONVIF service with provided credentials."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Configure authentication"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Create camera entity"
+                },
+                "description": "Create camera entity for {profile} at {resolution} resolution?",
+                "title": "Configure Profiles"
+            },
+            "device": {
+                "data": {
+                    "host": "Select discovered ONVIF device"
+                },
+                "title": "Select ONVIF device"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "port": "Port"
+                },
+                "title": "Configure ONVIF device"
+            },
+            "user": {
+                "description": "By clicking submit, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration.",
+                "title": "ONVIF device setup"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "Extra FFMPEG arguments",
+                    "rtsp_transport": "RTSP transport mechanism"
+                },
+                "title": "ONVIF Device Options"
+            }
+        }
+    }
+}

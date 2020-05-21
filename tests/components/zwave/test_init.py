@@ -3,7 +3,6 @@ import asyncio
 from collections import OrderedDict
 from datetime import datetime
 import unittest
-from unittest.mock import MagicMock, patch
 
 import pytest
 from pytz import utc
@@ -23,7 +22,7 @@ from homeassistant.helpers.device_registry import async_get_registry as get_dev_
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.setup import setup_component
 
-from tests.async_mock import AsyncMock
+from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import async_fire_time_changed, get_test_home_assistant, mock_registry
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
 

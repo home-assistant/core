@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 
-from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
+from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,11 +23,17 @@ def to_hass_level(level):
     return int((level * 255) // 100)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Lutron Caseta lights."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Lutron Caseta light platform.
+
+    Adds dimmers from the Caseta bridge associated with the config_entry as
+    light entities.
+    """
+
     entities = []
-    bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
+    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     light_devices = bridge.get_devices_by_domain(DOMAIN)
+
     for light_device in light_devices:
         entity = LutronCasetaLight(light_device, bridge)
         entities.append(entity)

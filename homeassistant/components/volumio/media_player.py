@@ -144,11 +144,7 @@ class Volumio(MediaPlayerEntity):
             )
             return False
 
-        try:
-            return data
-        except AttributeError:
-            _LOGGER.error("Received invalid response: %s", data)
-            return False
+        return data
 
     async def async_update(self):
         """Update state."""

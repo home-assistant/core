@@ -41,14 +41,14 @@ async def test_if_fires_when_hour_matches(hass, calls):
 
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=0))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     await common.async_turn_off(hass)
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=0))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_when_minute_matches(hass, calls):
@@ -72,7 +72,7 @@ async def test_if_fires_when_minute_matches(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow().replace(minute=0))
 
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_when_second_matches(hass, calls):
@@ -96,7 +96,7 @@ async def test_if_fires_when_second_matches(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow().replace(second=0))
 
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_when_all_matches(hass, calls):
@@ -120,7 +120,7 @@ async def test_if_fires_when_all_matches(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=1, minute=2, second=3))
 
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_periodic_seconds(hass, calls):
@@ -144,7 +144,7 @@ async def test_if_fires_periodic_seconds(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=0, minute=0, second=2))
 
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_periodic_minutes(hass, calls):
@@ -168,7 +168,7 @@ async def test_if_fires_periodic_minutes(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=0, minute=2, second=0))
 
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_periodic_hours(hass, calls):
@@ -192,7 +192,7 @@ async def test_if_fires_periodic_hours(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=2, minute=0, second=0))
 
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_default_values(hass, calls):
@@ -211,14 +211,14 @@ async def test_default_values(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=1, minute=2, second=0))
 
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=1, minute=2, second=1))
 
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=2, minute=2, second=0))
 
     await hass.async_block_till_done()
-    assert 2 == len(calls)
+    assert len(calls) == 2

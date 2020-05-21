@@ -7,6 +7,7 @@
         "error": {
             "cant_connect": "Konnt sech net mam Apparat verbannen. [Iwwerpr\u00e9ift Dokumentatioun] (https://www.home-assistant.io/integrations/vizio/) a stellt s\u00e9cher dass:\n- Den Apparat ass un\n- Den Apparat ass mam Netzwierk verbonnen\n- D'Optiounen d\u00e9i dir aginn hutt si korrekt\nier dir d'Verbindung nees prob\u00e9iert",
             "complete_pairing failed": "Feeler beim ofschl\u00e9isse vun der Kopplung. Iwwerpr\u00e9if dass de PIN korrekt an da de Fernsee nach \u00ebmmer ugeschalt a mam Netzwierk verbonnen ass ier de n\u00e4chste Versuch gestart g\u00ebtt.",
+            "complete_pairing_failed": "Feeler beim ofschl\u00e9isse vun der Kopplung. Iwwerpr\u00e9if dass de PIN korrekt an da de Fernsee nach \u00ebmmer ugeschalt a mam Netzwierk verbonnen ass ier de n\u00e4chste Versuch gestart g\u00ebtt.",
             "host_exists": "VIZIO Apparat mat d\u00ebsem Host ass scho konfigur\u00e9iert.",
             "name_exists": "VIZIO Apparat mat d\u00ebsen Numm ass scho konfigur\u00e9iert."
         },

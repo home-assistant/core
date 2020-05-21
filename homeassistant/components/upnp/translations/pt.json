@@ -17,9 +17,6 @@
                 "description": "Deseja configurar o UPnP / IGD?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
-            },
             "user": {
                 "data": {
                     "enable_port_mapping": "Ativar o mapeamento de porta para o Home Assistant",

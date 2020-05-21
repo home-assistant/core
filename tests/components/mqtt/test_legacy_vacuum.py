@@ -2,6 +2,8 @@
 from copy import deepcopy
 import json
 
+import pytest
+
 from homeassistant.components import vacuum
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
 from homeassistant.components.mqtt.vacuum import schema_legacy as mqttvacuum
@@ -612,6 +614,7 @@ async def test_discovery_update_vacuum(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",' '  "command_topic": "test_topic#" }'

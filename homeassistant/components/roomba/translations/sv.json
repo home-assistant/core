@@ -7,6 +7,7 @@
         "step": {
             "user": {
                 "data": {
+                    "blid": "BLID",
                     "certificate": "Certifikat",
                     "continuous": "Kontinuerlig",
                     "delay": "F\u00f6rdr\u00f6jning",
@@ -21,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "continuous": "Kontinuerlig",
                     "delay": "F\u00f6rdr\u00f6jning"
                 }
             }

@@ -21,7 +21,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host- of IP-adres",
+                    "host": "Host of IP-adres",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 },

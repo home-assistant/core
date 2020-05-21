@@ -6,8 +6,12 @@
             "not_konn_panel": "Non reconnu comme appareil Konnected.io",
             "unknown": "Une erreur inconnue s'est produite"
         },
+        "error": {
+            "cannot_connect": "Impossible de se connecter \u00e0 Konnected Panel sur {host} : {port}"
+        },
         "step": {
             "confirm": {
+                "description": "Model: {model} \n ID: {id} \n Host: {host} \n Port: {port} \n\nVous pouvez configurer le comportement des E/S et du panneau dans les param\u00e8tres de Konnected Alarm Panel.",
                 "title": "Appareil Konnected pr\u00eat"
             },
             "import_confirm": {
@@ -15,12 +19,18 @@
             },
             "user": {
                 "data": {
-                    "host": "Adresse IP de l\u2019appareil Konnected"
-                }
+                    "host": "Adresse IP de l\u2019appareil Konnected",
+                    "port": "Port de l'appareil Konnected"
+                },
+                "description": "Veuillez saisir les informations de l\u2019h\u00f4te de votre panneau Konnected.",
+                "title": "D\u00e9couverte d\u2019appareil Konnected"
             }
         }
     },
     "options": {
+        "abort": {
+            "not_konn_panel": "Non reconnu comme appareil Konnected.io"
+        },
         "error": {
             "one": "Vide",
             "other": "Vide"
@@ -52,8 +62,10 @@
                     "4": "Zone 4",
                     "5": "Zone 5",
                     "6": "Zone 6",
-                    "7": "Zone 7"
-                }
+                    "7": "Zone 7",
+                    "out": "OUT"
+                },
+                "title": "Configurer les E/S"
             },
             "options_io_ext": {
                 "data": {
@@ -62,13 +74,23 @@
                     "12": "Zone 12",
                     "8": "Zone 8",
                     "9": "Zone 9",
-                    "alarm1": "ALARME1"
-                }
+                    "alarm1": "ALARME1",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
+                },
+                "title": "Configurer les E/S \u00e9tendues"
+            },
+            "options_misc": {
+                "title": "Configurer divers"
             },
             "options_switch": {
                 "data": {
+                    "activation": "Sortie lorsque activ\u00e9",
+                    "momentary": "Dur\u00e9e de l'impulsion (ms) (facultatif)",
                     "more_states": "Configurer des \u00e9tats suppl\u00e9mentaires pour cette zone",
-                    "name": "Nom (facultatif)"
+                    "name": "Nom (facultatif)",
+                    "pause": "Pause entre les impulsions (ms) (facultatif)",
+                    "repeat": "Nombre de r\u00e9p\u00e9tition (-1=infini) (facultatif)"
                 }
             }
         }

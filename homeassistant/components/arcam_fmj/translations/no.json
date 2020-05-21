@@ -1,3 +1,8 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} ble bedt om \u00e5 sl\u00e5 p\u00e5"
+        }
+    },
     "title": ""
 }

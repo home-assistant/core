@@ -18,7 +18,7 @@
                 "title": "Conecte su Elgato Key Light"
             },
             "zeroconf_confirm": {
-                "description": "\u00bfDesea agregar Elgato Key Light con el n\u00famero de serie `{serial_number}` a Home Assistant?",
+                "description": "\u00bfDesea a\u00f1adir Elgato Key Light con el n\u00famero de serie `{serial_number}` a Home Assistant?",
                 "title": "Descubierto dispositivo Elgato Key Light"
             }
         }

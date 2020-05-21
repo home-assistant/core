@@ -821,6 +821,7 @@ async def test_setup_fails_without_config(hass):
     assert not await async_setup_component(hass, mqtt.DOMAIN, {})
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_message_callback_exception_gets_logged(hass, caplog):
     """Test exception raised by message handler."""
     await async_mock_mqtt_component(hass)
@@ -932,6 +933,42 @@ async def test_mqtt_ws_remove_discovered_device_twice(
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    assert device_entry is not None
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "mqtt/device/remove", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json(
+        {"id": 6, "type": "mqtt/device/remove", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
+
+
+async def test_mqtt_ws_remove_discovered_device_same_topic(
+    hass, device_reg, hass_ws_client, mqtt_mock
+):
+    """Test MQTT websocket device removal."""
+    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    data = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "availability_topic": "foobar/sensor",'
         '  "unique_id": "unique" }'
     )
 
@@ -1255,7 +1292,15 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {
         "topic": "sensor/#",
-        "messages": [{"topic": "sensor/abc", "payload": "123", "time": start_dt}],
+        "messages": [
+            {
+                "payload": "123",
+                "qos": 0,
+                "retain": False,
+                "time": start_dt,
+                "topic": "sensor/abc",
+            }
+        ],
     } in debug_info_data["entities"][0]["subscriptions"]
 
 
@@ -1302,7 +1347,134 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
     assert {
         "topic": "sensor/#",
         "messages": [
-            {"topic": "sensor/abc", "payload": "123", "time": dt1},
-            {"topic": "sensor/abc", "payload": "123", "time": dt2},
+            {
+                "payload": "123",
+                "qos": 0,
+                "retain": False,
+                "time": dt1,
+                "topic": "sensor/abc",
+            },
+            {
+                "payload": "123",
+                "qos": 0,
+                "retain": False,
+                "time": dt2,
+                "topic": "sensor/abc",
+            },
         ],
     } == debug_info_data["entities"][0]["subscriptions"][0]
+
+
+async def test_debug_info_same_topic(hass, mqtt_mock):
+    """Test debug info."""
+    config = {
+        "device": {"identifiers": ["helloworld"]},
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "sensor/status",
+        "availability_topic": "sensor/status",
+        "unique_id": "veryunique",
+    }
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {"topic": "sensor/status", "messages": []} in debug_info_data["entities"][0][
+        "subscriptions"
+    ]
+
+    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+        dt_utcnow.return_value = start_dt
+        async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
+    assert {
+        "payload": "123",
+        "qos": 0,
+        "retain": False,
+        "time": start_dt,
+        "topic": "sensor/status",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+
+    config["availability_topic"] = "sensor/availability"
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+        dt_utcnow.return_value = start_dt
+        async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
+
+
+async def test_debug_info_qos_retain(hass, mqtt_mock):
+    """Test debug info."""
+    config = {
+        "device": {"identifiers": ["helloworld"]},
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "sensor/#",
+        "unique_id": "veryunique",
+    }
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
+        "subscriptions"
+    ]
+
+    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+        dt_utcnow.return_value = start_dt
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=0, retain=False)
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=1, retain=True)
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=2, retain=False)
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
+    assert {
+        "payload": "123",
+        "qos": 0,
+        "retain": False,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    assert {
+        "payload": "123",
+        "qos": 1,
+        "retain": True,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    assert {
+        "payload": "123",
+        "qos": 2,
+        "retain": False,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]

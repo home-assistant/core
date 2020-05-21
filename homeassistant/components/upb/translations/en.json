@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "An UPB PIM with this address is already configured."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to UPB PIM, please try again.",
+            "invalid_upb_file": "Missing or invalid UPB UPStart export file, check the name and path of the file.",
+            "unknown": "Unexpected error."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Address (see description above)",
+                    "file_path": "Path and name of the UPStart UPB export file.",
+                    "protocol": "Protocol"
+                },
+                "description": "Connect a Universal Powerline Bus Powerline Interface Module (UPB PIM). The address string must be in the form 'address[:port]' for 'tcp'. The port is optional and defaults to 2101. Example: '192.168.1.42'. For the serial protocol, the address must be in the form 'tty[:baud]'. The baud is optional and defaults to 4800. Example: '/dev/ttyS1'.",
+                "title": "Connect to UPB PIM"
+            }
+        }
+    }
+}

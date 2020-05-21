@@ -8,8 +8,7 @@
             },
             "user": {
                 "data": {
-                    "password": "Palavra-passe",
-                    "username": "Email"
+                    "password": "Palavra-passe"
                 }
             }
         }

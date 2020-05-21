@@ -5,8 +5,8 @@ from zlib import adler32
 import pytest
 
 from homeassistant.components.homekit.aidmanager import (
-    AID_MANAGER_STORAGE_KEY,
     AccessoryAidStorage,
+    get_aid_storage_filename_for_entry_id,
     get_system_unique_id,
 )
 from homeassistant.helpers import device_registry
@@ -53,7 +53,7 @@ async def test_aid_generation(hass, device_reg, entity_reg):
     with patch(
         "homeassistant.components.homekit.aidmanager.AccessoryAidStorage.async_schedule_save"
     ):
-        aid_storage = AccessoryAidStorage(hass)
+        aid_storage = AccessoryAidStorage(hass, config_entry)
     await aid_storage.async_initialize()
 
     for _ in range(0, 2):
@@ -110,7 +110,7 @@ async def test_aid_adler32_collision(hass, device_reg, entity_reg):
     with patch(
         "homeassistant.components.homekit.aidmanager.AccessoryAidStorage.async_schedule_save"
     ):
-        aid_storage = AccessoryAidStorage(hass)
+        aid_storage = AccessoryAidStorage(hass, config_entry)
     await aid_storage.async_initialize()
 
     seen_aids = set()
@@ -129,8 +129,8 @@ async def test_aid_generation_no_unique_ids_handles_collision(
     hass, device_reg, entity_reg
 ):
     """Test colliding aids is stable."""
-
-    aid_storage = AccessoryAidStorage(hass)
+    config_entry = MockConfigEntry(domain="test", data={})
+    aid_storage = AccessoryAidStorage(hass, config_entry)
     await aid_storage.async_initialize()
 
     seen_aids = set()
@@ -394,7 +394,7 @@ async def test_aid_generation_no_unique_ids_handles_collision(
     await aid_storage.async_save()
     await hass.async_block_till_done()
 
-    aid_storage = AccessoryAidStorage(hass)
+    aid_storage = AccessoryAidStorage(hass, config_entry)
     await aid_storage.async_initialize()
 
     assert aid_storage.allocations == {
@@ -620,6 +620,7 @@ async def test_aid_generation_no_unique_ids_handles_collision(
         "light.light99": 596247761,
     }
 
-    aid_storage_path = hass.config.path(STORAGE_DIR, AID_MANAGER_STORAGE_KEY)
+    aidstore = get_aid_storage_filename_for_entry_id(config_entry.entry_id)
+    aid_storage_path = hass.config.path(STORAGE_DIR, aidstore)
     if await hass.async_add_executor_job(os.path.exists, aid_storage_path):
         await hass.async_add_executor_job(os.unlink, aid_storage_path)

@@ -10,7 +10,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt as dt_util
 
-from . import DOMAIN as TIBBER_DOMAIN
+from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,10 +20,8 @@ SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Tibber sensor."""
-    if discovery_info is None:
-        return
 
     tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
@@ -67,9 +65,32 @@ class TibberSensor(Entity):
         return self._device_state_attributes
 
     @property
+    def model(self):
+        """Return the model of the sensor."""
+        return None
+
+    @property
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def device_id(self):
+        """Return the ID of the physical device this sensor is part of."""
+        home = self._tibber_home.info["viewer"]["home"]
+        return home["meteringPointData"]["consumptionEan"]
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        device_info = {
+            "identifiers": {(TIBBER_DOMAIN, self.device_id)},
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+        }
+        if self.model is not None:
+            device_info["model"] = self.model
+        return device_info
 
 
 class TibberSensorElPrice(TibberSensor):
@@ -113,6 +134,11 @@ class TibberSensorElPrice(TibberSensor):
         return f"Electricity price {self._name}"
 
     @property
+    def model(self):
+        """Return the model of the sensor."""
+        return "Price Sensor"
+
+    @property
     def icon(self):
         """Return the icon to use in the frontend."""
         return ICON
@@ -125,8 +151,7 @@ class TibberSensorElPrice(TibberSensor):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        home = self._tibber_home.info["viewer"]["home"]
-        return home["meteringPointData"]["consumptionEan"]
+        return self.device_id
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
@@ -149,7 +174,7 @@ class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
 
     async def async_added_to_hass(self):
-        """Start unavailability tracking."""
+        """Start listen for real time data."""
         await self._tibber_home.rt_subscribe(self.hass.loop, self._async_callback)
 
     async def _async_callback(self, payload):
@@ -178,6 +203,11 @@ class TibberSensorRT(TibberSensor):
         return self._tibber_home.rt_subscription_running
 
     @property
+    def model(self):
+        """Return the model of the sensor."""
+        return "Tibber Pulse"
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return f"Real time consumption {self._name}"
@@ -200,6 +230,4 @@ class TibberSensorRT(TibberSensor):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        home = self._tibber_home.info["viewer"]["home"]
-        _id = home["meteringPointData"]["consumptionEan"]
-        return f"{_id}_rt_consumption"
+        return f"{self.device_id}_rt_consumption"

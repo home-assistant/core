@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "Haluatko m\u00e4\u00e4ritt\u00e4\u00e4 LIFX:n?",
+                "title": "LIFX"
+            }
+        }
+    }
+}

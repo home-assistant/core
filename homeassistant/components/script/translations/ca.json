@@ -1,8 +1,8 @@
 {
     "state": {
         "_": {
-            "off": "Desactivat",
-            "on": "Activat"
+            "off": "OFF",
+            "on": "ON"
         }
     },
     "title": "Programes (scripts)"

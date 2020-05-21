@@ -23,7 +23,7 @@
                     "url": "URL",
                     "username": "Nom d'usuari"
                 },
-                "description": "Introdueix les dades d\u2019acc\u00e9s del dispositiu. El nom d\u2019usuari i contrasenya s\u00f3n opcionals, per\u00f2 habiliten m\u00e9s funcions de la integraci\u00f3. D'altra banda, (mentre la integraci\u00f3 estigui activa) l'\u00fas d'una connexi\u00f3 autoritzada pot causar problemes per accedir a la interf\u00edcie web del dispositiu des de fora de Home Assistant i viceversa.",
+                "description": "Introdueix les dades d'acc\u00e9s del dispositiu. El nom d'usuari i contrasenya s\u00f3n opcionals, per\u00f2 habiliten m\u00e9s funcions de la integraci\u00f3. D'altra banda, (mentre la integraci\u00f3 estigui activa) l'\u00fas d'una connexi\u00f3 autoritzada pot causar problemes per accedir a la interf\u00edcie web del dispositiu des de fora de Home Assistant i viceversa.",
                 "title": "Configuraci\u00f3 de Huawei LTE"
             }
         }

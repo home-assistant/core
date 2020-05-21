@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Esta ubicaci\u00f3n ya est\u00e1 registrada."
+        },
         "step": {
             "user": {
                 "data": {

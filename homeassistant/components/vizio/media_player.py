@@ -132,12 +132,12 @@ class VizioDevice(MediaPlayerEntity):
         self._state = None
         self._volume_level = None
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
-        self._is_muted = None
+        self._is_volume_muted = None
         self._current_input = None
         self._current_app = None
         self._current_app_config = None
         self._current_sound_mode = None
-        self._available_sound_modes = None
+        self._available_sound_modes = []
         self._available_inputs = []
         self._available_apps = []
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
@@ -190,14 +190,11 @@ class VizioDevice(MediaPlayerEntity):
         if not is_on:
             self._state = STATE_OFF
             self._volume_level = None
-            self._is_muted = None
+            self._is_volume_muted = None
             self._current_input = None
-            self._available_inputs = None
             self._current_app = None
             self._current_app_config = None
-            self._available_apps = None
             self._current_sound_mode = None
-            self._available_sound_modes = None
             return
 
         self._state = STATE_ON
@@ -207,12 +204,15 @@ class VizioDevice(MediaPlayerEntity):
         )
         if audio_settings is not None:
             self._volume_level = float(audio_settings["volume"]) / self._max_volume
-            self._is_muted = audio_settings["mute"].lower() == "on"
+            if "mute" in audio_settings:
+                self._is_volume_muted = audio_settings["mute"].lower() == "on"
+            else:
+                self._is_volume_muted = None
 
             if VIZIO_SOUND_MODE in audio_settings:
                 self._supported_commands |= SUPPORT_SELECT_SOUND_MODE
                 self._current_sound_mode = audio_settings[VIZIO_SOUND_MODE]
-                if self._available_sound_modes is None:
+                if not self._available_sound_modes:
                     self._available_sound_modes = await self._device.get_setting_options(
                         VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
                     )
@@ -223,13 +223,14 @@ class VizioDevice(MediaPlayerEntity):
         if input_ is not None:
             self._current_input = input_
 
-        inputs = await self._device.get_inputs_list(log_api_exception=False)
+        if not self._available_inputs:
+            inputs = await self._device.get_inputs_list(log_api_exception=False)
 
-        # If no inputs returned, end update
-        if not inputs:
-            return
+            # If no inputs returned, end update
+            if not inputs:
+                return
 
-        self._available_inputs = [input_.name for input_ in inputs]
+            self._available_inputs = [input_.name for input_ in inputs]
 
         # Return before setting app variables if INPUT_APPS isn't in available inputs
         if self._device_class == DEVICE_CLASS_SPEAKER or not any(
@@ -239,8 +240,7 @@ class VizioDevice(MediaPlayerEntity):
 
         # Create list of available known apps from known app list after
         # filtering by CONF_INCLUDE/CONF_EXCLUDE
-        if not self._available_apps:
-            self._available_apps = self._apps_list(self._device.get_apps_list())
+        self._available_apps = self._apps_list(self._device.get_apps_list())
 
         self._current_app_config = await self._device.get_current_app_config(
             log_api_exception=False
@@ -324,7 +324,7 @@ class VizioDevice(MediaPlayerEntity):
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._is_muted
+        return self._is_volume_muted
 
     @property
     def source(self) -> str:
@@ -428,10 +428,10 @@ class VizioDevice(MediaPlayerEntity):
         """Mute the volume."""
         if mute:
             await self._device.mute_on()
-            self._is_muted = True
+            self._is_volume_muted = True
         else:
             await self._device.mute_off()
-            self._is_muted = False
+            self._is_volume_muted = False
 
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""

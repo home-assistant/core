@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
-            "missing_configuration": "Withings-integreringen er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
+            "missing_configuration": "Withings-integrasjonen er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
         },
         "create_entry": {
-            "default": "Vellykket godkjent med Withings."
+            "default": "Vellykket godkjenning med Withings."
         },
         "step": {
             "pick_implementation": {
-                "title": "Velg autentiseringsmetode"
+                "title": "Velg godkjenningsmetode"
             },
             "profile": {
                 "data": {

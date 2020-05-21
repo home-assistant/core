@@ -1,4 +1,5 @@
 """The tests for the MaryTTS speech platform."""
+import asyncio
 import os
 import shutil
 from urllib.parse import urlencode
@@ -11,6 +12,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 import homeassistant.components.tts as tts
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.setup import setup_component
 
@@ -23,6 +25,13 @@ class TestTTSMaryTTSPlatform:
     def setup_method(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+
+        asyncio.run_coroutine_threadsafe(
+            async_process_ha_core_config(
+                self.hass, {"internal_url": "http://example.local:8123"}
+            ),
+            self.hass.loop,
+        )
 
         self.host = "localhost"
         self.port = 59125

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "connect_error": "\u8fde\u63a5\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5",
+            "no_device_selected": "\u672a\u9009\u62e9\u8bbe\u5907\uff0c\u8bf7\u9009\u62e9\u4e00\u4e2a\u8bbe\u5907\u3002"
+        },
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP \u5730\u5740",
+                    "name": "\u7f51\u5173\u540d\u79f0",
+                    "token": "API Token"
+                },
+                "description": "\u60a8\u9700\u8981\u83b7\u53d6 API Token\u3002\u5982\u9700\u5e2e\u52a9\uff0c\u8bf7\u53c2\u9605\u4ee5\u4e0b\u94fe\u63a5\uff1ahttps://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token",
+                "title": "\u8fde\u63a5\u5230\u5c0f\u7c73\u7f51\u5173"
+            },
+            "user": {
+                "data": {
+                    "gateway": "\u8fde\u63a5\u5230\u5c0f\u7c73\u7f51\u5173"
+                },
+                "description": "\u8bf7\u9009\u62e9\u8981\u8fde\u63a5\u7684\u8bbe\u5907\u3002",
+                "title": "\u5c0f\u7c73 Miio"
+            }
+        }
+    }
+}

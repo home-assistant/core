@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Kontroller Site ass scho konfigur\u00e9iert",
+            "no_local_user": "Kee lokale Benotzer fonnt, erstell ee lokale Kont um Kontroller a prob\u00e9ier nach eemol",
             "user_privilege": "Benotzer muss een Administrator sinn"
         },
         "error": {
@@ -51,6 +52,13 @@
                     "one": "Een",
                     "other": "M\u00e9i"
                 }
+            },
+            "simple_options": {
+                "data": {
+                    "track_clients": "Reseau Cliente verfollegen",
+                    "track_devices": "Reseau Apparater verfollege (Ubiquiti Apparater)"
+                },
+                "description": "UniFi Integratioun ariichten"
             },
             "statistics_sensors": {
                 "data": {

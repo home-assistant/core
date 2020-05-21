@@ -4,8 +4,8 @@
             "user_privilege": "A felhaszn\u00e1l\u00f3nak rendszergazd\u00e1nak kell lennie"
         },
         "error": {
-            "faulty_credentials": "Rossz felhaszn\u00e1l\u00f3i hiteles\u00edt\u0151 adatok",
-            "service_unavailable": "Nincs el\u00e9rhet\u0151 szolg\u00e1ltat\u00e1s"
+            "faulty_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "service_unavailable": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
             "user": {

@@ -1,6 +1,4 @@
 """The tests for the image_processing component."""
-from unittest.mock import PropertyMock
-
 import homeassistant.components.http as http
 import homeassistant.components.image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
@@ -8,7 +6,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 
-from tests.async_mock import patch
+from tests.async_mock import PropertyMock, patch
 from tests.common import (
     assert_setup_component,
     get_test_home_assistant,

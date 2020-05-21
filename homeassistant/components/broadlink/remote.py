@@ -9,6 +9,12 @@ from itertools import product
 import logging
 
 import broadlink as blk
+from broadlink.exceptions import (
+    AuthorizationError,
+    BroadlinkException,
+    DeviceOfflineError,
+    ReadError,
+)
 import voluptuous as vol
 
 from homeassistant.components.remote import (
@@ -36,11 +42,11 @@ from .const import (
     DEFAULT_LEARNING_TIMEOUT,
     DEFAULT_NAME,
     DEFAULT_PORT,
-    DEFAULT_RETRY,
     DEFAULT_TIMEOUT,
     RM4_TYPES,
     RM_TYPES,
 )
+from .device import BroadlinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,17 +109,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         api = blk.rm4((host, DEFAULT_PORT), mac_addr, None)
     api.timeout = timeout
+    device = BroadlinkDevice(hass, api)
+
     code_storage = Store(hass, CODE_STORAGE_VERSION, f"broadlink_{unique_id}_codes")
     flag_storage = Store(hass, FLAG_STORAGE_VERSION, f"broadlink_{unique_id}_flags")
-    remote = BroadlinkRemote(name, unique_id, api, code_storage, flag_storage)
 
-    connected, loaded = (False, False)
-    try:
-        connected, loaded = await asyncio.gather(
-            hass.async_add_executor_job(api.auth), remote.async_load_storage_files()
-        )
-    except OSError:
-        pass
+    remote = BroadlinkRemote(name, unique_id, device, code_storage, flag_storage)
+
+    connected, loaded = await asyncio.gather(
+        device.async_connect(), remote.async_load_storage_files()
+    )
     if not connected:
         hass.data[DOMAIN][COMPONENT].remove(unique_id)
         raise PlatformNotReady
@@ -127,11 +132,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BroadlinkRemote(RemoteEntity):
     """Representation of a Broadlink remote."""
 
-    def __init__(self, name, unique_id, api, code_storage, flag_storage):
+    def __init__(self, name, unique_id, device, code_storage, flag_storage):
         """Initialize the remote."""
+        self.device = device
         self._name = name
         self._unique_id = unique_id
-        self._api = api
         self._code_storage = code_storage
         self._flag_storage = flag_storage
         self._codes = {}
@@ -157,7 +162,7 @@ class BroadlinkRemote(RemoteEntity):
     @property
     def available(self):
         """Return True if the remote is available."""
-        return self._available
+        return self.device.available
 
     @property
     def supported_features(self):
@@ -182,9 +187,9 @@ class BroadlinkRemote(RemoteEntity):
         self._state = False
 
     async def async_update(self):
-        """Update the availability of the remote."""
+        """Update the availability of the device."""
         if not self.available:
-            await self._async_connect()
+            await self.device.async_connect()
 
     async def async_load_storage_files(self):
         """Load codes and toggle flags from storage files."""
@@ -213,8 +218,10 @@ class BroadlinkRemote(RemoteEntity):
                 should_delay = await self._async_send_code(
                     cmd, device, delay if should_delay else 0
                 )
-            except ConnectionError:
+            except (AuthorizationError, DeviceOfflineError):
                 break
+            except BroadlinkException:
+                pass
 
         self._flag_storage.async_delay_save(self.get_flags, FLAG_SAVE_DELAY)
 
@@ -227,7 +234,7 @@ class BroadlinkRemote(RemoteEntity):
         try:
             code = self._codes[device][command]
         except KeyError:
-            _LOGGER.error("Failed to send '%s/%s': command not found", command, device)
+            _LOGGER.error("Failed to send '%s/%s': Command not found", command, device)
             return False
 
         if isinstance(code, list):
@@ -238,12 +245,14 @@ class BroadlinkRemote(RemoteEntity):
         await asyncio.sleep(delay)
 
         try:
-            await self._async_attempt(self._api.send_data, data_packet(code))
+            await self.device.async_request(
+                self.device.api.send_data, data_packet(code)
+            )
         except ValueError:
-            _LOGGER.error("Failed to send '%s/%s': invalid code", command, device)
+            _LOGGER.error("Failed to send '%s/%s': Invalid code", command, device)
             return False
-        except ConnectionError:
-            _LOGGER.error("Failed to send '%s/%s': remote is offline", command, device)
+        except BroadlinkException as err_msg:
+            _LOGGER.error("Failed to send '%s/%s': %s", command, device, err_msg)
             raise
 
         if should_alternate:
@@ -268,8 +277,10 @@ class BroadlinkRemote(RemoteEntity):
                 should_store |= await self._async_learn_code(
                     command, device, toggle, timeout
                 )
-            except ConnectionError:
+            except (AuthorizationError, DeviceOfflineError):
                 break
+            except BroadlinkException:
+                pass
 
         if should_store:
             await self._code_storage.async_save(self._codes)
@@ -287,22 +298,19 @@ class BroadlinkRemote(RemoteEntity):
                     await self._async_capture_code(command, timeout),
                     await self._async_capture_code(command, timeout),
                 ]
-        except (ValueError, TimeoutError):
-            _LOGGER.error(
-                "Failed to learn '%s/%s': no signal received", command, device
-            )
+        except TimeoutError:
+            _LOGGER.error("Failed to learn '%s/%s': No code received", command, device)
             return False
-        except ConnectionError:
-            _LOGGER.error("Failed to learn '%s/%s': remote is offline", command, device)
+        except BroadlinkException as err_msg:
+            _LOGGER.error("Failed to learn '%s/%s': %s", command, device, err_msg)
             raise
 
         self._codes.setdefault(device, {}).update({command: code})
-
         return True
 
     async def _async_capture_code(self, command, timeout):
         """Enter learning mode and capture a code from a remote."""
-        await self._async_attempt(self._api.enter_learning)
+        await self.device.async_request(self.device.api.enter_learning)
 
         self.hass.components.persistent_notification.async_create(
             f"Press the '{command}' button.",
@@ -313,44 +321,18 @@ class BroadlinkRemote(RemoteEntity):
         code = None
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=timeout):
-            code = await self.hass.async_add_executor_job(self._api.check_data)
-            if code:
+            try:
+                code = await self.device.async_request(self.device.api.check_data)
+            except ReadError:
+                await asyncio.sleep(1)
+            else:
                 break
-            await asyncio.sleep(1)
 
         self.hass.components.persistent_notification.async_dismiss(
             notification_id="learn_command"
         )
 
-        if not code:
+        if code is None:
             raise TimeoutError
-        if all(not value for value in code):
-            raise ValueError
 
         return b64encode(code).decode("utf8")
-
-    async def _async_attempt(self, function, *args):
-        """Retry a socket-related function until it succeeds."""
-        for retry in range(DEFAULT_RETRY):
-            if retry and not await self._async_connect():
-                continue
-            try:
-                await self.hass.async_add_executor_job(function, *args)
-            except OSError:
-                continue
-            return
-        raise ConnectionError
-
-    async def _async_connect(self):
-        """Connect to the remote."""
-        try:
-            auth = await self.hass.async_add_executor_job(self._api.auth)
-        except OSError:
-            auth = False
-        if auth and not self._available:
-            _LOGGER.warning("Connected to the remote")
-            self._available = True
-        elif not auth and self._available:
-            _LOGGER.warning("Disconnected from the remote")
-            self._available = False
-        return auth

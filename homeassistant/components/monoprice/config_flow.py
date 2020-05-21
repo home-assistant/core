@@ -99,7 +99,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 @core.callback
 def _key_for_source(index, source, previous_sources):
     if str(index) in previous_sources:
-        key = vol.Optional(source, default=previous_sources[str(index)])
+        key = vol.Optional(
+            source, description={"suggested_value": previous_sources[str(index)]}
+        )
     else:
         key = vol.Optional(source)
 

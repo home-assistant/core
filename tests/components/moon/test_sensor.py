@@ -1,11 +1,11 @@
 """The test for the moon sensor platform."""
 from datetime import datetime
 import unittest
-from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 DAY1 = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)

@@ -2,6 +2,9 @@
     "config": {
         "step": {
             "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou IP du routeur"
+                },
                 "title": "Connectez-vous au routeur Vilfo"
             }
         }

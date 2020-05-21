@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Configureer authenticatie"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Cameraentiteit maken"
+                },
+                "title": "Configureer profielen"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "title": "[%%] Apparaatopties"
+            }
+        }
+    }
+}

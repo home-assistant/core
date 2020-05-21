@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci.",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        }
+    }
+}

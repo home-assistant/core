@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il ricevitore DirecTV \u00e8 gi\u00e0 configurato",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare"
+            "cannot_connect": "Impossibile connettersi"
         },
         "flow_title": "DirecTV: {name}",
         "step": {
@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host o indirizzo IP"
+                    "host": "Host"
                 },
                 "title": "Collegamento al ricevitore DirecTV"
             }

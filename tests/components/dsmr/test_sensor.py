@@ -9,7 +9,6 @@ import asyncio
 import datetime
 from decimal import Decimal
 from itertools import chain, repeat
-from unittest.mock import DEFAULT, Mock
 
 import pytest
 
@@ -18,6 +17,7 @@ from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, TIME_HOURS, VOLUME_CUBIC_METERS
 
 import tests.async_mock
+from tests.async_mock import DEFAULT, Mock
 from tests.common import assert_setup_component
 
 

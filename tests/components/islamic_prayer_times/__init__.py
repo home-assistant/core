@@ -42,4 +42,4 @@ NEW_PRAYER_TIMES_TIMESTAMPS = {
     "Midnight": datetime(2020, 1, 1, 00, 43, 0),
 }
 
-NOW = datetime(2020, 1, 1, 00, 00, 0)
+NOW = datetime(2020, 1, 1, 00, 00, 0).astimezone()

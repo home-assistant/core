@@ -20,7 +20,7 @@
             "user": {
                 "data": {
                     "password": "Mot de passe",
-                    "username": "Email"
+                    "with_family": "Avec la famille"
                 },
                 "description": "Entrez vos identifiants",
                 "title": "Identifiants iCloud"
