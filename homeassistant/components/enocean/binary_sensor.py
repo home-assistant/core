@@ -3,14 +3,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import enocean
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.components.enocean.device import EnOceanDevice
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
 
 
-class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorEntity):
+class EnOceanBinarySensor(EnOceanDevice, BinarySensorEntity):
     """Representation of EnOcean binary sensors such as wall switches.
 
     Supported EEPs (EnOcean Equipment Profiles):

@@ -1,0 +1,20 @@
+{
+  "config": {
+    "title": "ENOcean",
+    "flow_title": "ENOcean setup",
+    "step": {
+      "init": {
+        "title": "Enter the path to you ENOcean dongle",
+        "data": {
+          "path": "USB dongle path"
+        }
+      }
+    },
+    "error": {
+      "invalid_dongle_path": "No dongle found for this path."
+    },
+    "abort": {
+      "dongle_already_configured": "An enocean dongle is already configured. If it is not visible in the UI, check the configuration.yaml file."
+    }
+  }
+}

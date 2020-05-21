@@ -3,7 +3,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import enocean
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.enocean.device import EnOceanDevice
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -18,7 +19,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +62,6 @@ SENSOR_TYPES = {
     },
 }
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -105,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([EnOceanWindowHandle(dev_id, dev_name)])
 
 
-class EnOceanSensor(enocean.EnOceanDevice, RestoreEntity):
+class EnOceanSensor(EnOceanDevice, RestoreEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
     def __init__(self, dev_id, dev_name, sensor_type):
