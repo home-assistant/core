@@ -136,12 +136,17 @@ class ProxmoxClient:
         self._connection_start_time = None
 
     def build_client(self):
-        """Construct the ProxmoxAPI client."""
+        """Construct the ProxmoxAPI client. Allows inserting the realm withing the `user` value."""
+
+        if "@" in self._user:
+            user_id = self._user
+        else:
+            user_id = f"{self._user}@{self._realm}"
 
         self._proxmox = ProxmoxAPI(
             self._host,
             port=self._port,
-            user=f"{self._user}@{self._realm}",
+            user=user_id,
             password=self._password,
             verify_ssl=self._verify_ssl,
         )
