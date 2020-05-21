@@ -27,6 +27,7 @@ from .const import (
     DOMAIN,
     DOMAIN_DATA_CONFIG,
     DOMAIN_DATA_ENTRIES,
+    DOMAIN_DATA_TASKS,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
@@ -73,6 +74,15 @@ DEVICE_SCHEMA = vol.Schema(
     )
 )
 
+
+async def _await_cancel(task):
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA])}, extra=vol.ALLOW_EXTRA
 )
@@ -81,6 +91,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the component."""
     hass.data[DOMAIN_DATA_ENTRIES] = {}
+    hass.data[DOMAIN_DATA_TASKS] = {}
     hass.data[DOMAIN_DATA_CONFIG] = {}
 
     for device in config[DOMAIN]:
@@ -93,6 +104,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
                 data={CONF_HOST: device[CONF_HOST], CONF_PORT: device[CONF_PORT]},
             )
         )
+
+    async def _stop(_):
+        asyncio.gather(
+            *[_await_cancel(task) for task in hass.data[DOMAIN_DATA_TASKS].values()]
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
 
     return True
 
@@ -107,13 +125,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.Confi
             {CONF_HOST: entry.data[CONF_HOST], CONF_PORT: entry.data[CONF_PORT]}
         ),
     )
+    tasks = hass.data.setdefault(DOMAIN_DATA_TASKS, {})
 
     hass.data[DOMAIN_DATA_ENTRIES][entry.entry_id] = {
         "client": client,
         "config": config,
     }
 
-    asyncio.ensure_future(_run_client(hass, client, config[CONF_SCAN_INTERVAL]))
+    task = asyncio.create_task(_run_client(hass, client, DEFAULT_SCAN_INTERVAL))
+    tasks[entry.entry_id] = task
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "media_player")
@@ -122,22 +142,23 @@ async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.Confi
     return True
 
 
+async def async_unload_entry(hass, entry):
+    """Cleanup before removing config entry."""
+    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
+
+    task = hass.data[DOMAIN_DATA_TASKS].pop(entry.entry_id)
+    await _await_cancel(task)
+
+    hass.data[DOMAIN_DATA_ENTRIES].pop(entry.entry_id)
+
+    return True
+
+
 async def _run_client(hass, client, interval):
-    task = asyncio.Task.current_task()
-    run = True
-
-    async def _stop(_):
-        nonlocal run
-        run = False
-        task.cancel()
-        await task
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
-
     def _listen(_):
         hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_CLIENT_DATA, client.host)
 
-    while run:
+    while True:
         try:
             with async_timeout.timeout(interval):
                 await client.start()
@@ -163,7 +184,7 @@ async def _run_client(hass, client, interval):
         except asyncio.TimeoutError:
             continue
         except asyncio.CancelledError:
-            return
+            raise
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception, aborting arcam client")
             return

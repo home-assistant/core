@@ -21,7 +21,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
 
         if metric.is_bool:
-            entities.append(BoolEntity(device, metric))
+            entities.append(BoolEntity(device, metric, config_entry.options))
 
         async_add_entities(entities)
 
@@ -31,9 +31,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BoolEntity(WiffiEntity, BinarySensorEntity):
     """Entity for wiffi metrics which have a boolean value."""
 
-    def __init__(self, device, metric):
+    def __init__(self, device, metric, options):
         """Initialize the entity."""
-        super().__init__(device, metric)
+        super().__init__(device, metric, options)
         self._value = metric.value
         self.reset_expiration_date()
 

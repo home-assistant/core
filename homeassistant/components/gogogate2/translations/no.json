@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP adresse"
+                },
+                "description": "Oppgi n\u00f8dvendig informasjon nedenfor.",
+                "title": "Konfigurer GogoGate2"
+            }
+        }
+    }
+}

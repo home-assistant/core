@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "UPnP/IGD ass scho konfigur\u00e9iert",
             "incomplete_device": "Ignor\u00e9iert onvollst\u00e4nnegen UPnP-Apparat",
+            "incomplete_discovery": "Entdeckung net komplett",
             "no_devices_discovered": "Keng UPnP/IGDs entdeckt",
             "no_devices_found": "Keng UPnP/IGD Apparater am Netzwierk fonnt.",
             "no_sensors_or_port_mapping": "Aktiv\u00e9ier op mannst Sensoren oder Port Mapping",

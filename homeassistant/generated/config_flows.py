@@ -7,6 +7,7 @@ To update, run python3 -m script.hassfest
 
 FLOWS = [
     "abode",
+    "acmeda",
     "adguard",
     "agent_dvr",
     "airly",
@@ -51,6 +52,7 @@ FLOWS = [
     "geonetnz_volcano",
     "gios",
     "glances",
+    "gogogate2",
     "gpslogger",
     "griddy",
     "hangouts",
@@ -89,6 +91,7 @@ FLOWS = [
     "met",
     "meteo_france",
     "mikrotik",
+    "mill",
     "minecraft_server",
     "mobile_app",
     "monoprice",
@@ -106,6 +109,7 @@ FLOWS = [
     "opentherm_gw",
     "openuv",
     "owntracks",
+    "ozw",
     "panasonic_viera",
     "pi_hole",
     "plaato",
@@ -164,6 +168,5 @@ FLOWS = [
     "xiaomi_miio",
     "zerproc",
     "zha",
-    "zwave",
-    "zwave_mqtt"
+    "zwave"
 ]

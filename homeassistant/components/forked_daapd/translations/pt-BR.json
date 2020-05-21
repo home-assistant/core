@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado.",
+            "not_forked_daapd": "O dispositivo n\u00e3o \u00e9 um servidor forked-daapd."
+        },
+        "error": {
+            "unknown_error": "Erro desconhecido.",
+            "websocket_not_enabled": "websocket do servidor forked-daapd n\u00e3o ativado.",
+            "wrong_host_or_port": "N\u00e3o foi poss\u00edvel conectar. Por favor, verifique o endere\u00e7o e a porta.",
+            "wrong_password": "Senha incorreta.",
+            "wrong_server_type": "A integra\u00e7\u00e3o forked-daapd requer um servidor forked-daapd com vers\u00e3o >= 27.0."
+        },
+        "flow_title": "servidor forked-daapd: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Endere\u00e7o (IP)",
+                    "name": "Nome amig\u00e1vel",
+                    "password": "Senha da API (deixe em branco se n\u00e3o houver senha)",
+                    "port": "Porta API"
+                },
+                "title": "Configurar dispositivo forked-daapd"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "librespot_java_port": "Porta para controle de pipe librespot-java (se usado)",
+                    "max_playlists": "N\u00famero m\u00e1ximo de listas de reprodu\u00e7\u00e3o usadas como fontes",
+                    "tts_pause_time": "Segundos para pausar antes e depois do TTS",
+                    "tts_volume": "Volume TTS (flutua\u00e7\u00e3o na faixa [0,1])"
+                },
+                "description": "Defina v\u00e1rias op\u00e7\u00f5es para a integra\u00e7\u00e3o forked-daapd.",
+                "title": "Configurar op\u00e7\u00f5es forked-daapd"
+            }
+        }
+    }
+}

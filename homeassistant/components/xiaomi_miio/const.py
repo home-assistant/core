@@ -34,6 +34,8 @@ SERVICE_EYECARE_MODE_OFF = "light_eyecare_mode_off"
 
 # Remote Services
 SERVICE_LEARN = "remote_learn_command"
+SERVICE_SET_LED_ON = "remote_set_led_on"
+SERVICE_SET_LED_OFF = "remote_set_led_off"
 
 # Switch Services
 SERVICE_SET_WIFI_LED_ON = "switch_set_wifi_led_on"

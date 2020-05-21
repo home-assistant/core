@@ -14,7 +14,7 @@
         },
         "step": {
             "auth": {
-                "description": "Suivez ce [lien] ( {authorization_url} ) et <b> Autorisez </b> l'acc\u00e8s \u00e0 votre compte Ambiclimate, puis revenez et appuyez sur <b> Envoyer </b> ci-dessous. \n (Assurez-vous que l'URL de rappel sp\u00e9cifi\u00e9 est {cb_url} )",
+                "description": "Suivez ce [lien]({authorization_url}) et **Autorisez** l'acc\u00e8s \u00e0 votre compte Ambiclimate, puis revenez et appuyez sur **Envoyer** ci-dessous. \n (Assurez-vous que l'URL de rappel sp\u00e9cifi\u00e9 est {cb_url})",
                 "title": "Authentifier Ambiclimate"
             }
         }

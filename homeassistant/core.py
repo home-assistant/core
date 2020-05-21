@@ -1454,10 +1454,6 @@ class Config:
         )
         data = await store.async_load()
 
-        if data and "external_url" in data:
-            self._update(source=SOURCE_STORAGE, **data)
-            return
-
         async def migrate_base_url(_: Event) -> None:
             """Migrate base_url to internal_url/external_url."""
             if self.hass.config.api is None:
@@ -1484,11 +1480,24 @@ class Config:
                     external_url=network.normalize_url(str(base_url))
                 )
 
-        # Try to migrate base_url to internal_url/external_url
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, migrate_base_url)
-
         if data:
-            self._update(source=SOURCE_STORAGE, **data)
+            # Try to migrate base_url to internal_url/external_url
+            if "external_url" not in data:
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_START, migrate_base_url
+                )
+
+            self._update(
+                source=SOURCE_STORAGE,
+                latitude=data.get("latitude"),
+                longitude=data.get("longitude"),
+                elevation=data.get("elevation"),
+                unit_system=data.get("unit_system"),
+                location_name=data.get("location_name"),
+                time_zone=data.get("time_zone"),
+                external_url=data.get("external_url", _UNDEF),
+                internal_url=data.get("internal_url", _UNDEF),
+            )
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""

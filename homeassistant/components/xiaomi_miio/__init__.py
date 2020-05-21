@@ -38,7 +38,11 @@ async def async_setup_gateway_entry(
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
     name = entry.title
-    gateway_id = entry.data["gateway_id"]
+    gateway_id = entry.unique_id
+
+    # For backwards compat
+    if entry.unique_id.endswith("-gateway"):
+        hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass)

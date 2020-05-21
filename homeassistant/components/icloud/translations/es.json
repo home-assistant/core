@@ -20,6 +20,7 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
+                    "username": "Correo electr\u00f3nico",
                     "with_family": "Con la familia"
                 },
                 "description": "Ingrese sus credenciales",

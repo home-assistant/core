@@ -244,17 +244,17 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_track_clients:
-            await self.async_remove()
+            await self.remove_item({self.client.mac})
 
         elif self.is_wired:
             if not self.controller.option_track_wired_clients:
-                await self.async_remove()
+                await self.remove_item({self.client.mac})
 
         elif (
             self.controller.option_ssid_filter
             and self.client.essid not in self.controller.option_ssid_filter
         ):
-            await self.async_remove()
+            await self.remove_item({self.client.mac})
 
 
 class UniFiDeviceTracker(UniFiBase, ScannerEntity):
@@ -383,4 +383,4 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_track_devices:
-            await self.async_remove()
+            await self.remove_item({self.device.mac})

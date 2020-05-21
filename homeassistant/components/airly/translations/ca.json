@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Clau API d'Airly",
+                    "api_key": "Clau API",
                     "latitude": "Latitud",
                     "longitude": "Longitud",
                     "name": "Nom de la integraci\u00f3"

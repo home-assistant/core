@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "Please follow the link below and <b>Accept</b> access to your Minut account, then come back and press <b>Submit</b> below.\n\n[Link]({authorization_url})",
+                "description": "Please follow the link below and **Accept** access to your Minut account, then come back and press **Submit** below.\n\n[Link]({authorization_url})",
                 "title": "Authenticate Point"
             },
             "user": {

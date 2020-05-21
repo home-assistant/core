@@ -19,10 +19,10 @@
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%] (opcjonalnie, je\u015bli wprowadzono token)",
-                    "port": "[%key_id:common::config_flow::data::port%]",
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port",
                     "ssl": "U\u017cyj SSL",
-                    "token": "[%key_id:common::config_flow::data::access_token%] (opcjonalnie)",
+                    "token": "Token dost\u0119pu (opcjonalnie)",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
                 "title": "Manualna konfiguracja Plex"
@@ -36,7 +36,7 @@
             },
             "start_website_auth": {
                 "description": "Kontynuuj, by dokona\u0107 autoryzacji w plex.tv.",
-                "title": "Po\u0142\u0105cz z serwerem Plex"
+                "title": "Po\u0142\u0105czenie z serwerem Plex"
             },
             "user": {
                 "description": "Przejd\u017a do [plex.tv](https://plex.tv), aby po\u0142\u0105czy\u0107 serwer Plex.",
