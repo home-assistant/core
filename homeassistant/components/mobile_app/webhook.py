@@ -125,7 +125,7 @@ def validate_schema(schema):
                 data = schema(data)
             except vol.Invalid as ex:
                 err = vol.humanize.humanize_error(data, ex)
-                if 'state' not in data:
+                if 'state' in err:
                     _LOGGER.debug("Webhook data incomplete, continuing")
                     pass
                 else:
