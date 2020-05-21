@@ -2,6 +2,7 @@
 import logging
 
 from pydelijn.api import Passages
+from pydelijn.common import HttpException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -37,22 +38,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the sensor."""
     api_key = config[CONF_API_KEY]
-    name = DEFAULT_NAME
 
     session = async_get_clientsession(hass)
 
     sensors = []
     for nextpassage in config[CONF_NEXT_DEPARTURE]:
-        stop_id = nextpassage[CONF_STOP_ID]
-        number_of_departures = nextpassage[CONF_NUMBER_OF_DEPARTURES]
-        line = Passages(
-            hass.loop, stop_id, number_of_departures, api_key, session, True
+        sensors.append(
+            DeLijnPublicTransportSensor(
+                Passages(
+                    hass.loop,
+                    nextpassage[CONF_STOP_ID],
+                    nextpassage[CONF_NUMBER_OF_DEPARTURES],
+                    api_key,
+                    session,
+                    True,
+                )
+            )
         )
-        await line.get_passages()
-        if line.passages is None:
-            _LOGGER.warning("No data received from De Lijn")
-            return
-        sensors.append(DeLijnPublicTransportSensor(line, name))
 
     async_add_entities(sensors, True)
 
@@ -60,20 +62,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class DeLijnPublicTransportSensor(Entity):
     """Representation of a Ruter sensor."""
 
-    def __init__(self, line, name):
+    def __init__(self, line):
         """Initialize the sensor."""
         self.line = line
         self._attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._name = name
+        self._name = None
         self._state = None
-        self._available = False
+        self._available = True
 
     async def async_update(self):
         """Get the latest data from the De Lijn API."""
-        await self.line.get_passages()
-        if self.line.passages is None:
-            _LOGGER.warning("No data received from De Lijn")
+        try:
+            await self.line.get_passages()
+            self._name = await self.line.get_stopname()
+        except HttpException:
+            self._available = False
+            _LOGGER.error("De Lijn http error")
             return
+
+        self._attributes["stopname"] = self._name
+        for passage in self.line.passages:
+            passage["stopname"] = self._name
+
         try:
             first = self.line.passages[0]
             if first["due_at_realtime"] is not None:
@@ -81,8 +91,6 @@ class DeLijnPublicTransportSensor(Entity):
             else:
                 first_passage = first["due_at_schedule"]
             self._state = first_passage
-            self._name = first["stopname"]
-            self._attributes["stopname"] = first["stopname"]
             self._attributes["line_number_public"] = first["line_number_public"]
             self._attributes["line_transport_type"] = first["line_transport_type"]
             self._attributes["final_destination"] = first["final_destination"]
@@ -90,8 +98,8 @@ class DeLijnPublicTransportSensor(Entity):
             self._attributes["due_at_realtime"] = first["due_at_realtime"]
             self._attributes["next_passages"] = self.line.passages
             self._available = True
-        except (KeyError, IndexError) as error:
-            _LOGGER.debug("Error getting data from De Lijn: %s", error)
+        except (KeyError, IndexError):
+            _LOGGER.error("Invalid data received from De Lijn")
             self._available = False
 
     @property
