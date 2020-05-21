@@ -128,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN][DT_SERIAL].append(device.serial_number)
 
         @callback
-        def client_created_callback(device, type, params):
+        def client_created_callback(device, type_, params):
             # Callback to continue device setup after creating the client.
             hass.add_job(dispatch_devices_callback(device))
 
@@ -241,7 +241,7 @@ class WiLightDevice(Entity):
         self._device_id = wilight.device_id
         self._swversion = wilight.swversion
         self._client = wilight.client
-        self._model = wilight.type
+        self._model = wilight.model
         self._name = item_name
         self._index = index
         self._type = item_type
