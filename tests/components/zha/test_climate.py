@@ -1,5 +1,4 @@
 """Test zha climate."""
-import logging
 
 import pytest
 import zigpy.zcl.clusters
@@ -1001,34 +1000,32 @@ async def test_fan_mode(hass, device_climate_fan):
     assert state.attributes[ATTR_FAN_MODE] == FAN_ON
 
 
-async def test_set_fan_mode_no_fan(hass, device_climate, caplog):
+async def test_set_fan_mode_no_fan(hass, device_climate):
     """Test setting fan mode on fun less climate."""
 
     entity_id = await find_entity_id(DOMAIN, device_climate, hass)
 
-    with caplog.at_level(logging.DEBUG):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_ON},
-            blocking=True,
-        )
-    assert "Fan is not supported" in caplog.text
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_ON},
+        blocking=True,
+    )
 
 
-async def test_set_fan_mode_not_supported(hass, device_climate_fan, caplog):
+async def test_set_fan_mode_not_supported(hass, device_climate_fan):
     """Test fan setting unsupported mode."""
 
     entity_id = await find_entity_id(DOMAIN, device_climate_fan, hass)
+    fan_cluster = device_climate_fan.device.endpoints[1].fan
 
-    with caplog.at_level(logging.DEBUG):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
-            blocking=True,
-        )
-    assert "Unsupported 'low' fan mode" in caplog.text
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
+        blocking=True,
+    )
+    assert fan_cluster.write_attributes.await_count == 0
 
 
 async def test_set_fan_mode(hass, device_climate_fan):
