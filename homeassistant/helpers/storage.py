@@ -200,31 +200,20 @@ class Store:
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
+        data = self._data
+
+        if "data_func" in data:
+            data["data"] = data.pop("data_func")()
+
+        self._data = None
 
         async with self._write_lock:
-            if self._data is None:
-                # Another write already consumed the data
-                _LOGGER.error("Lost race condition for file %s", self.key)
-                return
-
-            data = self._data
-
-            if "data_func" in data:
-                data["data"] = data.pop("data_func")()
-
-            self._data = None
-
-            if self.key == "core.device_registry":
-                _LOGGER.warning("About to write data: %s", data)
-
             try:
                 await self.hass.async_add_executor_job(
                     self._write_data, self.path, data
                 )
             except (json_util.SerializationError, json_util.WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
-            except Exception:
-                _LOGGER.exception("Unknown error while writing config for %s", self.key)
 
     def _write_data(self, path: str, data: Dict) -> None:
         """Write the data."""
