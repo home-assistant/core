@@ -312,7 +312,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200519.0
+home-assistant-frontend==20200519.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -554,7 +554,7 @@ pyflume==0.4.0
 pyflunearyou==1.0.7
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.8
+pyforked-daapd==0.1.9
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
