@@ -1561,11 +1561,13 @@ class TransportControlTrait(_Trait):
             service = media_player.SERVICE_MEDIA_SEEK
 
             rel_position = params["relativePositionMs"] / 1000
-            now = dt.utcnow()
-            upd_at = self.state.attributes.get(
-                media_player.ATTR_MEDIA_POSITION_UPDATED_AT, now
-            )
-            seconds_since = (now - upd_at).total_seconds()
+            seconds_since = 0  # Default to 0 seconds
+            if self.state.state == STATE_PLAYING:
+                now = dt.utcnow()
+                upd_at = self.state.attributes.get(
+                    media_player.ATTR_MEDIA_POSITION_UPDATED_AT, now
+                )
+                seconds_since = (now - upd_at).total_seconds()
             position = self.state.attributes.get(media_player.ATTR_MEDIA_POSITION, 0)
             max_position = self.state.attributes.get(
                 media_player.ATTR_MEDIA_DURATION, 0
