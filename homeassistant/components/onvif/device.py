@@ -223,7 +223,7 @@ class ONVIFDevice:
         try:
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
-            snapshot = media_capabilities.SnapshotUri
+            snapshot = media_capabilities and media_capabilities.SnapshotUri
         except (ONVIFError, Fault):
             pass
 
@@ -231,7 +231,7 @@ class ONVIFDevice:
         try:
             event_service = self.device.create_events_service()
             event_capabilities = await event_service.GetServiceCapabilities()
-            pullpoint = event_capabilities.WSPullPointSupport
+            pullpoint = event_capabilities and event_capabilities.WSPullPointSupport
         except (ONVIFError, Fault):
             pass
 
