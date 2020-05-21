@@ -66,9 +66,11 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self.coordinator.atag.climate.temp_unit in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
-            return self.coordinator.atag.climate.temp_unit
-        return None
+        return (
+            TEMP_CELSIUS
+            if self.coordinator.atag.climate.temp_unit == TEMP_CELSIUS
+            else TEMP_FAHRENHEIT
+        )
 
     @property
     def current_temperature(self) -> Optional[float]:
