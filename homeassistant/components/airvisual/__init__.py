@@ -1,6 +1,7 @@
 """The airvisual component."""
 import asyncio
 from datetime import timedelta
+from math import ceil
 
 from pyairvisual import Client
 from pyairvisual.errors import AirVisualError, NodeProError
@@ -37,7 +38,6 @@ from .const import (
 PLATFORMS = ["air_quality", "sensor"]
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
-DEFAULT_GEOGRAPHY_SCAN_INTERVAL = timedelta(minutes=10)
 DEFAULT_NODE_PRO_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_OPTIONS = {CONF_SHOW_ON_MAP: True}
 
@@ -86,6 +86,37 @@ def async_get_geography_id(geography_dict):
     return ", ".join(
         (str(geography_dict[CONF_LATITUDE]), str(geography_dict[CONF_LONGITUDE]))
     )
+
+
+@callback
+def async_get_cloud_api_update_interval(hass, api_key):
+    """Get a leveled scan interval for a particular cloud API key.
+
+    This will shift based on the number of active consumers, thus keeping the user
+    under the monthly API limit.
+    """
+    num_consumers = len(
+        {
+            config_entry
+            for config_entry in hass.config_entries.async_entries(DOMAIN)
+            if config_entry.data.get(CONF_API_KEY) == api_key
+        }
+    )
+
+    # Assuming 10,000 calls per month and a "smallest possible month" of 28 days; note
+    # that we give a buffer of 1500 API calls for any drift, restarts, etc.:
+    minutes_between_api_calls = ceil(1 / (8500 / 28 / 24 / 60 / num_consumers))
+    return timedelta(minutes=minutes_between_api_calls)
+
+
+@callback
+def async_reset_coordinator_update_intervals(hass, update_interval):
+    """Update any existing data coordinators with a new update interval."""
+    if not hass.data[DOMAIN][DATA_COORDINATOR]:
+        return
+
+    for coordinator in hass.data[DOMAIN][DATA_COORDINATOR].values():
+        coordinator.update_interval = update_interval
 
 
 async def async_setup(hass, config):
@@ -163,6 +194,10 @@ async def async_setup_entry(hass, config_entry):
 
         client = Client(api_key=config_entry.data[CONF_API_KEY], session=websession)
 
+        update_interval = async_get_cloud_api_update_interval(
+            hass, config_entry.data[CONF_API_KEY]
+        )
+
         async def async_update_data():
             """Get new data from the API."""
             if CONF_CITY in config_entry.data:
@@ -185,9 +220,13 @@ async def async_setup_entry(hass, config_entry):
             hass,
             LOGGER,
             name="geography data",
-            update_interval=DEFAULT_GEOGRAPHY_SCAN_INTERVAL,
+            update_interval=update_interval,
             update_method=async_update_data,
         )
+
+        # Ensure any other, existing config entries that use this API key are updated
+        # with the new scan interval:
+        async_reset_coordinator_update_intervals(hass, update_interval)
 
         # Only geography-based entries have options:
         config_entry.add_update_listener(async_update_options)
