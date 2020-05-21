@@ -65,3 +65,8 @@ PV_ROOM_DATA = "pv_room_data"
 COORDINATOR = "coordinator"
 
 HUB_EXCEPTIONS = (asyncio.TimeoutError, PvApiConnectionError)
+
+LEGACY_DEVICE_SUB_REVISION = 1
+LEGACY_DEVICE_REVISION = 0
+LEGACY_DEVICE_BUILD = 0
+LEGACY_DEVICE_MODEL = "PV Hub1.0"
