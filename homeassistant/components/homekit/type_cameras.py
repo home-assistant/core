@@ -14,16 +14,22 @@ from pyhap.const import CATEGORY_CAMERA
 
 from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.const import STATE_ON
 from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_state_change,
+    async_track_time_interval,
+)
 from homeassistant.util import get_local_ip
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
+    CHAR_MOTION_DETECTED,
     CHAR_STREAMING_STRATUS,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
+    CONF_LINKED_MOTION_SENSOR,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
@@ -44,6 +50,7 @@ from .const import (
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
     SERV_CAMERA_RTP_STREAM_MANAGEMENT,
+    SERV_MOTION_SENSOR,
 )
 from .img_util import scale_jpeg_camera_image
 from .util import pid_is_alive
@@ -179,6 +186,43 @@ class Camera(HomeAccessory, PyhapCamera):
             config,
             category=CATEGORY_CAMERA,
             options=options,
+        )
+        self._char_motion_detected = None
+        self.linked_motion_sensor = self.config.get(CONF_LINKED_MOTION_SENSOR)
+        if not self.linked_motion_sensor or not self.hass.states.get(
+            self.linked_motion_sensor
+        ):
+            return
+        serv_motion = self.add_preload_service(SERV_MOTION_SENSOR)
+        self._char_motion_detected = serv_motion.configure_char(
+            CHAR_MOTION_DETECTED, value=False
+        )
+
+    async def run_handler(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
+        if self._char_motion_detected:
+            async_track_state_change(
+                self.hass, self.linked_motion_sensor, self._async_update_motion_state
+            )
+        await super().run_handler()
+
+    @callback
+    def _async_update_motion_state(self, new_state):
+        """Handle link motion sensor state change to update HomeKit value."""
+        state = new_state.state
+        detected = state == STATE_ON
+        if self._char_motion_detected.value == detected:
+            return
+
+        self._char_motion_detected.set_value(detected)
+        _LOGGER.debug(
+            "%s: Set linked motion %s sensor to %d",
+            self.entity_id,
+            self.linked_motion_sensor,
+            detected,
         )
 
     @callback
