@@ -1,5 +1,6 @@
 """Adds config flow for Bravia TV integration."""
 import ipaddress
+from json.decoder import JSONDecodeError
 import logging
 import re
 
@@ -129,9 +130,12 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=self.title, data=user_input)
 
         # Connecting with th PIN "0000" to start the pairing process on the TV.
-        await self.hass.async_add_executor_job(
-            self.braviarc.connect, "0000", CLIENTID_PREFIX, NICKNAME,
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self.braviarc.connect, "0000", CLIENTID_PREFIX, NICKNAME,
+            )
+        except JSONDecodeError:
+            return self.async_abort(reason="unsupported_model")
 
         return self.async_show_form(
             step_id="authorize",

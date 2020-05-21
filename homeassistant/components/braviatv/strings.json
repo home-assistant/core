@@ -22,7 +22,9 @@
       "unsupported_model": "Your TV model is not supported."
     },
     "abort": {
-      "already_configured": "This TV is already configured."
+      "already_configured": "This TV is already configured.",
+      "cannot_connect": "Failed to connect.",
+      "unsupported_model": "Your TV model is not supported."
     }
   },
   "options": {
