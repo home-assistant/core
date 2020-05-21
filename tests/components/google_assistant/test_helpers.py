@@ -44,15 +44,17 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
 
     config.async_enable_local_sdk()
 
-    serialized = await entity.sync_serialize(None)
-    assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
-    assert serialized["customData"] == {
-        "httpPort": 1234,
-        "httpSSL": True,
-        "proxyDeviceId": None,
-        "webhookId": "mock-webhook-id",
-        "baseUrl": "https://hostname:1234",
-    }
+    with patch("homeassistant.helpers.instance_id.async_get", return_value="abcdef"):
+        serialized = await entity.sync_serialize(None)
+        assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
+        assert serialized["customData"] == {
+            "httpPort": 1234,
+            "httpSSL": True,
+            "proxyDeviceId": None,
+            "webhookId": "mock-webhook-id",
+            "baseUrl": "https://hostname:1234",
+            "uuid": "abcdef",
+        }
 
     for device_type in NOT_EXPOSE_LOCAL:
         with patch(
