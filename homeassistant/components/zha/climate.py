@@ -234,8 +234,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self._thrm.pi_heating_demand is None
             and self._thrm.pi_cooling_demand is None
         ):
-            self.debug("Running mode: %s", self._thrm.running_mode)
-            self.debug("Running state: %s", self._thrm.running_state)
             running_state = self._thrm.running_state
             if running_state is None:
                 return None
