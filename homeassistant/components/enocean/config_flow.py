@@ -43,8 +43,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         It uses a state machine to walk through the different steps of the
         configuration.
         """
-        enocean_configured = DOMAIN in self.hass.config.components
-        if enocean_configured:
+        if self._async_current_entries() or DOMAIN in self.hass.data:
             return self.async_abort(reason="dongle_already_configured")
 
         if user_input is None:
@@ -56,7 +55,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.set_dongle_setup_state(config_state, user_input)
 
-    async def set_dongle_setup_state(self, new_state, user_input=None, errors={}):
+    async def set_dongle_setup_state(self, new_state, user_input=None, errors=None):
         """Change the current state of the dongle setup state machine (re-entrant method)."""
         if new_state == DongleSetupStates.SELECT_MANUAL:
             LOGGER.debug(f"Config step: select manual with errors={errors}")
@@ -75,7 +74,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        elif new_state == DongleSetupStates.SELECT_AUTO:
+        if new_state == DongleSetupStates.SELECT_AUTO:
             LOGGER.debug("Config step: select auto")
             bridges = EnOceanDongle.detect()
             if len(bridges) == 0:
@@ -89,20 +88,20 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(bridges)}),
             )
 
-        elif new_state == DongleSetupStates.VALIDATE:
+        if new_state == DongleSetupStates.VALIDATE:
             LOGGER.debug("Config step: validate")
             dongle_path = user_input[CONF_DEVICE]
             if path.exists(dongle_path) and not path.isdir(dongle_path):
                 return await self.set_dongle_setup_state(
                     DongleSetupStates.CREATE_ENTRY, user_input
                 )
-            else:
-                errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
-                return await self.set_dongle_setup_state(
-                    DongleSetupStates.SELECT_MANUAL, user_input, errors
-                )
 
-        elif new_state == DongleSetupStates.CREATE_ENTRY:
+            errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
+            return await self.set_dongle_setup_state(
+                DongleSetupStates.SELECT_MANUAL, user_input, errors
+            )
+
+        if new_state == DongleSetupStates.CREATE_ENTRY:
             LOGGER.debug("Config step: create entry")
             await self.async_set_unique_id(user_input[CONF_DEVICE])
             self._abort_if_unique_id_configured()

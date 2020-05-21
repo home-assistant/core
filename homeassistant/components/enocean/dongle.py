@@ -26,7 +26,7 @@ class EnOceanDongle:
     """
 
     @classmethod
-    def detect(self):
+    def detect(cls):
         """Return a list of candidate paths for USB ENOcean dongles.
 
         This method is currently a bit simplistic, it may need to be
