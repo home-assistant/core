@@ -185,6 +185,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         device = get_device(
+            self.hass,
             self.onvif_config[CONF_HOST],
             self.onvif_config[CONF_PORT],
             self.onvif_config[CONF_USERNAME],
