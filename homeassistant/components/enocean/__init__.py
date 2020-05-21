@@ -2,10 +2,11 @@
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.enocean.const import DATA_ENOCEAN, DOMAIN, LOGGER
 from homeassistant.components.enocean.dongle import EnOceanDongle
 from homeassistant.const import CONF_DEVICE
+import homeassistant.helpers.config_validation as cv
+
 from ... import config_entries, core
 
 CONFIG_SCHEMA = vol.Schema(
@@ -27,7 +28,7 @@ def setup(hass, config):
 
 
 async def async_setup_entry(
-        hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Set up an EnOcean dongle for the given entry.
 
@@ -44,7 +45,7 @@ async def async_setup_entry(
         hass.data[DOMAIN] = {}
 
     if CONF_DEVICE not in config_entry.data:
-        LOGGER.error("Missing {} entry in config".format(CONF_DEVICE))
+        LOGGER.error(f"Missing {CONF_DEVICE} entry in config")
         return False
 
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
@@ -55,5 +56,5 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass, config_entry):
     """Unload ENOcean config entry."""
-    LOGGER.debug("Unloading {}".format(DOMAIN))
+    LOGGER.debug(f"Unloading {DOMAIN}")
     return True

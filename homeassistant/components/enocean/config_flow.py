@@ -59,7 +59,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def set_dongle_setup_state(self, new_state, user_input=None, errors={}):
         """Change the current state of the dongle setup state machine (re-entrant method)."""
         if new_state == DongleSetupStates.SELECT_MANUAL:
-            LOGGER.debug("Config step: select manual with errors={}".format(errors))
+            LOGGER.debug(f"Config step: select manual with errors={errors}")
             default_value = None
             if (
                 user_input is not None

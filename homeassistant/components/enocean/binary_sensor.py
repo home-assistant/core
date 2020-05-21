@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
@@ -11,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.enocean.device import EnOceanDevice
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 

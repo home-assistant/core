@@ -42,7 +42,7 @@ class EnOceanDongle:
     def __init__(self, hass, serial_path):
         """Initialize the EnOcean dongle."""
 
-        LOGGER.debug("Creating dongle for path {}".format(serial_path))
+        LOGGER.debug(f"Creating dongle for path {serial_path}")
         self.__communicator = SerialCommunicator(
             port=serial_path, callback=self.callback
         )

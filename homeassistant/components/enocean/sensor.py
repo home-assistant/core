@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.enocean.device import EnOceanDevice
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -19,6 +18,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
