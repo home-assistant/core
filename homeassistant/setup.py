@@ -41,7 +41,10 @@ async def async_setup_component(
     setup_tasks = hass.data.setdefault(DATA_SETUP, {})
 
     if domain in setup_tasks:
+        _LOGGER.info("async_setup_component: setup_tasks: %s", domain)
         return await setup_tasks[domain]  # type: ignore
+
+    _LOGGER.info("_async_setup_component: %s", domain)
 
     task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config)
@@ -65,12 +68,19 @@ async def _async_process_dependencies(
         )
         return False
 
+    _LOGGER.info("deps for %s are %s", name, dependencies)
+
     tasks = [async_setup_component(hass, dep, config) for dep in dependencies]
 
     if not tasks:
+        _LOGGER.info("NO async_setup_component tasks")
         return True
 
+    _LOGGER.info("Waiting for async_setup_component tasks: %s", tasks)
+
     results = await asyncio.gather(*tasks)
+
+    _LOGGER.info("Finished Waiting for async_setup_component tasks: %s", results)
 
     failed = [dependencies[idx] for idx, res in enumerate(results) if not res]
 
@@ -123,13 +133,20 @@ async def _async_setup_component(
         )
         return False
 
+    _LOGGER.info("Processing deps for %s", domain)
+
     # Process requirements as soon as possible, so we can import the component
     # without requiring imports to be in functions.
     try:
         await async_process_deps_reqs(hass, config, integration)
     except HomeAssistantError as err:
-        log_error(str(err), integration.documentation)
+        log_error(
+            f"Processing dependencies for {integration} failed ({err})",
+            integration.documentation,
+        )
         return False
+
+    _LOGGER.info("get_component for %s", domain)
 
     # Some integrations fail on import because they call functions incorrectly.
     # So we do it before validating config to catch these errors.
@@ -141,6 +158,8 @@ async def _async_setup_component(
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Setup failed for %s: unknown error", domain)
         return False
+
+    _LOGGER.info("async_process_component_config for %s", domain)
 
     processed_config = await conf_util.async_process_component_config(
         hass, config, integration
@@ -244,7 +263,7 @@ async def async_prepare_setup_platform(
     try:
         await async_process_deps_reqs(hass, hass_config, integration)
     except HomeAssistantError as err:
-        log_error(str(err))
+        log_error(f"Processing dependencies for {integration} failed ({err})")
         return None
 
     try:
@@ -288,15 +307,36 @@ async def async_process_deps_reqs(
     elif integration.domain in processed:
         return
 
+    _LOGGER.info(
+        "async_process_deps_reqs: %s, %s, requirements: %s",
+        integration.domain,
+        integration.dependencies,
+        integration.requirements,
+    )
+
     if integration.dependencies and not await _async_process_dependencies(
         hass, config, integration.domain, integration.dependencies
     ):
         raise HomeAssistantError("Could not set up all dependencies.")
 
+    _LOGGER.info(
+        "FINISH async_process_deps_reqs: %s, %s, requirements: %s",
+        integration.domain,
+        integration.dependencies,
+        integration.requirements,
+    )
+
     if not hass.config.skip_pip and integration.requirements:
         await requirements.async_get_integration_with_requirements(
             hass, integration.domain
         )
+
+    _LOGGER.info(
+        "FINISH2 async_process_deps_reqs: %s, %s, requirements: %s",
+        integration.domain,
+        integration.dependencies,
+        integration.requirements,
+    )
 
     processed.add(integration.domain)
 

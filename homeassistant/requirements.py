@@ -52,6 +52,8 @@ async def async_get_integration_with_requirements(
     if hass.config.skip_pip:
         return integration
 
+    _LOGGER.info("async_get_integration_with_requirements: %s", domain)
+
     cache = hass.data.get(DATA_INTEGRATIONS_WITH_REQS)
     if cache is None:
         cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
@@ -69,14 +71,26 @@ async def async_get_integration_with_requirements(
             raise IntegrationNotFound(domain)
 
     if int_or_evt is not _UNDEF:
+        _LOGGER.info("async_get_integration_with_requirements (int_or_evt): %s", domain)
         return cast(Integration, int_or_evt)
 
     event = cache[domain] = asyncio.Event()
+
+    _LOGGER.info(
+        "async_get_integration_with_requirements: call async_process_requirements %s requirements: %s",
+        domain,
+        integration.requirements,
+    )
 
     if integration.requirements:
         await async_process_requirements(
             hass, integration.domain, integration.requirements
         )
+
+    _LOGGER.info(
+        "async_get_integration_with_requirements: done async_process_requirements %s",
+        domain,
+    )
 
     deps_to_check = [
         dep
@@ -92,6 +106,12 @@ async def async_get_integration_with_requirements(
         ):
             deps_to_check.append(check_domain)
 
+    _LOGGER.info(
+        "deps_to_check for %s async_get_integration_with_requirements: %s",
+        domain,
+        deps_to_check,
+    )
+
     if deps_to_check:
         await asyncio.gather(
             *[
@@ -99,6 +119,8 @@ async def async_get_integration_with_requirements(
                 for dep in deps_to_check
             ]
         )
+
+    _LOGGER.info("finished async_get_integration_with_requirements: %s", domain)
 
     cache[domain] = integration
     event.set()
