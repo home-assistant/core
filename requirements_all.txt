@@ -1115,7 +1115,7 @@ prometheus_client==0.7.1
 protobuf==3.6.1
 
 # homeassistant.components.proxmoxve
-proxmoxer==1.0.4
+proxmoxer==1.1.0
 
 # homeassistant.components.systemmonitor
 psutil==5.7.0
