@@ -239,7 +239,7 @@ class GoogleCloudTTSProvider(Provider):
 
         try:
             # pylint: disable=no-member
-            synthesis_input = texttospeech.types.SynthesisInput(text=message)
+            synthesis_input = texttospeech.types.SynthesisInput(ssml=message)
 
             voice = texttospeech.types.VoiceSelectionParams(
                 language_code=language,
