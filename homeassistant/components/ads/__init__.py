@@ -30,8 +30,11 @@ ADSTYPE_DINT = "dint"
 ADSTYPE_INT = "int"
 ADSTYPE_UDINT = "udint"
 ADSTYPE_UINT = "uint"
+ADSTYPE_REAL = "real"
+ADSTYPE_LREAL = "lreal"
 
 CONF_ADS_FACTOR = "factor"
+CONF_ADS_DIGIT = "digit"
 CONF_ADS_TYPE = "adstype"
 CONF_ADS_VALUE = "value"
 CONF_ADS_VAR = "adsvar"
@@ -69,6 +72,8 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
                 ADSTYPE_BOOL,
                 ADSTYPE_DINT,
                 ADSTYPE_UDINT,
+                ADSTYPE_REAL,
+                ADSTYPE_LREAL
             ]
         ),
         vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
@@ -95,6 +100,8 @@ def setup(hass, config):
         ADSTYPE_INT: pyads.PLCTYPE_INT,
         ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
         ADSTYPE_UINT: pyads.PLCTYPE_UINT,
+        ADSTYPE_REAL: pyads.PLCTYPE_REAL,
+        ADSTYPE_LREAL: pyads.PLCTYPE_LREAL,
     }
 
     AdsHub.ADSError = pyads.ADSError
@@ -104,6 +111,8 @@ def setup(hass, config):
     AdsHub.PLCTYPE_INT = pyads.PLCTYPE_INT
     AdsHub.PLCTYPE_UDINT = pyads.PLCTYPE_UDINT
     AdsHub.PLCTYPE_UINT = pyads.PLCTYPE_UINT
+    AdsHub.PLCTYPE_REAL = pyads.PLCTYPE_REAL
+    AdsHub.PLCTYPE_LREAL = pyads.PLCTYPE_LREAL
 
     try:
         ads = AdsHub(client)
@@ -142,7 +151,7 @@ def setup(hass, config):
 
 # Tuple to hold data needed for notification
 NotificationItem = namedtuple(
-    "NotificationItem", "hnotify huser name plc_datatype callback"
+    "NotificationItem", "hnotify huser name plc_datatype digit callback"
 )
 
 
@@ -193,16 +202,15 @@ class AdsHub:
             except pyads.ADSError as err:
                 _LOGGER.error("Error writing %s: %s", name, err)
 
-    def read_by_name(self, name, plc_datatype):
+    def read_by_name(self, name, plc_datatype, digit):
         """Read a value from the device."""
-
         with self._lock:
             try:
-                return self._client.read_by_name(name, plc_datatype)
+                return self._client.read_by_name(name, plc_datatype, digit)
             except pyads.ADSError as err:
                 _LOGGER.error("Error reading %s: %s", name, err)
 
-    def add_device_notification(self, name, plc_datatype, callback):
+    def add_device_notification(self, name, plc_datatype, digit, callback):
         """Add a notification to the ADS devices."""
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
@@ -217,7 +225,7 @@ class AdsHub:
             else:
                 hnotify = int(hnotify)
                 self._notification_items[hnotify] = NotificationItem(
-                    hnotify, huser, name, plc_datatype, callback
+                    hnotify, huser, name, plc_datatype, digit, callback
                 )
 
                 _LOGGER.debug(
@@ -252,6 +260,10 @@ class AdsHub:
             value = struct.unpack("<i", bytearray(data)[:4])[0]
         elif notification_item.plc_datatype == self.PLCTYPE_UDINT:
             value = struct.unpack("<I", bytearray(data)[:4])[0]
+        elif notification_item.plc_datatype == self.PLCTYPE_REAL:
+            value = float("{:0.{prec}f}".format(struct.unpack("<f", bytearray(data)[:4])[0], prec = notification_item.digit))
+        elif notification_item.plc_datatype == self.PLCTYPE_LREAL:
+            value = float("{:0.{prec}f}".format(struct.unpack("<d", bytearray(data)[:8])[0], prec = notification_item.digit))
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")
@@ -262,7 +274,7 @@ class AdsHub:
 class AdsEntity(Entity):
     """Representation of ADS entity."""
 
-    def __init__(self, ads_hub, name, ads_var):
+    def __init__(self, ads_hub, name, ads_var, digit):
         """Initialize ADS binary sensor."""
         self._name = name
         self._unique_id = ads_var
@@ -270,17 +282,18 @@ class AdsEntity(Entity):
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
+        self._digit = digit
         self._event = None
 
     async def async_initialize_device(
-        self, ads_var, plctype, state_key=STATE_KEY_STATE, factor=None
+        self, ads_var, plctype, digit, state_key=STATE_KEY_STATE, factor=None
     ):
         """Register device notification."""
 
         def update(name, value):
             """Handle device notifications."""
             _LOGGER.debug("Variable %s changed its value to %d", name, value)
-
+                              
             if factor is None:
                 self._state_dict[state_key] = value
             else:
@@ -296,7 +309,7 @@ class AdsEntity(Entity):
         self._event = asyncio.Event()
 
         await self.hass.async_add_executor_job(
-            self._ads_hub.add_device_notification, ads_var, plctype, update
+            self._ads_hub.add_device_notification, ads_var, plctype, digit, update
         )
         try:
             with async_timeout.timeout(10):

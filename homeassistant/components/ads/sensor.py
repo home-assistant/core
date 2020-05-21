@@ -8,7 +8,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE, AdsEntity
+from . import CONF_ADS_FACTOR, CONF_ADS_DIGIT, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE, AdsEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,6 +17,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
+        vol.Optional(CONF_ADS_DIGIT, default=1): cv.positive_int,
         vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_INT): vol.In(
             [
                 ads.ADSTYPE_INT,
@@ -24,6 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 ads.ADSTYPE_BYTE,
                 ads.ADSTYPE_DINT,
                 ads.ADSTYPE_UDINT,
+                ads.ADSTYPE_REAL,
+                ads.ADSTYPE_LREAL,
             ]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -41,8 +44,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config[CONF_NAME]
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     factor = config.get(CONF_ADS_FACTOR)
+    digit = config.get(CONF_ADS_DIGIT)
 
-    entity = AdsSensor(ads_hub, ads_var, ads_type, name, unit_of_measurement, factor)
+    entity = AdsSensor(ads_hub, ads_var, ads_type, name, unit_of_measurement, factor, digit)
 
     add_entities([entity])
 
@@ -50,18 +54,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AdsSensor(AdsEntity):
     """Representation of an ADS sensor entity."""
 
-    def __init__(self, ads_hub, ads_var, ads_type, name, unit_of_measurement, factor):
+    def __init__(self, ads_hub, ads_var, ads_type, name, unit_of_measurement, factor, digit):
         """Initialize AdsSensor entity."""
-        super().__init__(ads_hub, name, ads_var)
+        super().__init__(ads_hub, name, ads_var, digit)
         self._unit_of_measurement = unit_of_measurement
         self._ads_type = ads_type
         self._factor = factor
+        self._digit = digit
 
     async def async_added_to_hass(self):
         """Register device notification."""
+
         await self.async_initialize_device(
             self._ads_var,
             self._ads_hub.ADS_TYPEMAP[self._ads_type],
+            self._digit,
             STATE_KEY_STATE,
             self._factor,
         )
