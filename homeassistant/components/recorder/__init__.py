@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.pool import SingletonThreadPool, StaticPool
+from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -272,7 +272,7 @@ class Recorder(threading.Thread):
                 connected = True
                 _LOGGER.debug("Connected to recorder database")
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception(
+                _LOGGER.error(
                     "Error during connection setup: %s (retrying in %s seconds)",
                     err,
                     self.db_retry_wait,
@@ -499,6 +499,7 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
+        kwargs = {}
 
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
@@ -518,12 +519,17 @@ class Recorder(threading.Thread):
                 cursor.execute("SET session wait_timeout=28800")
                 cursor.close()
 
-        engine_args = engine_args_for_db_url(self.db_url)
+        if self.db_url == "sqlite://" or ":memory:" in self.db_url:
+            kwargs["connect_args"] = {"check_same_thread": False}
+            kwargs["poolclass"] = StaticPool
+            kwargs["pool_reset_on_return"] = None
+        else:
+            kwargs["echo"] = False
 
         if self.engine is not None:
             self.engine.dispose()
 
-        self.engine = create_engine(self.db_url, **engine_args)
+        self.engine = create_engine(self.db_url, **kwargs)
 
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
@@ -563,15 +569,3 @@ class Recorder(threading.Thread):
             self.event_session.close()
 
         self.run_info = None
-
-
-def engine_args_for_db_url(db_url):
-    """Build the engine args for given db url."""
-    if db_url == "sqlite://" or ":memory:" in db_url:
-        return {
-            "connect_args": {"check_same_thread": False},
-            "poolclass": StaticPool,
-            "pool_reset_on_return": None,
-        }
-
-    return {"echo": False}
