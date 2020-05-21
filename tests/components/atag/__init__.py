@@ -1,7 +1,7 @@
 """Tests for the Atag integration."""
 
 from homeassistant.components.atag import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE, CONF_EMAIL, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -12,12 +12,14 @@ USER_INPUT = {
     CONF_EMAIL: "atag@domain.com",
     CONF_PORT: 10000,
 }
-UID = "xxxx-xxxx-xxxx_xx-xx-xxx-xxx"
-PAIR_REPLY = {"pair_reply": {"status": {"device_id": UID}, "acc_status": 2}}
-UPDATE_REPLY = {"update_reply": {"status": {"device_id": UID}, "acc_status": 2}}
+COMPLETE_ENTRY = USER_INPUT.copy()
+COMPLETE_ENTRY[CONF_DEVICE] = CONF_DEVICE
+
+PAIR_REPLY = {"pair_reply": {"status": {"device_id": CONF_DEVICE}, "acc_status": 2}}
+UPDATE_REPLY = {"update_reply": {"status": {"device_id": CONF_DEVICE}, "acc_status": 2}}
 RECEIVE_REPLY = {
     "retrieve_reply": {
-        "status": {"device_id": UID},
+        "status": {"device_id": CONF_DEVICE},
         "report": {
             "burning_hours": 1000,
             "room_temp": 20,
@@ -75,7 +77,7 @@ async def init_integration(
         headers={"Content-Type": "application/json"},
     )
 
-    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT)
+    entry = MockConfigEntry(domain=DOMAIN, data=COMPLETE_ENTRY)
     entry.add_to_hass(hass)
 
     if not skip_setup:
