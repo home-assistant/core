@@ -210,7 +210,9 @@ class Camera(HomeAccessory, PyhapCamera):
         await super().run_handler()
 
     @callback
-    def _async_update_motion_state(self, new_state):
+    def _async_update_motion_state(
+        self, entity_id=None, old_state=None, new_state=None
+    ):
         """Handle link motion sensor state change to update HomeKit value."""
         state = new_state.state
         detected = state == STATE_ON
