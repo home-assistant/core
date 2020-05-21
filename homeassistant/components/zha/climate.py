@@ -261,13 +261,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> Optional[str]:
         """Return HVAC operation mode."""
-        try:
-            return SYSTEM_MODE_2_HVAC[self._thrm.system_mode]
-        except KeyError:
-            self.error(
-                "can't map 'system_mode: %s' to a HVAC mode", self._thrm.system_mode
-            )
-        return None
+        return SYSTEM_MODE_2_HVAC.get(self._thrm.system_mode)
 
     @property
     def hvac_modes(self) -> Tuple[str, ...]:
