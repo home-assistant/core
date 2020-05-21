@@ -21,15 +21,13 @@ WEBHOOK_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: [
-            vol.Schema(
-                {
-                    vol.Optional(CONF_WEBHOOK, default=[]): vol.All(
-                        cv.ensure_list, [WEBHOOK_SCHEMA]
-                    ),
-                }
-            )
-        ],
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_WEBHOOK, default=[]): vol.All(
+                    cv.ensure_list, [WEBHOOK_SCHEMA]
+                ),
+            }
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -39,12 +37,9 @@ async def async_setup(hass, config):
     """Set up the Unify Circuit component."""
     domain_config = config.get(DOMAIN)
 
-    for conf in domain_config:
-        for webhook_conf in conf.get(CONF_WEBHOOK):
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass, "notify", DOMAIN, webhook_conf, config
-                )
-            )
+    for webhook_conf in domain_config[CONF_WEBHOOK]:
+        hass.async_create_task(
+            discovery.async_load_platform(hass, "notify", DOMAIN, webhook_conf, config)
+        )
 
     return True
