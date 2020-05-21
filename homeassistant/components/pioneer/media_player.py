@@ -24,9 +24,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +117,7 @@ class PioneerDevice(MediaPlayerDevice):
         """Establish a telnet connection and sends command."""
         tries = MAX_TRIES
         while tries > 0:
-            tries = tries -1
+            tries = tries - 1
             try:
                 try:
                     telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
@@ -127,18 +126,25 @@ class PioneerDevice(MediaPlayerDevice):
                     telnet.close()
                     break
                 except (ConnectionRefusedError, OSError):
-                    _LOGGER.warning("telnet_command: Pioneer %s refused connection", self._name)
+                    _LOGGER.warning(
+                        "telnet_command: Pioneer %s refused connection", self._name
+                    )
                     time.sleep(TRY_DELAY)
                     continue
             except telnetlib.socket.timeout:
                 _LOGGER.debug("Pioneer %s command %s timed out", self._name, command)
-        if tries == 0: _LOGGER.warning("Tried %d times, but Pioneer %s still refused connection", MAX_TRIES, self._name)
+        if tries == 0:
+            _LOGGER.warning(
+                "Tried %d times, but Pioneer %s still refused connection",
+                MAX_TRIES,
+                self._name,
+            )
 
     def update(self):
         """Get the latest details from the device."""
         tries = MAX_TRIES
         while tries > 0:
-            tries = tries -1
+            tries = tries - 1
             try:
                 telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
                 break
@@ -146,8 +152,12 @@ class PioneerDevice(MediaPlayerDevice):
                 _LOGGER.debug("update: Pioneer %s refused connection", self._name)
                 time.sleep(TRY_DELAY)
                 continue
-        if tries == 0: 
-            _LOGGER.warning("Tried %d times, but Pioneer %s still refused connection", MAX_TRIES, self._name)
+        if tries == 0:
+            _LOGGER.warning(
+                "Tried %d times, but Pioneer %s still refused connection",
+                MAX_TRIES,
+                self._name,
+            )
             return False
 
         pwstate = self.telnet_request(telnet, "?P", "PWR")
