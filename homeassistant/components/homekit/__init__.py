@@ -627,12 +627,14 @@ class HomeKit:
         ent_cfg = self._config.setdefault(entity_id, {})
         if ent_reg_ent.device_id:
             dev_reg_ent = dev_reg.async_get(ent_reg_ent.device_id)
-            if dev_reg_ent.manufacturer:
-                ent_cfg[ATTR_MANUFACTURER] = dev_reg_ent.manufacturer
-            if dev_reg_ent.model:
-                ent_cfg[ATTR_MODEL] = dev_reg_ent.model
-            if dev_reg_ent.sw_version:
-                ent_cfg[ATTR_SOFTWARE_VERSION] = dev_reg_ent.sw_version
+            if dev_reg_ent is not None:
+                # Handle missing devices
+                if dev_reg_ent.manufacturer:
+                    ent_cfg[ATTR_MANUFACTURER] = dev_reg_ent.manufacturer
+                if dev_reg_ent.model:
+                    ent_cfg[ATTR_MODEL] = dev_reg_ent.model
+                if dev_reg_ent.sw_version:
+                    ent_cfg[ATTR_SOFTWARE_VERSION] = dev_reg_ent.sw_version
         if ATTR_MANUFACTURER not in ent_cfg:
             integration = await async_get_integration(self.hass, ent_reg_ent.platform)
             ent_cfg[ATTR_INTERGRATION] = integration.name
