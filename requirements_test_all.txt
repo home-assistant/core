@@ -420,7 +420,7 @@ numpy==1.18.4
 oauth2client==4.0.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==0.3.0
+onvif-zeep-async==0.4.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0

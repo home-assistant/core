@@ -91,7 +91,7 @@ class EventManager:
 
         return self.started
 
-    async def async_stop(self, event=None) -> None:
+    async def async_stop(self) -> None:
         """Unsubscribe from events."""
         if not self._subscription:
             return
@@ -110,7 +110,7 @@ class EventManager:
     async def async_pull_messages(self, _now: dt = None) -> None:
         """Pull messages from device."""
         try:
-            pullpoint = self.device.get_service("pullpoint")
+            pullpoint = self.device.create_pullpoint_service()
             req = pullpoint.create_type("PullMessages")
             req.MessageLimit = 100
             req.Timeout = dt.timedelta(seconds=60)

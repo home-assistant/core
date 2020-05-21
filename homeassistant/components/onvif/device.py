@@ -82,6 +82,7 @@ class ONVIFDevice:
     async def async_setup(self) -> bool:
         """Set up the device."""
         self.device = get_device(
+            self.hass,
             host=self.config_entry.data[CONF_HOST],
             port=self.config_entry.data[CONF_PORT],
             username=self.config_entry.data[CONF_USERNAME],
@@ -137,6 +138,12 @@ class ONVIFDevice:
             return False
 
         return True
+
+    async def async_stop(self, event=None):
+        """Shut it all down."""
+        if self.events:
+            await self.events.async_stop()
+        await self.device.close()
 
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
@@ -275,7 +282,7 @@ class ONVIFDevice:
                     is not None,
                 )
 
-                ptz_service = self.device.get_service("ptz")
+                ptz_service = self.device.create_ptz_service()
                 presets = await ptz_service.GetPresets(profile.token)
                 profile.ptz.presets = [preset.token for preset in presets]
 
@@ -323,7 +330,7 @@ class ONVIFDevice:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
 
-        ptz_service = self.device.get_service("ptz")
+        ptz_service = self.device.create_ptz_service()
 
         pan_val = distance * PAN_FACTOR.get(pan, 0)
         tilt_val = distance * TILT_FACTOR.get(tilt, 0)
@@ -418,8 +425,13 @@ class ONVIFDevice:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 
 
-def get_device(host, port, username, password) -> ONVIFCamera:
+def get_device(hass, host, port, username, password) -> ONVIFCamera:
     """Get ONVIFCamera instance."""
     return ONVIFCamera(
-        host, port, username, password, f"{os.path.dirname(onvif.__file__)}/wsdl/",
+        host,
+        port,
+        username,
+        password,
+        f"{os.path.dirname(onvif.__file__)}/wsdl/",
+        no_cache=True,
     )
