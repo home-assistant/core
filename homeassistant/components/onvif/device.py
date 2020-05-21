@@ -8,7 +8,6 @@ from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedE
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -84,7 +82,6 @@ class ONVIFDevice:
     async def async_setup(self) -> bool:
         """Set up the device."""
         self.device = get_device(
-            self.hass,
             host=self.config_entry.data[CONF_HOST],
             port=self.config_entry.data[CONF_PORT],
             username=self.config_entry.data[CONF_USERNAME],
@@ -421,15 +418,8 @@ class ONVIFDevice:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 
 
-def get_device(hass, host, port, username, password) -> ONVIFCamera:
+def get_device(host, port, username, password) -> ONVIFCamera:
     """Get ONVIFCamera instance."""
-    session = async_get_clientsession(hass)
-    transport = AsyncTransport(None, session=session)
     return ONVIFCamera(
-        host,
-        port,
-        username,
-        password,
-        f"{os.path.dirname(onvif.__file__)}/wsdl/",
-        transport=transport,
+        host, port, username, password, f"{os.path.dirname(onvif.__file__)}/wsdl/",
     )
