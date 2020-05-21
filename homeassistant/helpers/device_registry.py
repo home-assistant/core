@@ -207,9 +207,6 @@ class DeviceRegistry:
         name_by_user=_UNDEF,
     ):
         """Update device attributes."""
-
-        _LOGGER.warning("_async_update_device - device_id:%s", device_id)
-
         old = self.devices[device_id]
 
         changes = {}
@@ -267,10 +264,6 @@ class DeviceRegistry:
         if old.is_new:
             changes["is_new"] = False
 
-        _LOGGER.warning(
-            "_async_update_device - changes - device_id:%s %s", device_id, changes
-        )
-
         if not changes:
             return old
 
@@ -299,8 +292,6 @@ class DeviceRegistry:
     async def async_load(self):
         """Load the device registry."""
         async_setup_cleanup(self.hass, self)
-
-        _LOGGER.warning("Device registry loaded!")
 
         data = await self._store.async_load()
 
@@ -358,8 +349,6 @@ class DeviceRegistry:
             }
             for entry in self.devices.values()
         ]
-
-        _LOGGER.warning("_data_to_save: %s %s", self.devices, data)
 
         return data
 
