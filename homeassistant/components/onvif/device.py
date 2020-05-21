@@ -82,7 +82,6 @@ class ONVIFDevice:
     async def async_setup(self) -> bool:
         """Set up the device."""
         self.device = get_device(
-            self.hass,
             host=self.config_entry.data[CONF_HOST],
             port=self.config_entry.data[CONF_PORT],
             username=self.config_entry.data[CONF_USERNAME],
@@ -425,13 +424,17 @@ class ONVIFDevice:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 
 
-def get_device(hass, host, port, username, password) -> ONVIFCamera:
+def get_device(host, port, username, password) -> ONVIFCamera:
     """Get ONVIFCamera instance."""
     return ONVIFCamera(
+<<<<<<< HEAD
         host,
         port,
         username,
         password,
         f"{os.path.dirname(onvif.__file__)}/wsdl/",
         no_cache=True,
+=======
+        host, port, username, password, f"{os.path.dirname(onvif.__file__)}/wsdl/",
+>>>>>>> allow lib to create AsyncTransport
     )
