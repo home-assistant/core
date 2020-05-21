@@ -1,6 +1,5 @@
 """Support for manual alarms."""
 import copy
-import datetime
 import logging
 import re
 
@@ -37,16 +36,20 @@ from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    ATTR_NEXT_STATE,
+    ATTR_PREVIOUS_STATE,
+    CONF_CODE_ARM_REQUIRED,
+    CONF_CODE_TEMPLATE,
+    DEFAULT_ALARM_NAME,
+    DEFAULT_ARMING_TIME,
+    DEFAULT_DELAY_TIME,
+    DEFAULT_DISARM_AFTER_TRIGGER,
+    DEFAULT_TRIGGER_TIME,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CODE_TEMPLATE = "code_template"
-CONF_CODE_ARM_REQUIRED = "code_arm_required"
-
-DEFAULT_ALARM_NAME = "HA Alarm"
-DEFAULT_DELAY_TIME = datetime.timedelta(seconds=60)
-DEFAULT_ARMING_TIME = datetime.timedelta(seconds=60)
-DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
-DEFAULT_DISARM_AFTER_TRIGGER = False
 
 SUPPORTED_STATES = [
     STATE_ALARM_DISARMED,
@@ -66,9 +69,6 @@ SUPPORTED_ARMING_STATES = [
     for state in SUPPORTED_STATES
     if state not in (STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 ]
-
-ATTR_PREVIOUS_STATE = "previous_state"
-ATTR_NEXT_STATE = "next_state"
 
 
 def _state_validator(config):
