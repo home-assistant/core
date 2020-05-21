@@ -106,11 +106,6 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
 
     async def stream_source(self):
         """Return the stream source."""
-        if self._stream_uri is None:
-            uri_no_auth = await self.device.async_get_stream_uri(self.profile)
-            self._stream_uri = uri_no_auth.replace(
-                "rtsp://", f"rtsp://{self.device.username}:{self.device.password}@", 1
-            )
         return self._stream_uri
 
     async def async_camera_image(self):
@@ -118,11 +113,6 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         image = None
 
         if self.device.capabilities.snapshot:
-            if self._snapshot_uri is None:
-                self._snapshot_uri = await self.device.async_get_snapshot_uri(
-                    self.profile
-                )
-
             auth = None
             if self.device.username and self.device.password:
                 auth = HTTPDigestAuth(self.device.username, self.device.password)
@@ -180,6 +170,16 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             )
         finally:
             await stream.close()
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+        uri_no_auth = await self.device.async_get_stream_uri(self.profile)
+        self._stream_uri = uri_no_auth.replace(
+            "rtsp://", f"rtsp://{self.device.username}:{self.device.password}@", 1
+        )
+
+        if self.device.capabilities.snapshot:
+            self._snapshot_uri = await self.device.async_get_snapshot_uri(self.profile)
 
     async def async_perform_ptz(
         self,
