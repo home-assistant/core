@@ -2,9 +2,9 @@
 import asyncio
 import ipaddress
 import logging
+from typing import Callable
 
 from aiohttp import web
-from pyhap.const import __version__ as pyhap_version
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -29,7 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
@@ -74,10 +74,13 @@ from .const import (
     HOMEKIT,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
-    MANUFACTURER,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
     SHUTDOWN_TIMEOUT,
+    STATUS_READY,
+    STATUS_RUNNING,
+    STATUS_STOPPED,
+    STATUS_WAIT,
     UNDO_UPDATE_LISTENER,
 )
 from .util import (
@@ -94,11 +97,8 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_DEVICES = 150
 
-# #### Driver Status ####
-STATUS_READY = 0
-STATUS_RUNNING = 1
-STATUS_STOPPED = 2
-STATUS_WAIT = 3
+
+PLATFORMS = ["switch"]
 
 
 def _has_all_unique_names_and_ports(bridges):
@@ -237,7 +237,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entity_config,
         safe_mode,
         advertise_ip,
-        entry.entry_id,
+        entry,
     )
     zeroconf_instance = await zeroconf.async_get_instance(hass)
     await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
@@ -249,6 +249,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         HOMEKIT: homekit,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     if hass.state == CoreState.running:
         await homekit.async_start()
@@ -274,8 +279,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
 
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+
+    stop_ok = True
     if homekit.status == STATUS_RUNNING:
-        await homekit.async_stop()
+        stop_ok = await homekit.async_stop()
 
     for _ in range(0, SHUTDOWN_TIMEOUT):
         if not await hass.async_add_executor_job(
@@ -284,9 +299,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.info("Waiting for the HomeKit server to shutdown.")
             await asyncio.sleep(1)
 
-    hass.data[DOMAIN].pop(entry.entry_id)
+    if stop_ok and unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+        return True
 
-    return True
+    return False
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -392,7 +409,7 @@ class HomeKit:
         entity_config,
         safe_mode,
         advertise_ip=None,
-        entry_id=None,
+        config_entry=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -403,17 +420,21 @@ class HomeKit:
         self._config = entity_config
         self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
-        self._entry_id = entry_id
-        self.status = STATUS_READY
-
+        self._config_entry = config_entry
+        self._entry_id = config_entry.entry_id
+        self._bridge_status_listeners = []
+        self.status = None
         self.bridge = None
         self.driver = None
+        self._bridge_lock = None
 
     def setup(self, zeroconf_instance):
         """Set up bridge and accessory driver."""
         # pylint: disable=import-outside-toplevel
         from .accessories import HomeBridge, HomeDriver
 
+        self._bridge_lock = asyncio.Lock()
+        self._async_update_bridge_status(STATUS_READY)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         ip_addr = self._ip_address or get_local_ip()
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
@@ -493,9 +514,10 @@ class HomeKit:
     async def async_start(self, *args):
         """Start the accessory driver."""
 
-        if self.status != STATUS_READY:
-            return
-        self.status = STATUS_WAIT
+        async with self._bridge_lock:
+            if self.status != STATUS_READY:
+                return
+            self._async_update_bridge_status(STATUS_WAIT)
 
         ent_reg = await entity_registry.async_get_registry(self.hass)
         dev_reg = await device_registry.async_get_registry(self.hass)
@@ -522,41 +544,16 @@ class HomeKit:
 
             bridged_states.append(state)
 
-        self._async_register_bridge(dev_reg)
+        self._async_purge_old_bridges(dev_reg)
         await self.hass.async_add_executor_job(self._start, bridged_states)
 
     @callback
-    def _async_register_bridge(self, dev_reg):
-        """Register the bridge as a device so homekit_controller and exclude it from discovery."""
+    def _async_purge_old_bridges(self, dev_reg):
+        """Purge bridges that exist from failed pairing or manual resets."""
+        devices_to_purge = []
         formatted_mac = device_registry.format_mac(self.driver.state.mac)
         connection = (device_registry.CONNECTION_NETWORK_MAC, formatted_mac)
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
-        self._async_purge_old_bridges(dev_reg, identifier, connection)
-
-        existing_dev = dev_reg.async_get_device({identifier}, {connection})
-        _LOGGER.debug("existing_dev device: %s", existing_dev)
-
-        new_dev = dev_reg.async_get_or_create(
-            # identifiers will be stable for the life of the config entry
-            identifiers={identifier},
-            config_entry_id=self._entry_id,
-            # connections can change if the pairing is manually reset
-            # of the homekit state files are deleted (which happens
-            # more than we would hope). We still need connections
-            # so we can identify the bridge on the network via zeroconf
-            # so it can be excluded from homekit_controller.
-            connections={connection},
-            manufacturer=MANUFACTURER,
-            name=self._name,
-            model="Home Assistant HomeKit Bridge",
-            sw_version=pyhap_version,
-        )
-        _LOGGER.debug("new device: %s", new_dev)
-
-    @callback
-    def _async_purge_old_bridges(self, dev_reg, identifier, connection):
-        """Purge bridges that exist from failed pairing or manual resets."""
-        devices_to_purge = []
         for entry in dev_reg.devices.values():
             if self._entry_id in entry.config_entries and (
                 identifier not in entry.identifiers
@@ -566,7 +563,6 @@ class HomeKit:
                 continue
 
         for device_id in devices_to_purge:
-            _LOGGER.debug("pruging device: %s", device_id)
             dev_reg.async_remove_device(device_id)
 
     def _start(self, bridged_states):
@@ -599,13 +595,14 @@ class HomeKit:
 
         _LOGGER.debug("Driver start for %s", self._name)
         self.hass.add_job(self.driver.start)
-        self.status = STATUS_RUNNING
+        self._async_update_bridge_status(STATUS_RUNNING)
 
     async def async_stop(self, *args):
         """Stop the accessory driver."""
-        if self.status != STATUS_RUNNING:
-            return
-        self.status = STATUS_STOPPED
+        async with self._bridge_lock:
+            if self.status != STATUS_RUNNING:
+                return
+            self._async_update_bridge_status(STATUS_STOPPED)
         _LOGGER.debug("Driver stop for %s", self._name)
         self.hass.add_job(self.driver.stop)
 
@@ -664,6 +661,32 @@ class HomeKit:
         if ATTR_MANUFACTURER not in ent_cfg:
             integration = await async_get_integration(self.hass, ent_reg_ent.platform)
             ent_cfg[ATTR_INTERGRATION] = integration.name
+
+    @callback
+    def async_add_bridge_status_listener(
+        self, update_callback: CALLBACK_TYPE
+    ) -> Callable[[], None]:
+        """Listen for bridge status updates."""
+        self._bridge_status_listeners.append(update_callback)
+
+        @callback
+        def remove_listener() -> None:
+            """Remove bridge status listener."""
+            self.async_remove_bridge_status_listener(update_callback)
+
+        return remove_listener
+
+    @callback
+    def async_remove_remote_key_listener(self, update_callback: CALLBACK_TYPE) -> None:
+        """Remove bridge status listener."""
+        self._bridge_status_listeners.remove(update_callback)
+
+    @callback
+    def _async_update_bridge_status(self, new_status):
+        """Update listeners with bridge status."""
+        self.status = new_status
+        for update_callback in self._bridge_status_listeners:
+            update_callback(self.status)
 
 
 class HomeKitPairingQRView(HomeAssistantView):
