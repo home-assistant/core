@@ -1,6 +1,5 @@
 """Class to hold all media player accessories."""
 import logging
-from typing import Callable
 
 from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 
@@ -37,7 +36,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -258,7 +257,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         self.support_select_source = False
-        self._remote_key_listeners = []
+
         self.sources = []
 
         # Add additional characteristics if volume or input selection supported
@@ -375,25 +374,6 @@ class TelevisionMediaPlayer(HomeAccessory):
         source = self.sources[value]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_INPUT_SOURCE: source}
         self.call_service(DOMAIN, SERVICE_SELECT_SOURCE, params)
-
-    @callback
-    def async_add_remote_key_listener(
-        self, update_callback: CALLBACK_TYPE
-    ) -> Callable[[], None]:
-        """Listen for remote key updates."""
-        self._remote_key_listeners.append(update_callback)
-
-        @callback
-        def remove_listener() -> None:
-            """Remove remote key listener."""
-            self.async_remove_remote_key_listener(update_callback)
-
-        return remove_listener
-
-    @callback
-    def async_remove_remote_key_listener(self, update_callback: CALLBACK_TYPE) -> None:
-        """Remove remote key listener."""
-        self._remote_key_listeners.remove(update_callback)
 
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
