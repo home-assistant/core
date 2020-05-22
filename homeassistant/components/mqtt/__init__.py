@@ -907,7 +907,7 @@ class MQTT:
             return
 
         self.connected = True
-        _LOGGER.info("Connected to MQTT server (%s).", result_code)
+        _LOGGER.info("Connected to MQTT server (%s)", result_code)
 
         # Group subscriptions to only re-subscribe once for each topic.
         keyfunc = attrgetter("topic")
@@ -974,7 +974,7 @@ class MQTT:
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
         self.connected = False
-        _LOGGER.warning("Disconnected from MQTT server (%s).", result_code)
+        _LOGGER.warning("Disconnected from MQTT server (%s)", result_code)
 
 
 def _raise_on_error(result_code: int) -> None:
