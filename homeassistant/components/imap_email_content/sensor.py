@@ -103,6 +103,8 @@ class EmailReader:
 
         if message_data is None:
             return None
+        if message_data[0] is None:
+            return None
         raw_email = message_data[0][1]
         email_message = email.message_from_bytes(raw_email)
         return email_message
@@ -125,6 +127,8 @@ class EmailReader:
                 if self._last_id is None or int(message_uid) > self._last_id:
                     self._last_id = int(message_uid)
                     return self._fetch_message(message_uid)
+
+            return self._fetch_message(str(self._last_id))
 
         except imaplib.IMAP4.error:
             _LOGGER.info("Connection to %s lost, attempting to reconnect", self._server)
