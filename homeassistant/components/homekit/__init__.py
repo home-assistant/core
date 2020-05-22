@@ -438,7 +438,6 @@ class HomeKit:
         # pylint: disable=import-outside-toplevel
         from .accessories import HomeBridge, HomeDriver
 
-        self._bridge_lock = asyncio.Lock()
         self._async_update_bridge_status(STATUS_READY)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         ip_addr = self._ip_address or get_local_ip()
