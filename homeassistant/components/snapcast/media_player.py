@@ -258,7 +258,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
         """Return the state of the player."""
         if self._client.connected:
             return STATE_ON
-        return STATE_OFF
+        return STATE_IDLE
 
     @property
     def device_state_attributes(self):
