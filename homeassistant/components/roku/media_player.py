@@ -170,11 +170,11 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         await self.coordinator.roku.remote("poweroff")
 
     async def async_media_pause(self) -> None:
-        """Send play/pause command."""
+        """Send pause command."""
         await self.coordinator.roku.remote("play")
 
     async def async_media_play(self) -> None:
-        """Send play/pause command."""
+        """Send play command."""
         await self.coordinator.roku.remote("play")
 
     async def async_media_play_pause(self) -> None:
