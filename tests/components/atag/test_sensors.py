@@ -12,7 +12,6 @@ async def test_sensors(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation of ATAG sensors."""
-
     entry = await init_integration(hass, aioclient_mock)
     registry = await hass.helpers.entity_registry.async_get_registry()
 
