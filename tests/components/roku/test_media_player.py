@@ -17,6 +17,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -292,6 +293,16 @@ async def test_services(
         remote_mock.assert_called_once_with("play")
 
     with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_MEDIA_PLAY_PAUSE,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+            blocking=True,
+        )
+
+        remote_mock.assert_called_once_with("play")
+
+     with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_NEXT_TRACK,
