@@ -15,8 +15,6 @@ from homeassistant.components.media_player.const import (
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_NEXT_TRACK,
@@ -33,6 +31,8 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_TURN_OFF,
