@@ -28,6 +28,7 @@ FLOWS = [
     "august",
     "aurora",
     "awair",
+    "aurora_abb_powerone",
     "axis",
     "azure_devops",
     "blebox",
