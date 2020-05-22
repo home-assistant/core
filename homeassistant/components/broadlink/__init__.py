@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 import re
 
-from broadlink.exceptions import BroadlinkException, ReadError
+from broadlink.exceptions import BroadlinkException, ReadError, StorageError
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
@@ -87,7 +87,7 @@ async def async_setup_service(hass, host, device):
         while (utcnow() - start_time) < timedelta(seconds=20):
             try:
                 packet = await device.async_request(device.api.check_data)
-            except ReadError:
+            except (ReadError, StorageError):
                 await asyncio.sleep(1)
             except BroadlinkException as err_msg:
                 _LOGGER.error("Failed to learn: %s", err_msg)

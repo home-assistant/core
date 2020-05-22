@@ -14,6 +14,7 @@ from broadlink.exceptions import (
     BroadlinkException,
     DeviceOfflineError,
     ReadError,
+    StorageError,
 )
 import voluptuous as vol
 
@@ -323,7 +324,7 @@ class BroadlinkRemote(RemoteEntity):
         while (utcnow() - start_time) < timedelta(seconds=timeout):
             try:
                 code = await self.device.async_request(self.device.api.check_data)
-            except ReadError:
+            except (ReadError, StorageError):
                 await asyncio.sleep(1)
             else:
                 break
