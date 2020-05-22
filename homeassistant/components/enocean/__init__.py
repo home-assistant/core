@@ -45,7 +45,7 @@ async def async_setup_entry(
         hass.data[DOMAIN] = {}
 
     if CONF_DEVICE not in config_entry.data:
-        LOGGER.error(f"Missing {CONF_DEVICE} entry in config")
+        LOGGER.error("Missing %s entry in config", CONF_DEVICE)
         return False
 
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
@@ -56,5 +56,5 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass, config_entry):
     """Unload ENOcean config entry."""
-    LOGGER.debug(f"Unloading {DOMAIN}")
+    LOGGER.debug("Unloading %s", DOMAIN)
     return True
