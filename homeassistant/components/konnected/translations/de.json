@@ -89,7 +89,8 @@
                     "api_host": "API-Host-URL \u00fcberschreiben (optional)",
                     "override_api_host": "\u00dcberschreiben Sie die Standard-Host-Panel-URL der Home Assistant-API"
                 },
-                "description": "Bitte w\u00e4hlen Sie das gew\u00fcnschte Verhalten f\u00fcr Ihr Panel"
+                "description": "Bitte w\u00e4hlen Sie das gew\u00fcnschte Verhalten f\u00fcr Ihr Panel",
+                "title": "Sonstiges konfigurieren"
             },
             "options_switch": {
                 "data": {
@@ -100,7 +101,8 @@
                     "pause": "Pause zwischen Impulsen (ms) (optional)",
                     "repeat": "Zeit zum Wiederholen (-1 = unendlich) (optional)"
                 },
-                "description": "Bitte w\u00e4hlen Sie die Ausgabeoptionen f\u00fcr {zone} : Status {state}"
+                "description": "Bitte w\u00e4hlen Sie die Ausgabeoptionen f\u00fcr {zone} : Status {state}",
+                "title": "Konfigurieren Sie den schaltbaren Ausgang"
             }
         }
     }

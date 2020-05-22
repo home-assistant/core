@@ -1,24 +1,26 @@
 """Support for Blink system camera control."""
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from . import BINARY_SENSORS, BLINK_DATA
+from .const import DOMAIN, TYPE_CAMERA_ARMED, TYPE_MOTION_DETECTED
+
+BINARY_SENSORS = {
+    TYPE_CAMERA_ARMED: ["Camera Armed", "mdi:verified"],
+    TYPE_MOTION_DETECTED: ["Motion Detected", "mdi:run-fast"],
+}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config, async_add_entities):
     """Set up the blink binary sensors."""
-    if discovery_info is None:
-        return
-    data = hass.data[BLINK_DATA]
+    data = hass.data[DOMAIN][config.entry_id]
 
-    devs = []
+    entities = []
     for camera in data.cameras:
-        for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
-            devs.append(BlinkBinarySensor(data, camera, sensor_type))
-    add_entities(devs, True)
+        for sensor_type in BINARY_SENSORS:
+            entities.append(BlinkBinarySensor(data, camera, sensor_type))
+    async_add_entities(entities)
 
 
-class BlinkBinarySensor(BinarySensorDevice):
+class BlinkBinarySensor(BinarySensorEntity):
     """Representation of a Blink binary sensor."""
 
     def __init__(self, data, camera, sensor_type):
@@ -26,7 +28,7 @@ class BlinkBinarySensor(BinarySensorDevice):
         self.data = data
         self._type = sensor_type
         name, icon = BINARY_SENSORS[sensor_type]
-        self._name = f"{BLINK_DATA} {camera} {name}"
+        self._name = f"{DOMAIN} {camera} {name}"
         self._icon = icon
         self._camera = data.cameras[camera]
         self._state = None

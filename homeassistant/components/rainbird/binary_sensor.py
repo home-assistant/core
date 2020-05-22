@@ -3,7 +3,7 @@ import logging
 
 from pyrainbird import RainbirdController
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import (
     DATA_RAINBIRD,
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class RainBirdSensor(BinarySensorDevice):
+class RainBirdSensor(BinarySensorEntity):
     """A sensor implementation for Rain Bird device."""
 
     def __init__(self, controller: RainbirdController, sensor_type):

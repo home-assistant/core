@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "name": "Nom de la connexi\u00f3 Velbus",
-                    "port": "Cadena de connexi\u00f3"
+                    "port": "String de connexi\u00f3"
                 },
                 "title": "Tipus de connexi\u00f3 Velbus"
             }

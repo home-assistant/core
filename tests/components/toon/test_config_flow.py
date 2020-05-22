@@ -1,7 +1,5 @@
 """Tests for the Toon config flow."""
 
-from unittest.mock import patch
-
 import pytest
 from toonapilib.toonapilibexceptions import (
     AgreementsRetrievalError,
@@ -22,6 +20,7 @@ from homeassistant.components.toon.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FIXTURE_APP = {

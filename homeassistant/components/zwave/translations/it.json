@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "network_key": "Chiave di rete (lascia vuoto per generare automaticamente)",
-                    "usb_path": "Percorso USB"
+                    "usb_path": "Percorso del dispositivo USB"
                 },
                 "description": "Vai su https://www.home-assistant.io/docs/z-wave/installation/ per le informazioni sulle variabili di configurazione",
                 "title": "Configura Z-Wave"
@@ -21,13 +21,13 @@
     "state": {
         "_": {
             "dead": "Disattivo",
-            "initializing": "Avvio",
+            "initializing": "In avvio",
             "ready": "Pronto",
-            "sleeping": "In attesa"
+            "sleeping": "Dormiente"
         },
         "query_stage": {
-            "dead": "Disattivo ({query_stage})",
-            "initializing": "Avvio ({query_stage})"
+            "dead": "Disattivo",
+            "initializing": "In avvio"
         }
     }
 }

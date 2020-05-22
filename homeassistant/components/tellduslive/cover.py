@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components import cover, tellduslive
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
@@ -25,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TelldusLiveCover(TelldusLiveEntity, CoverDevice):
+class TelldusLiveCover(TelldusLiveEntity, CoverEntity):
     """Representation of a cover."""
 
     @property

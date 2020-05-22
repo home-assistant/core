@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup TCP server for WIFFI devices",
+        "data": {
+          "port": "Server Port"
+        }
+      }
+    },
+    "abort": {
+      "addr_in_use": "Server port already in use.",
+      "start_server_failed": "Start server failed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timeout": "Timeout (minutes)"
+        }
+      }
+    }
+  }
+}

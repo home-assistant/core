@@ -5,8 +5,8 @@
             "turn_on": "w\u0142\u0105cz {entity_name}"
         },
         "condition_type": {
-            "is_off": "wentylator (entity_name} jest wy\u0142\u0105czony",
-            "is_on": "wentylator (entity_name} jest w\u0142\u0105czony"
+            "is_off": "wentylator {entity_name} jest wy\u0142\u0105czony",
+            "is_on": "wentylator {entity_name} jest w\u0142\u0105czony"
         },
         "trigger_type": {
             "turned_off": "nast\u0105pi wy\u0142\u0105czenie {entity_name}",

@@ -9,15 +9,35 @@
         "step": {
             "user": {
                 "data": {
-                    "radio_type": "Tipo de radio",
-                    "usb_path": "Ruta del dispositivo USB"
+                    "radio_type": "Tipo de radio"
                 },
                 "title": "ZHA"
             }
         }
     },
     "device_automation": {
+        "action_type": {
+            "squawk": "Graznido",
+            "warn": "Advertir"
+        },
         "trigger_subtype": {
+            "both_buttons": "Ambos botones",
+            "button_1": "Primer bot\u00f3n",
+            "button_2": "Segundo bot\u00f3n",
+            "button_3": "Tercer bot\u00f3n",
+            "button_4": "Cuarto bot\u00f3n",
+            "button_5": "Quinto bot\u00f3n",
+            "button_6": "Sexto bot\u00f3n",
+            "close": "Cerrar",
+            "dim_down": "Bajar la intensidad",
+            "dim_up": "Aumentar intensidad",
+            "face_1": "con la cara 1 activada",
+            "face_2": "con la cara 2 activada",
+            "face_3": "con la cara 3 activada",
+            "face_4": "con la cara 4 activada",
+            "face_5": "con la cara 5 activada",
+            "face_6": "con la cara 6 activada",
+            "face_any": "Con cualquier cara/especificada(s) activada(s)",
             "left": "Izquierda",
             "open": "Abrir",
             "right": "Derecha",
@@ -31,7 +51,23 @@
             "device_rotated": "Dispositivo girado \"{subtype}\"",
             "device_shaken": "Dispositivo agitado",
             "device_slid": "Dispositivo deslizado \"{subtype}\"",
-            "device_tilted": "Dispositivo inclinado"
+            "device_tilted": "Dispositivo inclinado",
+            "remote_button_alt_double_press": "El bot\u00f3n \"{subtype}\" fue presionado 2 veces (modo alternativo)",
+            "remote_button_alt_long_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado continuamente (modo alternativo)",
+            "remote_button_alt_long_release": "Se solt\u00f3 el bot\u00f3n \"{subtype}\" despu\u00e9s de una pulsaci\u00f3n prolongada (modo alternativo)",
+            "remote_button_alt_quadruple_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado 4 veces (modo alternativo)",
+            "remote_button_alt_quintuple_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado 5 veces (modo alternativo)",
+            "remote_button_alt_short_press": "El bot\u00f3n \"{subtype}\" ha sido presionado (modo alternativo)",
+            "remote_button_alt_short_release": "El bot\u00f3n \"{subtype}\" ha sido soltado (modo alternativo)",
+            "remote_button_alt_triple_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado 3 veces (modo alternativo)",
+            "remote_button_double_press": "El bot\u00f3n \"{subtype}\" fue presionado 2 veces",
+            "remote_button_long_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado continuamente",
+            "remote_button_long_release": "Se solt\u00f3 el bot\u00f3n \"{subtype}\" despu\u00e9s de una pulsaci\u00f3n prolongada",
+            "remote_button_quadruple_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado 4 veces",
+            "remote_button_quintuple_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado 5 veces",
+            "remote_button_short_press": "Se presion\u00f3 el bot\u00f3n \"{subtype}\"",
+            "remote_button_short_release": "Se solt\u00f3 el bot\u00f3n \"{subtype}\"",
+            "remote_button_triple_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado 3 veces"
         }
     }
 }

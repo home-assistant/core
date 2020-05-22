@@ -1,7 +1,6 @@
 """The tests for the emulated Hue component."""
 import json
 import unittest
-from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 import defusedxml.ElementTree as ET
@@ -9,7 +8,9 @@ import requests
 
 from homeassistant import const, setup
 from homeassistant.components import emulated_hue
+from homeassistant.const import HTTP_OK
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
@@ -51,12 +52,14 @@ class TestEmulatedHue(unittest.TestCase):
         """Test the description."""
         result = requests.get(BRIDGE_URL_BASE.format("/description.xml"), timeout=5)
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "text/xml" in result.headers["content-type"]
 
         # Make sure the XML is parsable
         try:
-            ET.fromstring(result.text)
+            root = ET.fromstring(result.text)
+            ns = {"s": "urn:schemas-upnp-org:device-1-0"}
+            assert root.find("./s:device/s:serialNumber", ns).text == "001788FFFE23BFC2"
         except:  # noqa: E722 pylint: disable=bare-except
             self.fail("description.xml is not valid XML!")
 
@@ -68,7 +71,7 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format("/api"), data=json.dumps(request_json), timeout=5
         )
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "application/json" in result.headers["content-type"]
 
         resp_json = result.json()
@@ -87,7 +90,7 @@ class TestEmulatedHue(unittest.TestCase):
             timeout=5,
         )
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "application/json" in result.headers["content-type"]
 
         resp_json = result.json()

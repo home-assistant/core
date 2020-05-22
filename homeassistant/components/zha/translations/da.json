@@ -7,11 +7,29 @@
             "cannot_connect": "Kunne ikke oprette forbindelse til ZHA-enhed."
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Radiotype"
+                },
+                "description": "V\u00e6lg en type Zigbee-radio",
+                "title": "Radiotype"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "porthastighed",
+                    "flow_control": "dataflowstyring",
+                    "path": "Sti til seriel enhed"
+                },
+                "description": "Angiv portspecifikke indstillinger",
+                "title": "Indstillinger"
+            },
             "user": {
                 "data": {
+                    "path": "Stien til seriel enhed",
                     "radio_type": "Radio-type",
-                    "usb_path": "Sti til USB-enhed"
+                    "usb_path": "USB-enheds sti"
                 },
+                "description": "V\u00e6lg seriel port til Zigbee-radio",
                 "title": "ZHA"
             }
         }

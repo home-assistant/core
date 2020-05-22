@@ -1,9 +1,9 @@
 {
     "state": {
         "_": {
-            "active": "akt\u00edv",
-            "idle": "t\u00e9tlen",
-            "paused": "sz\u00fcneteltetve"
+            "active": "Akt\u00edv",
+            "idle": "T\u00e9tlen",
+            "paused": "Sz\u00fcnetel"
         }
     }
 }

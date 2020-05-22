@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -108,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorDevice):
+class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
     """Representation of an August Door binary sensor."""
 
     def __init__(self, data, sensor_type, device):
@@ -155,7 +155,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorDevice):
         return f"{self._device_id}_open"
 
 
-class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorDevice):
+class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
     """Representation of an August binary sensor."""
 
     def __init__(self, data, sensor_type, device):

@@ -1,6 +1,4 @@
 """Test the Netatmo config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
@@ -10,6 +8,7 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"

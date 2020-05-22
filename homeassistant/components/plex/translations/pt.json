@@ -1,19 +1,9 @@
 {
     "config": {
         "step": {
-            "manual_setup": {
+            "select_server": {
                 "data": {
-                    "host": "Servidor",
-                    "port": "Porta"
-                }
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "plex_mp_settings": {
-                "data": {
-                    "show_all_controls": "Mostrar todos os controles"
+                    "server": "Servidor"
                 }
             }
         }

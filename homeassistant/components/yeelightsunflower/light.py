@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(SunflowerBulb(light) for light in hub.get_lights())
 
 
-class SunflowerBulb(Light):
+class SunflowerBulb(LightEntity):
     """Representation of a Yeelight Sunflower Light."""
 
     def __init__(self, light):

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00c8 possibile aggiungere un solo dispositivo Atag ad Home Assistant"
+        },
+        "error": {
+            "connection_error": "Impossibile connettersi, si prega di riprovare"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail (Opzionale)",
+                    "host": "Host",
+                    "port": "Porta"
+                },
+                "title": "Connettersi al dispositivo"
+            }
+        }
+    },
+    "title": "Atag"
+}

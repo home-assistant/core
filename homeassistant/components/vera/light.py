@@ -9,7 +9,7 @@ from homeassistant.components.light import (
     ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -37,7 +37,7 @@ async def async_setup_entry(
     )
 
 
-class VeraLight(VeraDevice, Light):
+class VeraLight(VeraDevice, LightEntity):
     """Representation of a Vera Light, including dimmable."""
 
     def __init__(self, vera_device, controller):

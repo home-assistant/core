@@ -1,6 +1,5 @@
 """The tests for the IGN Sismologia (Earthquakes) Feed platform."""
 import datetime
-from unittest.mock import MagicMock, call, patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -29,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import MagicMock, call, patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "ign_sismologia", CONF_RADIUS: 200}]}

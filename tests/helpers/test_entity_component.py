@@ -3,9 +3,7 @@
 from collections import OrderedDict
 from datetime import timedelta
 import logging
-from unittest.mock import Mock, patch
 
-import asynctest
 import pytest
 import voluptuous as vol
 
@@ -17,13 +15,13 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockModule,
     MockPlatform,
     async_fire_time_changed,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -82,13 +80,8 @@ async def test_setup_recovers_when_setup_raises(hass):
     assert platform2_setup.called
 
 
-@asynctest.patch(
-    "homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",
-    return_value=mock_coro(),
-)
-@asynctest.patch(
-    "homeassistant.setup.async_setup_component", return_value=mock_coro(True)
-)
+@patch("homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",)
+@patch("homeassistant.setup.async_setup_component", return_value=True)
 async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     """Test setup for discovery."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -105,7 +98,7 @@ async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
 
 
-@asynctest.patch("homeassistant.helpers.entity_platform.async_track_time_interval")
+@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_config(mock_track, hass):
     """Test the setting of the scan interval via configuration."""
 
@@ -295,7 +288,7 @@ async def test_setup_dependencies_platform(hass):
 
 async def test_setup_entry(hass):
     """Test setup entry calls async_setup_entry on platform."""
-    mock_setup_entry = Mock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
     mock_entity_platform(
         hass,
         "test_domain.entry_domain",
@@ -326,7 +319,7 @@ async def test_setup_entry_platform_not_exist(hass):
 
 async def test_setup_entry_fails_duplicate(hass):
     """Test we don't allow setting up a config entry twice."""
-    mock_setup_entry = Mock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
     mock_entity_platform(
         hass,
         "test_domain.entry_domain",
@@ -344,7 +337,7 @@ async def test_setup_entry_fails_duplicate(hass):
 
 async def test_unload_entry_resets_platform(hass):
     """Test unloading an entry removes all entities."""
-    mock_setup_entry = Mock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
     mock_entity_platform(
         hass,
         "test_domain.entry_domain",
@@ -380,7 +373,7 @@ async def test_update_entity(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entity = MockEntity()
     entity.async_write_ha_state = Mock()
-    entity.async_update_ha_state = Mock(return_value=mock_coro())
+    entity.async_update_ha_state = AsyncMock(return_value=None)
     await component.async_add_entities([entity])
 
     # Called as part of async_add_entities

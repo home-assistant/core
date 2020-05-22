@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class ITachIP2IRRemote(remote.RemoteDevice):
+class ITachIP2IRRemote(remote.RemoteEntity):
     """Device that sends commands to an ITachIP2IR device."""
 
     def __init__(self, itachip2ir, name):

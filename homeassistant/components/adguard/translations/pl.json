@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nazwa hosta lub adres IP",
                     "password": "Has\u0142o",
                     "port": "Port",
                     "ssl": "AdGuard Home u\u017cywa certyfikatu SSL",

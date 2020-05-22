@@ -3,5 +3,5 @@
   "name": "De Lijn",
   "documentation": "https://www.home-assistant.io/integrations/delijn",
   "codeowners": ["@bollewolle"],
-  "requirements": ["pydelijn==0.5.1"]
+  "requirements": ["pydelijn==0.6.0"]
 }

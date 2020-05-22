@@ -60,7 +60,7 @@ class FortigateDeviceScanner(DeviceScanner):
         await self.async_update_info()
         return [device.mac for device in self.last_results]
 
-    async def get_device_name(self, device):
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         name = next(
             (result.hostname for result in self.last_results if result.mac == device),

@@ -1,7 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_battery_level": "Nivell de bateria de {entity_name}",
+            "is_battery_level": "Nivell de bateria actual de {entity_name}",
             "is_humidity": "Humitat de {entity_name}",
             "is_illuminance": "Il\u00b7luminaci\u00f3 de {entity_name}",
             "is_power": "Pot\u00e8ncia de {entity_name}",
@@ -25,8 +25,8 @@
     },
     "state": {
         "_": {
-            "off": "Desactivat",
-            "on": "Activat"
+            "off": "OFF",
+            "on": "ON"
         }
     },
     "title": "Sensors"

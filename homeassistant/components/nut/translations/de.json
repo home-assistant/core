@@ -18,7 +18,8 @@
                 "data": {
                     "alias": "Alias",
                     "resources": "Ressourcen"
-                }
+                },
+                "title": "W\u00e4hle die zu \u00fcberwachende USV"
             },
             "user": {
                 "data": {

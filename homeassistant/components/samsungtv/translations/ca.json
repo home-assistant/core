@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3 o adre\u00e7a IP",
+                    "host": "Amfitri\u00f3",
                     "name": "Nom"
                 },
                 "description": "Introdeix les dades del televisor Samsung. Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent demanant autenticaci\u00f3.",

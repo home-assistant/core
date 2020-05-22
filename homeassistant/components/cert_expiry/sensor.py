@@ -8,7 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     TIME_DAYS,
@@ -27,15 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=12)
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_NAME, invalidation_version="0.109"),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        }
-    ),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
 )
 
 

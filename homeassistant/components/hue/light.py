@@ -24,7 +24,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
@@ -194,7 +194,7 @@ def hass_to_hue_brightness(value):
     return max(1, round((value / 255) * 254))
 
 
-class HueLight(Light):
+class HueLight(LightEntity):
     """Representation of a Hue light."""
 
     def __init__(self, coordinator, bridge, is_group, light, supported_features):
@@ -258,6 +258,9 @@ class HueLight(Light):
             bri = self.light.action.get("bri")
         else:
             bri = self.light.state.get("bri")
+
+        if bri is None:
+            return bri
 
         return hue_brightness_to_hass(bri)
 

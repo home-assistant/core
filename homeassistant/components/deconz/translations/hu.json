@@ -28,6 +28,12 @@
                     "host": "Hoszt",
                     "port": "Port"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
+                }
             }
         }
     },

@@ -1,6 +1,5 @@
 """The tests for the notify demo platform."""
 import unittest
-from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -11,6 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.notify import common
 

@@ -9,8 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "radio_type": "Tipo de r\u00e1dio",
-                    "usb_path": "Caminho do Dispositivo USB"
+                    "radio_type": "Tipo de r\u00e1dio"
                 },
                 "title": "ZHA"
             }
@@ -21,6 +20,16 @@
             "warn": "Avisar"
         },
         "trigger_subtype": {
+            "both_buttons": "Ambos os bot\u00f5es",
+            "button_1": "Primeiro bot\u00e3o",
+            "button_2": "Segundo bot\u00e3o",
+            "button_3": "Terceiro bot\u00e3o",
+            "button_4": "Quarto bot\u00e3o",
+            "button_5": "Quinto bot\u00e3o",
+            "button_6": "Sexto bot\u00e3o",
+            "close": "Fechar",
+            "dim_down": "Escurecer",
+            "dim_up": "Clariar",
             "left": "Esquerda"
         }
     }

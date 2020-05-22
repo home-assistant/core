@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Roku device is already configured",
+            "already_configured": "Device is already configured",
             "unknown": "Unexpected error"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again"
+            "cannot_connect": "Failed to connect"
         },
         "flow_title": "Roku: {name}",
         "step": {
@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host or IP address"
+                    "host": "Host"
                 },
                 "description": "Enter your Roku information.",
                 "title": "Roku"

@@ -5,7 +5,7 @@ from typing import List
 from pyflexit.pyflexit import pyflexit
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     SUPPORT_FAN_MODE,
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([Flexit(hub, modbus_slave, name)], True)
 
 
-class Flexit(ClimateDevice):
+class Flexit(ClimateEntity):
     """Representation of a Flexit AC unit."""
 
     def __init__(self, hub, modbus_slave, name):

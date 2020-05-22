@@ -1,0 +1,25 @@
+{
+    "topic": "OpenZWave/1/node/37/instance/1/commandclass/48/value/625737744/",
+    "payload": {
+        "Label": "Sensor",
+        "Value": true,
+        "Units": "",
+        "Min": 0,
+        "Max": 0,
+        "Type": "Bool",
+        "Instance": 1,
+        "CommandClass": "COMMAND_CLASS_SENSOR_BINARY",
+        "Index": 0,
+        "Node": 37,
+        "Genre": "User",
+        "Help": "Binary Sensor State",
+        "ValueIDKey": 625737744,
+        "ReadOnly": false,
+        "WriteOnly": false,
+        "ValueSet": false,
+        "ValuePolled": false,
+        "ChangeVerified": false,
+        "Event": "valueAdded",
+        "TimeStamp": 1579566891
+    }
+}

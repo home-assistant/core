@@ -1,24 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+            "already_configured": "D\u00ebsen WLED Apparat ass scho konfigur\u00e9iert.",
+            "connection_error": "Feeler beim verbannen mam WLED Apparat."
         },
         "error": {
-            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+            "connection_error": "Feeler beim verbannen mam WLED Apparat."
         },
-        "flow_title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
+        "flow_title": "WLED: {name}",
         "step": {
             "user": {
                 "data": {
                     "host": "Numm oder IP Adresse"
                 },
-                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+                "description": "D\u00e4in WLED als Integratioun mam Home Assistant ariichten.",
+                "title": "D\u00e4in WLED verbannen"
             },
             "zeroconf_confirm": {
-                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+                "description": "Soll de WLED mam Numm `{name}` am Home Assistant dob\u00e4i gesaat ginn?",
+                "title": "Entdeckten WLED Apparat"
             }
         }
     }

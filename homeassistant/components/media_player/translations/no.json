@@ -10,7 +10,12 @@
     },
     "state": {
         "_": {
-            "playing": "Spiller"
+            "idle": "Inaktiv",
+            "off": "Av",
+            "on": "P\u00e5",
+            "paused": "Pauset",
+            "playing": "Spiller",
+            "standby": "Avventer"
         }
     },
     "title": "Mediaspiller"

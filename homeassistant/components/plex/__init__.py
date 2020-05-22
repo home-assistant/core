@@ -76,8 +76,10 @@ SERVER_CONFIG_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    cv.deprecated(PLEX_DOMAIN, invalidation_version="0.111"),
-    {PLEX_DOMAIN: SERVER_CONFIG_SCHEMA},
+    vol.All(
+        cv.deprecated(PLEX_DOMAIN, invalidation_version="0.111"),
+        {PLEX_DOMAIN: SERVER_CONFIG_SCHEMA},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

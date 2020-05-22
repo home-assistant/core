@@ -7,7 +7,7 @@ import pyatmo
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -156,7 +156,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return
 
 
-class NetatmoThermostat(ClimateDevice):
+class NetatmoThermostat(ClimateEntity):
     """Representation a Netatmo thermostat."""
 
     def __init__(self, data, room_id):

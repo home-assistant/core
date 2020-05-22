@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP ass scho konfigur\u00e9iert"
+            "already_configured": "ESP ass scho konfigur\u00e9iert",
+            "already_in_progress": "ESP Konfiguratioun ass schonn am gaang."
         },
         "error": {
             "connection_error": "Keng Verbindung zum ESP. Iwwerpr\u00e9ift d'Pr\u00e4sens vun der Zeil api: am YAML Fichier.",
@@ -27,7 +28,7 @@
                     "port": "Port"
                 },
                 "description": "Gitt Verbindungs Informatioune vun \u00e4rem [ESPHome](https://esphomelib.com/) an.",
-                "title": "[%key:component::esphome::title%]"
+                "title": "ESPHome"
             }
         }
     }

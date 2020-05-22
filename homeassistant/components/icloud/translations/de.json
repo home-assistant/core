@@ -20,7 +20,6 @@
             "user": {
                 "data": {
                     "password": "Passwort",
-                    "username": "E-Mail",
                     "with_family": "Mit Familie"
                 },
                 "description": "Gib deine Zugangsdaten ein",

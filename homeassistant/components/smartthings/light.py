@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 import homeassistant.util.color as color_util
 
@@ -61,7 +61,7 @@ def convert_scale(value, value_scale, target_scale, round_digits=4):
     return round(value * target_scale / value_scale, round_digits)
 
 
-class SmartThingsLight(SmartThingsEntity, Light):
+class SmartThingsLight(SmartThingsEntity, LightEntity):
     """Define a SmartThings Light."""
 
     def __init__(self, device):

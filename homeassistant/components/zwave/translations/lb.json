@@ -20,14 +20,14 @@
     },
     "state": {
         "_": {
-            "dead": "Net Ereechbar",
+            "dead": "Doud",
             "initializing": "Initialis\u00e9iert",
             "ready": "Bereet",
             "sleeping": "Schl\u00e9ift"
         },
         "query_stage": {
-            "dead": "Net Ereechbar ({query_stage})",
-            "initializing": "Initialis\u00e9iert ( {query_stage} )"
+            "dead": "Doud",
+            "initializing": "Initialis\u00e9iert"
         }
     }
 }

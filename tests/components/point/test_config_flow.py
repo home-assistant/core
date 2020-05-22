@@ -1,21 +1,20 @@
 """Tests for the Point config flow."""
 import asyncio
-from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
 
-from tests.common import mock_coro
+from tests.async_mock import AsyncMock, patch
 
 
 def init_config_flow(hass, side_effect=None):
     """Init a configuration flow."""
     config_flow.register_flow_implementation(hass, DOMAIN, "id", "secret")
     flow = config_flow.PointFlowHandler()
-    flow._get_authorization_url = Mock(  # pylint: disable=protected-access
-        return_value=mock_coro("https://example.com"), side_effect=side_effect
+    flow._get_authorization_url = AsyncMock(  # pylint: disable=protected-access
+        return_value="https://example.com", side_effect=side_effect
     )
     flow.hass = hass
     return flow

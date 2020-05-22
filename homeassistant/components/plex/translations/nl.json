@@ -14,6 +14,7 @@
             "no_servers": "Geen servers gekoppeld aan account",
             "not_found": "Plex-server niet gevonden"
         },
+        "flow_title": "{naam} ({host})",
         "step": {
             "select_server": {
                 "data": {

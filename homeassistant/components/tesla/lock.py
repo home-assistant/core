@@ -1,7 +1,7 @@
 """Support for Tesla door locks."""
 import logging
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
@@ -22,7 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class TeslaLock(TeslaDevice, LockDevice):
+class TeslaLock(TeslaDevice, LockEntity):
     """Representation of a Tesla door lock."""
 
     def __init__(self, tesla_device, controller, config_entry):

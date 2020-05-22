@@ -2,9 +2,9 @@
     "state": {
         "_": {
             "closed": "Closed",
-            "home": "[%key:component::device_tracker::state::home%]",
+            "home": "Home",
             "locked": "Locked",
-            "not_home": "[%key:component::device_tracker::state::not_home%]",
+            "not_home": "Away",
             "off": "Off",
             "ok": "OK",
             "on": "On",

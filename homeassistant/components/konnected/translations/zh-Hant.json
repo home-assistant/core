@@ -20,8 +20,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Konnected \u8a2d\u5099 IP \u4f4d\u5740",
-                    "port": "Konnected \u8a2d\u5099\u901a\u8a0a\u57e0"
+                    "host": "IP \u4f4d\u5740",
+                    "port": "\u901a\u8a0a\u57e0"
                 },
                 "description": "\u8acb\u8f38\u5165 Konnected \u9762\u677f\u4e3b\u6a5f\u7aef\u8cc7\u8a0a\u3002",
                 "title": "\u641c\u7d22 Konnected \u8a2d\u5099"

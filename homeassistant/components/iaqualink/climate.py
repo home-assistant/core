@@ -10,7 +10,7 @@ from iaqualink.const import (
     AQUALINK_TEMP_FAHRENHEIT_LOW,
 )
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     DOMAIN,
     HVAC_MODE_HEAT,
@@ -39,7 +39,7 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkThermostat(AqualinkEntity, ClimateDevice):
+class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     """Representation of a thermostat."""
 
     @property

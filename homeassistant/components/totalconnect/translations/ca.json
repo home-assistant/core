@@ -4,7 +4,7 @@
             "already_configured": "El compte ja ha estat configurat"
         },
         "error": {
-            "login": "Error d\u2019inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya"
+            "login": "Error d'inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya"
         },
         "step": {
             "user": {

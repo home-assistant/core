@@ -5,7 +5,7 @@ from typing import Callable, Optional, Sequence, cast
 import voluptuous as vol
 
 from homeassistant.components import switch
-from homeassistant.components.light import PLATFORM_SCHEMA, Light
+from homeassistant.components.light import PLATFORM_SCHEMA, LightEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -49,7 +49,7 @@ async def async_setup_platform(
     )
 
 
-class LightSwitch(Light):
+class LightSwitch(LightEntity):
     """Represents a Switch as a Light."""
 
     def __init__(self, name: str, switch_entity_id: str) -> None:

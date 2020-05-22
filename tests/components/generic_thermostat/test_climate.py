@@ -1,7 +1,6 @@
 """The tests for the generic_thermostat."""
 import datetime
 
-from asynctest import mock
 import pytest
 import pytz
 import voluptuous as vol
@@ -32,6 +31,7 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, mock_restore_cache
 from tests.components.climate import common
 
@@ -622,7 +622,7 @@ async def test_temp_change_ac_trigger_on_long_enough(hass, setup_comp_4):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, False)
@@ -650,7 +650,7 @@ async def test_temp_change_ac_trigger_off_long_enough(hass, setup_comp_4):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, True)
@@ -733,7 +733,7 @@ async def test_temp_change_ac_trigger_on_long_enough_2(hass, setup_comp_5):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, False)
@@ -761,7 +761,7 @@ async def test_temp_change_ac_trigger_off_long_enough_2(hass, setup_comp_5):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, True)
@@ -852,7 +852,7 @@ async def test_temp_change_heater_trigger_on_long_enough(hass, setup_comp_6):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, False)
@@ -871,7 +871,7 @@ async def test_temp_change_heater_trigger_off_long_enough(hass, setup_comp_6):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, True)

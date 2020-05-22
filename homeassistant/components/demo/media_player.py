@@ -1,5 +1,5 @@
 """Demo implementation of the media player."""
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -93,7 +93,7 @@ NETFLIX_PLAYER_SUPPORT = (
 )
 
 
-class AbstractDemoPlayer(MediaPlayerDevice):
+class AbstractDemoPlayer(MediaPlayerEntity):
     """A demo media players."""
 
     # We only implement the methods that we support

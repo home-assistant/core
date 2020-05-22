@@ -545,19 +545,25 @@ def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
 
             reg = await hass.helpers.entity_registry.async_get_registry()
 
+            authorized = False
+
             for entity in reg.entities.values():
                 if entity.platform != domain:
                     continue
 
                 if user.permissions.check_entity(entity.entity_id, POLICY_CONTROL):
-                    return await service_handler(call)
+                    authorized = True
+                    break
 
-            raise Unauthorized(
-                context=call.context,
-                permission=POLICY_CONTROL,
-                user_id=call.context.user_id,
-                perm_category=CAT_ENTITIES,
-            )
+            if not authorized:
+                raise Unauthorized(
+                    context=call.context,
+                    permission=POLICY_CONTROL,
+                    user_id=call.context.user_id,
+                    perm_category=CAT_ENTITIES,
+                )
+
+            return await service_handler(call)
 
         return check_permissions
 

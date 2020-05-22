@@ -6,7 +6,7 @@
         "error": {
             "connection_error": "Kan ikke koble til Abode.",
             "identifier_exists": "Kontoen er allerede registrert.",
-            "invalid_credentials": "Ugyldig brukerinformasjon"
+            "invalid_credentials": "Ugyldig legitimasjon"
         },
         "step": {
             "user": {

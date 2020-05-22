@@ -1,3 +1,8 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} \u4f9d\u9700\u6c42\u958b\u555f"
+        }
+    },
     "title": "Arcam FMJ"
 }

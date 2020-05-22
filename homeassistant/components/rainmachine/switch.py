@@ -4,7 +4,7 @@ import logging
 
 from regenmaschine.errors import RequestError
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -111,7 +111,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class RainMachineSwitch(RainMachineEntity, SwitchDevice):
+class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     """A class to represent a generic RainMachine switch."""
 
     def __init__(self, rainmachine, switch_data):

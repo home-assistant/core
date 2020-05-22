@@ -4,7 +4,6 @@ import logging
 import os
 from unittest.mock import Mock
 
-from asynctest import patch
 import pytest
 
 from homeassistant import bootstrap
@@ -12,6 +11,7 @@ import homeassistant.config as config_util
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -35,6 +35,15 @@ async def test_home_assistant_core_config_validation(hass):
         {"homeassistant": {"latitude": "some string"}}, hass
     )
     assert result is None
+
+
+async def test_async_enable_logging(hass):
+    """Test to ensure logging is migrated to the queue handlers."""
+    with patch("logging.getLogger"), patch(
+        "homeassistant.bootstrap.async_activate_log_queue_handler"
+    ) as mock_async_activate_log_queue_handler:
+        bootstrap.async_enable_logging(hass)
+        mock_async_activate_log_queue_handler.assert_called_once()
 
 
 async def test_load_hassio(hass):

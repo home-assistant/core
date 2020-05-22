@@ -1,12 +1,12 @@
 """The tests for the nexbus sensor component."""
 from copy import deepcopy
-from unittest.mock import patch
 
 import pytest
 
 import homeassistant.components.nextbus.sensor as nextbus
 import homeassistant.components.sensor as sensor
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, async_setup_component
 
 VALID_AGENCY = "sf-muni"
