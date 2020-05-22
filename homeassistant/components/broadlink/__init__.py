@@ -31,12 +31,12 @@ def data_packet(value):
 
 def hostname(value):
     """Validate a hostname."""
-    host = str(value).lower()
+    host = str(value)
     if len(host) > 253:
         raise ValueError
     if host[-1] == ".":
         host = host[:-1]
-    allowed = re.compile(r"(?!-)[a-z\d-]{1,63}(?<!-)$")
+    allowed = re.compile(r"(?![_-])[a-z\d_-]{1,63}(?<![_-])$", flags=re.IGNORECASE)
     if not all(allowed.match(elem) for elem in host.split(".")):
         raise ValueError
     return host

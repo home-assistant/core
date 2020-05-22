@@ -16,6 +16,7 @@
             "not_found": "No se ha encontrado el servidor Plex",
             "ssl_error": "Problema con el certificado SSL"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {

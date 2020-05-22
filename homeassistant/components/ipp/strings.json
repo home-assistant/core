@@ -28,7 +28,8 @@
       "connection_upgrade": "Failed to connect to printer due to connection upgrade being required.",
       "ipp_error": "Encountered IPP error.",
       "ipp_version_error": "IPP version not supported by printer.",
-      "parse_error": "Failed to parse response from printer."
+      "parse_error": "Failed to parse response from printer.",
+      "unique_id_required": "Device missing unique identification required for discovery."
     }
   }
 }

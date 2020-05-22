@@ -11,9 +11,9 @@
                 "data": {
                     "broker": "Po\u015brednik",
                     "discovery": "W\u0142\u0105cz wykrywanie",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "port": "[%key_id:common::config_flow::data::port%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT.",
                 "title": "MQTT"

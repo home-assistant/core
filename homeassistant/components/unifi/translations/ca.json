@@ -44,7 +44,7 @@
                     "track_wired_clients": "Inclou clients de xarxa per cable"
                 },
                 "description": "Configuraci\u00f3 de seguiment de dispositius",
-                "title": "Opcions d'UniFi"
+                "title": "Opcions d'UniFi 1/3"
             },
             "simple_options": {
                 "data": {
@@ -59,7 +59,7 @@
                     "allow_bandwidth_sensors": "Crea sensors d'\u00fas d'ample de banda per a clients de la xarxa"
                 },
                 "description": "Configuraci\u00f3 dels sensors d'estad\u00edstiques",
-                "title": "Opcions d'UniFi"
+                "title": "Opcions d'UniFi 3/3"
             }
         }
     }

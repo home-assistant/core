@@ -1,21 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
             "device_fail": "Nieoczekiwany b\u0142\u0105d tworzenia urz\u0105dzenia.",
             "device_timeout": "Przekroczono limit czasu \u0142\u0105czenia z urz\u0105dzeniem."
         },
         "error": {
-            "device_fail": "[%key_id:common::config_flow::error::unknown%]",
-            "device_timeout": "[%key_id:common::config_flow::error::cannot_connect%]",
-            "forbidden": "[%key_id:common::config_flow::error::invalid_auth%]"
+            "device_fail": "Nieoczekiwany b\u0142\u0105d.",
+            "device_timeout": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "forbidden": "Niepoprawne uwierzytelnienie."
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
-                    "key": "Klucz uwierzytelniania (u\u017cywany tylko przez urz\u0105dzenia BRP072C/Zena)",
-                    "password": "Has\u0142o urz\u0105dzenia (u\u017cywane tylko przez urz\u0105dzenia SKYFi)"
+                    "host": "Nazwa hosta lub adres IP",
+                    "key": "Klucz API",
+                    "password": "Has\u0142o"
                 },
                 "description": "Wprowad\u017a adres IP Daikin AC.",
                 "title": "Konfiguracja Daikin AC"

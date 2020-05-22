@@ -54,6 +54,8 @@ class ONVIFDevice:
         self.profiles: List[Profile] = []
         self.max_resolution: int = 0
 
+        self._dt_diff_seconds: int = 0
+
     @property
     def name(self) -> str:
         """Return the name of this device."""
@@ -99,6 +101,16 @@ class ONVIFDevice:
 
             if self.capabilities.ptz:
                 self.device.create_ptz_service()
+
+            if self._dt_diff_seconds > 300 and self.capabilities.events:
+                self.capabilities.events = False
+                LOGGER.warning(
+                    "The system clock on '%s' is more than 5 minutes off. "
+                    "Although this device supports events, they will be "
+                    "disabled until the device clock is fixed as we will "
+                    "not be able to renew the subscription.",
+                    self.name,
+                )
 
             if self.capabilities.events:
                 self.events = EventManager(
@@ -179,9 +191,9 @@ class ONVIFDevice:
                 )
 
                 dt_diff = cam_date - system_date
-                dt_diff_seconds = dt_diff.total_seconds()
+                self._dt_diff_seconds = dt_diff.total_seconds()
 
-                if dt_diff_seconds > 5:
+                if self._dt_diff_seconds > 5:
                     LOGGER.warning(
                         "The date/time on the device (UTC) is '%s', "
                         "which is different from the system '%s', "
@@ -207,19 +219,30 @@ class ONVIFDevice:
 
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
-        media_service = self.device.create_media_service()
-        media_capabilities = await media_service.GetServiceCapabilities()
-        event_service = self.device.create_events_service()
-        event_capabilities = await event_service.GetServiceCapabilities()
+        snapshot = False
+        try:
+            media_service = self.device.create_media_service()
+            media_capabilities = await media_service.GetServiceCapabilities()
+            snapshot = media_capabilities and media_capabilities.SnapshotUri
+        except (ONVIFError, Fault):
+            pass
+
+        pullpoint = False
+        try:
+            event_service = self.device.create_events_service()
+            event_capabilities = await event_service.GetServiceCapabilities()
+            pullpoint = event_capabilities and event_capabilities.WSPullPointSupport
+        except (ONVIFError, Fault):
+            pass
+
         ptz = False
         try:
             self.device.get_definition("ptz")
             ptz = True
         except ONVIFError:
             pass
-        return Capabilities(
-            media_capabilities.SnapshotUri, event_capabilities.WSPullPointSupport, ptz
-        )
+
+        return Capabilities(snapshot, pullpoint, ptz)
 
     async def async_get_profiles(self) -> List[Profile]:
         """Obtain media profiles for this device."""

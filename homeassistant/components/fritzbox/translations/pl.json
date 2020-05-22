@@ -13,17 +13,17 @@
         "step": {
             "confirm": {
                 "data": {
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Czy chcesz skonfigurowa\u0107 {name}?",
                 "title": "AVM FRITZ! Box"
             },
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a informacje o urz\u0105dzeniu AVM FRITZ! Box.",
                 "title": "AVM FRITZ! Box"

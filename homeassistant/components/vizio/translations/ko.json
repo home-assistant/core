@@ -16,7 +16,7 @@
                 "data": {
                     "pin": "PIN"
                 },
-                "description": "TV \uc5d0 \ucf54\ub4dc\uac00 \ud45c\uc2dc\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud574\ub2f9 \ucf54\ub4dc\ub97c \uc591\uc2dd\uc5d0 \uc785\ub825\ud55c \ud6c4 \ub2e4\uc74c \ub2e8\uacc4\ub97c \uacc4\uc18d\ud558\uc5ec \ud398\uc5b4\ub9c1\uc744 \uc644\ub8cc\ud574\uc8fc\uc138\uc694.",
+                "description": "TV \uc5d0 \ucf54\ub4dc\uac00 \ud45c\uc2dc\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud574\ub2f9 \ucf54\ub4dc\ub97c \uc785\ub825\ub780\uc5d0 \uc785\ub825\ud55c \ud6c4 \ub2e4\uc74c \ub2e8\uacc4\ub97c \uacc4\uc18d\ud558\uc5ec \ud398\uc5b4\ub9c1\uc744 \uc644\ub8cc\ud574\uc8fc\uc138\uc694.",
                 "title": "\ud398\uc5b4\ub9c1 \uacfc\uc815 \ub05d\ub0b4\uae30"
             },
             "pairing_complete": {
@@ -43,7 +43,7 @@
         "step": {
             "init": {
                 "data": {
-                    "apps_to_include_or_exclude": "\ud3ec\ud568 \ub610\ub294 \uc81c\uc678 \ud560 \uc571",
+                    "apps_to_include_or_exclude": "\ud3ec\ud568 \ub610\ub294 \uc81c\uc678\ud560 \uc571",
                     "include_or_exclude": "\uc571\uc744 \ud3ec\ud568 \ub610\ub294 \uc81c\uc678\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
                     "volume_step": "\ubcfc\ub968 \ub2e8\uacc4 \ud06c\uae30"
                 },

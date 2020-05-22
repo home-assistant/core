@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "UPnP / IGD er allerede konfigurert",
             "incomplete_device": "Ignorerer ufullstendig UPnP-enhet",
+            "incomplete_discovery": "Ufullstendig oppdagelse",
             "no_devices_discovered": "Ingen UPnP / IGDs oppdaget",
             "no_devices_found": "Ingen UPnP / IGD-enheter funnet p\u00e5 nettverket.",
             "no_sensors_or_port_mapping": "Aktiver minst sensorer eller port mapping",

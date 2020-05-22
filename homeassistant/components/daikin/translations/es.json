@@ -7,7 +7,7 @@
         },
         "error": {
             "device_fail": "Error inesperado",
-            "device_timeout": "Error al conectar",
+            "device_timeout": "No se pudo conectar",
             "forbidden": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "step": {

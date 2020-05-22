@@ -6,6 +6,9 @@ DOMAIN = "wiffi"
 # Default port for TCP server
 DEFAULT_PORT = 8189
 
+# Default timeout in minutes
+DEFAULT_TIMEOUT = 3
+
 # Signal name to send create/update to platform (sensor/binary_sensor)
 CREATE_ENTITY_SIGNAL = "wiffi_create_entity_signal"
 UPDATE_ENTITY_SIGNAL = "wiffi_update_entity_signal"

@@ -15,14 +15,6 @@ from .const import CONF_KEY, CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_KEY): str,
-        vol.Optional(CONF_PASSWORD): str,
-    }
-)
-
 
 @config_entries.HANDLERS.register("daikin")
 class FlowHandler(config_entries.ConfigFlow):
@@ -31,12 +23,26 @@ class FlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def _create_entry(self, host, mac, key=None, uuid=None, password=None):
+    def __init__(self):
+        """Initialize the Daikin config flow."""
+        self.host = None
+
+    @property
+    def schema(self):
+        """Return current schema."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=self.host): str,
+                vol.Optional(CONF_KEY): str,
+                vol.Optional(CONF_PASSWORD): str,
+            }
+        )
+
+    async def _create_entry(self, host, mac, key=None, uuid=None, password=None):
         """Register new entry."""
         # Check if mac already is registered
-        for entry in self._async_current_entries():
-            if entry.data[KEY_MAC] == mac:
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(mac)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=host,
@@ -73,31 +79,31 @@ class FlowHandler(config_entries.ConfigFlow):
         except asyncio.TimeoutError:
             return self.async_show_form(
                 step_id="user",
-                data_schema=DATA_SCHEMA,
+                data_schema=self.schema,
                 errors={"base": "device_timeout"},
             )
         except web_exceptions.HTTPForbidden:
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors={"base": "forbidden"},
+                step_id="user", data_schema=self.schema, errors={"base": "forbidden"},
             )
         except ClientError:
             _LOGGER.exception("ClientError")
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors={"base": "device_fail"},
+                step_id="user", data_schema=self.schema, errors={"base": "device_fail"},
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors={"base": "device_fail"},
+                step_id="user", data_schema=self.schema, errors={"base": "device_fail"},
             )
 
         mac = device.mac
-        return self._create_entry(host, mac, key, uuid, password)
+        return await self._create_entry(host, mac, key, uuid, password)
 
     async def async_step_user(self, user_input=None):
         """User initiated config flow."""
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA,)
+            return self.async_show_form(step_id="user", data_schema=self.schema)
         return await self._create_device(
             user_input[CONF_HOST],
             user_input.get(CONF_KEY),
@@ -111,7 +117,10 @@ class FlowHandler(config_entries.ConfigFlow):
             return await self.async_step_user()
         return await self._create_device(host)
 
-    async def async_step_discovery(self, user_input):
+    async def async_step_discovery(self, discovery_info):
         """Initialize step from discovery."""
-        _LOGGER.info("Discovered device: %s", user_input)
-        return self._create_entry(user_input[KEY_IP], user_input[KEY_MAC])
+        _LOGGER.debug("Discovered device: %s", discovery_info)
+        await self.async_set_unique_id(discovery_info[KEY_MAC])
+        self._abort_if_unique_id_configured()
+        self.host = discovery_info[KEY_IP]
+        return await self.async_step_user()

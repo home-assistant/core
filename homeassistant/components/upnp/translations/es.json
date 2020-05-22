@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "UPnP / IGD ya est\u00e1 configurado",
             "incomplete_device": "Ignorando el dispositivo UPnP incompleto",
+            "incomplete_discovery": "Descubrimiento incompleto",
             "no_devices_discovered": "No se descubrieron UPnP / IGDs",
             "no_devices_found": "No se encuentran dispositivos UPnP/IGD en la red.",
             "no_sensors_or_port_mapping": "Habilitar al menos sensores o mapeo de puertos",

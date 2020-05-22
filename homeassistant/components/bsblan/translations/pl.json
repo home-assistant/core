@@ -3,8 +3,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
-                    "port": "[%key_id:common::config_flow::data::port%]"
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
                 }
             }
         }

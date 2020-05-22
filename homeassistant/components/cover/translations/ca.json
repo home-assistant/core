@@ -27,9 +27,9 @@
     },
     "state": {
         "_": {
-            "closed": "Tancada",
+            "closed": "Tancat/da",
             "closing": "Tancant",
-            "open": "Oberta",
+            "open": "Obert/a",
             "opening": "Obrint",
             "stopped": "Aturat"
         }

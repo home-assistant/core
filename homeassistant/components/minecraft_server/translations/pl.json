@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa"
                 },
                 "description": "Skonfiguruj instancj\u0119 serwera Minecraft, aby umo\u017cliwi\u0107 monitorowanie.",

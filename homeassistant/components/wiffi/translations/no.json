@@ -12,5 +12,14 @@
                 "title": "Sett opp TCP-server for WIFFI-enheter"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Timeout (minutter)"
+                }
+            }
+        }
     }
 }

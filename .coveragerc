@@ -10,6 +10,14 @@ omit =
     # omit pieces of code that rely on external devices being present
     homeassistant/components/acer_projector/switch.py
     homeassistant/components/actiontec/device_tracker.py
+    homeassistant/components/acmeda/__init__.py
+    homeassistant/components/acmeda/base.py
+    homeassistant/components/acmeda/const.py
+    homeassistant/components/acmeda/cover.py
+    homeassistant/components/acmeda/errors.py
+    homeassistant/components/acmeda/helpers.py
+    homeassistant/components/acmeda/hub.py
+    homeassistant/components/acmeda/sensor.py
     homeassistant/components/adguard/__init__.py
     homeassistant/components/adguard/const.py
     homeassistant/components/adguard/sensor.py
@@ -62,7 +70,6 @@ omit =
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
     homeassistant/components/aurora_abb_powerone/sensor.py
-    homeassistant/components/automatic/*
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
     homeassistant/components/avri/sensor.py
@@ -282,7 +289,6 @@ omit =
     homeassistant/components/glances/sensor.py
     homeassistant/components/gntp/notify.py
     homeassistant/components/goalfeed/*
-    homeassistant/components/gogogate2/cover.py
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
@@ -727,6 +733,7 @@ omit =
     homeassistant/components/steam_online/sensor.py
     homeassistant/components/stiebel_eltron/*
     homeassistant/components/stookalert/*
+    homeassistant/components/stream/*
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
@@ -915,15 +922,15 @@ omit =
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py
     homeassistant/components/zhong_hong/climate.py
-    homeassistant/components/zigbee/*
+    homeassistant/components/xbee/*
     homeassistant/components/ziggo_mediabox_xl/media_player.py
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
-    homeassistant/components/zwave_mqtt/__init__.py
-    homeassistant/components/zwave_mqtt/discovery.py
-    homeassistant/components/zwave_mqtt/entity.py
-    homeassistant/components/zwave_mqtt/services.py
+    homeassistant/components/ozw/__init__.py
+    homeassistant/components/ozw/discovery.py
+    homeassistant/components/ozw/entity.py
+    homeassistant/components/ozw/services.py
 
 [report]
 # Regexes for lines to exclude from consideration

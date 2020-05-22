@@ -16,6 +16,7 @@
             "not_found": "Plex \uc11c\ubc84\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
             "ssl_error": "SSL \uc778\uc99d\uc11c \uac80\uc99d"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {

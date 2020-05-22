@@ -8,11 +8,19 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Codi de dos factors"
+                },
+                "description": "Introdueix el PIN que has rebut per correu electr\u00f2nic. Si el correu no cont\u00e9 cap PIN, deixa-ho en blanc.",
+                "title": "Autenticaci\u00f3 de dos factors"
+            },
             "user": {
                 "data": {
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
-                }
+                },
+                "title": "Inici de sessi\u00f3 amb Blink"
             }
         }
     }

@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.components.switch import DEVICE_CLASS_SWITCH
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 
 DOMAIN = "blebox"
@@ -26,6 +27,8 @@ BLEBOX_TO_HASS_DEVICE_CLASSES = {
     "shutter": DEVICE_CLASS_SHUTTER,
     "gatebox": DEVICE_CLASS_DOOR,
     "gate": DEVICE_CLASS_GATE,
+    "relay": DEVICE_CLASS_SWITCH,
+    "temperature": DEVICE_CLASS_TEMPERATURE,
 }
 
 BLEBOX_TO_HASS_COVER_STATES = {
@@ -43,7 +46,6 @@ BLEBOX_TO_HASS_COVER_STATES = {
 }
 
 BLEBOX_TO_UNIT_MAP = {"celsius": TEMP_CELSIUS}
-BLEBOX_DEV_CLASS_MAP = {"temperature": DEVICE_CLASS_TEMPERATURE}
 
 DEFAULT_HOST = "192.168.0.2"
 DEFAULT_PORT = 80

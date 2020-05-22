@@ -103,6 +103,11 @@ class TestComponentHistory(unittest.TestCase):
         # Test get_state here because we have a DB setup
         assert states[0] == history.get_state(self.hass, future, states[0].entity_id)
 
+        time_before_recorder_ran = now - timedelta(days=1000)
+        assert history.get_states(self.hass, time_before_recorder_ran) == []
+
+        assert history.get_state(self.hass, time_before_recorder_ran, "demo.id") is None
+
     def test_state_changes_during_period(self):
         """Test state change during period."""
         self.init_recorder()

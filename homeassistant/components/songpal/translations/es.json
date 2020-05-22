@@ -5,7 +5,7 @@
             "not_songpal_device": "No es un dispositivo Songpal"
         },
         "error": {
-            "cannot_connect": "Error al conectar",
+            "cannot_connect": "No se pudo conectar",
             "connection": "Error de conexi\u00f3n: comprueba tu endpoint"
         },
         "flow_title": "Sony Songpal {name} ({host})",

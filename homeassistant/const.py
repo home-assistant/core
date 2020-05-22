@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 110
+MINOR_VERSION = 111
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -356,6 +356,10 @@ VOLT = "V"
 # Energy units
 ENERGY_WATT_HOUR = f"{POWER_WATT}h"
 ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
+
+# Electrical units
+ELECTRICAL_CURRENT_AMPERE = "A"
+ELECTRICAL_VOLT_AMPERE = f"{VOLT}{ELECTRICAL_CURRENT_AMPERE}"
 
 # Degree units
 DEGREE = "°"

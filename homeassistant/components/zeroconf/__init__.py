@@ -1,4 +1,5 @@
 """Support for exposing Home Assistant via Zeroconf."""
+import asyncio
 import ipaddress
 import logging
 import socket
@@ -116,9 +117,15 @@ def setup(hass, config):
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
     )
-    zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
+
+    # Get instance UUID
+    uuid = asyncio.run_coroutine_threadsafe(
+        hass.helpers.instance_id.async_get(), hass.loop
+    ).result()
 
     params = {
+        "location_name": hass.config.location_name,
+        "uuid": uuid,
         "version": __version__,
         "external_url": None,
         "internal_url": None,
@@ -128,6 +135,7 @@ def setup(hass, config):
         "requires_api_password": True,
     }
 
+    # Get instance URL's
     try:
         params["external_url"] = get_url(hass, allow_internal=False)
     except NoURLAvailableError:
@@ -150,8 +158,8 @@ def setup(hass, config):
 
     info = ServiceInfo(
         ZEROCONF_TYPE,
-        zeroconf_name,
-        None,
+        name=f"{hass.config.location_name}.{ZEROCONF_TYPE}",
+        server=f"{uuid}.local.",
         addresses=[host_ip_pton],
         port=hass.http.server_port,
         properties=params,
@@ -179,6 +187,8 @@ def setup(hass, config):
 
         service_info = zeroconf.get_service_info(service_type, name)
         if not service_info:
+            # Prevent the browser thread from collapsing as
+            # service_info can be None
             return
 
         info = info_from_service(service_info)
@@ -199,7 +209,8 @@ def setup(hass, config):
                 and HOMEKIT_PAIRED_STATUS_FLAG in info[HOMEKIT_PROPERTIES]
             ):
                 try:
-                    if not int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
+                    # 0 means paired and not discoverable by iOS clients)
+                    if int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
                         return
                 except ValueError:
                     # HomeKit pairing status unknown

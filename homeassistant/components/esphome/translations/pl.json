@@ -13,7 +13,7 @@
         "step": {
             "authenticate": {
                 "data": {
-                    "password": "[%key_id:common::config_flow::data::password%]"
+                    "password": "Has\u0142o"
                 },
                 "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji dla {name}.",
                 "title": "Wprowad\u017a has\u0142o"
@@ -24,8 +24,8 @@
             },
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
-                    "port": "[%key_id:common::config_flow::data::port%]"
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
                 },
                 "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia [ESPHome](https://esphomelib.com/) w\u0119z\u0142a.",
                 "title": "ESPHome"

@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
             "bad_config_file": "B\u0142\u0119dne dane z pliku konfiguracyjnego",
             "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane",
             "not_axis_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem Axis"
         },
         "error": {
-            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
             "already_in_progress": "Konfiguracja urz\u0105dzenia jest ju\u017c w toku.",
             "device_unavailable": "Urz\u0105dzenie jest niedost\u0119pne",
             "faulty_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce"
@@ -16,10 +16,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "port": "[%key_id:common::config_flow::data::port%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "title": "Konfiguracja urz\u0105dzenia Axis"
             }
