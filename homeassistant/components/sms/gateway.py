@@ -126,6 +126,10 @@ class Gateway:
         """Send sms message via the worker."""
         return await self._worker.SendSMSAsync(message)
 
+    async def TerminateAsync(self):
+        """Terminate modem connection."""
+        return await self._worker.TerminateAsync()
+
 
 async def create_sms_gateway(config, loop, callback):
     """Create the sms gateway."""
