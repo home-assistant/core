@@ -279,8 +279,14 @@ class ONVIFDevice:
                 )
 
                 ptz_service = self.device.get_service("ptz")
-                presets = await ptz_service.GetPresets(profile.token)
-                profile.ptz.presets = [preset.token for preset in presets]
+                try:
+                    presets = await ptz_service.GetPresets(profile.token)
+                    profile.ptz.presets = [preset.token for preset in presets]
+                except ServerDisconnectedError as err:
+	            LOGGER.warning(
+	                "Couldn't get device '%s' presets. Error: %s", self.name, err
+	            )
+	            pass
 
             profiles.append(profile)
 
