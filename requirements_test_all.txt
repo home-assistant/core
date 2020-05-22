@@ -141,7 +141,7 @@ arcam-fmj==0.4.6
 async-upnp-client==0.14.13
 
 # homeassistant.components.stream
-av==7.0.1
+av==8.0.1
 
 # homeassistant.components.axis
 axis==26
@@ -539,7 +539,7 @@ pychromecast==5.2.0
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.0.2
+pydaikin==2.0.4
 
 # homeassistant.components.deconz
 pydeconz==70

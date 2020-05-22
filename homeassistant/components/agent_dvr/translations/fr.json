@@ -12,7 +12,8 @@
                 "data": {
                     "host": "H\u00f4te",
                     "port": "Port"
-                }
+                },
+                "title": "Configurer l'agent DVR"
             }
         }
     },

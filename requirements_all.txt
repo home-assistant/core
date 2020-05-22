@@ -291,7 +291,7 @@ atenpdu==0.3.0
 aurorapy==0.2.6
 
 # homeassistant.components.stream
-av==7.0.1
+av==8.0.1
 
 # homeassistant.components.avea
 avea==1.4
@@ -1263,7 +1263,7 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.0.2
+pydaikin==2.0.4
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
