@@ -239,6 +239,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         advertise_ip,
         entry,
     )
+    await homekit.async_setup()
     zeroconf_instance = await zeroconf.async_get_instance(hass)
     await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
 
@@ -427,6 +428,10 @@ class HomeKit:
         self.bridge = None
         self.driver = None
         self._bridge_lock = None
+
+    async def async_setup(self):
+        """Set up async lock."""
+        self._bridge_lock = asyncio.Lock()
 
     def setup(self, zeroconf_instance):
         """Set up bridge and accessory driver."""
