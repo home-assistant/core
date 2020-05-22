@@ -177,6 +177,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Send play/pause command."""
         await self.coordinator.roku.remote("play")
 
+    async def async_media_play_pause(self) -> None:
+        """Send play/pause command."""
+        await self.coordinator.roku.remote("play")
+
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.coordinator.roku.remote("reverse")
