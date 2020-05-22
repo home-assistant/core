@@ -5,7 +5,6 @@
   "requirements": [
     "enocean==0.50"
   ],
-  "dependencies": [],
   "codeowners": [
     "@bdurrer"
   ],

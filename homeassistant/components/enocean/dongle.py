@@ -5,13 +5,11 @@ from os.path import basename, normpath
 
 from enocean.communicators import SerialCommunicator
 from enocean.protocol.packet import RadioPacket
+import serial
 
-from homeassistant.components.enocean.const import (
-    LOGGER,
-    SIGNAL_RECEIVE_MESSAGE,
-    SIGNAL_SEND_MESSAGE,
-)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,8 +21,8 @@ class EnOceanDongle:
     creating devices if needed, and dispatching messages to platforms.
     """
 
-    @classmethod
-    def detect(cls):
+    @staticmethod
+    def detect():
         """Return a list of candidate paths for USB ENOcean dongles.
 
         This method is currently a bit simplistic, it may need to be
@@ -37,22 +35,43 @@ class EnOceanDongle:
 
         return found_paths
 
+    @staticmethod
+    def validate_path(path: str):
+        """Return True if the provided path points to a valid serial port, False otherwise."""
+        try:
+            test_port = serial.Serial(path, 57600, timeout=0.1)
+            test_port.close()
+            return True
+        except Exception as e:
+            _LOGGER.warning("Dongle path %s is invalid: %s", path, str(e))
+            return False
+
     def __init__(self, hass, serial_path):
         """Initialize the EnOcean dongle."""
 
-        LOGGER.debug("Creating dongle for path %s", serial_path)
-        self.__communicator = SerialCommunicator(
+        self._communicator = SerialCommunicator(
             port=serial_path, callback=self.callback
         )
-        self.__communicator.start()
         self.serial_path = serial_path
         self.identifier = basename(normpath(serial_path))
         self.hass = hass
-        async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, self._send_message_callback)
+        self.dispatcher_disconnect_handle = None
+
+    def __del__(self):
+        """Disconnect callbacks established at init time."""
+        if self.dispatcher_disconnect_handle:
+            self.dispatcher_disconnect_handle()
+
+    async def async_setup(self):
+        """Finish the setup of the bridge and supported platforms."""
+        self._communicator.start()
+        self.dispatcher_disconnect_handle = async_dispatcher_connect(
+            self.hass, SIGNAL_SEND_MESSAGE, self._send_message_callback
+        )
 
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""
-        self.__communicator.send(command)
+        self._communicator.send(command)
 
     def callback(self, packet):
         """Handle EnOcean device's callback.

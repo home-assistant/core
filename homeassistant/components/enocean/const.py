@@ -3,7 +3,6 @@ import logging
 
 DOMAIN = "enocean"
 DATA_ENOCEAN = "enocean"
-CONNECTION_ENOCEAN = "enocean"
 
 ERROR_INVALID_DONGLE_PATH = "invalid_dongle_path"
 

@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.components.enocean.device import EnOceanDevice
+from homeassistant.components.enocean.device import EnOceanEntity
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
 
 
-class EnOceanBinarySensor(EnOceanDevice, BinarySensorEntity):
+class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     """Representation of EnOcean binary sensors such as wall switches.
 
     Supported EEPs (EnOcean Equipment Profiles):

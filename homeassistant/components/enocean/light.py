@@ -4,7 +4,7 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.components.enocean.device import EnOceanDevice
+from homeassistant.components.enocean.device import EnOceanEntity
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
 
 
-class EnOceanLight(EnOceanDevice, LightEntity):
+class EnOceanLight(EnOceanEntity, LightEntity):
     """Representation of an EnOcean light source."""
 
     def __init__(self, sender_id, dev_id, dev_name):

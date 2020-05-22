@@ -9,8 +9,8 @@ from homeassistant.components.enocean.const import (
 from homeassistant.helpers.entity import Entity
 
 
-class EnOceanDevice(Entity):
-    """Parent class for all devices associated with the EnOcean component."""
+class EnOceanEntity(Entity):
+    """Parent class for all entities associated with the EnOcean component."""
 
     def __init__(self, dev_id, dev_name="EnOcean device"):
         """Initialize the device."""
