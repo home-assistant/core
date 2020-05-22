@@ -39,11 +39,6 @@ def setup(hass, config):
     return True
 
 
-def notify_incoming_sms(message):
-    """Notify hass when an incoming SMS message is received."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Configure Gammu state machine."""
 
@@ -53,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device = entry.data[CONF_DEVICE]
     config = dict(Device=device, Connection="at")
     loop = get_running_loop()
-    gateway = await create_sms_gateway(config, loop, notify_incoming_sms)
+    gateway = await create_sms_gateway(config, loop, hass)
     if gateway:
         hass.data[DOMAIN][SMS_GATEWAY] = gateway
         for component in PLATFORMS:
