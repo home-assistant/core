@@ -9,8 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Clau API d\u2019aquest lloc",
-                    "name": "Nom d\u2019aquesta instal\u00b7laci\u00f3",
+                    "api_key": "Clau API d'aquest lloc",
+                    "name": "Nom d'aquesta instal\u00b7laci\u00f3",
                     "site_id": "SolarEdge site_id"
                 },
                 "title": "Configuraci\u00f3 dels par\u00e0metres de l'API per aquesta instal\u00b7laci\u00f3"

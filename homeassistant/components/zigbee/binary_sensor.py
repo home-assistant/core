@@ -1,7 +1,7 @@
 """Support for Zigbee binary sensors."""
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import DOMAIN, PLATFORM_SCHEMA, ZigBeeDigitalIn, ZigBeeDigitalInConfig
 
@@ -21,5 +21,5 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ZigBeeBinarySensor(ZigBeeDigitalIn, BinarySensorDevice):
+class ZigBeeBinarySensor(ZigBeeDigitalIn, BinarySensorEntity):
     """Use ZigBeeDigitalIn as binary sensor."""

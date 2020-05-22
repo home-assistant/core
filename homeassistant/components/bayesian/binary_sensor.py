@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -91,8 +91,7 @@ def update_probability(prior, prob_given_true, prob_given_false):
     """Update probability using Bayes' rule."""
     numerator = prob_given_true * prior
     denominator = numerator + prob_given_false * (1 - prior)
-    probability = numerator / denominator
-    return probability
+    return numerator / denominator
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -113,7 +112,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class BayesianBinarySensor(BinarySensorDevice):
+class BayesianBinarySensor(BinarySensorEntity):
     """Representation of a Bayesian sensor."""
 
     def __init__(self, name, prior, observations, probability_threshold, device_class):
@@ -246,7 +245,7 @@ class BayesianBinarySensor(BinarySensorDevice):
         """Return True if numeric condition is met."""
         entity = entity_observation["entity_id"]
 
-        should_trigger = condition.async_numeric_state(
+        return condition.async_numeric_state(
             self.hass,
             entity,
             entity_observation.get("below"),
@@ -254,26 +253,18 @@ class BayesianBinarySensor(BinarySensorDevice):
             None,
             entity_observation,
         )
-        return should_trigger
 
     def _process_state(self, entity_observation):
         """Return True if state conditions are met."""
         entity = entity_observation["entity_id"]
 
-        should_trigger = condition.state(
-            self.hass, entity, entity_observation.get("to_state")
-        )
-
-        return should_trigger
+        return condition.state(self.hass, entity, entity_observation.get("to_state"))
 
     def _process_template(self, entity_observation):
         """Return True if template condition is True."""
         template = entity_observation.get(CONF_VALUE_TEMPLATE)
         template.hass = self.hass
-        should_trigger = condition.async_template(
-            self.hass, template, entity_observation
-        )
-        return should_trigger
+        return condition.async_template(self.hass, template, entity_observation)
 
     @property
     def name(self):
@@ -299,9 +290,9 @@ class BayesianBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
 
-        attr_observations_list = list(
+        attr_observations_list = [
             obs.copy() for obs in self.current_observations.values() if obs is not None
-        )
+        ]
 
         for item in attr_observations_list:
             item.pop("value_template", None)

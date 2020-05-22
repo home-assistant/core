@@ -5,7 +5,7 @@ import logging
 import haanna
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class ThermostatDevice(ClimateDevice):
+class ThermostatDevice(ClimateEntity):
     """Representation of the Plugwise thermostat."""
 
     def __init__(self, api, name, min_temp, max_temp):

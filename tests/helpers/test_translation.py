@@ -3,14 +3,15 @@ import asyncio
 from os import path
 import pathlib
 
-from asynctest import Mock, patch
 import pytest
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import async_setup_component, setup_component
+
+from tests.async_mock import Mock, patch
 
 
 @pytest.fixture
@@ -142,11 +143,11 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
 
-    with patch.object(
-        translation, "component_translation_path", return_value="bla.json"
-    ), patch.object(
-        translation,
-        "load_translations_files",
+    with patch(
+        "homeassistant.helpers.translation.component_translation_path",
+        return_value="bla.json",
+    ), patch(
+        "homeassistant.helpers.translation.load_translations_files",
         return_value={"component1": {"hello": "world"}},
     ), patch(
         "homeassistant.helpers.translation.async_get_integration",
@@ -169,16 +170,18 @@ async def test_get_translations_while_loading_components(hass):
     integration.name = "Component 1"
     hass.config.components.add("component1")
 
-    async def mock_load_translation_files(files):
+    def mock_load_translation_files(files):
         """Mock load translation files."""
         # Mimic race condition by loading a component during setup
-        await async_setup_component(hass, "persistent_notification", {})
+        setup_component(hass, "persistent_notification", {})
         return {"component1": {"hello": "world"}}
 
-    with patch.object(
-        translation, "component_translation_path", return_value="bla.json"
-    ), patch.object(
-        translation, "load_translations_files", side_effect=mock_load_translation_files,
+    with patch(
+        "homeassistant.helpers.translation.component_translation_path",
+        return_value="bla.json",
+    ), patch(
+        "homeassistant.helpers.translation.load_translations_files",
+        mock_load_translation_files,
     ), patch(
         "homeassistant.helpers.translation.async_get_integration",
         return_value=integration,
@@ -229,9 +232,8 @@ async def test_translation_merging(hass, caplog):
         result["sensor.season"] = {"state": "bad data"}
         return result
 
-    with patch.object(
-        translation,
-        "load_translations_files",
+    with patch(
+        "homeassistant.helpers.translation.load_translations_files",
         side_effect=mock_load_translations_files,
     ):
         translations = await translation.async_get_translations(hass, "en", "state")

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Den h\u00e4r TV:n \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "invalid_host": "Ogiltigt v\u00e4rdnamn eller IP-adress.",
+            "unsupported_model": "Den h\u00e4r tv modellen st\u00f6ds inte."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "Pin-kod"
+                },
+                "title": "Auktorisera Sony Bravia TV"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rdnamn eller IP-adress f\u00f6r TV"
+                },
+                "title": "Sony Bravia TV"
+            }
+        }
+    }
+}

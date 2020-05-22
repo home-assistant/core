@@ -1,7 +1,7 @@
 """Support for deCONZ binary sensors."""
 from pydeconz.sensor import Presence, Vibration
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
+class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
     @callback

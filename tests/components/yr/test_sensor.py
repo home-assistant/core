@@ -1,11 +1,11 @@
 """The tests for the Yr sensor platform."""
 from datetime import datetime
-from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import DEGREE, SPEED_METERS_PER_SECOND, UNIT_PERCENTAGE
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, load_fixture
 
 NOW = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)

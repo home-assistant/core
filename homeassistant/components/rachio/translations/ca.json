@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "manual_run_mins": "Durant quant de temps (en minuts) mantenir engegada una estaci\u00f3 quan l\u2019interruptor s'activa."
+                    "manual_run_mins": "Durant quant de temps (en minuts) mantenir engegada una estaci\u00f3 quan l'interruptor s'activa."
                 }
             }
         }

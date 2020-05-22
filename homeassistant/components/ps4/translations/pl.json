@@ -21,7 +21,7 @@
             "link": {
                 "data": {
                     "code": "PIN",
-                    "ip_address": "Adres IP",
+                    "ip_address": "[%key_id:common::config_flow::data::ip%]",
                     "name": "Nazwa",
                     "region": "Region"
                 },
@@ -30,7 +30,7 @@
             },
             "mode": {
                 "data": {
-                    "ip_address": "Adres IP (pozostaw puste, je\u015bli u\u017cywasz funkcji Auto Discovery).",
+                    "ip_address": "[%key_id:common::config_flow::data::ip%] (pozostaw puste, je\u015bli u\u017cywasz wykrywania).",
                     "mode": "Tryb konfiguracji"
                 },
                 "description": "Wybierz tryb konfiguracji. Pole adresu IP mo\u017cna pozostawi\u0107 puste, je\u015bli wybierzesz opcj\u0119 Auto Discovery, poniewa\u017c urz\u0105dzenia zostan\u0105 automatycznie wykryte.",

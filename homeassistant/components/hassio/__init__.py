@@ -41,7 +41,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-DATA_HOMEASSISTANT_VERSION = "hassio_hass_version"
+DATA_INFO = "hassio_info"
+DATA_HOST_INFO = "hassio_host_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 SERVICE_ADDON_START = "addon_start"
@@ -130,7 +131,29 @@ def get_homeassistant_version(hass):
 
     Async friendly.
     """
-    return hass.data.get(DATA_HOMEASSISTANT_VERSION)
+    if DATA_INFO not in hass.data:
+        return None
+    return hass.data[DATA_INFO].get("homeassistant")
+
+
+@callback
+@bind_hass
+def get_info(hass):
+    """Return generic information from Supervisor.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_INFO)
+
+
+@callback
+@bind_hass
+def get_host_info(hass):
+    """Return generic host information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_HOST_INFO)
 
 
 @callback
@@ -247,20 +270,20 @@ async def async_setup(hass, config):
             DOMAIN, service, async_service_handler, schema=settings[1]
         )
 
-    async def update_homeassistant_version(now):
-        """Update last available Home Assistant version."""
+    async def update_info_data(now):
+        """Update last available supervisor information."""
         try:
-            data = await hassio.get_homeassistant_info()
-            hass.data[DATA_HOMEASSISTANT_VERSION] = data["last_version"]
+            hass.data[DATA_INFO] = await hassio.get_info()
+            hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
         except HassioAPIError as err:
             _LOGGER.warning("Can't read last version: %s", err)
 
         hass.helpers.event.async_track_point_in_utc_time(
-            update_homeassistant_version, utcnow() + HASSIO_UPDATE_INTERVAL
+            update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
         )
 
     # Fetch last version
-    await update_homeassistant_version(None)
+    await update_info_data(None)
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""

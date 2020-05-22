@@ -12,19 +12,21 @@
             "one": "Ein",
             "other": "andere"
         },
+        "flow_title": "UPnP/IGD: {name}",
         "step": {
             "confirm": {
                 "description": "M\u00f6chtest du UPnP/IGD einrichten?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
+            "ssdp_confirm": {
+                "description": "M\u00f6chten Sie dieses UPnP/IGD-Ger\u00e4t einrichten?"
             },
             "user": {
                 "data": {
                     "enable_port_mapping": "Aktiviere Port-Mapping f\u00fcr Home Assistant",
                     "enable_sensors": "Verkehrssensoren hinzuf\u00fcgen",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "usn": "Ger\u00e4t"
                 },
                 "title": "Konfigurations-Optionen"
             }

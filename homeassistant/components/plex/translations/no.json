@@ -10,11 +10,23 @@
             "unknown": "Mislyktes av ukjent \u00e5rsak"
         },
         "error": {
-            "faulty_credentials": "Autorisasjonen mislyktes",
-            "no_servers": "Ingen servere koblet til kontoen",
-            "not_found": "Plex-server ikke funnet"
+            "faulty_credentials": "Autorisasjonen mislyktes, bekreft token",
+            "host_or_token": "M\u00e5 oppgi minst en av Host eller Token",
+            "no_servers": "Ingen servere koblet til Plex-konto",
+            "not_found": "Plex-server ikke funnet",
+            "ssl_error": "Problem med SSL-sertifikat"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Host (valgfritt hvis token f\u00f8lger med)",
+                    "port": "Port",
+                    "ssl": "Bruk SSL",
+                    "token": "Token (valgfritt)",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                },
+                "title": "Manuell Plex-konfigurasjon"
+            },
             "select_server": {
                 "data": {
                     "server": ""
@@ -23,8 +35,18 @@
                 "title": "Velg Plex-server"
             },
             "start_website_auth": {
-                "description": "Fortsett \u00e5 autorisere p\u00e5 plex.tv.",
+                "description": "Fortsett \u00e5 godkjenne p\u00e5 plex.tv",
                 "title": "Koble til Plex-server"
+            },
+            "user": {
+                "description": "Fortsett til [plex.tv] (https://plex.tv) for \u00e5 koble en Plex-server.",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Oppsettmetode"
+                },
+                "title": "Plex Media Server"
             }
         }
     },
@@ -33,6 +55,7 @@
             "plex_mp_settings": {
                 "data": {
                     "ignore_new_shared_users": "Ignorer nye administrerte/delte brukere",
+                    "ignore_plex_web_clients": "Ignorer Plex Web-klienter",
                     "monitored_users": "Overv\u00e5kede brukere",
                     "use_episode_art": "Bruk episode bilde"
                 },

@@ -5,7 +5,7 @@ from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -70,7 +70,7 @@ def format_input_source(input_source_name, input_source_number):
     return f"{input_source_name} {input_source_number}"
 
 
-class PjLinkDevice(MediaPlayerDevice):
+class PjLinkDevice(MediaPlayerEntity):
     """Representation of a PJLink device."""
 
     def __init__(self, host, port, name, encoding, password):

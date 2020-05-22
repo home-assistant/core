@@ -88,9 +88,6 @@ def _add_reference(
     ...
 
 
-# pylint: enable=pointless-statement
-
-
 def _add_reference(  # type: ignore
     obj, loader: SafeLineLoader, node: yaml.nodes.Node
 ):

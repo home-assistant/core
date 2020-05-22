@@ -39,7 +39,14 @@
             "turn_on": "Allumer"
         },
         "trigger_type": {
-            "button_short_press": "\" {subtype} \" press\u00e9"
+            "button_double_press": "\"{subtype}\" double-cliqu\u00e9",
+            "button_long_press": "\" {subtype} \" press\u00e9 en continu",
+            "button_long_release": "\"{subtype}\" relach\u00e9 apr\u00e8s un appui long",
+            "button_quadruple_press": "\"{subtype}\" quadruple cliqu\u00e9",
+            "button_quintuple_press": "\"{subtype}\" quintuple cliqu\u00e9",
+            "button_short_press": "\" {subtype} \" press\u00e9",
+            "button_short_release": "\"{subtype}\" relach\u00e9",
+            "button_triple_press": "\"{subtype}\" triple-cliqu\u00e9"
         }
     }
 }

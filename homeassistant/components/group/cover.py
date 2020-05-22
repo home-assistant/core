@@ -27,7 +27,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -66,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([CoverGroup(config[CONF_NAME], config[CONF_ENTITIES])])
 
 
-class CoverGroup(CoverDevice):
+class CoverGroup(CoverEntity):
     """Representation of a CoverGroup."""
 
     def __init__(self, name, entities):

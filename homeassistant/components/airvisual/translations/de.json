@@ -14,7 +14,8 @@
                     "api_key": "API-Schl\u00fcssel",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad"
-                }
+                },
+                "title": "Konfigurieren Sie eine Geografie"
             },
             "node_pro": {
                 "data": {

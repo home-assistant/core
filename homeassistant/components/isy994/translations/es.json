@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Error al conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_host": "La entrada del host no estaba en formato URL completo, por ejemplo, http://192.168.10.100:80",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "Contrase\u00f1a",
+                    "tls": "La versi\u00f3n de TLS del controlador ISY.",
+                    "username": "Usuario"
+                },
+                "description": "La entrada del host debe estar en formato URL completo, por ejemplo, http://192.168.10.100:80",
+                "title": "Conectar con tu ISY994"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Ignorar Cadena",
+                    "restore_light_state": "Restaurar Intensidad de la Luz",
+                    "sensor_string": "Cadena Nodo Sensor",
+                    "variable_sensor_string": "Cadena de Sensor Variable"
+                },
+                "description": "Configura las opciones para la integraci\u00f3n de ISY: \n \u2022 Cadena Nodo Sensor: Cualquier dispositivo o carpeta que contenga 'Cadena Nodo Sensor' en el nombre ser\u00e1 tratada como un sensor o un sensor binario. \n \u2022 Ignorar Cadena: Cualquier dispositivo con 'Ignorar Cadena' en el nombre ser\u00e1 ignorado. \n \u2022 Restaurar Intensidad de la Luz: Si se habilita, la intensidad anterior ser\u00e1 restaurada al encender una luz en lugar de usar el nivel predeterminado del dispositivo.",
+                "title": "Opciones ISY994"
+            }
+        }
+    },
+    "title": "Dispositivos Universales ISY994"
+}

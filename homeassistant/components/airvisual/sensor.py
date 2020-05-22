@@ -2,7 +2,6 @@
 from logging import getLogger
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_STATE,
@@ -13,12 +12,23 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
-from .const import CONF_CITY, CONF_COUNTRY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE
+from . import AirVisualEntity
+from .const import (
+    CONF_CITY,
+    CONF_COUNTRY,
+    CONF_INTEGRATION_TYPE,
+    DATA_COORDINATOR,
+    DOMAIN,
+    INTEGRATION_TYPE_GEOGRAPHY,
+)
 
 _LOGGER = getLogger(__name__)
 
@@ -28,8 +38,6 @@ ATTR_POLLUTANT_SYMBOL = "pollutant_symbol"
 ATTR_POLLUTANT_UNIT = "pollutant_unit"
 ATTR_REGION = "region"
 
-DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
-
 MASS_PARTS_PER_MILLION = "ppm"
 MASS_PARTS_PER_BILLION = "ppb"
 VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m3"
@@ -37,10 +45,21 @@ VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m3"
 SENSOR_KIND_LEVEL = "air_pollution_level"
 SENSOR_KIND_AQI = "air_quality_index"
 SENSOR_KIND_POLLUTANT = "main_pollutant"
-SENSORS = [
+SENSOR_KIND_BATTERY_LEVEL = "battery_level"
+SENSOR_KIND_HUMIDITY = "humidity"
+SENSOR_KIND_TEMPERATURE = "temperature"
+
+GEOGRAPHY_SENSORS = [
     (SENSOR_KIND_LEVEL, "Air Pollution Level", "mdi:gauge", None),
     (SENSOR_KIND_AQI, "Air Quality Index", "mdi:chart-line", "AQI"),
     (SENSOR_KIND_POLLUTANT, "Main Pollutant", "mdi:chemical-weapon", None),
+]
+GEOGRAPHY_SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
+
+NODE_PRO_SENSORS = [
+    (SENSOR_KIND_BATTERY_LEVEL, "Battery", DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE),
+    (SENSOR_KIND_HUMIDITY, "Humidity", DEVICE_CLASS_HUMIDITY, UNIT_PERCENTAGE),
+    (SENSOR_KIND_TEMPERATURE, "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS),
 ]
 
 POLLUTANT_LEVEL_MAPPING = [
@@ -71,31 +90,43 @@ POLLUTANT_MAPPING = {
     "s2": {"label": "Sulfur Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
 }
 
-SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual sensors based on a config entry."""
-    airvisual = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
-    async_add_entities(
-        [
-            AirVisualSensor(airvisual, kind, name, icon, unit, locale, geography_id)
-            for geography_id in airvisual.data
-            for locale in SENSOR_LOCALES
-            for kind, name, icon, unit in SENSORS
-        ],
-        True,
-    )
+    if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+        sensors = [
+            AirVisualGeographySensor(
+                coordinator, config_entry, kind, name, icon, unit, locale,
+            )
+            for locale in GEOGRAPHY_SENSOR_LOCALES
+            for kind, name, icon, unit in GEOGRAPHY_SENSORS
+        ]
+    else:
+        sensors = [
+            AirVisualNodeProSensor(coordinator, kind, name, device_class, unit)
+            for kind, name, device_class, unit in NODE_PRO_SENSORS
+        ]
+
+    async_add_entities(sensors, True)
 
 
-class AirVisualSensor(Entity):
-    """Define an AirVisual sensor."""
+class AirVisualGeographySensor(AirVisualEntity):
+    """Define an AirVisual sensor related to geography data via the Cloud API."""
 
-    def __init__(self, airvisual, kind, name, icon, unit, locale, geography_id):
+    def __init__(self, coordinator, config_entry, kind, name, icon, unit, locale):
         """Initialize."""
-        self._airvisual = airvisual
-        self._geography_id = geography_id
+        super().__init__(coordinator)
+
+        self._attrs.update(
+            {
+                ATTR_CITY: config_entry.data.get(CONF_CITY),
+                ATTR_STATE: config_entry.data.get(CONF_STATE),
+                ATTR_COUNTRY: config_entry.data.get(CONF_COUNTRY),
+            }
+        )
+        self._config_entry = config_entry
         self._icon = icon
         self._kind = kind
         self._locale = locale
@@ -103,37 +134,20 @@ class AirVisualSensor(Entity):
         self._state = None
         self._unit = unit
 
-        self._attrs = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-            ATTR_CITY: airvisual.data[geography_id].get(CONF_CITY),
-            ATTR_STATE: airvisual.data[geography_id].get(CONF_STATE),
-            ATTR_COUNTRY: airvisual.data[geography_id].get(CONF_COUNTRY),
-        }
-
     @property
     def available(self):
         """Return True if entity is available."""
         try:
-            return bool(
-                self._airvisual.data[self._geography_id]["current"]["pollution"]
+            return self.coordinator.last_update_success and bool(
+                self.coordinator.data["current"]["pollution"]
             )
         except KeyError:
             return False
 
     @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
     def name(self):
         """Return the name."""
-        return f"{SENSOR_LOCALES[self._locale]} {self._name}"
+        return f"{GEOGRAPHY_SENSOR_LOCALES[self._locale]} {self._name}"
 
     @property
     def state(self):
@@ -143,27 +157,13 @@ class AirVisualSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._geography_id}_{self._locale}_{self._kind}"
+        return f"{self._config_entry.unique_id}_{self._locale}_{self._kind}"
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self.async_on_remove(async_dispatcher_connect(self.hass, TOPIC_UPDATE, update))
-
-    async def async_update(self):
-        """Update the sensor."""
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity from the latest data."""
         try:
-            data = self._airvisual.data[self._geography_id]["current"]["pollution"]
+            data = self.coordinator.data["current"]["pollution"]
         except KeyError:
             return
 
@@ -188,18 +188,79 @@ class AirVisualSensor(Entity):
                 }
             )
 
-        if CONF_LATITUDE in self._airvisual.geography_data:
-            if self._airvisual.options[CONF_SHOW_ON_MAP]:
-                self._attrs[ATTR_LATITUDE] = self._airvisual.geography_data[
-                    CONF_LATITUDE
-                ]
-                self._attrs[ATTR_LONGITUDE] = self._airvisual.geography_data[
-                    CONF_LONGITUDE
-                ]
+        if CONF_LATITUDE in self._config_entry.data:
+            if self._config_entry.options[CONF_SHOW_ON_MAP]:
+                self._attrs[ATTR_LATITUDE] = self._config_entry.data[CONF_LATITUDE]
+                self._attrs[ATTR_LONGITUDE] = self._config_entry.data[CONF_LONGITUDE]
                 self._attrs.pop("lati", None)
                 self._attrs.pop("long", None)
             else:
-                self._attrs["lati"] = self._airvisual.geography_data[CONF_LATITUDE]
-                self._attrs["long"] = self._airvisual.geography_data[CONF_LONGITUDE]
+                self._attrs["lati"] = self._config_entry.data[CONF_LATITUDE]
+                self._attrs["long"] = self._config_entry.data[CONF_LONGITUDE]
                 self._attrs.pop(ATTR_LATITUDE, None)
                 self._attrs.pop(ATTR_LONGITUDE, None)
+
+
+class AirVisualNodeProSensor(AirVisualEntity):
+    """Define an AirVisual sensor related to a Node/Pro unit."""
+
+    def __init__(self, coordinator, kind, name, device_class, unit):
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self._device_class = device_class
+        self._kind = kind
+        self._name = name
+        self._state = None
+        self._unit = unit
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
+
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {
+                (DOMAIN, self.coordinator.data["current"]["serial_number"])
+            },
+            "name": self.coordinator.data["current"]["settings"]["node_name"],
+            "manufacturer": "AirVisual",
+            "model": f'{self.coordinator.data["current"]["status"]["model"]}',
+            "sw_version": (
+                f'Version {self.coordinator.data["current"]["status"]["system_version"]}'
+                f'{self.coordinator.data["current"]["status"]["app_version"]}'
+            ),
+        }
+
+    @property
+    def name(self):
+        """Return the name."""
+        node_name = self.coordinator.data["current"]["settings"]["node_name"]
+        return f"{node_name} Node/Pro: {self._name}"
+
+    @property
+    def state(self):
+        """Return the state."""
+        return self._state
+
+    @property
+    def unique_id(self):
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"{self.coordinator.data['current']['serial_number']}_{self._kind}"
+
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity from the latest data."""
+        if self._kind == SENSOR_KIND_BATTERY_LEVEL:
+            self._state = self.coordinator.data["current"]["status"]["battery"]
+        elif self._kind == SENSOR_KIND_HUMIDITY:
+            self._state = self.coordinator.data["current"]["measurements"].get(
+                "humidity"
+            )
+        elif self._kind == SENSOR_KIND_TEMPERATURE:
+            self._state = self.coordinator.data["current"]["measurements"].get(
+                "temperature_C"
+            )

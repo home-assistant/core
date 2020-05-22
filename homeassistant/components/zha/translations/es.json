@@ -7,11 +7,29 @@
             "cannot_connect": "No se puede conectar al dispositivo ZHA."
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Tipo de Radio"
+                },
+                "description": "Selecciona el tipo de tu radio Zigbee",
+                "title": "Tipo de Radio"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "velocidad del puerto",
+                    "flow_control": "control de flujo de datos",
+                    "path": "Ruta del dispositivo serie"
+                },
+                "description": "Introduce los ajustes espec\u00edficos del puerto",
+                "title": "Configuraci\u00f3n"
+            },
             "user": {
                 "data": {
+                    "path": "Ruta del Dispositivo Serie",
                     "radio_type": "Tipo de radio",
-                    "usb_path": "Ruta del dispositivo USB"
+                    "usb_path": "Ruta del Dispositivo USB"
                 },
+                "description": "Selecciona puerto serie para radio Zigbee",
                 "title": "ZHA"
             }
         }

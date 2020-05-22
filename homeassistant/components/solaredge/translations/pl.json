@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Klucz API dla tej strony",
+                    "api_key": "[%key_id:common::config_flow::data::api_key%] dla tej strony",
                     "name": "Nazwa tej instalacji",
                     "site_id": "SolarEdge site-id"
                 },

@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Ja hi ha un enlla\u00e7 configurat amb aquest nom o port."
+        },
+        "step": {
+            "pairing": {
+                "description": "Tan aviat com l'enlla\u00e7 {name} estigui llest, rebr\u00e0s una \"Notificaci\u00f3\" de configuraci\u00f3 de l'enlla\u00e7 HomeKit informan-te de que la vinculaci\u00f3 est\u00e0 disponible.",
+                "title": "Vinculaci\u00f3 de l'enlla\u00e7 HomeKit"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Autoarrencada (desactiva-ho si fas servir Z-Wave o algun altre sistema d'inici lent)",
+                    "include_domains": "Dominis a incloure"
+                },
+                "description": "L'enlla\u00e7 HomeKit et permet accedir a les teves entitats de Home Assistant directament a HomeKit. Aquests enll\u00e7os estan limitats a un m\u00e0xim de 150 accessoris per inst\u00e0ncia (incl\u00f2s el propi enlla\u00e7). Si volguessis enlla\u00e7ar m\u00e9s accessoris, \u00e9s recomanable que utilitzis diferents enlla\u00e7os HomeKit per a dominis diferents. La configuraci\u00f3 avan\u00e7ada d'entitat per l'enlla\u00e7 prinipal nom\u00e9s est\u00e0 disponible amb YAML.",
+                "title": "Activaci\u00f3 de l'enlla\u00e7 HomeKit"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "[%key::component::homekit::config::step::user::data::auto_start%]",
+                    "safe_mode": "Mode segur (habilita-ho nom\u00e9s si falla la vinculaci\u00f3)",
+                    "zeroconf_default_interface": "Utilitza la interf\u00edcie zeroconf predeterminada. Activa-ho si no es pot trobar l'enlla\u00e7 a l'aplicaci\u00f3 Casa (Home app)."
+                },
+                "description": "Aquests par\u00e0metres nom\u00e9s s'han d'ajustar si l'enlla\u00e7 HomeKit no \u00e9s funcional.",
+                "title": "Configuraci\u00f3 avan\u00e7ada"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "C\u00e0meres que admeten fluxos H.264 natius"
+                },
+                "title": "Selecci\u00f3 del c\u00f2dec de v\u00eddeo de c\u00e0mera"
+            },
+            "exclude": {
+                "data": {
+                    "exclude_entities": "Entitats a excloure"
+                },
+                "description": "Selecciona les entitats que NO vulguis que siguin enlla\u00e7ades.",
+                "title": "Exclusi\u00f3 d'entitats de l'enlla\u00e7 en dominis seleccionats"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "[%key::component::homekit::config::step::user::data::include_domains%]"
+                },
+                "description": "Les entitats a \"Dominis a incloure\" s'enlla\u00e7aran a HomeKit. A la seg\u00fcent pantalla podr\u00e0s seleccionar quines entitats vols excloure d'aquesta llista.",
+                "title": "Selecci\u00f3 dels dominis a enlla\u00e7ar."
+            },
+            "yaml": {
+                "description": "Aquesta entrada es controla en YAML",
+                "title": "Ajusta les opcions de l'enlla\u00e7 HomeKit"
+            }
+        }
+    },
+    "title": "Enlla\u00e7 HomeKit"
+}

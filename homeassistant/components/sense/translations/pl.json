@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
-            "invalid_auth": "Niepoprawne uwierzytelnienie.",
-            "unknown": "Niespodziewany b\u0142\u0105d."
+            "invalid_auth": "[%key_id:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "Adres e-mail",
-                    "password": "Has\u0142o"
+                    "email": "[%key_id:common::config_flow::data::email%]",
+                    "password": "[%key_id:common::config_flow::data::password%]"
                 },
                 "title": "Po\u0142\u0105czenie z monitorem energii Sense"
             }

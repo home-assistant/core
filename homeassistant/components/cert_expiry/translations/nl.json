@@ -1,6 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Deze combinatie van host en poort is al geconfigureerd",
+            "import_failed": "Importeren vanuit configuratie is mislukt"
+        },
         "error": {
+            "connection_refused": "Verbinding geweigerd bij verbinding met host",
             "connection_timeout": "Time-out bij verbinding maken met deze host",
             "resolve_failed": "Deze host kon niet gevonden worden"
         },

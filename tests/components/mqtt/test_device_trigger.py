@@ -134,6 +134,7 @@ async def test_get_non_existing_triggers(hass, device_reg, entity_reg, mqtt_mock
     assert_lists_same(triggers, [])
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discover_bad_triggers(hass, device_reg, entity_reg, mqtt_mock):
     """Test bad discovery message."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={})

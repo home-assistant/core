@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -78,7 +78,7 @@ async def async_setup_entry(
     async_add_entities(lights, True)
 
 
-class WLEDLight(Light, WLEDDeviceEntity):
+class WLEDLight(LightEntity, WLEDDeviceEntity):
     """Defines a WLED light."""
 
     def __init__(

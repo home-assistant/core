@@ -21,11 +21,20 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_VOLUMES, DEFAULT_PORT, DEFAULT_PORT_SSL, DEFAULT_SSL
+from .const import (
+    CONF_VOLUMES,
+    DEFAULT_PORT,
+    DEFAULT_PORT_SSL,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SSL,
+)
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +69,12 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return SynologyDSMOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the synology_dsm config flow."""
@@ -214,6 +229,31 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for mac in entry.data.get(CONF_MAC, [])
         ]
         return mac in existing_macs
+
+
+class SynologyDSMOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ),
+                ): cv.positive_int
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 def _login_and_fetch_syno_info(api, otp_code):

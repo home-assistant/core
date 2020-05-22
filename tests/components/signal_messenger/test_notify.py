@@ -3,13 +3,14 @@
 import os
 import tempfile
 import unittest
-from unittest.mock import patch
 
 from pysignalclirestapi import SignalCliRestApi
 import requests_mock
 
 import homeassistant.components.signal_messenger.notify as signalmessenger
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 BASE_COMPONENT = "notify"
 

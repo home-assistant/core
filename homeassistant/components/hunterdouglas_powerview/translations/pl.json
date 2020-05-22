@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "link": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name} ({host})?",
+                "title": "Po\u0142\u0105cz si\u0119 z hubem PowerView"
+            },
+            "user": {
+                "data": {
+                    "host": "Adres IP"
+                },
+                "title": "Po\u0142\u0105cz si\u0119 z hubem PowerView"
+            }
+        }
+    },
+    "title": "Hunter Douglas PowerView"
+}

@@ -5,7 +5,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -46,7 +46,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_cover(gateway.api.lights.values())
 
 
-class DeconzCover(DeconzDevice, CoverDevice):
+class DeconzCover(DeconzDevice, CoverEntity):
     """Representation of a deCONZ cover."""
 
     def __init__(self, device, gateway):

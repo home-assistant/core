@@ -5,8 +5,9 @@
             "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom i les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, s'han actualitzat."
         },
         "error": {
-            "cant_connect": "No s'ha pogut connectar amb el dispositiu. [Comprova la documentaci\u00f3](https://www.home-assistant.io/integrations/vizio/) i torna a verificar que: \n - El dispositiu est\u00e0 engegat \n - El dispositiu est\u00e0 connectat a la xarxa \n - Els valors que has intridu\u00eft s\u00f3n correctes\n   abans d\u2019intentar tornar a presentar.",
+            "cant_connect": "No s'ha pogut connectar",
             "complete_pairing failed": "No s'ha pogut completar l'emparellament. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
+            "complete_pairing_failed": "No s'ha pogut completar l'emparellament. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
             "host_exists": "Dispositiu Vizio amb aquest nom d'amfitri\u00f3 ja configurat.",
             "name_exists": "Dispositiu Vizio amb aquest nom ja configurat."
         },
@@ -23,17 +24,17 @@
                 "title": "Emparellament completat"
             },
             "pairing_complete_import": {
-                "description": "El dispositiu Vizio SmartCast est\u00e0 connectat a Home Assistant.\n\nEl teu testimoni d'acc\u00e9s (access token) \u00e9s '**{access_token}**'.",
+                "description": "El dispositiu VIZIO SmartCast TV est\u00e0 connectat a Home Assistant.\n\nEl teu [%key::common::config_flow::data::access_token%] \u00e9s '**{access_token}**'.",
                 "title": "Emparellament completat"
             },
             "user": {
                 "data": {
-                    "access_token": "Testimoni d'acc\u00e9s",
+                    "access_token": "[%key::common::config_flow::data::access_token%]",
                     "device_class": "Tipus de dispositiu",
                     "host": "<Amfitri\u00f3/IP>:<Port>",
                     "name": "Nom"
                 },
-                "description": "Nom\u00e9s es necessita testimoni d'acc\u00e9s per als televisors. Si est\u00e0s configurant un televisor i encara no tens un testimoni d'acc\u00e9s, deixa-ho en blanc per poder fer el proc\u00e9s d'emparellament.",
+                "description": "Nom\u00e9s es necessita el [%key::common::config_flow::data::access_token%] per als televisors. Si est\u00e0s configurant un televisor i encara no tens un [%key::common::config_flow::data::access_token%], deixa-ho en blanc per poder fer el proc\u00e9s d'emparellament.",
                 "title": "Configuraci\u00f3 del client de Vizio SmartCast"
             }
         }

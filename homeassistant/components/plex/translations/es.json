@@ -10,11 +10,23 @@
             "unknown": "Fall\u00f3 por razones desconocidas"
         },
         "error": {
-            "faulty_credentials": "Error en la autorizaci\u00f3n",
-            "no_servers": "No hay servidores vinculados a la cuenta",
-            "not_found": "No se ha encontrado el servidor Plex"
+            "faulty_credentials": "La autorizaci\u00f3n fall\u00f3, verifica el token",
+            "host_or_token": "Debes proporcionar al menos uno de Host o Token",
+            "no_servers": "No hay servidores vinculados a la cuenta Plex",
+            "not_found": "No se ha encontrado el servidor Plex",
+            "ssl_error": "Problema con el certificado SSL"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Host (Opcional si se proporciona Token)",
+                    "port": "Puerto",
+                    "ssl": "Usar SSL",
+                    "token": "Token (Opcional)",
+                    "verify_ssl": "Verificar certificado SSL"
+                },
+                "title": "Configuraci\u00f3n Manual de Plex"
+            },
             "select_server": {
                 "data": {
                     "server": "Servidor"
@@ -25,6 +37,16 @@
             "start_website_auth": {
                 "description": "Contin\u00fae en plex.tv para autorizar",
                 "title": "Conectar servidor Plex"
+            },
+            "user": {
+                "description": "Continuar hacia [plex.tv](https://plex.tv) para vincular un servidor Plex.",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "M\u00e9todo de configuraci\u00f3n"
+                },
+                "title": "Plex Media Server"
             }
         }
     },
@@ -33,6 +55,7 @@
             "plex_mp_settings": {
                 "data": {
                     "ignore_new_shared_users": "Ignorar nuevos usuarios administrados/compartidos",
+                    "ignore_plex_web_clients": "Ignorar clientes web de Plex",
                     "monitored_users": "Usuarios monitorizados",
                     "use_episode_art": "Usar el arte de episodios"
                 },

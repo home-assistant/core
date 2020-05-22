@@ -9,20 +9,20 @@
             "set_tilt_position": "ustaw pochylenie {entity_name}"
         },
         "condition_type": {
-            "is_closed": "pokrywa {entity_name} jest zamkni\u0119ta",
+            "is_closed": "{entity_name} jest zamkni\u0119ta",
             "is_closing": "{entity_name} si\u0119 zamyka",
-            "is_open": "pokrywa {entity_name} jest otwarta",
+            "is_open": "{entity_name} jest otwarta",
             "is_opening": "{entity_name} si\u0119 otwiera",
-            "is_position": "pozycja pokrywy {entity_name} to",
-            "is_tilt_position": "pochylenie pokrywy {entity_name} to"
+            "is_position": "pozycja {entity_name} to",
+            "is_tilt_position": "pochylenie {entity_name} to"
         },
         "trigger_type": {
             "closed": "nast\u0105pi zamkni\u0119cie {entity_name}",
             "closing": "{entity_name} si\u0119 zamyka",
             "opened": "nast\u0105pi otwarcie {entity_name}",
             "opening": "{entity_name} si\u0119 otwiera",
-            "position": "zmieni si\u0119 pozycja pokrywy {entity_name}",
-            "tilt_position": "zmieni si\u0119 pochylenie pokrywy {entity_name}"
+            "position": "zmieni si\u0119 pozycja {entity_name}",
+            "tilt_position": "zmieni si\u0119 pochylenie {entity_name}"
         }
     },
     "state": {
@@ -31,8 +31,8 @@
             "closing": "zamykanie",
             "open": "otwarta",
             "opening": "otwieranie",
-            "stopped": "zatrzymany"
+            "stopped": "zatrzymanie"
         }
     },
-    "title": "Pokrywa"
+    "title": "Roleta"
 }

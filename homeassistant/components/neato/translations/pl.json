@@ -9,13 +9,13 @@
         },
         "error": {
             "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce",
-            "unexpected_error": "Niespodziewany b\u0142\u0105d"
+            "unexpected_error": "[%key_id:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika",
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]",
                     "vendor": "Dostawca"
                 },
                 "description": "Zapoznaj si\u0119 z [dokumentacj\u0105 Neato]({docs_url}).",

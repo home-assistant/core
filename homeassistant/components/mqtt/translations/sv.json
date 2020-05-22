@@ -26,5 +26,17 @@
                 "title": "MQTT Broker via Hass.io till\u00e4gg"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f6rsta knappen",
+            "button_2": "Andra knappen",
+            "button_3": "Tredje knappen",
+            "button_4": "Fj\u00e4rde knappen",
+            "button_5": "Femte knappen",
+            "button_6": "Sj\u00e4tte knappen",
+            "turn_off": "St\u00e4ng av",
+            "turn_on": "Starta"
+        }
     }
 }

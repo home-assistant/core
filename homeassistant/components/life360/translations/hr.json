@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "invalid_credentials": "Neva\u017ee\u0107e vjerodajnice",
-            "user_already_configured": "Ra\u010dun je ve\u0107 konfiguriran"
+            "invalid_credentials": "Neva\u017ee\u0107e vjerodajnice"
         },
         "create_entry": {
             "default": "Da biste postavili napredne opcije, pogledajte [Life360 dokumentacija] ( {docs_url} )."

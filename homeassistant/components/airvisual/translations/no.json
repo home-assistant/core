@@ -5,18 +5,18 @@
         },
         "error": {
             "general_error": "Det oppstod en ukjent feil.",
-            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel angitt.",
             "unable_to_connect": "Kan ikke koble til Node / Pro-enheten."
         },
         "step": {
             "geography": {
                 "data": {
-                    "api_key": "API-n\u00f8kkel",
+                    "api_key": "API n\u00f8kkel",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad"
                 },
                 "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en geografisk plassering.",
-                "title": "Konfigurer en geografi"
+                "title": "Konfigurer en Geography"
             },
             "node_pro": {
                 "data": {
@@ -32,7 +32,7 @@
                     "cloud_api": "Geografisk plassering",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad",
-                    "node_pro": "AirVisual Node Pro",
+                    "node_pro": "",
                     "type": "Integrasjonstype"
                 },
                 "description": "Velg hvilken type AirVisual-data du vil overv\u00e5ke.",

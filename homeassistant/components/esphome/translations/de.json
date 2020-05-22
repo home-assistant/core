@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP ist bereits konfiguriert"
+            "already_configured": "ESP ist bereits konfiguriert",
+            "already_in_progress": "Die ESP-Konfiguration wird bereits ausgef\u00fchrt"
         },
         "error": {
             "connection_error": "Keine Verbindung zum ESP m\u00f6glich. Achte darauf, dass deine YAML-Datei eine Zeile 'api:' enth\u00e4lt.",

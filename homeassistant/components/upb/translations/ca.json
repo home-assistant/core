@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Ja hi ha un UPB PIM configurat amb aquesta adre\u00e7a."
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar a UPB PIM, torna-ho a provar.",
+            "invalid_upb_file": "El fitxer d\u2019exportaci\u00f3 UPB UPStart no hi \u00e9s o \u00e9s erroni, comprova el nom i la ruta del fitxer.",
+            "unknown": "Error inesperat."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Adre\u00e7a (veure descripci\u00f3 de dalt)",
+                    "file_path": "Ruta i nom del fitxer d'exportaci\u00f3 UPStart UPB.",
+                    "protocol": "Protocol"
+                },
+                "title": "Connexi\u00f3 amb UPB PIM"
+            }
+        }
+    }
+}

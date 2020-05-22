@@ -1,15 +1,15 @@
 """Test the Logitech Harmony Hub config flow."""
-from asynctest import CoroutineMock, MagicMock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN
 
+from tests.async_mock import AsyncMock, MagicMock, patch
+
 
 def _get_mock_harmonyapi(connect=None, close=None):
     harmonyapi_mock = MagicMock()
-    type(harmonyapi_mock).connect = CoroutineMock(return_value=connect)
-    type(harmonyapi_mock).close = CoroutineMock(return_value=close)
+    type(harmonyapi_mock).connect = AsyncMock(return_value=connect)
+    type(harmonyapi_mock).close = AsyncMock(return_value=close)
 
     return harmonyapi_mock
 

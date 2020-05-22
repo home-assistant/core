@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_account%]"
+        },
+        "error": {
+            "connection_error": "[%key_id:common::config_flow::error::cannot_connect%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                }
+            }
+        }
+    }
+}

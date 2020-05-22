@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie Roku jest ju\u017c skonfigurowane.",
-            "unknown": "Niespodziewany b\u0142\u0105d."
+            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
+            "unknown": "[%key_id:common::config_flow::error::unknown%]"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie."
@@ -21,7 +21,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP"
+                    "host": "[%key_id:common::config_flow::data::host%]"
                 },
                 "description": "Wprowad\u017a dane Roku.",
                 "title": "Roku"

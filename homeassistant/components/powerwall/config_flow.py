@@ -1,7 +1,7 @@
 """Config flow for Tesla Powerwall integration."""
 import logging
 
-from tesla_powerwall import APIError, Powerwall, PowerwallUnreachableError
+from tesla_powerwall import APIChangedError, Powerwall, PowerwallUnreachableError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -25,8 +25,12 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         await hass.async_add_executor_job(power_wall.detect_and_pin_version)
         site_info = await hass.async_add_executor_job(power_wall.get_site_info)
-    except (PowerwallUnreachableError, APIError, ConnectionError):
+    except PowerwallUnreachableError:
         raise CannotConnect
+    except APIChangedError as err:
+        # Only log the exception without the traceback
+        _LOGGER.error(str(err))
+        raise WrongVersion
 
     # Return info that you want to store in the config entry.
     return {"title": site_info.site_name}
@@ -46,6 +50,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except WrongVersion:
+                errors["base"] = "wrong_version"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -69,3 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class WrongVersion(exceptions.HomeAssistantError):
+    """Error to indicate the powerwall uses a software version we cannot interact with."""

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "ESP \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "ESP \u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002"
         },
         "error": {
             "connection_error": "\u7121\u6cd5\u9023\u7dda\u81f3 ESP\uff0c\u8acb\u78ba\u5b9a\u60a8\u7684 YAML \u6a94\u6848\u5305\u542b\u300capi:\u300d\u8a2d\u5b9a\u5217\u3002",

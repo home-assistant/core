@@ -3,6 +3,7 @@ from ipaddress import ip_network
 import logging
 import os
 import ssl
+from traceback import extract_stack
 from typing import Optional, cast
 
 from aiohttp import web
@@ -63,29 +64,32 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-HTTP_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
-        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
-        vol.Optional(CONF_BASE_URL): cv.string,
-        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
-        vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
-            cv.ensure_list, [ip_network]
-        ),
-        vol.Optional(
-            CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
-        ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
-        vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
-            [SSL_INTERMEDIATE, SSL_MODERN]
-        ),
-    }
+HTTP_SCHEMA = vol.All(
+    cv.deprecated(CONF_BASE_URL),
+    vol.Schema(
+        {
+            vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
+            vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
+            vol.Optional(CONF_BASE_URL): cv.string,
+            vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+            vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
+            vol.Optional(CONF_SSL_KEY): cv.isfile,
+            vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
+            vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
+                cv.ensure_list, [ip_network]
+            ),
+            vol.Optional(
+                CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
+            ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
+            vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+            vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
+                [SSL_INTERMEDIATE, SSL_MODERN]
+            ),
+        }
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
@@ -102,23 +106,80 @@ class ApiConfig:
     """Configuration settings for API server."""
 
     def __init__(
-        self, host: str, port: Optional[int] = SERVER_PORT, use_ssl: bool = False
+        self,
+        local_ip: str,
+        host: str,
+        port: Optional[int] = SERVER_PORT,
+        use_ssl: bool = False,
     ) -> None:
         """Initialize a new API config object."""
+        self.local_ip = local_ip
         self.host = host
         self.port = port
         self.use_ssl = use_ssl
 
         host = host.rstrip("/")
         if host.startswith(("http://", "https://")):
-            self.base_url = host
+            self.deprecated_base_url = host
         elif use_ssl:
-            self.base_url = f"https://{host}"
+            self.deprecated_base_url = f"https://{host}"
         else:
-            self.base_url = f"http://{host}"
+            self.deprecated_base_url = f"http://{host}"
 
         if port is not None:
-            self.base_url += f":{port}"
+            self.deprecated_base_url += f":{port}"
+
+    @property
+    def base_url(self) -> str:
+        """Proxy property to find caller of this deprecated property."""
+        found_frame = None
+        for frame in reversed(extract_stack()):
+            for path in ("custom_components/", "homeassistant/components/"):
+                try:
+                    index = frame.filename.index(path)
+
+                    # Skip webhook from the stack
+                    if frame.filename[index:].startswith(
+                        "homeassistant/components/webhook/"
+                    ):
+                        continue
+
+                    found_frame = frame
+                    break
+                except ValueError:
+                    continue
+
+            if found_frame is not None:
+                break
+
+        # Did not source from an integration? Hard error.
+        if found_frame is None:
+            raise RuntimeError(
+                "Detected use of deprecated `base_url` property in the Home Assistant core. Please report this issue."
+            )
+
+        # If a frame was found, it originated from an integration
+        if found_frame:
+            start = index + len(path)
+            end = found_frame.filename.index("/", start)
+
+            integration = found_frame.filename[start:end]
+
+            if path == "custom_components/":
+                extra = " to the custom component author"
+            else:
+                extra = ""
+
+            _LOGGER.warning(
+                "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.get_url` method instead. Please report issue%s for %s using this method at %s, line %s: %s",
+                extra,
+                integration,
+                found_frame.filename[index:],
+                found_frame.lineno,
+                found_frame.line.strip(),
+            )
+
+        return self.deprecated_base_url
 
 
 async def async_setup(hass, config):
@@ -182,6 +243,7 @@ async def async_setup(hass, config):
     hass.http = server
 
     host = conf.get(CONF_BASE_URL)
+    local_ip = await hass.async_add_executor_job(hass_util.get_local_ip)
 
     if host:
         port = None
@@ -189,10 +251,10 @@ async def async_setup(hass, config):
         host = server_host
         port = server_port
     else:
-        host = hass_util.get_local_ip()
+        host = local_ip
         port = server_port
 
-    hass.config.api = ApiConfig(host, port, ssl_certificate is not None)
+    hass.config.api = ApiConfig(local_ip, host, port, ssl_certificate is not None)
 
     return True
 

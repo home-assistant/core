@@ -249,6 +249,10 @@ def async_enable_logging(
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
 
+    sys.excepthook = lambda *args: logging.getLogger(None).exception(
+        "Uncaught exception", exc_info=args  # type: ignore
+    )
+
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:
         err_log_path = hass.config.path(ERROR_LOG_FILENAME)

@@ -7,7 +7,7 @@ import busio  # pylint: disable=import-error
 import digitalio  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(binary_sensors, True)
 
 
-class MCP23017BinarySensor(BinarySensorDevice):
+class MCP23017BinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses MCP23017."""
 
     def __init__(self, name, pin, pull_mode, invert_logic):

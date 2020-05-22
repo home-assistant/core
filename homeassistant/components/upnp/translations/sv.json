@@ -17,14 +17,12 @@
                 "description": "Vill du konfigurera UPnP/IGD?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
-            },
             "user": {
                 "data": {
                     "enable_port_mapping": "Aktivera portmappning f\u00f6r Home Assistant",
                     "enable_sensors": "L\u00e4gg till trafiksensorer",
-                    "igd": "UPnP/IGD"
+                    "igd": "UPnP/IGD",
+                    "usn": "Enheten"
                 },
                 "title": "Konfigurationsalternativ f\u00f6r UPnP/IGD"
             }

@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from asynctest import patch
 from pytest import fixture
 
 from homeassistant.components.directv.media_player import (
@@ -55,6 +54,7 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import patch
 from tests.components.directv import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 

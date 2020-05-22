@@ -2,11 +2,11 @@
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
@@ -21,14 +21,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for UniFi integration."""
-    controller = get_controller_from_config_entry(hass, config_entry)
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {RX_SENSOR: set(), TX_SENSOR: set()}
 
     @callback
-    def items_added():
+    def items_added(
+        clients: set = controller.api.clients, devices: set = controller.api.devices
+    ) -> None:
         """Update the values of the controller."""
         if controller.option_allow_bandwidth_sensors:
-            add_entities(controller, async_add_entities)
+            add_entities(controller, async_add_entities, clients)
 
     for signal in (controller.signal_update, controller.signal_options_update):
         controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
@@ -37,14 +39,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def add_entities(controller, async_add_entities):
+def add_entities(controller, async_add_entities, clients):
     """Add new sensor entities from the controller."""
     sensors = []
 
-    for mac in controller.api.clients:
+    for mac in clients:
         for sensor_class in (UniFiRxBandwidthSensor, UniFiTxBandwidthSensor):
-            if mac not in controller.entities[DOMAIN][sensor_class.TYPE]:
-                sensors.append(sensor_class(controller.api.clients[mac], controller))
+            if mac in controller.entities[DOMAIN][sensor_class.TYPE]:
+                continue
+
+            client = controller.api.clients[mac]
+            sensors.append(sensor_class(client, controller))
 
     if sensors:
         async_add_entities(sensors)
@@ -68,7 +73,7 @@ class UniFiBandwidthSensor(UniFiClient):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_allow_bandwidth_sensors:
-            await self.async_remove()
+            await self.remove_item({self.client.mac})
 
 
 class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
