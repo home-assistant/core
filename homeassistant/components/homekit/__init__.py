@@ -688,7 +688,9 @@ class HomeKit:
         return remove_listener
 
     @callback
-    def async_remove_remote_key_listener(self, update_callback: CALLBACK_TYPE) -> None:
+    def async_remove_bridge_status_listener(
+        self, update_callback: CALLBACK_TYPE
+    ) -> None:
         """Remove bridge status listener."""
         self._bridge_status_listeners.remove(update_callback)
 
@@ -697,7 +699,7 @@ class HomeKit:
         """Update listeners with bridge status."""
         self.status = new_status
         for update_callback in self._bridge_status_listeners:
-            update_callback(self.status)
+            update_callback()
 
 
 class HomeKitPairingQRView(HomeAssistantView):
