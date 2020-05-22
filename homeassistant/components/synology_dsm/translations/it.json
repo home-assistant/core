@@ -22,7 +22,7 @@
                 "data": {
                     "api_version": "Versione DSM",
                     "password": "Password",
-                    "port": "Porta (opzionale)",
+                    "port": "Porta",
                     "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
                     "username": "Nome utente"
                 },
@@ -34,7 +34,7 @@
                     "api_version": "Versione DSM",
                     "host": "Host",
                     "password": "Password",
-                    "port": "Porta (opzionale)",
+                    "port": "Porta",
                     "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
                     "username": "Nome utente"
                 },

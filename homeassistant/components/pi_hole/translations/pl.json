@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana."
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana.",
+            "duplicated_name": "Nazwa ju\u017c istnieje."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
@@ -11,7 +12,10 @@
                 "data": {
                     "api_key": "Klucz API (opcjonalnie)",
                     "host": "Nazwa hosta lub adres IP",
-                    "port": "Port"
+                    "name": "Nazwa",
+                    "port": "Port",
+                    "ssl": "U\u017cyj SSL",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
                 }
             }
         }
