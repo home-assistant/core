@@ -1,6 +1,5 @@
 """The sms component."""
 import asyncio
-from asyncio import get_running_loop
 import logging
 
 import voluptuous as vol
@@ -47,8 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     device = entry.data[CONF_DEVICE]
     config = dict(Device=device, Connection="at")
-    loop = get_running_loop()
-    gateway = await create_sms_gateway(config, loop, hass)
+    gateway = await create_sms_gateway(config, hass)
     if gateway:
         hass.data[DOMAIN][SMS_GATEWAY] = gateway
         for component in PLATFORMS:
