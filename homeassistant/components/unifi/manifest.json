@@ -3,7 +3,7 @@
   "name": "Ubiquiti UniFi",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifi",
-  "requirements": ["aiounifi==21"],
+  "requirements": ["aiounifi==22"],
   "codeowners": ["@Kane610"],
   "quality_scale": "platinum"
 }

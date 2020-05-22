@@ -136,6 +136,19 @@ EVENT_CLIENT_1_WIRELESS_DISCONNECTED = {
     "_id": "5ea32ff730c49e00f90dca1a",
 }
 
+EVENT_DEVICE_2_UPGRADED = {
+    "_id": "5eae7fe02ab79c00f9d38960",
+    "datetime": "2020-05-09T20:06:37Z",
+    "key": "EVT_SW_Upgraded",
+    "msg": f'Switch[{DEVICE_2["mac"]}] was upgraded from "{DEVICE_2["version"]}" to "4.3.13.11253"',
+    "subsystem": "lan",
+    "sw": DEVICE_2["mac"],
+    "sw_name": DEVICE_2["name"],
+    "time": 1589054797635,
+    "version_from": {DEVICE_2["version"]},
+    "version_to": "4.3.13.11253",
+}
+
 
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when configuring unifi through device tracker platform."""
@@ -297,6 +310,22 @@ async def test_tracked_devices(hass):
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == STATE_UNAVAILABLE
+
+    # Update device registry when device is upgraded
+    device_2_copy = copy(DEVICE_2)
+    device_2_copy["version"] = EVENT_DEVICE_2_UPGRADED["version_to"]
+    message = {"meta": {"message": MESSAGE_DEVICE}, "data": [device_2_copy]}
+    controller.api.message_handler(message)
+    event = {"meta": {"message": MESSAGE_EVENT}, "data": [EVENT_DEVICE_2_UPGRADED]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    # Verify device registry has been updated
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = entity_registry.async_get("device_tracker.device_2")
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(entry.device_id)
+    assert device.sw_version == EVENT_DEVICE_2_UPGRADED["version_to"]
 
 
 async def test_remove_clients(hass):

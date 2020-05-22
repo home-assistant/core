@@ -23,20 +23,33 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR,
     BinarySensorEntity,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from . import ISY994_NODES, ISY994_PROGRAMS
 from .const import (
     _LOGGER,
     BINARY_SENSOR_DEVICE_TYPES_ISY,
     BINARY_SENSOR_DEVICE_TYPES_ZWAVE,
+    DOMAIN as ISY994_DOMAIN,
+    ISY994_NODES,
+    ISY994_PROGRAMS,
+    SUBNODE_CLIMATE_COOL,
+    SUBNODE_CLIMATE_HEAT,
+    SUBNODE_DUSK_DAWN,
+    SUBNODE_HEARTBEAT,
+    SUBNODE_LOW_BATTERY,
+    SUBNODE_MOTION_DISABLED,
+    SUBNODE_NEGATIVE,
+    SUBNODE_TAMPER,
     TYPE_CATEGORY_CLIMATE,
+    TYPE_INSTEON_MOTION,
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .helpers import migrate_old_unique_ids
+from .services import async_setup_device_services
 
 DEVICE_PARENT_REQUIRED = [
     DEVICE_CLASS_OPENING,
@@ -44,27 +57,19 @@ DEVICE_PARENT_REQUIRED = [
     DEVICE_CLASS_MOTION,
 ]
 
-SUBNODE_CLIMATE_COOL = 2
-SUBNODE_CLIMATE_HEAT = 3
-SUBNODE_NEGATIVE = 2
-SUBNODE_HEARTBEAT = 4
-SUBNODE_DUSK_DAWN = 2
-SUBNODE_LOW_BATTERY = 3
-SUBNODE_TAMPER = (10, 16)  # Int->10 or Hex->0xA depending on firmware
-SUBNODE_MOTION_DISABLED = (13, 19)  # Int->13 or Hex->0xD depending on firmware
 
-TYPE_INSTEON_MOTION = ("16.1.", "16.22.")
-
-
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list], None],
+) -> bool:
     """Set up the ISY994 binary sensor platform."""
     devices = []
     devices_by_address = {}
     child_nodes = []
 
-    for node in hass.data[ISY994_NODES][BINARY_SENSOR]:
+    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    for node in hass_isy_data[ISY994_NODES][BINARY_SENSOR]:
         device_class, device_type = _detect_device_type_and_class(node)
         if node.protocol == PROTO_INSTEON:
             if node.parent_node is not None:
@@ -130,7 +135,7 @@ def setup_platform(
             # the initial state is forced "OFF"/"NORMAL" if the
             # parent device has a valid state. This is corrected
             # upon connection to the ISY event stream if subnode has a valid state.
-            initial_state = None if parent_device.state == STATE_UNKNOWN else False
+            initial_state = None if parent_device.state is None else False
             if subnode_id == SUBNODE_DUSK_DAWN:
                 # Subnode 2 is the Dusk/Dawn sensor
                 device = ISYInsteonBinarySensorEntity(node, DEVICE_CLASS_LIGHT)
@@ -162,10 +167,12 @@ def setup_platform(
         device = ISYBinarySensorEntity(node, device_class)
         devices.append(device)
 
-    for name, status, _ in hass.data[ISY994_PROGRAMS][BINARY_SENSOR]:
+    for name, status, _ in hass_isy_data[ISY994_PROGRAMS][BINARY_SENSOR]:
         devices.append(ISYBinarySensorProgramEntity(name, status))
 
-    add_entities(devices)
+    await migrate_old_unique_ids(hass, BINARY_SENSOR, devices)
+    async_add_entities(devices)
+    async_setup_device_services(hass)
 
 
 def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):
@@ -208,18 +215,10 @@ class ISYBinarySensorEntity(ISYNodeEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        """Get whether the ISY994 binary sensor device is on.
-
-        Note: This method will return false if the current state is UNKNOWN
-        """
-        return bool(self.value)
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if self.value == ISY_VALUE_UNKNOWN:
-            return STATE_UNKNOWN
-        return STATE_ON if self.is_on else STATE_OFF
+        """Get whether the ISY994 binary sensor device is on."""
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return bool(self._node.status)
 
     @property
     def device_class(self) -> str:
@@ -235,7 +234,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
 
     Often times, a single device is represented by multiple nodes in the ISY,
     allowing for different nuances in how those devices report their on and
-    off events. This class turns those multiple nodes in to a single Home
+    off events. This class turns those multiple nodes into a single Home
     Assistant entity and handles both ways that ISY binary sensors can work.
     """
 
@@ -346,8 +345,8 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             self._heartbeat()
 
     @property
-    def value(self) -> object:
-        """Get the current value of the device.
+    def is_on(self) -> bool:
+        """Get whether the ISY994 binary sensor device is on.
 
         Insteon leak sensors set their primary node to On when the state is
         DRY, not WET, so we invert the binary state if the user indicates
@@ -361,13 +360,6 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             return not self._computed_state
 
         return self._computed_state
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if self._computed_state is None:
-            return STATE_UNKNOWN
-        return STATE_ON if self.is_on else STATE_OFF
 
 
 class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
@@ -386,7 +378,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
         self._parent_device = parent_device
         self._heartbeat_timer = None
         self._computed_state = None
-        if self.state != STATE_UNKNOWN:
+        if self.state is None:
             self._computed_state = False
 
     async def async_added_to_hass(self) -> None:
@@ -452,24 +444,14 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
         """
 
     @property
-    def value(self) -> object:
-        """Get the current value of this sensor."""
-        return self._computed_state
-
-    @property
     def is_on(self) -> bool:
         """Get whether the ISY994 binary sensor device is on.
 
         Note: This method will return false if the current state is UNKNOWN
+        which occurs after a restart until the first heartbeat or control
+        parent control event is received.
         """
-        return bool(self.value)
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if self._computed_state is None:
-            return None
-        return STATE_ON if self.is_on else STATE_OFF
+        return bool(self._computed_state)
 
     @property
     def device_class(self) -> str:
@@ -494,4 +476,4 @@ class ISYBinarySensorProgramEntity(ISYProgramEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 binary sensor device is on."""
-        return bool(self.value)
+        return bool(self._node.status)

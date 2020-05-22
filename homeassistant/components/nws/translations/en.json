@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API key (email)",
+                    "api_key": "API Key",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "station": "METAR station code"

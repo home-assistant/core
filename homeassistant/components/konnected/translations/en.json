@@ -20,8 +20,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Konnected device IP address",
-                    "port": "Konnected device port"
+                    "host": "IP address",
+                    "port": "Port"
                 },
                 "description": "Please enter the host information for your Konnected Panel.",
                 "title": "Discover Konnected Device"

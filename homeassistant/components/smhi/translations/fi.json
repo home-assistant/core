@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "wrong_location": "Sijainti vain Ruotsi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Leveysaste",
+                    "longitude": "Pituusaste",
+                    "name": "Nimi"
+                },
+                "title": "Sijainti Ruotsissa"
+            }
+        }
+    }
+}

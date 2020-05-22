@@ -22,6 +22,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
@@ -97,17 +98,21 @@ MANUFACTURER = "Universal Devices, Inc"
 
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
+CONF_VAR_SENSOR_STRING = "variable_sensor_string"
 CONF_TLS_VER = "tls"
+CONF_RESTORE_LIGHT_STATE = "restore_light_state"
 
 DEFAULT_IGNORE_STRING = "{IGNORE ME}"
 DEFAULT_SENSOR_STRING = "sensor"
+DEFAULT_RESTORE_LIGHT_STATE = False
 DEFAULT_TLS_VERSION = 1.1
 DEFAULT_PROGRAM_STRING = "HA."
+DEFAULT_VAR_SENSOR_STRING = "HA."
 
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-SUPPORTED_PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH]
+SUPPORTED_PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
 SUPPORTED_PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
@@ -119,12 +124,26 @@ ISY_GROUP_PLATFORM = SWITCH
 ISY994_ISY = "isy"
 ISY994_NODES = "isy994_nodes"
 ISY994_PROGRAMS = "isy994_programs"
+ISY994_VARIABLES = "isy994_variables"
 
 FILTER_UOM = "uom"
 FILTER_STATES = "states"
 FILTER_NODE_DEF_ID = "node_def_id"
 FILTER_INSTEON_TYPE = "insteon_type"
 FILTER_ZWAVE_CAT = "zwave_cat"
+
+# Special Subnodes for some Insteon Devices
+SUBNODE_CLIMATE_COOL = 2
+SUBNODE_CLIMATE_HEAT = 3
+SUBNODE_DUSK_DAWN = 2
+SUBNODE_EZIO2X4_SENSORS = [9, 10, 11, 12]
+SUBNODE_FANLINC_LIGHT = 1
+SUBNODE_HEARTBEAT = 4
+SUBNODE_IOLINC_RELAY = 2
+SUBNODE_LOW_BATTERY = 3
+SUBNODE_MOTION_DISABLED = (13, 19)  # Int->13 or Hex->0xD depending on firmware
+SUBNODE_NEGATIVE = 2
+SUBNODE_TAMPER = (10, 16)  # Int->10 or Hex->0xA depending on firmware
 
 # Generic Insteon Type Categories for Filters
 TYPE_CATEGORY_CONTROLLERS = "0."
@@ -136,12 +155,23 @@ TYPE_CATEGORY_POOL_CTL = "6."
 TYPE_CATEGORY_SENSOR_ACTUATORS = "7."
 TYPE_CATEGORY_ENERGY_MGMT = "9."
 TYPE_CATEGORY_COVER = "14."
-TYPE_CATEOGRY_LOCK = "15."
+TYPE_CATEGORY_LOCK = "15."
 TYPE_CATEGORY_SAFETY = "16."
 TYPE_CATEGORY_X10 = "113."
 
+TYPE_EZIO2X4 = "7.3.255."
+TYPE_INSTEON_MOTION = ("16.1.", "16.22.")
+
+UNDO_UPDATE_LISTENER = "undo_update_listener"
+
+# Used for discovery
+UDN_UUID_PREFIX = "uuid:"
+ISY_URL_POSTFIX = "/desc"
+
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
+# Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
+# Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
 NODE_FILTERS = {
     BINARY_SENSOR: {
         FILTER_UOM: [],
@@ -191,7 +221,7 @@ NODE_FILTERS = {
         FILTER_UOM: ["11"],
         FILTER_STATES: ["locked", "unlocked"],
         FILTER_NODE_DEF_ID: ["DoorLock"],
-        FILTER_INSTEON_TYPE: [TYPE_CATEOGRY_LOCK, "4.64."],
+        FILTER_INSTEON_TYPE: [TYPE_CATEGORY_LOCK, "4.64."],
         FILTER_ZWAVE_CAT: ["111"],
     },
     FAN: {
@@ -255,7 +285,28 @@ NODE_FILTERS = {
         ],
         FILTER_ZWAVE_CAT: ["121", "122", "123", "137", "141", "147"],
     },
+    CLIMATE: {
+        FILTER_UOM: ["2"],
+        FILTER_STATES: ["heating", "cooling", "idle", "fan_only", "off"],
+        FILTER_NODE_DEF_ID: ["TempLinc", "Thermostat"],
+        FILTER_INSTEON_TYPE: ["4.8", TYPE_CATEGORY_CLIMATE],
+        FILTER_ZWAVE_CAT: ["140"],
+    },
 }
+
+UOM_ISYV4_DEGREES = "degrees"
+UOM_ISYV4_NONE = "n/a"
+
+UOM_ISY_CELSIUS = 1
+UOM_ISY_FAHRENHEIT = 2
+
+UOM_DOUBLE_TEMP = "101"
+UOM_HVAC_ACTIONS = "66"
+UOM_HVAC_MODE_GENERIC = "67"
+UOM_HVAC_MODE_INSTEON = "98"
+UOM_FAN_MODES = "99"
+UOM_INDEX = "25"
+UOM_ON_OFF = "2"
 
 UOM_FRIENDLY_NAME = {
     "1": "A",
@@ -279,7 +330,7 @@ UOM_FRIENDLY_NAME = {
     "22": "%RH",
     "23": PRESSURE_INHG,
     "24": f"{LENGTH_INCHES}/{TIME_HOURS}",
-    "25": "index",
+    UOM_INDEX: "index",  # Index type. Use "node.formatted" for value
     "26": TEMP_KELVIN,
     "27": "keyword",
     "28": MASS_KILOGRAMS,
@@ -338,7 +389,7 @@ UOM_FRIENDLY_NAME = {
     "91": DEGREE,
     "92": f"{DEGREE} South",
     "100": "",  # Range 0-255, no unit.
-    "101": f"{DEGREE} (x2)",
+    UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
     "103": "$",
     "104": "¢",
@@ -353,7 +404,7 @@ UOM_FRIENDLY_NAME = {
     "113": "",  # raw 3-byte signed value
     "114": "",  # raw 4-byte signed value
     "116": LENGTH_MILES,
-    "117": "mb",
+    "117": "mbar",
     "118": "hPa",
     "119": f"{POWER_WATT}{TIME_HOURS}",
     "120": f"{LENGTH_INCHES}/{TIME_DAYS}",
@@ -394,7 +445,7 @@ UOM_TO_STATES = {
         26: "hardware failure",
         27: "factory reset",
     },
-    "66": {  # Thermostat Heat/Cool State
+    UOM_HVAC_ACTIONS: {  # Thermostat Heat/Cool State
         0: CURRENT_HVAC_IDLE,
         1: CURRENT_HVAC_HEAT,
         2: CURRENT_HVAC_COOL,
@@ -409,7 +460,7 @@ UOM_TO_STATES = {
         10: CURRENT_HVAC_HEAT,
         11: CURRENT_HVAC_HEAT,
     },
-    "67": {  # Thermostat Mode
+    UOM_HVAC_MODE_GENERIC: {  # Thermostat Mode
         0: HVAC_MODE_OFF,
         1: HVAC_MODE_HEAT,
         2: HVAC_MODE_COOL,
@@ -518,7 +569,7 @@ UOM_TO_STATES = {
             b: f"{b} %" for a, b in enumerate(list(range(1, 100)))
         },  # 1-99 are percentage open
     },
-    "98": {  # Insteon Thermostat Mode
+    UOM_HVAC_MODE_INSTEON: {  # Insteon Thermostat Mode
         0: HVAC_MODE_OFF,
         1: HVAC_MODE_HEAT,
         2: HVAC_MODE_COOL,
@@ -528,7 +579,7 @@ UOM_TO_STATES = {
         6: HVAC_MODE_AUTO,  # Program Heat-Set @ Local Device Only
         7: HVAC_MODE_AUTO,  # Program Cool-Set @ Local Device Only
     },
-    "99": {7: FAN_ON, 8: FAN_AUTO},  # Insteon Thermostat Fan Mode
+    UOM_FAN_MODES: {7: FAN_ON, 8: FAN_AUTO},  # Insteon Thermostat Fan Mode
     "115": {  # Most recent On style action taken for lamp control
         0: "on",
         1: "off",
@@ -545,6 +596,26 @@ UOM_TO_STATES = {
         12: "5x press off",
     },
 }
+
+ISY_HVAC_MODES = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_FAN_ONLY,
+]
+
+HA_HVAC_TO_ISY = {
+    HVAC_MODE_OFF: "off",
+    HVAC_MODE_HEAT: "heat",
+    HVAC_MODE_COOL: "cool",
+    HVAC_MODE_HEAT_COOL: "auto",
+    HVAC_MODE_FAN_ONLY: "fan_only",
+    HVAC_MODE_AUTO: "program_auto",
+}
+
+HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}
 
 BINARY_SENSOR_DEVICE_TYPES_ISY = {
     DEVICE_CLASS_MOISTURE: ["16.8.", "16.13.", "16.14."],

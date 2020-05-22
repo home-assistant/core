@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Chiave API Airly",
+                    "api_key": "Chiave API",
                     "latitude": "Latitudine",
                     "longitude": "Logitudine",
                     "name": "Nome dell'integrazione"

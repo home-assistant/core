@@ -5,8 +5,8 @@
       "user": {
         "title": "Set up Agent DVR",
         "data": {
-          "host": "Host",
-          "port": "Port"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },

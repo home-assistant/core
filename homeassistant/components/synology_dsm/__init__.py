@@ -121,8 +121,6 @@ class SynoApi:
         self._hass = hass
         self._entry = entry
 
-        self.temp_unit = hass.config.units.temperature_unit
-
         self.dsm: SynologyDSM = None
         self.information: SynoDSMInformation = None
         self.utilisation: SynoCoreUtilization = None

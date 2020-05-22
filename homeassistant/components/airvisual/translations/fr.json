@@ -5,16 +5,17 @@
         },
         "error": {
             "general_error": "Une erreur inconnue est survenue.",
-            "invalid_api_key": "Cl\u00e9 API invalide",
+            "invalid_api_key": "La cl\u00e9 API fournie n'est pas valide.",
             "unable_to_connect": "Impossible de se connecter \u00e0 l'unit\u00e9 Node / Pro."
         },
         "step": {
             "geography": {
                 "data": {
-                    "api_key": "Cl\u00e9 d'API",
+                    "api_key": "Cl\u00e9 API",
                     "latitude": "Latitude",
                     "longitude": "Longitude"
                 },
+                "description": "Utilisez l'API cloud AirVisual pour surveiller une position g\u00e9ographique.",
                 "title": "Configurer une g\u00e9ographie"
             },
             "node_pro": {
@@ -42,6 +43,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "show_on_map": "Afficher la g\u00e9ographie surveill\u00e9e sur la carte"
+                },
                 "description": "D\u00e9finissez diverses options pour l'int\u00e9gration d'AirVisual.",
                 "title": "Configurer AirVisual"
             }

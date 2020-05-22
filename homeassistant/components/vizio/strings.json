@@ -3,18 +3,20 @@
     "step": {
       "user": {
         "title": "Setup VIZIO SmartCast Device",
-        "description": "An Access Token is only needed for TVs. If you are configuring a TV and do not have an Access Token yet, leave it blank to go through a pairing process.",
+        "description": "An [%key:common::config_flow::data::access_token%] is only needed for TVs. If you are configuring a TV and do not have an [%key:common::config_flow::data::access_token%] yet, leave it blank to go through a pairing process.",
         "data": {
           "name": "Name",
-          "host": "<Host/IP>:<Port>",
+          "host": "[%key:common::config_flow::data::host%]",
           "device_class": "Device Type",
-          "access_token": "Access Token"
+          "access_token": "[%key:common::config_flow::data::access_token%]"
         }
       },
       "pair_tv": {
         "title": "Complete Pairing Process",
         "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
-        "data": { "pin": "PIN" }
+        "data": {
+          "pin": "PIN"
+        }
       },
       "pairing_complete": {
         "title": "Pairing Complete",
@@ -22,14 +24,14 @@
       },
       "pairing_complete_import": {
         "title": "Pairing Complete",
-        "description": "Your VIZIO SmartCast TV is now connected to Home Assistant.\n\nYour Access Token is '**{access_token}**'."
+        "description": "Your VIZIO SmartCast TV is now connected to Home Assistant.\n\nYour [%key:common::config_flow::data::access_token%] is '**{access_token}**'."
       }
     },
     "error": {
       "host_exists": "VIZIO device with specified host already configured.",
       "name_exists": "VIZIO device with specified name already configured.",
-      "complete_pairing failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
-      "cant_connect": "Could not connect to the device. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and re-verify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit."
+      "complete_pairing_failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
+      "cant_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_setup": "This entry has already been setup.",

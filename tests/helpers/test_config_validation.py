@@ -351,6 +351,26 @@ def test_string():
         schema(value)
 
 
+def test_string_with_no_html():
+    """Test string with no html validation."""
+    schema = vol.Schema(cv.string_with_no_html)
+
+    with pytest.raises(vol.Invalid):
+        schema("This has HTML in it <a>Link</a>")
+
+    with pytest.raises(vol.Invalid):
+        schema("<b>Bold</b>")
+
+    for value in (
+        True,
+        3,
+        "Hello",
+        "**Hello**",
+        "This has no HTML [Link](https://home-assistant.io)",
+    ):
+        schema(value)
+
+
 def test_temperature_unit():
     """Test temperature unit validation."""
     schema = vol.Schema(cv.temperature_unit)

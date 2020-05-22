@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Yhteyden muodostaminen ZHA-laitteeseen ei onnistu."
+        },
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Radiotyyppi"
+                },
+                "description": "Valitse Zigbee-radion tyyppi",
+                "title": "Radion tyyppi"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "portin nopeus",
+                    "flow_control": "tietovirran hallinta",
+                    "path": "Sarjalaitteen polku"
+                },
+                "description": "Anna porttikohtaiset asetukset",
+                "title": "Asetukset"
+            },
+            "user": {
+                "data": {
+                    "radio_type": "Radiotyyppi"
+                },
+                "title": "ZHA"
+            }
+        }
+    }
+}

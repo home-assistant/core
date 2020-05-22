@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifkatioun",
+            "invalid_host": "Host Entr\u00e9e muss am URL Format sinn, beispill, http://192.168.10.100:80",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "Universal Devices ISY994 {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "Passwuert",
+                    "tls": "TLS Versioun vum ISY Kontroller.",
+                    "username": "Benotzernumm"
+                },
+                "description": "Host Entr\u00e9e muss am URL Format sinn, beispill, http://192.168.10.100:80",
+                "title": "Mat dengem ISY994 verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Zeechefolleg ignor\u00e9ieren",
+                    "restore_light_state": "Hellegkeet vun der Luucht hierstellen",
+                    "sensor_string": "Node Sensor Zeechefolleg",
+                    "variable_sensor_string": "Variable Sensor Zeechefolleg"
+                },
+                "description": "Optioune fir ISY Integratioun defin\u00e9ieren:\n \u2022 Node Sensor Zeechefolleg: All Apparat oder Dossier welch 'Node Sensor Zeechefolleg' am Numm enth\u00e4lt g\u00ebtt als Sensor oder bin\u00e4re Sensor trait\u00e9iert.\n \u2022 Zeechefolleg inor\u00e9ieren: All Apparat mam 'Zeechefolleg ignor\u00e9ieren' am Numm g\u00ebtt ignor\u00e9iert.\n \u2022 Variable Sensor Zeechefolleg: All Variable mat 'Variable Sensor Zeechefolleg' am Numm g\u00ebtt als Sensor dob\u00e4igesat\n \u2022 Hellegkeet vun der Luucht hierstellen: Falls aktiv\u00e9iert g\u00ebtt d\u00e9i Hellegkeet vu virdrun hiergestallt bei uschalte vun der Luucht am platz vun der Standard Hellegkeet vun der Luucht.",
+                "title": "ISY994 Optiounen"
+            }
+        }
+    },
+    "title": "Universal Devices ISY994"
+}

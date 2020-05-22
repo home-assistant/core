@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kannst nur ein einziges Netatmo-Konto konfigurieren.",
-            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
-            "missing_configuration": "Die Netatmo-Komponente ist nicht konfiguriert. Folge bitte der Dokumentation."
+            "already_setup": "Bereits konfiguriert. Es ist nur eine einzige Konfiguration m\u00f6glich.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Autorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte folgen Sie der Dokumentation."
         },
         "create_entry": {
-            "default": "Erfolgreich mit Netatmo authentifiziert."
+            "default": "Erfolgreich authentifiziert."
         },
         "step": {
             "pick_implementation": {
-                "title": "W\u00e4hle die Authentifizierungsmethode"
+                "title": "W\u00e4hle Authentifizierungs-Methode"
             }
         }
     }

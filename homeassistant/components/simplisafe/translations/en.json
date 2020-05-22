@@ -12,7 +12,7 @@
                 "data": {
                     "code": "Code (used in Home Assistant UI)",
                     "password": "Password",
-                    "username": "Email Address"
+                    "username": "Email"
                 },
                 "title": "Fill in your information."
             }

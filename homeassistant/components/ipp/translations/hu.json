@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "connection_error": "Sikertelen csatlakoz\u00e1s"
+        },
+        "error": {
+            "connection_error": "Sikertelen csatlakoz\u00e1s"
+        },
+        "flow_title": "Nyomtat\u00f3: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

@@ -2,29 +2,20 @@
 
 from homeassistant.components import pi_hole
 
-from tests.async_mock import AsyncMock, patch
+from . import _create_mocked_hole, _patch_config_flow_hole
+
+from tests.async_mock import patch
 from tests.common import async_setup_component
 
-ZERO_DATA = {
-    "ads_blocked_today": 0,
-    "ads_percentage_today": 0,
-    "clients_ever_seen": 0,
-    "dns_queries_today": 0,
-    "domains_being_blocked": 0,
-    "queries_cached": 0,
-    "queries_forwarded": 0,
-    "status": 0,
-    "unique_clients": 0,
-    "unique_domains": 0,
-}
+
+def _patch_init_hole(mocked_hole):
+    return patch("homeassistant.components.pi_hole.Hole", return_value=mocked_hole)
 
 
 async def test_setup_minimal_config(hass):
     """Tests component setup with minimal config."""
-    with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        _hole.return_value.get_data = AsyncMock(return_value=None)
-        _hole.return_value.data = ZERO_DATA
-
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
         assert await async_setup_component(
             hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: [{"host": "pi.hole"}]}
         )
@@ -78,10 +69,8 @@ async def test_setup_minimal_config(hass):
 
 async def test_setup_name_config(hass):
     """Tests component setup with a custom name."""
-    with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        _hole.return_value.get_data = AsyncMock(return_value=None)
-        _hole.return_value.data = ZERO_DATA
-
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
         assert await async_setup_component(
             hass,
             pi_hole.DOMAIN,
@@ -98,19 +87,15 @@ async def test_setup_name_config(hass):
 
 async def test_disable_service_call(hass):
     """Test disable service call with no Pi-hole named."""
-    with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        mock_disable = AsyncMock(return_value=None)
-        _hole.return_value.disable = mock_disable
-        _hole.return_value.get_data = AsyncMock(return_value=None)
-        _hole.return_value.data = ZERO_DATA
-
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
         assert await async_setup_component(
             hass,
             pi_hole.DOMAIN,
             {
                 pi_hole.DOMAIN: [
-                    {"host": "pi.hole", "api_key": "1"},
-                    {"host": "pi.hole", "name": "Custom", "api_key": "2"},
+                    {"host": "pi.hole1", "api_key": "1"},
+                    {"host": "pi.hole2", "name": "Custom", "api_key": "2"},
                 ]
             },
         )
@@ -126,24 +111,20 @@ async def test_disable_service_call(hass):
 
         await hass.async_block_till_done()
 
-        assert mock_disable.call_count == 2
+        assert mocked_hole.disable.call_count == 2
 
 
 async def test_enable_service_call(hass):
     """Test enable service call with no Pi-hole named."""
-    with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        mock_enable = AsyncMock(return_value=None)
-        _hole.return_value.enable = mock_enable
-        _hole.return_value.get_data = AsyncMock(return_value=None)
-        _hole.return_value.data = ZERO_DATA
-
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
         assert await async_setup_component(
             hass,
             pi_hole.DOMAIN,
             {
                 pi_hole.DOMAIN: [
-                    {"host": "pi.hole", "api_key": "1"},
-                    {"host": "pi.hole", "name": "Custom", "api_key": "2"},
+                    {"host": "pi.hole1", "api_key": "1"},
+                    {"host": "pi.hole2", "name": "Custom", "api_key": "2"},
                 ]
             },
         )
@@ -156,4 +137,4 @@ async def test_enable_service_call(hass):
 
         await hass.async_block_till_done()
 
-        assert mock_enable.call_count == 2
+        assert mocked_hole.enable.call_count == 2

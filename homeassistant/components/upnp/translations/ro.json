@@ -10,9 +10,6 @@
             "other": ""
         },
         "step": {
-            "init": {
-                "title": "UPnP/IGD"
-            },
             "user": {
                 "data": {
                     "enable_port_mapping": "Activa\u021bi maparea porturilor pentru Home Assistant",

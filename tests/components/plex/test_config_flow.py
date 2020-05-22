@@ -22,7 +22,10 @@ from homeassistant.components.plex.const import (
     SERVERS,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.config_entries import ENTRY_STATE_LOADED
+from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    SOURCE_INTEGRATION_DISCOVERY,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -34,7 +37,7 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
-from .mock_classes import MockPlexAccount, MockPlexServer
+from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -746,3 +749,25 @@ async def test_setup_with_limited_credentials(hass):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ENTRY_STATE_LOADED
+
+
+async def test_integration_discovery(hass):
+    """Test integration self-discovery."""
+    mock_gdm = MockGDM()
+
+    with patch("homeassistant.components.plex.config_flow.GDM", return_value=mock_gdm):
+        await config_flow.async_discover(hass)
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert len(flows) == 1
+
+    flow = flows[0]
+
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == SOURCE_INTEGRATION_DISCOVERY
+    assert (
+        flow["context"]["unique_id"]
+        == mock_gdm.entries[0]["data"]["Resource-Identifier"]
+    )
+    assert flow["step_id"] == "user"

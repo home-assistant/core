@@ -14,9 +14,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
                     "password": "Senha",
-                    "port": "Porta",
                     "ssl": "O AdGuard Home usa um certificado SSL",
                     "username": "Nome de usu\u00e1rio",
                     "verify_ssl": "O AdGuard Home usa um certificado apropriado"

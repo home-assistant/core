@@ -21,7 +21,7 @@
                 "title": "Definer deCONZ-gatewayen"
             },
             "link": {
-                "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger -> Gateway -> Avansert \n 2. Trykk p\u00e5 \"L\u00e5s opp gateway\" knappen",
+                "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger -> Gateway -> Avansert \n 2. Trykk p\u00e5 \"Autentiser app\" knappen",
                 "title": "Koble til deCONZ"
             },
             "manual_confirm": {
@@ -33,7 +33,7 @@
             "manual_input": {
                 "data": {
                     "host": "Vert",
-                    "port": ""
+                    "port": "Port"
                 },
                 "title": "Konfigurer deCONZ gateway"
             },

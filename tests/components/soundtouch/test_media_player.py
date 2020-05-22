@@ -11,6 +11,7 @@ from libsoundtouch.device import (
 import pytest
 
 from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
 )
@@ -254,6 +255,36 @@ class MockStatusPause(Status):
         self._station_name = None
 
 
+class MockStatusPlayingAux(Status):
+    """Mock status AUX."""
+
+    def __init__(self):
+        """Init the class."""
+        self._source = "AUX"
+        self._play_status = "PLAY_STATE"
+        self._image = "image.url"
+        self._artist = None
+        self._track = None
+        self._album = None
+        self._duration = None
+        self._station_name = None
+
+
+class MockStatusPlayingBluetooth(Status):
+    """Mock status Bluetooth."""
+
+    def __init__(self):
+        """Init the class."""
+        self._source = "BLUETOOTH"
+        self._play_status = "PLAY_STATE"
+        self._image = "image.url"
+        self._artist = "artist"
+        self._track = "track"
+        self._album = "album"
+        self._duration = None
+        self._station_name = None
+
+
 async def test_ensure_setup_config(mocked_status, mocked_volume, hass, one_device):
     """Test setup OK with custom config."""
     await setup_soundtouch(
@@ -365,6 +396,37 @@ async def test_playing_radio(mocked_status, mocked_volume, hass, one_device):
     assert entity_1_state.attributes["media_title"] == "station"
 
 
+async def test_playing_aux(mocked_status, mocked_volume, hass, one_device):
+    """Test playing AUX info."""
+    mocked_status.side_effect = MockStatusPlayingAux
+    await setup_soundtouch(hass, DEVICE_1_CONFIG)
+
+    assert one_device.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
+
+    entity_1_state = hass.states.get("media_player.soundtouch_1")
+    assert entity_1_state.state == STATE_PLAYING
+    assert entity_1_state.attributes["source"] == "AUX"
+
+
+async def test_playing_bluetooth(mocked_status, mocked_volume, hass, one_device):
+    """Test playing Bluetooth info."""
+    mocked_status.side_effect = MockStatusPlayingBluetooth
+    await setup_soundtouch(hass, DEVICE_1_CONFIG)
+
+    assert one_device.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
+
+    entity_1_state = hass.states.get("media_player.soundtouch_1")
+    assert entity_1_state.state == STATE_PLAYING
+    assert entity_1_state.attributes["source"] == "BLUETOOTH"
+    assert entity_1_state.attributes["media_track"] == "track"
+    assert entity_1_state.attributes["media_artist"] == "artist"
+    assert entity_1_state.attributes["media_album_name"] == "album"
+
+
 async def test_get_volume_level(mocked_status, mocked_volume, hass, one_device):
     """Test volume level."""
     mocked_volume.side_effect = MockVolume
@@ -426,7 +488,7 @@ async def test_media_commands(mocked_status, mocked_volume, hass, one_device):
     assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
-    assert entity_1_state.attributes["supported_features"] == 18365
+    assert entity_1_state.attributes["supported_features"] == 20413
 
 
 @patch("libsoundtouch.device.SoundTouchDevice.power_off")
@@ -692,6 +754,72 @@ async def test_play_media_url(
         True,
     )
     mocked_play_url.assert_called_with("http://fqdn/file.mp3")
+
+
+@patch("libsoundtouch.device.SoundTouchDevice.select_source_aux")
+async def test_select_source_aux(
+    mocked_select_source_aux, mocked_status, mocked_volume, hass, one_device
+):
+    """Test select AUX."""
+    await setup_soundtouch(hass, DEVICE_1_CONFIG)
+
+    assert mocked_select_source_aux.call_count == 0
+    await hass.services.async_call(
+        "media_player",
+        "select_source",
+        {"entity_id": "media_player.soundtouch_1", ATTR_INPUT_SOURCE: "AUX"},
+        True,
+    )
+
+    assert mocked_select_source_aux.call_count == 1
+
+
+@patch("libsoundtouch.device.SoundTouchDevice.select_source_bluetooth")
+async def test_select_source_bluetooth(
+    mocked_select_source_bluetooth, mocked_status, mocked_volume, hass, one_device
+):
+    """Test select Bluetooth."""
+    await setup_soundtouch(hass, DEVICE_1_CONFIG)
+
+    assert mocked_select_source_bluetooth.call_count == 0
+    await hass.services.async_call(
+        "media_player",
+        "select_source",
+        {"entity_id": "media_player.soundtouch_1", ATTR_INPUT_SOURCE: "BLUETOOTH"},
+        True,
+    )
+
+    assert mocked_select_source_bluetooth.call_count == 1
+
+
+@patch("libsoundtouch.device.SoundTouchDevice.select_source_bluetooth")
+@patch("libsoundtouch.device.SoundTouchDevice.select_source_aux")
+async def test_select_source_invalid_source(
+    mocked_select_source_aux,
+    mocked_select_source_bluetooth,
+    mocked_status,
+    mocked_volume,
+    hass,
+    one_device,
+):
+    """Test select unsupported source."""
+    await setup_soundtouch(hass, DEVICE_1_CONFIG)
+
+    assert mocked_select_source_aux.call_count == 0
+    assert mocked_select_source_bluetooth.call_count == 0
+
+    await hass.services.async_call(
+        "media_player",
+        "select_source",
+        {
+            "entity_id": "media_player.soundtouch_1",
+            ATTR_INPUT_SOURCE: "SOMETHING_UNSUPPORTED",
+        },
+        True,
+    )
+
+    assert mocked_select_source_aux.call_count == 0
+    assert mocked_select_source_bluetooth.call_count == 0
 
 
 @patch("libsoundtouch.device.SoundTouchDevice.create_zone")

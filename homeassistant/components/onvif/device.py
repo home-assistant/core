@@ -11,6 +11,7 @@ from onvif.exceptions import ONVIFError
 from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -18,6 +19,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
@@ -31,24 +33,28 @@ from .const import (
     TILT_FACTOR,
     ZOOM_FACTOR,
 )
+from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 
 
 class ONVIFDevice:
     """Manages an ONVIF device."""
 
-    def __init__(self, hass, config_entry=None):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry = None):
         """Initialize the device."""
-        self.hass = hass
-        self.config_entry = config_entry
-        self.available = True
+        self.hass: HomeAssistant = hass
+        self.config_entry: ConfigEntry = config_entry
+        self.available: bool = True
 
-        self.device = None
+        self.device: ONVIFCamera = None
+        self.events: EventManager = None
 
-        self.info = DeviceInfo()
-        self.capabilities = Capabilities()
-        self.profiles = []
-        self.max_resolution = 0
+        self.info: DeviceInfo = DeviceInfo()
+        self.capabilities: Capabilities = Capabilities()
+        self.profiles: List[Profile] = []
+        self.max_resolution: int = 0
+
+        self._dt_diff_seconds: int = 0
 
     @property
     def name(self) -> str:
@@ -95,6 +101,21 @@ class ONVIFDevice:
 
             if self.capabilities.ptz:
                 self.device.create_ptz_service()
+
+            if self._dt_diff_seconds > 300 and self.capabilities.events:
+                self.capabilities.events = False
+                LOGGER.warning(
+                    "The system clock on '%s' is more than 5 minutes off. "
+                    "Although this device supports events, they will be "
+                    "disabled until the device clock is fixed as we will "
+                    "not be able to renew the subscription.",
+                    self.name,
+                )
+
+            if self.capabilities.events:
+                self.events = EventManager(
+                    self.hass, self.device, self.config_entry.unique_id
+                )
 
             # Determine max resolution from profiles
             self.max_resolution = max(
@@ -170,9 +191,9 @@ class ONVIFDevice:
                 )
 
                 dt_diff = cam_date - system_date
-                dt_diff_seconds = dt_diff.total_seconds()
+                self._dt_diff_seconds = dt_diff.total_seconds()
 
-                if dt_diff_seconds > 5:
+                if self._dt_diff_seconds > 5:
                     LOGGER.warning(
                         "The date/time on the device (UTC) is '%s', "
                         "which is different from the system '%s', "
@@ -198,15 +219,30 @@ class ONVIFDevice:
 
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
-        media_service = self.device.create_media_service()
-        capabilities = await media_service.GetServiceCapabilities()
+        snapshot = False
+        try:
+            media_service = self.device.create_media_service()
+            media_capabilities = await media_service.GetServiceCapabilities()
+            snapshot = media_capabilities and media_capabilities.SnapshotUri
+        except (ONVIFError, Fault):
+            pass
+
+        pullpoint = False
+        try:
+            event_service = self.device.create_events_service()
+            event_capabilities = await event_service.GetServiceCapabilities()
+            pullpoint = event_capabilities and event_capabilities.WSPullPointSupport
+        except (ONVIFError, Fault):
+            pass
+
         ptz = False
         try:
             self.device.get_definition("ptz")
             ptz = True
         except ONVIFError:
             pass
-        return Capabilities(capabilities.SnapshotUri, ptz)
+
+        return Capabilities(snapshot, pullpoint, ptz)
 
     async def async_get_profiles(self) -> List[Profile]:
         """Obtain media profiles for this device."""

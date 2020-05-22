@@ -8,6 +8,32 @@ from homeassistant.const import CONF_URL
 
 from .const import DEFAULT_DATA, MOCK_SERVERS, MOCK_USERS
 
+GDM_PAYLOAD = [
+    {
+        "data": {
+            "Content-Type": "plex/media-server",
+            "Name": "plextest",
+            "Port": "32400",
+            "Resource-Identifier": "1234567890123456789012345678901234567890",
+            "Updated-At": "157762684800",
+            "Version": "1.0",
+        },
+        "from": ("1.2.3.4", 32414),
+    }
+]
+
+
+class MockGDM:
+    """Mock a GDM instance."""
+
+    def __init__(self):
+        """Initialize the object."""
+        self.entries = GDM_PAYLOAD
+
+    def scan(self):
+        """Mock the scan call."""
+        pass
+
 
 class MockResource:
     """Mock a PlexAccount resource."""

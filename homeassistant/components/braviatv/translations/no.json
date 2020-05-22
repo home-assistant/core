@@ -13,14 +13,14 @@
                 "data": {
                     "pin": "PIN-kode"
                 },
-                "description": "Tast inn PIN-koden som vises p\u00e5 Sony Bravia TV. \n\n Hvis PIN-koden ikke vises, m\u00e5 du avregistrere Home Assistant p\u00e5 TV-en, g\u00e5 til: Innstillinger - > Nettverk - > Innstillinger for ekstern enhet - > Avregistrere ekstern enhet.",
-                "title": "Autoriser Sony Bravia TV"
+                "description": "Angi PIN-koden som vises p\u00e5 Sony Bravia TV. \n\nHvis PIN-koden ikke vises, m\u00e5 du avregistrere Home Assistant p\u00e5 TV-en, g\u00e5 til: Innstillinger -> Nettverk -> Innstillinger for ekstern enhet -> Avregistrere ekstern enhet.",
+                "title": "Godkjenn Sony Bravia TV"
             },
             "user": {
                 "data": {
                     "host": "TV-vertsnavn eller IP-adresse"
                 },
-                "description": "Sett opp Sony Bravia TV-integrasjon. Hvis du har problemer med konfigurasjonen, g\u00e5 til: https://www.home-assistant.io/integrations/braviatv \n\n Forsikre deg om at TV-en er sl\u00e5tt p\u00e5.",
+                "description": "Sett opp Sony Bravia TV-integrasjon. Hvis du har problemer med konfigurasjonen, g\u00e5 til: [https://www.home-assistant.io/integrations/braviatv](https://www.home-assistant.io/integrations/braviatv)\n\n Forsikre deg om at TV-en er sl\u00e5tt p\u00e5.",
                 "title": ""
             }
         }

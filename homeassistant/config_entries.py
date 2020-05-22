@@ -22,6 +22,7 @@ _UNDEF: dict = {}
 
 SOURCE_DISCOVERY = "discovery"
 SOURCE_IMPORT = "import"
+SOURCE_INTEGRATION_DISCOVERY = "integration_discovery"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"

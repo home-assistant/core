@@ -29,6 +29,19 @@
                     "host": "Gostitelj",
                     "port": "Vrata"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata"
+                },
+                "title": "Konfigurirajte prehod deCONZ"
+            },
+            "user": {
+                "data": {
+                    "host": "Izberite odkrit prehod deCONZ"
+                },
+                "title": "Izberite prehod deCONZ"
             }
         }
     },

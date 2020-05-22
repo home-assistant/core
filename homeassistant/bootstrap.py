@@ -14,7 +14,6 @@ import voluptuous as vol
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_STOP,
     REQUIRED_NEXT_PYTHON_DATE,
     REQUIRED_NEXT_PYTHON_VER,
@@ -22,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import DATA_SETUP, async_setup_component
-from homeassistant.util.logging import AsyncHandler
+from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
 
@@ -278,23 +277,16 @@ def async_enable_logging(
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
 
-        async_handler = AsyncHandler(hass.loop, err_handler)
-
-        async def async_stop_async_handler(_: Any) -> None:
-            """Cleanup async handler."""
-            logging.getLogger("").removeHandler(async_handler)  # type: ignore
-            await async_handler.async_close(blocking=True)
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
-
         logger = logging.getLogger("")
-        logger.addHandler(async_handler)  # type: ignore
+        logger.addHandler(err_handler)
         logger.setLevel(logging.INFO)
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
     else:
         _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
+
+    async_activate_log_queue_handler(hass)
 
 
 async def async_mount_local_lib_path(config_dir: str) -> str:

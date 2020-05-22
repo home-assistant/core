@@ -13,13 +13,23 @@
                     "port": "Port (Valfri)",
                     "username": "Anv\u00e4ndarnamn"
                 },
-                "description": "Do vill du konfigurera {name} ({host})?"
+                "description": "Do vill du konfigurera {name} ({host})?",
+                "title": "Synology DSM"
             },
             "user": {
                 "data": {
                     "host": "V\u00e4rd",
                     "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minuter mellan skanningar"
                 }
             }
         }

@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -29,8 +30,6 @@ from .const import (
 from .device import ONVIFDevice
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
-PLATFORMS = ["camera"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -79,7 +78,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.unique_id] = device
 
-    for component in PLATFORMS:
+    platforms = ["camera"]
+
+    if device.capabilities.events and await device.events.async_start():
+        platforms += ["binary_sensor", "sensor"]
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.events.async_stop)
+
+    for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -89,11 +94,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+
+    device = hass.data[DOMAIN][entry.unique_id]
+    platforms = ["camera"]
+
+    if device.capabilities.events and device.events.started:
+        platforms += ["binary_sensor", "sensor"]
+        await device.events.async_stop()
+
     return all(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                for component in platforms
             ]
         )
     )

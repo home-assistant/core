@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP je \u017ee konfiguriran"
+            "already_configured": "ESP je \u017ee konfiguriran",
+            "already_in_progress": "Konfiguracija ESP je \u017ee v teku"
         },
         "error": {
             "connection_error": "Ne morem se povezati z ESP. Poskrbite, da va\u0161a datoteka YAML vsebuje vrstico \"api:\".",

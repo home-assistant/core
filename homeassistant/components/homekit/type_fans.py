@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -80,13 +81,13 @@ class Fan(HomeAccessory):
 
         if CHAR_ROTATION_SPEED in chars:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
-            # an arbitrary non-zero value. It is updated immediately by update_state
+            # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
             self.char_speed = serv_fan.configure_char(CHAR_ROTATION_SPEED, value=100)
 
         if CHAR_SWING_MODE in chars:
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
-        self.update_state(state)
+        self.async_update_state(state)
         serv_fan.setter_callback = self._set_chars
 
     def _set_chars(self, char_values):
@@ -146,7 +147,8 @@ class Fan(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_SPEED: speed}
         self.call_service(DOMAIN, SERVICE_SET_SPEED, params, speed)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update fan after state change."""
         # Handle State
         state = new_state.state

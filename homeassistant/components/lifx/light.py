@@ -371,6 +371,12 @@ class LIFXManager:
 
             # Read initial state
             ack = AwaitAioLIFX().wait
+
+            # Used to populate sw_version
+            # no need to wait as we do not
+            # need it until later
+            bulb.get_hostfirmware()
+
             color_resp = await ack(bulb.get_color)
             if color_resp:
                 version_resp = await ack(bulb.get_version)
@@ -459,7 +465,13 @@ class LIFXLight(LightEntity):
             "manufacturer": "LIFX",
         }
 
-        model = aiolifx().products.product_map.get(self.bulb.product)
+        version = self.bulb.host_firmware_version
+        if version is not None:
+            info["sw_version"] = version
+
+        product_map = aiolifx().products.product_map
+
+        model = product_map.get(self.bulb.product) or self.bulb.product
         if model is not None:
             info["model"] = model
 

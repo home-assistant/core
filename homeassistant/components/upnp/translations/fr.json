@@ -12,19 +12,21 @@
             "one": "Vide",
             "other": "Vide"
         },
+        "flow_title": "UPnP/IGD: {name}",
         "step": {
             "confirm": {
                 "description": "Voulez-vous configurer UPnP / IGD?",
                 "title": "UPnP / IGD"
             },
-            "init": {
-                "title": "UPnP / IGD"
+            "ssdp_confirm": {
+                "description": "Voulez-vous configurer ce p\u00e9riph\u00e9rique UPnP/IGD?"
             },
             "user": {
                 "data": {
                     "enable_port_mapping": "Activer le mappage de port pour Home Assistant",
                     "enable_sensors": "Ajouter des capteurs de trafic",
-                    "igd": "UPnP / IGD"
+                    "igd": "UPnP / IGD",
+                    "usn": "Appareil"
                 },
                 "title": "Options de configuration pour UPnP / IGD"
             }

@@ -1,3 +1,8 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "S'ha sol\u00b7licitat l'activaci\u00f3 de {entity_name}"
+        }
+    },
     "title": "Arcam FMJ"
 }

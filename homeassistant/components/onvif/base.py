@@ -9,7 +9,7 @@ from .models import Profile
 class ONVIFBaseEntity(Entity):
     """Base class common to all ONVIF entities."""
 
-    def __init__(self, device: ONVIFDevice, profile: Profile) -> None:
+    def __init__(self, device: ONVIFDevice, profile: Profile = None) -> None:
         """Initialize the ONVIF entity."""
         self.device = device
         self.profile = profile

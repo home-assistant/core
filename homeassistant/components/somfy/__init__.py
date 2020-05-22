@@ -3,12 +3,17 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from pymfy.api.devices.category import Category
 from requests import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
@@ -86,6 +91,20 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     await update_all_devices(hass)
 
+    device_registry = await dr.async_get_registry(hass)
+
+    devices = hass.data[DOMAIN][DEVICES]
+    hubs = [device for device in devices if Category.HUB.value in device.categories]
+
+    for hub in hubs:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, hub.id)},
+            manufacturer="Somfy",
+            name=hub.name,
+            model=hub.type,
+        )
+
     for component in SOMFY_COMPONENTS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -134,7 +153,7 @@ class SomfyEntity(Entity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "model": self.device.type,
-            "via_hub": (DOMAIN, self.device.site_id),
+            "via_hub": (DOMAIN, self.device.parent_id),
             # For the moment, Somfy only returns their own device.
             "manufacturer": "Somfy",
         }

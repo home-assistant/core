@@ -16,9 +16,6 @@
                 "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a UPnP/IGD-t?",
                 "title": "UPnP/IGD"
             },
-            "init": {
-                "title": "UPnP/IGD"
-            },
             "user": {
                 "data": {
                     "enable_port_mapping": "Enged\u00e9lyezd a port mappinget a Home Assistant sz\u00e1m\u00e1ra",
