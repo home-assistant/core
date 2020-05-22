@@ -17,8 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EnOceanDongle:
-    """Representation of an EnOcean dongle."""
-
     """Representation of an EnOcean dongle.
 
     The dongle is responsible for receiving the ENOcean frames,
