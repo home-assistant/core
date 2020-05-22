@@ -302,7 +302,7 @@ async def test_services(
 
         remote_mock.assert_called_once_with("play")
 
-     with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_NEXT_TRACK,
