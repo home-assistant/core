@@ -8,13 +8,9 @@
 =======
   "config": {
     "step": {
-<<<<<<< HEAD
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       }
-=======
-      "pick_implementation": { "title": "Pick Authentication Method" }
->>>>>>> Add test for options flow
     },
     "abort": {
       "already_setup": "[%key:common::config_flow::abort::single_instance_allowed%]",
