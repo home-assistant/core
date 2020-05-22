@@ -21,7 +21,7 @@
             "node_pro": {
                 "data": {
                     "ip_address": "Indirizzo IP/Nome host dell'unit\u00e0",
-                    "password": "Password dell'unit\u00e0"
+                    "password": "Password"
                 },
                 "description": "Monitorare un'unit\u00e0 AirVisual personale. La password pu\u00f2 essere recuperata dall'interfaccia utente dell'unit\u00e0.",
                 "title": "Configurare un AirVisual Node/Pro"

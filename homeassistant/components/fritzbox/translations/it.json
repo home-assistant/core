@@ -21,7 +21,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host o indirizzo IP",
+                    "host": "Host",
                     "password": "Password",
                     "username": "Nome utente"
                 },

@@ -16,10 +16,11 @@
             "not_found": "Server Plex non trovato",
             "ssl_error": "Problema con il certificato SSL"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Host (opzionale se si \u00e8 fornito un Token)",
+                    "host": "Host",
                     "port": "Porta",
                     "ssl": "Utilizzare SSL",
                     "token": "Token (opzionale)",

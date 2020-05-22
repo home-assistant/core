@@ -9,8 +9,9 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "E-mail (Opzionale)",
                     "host": "Host",
-                    "port": "Porta (10000)"
+                    "port": "Porta"
                 },
                 "title": "Connettersi al dispositivo"
             }
