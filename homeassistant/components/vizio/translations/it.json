@@ -31,7 +31,7 @@
                 "data": {
                     "access_token": "Token di accesso",
                     "device_class": "Tipo di dispositivo",
-                    "host": "< Host / IP >: <Port>",
+                    "host": "Host",
                     "name": "Nome"
                 },
                 "description": "Un Token di accesso \u00e8 necessario solo per i televisori. Se si sta configurando un televisore e non si dispone ancora di un Token di accesso, lasciarlo vuoto per passare attraverso un processo di associazione.",
