@@ -165,8 +165,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 async_add_entities([entity])
 
         players = await lms.async_get_players()
-        for player in players:
-            hass.async_create_task(_discovered_player(player))
+        if players:
+            for player in players:
+                hass.async_create_task(_discovered_player(player))
 
         hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
 
