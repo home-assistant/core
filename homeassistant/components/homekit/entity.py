@@ -1,30 +1,42 @@
-"""The homekitintegration base entity."""
+"""The homekit integration base entity."""
 
+from pyhap.const import __version__ as pyhap_version
+
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import BRIDGE_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 
 
 class HomeKitEntity(Entity):
     """Base class for homekit entities."""
 
-    def __init__(self, bridge_mac, acc, model):
+    def __init__(self, config_entry, bridge_mac, bridge_name):
         """Initialize the sensor."""
         super().__init__()
-        self.model = model
-        self.acc = acc
-        self.bridge_mac = bridge_mac
-        self.base_unique_id = f"{bridge_mac}_{acc.aid}"
+        self._bridge_mac = bridge_mac
+        self._bridge_name = bridge_name
+        self._config_entry = config_entry
 
     @property
     def device_info(self):
         """Entity device info."""
+        connection = (device_registry.CONNECTION_NETWORK_MAC, self._bridge_mac)
+        identifier = (DOMAIN, self._config_entry.entry_id, BRIDGE_SERIAL_NUMBER)
         device_info = {
-            "identifiers": {(DOMAIN, self.base_unique_id)},
-            "name": self.name,
+            # identifiers will be stable for the life of the config entry
+            "identifiers": {identifier},
+            "name": self._bridge_name,
             "manufacturer": MANUFACTURER,
-            "model": self.model,
-            "via_device": (DOMAIN, self.bridge_mac),
+            # connections can change if the pairing is manually reset
+            # of the homekit state files are deleted (which happens
+            # more than we would hope). We still need connections
+            # so we can identify the bridge on the network via zeroconf
+            # so it can be excluded from homekit_controller.
+            "connections": {connection},
+            "model": "Home Assistant HomeKit Bridge",
+            "via_device": (DOMAIN, self._bridge_mac),
+            "sw_version": pyhap_version,
         }
         return device_info
 
