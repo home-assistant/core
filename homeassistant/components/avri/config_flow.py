@@ -13,7 +13,6 @@ from .const import (
     CONF_HOUSE_NUMBER_EXTENSION,
     CONF_ZIP_CODE,
     DEFAULT_COUNTRY_CODE,
-    DOMAIN,
 )
 
 DATA_SCHEMA = vol.Schema(
