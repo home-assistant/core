@@ -5,7 +5,7 @@
         },
         "error": {
             "general_error": "\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002",
-            "invalid_api_key": "API \u5bc6\u78bc\u7121\u6548\u3002",
+            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548\u3002",
             "unable_to_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Node/Pro \u8a2d\u5099\u3002"
         },
         "step": {

@@ -15,7 +15,7 @@
                     "password": "Has\u0142o"
                 },
                 "description": "Obecnie pobieranie BLID i has\u0142a jest procesem r\u0119cznym. Prosz\u0119 post\u0119powa\u0107 zgodnie z instrukcjami zawartymi w dokumentacji pod adresem: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials.",
-                "title": "Po\u0142\u0105cz z urz\u0105dzeniem"
+                "title": "Po\u0142\u0105czenie z urz\u0105dzeniem"
             }
         }
     },

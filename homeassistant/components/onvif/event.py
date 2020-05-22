@@ -104,7 +104,8 @@ class EventManager:
         if not self._subscription:
             return
 
-        await self._subscription.Renew(dt_util.utcnow() + dt.timedelta(minutes=10))
+        termination_time = (dt_util.utcnow() + dt.timedelta(minutes=30)).isoformat()
+        await self._subscription.Renew(termination_time)
 
     async def async_pull_messages(self, _now: dt = None) -> None:
         """Pull messages from device."""

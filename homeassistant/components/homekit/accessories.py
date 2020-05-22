@@ -75,6 +75,7 @@ from .const import (
 from .util import (
     convert_to_float,
     dismiss_setup_message,
+    format_sw_version,
     show_setup_message,
     validate_media_player_features,
 )
@@ -253,7 +254,7 @@ class HomeAccessory(Accessory):
         else:
             model = domain.title()
         if ATTR_SOFTWARE_VERSION in self.config:
-            sw_version = self.config[ATTR_SOFTWARE_VERSION]
+            sw_version = format_sw_version(self.config[ATTR_SOFTWARE_VERSION])
         else:
             sw_version = __version__
 

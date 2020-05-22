@@ -1,18 +1,18 @@
 """BleBox switch implementation."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import BleBoxEntity, create_blebox_entities
 from .const import BLEBOX_TO_HASS_DEVICE_CLASSES
 
 
-async def async_setup_entry(hass, config_entry, async_add):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a BleBox switch entity."""
     create_blebox_entities(
-        hass, config_entry, async_add, BleBoxSwitchEntity, "switches"
+        hass, config_entry, async_add_entities, BleBoxSwitchEntity, "switches"
     )
 
 
-class BleBoxSwitchEntity(BleBoxEntity, SwitchDevice):
+class BleBoxSwitchEntity(BleBoxEntity, SwitchEntity):
     """Representation of a BleBox switch feature."""
 
     @property
@@ -27,8 +27,8 @@ class BleBoxSwitchEntity(BleBoxEntity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        return await self._feature.async_turn_on()
+        await self._feature.async_turn_on()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        return await self._feature.async_turn_off()
+        await self._feature.async_turn_off()

@@ -12,5 +12,14 @@
                 "title": "Configuraci\u00f3 del servidor TCP per a dispositius WIFFI"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Temps m\u00e0xim d'espera (minuts)"
+                }
+            }
+        }
     }
 }

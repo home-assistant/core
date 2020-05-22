@@ -31,9 +31,15 @@ from .const import (
     DEVICE_REVISION,
     DEVICE_SERIAL_NUMBER,
     DOMAIN,
+    FIRMWARE_BUILD,
     FIRMWARE_IN_USERDATA,
+    FIRMWARE_SUB_REVISION,
     HUB_EXCEPTIONS,
     HUB_NAME,
+    LEGACY_DEVICE_BUILD,
+    LEGACY_DEVICE_MODEL,
+    LEGACY_DEVICE_REVISION,
+    LEGACY_DEVICE_SUB_REVISION,
     MAC_ADDRESS_IN_USERDATA,
     MAINPROCESSOR_IN_USERDATA_FIRMWARE,
     MODEL_IN_MAINPROCESSOR,
@@ -159,9 +165,19 @@ async def async_get_device_info(pv_request):
     resources = await userdata.get_resources()
     userdata_data = resources[USER_DATA]
 
-    main_processor_info = userdata_data[FIRMWARE_IN_USERDATA][
-        MAINPROCESSOR_IN_USERDATA_FIRMWARE
-    ]
+    if FIRMWARE_IN_USERDATA in userdata_data:
+        main_processor_info = userdata_data[FIRMWARE_IN_USERDATA][
+            MAINPROCESSOR_IN_USERDATA_FIRMWARE
+        ]
+    else:
+        # Legacy devices
+        main_processor_info = {
+            REVISION_IN_MAINPROCESSOR: LEGACY_DEVICE_REVISION,
+            FIRMWARE_SUB_REVISION: LEGACY_DEVICE_SUB_REVISION,
+            FIRMWARE_BUILD: LEGACY_DEVICE_BUILD,
+            MODEL_IN_MAINPROCESSOR: LEGACY_DEVICE_MODEL,
+        }
+
     return {
         DEVICE_NAME: base64_to_unicode(userdata_data[HUB_NAME]),
         DEVICE_MAC_ADDRESS: userdata_data[MAC_ADDRESS_IN_USERDATA],
