@@ -440,7 +440,13 @@ omit =
     homeassistant/components/luftdaten/*
     homeassistant/components/lupusec/*
     homeassistant/components/lutron/*
-    homeassistant/components/lutron_caseta/*
+    homeassistant/components/lutron_caseta/__init__.py
+    homeassistant/components/lutron_caseta/binary_sensor.py
+    homeassistant/components/lutron_caseta/cover.py
+    homeassistant/components/lutron_caseta/fan.py
+    homeassistant/components/lutron_caseta/light.py
+    homeassistant/components/lutron_caseta/scene.py
+    homeassistant/components/lutron_caseta/switch.py
     homeassistant/components/lw12wifi/light.py
     homeassistant/components/lyft/sensor.py
     homeassistant/components/magicseaweed/sensor.py
