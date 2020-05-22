@@ -35,11 +35,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Unify Circuit component."""
-    domain_config = config.get(DOMAIN)
+    webhooks = config.get(DOMAIN)[CONF_WEBHOOK]
 
-    for webhook_conf in domain_config[CONF_WEBHOOK]:
-        hass.async_create_task(
-            discovery.async_load_platform(hass, "notify", DOMAIN, webhook_conf, config)
-        )
+    for webhook_conf in webhooks:
+        if 'url' in webhook_conf:
+            hass.async_create_task(
+                discovery.async_load_platform(hass, "notify", DOMAIN, webhook_conf, config)
+            )
 
     return True
