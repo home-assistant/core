@@ -69,12 +69,12 @@ class GammuAsyncWorker(gammu.worker.GammuWorker):
         self.loop = loop
         self._init_future = None
         self._terminate_future = None
+        self._thread = None
 
     async def init_async(self):
         """Connect to phone."""
         self._init_future = self.loop.create_future()
 
-        # self.initiate();
         self._thread = GammuAsyncThread(self._queue, self._config, self._callback)
         self._thread.start()
 
