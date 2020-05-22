@@ -557,3 +557,29 @@ class SinopeTechnologiesThermostat(Thermostat):
 
         self.debug("set occupancy to %s. Status: %s", 0 if is_away else 1, res)
         return res
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    manufacturers="Zen Within",
+)
+class ZenWithinThermostat(Thermostat):
+    """Zen Within Thermostat implementation."""
+
+    @property
+    def _rm_rs_action(self) -> Optional[str]:
+        """Return the current HVAC action based on running mode and running state."""
+
+        running_state = self._thrm.running_state
+        if running_state is None:
+            return None
+        if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
+            return CURRENT_HVAC_HEAT
+        if running_state & (RunningState.COOL | RunningState.COOL_STAGE_2):
+            return CURRENT_HVAC_COOL
+        if running_state & (
+            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+        ):
+            return CURRENT_HVAC_FAN
+        return self._off_idle_action

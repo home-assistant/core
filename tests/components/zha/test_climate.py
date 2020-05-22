@@ -89,7 +89,22 @@ CLIMATE_SINOPE = {
         "profile_id": 260,
     },
 }
-SINOPE = "Sinope Technologies"
+
+CLIMATE_ZEN = {
+    1: {
+        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        "in_clusters": [
+            zigpy.zcl.clusters.general.Basic.cluster_id,
+            zigpy.zcl.clusters.general.Identify.cluster_id,
+            zigpy.zcl.clusters.hvac.Fan.cluster_id,
+            zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
+            zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
+        ],
+        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
+    }
+}
+MANUF_SINOPE = "Sinope Technologies"
+MANUF_ZEN = "Zen Within"
 
 ZCL_ATTR_PLUG = {
     "abs_min_heat_setpoint_limit": 800,
@@ -169,7 +184,14 @@ async def device_climate_fan(device_climate_mock):
 async def device_climate_sinope(device_climate_mock):
     """Sinope thermostat."""
 
-    return await device_climate_mock(CLIMATE_SINOPE, manuf=SINOPE)
+    return await device_climate_mock(CLIMATE_SINOPE, manuf=MANUF_SINOPE)
+
+
+@pytest.fixture
+async def device_climate_zen(device_climate_mock):
+    """Zen Within thermostat."""
+
+    return await device_climate_mock(CLIMATE_ZEN, manuf=MANUF_ZEN)
 
 
 def test_sequence_mappings():
@@ -195,11 +217,11 @@ async def test_climate_local_temp(hass, device_climate):
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
 
 
-async def test_climate_hvac_action_running_state(hass, device_climate):
+async def test_climate_hvac_action_running_state_zen(hass, device_climate_zen):
     """Test hvac action via running state."""
 
-    thrm_cluster = device_climate.device.endpoints[1].thermostat
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    thrm_cluster = device_climate_zen.device.endpoints[1].thermostat
+    entity_id = await find_entity_id(DOMAIN, device_climate_zen, hass)
 
     state = hass.states.get(entity_id)
     assert ATTR_HVAC_ACTION not in state.attributes
@@ -381,7 +403,7 @@ async def test_target_temperature(
                 "unoccupied_heating_setpoint": 1600,
                 "unoccupied_cooling_setpoint": 2700,
             },
-            manuf=SINOPE,
+            manuf=MANUF_SINOPE,
         )
     entity_id = await find_entity_id(DOMAIN, device_climate, hass)
     if preset:
@@ -417,7 +439,7 @@ async def test_target_temperature_high(
                 "system_mode": Thermostat.SystemMode.Auto,
                 "unoccupied_cooling_setpoint": unoccupied,
             },
-            manuf=SINOPE,
+            manuf=MANUF_SINOPE,
         )
     entity_id = await find_entity_id(DOMAIN, device_climate, hass)
     if preset:
@@ -453,7 +475,7 @@ async def test_target_temperature_low(
                 "system_mode": Thermostat.SystemMode.Auto,
                 "unoccupied_heating_setpoint": unoccupied,
             },
-            manuf=SINOPE,
+            manuf=MANUF_SINOPE,
         )
     entity_id = await find_entity_id(DOMAIN, device_climate, hass)
     if preset:
@@ -665,7 +687,7 @@ async def test_set_temperature_heat_cool(hass, device_climate_mock):
                 "unoccupied_heating_setpoint": 1600,
                 "unoccupied_cooling_setpoint": 2700,
             },
-            manuf=SINOPE,
+            manuf=MANUF_SINOPE,
         )
     entity_id = await find_entity_id(DOMAIN, device_climate, hass)
     thrm_cluster = device_climate.device.endpoints[1].thermostat
@@ -755,7 +777,7 @@ async def test_set_temperature_heat(hass, device_climate_mock):
                 "unoccupied_heating_setpoint": 1600,
                 "unoccupied_cooling_setpoint": 2700,
             },
-            manuf=SINOPE,
+            manuf=MANUF_SINOPE,
         )
     entity_id = await find_entity_id(DOMAIN, device_climate, hass)
     thrm_cluster = device_climate.device.endpoints[1].thermostat
@@ -838,7 +860,7 @@ async def test_set_temperature_cool(hass, device_climate_mock):
                 "unoccupied_cooling_setpoint": 1600,
                 "unoccupied_heating_setpoint": 2700,
             },
-            manuf=SINOPE,
+            manuf=MANUF_SINOPE,
         )
     entity_id = await find_entity_id(DOMAIN, device_climate, hass)
     thrm_cluster = device_climate.device.endpoints[1].thermostat
@@ -921,7 +943,7 @@ async def test_set_temperature_wrong_mode(hass, device_climate_mock):
                 "unoccupied_cooling_setpoint": 1600,
                 "unoccupied_heating_setpoint": 2700,
             },
-            manuf=SINOPE,
+            manuf=MANUF_SINOPE,
         )
     entity_id = await find_entity_id(DOMAIN, device_climate, hass)
     thrm_cluster = device_climate.device.endpoints[1].thermostat
