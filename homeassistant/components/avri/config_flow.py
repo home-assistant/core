@@ -5,6 +5,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID
 
+from .const import DOMAIN  # pylint:disable=unused-import
+
 from .const import (
     CONF_COUNTRY_CODE,
     CONF_HOUSE_NUMBER,
