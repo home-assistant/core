@@ -184,7 +184,7 @@ async def async_setup_entry(
             async_add_entities(entities)
 
     async_dispatcher_connect(
-        hass, f"signal_update-{entry.entry_id}", add_public_entities
+        hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
     )
 
     entry.add_update_listener(async_config_entry_updated)
@@ -194,7 +194,7 @@ async def async_setup_entry(
 
 async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle signals of config entry being updated."""
-    async_dispatcher_send(hass, f"signal_update-{entry.entry_id}")
+    async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
