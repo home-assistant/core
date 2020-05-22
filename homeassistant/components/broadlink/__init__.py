@@ -85,10 +85,11 @@ async def async_setup_service(hass, host, device):
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
+            await asyncio.sleep(1)
             try:
                 packet = await device.async_request(device.api.check_data)
             except (ReadError, StorageError):
-                await asyncio.sleep(1)
+                continue
             except BroadlinkException as err_msg:
                 _LOGGER.error("Failed to learn: %s", err_msg)
                 return

@@ -322,10 +322,11 @@ class BroadlinkRemote(RemoteEntity):
         code = None
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=timeout):
+            await asyncio.sleep(1)
             try:
                 code = await self.device.async_request(self.device.api.check_data)
             except (ReadError, StorageError):
-                await asyncio.sleep(1)
+                continue
             else:
                 break
 
