@@ -243,20 +243,20 @@ class Thermostat(ZhaEntity, ClimateEntity):
     def _rm_rs_action(self) -> Optional[str]:
         """Return the current HVAC action based on running mode and running state."""
 
-        self.debug("Running mode: %s", self._thrm.running_mode)
-        self.debug("Running state: %s", self._thrm.running_state)
-        running_state = self._thrm.running_state
-        if running_state is None:
-            return None
-        if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
+        running_mode = self._thrm.running_mode
+        if running_mode == SystemMode.HEAT:
             return CURRENT_HVAC_HEAT
-        if running_state & (RunningState.COOL | RunningState.COOL_STAGE_2):
+        if running_mode == SystemMode.COOL:
             return CURRENT_HVAC_COOL
-        if running_state & (
+
+        running_state = self._thrm.running_state
+        if running_state and running_state & (
             RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
         ):
             return CURRENT_HVAC_FAN
-        return self._off_idle_action
+        if self.hvac_mode != HVAC_MODE_OFF and running_mode == SystemMode.OFF:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
 
     @property
     def _pi_demand_action(self) -> Optional[str]:
@@ -268,11 +268,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         cooling_demand = self._thrm.pi_cooling_demand
         if cooling_demand is not None and cooling_demand > 0:
             return CURRENT_HVAC_COOL
-        return self._off_idle_action
 
-    @property
-    def _off_idle_action(self) -> Optional[str]:
-        """Return the current HVAC action off or idle."""
         if self.hvac_mode != HVAC_MODE_OFF:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
@@ -410,6 +406,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             if occupancy is True:
                 self._preset = PRESET_NONE
 
+        self.debug("Attribute '%s' = %s update", record.attr_name, record.value)
         self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -582,4 +579,7 @@ class ZenWithinThermostat(Thermostat):
             RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
         ):
             return CURRENT_HVAC_FAN
-        return self._off_idle_action
+
+        if self.hvac_mode != HVAC_MODE_OFF:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
