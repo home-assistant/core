@@ -31,6 +31,12 @@ class NetatmoFlowHandler(
     DOMAIN = DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return NetatmoOptionsFlowHandler(config_entry)
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -65,12 +71,6 @@ class NetatmoFlowHandler(
     async def async_step_homekit(self, homekit_info):
         """Handle HomeKit discovery."""
         return await self.async_step_user()
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return NetatmoOptionsFlowHandler(config_entry)
 
 
 class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
