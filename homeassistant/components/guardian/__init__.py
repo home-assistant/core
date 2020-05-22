@@ -307,7 +307,7 @@ class GuardianEntity(Entity):
             "identifiers": {(DOMAIN, self._guardian.uid)},
             "manufacturer": "Elexa",
             "model": self._guardian.data[DATA_DIAGNOSTICS]["firmware"],
-            "name": self._name,
+            "name": f"Guardian {self._guardian.uid}",
         }
 
     @property
