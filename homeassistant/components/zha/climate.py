@@ -234,8 +234,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self._thrm.pi_heating_demand is None
             and self._thrm.pi_cooling_demand is None
         ):
-            self.debug("Running mode: %s", self._thrm.running_mode)
-            self.debug("Running state: %s", self._thrm.running_state)
             running_state = self._thrm.running_state
             if running_state is None:
                 return None
@@ -261,13 +259,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> Optional[str]:
         """Return HVAC operation mode."""
-        try:
-            return SYSTEM_MODE_2_HVAC[self._thrm.system_mode]
-        except KeyError:
-            self.error(
-                "can't map 'system_mode: %s' to a HVAC mode", self._thrm.system_mode
-            )
-        return None
+        return SYSTEM_MODE_2_HVAC.get(self._thrm.system_mode)
 
     @property
     def hvac_modes(self) -> Tuple[str, ...]:
