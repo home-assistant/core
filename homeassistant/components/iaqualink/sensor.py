@@ -1,10 +1,9 @@
 """Support for Aqualink temperature sensors."""
 import logging
-from typing import Optional
 
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import AqualinkEntity
@@ -36,18 +35,19 @@ class HassAqualinkSensor(AqualinkEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the measurement unit for the sensor."""
-        if self.dev.system.temp_unit == "F":
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+        if self.dev.name.endswith("_temp"):
+            if self.dev.system.temp_unit == "F":
+                return TEMP_FAHRENHEIT
+            return TEMP_CELSIUS
 
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        return int(self.dev.state) if self.dev.state != "" else None
+        if self.dev.state == "":
+            return None
 
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the class of the sensor."""
-        if self.dev.name.endswith("_temp"):
-            return DEVICE_CLASS_TEMPERATURE
-        return None
+        try:
+            state = int(self.dev.state)
+        except ValueError:
+            state = float(self.dev.state)
+        return state
