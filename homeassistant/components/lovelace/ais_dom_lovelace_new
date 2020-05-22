@@ -325,7 +325,7 @@
                                     "type": "vertical-stack"
                                 },
                                 {
-                                    "content": "[[ sensor.aisknowledgeanswer.state ]]\n",
+                                    "content": "{{ states.sensor.aisknowledgeanswer.attributes.text }}\n",
                                     "type": "markdown"
                                 },
                                 {
@@ -774,7 +774,7 @@
                                 },
                                 {
                                     "card": {
-                                        "content": "[[ sensor.rssnewstext.attributes.text ]]\n",
+                                        "content": "{{states.sensor.rssnewstext.attributes.text}}\n",
                                         "title": "Tre\u015b\u0107 artyku\u0142u",
                                         "type": "markdown"
                                     },

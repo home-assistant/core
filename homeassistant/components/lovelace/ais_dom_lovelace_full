@@ -1138,7 +1138,7 @@
                                 },
                                 {
                                     "card": {
-                                        "content": "[[ sensor.rssnewstext.attributes.text ]]\n",
+                                        "content": "{{states.sensor.rssnewstext.attributes.text}}\n",
                                         "title": "Tre\u015b\u0107 artyku\u0142u",
                                         "type": "markdown"
                                     },
