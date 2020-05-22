@@ -1,5 +1,4 @@
 """Test the Lutron Caseta config flow."""
-from asynctest import patch
 from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant import config_entries, data_entry_flow
@@ -14,6 +13,7 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.const import CONF_HOST
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -95,6 +95,12 @@ async def test_bridge_cannot_connect(hass):
     assert result["type"] == "form"
     assert result["step_id"] == STEP_IMPORT_FAILED
     assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
+
     # validate setup_entry was not called
     assert len(mock_setup_entry.mock_calls) == 0
 
