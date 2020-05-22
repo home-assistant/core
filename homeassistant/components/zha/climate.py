@@ -103,6 +103,8 @@ SEQ_OF_OPERATION = {
     0x04: (HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT),
     # cooling and heating 4-pipes
     0x05: (HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT),
+    0x06: (HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF),  # centralite specific
+    0x07: (HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF),  # centralite specific
 }
 
 
