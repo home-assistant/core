@@ -17,7 +17,7 @@
                     "key": "Clau API",
                     "password": "Contrasenya"
                 },
-                "description": "Introdueix l'adre\u00e7a IP del teu Daikin AC.",
+                "description": "Introdueix l'adre\u00e7a IP del teu AC Daikin.\n\nTingues en compte que la Clau API i la Contrasenya s'utilitzen als dispositius BRP072Cxx i SKYFi respectivament.",
                 "title": "Configuraci\u00f3 de Daikin AC"
             }
         }

@@ -11,6 +11,7 @@ import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
@@ -87,6 +88,7 @@ CHANNEL_POWER_CONFIGURATION = "power"
 CHANNEL_PRESSURE = "pressure"
 CHANNEL_SMARTENERGY_METERING = "smartenergy_metering"
 CHANNEL_TEMPERATURE = "temperature"
+CHANNEL_THERMOSTAT = "thermostat"
 CHANNEL_ZDO = "zdo"
 CHANNEL_ZONE = ZONE = "ias_zone"
 
@@ -96,7 +98,17 @@ CLUSTER_COMMANDS_SERVER = "server_commands"
 CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
-COMPONENTS = (BINARY_SENSOR, COVER, DEVICE_TRACKER, FAN, LIGHT, LOCK, SENSOR, SWITCH)
+COMPONENTS = (
+    BINARY_SENSOR,
+    CLIMATE,
+    COVER,
+    DEVICE_TRACKER,
+    FAN,
+    LIGHT,
+    LOCK,
+    SENSOR,
+    SWITCH,
+)
 
 CONF_BAUDRATE = "baudrate"
 CONF_DATABASE = "database_path"
