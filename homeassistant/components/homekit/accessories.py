@@ -268,7 +268,6 @@ class HomeAccessory(Accessory):
         self.category = category
         self.entity_id = entity_id
         self.hass = hass
-        self.name = name
         self.debounce = {}
         self._char_battery = None
         self._char_charging = None
