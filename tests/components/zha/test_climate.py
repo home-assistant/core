@@ -1000,19 +1000,6 @@ async def test_fan_mode(hass, device_climate_fan):
     assert state.attributes[ATTR_FAN_MODE] == FAN_ON
 
 
-async def test_set_fan_mode_no_fan(hass, device_climate):
-    """Test setting fan mode on fun less climate."""
-
-    entity_id = await find_entity_id(DOMAIN, device_climate, hass)
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_ON},
-        blocking=True,
-    )
-
-
 async def test_set_fan_mode_not_supported(hass, device_climate_fan):
     """Test fan setting unsupported mode."""
 

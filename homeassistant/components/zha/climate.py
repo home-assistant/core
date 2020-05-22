@@ -395,10 +395,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        if self.fan_modes is None:
-            self.warning("Fan is not supported")
-            return
-
         if fan_mode not in self.fan_modes:
             self.warning("Unsupported '%s' fan mode", fan_mode)
             return
