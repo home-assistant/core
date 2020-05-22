@@ -23,7 +23,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_WEBHOOK, default=[]): vol.All(
+                vol.Required(CONF_WEBHOOK, default=[]): vol.All(
                     cv.ensure_list, [WEBHOOK_SCHEMA]
                 ),
             }
