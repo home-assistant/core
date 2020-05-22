@@ -8,7 +8,7 @@ from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationSer
 from homeassistant.const import CONF_NAME, CONF_RECIPIENT
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +19,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
-    gateway = hass.data[DOMAIN]
+    if SMS_GATEWAY not in hass.data[DOMAIN]:
+        _LOGGER.error("SMS gateway not found, cannot initialize service")
+        return
+    gateway = hass.data[DOMAIN][SMS_GATEWAY]
     number = config[CONF_RECIPIENT]
     return SMSNotificationService(gateway, number)
 
@@ -32,7 +35,7 @@ class SMSNotificationService(BaseNotificationService):
         self.gateway = gateway
         self.number = number
 
-    def send_message(self, message="", **kwargs):
+    async def send_message(self, message="", **kwargs):
         """Send SMS message."""
         smsinfo = {
             "Class": -1,
@@ -53,6 +56,6 @@ class SMSNotificationService(BaseNotificationService):
             encoded_message["Number"] = self.number
             try:
                 # Actually send the message
-                self.gateway.SendSMS(encoded_message)
+                await self.gateway.send_sms_async(encoded_message)
             except gammu.GSMError as exc:  # pylint: disable=no-member
                 _LOGGER.error("Sending to %s failed: %s", self.number, exc)

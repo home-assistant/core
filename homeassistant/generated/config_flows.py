@@ -130,6 +130,7 @@ FLOWS = [
     "simplisafe",
     "smartthings",
     "smhi",
+    "sms",
     "solaredge",
     "solarlog",
     "soma",
