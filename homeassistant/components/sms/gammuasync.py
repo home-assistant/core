@@ -30,8 +30,8 @@ class GammuAsyncThread(gammu.worker.GammuThread):
             errcode = info.args[0]["Code"]
             error = gammu.ErrorNumbers[errcode]
             self._callback(future, result, error, percentage)
-        except Exception as e:
-            self._callback(future, None, e, percentage)
+        except Exception as exception:  # pylint: disable=broad-except
+            self._callback(future, None, exception, percentage)
         else:
             self._callback(future, result, None, percentage)
 
@@ -45,7 +45,8 @@ class GammuAsyncWorker(gammu.worker.GammuWorker):
         if name == "Init" and self._init_future is not None:
             future = self._init_future
         elif name == "Terminate" and self._terminate_future is not None:
-            self._thread._kill = True
+            # Set _kill to true on the base class to avoid waiting for termination
+            self._thread._kill = True  # pylint: disable=protected-access
             future = self._terminate_future
         elif hasattr(name, "set_result"):
             future = name
@@ -55,7 +56,7 @@ class GammuAsyncWorker(gammu.worker.GammuWorker):
                 self.loop.call_soon_threadsafe(future.set_result, result)
             else:
                 exception = error
-                if type(error) is not Exception:
+                if not isinstance(error, Exception):
                     exception = gammu.GSMError(error)
                 self.loop.call_soon_threadsafe(future.set_exception, exception)
 
@@ -69,7 +70,7 @@ class GammuAsyncWorker(gammu.worker.GammuWorker):
         self._init_future = None
         self._terminate_future = None
 
-    async def InitAsync(self):
+    async def init_async(self):
         """Connect to phone."""
         self._init_future = self.loop.create_future()
 
@@ -80,35 +81,35 @@ class GammuAsyncWorker(gammu.worker.GammuWorker):
         await self._init_future
         self._init_future = None
 
-    async def GetSignalQualityAsync(self):
+    async def get_signal_quality_async(self):
         """Get signal quality from phone."""
         future = self.loop.create_future()
         self.enqueue(future, commands=[("GetSignalQuality", ())])
         result = await future
         return result
 
-    async def SendSMSAsync(self, message):
+    async def send_sms_async(self, message):
         """Send sms message via the phone."""
         future = self.loop.create_future()
         self.enqueue(future, commands=[("SendSMS", [message])])
         result = await future
         return result
 
-    async def SetIncomingCallbackAsync(self, callback):
+    async def set_incoming_callback_async(self, callback):
         """Set the callback to call from phone."""
         future = self.loop.create_future()
         self.enqueue(future, commands=[("SetIncomingCallback", [callback])])
         result = await future
         return result
 
-    async def SetIncomingSMSAsync(self):
+    async def set_incoming_sms_async(self):
         """Activate SMS notifications from phone."""
         future = self.loop.create_future()
         self.enqueue(future, commands=[("SetIncomingSMS", ())])
         result = await future
         return result
 
-    async def TerminateAsync(self):
+    async def terminate_async(self):
         """Terminate phone communication."""
         self._terminate_future = self.loop.create_future()
         self.enqueue("Terminate")

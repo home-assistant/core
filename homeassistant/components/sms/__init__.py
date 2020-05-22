@@ -56,8 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 hass.config_entries.async_forward_entry_setup(entry, component)
             )
         return True
-    else:
-        return False
+    return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -76,6 +75,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if SMS_GATEWAY in hass.data[DOMAIN]:
             gateway = hass.data[DOMAIN][SMS_GATEWAY]
             hass.data[DOMAIN].pop(SMS_GATEWAY)
-            await gateway.TerminateAsync()
+            await gateway.terminate_async()
 
     return unload_ok
