@@ -58,17 +58,17 @@ class GSMSignalSensor(Entity):
         return self._state["SignalStrength"]
 
     @property
-    def force_update(self):
+    async def async_force_update(self):
         """Force update."""
         try:
-            self._state = self._gateway.GetSignalQuality()
+            self._state = await self._gateway.GetSignalQualityAsync()
         except gammu.GSMError as exc:  # pylint: disable=no-member
             _LOGGER.error("Failed to read signal quality: %s", exc)
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from the modem."""
         try:
-            self._state = self._gateway.GetSignalQuality()
+            self._state = await self._gateway.GetSignalQualityAsync()
         except gammu.GSMError as exc:  # pylint: disable=no-member
             _LOGGER.error("Failed to read signal quality: %s", exc)
 

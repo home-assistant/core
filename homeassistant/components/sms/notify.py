@@ -35,7 +35,7 @@ class SMSNotificationService(BaseNotificationService):
         self.gateway = gateway
         self.number = number
 
-    def send_message(self, message="", **kwargs):
+    async def send_message(self, message="", **kwargs):
         """Send SMS message."""
         smsinfo = {
             "Class": -1,
@@ -56,6 +56,6 @@ class SMSNotificationService(BaseNotificationService):
             encoded_message["Number"] = self.number
             try:
                 # Actually send the message
-                self.gateway.SendSMS(encoded_message)
+                await self.gateway.SendSMSAsync(encoded_message)
             except gammu.GSMError as exc:  # pylint: disable=no-member
                 _LOGGER.error("Sending to %s failed: %s", self.number, exc)

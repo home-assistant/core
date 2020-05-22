@@ -1,8 +1,8 @@
 """The sms component."""
 import asyncio
+from asyncio import get_running_loop
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, SMS_GATEWAY
+from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +39,11 @@ def setup(hass, config):
     return True
 
 
+def notify_incoming_sms(message):
+    """Notify hass when an incoming SMS message is received."""
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Configure Gammu state machine."""
 
@@ -45,20 +51,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].setdefault(entry_id, {})
 
     device = entry.data[CONF_DEVICE]
-    gateway = gammu.StateMachine()  # pylint: disable=no-member
-    try:
-        gateway.SetConfig(0, dict(Device=device, Connection="at"))
-        gateway.Init()
-    except gammu.GSMError as exc:  # pylint: disable=no-member
-        _LOGGER.error("Failed to initialize, error %s", exc)
-        return False
-    else:
+    config = dict(Device=device, Connection="at")
+    loop = get_running_loop()
+    gateway = await create_sms_gateway(config, loop, notify_incoming_sms)
+    if gateway:
         hass.data[DOMAIN][SMS_GATEWAY] = gateway
         for component in PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
             )
         return True
+    else:
+        return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
