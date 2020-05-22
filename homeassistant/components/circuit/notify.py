@@ -15,12 +15,7 @@ def get_service(hass, config, discovery_info=None):
     if discovery_info is None:
         return None
 
-    try:
-        return CircuitNotificationService(hass, discovery_info)
-
-    except RuntimeError as err:
-        _LOGGER.exception("Error in creating a new Unify Circuit message: %s", err)
-        return None
+    return CircuitNotificationService(hass, discovery_info)
 
 
 @attr.s
