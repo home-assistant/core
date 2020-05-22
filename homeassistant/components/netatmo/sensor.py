@@ -165,7 +165,7 @@ async def async_setup_entry(
     def add_public_entities():
         """Retrieve Netatmo public weather entities."""
         entities = []
-        for area in entry.options.get(CONF_WEATHER_AREAS).values():
+        for area in entry.options.get(CONF_WEATHER_AREAS, {}).values():
             data = NetatmoPublicData(
                 auth,
                 lat_ne=area[CONF_LAT_NE],
@@ -183,7 +183,9 @@ async def async_setup_entry(
         if entities:
             async_add_entities(entities)
 
-    async_dispatcher_connect(hass, "signal_update", add_public_entities)
+    async_dispatcher_connect(
+        hass, f"signal_update-{entry.entry_id}", add_public_entities
+    )
 
     entry.add_update_listener(async_config_entry_updated)
 
@@ -192,7 +194,7 @@ async def async_setup_entry(
 
 async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle signals of config entry being updated."""
-    async_dispatcher_send(hass, "signal_update")
+    async_dispatcher_send(hass, f"signal_update-{entry.entry_id}")
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
