@@ -189,14 +189,16 @@ class Camera(HomeAccessory, PyhapCamera):
         )
         self._char_motion_detected = None
         self.linked_motion_sensor = self.config.get(CONF_LINKED_MOTION_SENSOR)
-        if not self.linked_motion_sensor or not self.hass.states.get(
-            self.linked_motion_sensor
-        ):
+        if not self.linked_motion_sensor:
+            return
+        state = self.hass.states.get(self.linked_motion_sensor)
+        if not state:
             return
         serv_motion = self.add_preload_service(SERV_MOTION_SENSOR)
         self._char_motion_detected = serv_motion.configure_char(
             CHAR_MOTION_DETECTED, value=False
         )
+        self._async_update_motion_state(None, None, state)
 
     async def run_handler(self):
         """Handle accessory driver started event.
@@ -207,6 +209,7 @@ class Camera(HomeAccessory, PyhapCamera):
             async_track_state_change(
                 self.hass, self.linked_motion_sensor, self._async_update_motion_state
             )
+
         await super().run_handler()
 
     @callback
@@ -214,8 +217,7 @@ class Camera(HomeAccessory, PyhapCamera):
         self, entity_id=None, old_state=None, new_state=None
     ):
         """Handle link motion sensor state change to update HomeKit value."""
-        state = new_state.state
-        detected = state == STATE_ON
+        detected = new_state.state == STATE_ON
         if self._char_motion_detected.value == detected:
             return
 

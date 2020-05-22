@@ -11,8 +11,11 @@ from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_MOTION,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
 )
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -499,9 +502,9 @@ class HomeKit:
 
         device_lookup = ent_reg.async_get_device_class_lookup(
             {
-                ("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING),
-                ("binary_sensor", DEVICE_CLASS_MOTION),
-                ("sensor", DEVICE_CLASS_BATTERY),
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING),
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION),
+                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY),
             }
         )
 
@@ -620,7 +623,7 @@ class HomeKit:
         if ATTR_BATTERY_CHARGING not in state.attributes:
             battery_charging_binary_sensor_entity_id = device_lookup[
                 ent_reg_ent.device_id
-            ].get(("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING))
+            ].get((BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING))
             if battery_charging_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -629,18 +632,18 @@ class HomeKit:
 
         if ATTR_BATTERY_LEVEL not in state.attributes:
             battery_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                ("sensor", DEVICE_CLASS_BATTERY)
+                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY)
             )
             if battery_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_BATTERY_SENSOR, battery_sensor_entity_id
                 )
 
-        if state.entity_id.startswith("camera."):
+        if state.entity_id.startswith(f"{CAMERA_DOMAIN}."):
             motion_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                ("binary_sensor", DEVICE_CLASS_MOTION)
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION)
             )
-            if battery_charging_binary_sensor_entity_id:
+            if motion_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id,
                 )
