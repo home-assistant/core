@@ -282,9 +282,13 @@ class ONVIFDevice:
                     is not None,
                 )
 
-                ptz_service = self.device.create_ptz_service()
-                presets = await ptz_service.GetPresets(profile.token)
-                profile.ptz.presets = [preset.token for preset in presets]
+                try:
+                    ptz_service = self.device.create_ptz_service()
+                    presets = await ptz_service.GetPresets(profile.token)
+                    profile.ptz.presets = [preset.token for preset in presets]
+                except Fault:
+                    # It's OK if Presets aren't supported
+                    profile.ptz.presets = []
 
             profiles.append(profile)
 
