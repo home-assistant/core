@@ -401,7 +401,7 @@ def async_cleanup(
     """Clean up device registry."""
     # Find all devices that are referenced by a config_entry.
     config_entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries()}
-    referenced_by_config_entries = {
+    references_config_entries = {
         device.id
         for device in dev_reg.devices.values()
         for config_entry_id in device.config_entries
@@ -409,11 +409,9 @@ def async_cleanup(
     }
 
     # Find all devices that are referenced in the entity registry.
-    referenced_by_entities = {entry.device_id for entry in ent_reg.entities.values()}
+    references_entities = {entry.device_id for entry in ent_reg.entities.values()}
 
-    orphan = (
-        set(dev_reg.devices) - referenced_by_entities - referenced_by_config_entries
-    )
+    orphan = set(dev_reg.devices) - references_entities - references_config_entries
 
     for dev_id in orphan:
         dev_reg.async_remove_device(dev_id)
