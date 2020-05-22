@@ -301,9 +301,6 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             last_media_position = self.media_position
             await self._player.async_update()
             if self.media_position != last_media_position:
-                _LOGGER.debug(
-                    "Media position updated for %s: %s", self, self.media_position
-                )
                 self._last_update = utcnow()
             if self._player.connected is False:
                 _LOGGER.info("Player %s is not available", self.name)
