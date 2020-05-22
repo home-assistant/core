@@ -255,7 +255,10 @@ class ONVIFDevice:
         profiles = []
         for key, onvif_profile in enumerate(result):
             # Only add H264 profiles
-            if onvif_profile.VideoEncoderConfiguration.Encoding != "H264":
+            if (
+                not onvif_profile.VideoEncoderConfiguration
+                or onvif_profile.VideoEncoderConfiguration.Encoding != "H264"
+            ):
                 continue
 
             profile = Profile(
