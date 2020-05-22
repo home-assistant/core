@@ -340,7 +340,7 @@ async def test_call_with_required_features(hass, mock_entities):
 
 
 async def test_call_with_both_required_features(hass, mock_entities):
-    """Test service calls invoked only if entity has required features."""
+    """Test service calls invoked only if entity has both features."""
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
