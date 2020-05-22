@@ -14,7 +14,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     homekit = hass.data[DOMAIN][config_entry.entry_id][HOMEKIT]
     mac = homekit.driver.state.mac
-    bridge_name = homekit.bridge.name
+    bridge_name = homekit.bridge.display_name
 
     async_add_entities(
         [HomeKitBridgeSwitch(config_entry, mac, bridge_name, homekit)], False
