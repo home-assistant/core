@@ -236,24 +236,43 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self._thrm.pi_heating_demand is None
             and self._thrm.pi_cooling_demand is None
         ):
-            running_state = self._thrm.running_state
-            if running_state is None:
-                return None
-            if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
-                return CURRENT_HVAC_HEAT
-            if running_state & (RunningState.COOL | RunningState.COOL_STAGE_2):
-                return CURRENT_HVAC_COOL
-            if running_state & (
-                RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
-            ):
-                return CURRENT_HVAC_FAN
-        else:
-            heating_demand = self._thrm.pi_heating_demand
-            if heating_demand is not None and heating_demand > 0:
-                return CURRENT_HVAC_HEAT
-            cooling_demand = self._thrm.pi_cooling_demand
-            if cooling_demand is not None and cooling_demand > 0:
-                return CURRENT_HVAC_COOL
+            return self._rm_rs_action
+        return self._pi_demand_action
+
+    @property
+    def _rm_rs_action(self) -> Optional[str]:
+        """Return the current HVAC action based on running mode and running state."""
+
+        self.debug("Running mode: %s", self._thrm.running_mode)
+        self.debug("Running state: %s", self._thrm.running_state)
+        running_state = self._thrm.running_state
+        if running_state is None:
+            return None
+        if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
+            return CURRENT_HVAC_HEAT
+        if running_state & (RunningState.COOL | RunningState.COOL_STAGE_2):
+            return CURRENT_HVAC_COOL
+        if running_state & (
+            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+        ):
+            return CURRENT_HVAC_FAN
+        return self._off_idle_action
+
+    @property
+    def _pi_demand_action(self) -> Optional[str]:
+        """Return the current HVAC action based on pi_demands."""
+
+        heating_demand = self._thrm.pi_heating_demand
+        if heating_demand is not None and heating_demand > 0:
+            return CURRENT_HVAC_HEAT
+        cooling_demand = self._thrm.pi_cooling_demand
+        if cooling_demand is not None and cooling_demand > 0:
+            return CURRENT_HVAC_COOL
+        return self._off_idle_action
+
+    @property
+    def _off_idle_action(self) -> Optional[str]:
+        """Return the current HVAC action off or idle."""
         if self.hvac_mode != HVAC_MODE_OFF:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
