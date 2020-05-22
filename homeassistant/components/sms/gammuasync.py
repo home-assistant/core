@@ -81,13 +81,6 @@ class GammuAsyncWorker(gammu.worker.GammuWorker):
         await self._init_future
         self._init_future = None
 
-    async def get_signal_quality_async(self):
-        """Get signal quality from phone."""
-        future = self.loop.create_future()
-        self.enqueue(future, commands=[("GetSignalQuality", ())])
-        result = await future
-        return result
-
     async def send_sms_async(self, message):
         """Send sms message via the phone."""
         future = self.loop.create_future()
