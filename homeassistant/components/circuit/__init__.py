@@ -38,9 +38,8 @@ async def async_setup(hass, config):
     webhooks = config[DOMAIN][CONF_WEBHOOK]
 
     for webhook_conf in webhooks:
-        if 'url' in webhook_conf:
-            hass.async_create_task(
-                discovery.async_load_platform(hass, "notify", DOMAIN, webhook_conf, config)
-            )
+        hass.async_create_task(
+            discovery.async_load_platform(hass, "notify", DOMAIN, webhook_conf, config)
+        )
 
     return True
