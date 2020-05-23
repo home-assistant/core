@@ -23,7 +23,6 @@
     },
     "abort": {
       "already_configured": "This TV is already configured.",
-      "cannot_connect": "Failed to connect.",
       "no_ip_control": "IP Control is disabled on your TV or the TV is not supported."
     }
   },
