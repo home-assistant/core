@@ -97,6 +97,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_DEVICES = 150
 
+STOP_TIMEOUT = 20
 
 PLATFORMS = ["switch"]
 
@@ -292,13 +293,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     stop_ok = True
     if homekit.status == STATUS_RUNNING:
         stop_ok = await homekit.async_stop()
-
-    for _ in range(0, SHUTDOWN_TIMEOUT):
-        if not await hass.async_add_executor_job(
-            port_is_available, entry.data[CONF_PORT]
-        ):
-            _LOGGER.info("Waiting for the HomeKit server to shutdown.")
-            await asyncio.sleep(1)
 
     if stop_ok and unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -549,6 +543,7 @@ class HomeKit:
             bridged_states.append(state)
 
         self._async_purge_old_bridges(dev_reg)
+        self.driver.aio_stop_event.clear()
         await self.hass.async_add_executor_job(self._start, bridged_states)
 
     @callback
@@ -598,6 +593,7 @@ class HomeKit:
             )
 
         _LOGGER.debug("Driver start for %s", self._name)
+        self.driver.stop_event.clear()
         self.hass.add_job(self.driver.start)
         self._async_update_bridge_status(STATUS_RUNNING)
 
@@ -607,8 +603,38 @@ class HomeKit:
             if self.status != STATUS_RUNNING:
                 return
             self._async_update_bridge_status(STATUS_STOPPED)
+
         _LOGGER.debug("Driver stop for %s", self._name)
         self.hass.add_job(self.driver.stop)
+
+        try:
+            await asyncio.wait_for(self.driver.aio_stop_event.wait(), STOP_TIMEOUT)
+        except asyncio.TimeoutError:
+            _LOGGER.error(
+                "Failed to stop bridge %s after %s seconds", self._name, STOP_TIMEOUT
+            )
+
+        shutdown_ok = False
+        for _ in range(0, SHUTDOWN_TIMEOUT):
+            if await self.hass.async_add_executor_job(
+                port_is_available, self._config_entry.data[CONF_PORT]
+            ):
+                shutdown_ok = True
+            else:
+                _LOGGER.info(
+                    "Waiting for the HomeKit server %s to shutdown.", self._name
+                )
+                await asyncio.sleep(1)
+
+        if not shutdown_ok:
+            return False
+
+        async with self._bridge_lock:
+            if self.status != STATUS_STOPPED:
+                return
+            self._async_update_bridge_status(STATUS_READY)
+
+        return True
 
     @callback
     def _async_configure_linked_sensors(self, ent_reg_ent, device_lookup, state):
