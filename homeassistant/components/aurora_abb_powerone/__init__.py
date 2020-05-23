@@ -1,6 +1,15 @@
 """The Aurora ABB Powerone PV inverter sensor integration."""
+
+# TODO There is no text for the helpers on the setup screen
+# TODO verify that sn, pn, fw read correctly at init.
+# TODO remove debug output.
+# TODO prevent setting up the integration twice
+# TODO default update rate for temperature sensor should be slower.
+# TODO (maybe) allow setup via configuration.yaml (deprecated?)
+
 import asyncio
 from collections import defaultdict
+import logging
 
 from aurorapy.client import AuroraSerialClient
 
@@ -12,6 +21,8 @@ from .const import DOMAIN
 
 PLATFORMS = ["sensor"]
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Aurora ABB PowerOne component."""
@@ -20,10 +31,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Aurora ABB PowerOne from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
     hass.data.setdefault(DOMAIN, {})
-    print(f"async_setup_entry={entry.data}")
+    _LOGGER.debug("async_setup_entry got user config data=%s", entry.data)
 
     comport = entry.data[CONF_PORT]
     address = entry.data[CONF_ADDRESS]

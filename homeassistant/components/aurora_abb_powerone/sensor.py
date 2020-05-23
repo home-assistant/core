@@ -13,7 +13,6 @@ from homeassistant.const import (  # CONF_ADDRESS,; CONF_DEVICE,; CONF_NAME,
     TEMP_CELSIUS,
 )
 
-
 # import voluptuous as vol
 
 
@@ -36,20 +35,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config, async_add_entities) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
-    print(f"async setup entry={config}")
     entities = []
     client = hass.data[DOMAIN][config.entry_id]["client"]
 
     # sensor.type = instantaneouspower, temperature, etc.
     for sensor in hass.data[DOMAIN][config.entry_id]["devices"]["main"]["sensor"]:
-        print(f"sensor = {sensor}")
         if sensor["parameter"] == "temperature":
             entities.append(AuroraSensor(sensor, client, config, "temperature"))
         elif sensor["parameter"] == "instantaneouspower":
             entities.append(AuroraSensor(sensor, client, config, "instantaneouspower"))
         else:
-            _LOGGER.error(f"Unrecognised sensor parameter '{sensor['parameter']}''")
-    print(f"adding {len(entities)} entities")
+            _LOGGER.error("Unrecognised sensor parameter '%s'", sensor["parameter"])
+    _LOGGER.debug("async_setup_entry adding %d entitites", len(entities))
     async_add_entities(entities, True)
 
 

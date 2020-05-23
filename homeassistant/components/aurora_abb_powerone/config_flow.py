@@ -23,7 +23,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_and_connect(hass: core.HomeAssistant, data, populateOnFail: False):
+def validate_and_connect(hass: core.HomeAssistant, data, populate_on_fail: False):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -45,9 +45,9 @@ def validate_and_connect(hass: core.HomeAssistant, data, populateOnFail: False):
         ret["firmware"] = client.firmware(1)
         # print(f"fw1='{fw}'")
         _LOGGER.info("Returning device info=%s", ret)
-    except AuroraError as e:
+    except AuroraError as err:
         _LOGGER.warning("Could not connect to device=%s", comport)
-        if populateOnFail:
+        if populate_on_fail:
             ret = {
                 "title": DEFAULT_INTEGRATION_TITLE,
                 "serial_number": "735492",
@@ -56,7 +56,7 @@ def validate_and_connect(hass: core.HomeAssistant, data, populateOnFail: False):
             }
             _LOGGER.warning("Using dummy device info=%s", ret)
         else:
-            raise e
+            raise err
     finally:
         if client.serline.isOpen:
             client.close()
@@ -86,7 +86,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             comportslist = []
             for port in comports:
                 comportslist.append(port.device)
-                print(port.device)
+                _LOGGER.debug("COM port option: %s", port.device)
             if len(comportslist) > 0:
                 defaultcomport = comportslist[0]
             else:
@@ -117,9 +117,10 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 else:
                     _LOGGER.error(
-                        "Unable to communicate with Aurora ABB Inverter at {}: {} {}".format(
-                            user_input[CONF_PORT], type(error), error
-                        )
+                        "Unable to communicate with Aurora ABB Inverter at %s: %s %s",
+                        user_input[CONF_PORT],
+                        type(error),
+                        error,
                     )
         # If no user input, must be first pass through the config.  Show  initial form.
         # DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
