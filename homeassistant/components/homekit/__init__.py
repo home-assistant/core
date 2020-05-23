@@ -570,7 +570,13 @@ class HomeKit:
                 identifier not in entry.identifiers
                 or connection not in entry.connections
             ):
-                _LOGGER.debug("purging: %s %s (identifiers:%s connections:%s)", entry, entry.id, entry.identifiers, entry.connections)
+                _LOGGER.debug(
+                    "purging: %s %s (identifiers:%s connections:%s)",
+                    entry,
+                    entry.id,
+                    entry.identifiers,
+                    entry.connections,
+                )
                 devices_to_purge.append(entry.id)
                 continue
 
