@@ -607,13 +607,6 @@ class HomeKit:
         _LOGGER.debug("Driver stop for %s", self._name)
         self.hass.add_job(self.driver.stop)
 
-        try:
-            await asyncio.wait_for(self.driver.aio_stop_event.wait(), STOP_TIMEOUT)
-        except asyncio.TimeoutError:
-            _LOGGER.error(
-                "Failed to stop bridge %s after %s seconds", self._name, STOP_TIMEOUT
-            )
-
         shutdown_ok = False
         for _ in range(0, SHUTDOWN_TIMEOUT):
             if await self.hass.async_add_executor_job(
