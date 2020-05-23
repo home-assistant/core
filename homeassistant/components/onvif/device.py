@@ -214,11 +214,20 @@ class ONVIFDevice:
         """Obtain information about this device."""
         devicemgmt = self.device.create_devicemgmt_service()
         device_info = await devicemgmt.GetDeviceInformation()
+
+        # Grab the last MAC address for backwards compatibility
+        mac = None
+        network_interfaces = await devicemgmt.GetNetworkInterfaces()
+        for interface in network_interfaces:
+            if interface.Enabled:
+                mac = interface.Info.HwAddress
+
         return DeviceInfo(
             device_info.Manufacturer,
             device_info.Model,
             device_info.FirmwareVersion,
-            self.config_entry.unique_id,
+            device_info.SerialNumber,
+            mac,
         )
 
     async def async_get_capabilities(self):

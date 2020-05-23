@@ -195,15 +195,21 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await device.update_xaddrs()
 
         try:
+            devicemgmt = device.create_devicemgmt_service()
+
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
-                devicemgmt = device.create_devicemgmt_service()
                 network_interfaces = await devicemgmt.GetNetworkInterfaces()
                 for interface in network_interfaces:
                     if interface.Enabled:
                         self.device_id = interface.Info.HwAddress
 
-            if self.device_id is None:
+            # If no network interfaces are exposed, fallback to serial number
+            if not self.device_id:
+                device_info = await devicemgmt.GetDeviceInformation()
+                self.device_id = device_info.SerialNumber
+
+            if not self.device_id:
                 return self.async_abort(reason="no_mac")
 
             await self.async_set_unique_id(self.device_id, raise_on_progress=False)
