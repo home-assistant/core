@@ -5,7 +5,9 @@
         "title": "Configure Aurora ABB PowerOne solar PV inverter",
         "description": "Select configuration options. Inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel",
         "data": {
-          "host": "Host"
+          "port": "RS485 or USB-RS485 Adaptor Port",
+          "address": "Inverter Address",
+          "usedummyonfail": "Use dummy data if connection fails (for debug)"
         }
       }
     },
