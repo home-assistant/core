@@ -2,14 +2,16 @@
 
 DOMAIN = "aurora_abb_powerone"
 
-MIN_ADDRESS = 0
-MAX_ADDRESS = 255
+# Min max addresses and default according to here:
+# https://library.e.abb.com/public/e57212c407344a16b4644cee73492b39/PVI-3.0_3.6_4.2-TL-OUTD-Product%20manual%20EN-RevB(M000016BG).pdf
+MIN_ADDRESS = 2
+MAX_ADDRESS = 63
 DEFAULT_ADDRESS = 2
 
 # DEFAULT_NAME = "Solar PV???"
 DEFAULT_INTEGRATION_TITLE = "PhotoVoltaic Inverters"
 DEFAULT_DEVICE_NAME = "Solar Inverter"
-CONF_CONNECTNOW = "connectnow"
+CONF_USEDUMMYONFAIL = "usedummyonfail"
 
 DEVICES = "devices"
 MANUFACTURER = "ABB"
