@@ -73,7 +73,7 @@ class HomeAssistantLogFilter(logging.Filter):
         # so they take precedence of the shorter names
         # to allow for more granular settings.
         #
-        names_by_len = sorted(list(logs.keys()), key=len, reverse=True)
+        names_by_len = sorted(list(logs), key=len, reverse=True)
         self._log_rx = re.compile("".join(["^(?:", "|".join(names_by_len), ")"]))
         self._logs = logs
 
