@@ -458,7 +458,10 @@ class HomeKit:
         # will be wrong
         if os.path.exists(self._persist_file):
             self.driver.load()
+        else:
+            self.driver.persist()
 
+    
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
             _LOGGER.debug("Safe_mode selected for %s", self._name)
