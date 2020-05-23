@@ -832,7 +832,7 @@ stringcase==1.2.0
 sunwatcher==0.2.1
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.10
+tellduslive==0.10.11
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.2.8
