@@ -425,7 +425,7 @@ class HomeKit:
         self._bridge_lock = asyncio.Lock()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
-        self.hass.async_add_executor_job(self._setup)
+        await self.hass.async_add_executor_job(self._setup)
         zeroconf_instance = await zeroconf.async_get_instance(self.hass)
         await self.hass.async_add_executor_job(self._prepare_bridge, zeroconf_instance)
 
