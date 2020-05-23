@@ -892,6 +892,10 @@ omit =
     homeassistant/components/stookalert/*
     homeassistant/components/stream/*
     homeassistant/components/streamlabswater/*
+    homeassistant/components/subaru/__init__.py
+    homeassistant/components/subaru/const.py
+    homeassistant/components/subaru/lock.py
+    homeassistant/components/subaru/sensor.py
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/surepetcare/__init__.py
