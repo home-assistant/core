@@ -1,6 +1,6 @@
 """Platform for Roth Touchline floor heating controller."""
-import logging
 from collections import OrderedDict
+import logging
 
 from pytouchline import PyTouchline
 import voluptuous as vol
