@@ -41,7 +41,7 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
     client = hass.data[DOMAIN][config.entry_id]["client"]
 
     # sensor.type = instantaneouspower, temperature, etc.
-    for sensor in hass.data[DOMAIN][config.entry_id]["devices"]["sensor"]:
+    for sensor in hass.data[DOMAIN][config.entry_id]["devices"]["main"]["sensor"]:
         print(f"sensor = {sensor}")
         if sensor["parameter"] == "temperature":
             entities.append(AuroraSensor(sensor, client, config, "temperature"))
@@ -79,16 +79,17 @@ class AuroraSensor(AuroraDevice):
     ):
         """Initialize the sensor."""
         self._state = None
+        super().__init__(device_params, client, config_entry)
+
         if typename == "instantaneouspower":
             self.type = typename
             self.units = POWER_WATT
         elif typename == "temperature":
             self.type = typename
             self.units = TEMP_CELSIUS
-        super().__init__(device_params, client, config_entry)
 
         if self.type:
-            self._name = f"Aurora ABB PV Inverter {device_params['name']}"
+            self._name = f"{self.device_name} {device_params['name']}"
 
     @property
     def name(self):

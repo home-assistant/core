@@ -29,7 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     address = entry.data[CONF_ADDRESS]
     client = AuroraSerialClient(address, comport, parity="N", timeout=1)
     all_device_params = [
-        {"type": "device", "parameter": None, "name": "Device"},
         {"type": "sensor", "parameter": "instantaneouspower", "name": "Power Output"},
         {"type": "sensor", "parameter": "temperature", "name": "Temperature"},
     ]
@@ -39,8 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "devices": defaultdict(list),
     }
 
+    entry_data["devices"]["main"] = defaultdict(list)
     for device_params in all_device_params:
-        entry_data["devices"][device_params["type"]].append(device_params)
+        entry_data["devices"]["main"][device_params["type"]].append(device_params)
 
     for platform in PLATFORMS:
         hass.async_create_task(

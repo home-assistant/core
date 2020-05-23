@@ -8,9 +8,14 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_ADDRESS, CONF_PORT  # CONF_NAME,
 
-from .const import CONF_CONNECTNOW, DEFAULT_ADDRESS, MAX_ADDRESS, MIN_ADDRESS
-
-from .const import DOMAIN  # DEFAULT_NAME,; pylint:disable=unused-import
+from .const import (
+    CONF_CONNECTNOW,
+    DEFAULT_ADDRESS,
+    DEFAULT_INTEGRATION_TITLE,
+    DOMAIN,
+    MAX_ADDRESS,
+    MIN_ADDRESS,
+)
 
 # import homeassistant.helpers.config_validation as cv
 
@@ -78,11 +83,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Handle the initial step.
         if user_input is not None:
-            # try:
-            self.config = {
-                CONF_PORT,
-                CONF_ADDRESS,
-            }
             if user_input[CONF_CONNECTNOW]:
                 try:
                     info = await validate_comport(self.hass, user_input)
@@ -108,7 +108,9 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                         raise error
             else:
-                return self.async_create_entry(title="Solar Inverter", data=user_input)
+                return self.async_create_entry(
+                    title=DEFAULT_INTEGRATION_TITLE, data=user_input
+                )
 
             # except CannotConnect:
             #     errors["base"] = "cannot_connect"

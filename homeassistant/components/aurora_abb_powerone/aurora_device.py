@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .const import DOMAIN, ICONS
+from .const import DEFAULT_DEVICE_NAME, DOMAIN, ICONS, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,21 +23,12 @@ class AuroraDevice(Entity):
         self._id = config_entry.entry_id
         self.type = "device"
         # self._display_name = config_entry.
-        self.serialnum = config_entry.data.get("serialnum", None)
-        self._sw_version = config_entry.data.get("sw_version", None)
+        self.serialnum = config_entry.data.get("serialnum", "dummy ID")
+        self._sw_version = config_entry.data.get("sw_version", "123.456")
 
         self.client = client
-        self._name = "Aurora ABB PV Inverter"
+        self.device_name = DEFAULT_DEVICE_NAME
         self._icon = ICONS.get(self.type)
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    def get_name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def unique_id(self) -> str:
@@ -48,9 +39,11 @@ class AuroraDevice(Entity):
     def device_info(self):
         """Return device specific attributes."""
         return {
+            "config_entry_id": self._id,
             "identifiers": {(DOMAIN, self.serialnum)},
-            "name": self.name,
-            "manufacturer": "ABB",
+            "manufacturer": MANUFACTURER,
+            "model": "PVI-3.6-OUTD",
+            "name": self.device_name,
             "sw_version": self._sw_version,
         }
 
