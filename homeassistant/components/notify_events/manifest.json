@@ -1,0 +1,9 @@
+{
+  "domain": "notify_events",
+  "name": "Notify.Events",
+  "documentation": "!! https://www.home-assistant.io/integrations/notify_events",
+  "issue_tracker": "!! https://github.com/..",
+  "codeowners": ["@matrozov", "@papajojo"],
+  "requirements": ["notify-events==1.0.2"],
+  "dependencies": []
+}
