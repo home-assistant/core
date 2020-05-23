@@ -423,6 +423,7 @@ class HomeKit:
         self._config_entry = config_entry
         self._entry_id = config_entry.entry_id
         self._bridge_status_listeners = []
+        self._persist_file = None
         self.status = None
         self.bridge = None
         self.driver = None
@@ -434,21 +435,26 @@ class HomeKit:
 
     def setup(self):
         """Set up bridge and accessory driver."""
+        if not self._ip_address:
+            self._ip_address = get_local_ip()
+        self._persist_file = get_persist_fullpath_for_entry_id(
+            self.hass, self._entry_id
+        )
+        self._async_update_bridge_status(STATUS_READY)
+
+    def _prepare_bridge(self):
+        """Create the driver and bridge."""
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         # pylint: disable=import-outside-toplevel
         from .accessories import HomeBridge, HomeDriver
-
-        self._async_update_bridge_status(STATUS_READY)
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
-        ip_addr = self._ip_address or get_local_ip()
-        persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
         self.driver = HomeDriver(
             self.hass,
             self._entry_id,
             self._name,
-            address=ip_addr,
+            address=self._ip_address,
             port=self._port,
-            persist_file=persist_file,
+            persist_file=self._persist_file,
             advertised_address=self._advertise_ip,
             interface_choice=self._interface_choice,
         )
@@ -528,6 +534,10 @@ class HomeKit:
                 return
             self._async_update_bridge_status(STATUS_WAIT)
 
+        await self.hass.async_add_executor_job(self._prepare_bridge)
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+
         ent_reg = await entity_registry.async_get_registry(self.hass)
         dev_reg = await device_registry.async_get_registry(self.hass)
 
@@ -555,7 +565,6 @@ class HomeKit:
             bridged_states.append(state)
 
         self._async_purge_old_bridges(dev_reg)
-        self.driver.aio_stop_event.clear()
         await self.hass.async_add_executor_job(self._start, bridged_states)
 
     @callback
