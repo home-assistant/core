@@ -239,8 +239,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry,
     )
     await homekit.async_setup()
-    zeroconf_instance = await zeroconf.async_get_instance(hass)
-    await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
+    await hass.async_add_executor_job(homekit.setup)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -426,7 +425,7 @@ class HomeKit:
         """Set up async lock."""
         self._bridge_lock = asyncio.Lock()
 
-    def setup(self, zeroconf_instance):
+    def setup(self):
         """Set up bridge and accessory driver."""
         if not self._ip_address:
             self._ip_address = get_local_ip()
@@ -435,7 +434,7 @@ class HomeKit:
         )
         self._async_update_bridge_status(STATUS_READY)
 
-    def _prepare_bridge(self):
+    def _prepare_bridge(self, zeroconf_instance):
         """Create the driver and bridge."""
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         # pylint: disable=import-outside-toplevel
@@ -521,7 +520,8 @@ class HomeKit:
                 return
             self._async_update_bridge_status(STATUS_WAIT)
 
-        await self.hass.async_add_executor_job(self._prepare_bridge)
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        await self.hass.async_add_executor_job(self._prepare_bridge, zeroconf_instance)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
