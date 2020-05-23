@@ -1,5 +1,4 @@
 """Platform for Roth Touchline floor heating controller."""
-from collections import OrderedDict
 import logging
 
 from pytouchline import PyTouchline
@@ -16,9 +15,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_MODES1 = OrderedDict()
-
-PRESET_MODES1 = {
+PRESET_MODES = {
     "Normal": {"mode": 0, "program": 0},
     "Night": {"mode": 1, "program": 0},
     "Holiday": {"mode": 2, "program": 0},
@@ -26,8 +23,6 @@ PRESET_MODES1 = {
     "Pro 2": {"mode": 0, "program": 2},
     "Pro 3": {"mode": 0, "program": 3},
 }
-
-OPERATION_LIST = [HVAC_MODE_HEAT]
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -84,7 +79,7 @@ class Touchline(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return list of possible operation modes."""
-        return OPERATION_LIST
+        return [HVAC_MODE_HEAT]
 
     @property
     def should_poll(self):
@@ -124,7 +119,7 @@ class Touchline(ClimateDevice):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return list(PRESET_MODES1.keys())
+        return list(PRESET_MODES.keys())
 
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
@@ -146,28 +141,28 @@ class Touchline(ClimateDevice):
     @staticmethod
     def map_mode_hass_touchline(preset_mode):
         """Map Home Assistant Preset Modes to Touchline Operation Modes."""
-        return PRESET_MODES1[preset_mode]["mode"]
+        return PRESET_MODES[preset_mode]["mode"]
 
     @staticmethod
     def map_program_hass_touchline(preset_mode):
         """Map Home Assistant Preset Modes to Touchline Program Modes."""
-        return PRESET_MODES1[preset_mode]["program"]
+        return PRESET_MODES[preset_mode]["program"]
 
     @staticmethod
     def map_mode_touchline_hass(operation_mode, week_program):
         """Map Touchline Operation Modes to Home Assistant Preset Modes."""
         if operation_mode == 0 and week_program == 0:
-            preset_mode = list(PRESET_MODES1.keys())[0]
+            preset_mode = list(PRESET_MODES.keys())[0]
         elif operation_mode == 1 and week_program == 0:
-            preset_mode = list(PRESET_MODES1.keys())[1]
+            preset_mode = list(PRESET_MODES.keys())[1]
         elif operation_mode == 2 and week_program == 0:
-            preset_mode = list(PRESET_MODES1.keys())[2]
+            preset_mode = list(PRESET_MODES.keys())[2]
         elif operation_mode == 0 and week_program == 1:
-            preset_mode = list(PRESET_MODES1.keys())[3]
+            preset_mode = list(PRESET_MODES.keys())[3]
         elif operation_mode == 0 and week_program == 2:
-            preset_mode = list(PRESET_MODES1.keys())[4]
+            preset_mode = list(PRESET_MODES.keys())[4]
         elif operation_mode == 0 and week_program == 3:
-            preset_mode = list(PRESET_MODES1.keys())[5]
+            preset_mode = list(PRESET_MODES.keys())[5]
         else:
             preset_mode = None
 
