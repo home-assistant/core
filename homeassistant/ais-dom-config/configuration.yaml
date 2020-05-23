@@ -56,11 +56,6 @@ script: !include scripts.yaml
 # bookmarks and favorites
 ais_bookmarks:
 
-# set up Zeroconf and make AIS dom discoverable
-ais_mdns:
-
-#
-# ais_gm_service:
 #
 ais_audiobooks_service:
 #
@@ -72,13 +67,6 @@ ais_amplifier_service:
 
 #
 person:
-
-# TODO
-# check if user is authenticated and add this to polymer
-# /api/ingress/
-#ais_ingress:
-#  host: localhost
-#  port: 8888
 
 ais_help:
 ais_virtual_devices:
@@ -96,3 +84,16 @@ logger:
 # Listening for ptvsd connection
 # TODO https://github.com/microsoft/ptvsd
 # ptvsd:
+
+# set up Zeroconf and make AIS dom discoverable
+# ais_mdns:
+#
+# ais_gm_service:
+#
+
+# TODO
+# check if user is authenticated and add this to polymer
+# /api/ingress/
+#ais_ingress:
+#  host: localhost
+#  port: 8888
