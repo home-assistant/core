@@ -22,7 +22,7 @@ WEBHOOK_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {vol.Required(CONF_WEBHOOK): vol.All(cv.ensure_list, [WEBHOOK_SCHEMA]),}
+            {vol.Required(CONF_WEBHOOK): vol.All(cv.ensure_list, [WEBHOOK_SCHEMA]), }
         )
     },
     extra=vol.ALLOW_EXTRA,
