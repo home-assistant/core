@@ -264,6 +264,24 @@ async def test_zeroconf_with_uuid_device_exists_abort(
     assert result["reason"] == "already_configured"
 
 
+async def test_zeroconf_empty_unique_id_required_abort(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort zeroconf flow if printer lacks (empty) unique identification."""
+    mock_connection(aioclient_mock, no_unique_id=True)
+
+    discovery_info = {
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO,
+        "properties": {**MOCK_ZEROCONF_IPP_SERVICE_INFO["properties"], "UUID": ""},
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unique_id_required"
+
+
 async def test_zeroconf_unique_id_required_abort(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
