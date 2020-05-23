@@ -42,8 +42,8 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_HOME,
     STATE_IDLE,
+    STATE_OFF,
     STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
 from homeassistant.helpers.typing import HomeAssistantType
@@ -75,14 +75,14 @@ async def test_setup(
     assert main.unique_id == UPNP_SERIAL
 
 
-async def test_idle_setup(
+async def test_standby_setup(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test setup with idle device."""
+    """Test setup with device in low power/always on mode."""
     await setup_integration(hass, aioclient_mock, power=False)
 
     state = hass.states.get(MAIN_ENTITY_ID)
-    assert state.state == STATE_STANDBY
+    assert state.state == STATE_OFF
 
 
 async def test_tv_setup(
