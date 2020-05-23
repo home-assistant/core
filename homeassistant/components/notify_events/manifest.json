@@ -3,6 +3,6 @@
   "name": "Notify.Events",
   "documentation": "https://www.home-assistant.io/integrations/notify_events",
   "codeowners": ["@matrozov", "@papajojo"],
-  "requirements": ["notify-events==1.0.2"],
+  "requirements": ["notify-events==1.0.3"],
   "dependencies": []
 }
