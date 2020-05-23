@@ -1,10 +1,10 @@
 """The Aurora ABB Powerone PV inverter sensor integration."""
 
 # TODO There is no text for the helpers on the setup screen
-# TODO verify that sn, pn, fw read correctly at init.
-# TODO remove debug output.
-# TODO prevent setting up the integration twice
+# TODO use the actual serial number as unique id for device and sensors
 # TODO default update rate for temperature sensor should be slower.
+# TODO verify that sn, pn, fw read correctly at init.
+# TODO map pn onto recognisable model number for inverter
 # TODO (maybe) allow setup via configuration.yaml (deprecated?)
 
 import asyncio

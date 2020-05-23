@@ -103,6 +103,11 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = validate_and_connect(
                     self.hass, user_input, user_input[CONF_USEDUMMYONFAIL]
                 )
+                # Bomb out early if someone has already set up this device.
+                device_unique_id = info["serial_number"]
+                await self.async_set_unique_id(device_unique_id)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(title=info["title"], data=user_input)
 
             except OSError as error:
