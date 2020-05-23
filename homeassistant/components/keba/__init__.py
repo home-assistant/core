@@ -50,6 +50,7 @@ _SERVICE_MAP = {
     "enable": "async_enable_ev",
     "disable": "async_disable_ev",
     "set_failsafe": "async_set_failsafe",
+    "set_text": "async_set_text",
 }
 
 
@@ -237,3 +238,10 @@ class KebaHandler(KebaKeContact):
                 "failsafe_persist value are not correct. %s",
                 ex,
             )
+
+    async def async_set_text(self, param):
+        """Set text in async way."""
+        text = param["text"].replace(" ", "$")
+        min_time = param["min_time"]
+        max_time = param["max_time"]
+        await self.set_text(text, int(min_time), int(max_time))

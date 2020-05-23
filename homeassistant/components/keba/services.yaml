@@ -38,6 +38,21 @@ disable:
   description: >
     Stops the charging process if charging station is authorized.
 
+set_text:
+  description: Display a text message on the charger display.
+  fields:
+    text:
+      description: Text to Display. Maximum 23 chars.
+      example: "Hello"
+    min_time:
+      description: >
+        Duration in seconds of the text message before next message will be displayed.
+      example: 2
+    max_time:
+      description:
+        Duration in seconds of the text message if no more messages are set.
+      example: 10
+
 set_failsafe:
   description: >
     Set the failsafe mode of the charging station. If all parameters are 0, the failsafe mode will be disabled.
