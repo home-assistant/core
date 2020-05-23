@@ -9,6 +9,9 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_ADDRESS, CONF_PORT  # CONF_NAME,
 
 from .const import (
+    ATTR_FIRMWARE,
+    ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
     CONF_USEDUMMYONFAIL,
     DEFAULT_ADDRESS,
     DEFAULT_INTEGRATION_TITLE,
@@ -38,11 +41,13 @@ def validate_and_connect(hass: core.HomeAssistant, data, populate_on_fail: False
     try:
         client = AuroraSerialClient(address, comport, parity="N", timeout=1)
         client.connect()
-        ret["serial_numnber"] = client.serial_number()
+        ret[ATTR_SERIAL_NUMBER] = client.serial_number()
         # print(f"sn='{sn}'")
-        ret["pn"] = client.pn()  # "PVI-3.6-OUTD" returns '-3G97-'
+        ver = client.version()
+        partnum = client.pn()
+        ret[ATTR_MODEL] = f"{ver} ({partnum})"
         # print(f"pn='{pn}'")
-        ret["firmware"] = client.firmware(1)
+        ret[ATTR_FIRMWARE] = client.firmware(1)
         # print(f"fw1='{fw}'")
         _LOGGER.info("Returning device info=%s", ret)
     except AuroraError as err:
