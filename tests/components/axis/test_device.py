@@ -122,7 +122,7 @@ async def setup_axis_integration(
     ), patch(
         "axis.param_cgi.Properties.update_properties", new=mock_update_properties
     ), patch(
-        "axis.AxisDevice.start", return_value=True
+        "axis.streammanager.StreamManager.start", return_value=True
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -225,7 +225,7 @@ async def test_shutdown():
 
     axis_device.shutdown(None)
 
-    assert len(axis_device.api.stop.mock_calls) == 1
+    assert len(axis_device.api.stream.stop.mock_calls) == 1
 
 
 async def test_get_device_fails(hass):

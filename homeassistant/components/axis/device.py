@@ -5,7 +5,7 @@ import asyncio
 import async_timeout
 import axis
 from axis.event_stream import OPERATION_INITIALIZED
-from axis.mqtt import json_message_to_event
+from axis.mqtt import mqtt_json_to_event
 from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 
 from homeassistant.components import mqtt
@@ -163,7 +163,7 @@ class AxisNetworkDevice:
         """Axis MQTT message."""
         self.disconnect_from_stream()
 
-        event = json_message_to_event(msg.payload)
+        event = mqtt_json_to_event(msg.payload)
         self.api.event.process_event(event)
 
     async def async_setup(self):
@@ -201,7 +201,7 @@ class AxisNetworkDevice:
                     self.async_connection_status_callback
                 )
                 self.api.enable_events(event_callback=self.async_event_callback)
-                self.api.start()
+                self.api.stream.start()
 
                 if self.api.vapix.mqtt:
                     async_when_setup(self.hass, MQTT_DOMAIN, self.use_mqtt)
@@ -219,7 +219,7 @@ class AxisNetworkDevice:
             self.api.stream.connection_status_callback.remove(
                 self.async_connection_status_callback
             )
-            self.api.stop()
+            self.api.stream.stop()
 
     @callback
     def shutdown(self, event):
