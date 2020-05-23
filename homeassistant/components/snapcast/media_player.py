@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     STATE_IDLE,
+    STATE_STANDBY,
     STATE_OFF,
     STATE_ON,
     STATE_PLAYING,
@@ -258,7 +259,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
         """Return the state of the player."""
         if self._client.connected:
             return STATE_ON
-        return STATE_IDLE
+        return STATE_STANDBY
 
     @property
     def device_state_attributes(self):
