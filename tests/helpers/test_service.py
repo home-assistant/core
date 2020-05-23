@@ -334,9 +334,14 @@ async def test_call_with_required_features(hass, mock_entities):
         ha.ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
         required_features=[SUPPORT_A],
     )
-    assert len(mock_entities) == 4
-    # Called once because only one of the entities had the required features
+
     assert test_service_mock.call_count == 2
+    expected = [
+        mock_entities["light.kitchen"],
+        mock_entities["light.bedroom"],
+    ]
+    actual = [call[0][0] for call in test_service_mock.call_args_list]
+    assert all(entity in actual for entity in expected)
 
 
 async def test_call_with_both_required_features(hass, mock_entities):
@@ -349,9 +354,11 @@ async def test_call_with_both_required_features(hass, mock_entities):
         ha.ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
         required_features=[SUPPORT_A | SUPPORT_B],
     )
-    assert len(mock_entities) == 4
-    # Called once because only one of the entities had the required features
+
     assert test_service_mock.call_count == 1
+    assert [call[0][0] for call in test_service_mock.call_args_list] == [
+        mock_entities["light.bedroom"]
+    ]
 
 
 async def test_call_with_one_of_required_features(hass, mock_entities):
@@ -364,9 +371,15 @@ async def test_call_with_one_of_required_features(hass, mock_entities):
         ha.ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
         required_features=[SUPPORT_A, SUPPORT_C],
     )
-    assert len(mock_entities) == 4
-    # Called once because only one of the entities had the required features
+
     assert test_service_mock.call_count == 3
+    expected = [
+        mock_entities["light.kitchen"],
+        mock_entities["light.bedroom"],
+        mock_entities["light.bathroom"],
+    ]
+    actual = [call[0][0] for call in test_service_mock.call_args_list]
+    assert all(entity in actual for entity in expected)
 
 
 async def test_call_with_sync_func(hass, mock_entities):
