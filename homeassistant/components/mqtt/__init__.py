@@ -645,7 +645,7 @@ async def async_setup_entry(hass, entry):
         tls_version=tls_version,
     )
 
-    hass.data[DATA_MQTT].async_connect()
+    await hass.data[DATA_MQTT].async_connect()
 
     async def async_stop_mqtt(_event: Event):
         """Stop MQTT component."""
@@ -814,9 +814,24 @@ class MQTT:
                 self._mqttc.publish, topic, payload, qos, retain
             )
 
-    def async_connect(self) -> str:
+    async def async_connect(self) -> str:
         """Connect to the host. Does process messages yet."""
-        self._mqttc.connect_async(self.broker, self.port, self.keepalive)
+        # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt
+
+        result: int = None
+        try:
+            result = await self.hass.async_add_executor_job(
+                self._mqttc.connect, self.broker, self.port, self.keepalive
+            )
+        except OSError as err:
+            _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
+
+        if result is not None and result != 0:
+            _LOGGER.error(
+                "Failed to connect to MQTT server: %s", mqtt.error_string(result)
+            )
+
         self._mqttc.loop_start()
 
     async def async_disconnect(self):
