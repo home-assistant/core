@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Subaru binary_sensors by config_entry."""
+    """Set up the Subaru sensors by config_entry."""
     controller = hass.data[SUBARU_DOMAIN][config_entry.entry_id]["controller"]
     entities = []
     for device in hass.data[SUBARU_DOMAIN][config_entry.entry_id]["devices"]["sensor"]:
@@ -29,23 +29,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SubaruSensor(SubaruDevice, Entity):
     """Representation of Subaru sensors."""
 
-    def __init__(self, subaru_device, controller, config_entry, sensor_type=None):
+    def __init__(self, subaru_device, controller, config_entry):
         """Initialize of the sensor."""
         self.current_value = None
         self.units = None
-        self.last_changed_time = None
-        self.type = sensor_type
         super().__init__(subaru_device, controller, config_entry)
-
-        if self.type:
-            self._name = f"{self.subaru_device.name} ({self.type})"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        if self.type:
-            return f"{self.subaru_id}_{self.type}"
-        return self.subaru_id
 
     @property
     def state(self):

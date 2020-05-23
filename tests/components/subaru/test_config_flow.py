@@ -1,13 +1,31 @@
-"""Test the Subaru config flow."""
-from unittest.mock import patch
+"""
+Test the Subaru config flow.
+
+Borrowed heavily from Tesla tests (thanks @alandtse)
+"""
+from datetime import datetime
 
 from subarulink.exceptions import SubaruException
 
 from homeassistant import config_entries, setup
-from homeassistant.components.subaru.const import DOMAIN
-from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
+from homeassistant.components.subaru.const import (
+    CONF_HARD_POLL_INTERVAL,
+    DEFAULT_HARD_POLL_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MIN_HARD_POLL_INTERVAL,
+    MIN_SCAN_INTERVAL,
+)
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_PASSWORD,
+    CONF_PIN,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 
-from tests.common import mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 TEST_USERNAME = "test@fake.com"
 TEST_TITLE = TEST_USERNAME
@@ -26,13 +44,9 @@ async def test_form(hass):
 
     with patch(
         "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
-        return_value=mock_coro(True),
-    ), patch(
-        "homeassistant.components.subaru.async_setup", return_value=mock_coro(True)
-    ) as mock_setup, patch(
-        "homeassistant.components.subaru.async_setup_entry",
-        return_value=mock_coro(True),
+        return_value=True,
     ) as mock_setup_entry:
+        device_id = int(datetime.now().timestamp())
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -47,11 +61,10 @@ async def test_form(hass):
     assert result2["data"][CONF_USERNAME] == TEST_USERNAME
     assert result2["data"][CONF_PASSWORD] == TEST_PASSWORD
     assert result2["data"][CONF_PIN] == TEST_PIN
-    assert result2["data"][CONF_DEVICE_ID] > 1000
+    assert result2["data"][CONF_DEVICE_ID] == device_id
 
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_form_invalid_auth(hass):
@@ -98,3 +111,88 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "connection_error"}
+
+
+async def test_form_repeat_identifier(hass):
+    """Test we handle repeat identifiers."""
+    entry = MockConfigEntry(domain=DOMAIN, title=TEST_USERNAME, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_PIN: TEST_PIN,
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "identifier_exists"}
+
+
+async def test_option_flow(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 350, CONF_HARD_POLL_INTERVAL: 3600},
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {CONF_SCAN_INTERVAL: 350, CONF_HARD_POLL_INTERVAL: 3600}
+
+
+async def test_option_flow_defaults(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        CONF_HARD_POLL_INTERVAL: DEFAULT_HARD_POLL_INTERVAL,
+    }
+
+
+async def test_option_flow_input_floor(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 1, CONF_HARD_POLL_INTERVAL: 1},
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: MIN_SCAN_INTERVAL,
+        CONF_HARD_POLL_INTERVAL: MIN_HARD_POLL_INTERVAL,
+    }

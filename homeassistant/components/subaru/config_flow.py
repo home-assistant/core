@@ -67,7 +67,7 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA,
-                errors={CONF_USERNAME: "identifier_exists"},
+                errors={"base": "identifier_exists"},
                 description_placeholders={},
             )
 

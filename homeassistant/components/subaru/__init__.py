@@ -5,9 +5,8 @@ from datetime import datetime
 import logging
 
 from subarulink.hass import HassController as SubaruAPI, SubaruException
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONF_DEVICE_ID,
@@ -17,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -27,63 +26,14 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ICONS,
-    MIN_HARD_POLL_INTERVAL,
-    MIN_SCAN_INTERVAL,
     SUBARU_COMPONENTS,
 )
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_PIN): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
-                vol.Optional(
-                    CONF_HARD_POLL_INTERVAL, default=DEFAULT_HARD_POLL_INTERVAL
-                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_HARD_POLL_INTERVAL)),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, base_config):
     """Set up of Subaru component."""
-    config = base_config.get(DOMAIN)
-    if not config:
-        return True
-    email = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    pin = config[CONF_PIN]
-    scan_interval = config[CONF_SCAN_INTERVAL]
-    hard_poll_interval = config[CONF_HARD_POLL_INTERVAL]
-    device_id = int(datetime.now().timestamp())
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: email,
-                CONF_PASSWORD: password,
-                CONF_PIN: pin,
-                CONF_DEVICE_ID: device_id,
-            },
-        )
-    )
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][email] = {
-        CONF_SCAN_INTERVAL: scan_interval,
-        CONF_HARD_POLL_INTERVAL: hard_poll_interval,
-        CONF_DEVICE_ID: device_id,
-    }
     return True
 
 
