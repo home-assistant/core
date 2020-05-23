@@ -239,7 +239,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry,
     )
     await homekit.async_setup()
-    await hass.async_add_executor_job(homekit.setup)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -423,12 +422,14 @@ class HomeKit:
 
     async def async_setup(self):
         """Set up async lock."""
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self._bridge_lock = asyncio.Lock()
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+
+        self.hass.async_add_executor_job(self.setup)
         zeroconf_instance = await zeroconf.async_get_instance(self.hass)
         await self.hass.async_add_executor_job(self._prepare_bridge, zeroconf_instance)
 
-    def setup(self):
+    def _setup(self):
         """Set up bridge and accessory driver."""
         if not self._ip_address:
             self._ip_address = get_local_ip()
