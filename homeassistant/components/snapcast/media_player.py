@@ -28,6 +28,8 @@ from .const import (
     ATTR_MASTER,
     CLIENT_PREFIX,
     CLIENT_SUFFIX,
+    STREAM_PREFIX,
+    STREAM_SUFFIX,
     DATA_KEY,
     GROUP_PREFIX,
     GROUP_SUFFIX,
@@ -45,6 +47,8 @@ SUPPORT_SNAPCAST_CLIENT = (
 )
 SUPPORT_SNAPCAST_GROUP = (
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
+)
+SUPPORT_SNAPCAST_STREAM = (
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -84,7 +88,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     groups = [SnapcastGroupDevice(group, hpid) for group in server.groups]
     clients = [SnapcastClientDevice(client, hpid) for client in server.clients]
-    devices = groups + clients
+    streams = [SnapcastStreamDevice(stream, hpid) for stream in server.streams]
+    devices = groups + clients + streams
     hass.data[DATA_KEY] = devices
     async_add_entities(devices)
 
@@ -331,3 +336,52 @@ class SnapcastClientDevice(MediaPlayerEntity):
         """Set the latency of the client."""
         await self._client.set_latency(latency)
         self.async_write_ha_state()
+
+class SnapcastStreamDevice(MediaPlayerEntity):
+    """Representation of a Snapcast stream device."""
+
+    def __init__(self, stream, uid_part):
+        """Initialize the Snapcast stream device."""
+        #stream.set_callback(self.schedule_update_ha_state)
+        self._stream = stream
+        self._uid = f"{STREAM_PREFIX}{uid_part}_{self._stream.identifier}"
+
+    @property
+    def state(self):
+        """Return the state of the stream."""
+        return {
+            "idle": STATE_IDLE,
+            "playing": STATE_PLAYING,
+            "unknown": STATE_UNKNOWN,
+        }.get(self._stream.status, STATE_UNKNOWN)
+
+    @property
+    def identifier(self):
+        """Return the snapcast identifier."""
+        return self._stream.identifier
+
+    @property
+    def unique_id(self):
+        """Return the ID of snapcast stream."""
+        return self._uid
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return f"{STREAM_PREFIX}{self._stream.identifier}"
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        name = f"{self._stream.friendly_name} {STREAM_SUFFIX}"
+        return {"friendly_name": name}
+
+    @property
+    def should_poll(self):
+        """Do not poll for state."""
+        return True
+
+    @property
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        return SUPPORT_SNAPCAST_STREAM
