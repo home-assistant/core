@@ -219,7 +219,8 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             media_service = device.create_media_service()
             profiles = await media_service.GetProfiles()
             h264 = any(
-                profile.VideoEncoderConfiguration.Encoding == "H264"
+                profile.VideoEncoderConfiguration
+                and profile.VideoEncoderConfiguration.Encoding == "H264"
                 for profile in profiles
             )
 
