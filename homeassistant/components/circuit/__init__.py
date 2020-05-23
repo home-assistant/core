@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Unify Circuit component."""
-    webhooks = config.get(DOMAIN)[CONF_WEBHOOK]
+    webhooks = config[DOMAIN][CONF_WEBHOOK]
 
     for webhook_conf in webhooks:
         if 'url' in webhook_conf:
