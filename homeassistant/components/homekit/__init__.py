@@ -555,6 +555,9 @@ class HomeKit:
 
             ent_reg_ent = ent_reg.async_get(state.entity_id)
             if ent_reg_ent:
+                if ent_reg_ent.platform == DOMAIN:
+                    # Do not export the turn off switch!
+                    continue
                 await self._async_set_device_info_attributes(
                     ent_reg_ent, dev_reg, state.entity_id
                 )
