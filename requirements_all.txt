@@ -175,7 +175,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.37
+aiohomekit[IP]==0.2.38
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
