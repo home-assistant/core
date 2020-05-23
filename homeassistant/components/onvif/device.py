@@ -255,7 +255,10 @@ class ONVIFDevice:
         profiles = []
         for key, onvif_profile in enumerate(result):
             # Only add H264 profiles
-            if onvif_profile.VideoEncoderConfiguration.Encoding != "H264":
+            if (
+                not onvif_profile.VideoEncoderConfiguration
+                or onvif_profile.VideoEncoderConfiguration.Encoding != "H264"
+            ):
                 continue
 
             profile = Profile(
@@ -282,9 +285,13 @@ class ONVIFDevice:
                     is not None,
                 )
 
-                ptz_service = self.device.create_ptz_service()
-                presets = await ptz_service.GetPresets(profile.token)
-                profile.ptz.presets = [preset.token for preset in presets]
+                try:
+                    ptz_service = self.device.create_ptz_service()
+                    presets = await ptz_service.GetPresets(profile.token)
+                    profile.ptz.presets = [preset.token for preset in presets]
+                except (Fault, ServerDisconnectedError):
+                    # It's OK if Presets aren't supported
+                    profile.ptz.presets = []
 
             profiles.append(profile)
 
