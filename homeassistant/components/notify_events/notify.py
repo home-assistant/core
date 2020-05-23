@@ -92,7 +92,7 @@ class NotifyEventsNotificationService(BaseNotificationService):
                 _LOGGER.error("File does not exist: %s", item[ATTR_FILE_PATH])
 
     async def prepare_message(self, message, data) -> Message:
-        """Prepare a message to send"""
+        """Prepare a message to send."""
         msg = Message(message)
 
         if ATTR_TITLE in data:
