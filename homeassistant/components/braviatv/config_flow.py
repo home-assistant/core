@@ -135,7 +135,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.braviarc.connect, "0000", CLIENTID_PREFIX, NICKNAME,
             )
         except JSONDecodeError:
-            return self.async_abort(reason="unsupported_model")
+            return self.async_abort(reason="no_ip_control")
 
         return self.async_show_form(
             step_id="authorize",

@@ -1,4 +1,6 @@
 """Define tests for the Bravia TV config flow."""
+from json.decoder import JSONDecodeError
+
 from homeassistant import data_entry_flow
 from homeassistant.components.braviatv.const import CONF_IGNORED_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -158,6 +160,17 @@ async def test_authorize_model_unsupported(hass):
         )
 
         assert result["errors"] == {"base": "unsupported_model"}
+
+
+async def test_authorize_no_ip_control(hass):
+    """Test that errors are shown when IP Control is disabled on the TV."""
+    with patch("bravia_tv.BraviaRC.connect", side_effect=JSONDecodeError("", "", 1)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "10.10.10.12"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "no_ip_control"
 
 
 async def test_duplicate_error(hass):
