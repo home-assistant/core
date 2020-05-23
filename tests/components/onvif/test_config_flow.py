@@ -17,6 +17,7 @@ PORT = 80
 USERNAME = "admin"
 PASSWORD = "12345"
 MAC = "aa:bb:cc:dd:ee"
+SERIAL_NUMBER = "ABCDEFGHIJK"
 
 DISCOVERY = [
     {
@@ -37,10 +38,19 @@ DISCOVERY = [
 
 
 def setup_mock_onvif_camera(
-    mock_onvif_camera, with_h264=True, two_profiles=False, with_interfaces=True
+    mock_onvif_camera,
+    with_h264=True,
+    two_profiles=False,
+    with_interfaces=True,
+    with_serial=True,
 ):
     """Prepare mock onvif.ONVIFCamera."""
     devicemgmt = MagicMock()
+
+    device_info = MagicMock()
+    device_info.SerialNumber = SERIAL_NUMBER if with_serial else None
+    devicemgmt.GetDeviceInformation.return_value = Future()
+    devicemgmt.GetDeviceInformation.return_value.set_result(device_info)
 
     interface = MagicMock()
     interface.Enabled = True
@@ -390,11 +400,48 @@ async def test_flow_manual_entry(hass):
 
 
 async def test_flow_import_no_mac(hass):
-    """Test that config flow fails when no MAC available."""
+    """Test that config flow uses Serial Number when no MAC available."""
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera, patch(
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device:
+        setup_mock_onvif_camera(mock_onvif_camera, with_interfaces=False)
+        setup_mock_device(mock_device)
+
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                config_flow.CONF_NAME: NAME,
+                config_flow.CONF_HOST: HOST,
+                config_flow.CONF_PORT: PORT,
+                config_flow.CONF_USERNAME: USERNAME,
+                config_flow.CONF_PASSWORD: PASSWORD,
+            },
+        )
+
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == f"{NAME} - {SERIAL_NUMBER}"
+        assert result["data"] == {
+            config_flow.CONF_NAME: NAME,
+            config_flow.CONF_HOST: HOST,
+            config_flow.CONF_PORT: PORT,
+            config_flow.CONF_USERNAME: USERNAME,
+            config_flow.CONF_PASSWORD: PASSWORD,
+        }
+
+
+async def test_flow_import_no_mac_or_serial(hass):
+    """Test that config flow fails when no MAC or Serial Number available."""
     with patch(
         "homeassistant.components.onvif.config_flow.get_device"
     ) as mock_onvif_camera:
-        setup_mock_onvif_camera(mock_onvif_camera, with_interfaces=False)
+        setup_mock_onvif_camera(
+            mock_onvif_camera, with_interfaces=False, with_serial=False
+        )
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
