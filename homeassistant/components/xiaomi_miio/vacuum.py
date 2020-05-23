@@ -2,7 +2,9 @@
 from functools import partial
 import logging
 
+from croniter import croniter
 from miio import DeviceException, Vacuum  # pylint: disable=import-error
+from pytz import all_timezones, timezone, utc
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -270,7 +272,23 @@ class MiroboVacuum(StateVacuumEntity):
     @property
     def timers(self):
         """Get the list of added timers of the vacuum cleaner."""
-        return [{"enabled": timer.enabled, "time": timer.ts} for timer in self._timers]
+        if self.timezone not in all_timezones:
+            return []
+
+        timers = []
+        local_tz = timezone(self.timezone)
+
+        for timer in self._timers:
+            cron = croniter(timer.cron, start_time=local_tz.localize(datetime.now()))
+            next_schedule = cron.get_next(ret_type=datetime)
+            timers.append(
+                {
+                    "enabled": timer.enabled,
+                    "cron": timer.cron,
+                    "next_schedule": next_schedule.astimezone(utc),
+                }
+            )
+        return timers
 
     @property
     def device_state_attributes(self):

@@ -450,6 +450,9 @@ coronavirus==1.1.1
 # homeassistant.components.crimereports
 crimereports==1.0.1
 
+# homeassistant.components.xiaomi_miio
+croniter==0.3.31
+
 # homeassistant.components.datadog
 datadog==0.15.0
 

@@ -199,6 +199,9 @@ coronavirus==1.1.1
 # homeassistant.scripts.credstash
 # credstash==1.15.0
 
+# homeassistant.components.xiaomi_miio
+croniter==0.3.31
+
 # homeassistant.components.datadog
 datadog==0.15.0
 

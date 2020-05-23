@@ -1,8 +1,9 @@
 """The tests for the Xiaomi vacuum platform."""
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 from unittest import mock
 
 import pytest
+from pytz import utc
 
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -62,6 +63,7 @@ STATUS_CALLS = [
     mock.call.consumable_status(),
     mock.call.clean_history(),
     mock.call.dnd_status(),
+    mock.call.timezone(),
     mock.call.timer(),
 ]
 
@@ -97,22 +99,25 @@ def mirobo_is_got_error_fixture():
     mock_vacuum.dnd_status().start = time(hour=22, minute=0)
     mock_vacuum.dnd_status().end = time(hour=6, minute=0)
 
+    mock_vacuum.timezone.return_value = "Europe/Berlin"
+
     mock_timer_1 = mock.MagicMock()
     mock_timer_1.enabled = True
-    mock_timer_1.ts = time(hour=9, minute=0)
+    mock_timer_1.cron = "5 5 1 8 1"
 
     mock_timer_2 = mock.MagicMock()
     mock_timer_2.enabled = False
-    mock_timer_2.ts = time(hour=11, minute=0)
+    mock_timer_2.cron = "5 5 1 8 2"
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    mock_vacuum.timezone.return_value = "Europe/Berlin"
-
     with mock.patch(
         "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
+    ) as mock_vaccum_cls, mock.patch(
+        "homeassistant.components.xiaomi_miio.vacuum.croniter.get_next"
+    ) as mock_next_schedule:
         mock_vaccum_cls.return_value = mock_vacuum
+        mock_next_schedule.return_value = datetime(2020, 5, 23, 15, 21, 10)
         yield mock_vacuum
 
 
@@ -175,22 +180,25 @@ def mirobo_is_on_fixture():
     mock_vacuum.status().state_code = 5
     mock_vacuum.dnd_status().enabled = False
 
+    mock_vacuum.timezone.return_value = "Europe/Berlin"
+
     mock_timer_1 = mock.MagicMock()
     mock_timer_1.enabled = True
-    mock_timer_1.ts = time(hour=9, minute=0)
+    mock_timer_1.cron = "5 5 1 8 1"
 
     mock_timer_2 = mock.MagicMock()
     mock_timer_2.enabled = False
-    mock_timer_2.ts = time(hour=11, minute=0)
+    mock_timer_2.cron = "5 5 1 8 2"
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    mock_vacuum.timezone.return_value = "Europe/Berlin"
-
     with mock.patch(
         "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
+    ) as mock_vaccum_cls, mock.patch(
+        "homeassistant.components.xiaomi_miio.vacuum.croniter.get_next"
+    ) as mock_next_schedule:
         mock_vaccum_cls.return_value = mock_vacuum
+        mock_next_schedule.return_value = datetime(2020, 5, 23, 15, 21, 10)
         yield mock_vacuum
 
 
@@ -268,11 +276,19 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     assert state.attributes.get(ATTR_CLEANING_COUNT) == 35
     assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 123
     assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 695
-    assert state.attributes.get(ATTR_TIMERS) == [
-        {"enabled": True, "time": time(hour=9, minute=0)},
-        {"enabled": False, "time": time(hour=11, minute=0)},
-    ]
     assert state.attributes.get(ATTR_TIMEZONE) == "Europe/Berlin"
+    assert state.attributes.get(ATTR_TIMERS) == [
+        {
+            "enabled": True,
+            "cron": "5 5 1 8 1",
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+        },
+        {
+            "enabled": False,
+            "cron": "5 5 1 8 2",
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+        },
+    ]
 
     # Call services
     await hass.services.async_call(
@@ -373,11 +389,19 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     assert state.attributes.get(ATTR_CLEANING_COUNT) == 41
     assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 323
     assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 675
-    assert state.attributes.get(ATTR_TIMERS) == [
-        {"enabled": True, "time": time(hour=9, minute=0)},
-        {"enabled": False, "time": time(hour=11, minute=0)},
-    ]
     assert state.attributes.get(ATTR_TIMEZONE) == "Europe/Berlin"
+    assert state.attributes.get(ATTR_TIMERS) == [
+        {
+            "enabled": True,
+            "cron": "5 5 1 8 1",
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+        },
+        {
+            "enabled": False,
+            "cron": "5 5 1 8 2",
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+        },
+    ]
 
     # Xiaomi vacuum specific services:
     await hass.services.async_call(
