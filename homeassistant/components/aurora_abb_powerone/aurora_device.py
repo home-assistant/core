@@ -29,6 +29,7 @@ class AuroraDevice(Entity):
         self.client = client
         self.device_name = DEFAULT_DEVICE_NAME
         self._icon = ICONS.get(self.type)
+        # self.should_poll(True)
 
     @property
     def unique_id(self) -> str:
@@ -51,8 +52,8 @@ class AuroraDevice(Entity):
         """Read data from the device."""
         try:
             self.client.connect()
-            self._sw_version = self.client.firmware()
             self.serialnum = self.client.serial_number()
+            self._sw_version = self.client.firmware()
             self.name = self.client.pn()
         except AuroraError as error:
             # aurorapy does not have different exceptions (yet) for dealing
