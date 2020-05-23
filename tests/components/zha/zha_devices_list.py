@@ -3349,7 +3349,7 @@ DEVICES = [
             },
             ("climate", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["thermostat", "fan"],
-                "entity_class": "Thermostat",
+                "entity_class": "ZenWithinThermostat",
                 "entity_id": "climate.zen_within_zen_01_77665544_fan_thermostat",
             },
         },
