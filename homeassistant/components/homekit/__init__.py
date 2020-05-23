@@ -564,11 +564,13 @@ class HomeKit:
         formatted_mac = device_registry.format_mac(self.driver.state.mac)
         connection = (device_registry.CONNECTION_NETWORK_MAC, formatted_mac)
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
+        _LOGGER.debug("Current bridge: %s %s", identifier, connection)
         for entry in dev_reg.devices.values():
             if self._entry_id in entry.config_entries and (
                 identifier not in entry.identifiers
                 or connection not in entry.connections
             ):
+                _LOGGER.debug("purging: %s %s (identifiers:%s connections:%s)", entry, entry.id, entry.identifiers, entry.connections)
                 devices_to_purge.append(entry.id)
                 continue
 
