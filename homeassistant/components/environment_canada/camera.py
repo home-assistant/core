@@ -94,4 +94,4 @@ class ECCamera(Camera):
             self.image = self.radar_object.get_loop()
         else:
             self.image = self.radar_object.get_latest_frame()
-        self.timestamp = self.radar_object.timestamp.isoformat()
+        self.timestamp = self.radar_object.timestamp
