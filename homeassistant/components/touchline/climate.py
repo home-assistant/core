@@ -1,11 +1,6 @@
-"""
-Platform for Roth Touchline floor heating controller.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/touchline/
-"""
+"""Platform for Roth Touchline floor heating controller."""
 import logging
-from typing import List
+from collections import OrderedDict
 
 from pytouchline import PyTouchline
 import voluptuous as vol
@@ -21,21 +16,18 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_NORMAL = "Normal"
-PRESET_NIGHT = "Night"
-PRESET_VACATION = "Holiday"
-PRESET_P1 = "Pro 1"
-PRESET_P2 = "Pro 2"
-PRESET_P3 = "Pro 3"
+PRESET_MODES1 = OrderedDict()
 
-PRESET_MODES = [
-    PRESET_NORMAL,
-    PRESET_NIGHT,
-    PRESET_VACATION,
-    PRESET_P1,
-    PRESET_P2,
-    PRESET_P3,
-]
+PRESET_MODES1 = {
+    "Normal": {"mode": 0, "program": 0},
+    "Night": {"mode": 1, "program": 0},
+    "Holiday": {"mode": 2, "program": 0},
+    "Pro 1": {"mode": 0, "program": 1},
+    "Pro 2": {"mode": 0, "program": 2},
+    "Pro 3": {"mode": 0, "program": 3},
+}
+
+OPERATION_LIST = [HVAC_MODE_HEAT]
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -64,10 +56,7 @@ class Touchline(ClimateDevice):
         self._current_temperature = None
         self._target_temperature = None
         self._current_operation_mode = None
-        self._current_week_program = None
-        self._current_preset_mode = None
         self._preset_mode = None
-        self._preset_modes = PRESET_MODES
 
     @property
     def supported_features(self):
@@ -80,24 +69,22 @@ class Touchline(ClimateDevice):
         self._name = self.unit.get_name()
         self._current_temperature = self.unit.get_current_temperature()
         self._target_temperature = self.unit.get_target_temperature()
-        self._current_operation_mode = self.unit.get_operation_mode()
-        self._current_week_program = self.unit.get_week_program()
-        self._current_preset_mode = self.map_mode_touchline_hass(
-            self._current_operation_mode, self._current_week_program
-        )
         self._preset_mode = self.map_mode_touchline_hass(
-            self._current_operation_mode, self._current_week_program
+            self.unit.get_operation_mode(), self.unit.get_week_program()
         )
 
     @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode."""
+    def hvac_mode(self):
+        """Return current HVAC mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
         return HVAC_MODE_HEAT
 
     @property
-    def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_HEAT]
+    def hvac_modes(self):
+        """Return list of possible operation modes."""
+        return OPERATION_LIST
 
     @property
     def should_poll(self):
@@ -130,16 +117,6 @@ class Touchline(ClimateDevice):
         return self._current_operation_mode
 
     @property
-    def current_week_program(self):
-        """Return the current week program."""
-        return self._current_week_program
-
-    @property
-    def current_preset_mode(self):
-        """Return the current preset mode."""
-        return self._current_preset_mode
-
-    @property
     def preset_mode(self):
         """Return the current preset mode."""
         return self._preset_mode
@@ -147,7 +124,7 @@ class Touchline(ClimateDevice):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return PRESET_MODES
+        return list(PRESET_MODES1.keys())
 
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
@@ -155,9 +132,10 @@ class Touchline(ClimateDevice):
         program = self.map_program_hass_touchline(preset_mode)
         self.unit.set_operation_mode(mode)
         self.unit.set_week_program(program)
-        self._current_operation_mode = mode
-        self._current_week_program = program
-        self._current_preset_mode = preset_mode
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        self._current_operation_mode = HVAC_MODE_HEAT
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -168,46 +146,28 @@ class Touchline(ClimateDevice):
     @staticmethod
     def map_mode_hass_touchline(preset_mode):
         """Map Home Assistant Preset Modes to Touchline Operation Modes."""
-        if preset_mode == PRESET_NORMAL:
-            mode = 0
-        elif preset_mode == PRESET_NIGHT:
-            mode = 1
-        elif preset_mode == PRESET_VACATION:
-            mode = 2
-        else:
-            mode = 0
-
-        return mode
+        return PRESET_MODES1[preset_mode]["mode"]
 
     @staticmethod
     def map_program_hass_touchline(preset_mode):
         """Map Home Assistant Preset Modes to Touchline Program Modes."""
-        if preset_mode == PRESET_P1:
-            week_program = 1
-        elif preset_mode == PRESET_P2:
-            week_program = 2
-        elif preset_mode == PRESET_P3:
-            week_program = 3
-        else:
-            week_program = 0
-
-        return week_program
+        return PRESET_MODES1[preset_mode]["program"]
 
     @staticmethod
     def map_mode_touchline_hass(operation_mode, week_program):
         """Map Touchline Operation Modes to Home Assistant Preset Modes."""
         if operation_mode == 0 and week_program == 0:
-            preset_mode = PRESET_NORMAL
+            preset_mode = list(PRESET_MODES1.keys())[0]
         elif operation_mode == 1 and week_program == 0:
-            preset_mode = PRESET_NIGHT
+            preset_mode = list(PRESET_MODES1.keys())[1]
         elif operation_mode == 2 and week_program == 0:
-            preset_mode = PRESET_VACATION
+            preset_mode = list(PRESET_MODES1.keys())[2]
         elif operation_mode == 0 and week_program == 1:
-            preset_mode = PRESET_P1
+            preset_mode = list(PRESET_MODES1.keys())[3]
         elif operation_mode == 0 and week_program == 2:
-            preset_mode = PRESET_P2
+            preset_mode = list(PRESET_MODES1.keys())[4]
         elif operation_mode == 0 and week_program == 3:
-            preset_mode = PRESET_P3
+            preset_mode = list(PRESET_MODES1.keys())[5]
         else:
             preset_mode = None
 
