@@ -2,6 +2,7 @@
 import asyncio
 import ipaddress
 import logging
+import os
 from typing import Callable
 
 from aiohttp import web
@@ -453,6 +454,10 @@ class HomeKit:
             advertised_address=self._advertise_ip,
             zeroconf_instance=zeroconf_instance,
         )
+        # If we do not load the mac address
+        # will be wrong
+        if os.path.exists(self._persist_file):
+            self.driver.load()
 
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
