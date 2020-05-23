@@ -97,8 +97,6 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_DEVICES = 150
 
-STOP_TIMEOUT = 20
-
 PLATFORMS = ["switch"]
 
 
