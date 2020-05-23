@@ -6,6 +6,11 @@
 # TODO verify that sn, pn, fw read correctly at init.
 # TODO map pn onto recognisable model number for inverter
 # TODO (maybe) allow setup via configuration.yaml (deprecated?)
+# TODO Extra sensors (grid voltage, frequency, etc)
+#
+# Reference info:
+# https://s1.solacity.com/docs/PVI-3.0-3.6-4.2-OUTD-US%20Manual.pdf
+# http://www.drhack.it/images/PDF/AuroraCommunicationProtocol_4_2.pdf
 
 import asyncio
 from collections import defaultdict
@@ -17,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import ATTR_SERIAL_NUMBER, DOMAIN
 
 PLATFORMS = ["sensor"]
 
@@ -46,10 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "client": client,
         "devices": defaultdict(list),
     }
-
-    entry_data["devices"]["main"] = defaultdict(list)
+    serialnum = entry.data[ATTR_SERIAL_NUMBER]
+    entry_data["devices"][serialnum] = defaultdict(list)
     for device_params in all_device_params:
-        entry_data["devices"]["main"][device_params["type"]].append(device_params)
+        entry_data["devices"][serialnum][device_params["type"]].append(device_params)
 
     for platform in PLATFORMS:
         hass.async_create_task(

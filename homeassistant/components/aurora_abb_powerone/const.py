@@ -18,6 +18,7 @@ MANUFACTURER = "ABB"
 
 ATTR_DEVICE_NAME = "device_name"
 ATTR_DEVICE_ID = "device_id"
+ATTR_SERIAL_NUMBER = "serial_number"
 
 ICONS = {
     "device": "mdi:battery",

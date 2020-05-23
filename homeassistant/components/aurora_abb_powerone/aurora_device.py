@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .const import DEFAULT_DEVICE_NAME, DOMAIN, ICONS, MANUFACTURER
+from .const import ATTR_SERIAL_NUMBER, DEFAULT_DEVICE_NAME, DOMAIN, ICONS, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,9 +23,9 @@ class AuroraDevice(Entity):
         self._id = config_entry.entry_id
         self.type = "device"
         # self._display_name = config_entry.
-        self.serialnum = config_entry.data.get("serialnum", "dummy ID")
-        self._sw_version = config_entry.data.get("sw_version", "123.456")
-
+        self.serialnum = config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn")
+        self._sw_version = config_entry.data.get("firmware", "0.0.0")
+        self._model = config_entry.data.get("pn", "Model unknown")
         self.client = client
         self.device_name = DEFAULT_DEVICE_NAME
         self._icon = ICONS.get(self.type)
@@ -43,7 +43,7 @@ class AuroraDevice(Entity):
             "config_entry_id": self._id,
             "identifiers": {(DOMAIN, self.serialnum)},
             "manufacturer": MANUFACTURER,
-            "model": "PVI-3.6-OUTD",
+            "model": self._model,
             "name": self.device_name,
             "sw_version": self._sw_version,
         }

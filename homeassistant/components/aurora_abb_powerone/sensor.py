@@ -5,7 +5,7 @@ import logging
 from aurorapy.client import AuroraError, AuroraSerialClient
 
 from .aurora_device import AuroraDevice
-from .const import DOMAIN
+from .const import ATTR_SERIAL_NUMBER, DOMAIN
 
 from homeassistant.const import (  # CONF_ADDRESS,; CONF_DEVICE,; CONF_NAME,
     DEVICE_CLASS_POWER,
@@ -14,12 +14,7 @@ from homeassistant.const import (  # CONF_ADDRESS,; CONF_DEVICE,; CONF_NAME,
 )
 
 # import voluptuous as vol
-
-
 # import homeassistant.helpers.config_validation as cv
-
-
-# from .const import DOMAIN, DEFAULT_ADDRESS, DEFAULT_NAME
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,9 +32,9 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
     client = hass.data[DOMAIN][config.entry_id]["client"]
-
+    serialnum = config.data[ATTR_SERIAL_NUMBER]
     # sensor.type = instantaneouspower, temperature, etc.
-    for sensor in hass.data[DOMAIN][config.entry_id]["devices"]["main"]["sensor"]:
+    for sensor in hass.data[DOMAIN][config.entry_id]["devices"][serialnum]["sensor"]:
         if sensor["parameter"] == "temperature":
             entities.append(AuroraSensor(sensor, client, config, "temperature"))
         elif sensor["parameter"] == "instantaneouspower":
