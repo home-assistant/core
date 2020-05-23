@@ -2,11 +2,9 @@
 from enocean.protocol.packet import Packet
 from enocean.utils import combine_hex
 
-from homeassistant.components.enocean.const import (
-    SIGNAL_RECEIVE_MESSAGE,
-    SIGNAL_SEND_MESSAGE,
-)
 from homeassistant.helpers.entity import Entity
+
+from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 
 class EnOceanEntity(Entity):

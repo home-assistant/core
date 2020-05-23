@@ -8,7 +8,7 @@ from homeassistant.config_entries import CONN_CLASS_ASSUMED
 from homeassistant.const import CONF_DEVICE
 
 from . import EnOceanDongle
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH
+from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
 
 
 class DongleSetupStates(Enum):
@@ -34,7 +34,19 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, data=None):
         """Import a yaml configuration."""
-        return self.async_create_entry(title="EnOcean", data=data)
+
+        dongle_path = data[CONF_DEVICE]
+        path_is_valid = await self.hass.async_add_executor_job(
+            EnOceanDongle.validate_path, dongle_path
+        )
+        if not path_is_valid:
+            LOGGER.warning(
+                "Cannot import yaml configuration: %s is not a valid dongle path.",
+                dongle_path,
+            )
+            return self.async_abort(reason="single_instance_allowed")
+
+        return self.create_enocean_entry(data)
 
     async def async_step_user(self, user_input=None):
         """Handle an EnOcean config flow start."""
@@ -43,52 +55,57 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return await self.async_step_detect()
-        elif user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
-            return await self.async_step_manual(user_input)
-        else:
-            return await self.async_step_validate(user_input)
+        if await self.validate_enocean_conf(user_input):
+            return self.create_enocean_entry(user_input)
+        return await self.async_step_manual(user_input)
 
     async def async_step_detect(self, user_input=None):
         """Propose a list of detected dongles."""
+        if user_input is not None:
+            if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
+                return await self.async_step_manual(None)
+            if await self.validate_enocean_conf(user_input):
+                return self.create_enocean_entry(user_input)
+
         bridges = await self.hass.async_add_executor_job(EnOceanDongle.detect)
         if len(bridges) == 0:
             return await self.async_step_manual(user_input)
 
         bridges.append(self.MANUAL_PATH_VALUE)
         return self.async_show_form(
-            step_id="validate",
+            step_id="detect",
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(bridges)}),
         )
 
-    async def async_step_manual(self, user_input=None, errors=None):
+    async def async_step_manual(self, user_input=None):
         """Request manual USB dongle path."""
         default_value = None
-        if user_input is not None and user_input[CONF_DEVICE] != self.MANUAL_PATH_VALUE:
+        errors = {}
+        if user_input is not None:
+            if await self.validate_enocean_conf(user_input):
+                return self.create_enocean_entry(user_input)
             default_value = user_input[CONF_DEVICE]
+            errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
+
         return self.async_show_form(
-            step_id="validate",
+            step_id="manual",
             data_schema=vol.Schema(
                 {vol.Required(CONF_DEVICE, default=default_value): str}
             ),
             errors=errors,
         )
 
-    async def async_step_validate(self, user_input):
-        """Validate the provided path."""
+    async def validate_enocean_conf(self, user_input) -> bool:
+        """Return True if the user_input contains a valid dongle path."""
+        if user_input is None:
+            return False
+
         dongle_path = user_input[CONF_DEVICE]
-
-        if dongle_path == self.MANUAL_PATH_VALUE:
-            return await self.async_step_manual(user_input)
-
         path_is_valid = await self.hass.async_add_executor_job(
             EnOceanDongle.validate_path, dongle_path
         )
-        if not path_is_valid:
-            errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
-            return await self.async_step_manual(user_input, errors)
+        return path_is_valid
 
-        return await self.async_step_create_entry(user_input)
-
-    async def async_step_create_entry(self, user_input):
+    def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
         return self.async_create_entry(title="EnOcean", data=user_input)

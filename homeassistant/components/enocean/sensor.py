@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.enocean.device import EnOceanEntity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -20,6 +19,8 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from .device import EnOceanEntity
 
 _LOGGER = logging.getLogger(__name__)
 

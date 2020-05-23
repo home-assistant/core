@@ -39,10 +39,11 @@ class EnOceanDongle:
     def validate_path(path: str):
         """Return True if the provided path points to a valid serial port, False otherwise."""
         try:
-            test_port = serial.Serial(path, 57600, timeout=0.1)
-            test_port.close()
+            # Creating the serial communicator will raise an exception
+            # if it cannot connect
+            SerialCommunicator(port=path)
             return True
-        except Exception as e:
+        except serial.SerialException as e:
             _LOGGER.warning("Dongle path %s is invalid: %s", path, str(e))
             return False
 
@@ -57,17 +58,17 @@ class EnOceanDongle:
         self.hass = hass
         self.dispatcher_disconnect_handle = None
 
-    def __del__(self):
-        """Disconnect callbacks established at init time."""
-        if self.dispatcher_disconnect_handle:
-            self.dispatcher_disconnect_handle()
-
     async def async_setup(self):
         """Finish the setup of the bridge and supported platforms."""
         self._communicator.start()
         self.dispatcher_disconnect_handle = async_dispatcher_connect(
             self.hass, SIGNAL_SEND_MESSAGE, self._send_message_callback
         )
+
+    def unload(self):
+        """Disconnect callbacks established at init time."""
+        if self.dispatcher_disconnect_handle:
+            self.dispatcher_disconnect_handle()
 
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""

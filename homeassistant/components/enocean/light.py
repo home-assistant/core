@@ -4,7 +4,6 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.components.enocean.device import EnOceanEntity
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -13,6 +12,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from .device import EnOceanEntity
 
 _LOGGER = logging.getLogger(__name__)
 

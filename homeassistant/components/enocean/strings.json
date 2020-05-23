@@ -3,7 +3,13 @@
   "config": {
     "flow_title": "ENOcean setup",
     "step": {
-      "init": {
+      "detect": {
+        "title": "Select the path to you ENOcean dongle",
+        "data": {
+          "path": "USB dongle path"
+        }
+      },
+      "manual": {
         "title": "Enter the path to you ENOcean dongle",
         "data": {
           "path": "USB dongle path"
@@ -11,9 +17,11 @@
       }
     },
     "error": {
-      "invalid_dongle_path": "No dongle found for this path."
+      "invalid_dongle_path": "No valid dongle found for this path"
     },
     "abort": {
+      "invalid_dongle_path": "Invalid dongle path",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }
 }

@@ -8,9 +8,10 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.components.enocean.device import EnOceanEntity
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from .device import EnOceanEntity
 
 _LOGGER = logging.getLogger(__name__)
 

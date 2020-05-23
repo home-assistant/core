@@ -7,7 +7,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_DEVICE
 import homeassistant.helpers.config_validation as cv
 
-from .const import DATA_ENOCEAN, DOMAIN, LOGGER
+from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE
 from .dongle import EnOceanDongle
 
 CONFIG_SCHEMA = vol.Schema(
@@ -41,26 +41,18 @@ async def async_setup(hass, config):
 async def async_setup_entry(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
-    """Set up an EnOcean dongle for the given entry.
-
-    This will read a flow-based configuration, but only if
-    a configuration was not found in the text-based configuration.
-    """
-    if DATA_ENOCEAN in hass.data and hass.data[DATA_ENOCEAN] is EnOceanDongle:
-        LOGGER.warning("Dongle already configured, skipping configuration")
-        return True
-
-    if DATA_ENOCEAN not in hass.data:
-        hass.data[DATA_ENOCEAN] = {}
-
+    """Set up an EnOcean dongle for the given entry."""
+    enocean_data = hass.data.setdefault(DATA_ENOCEAN, {})
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
-    hass.data[DATA_ENOCEAN] = usb_dongle
     await usb_dongle.async_setup()
+    enocean_data[ENOCEAN_DONGLE] = usb_dongle
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload ENOcean config entry."""
+    enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
+    enocean_dongle.unload()
     hass.data[DATA_ENOCEAN] = None
     return True
