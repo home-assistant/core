@@ -17,7 +17,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_STANDBY
+from homeassistant.const import STATE_HOME, STATE_IDLE, STATE_OFF, STATE_PLAYING
 
 from . import RokuDataUpdateCoordinator, RokuEntity
 from .const import DOMAIN
@@ -67,7 +67,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def state(self) -> str:
         """Return the state of the device."""
         if self.coordinator.data.state.standby:
-            return STATE_STANDBY
+            return STATE_OFF
 
         if self.coordinator.data.app is None:
             return None
