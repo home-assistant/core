@@ -551,3 +551,39 @@ async def test_camera_with_linked_motion_sensor(hass, run_driver, events):
     )
     await hass.async_block_till_done()
     assert char.value is False
+
+    char.set_value(True)
+    hass.states.async_set(
+        motion_entity_id, STATE_ON, {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION}
+    )
+    await hass.async_block_till_done()
+    assert char.value is True
+
+
+async def test_camera_with_a_missing_linked_motion_sensor(hass, run_driver, events):
+    """Test a camera with a configured linked motion sensor that is missing."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    motion_entity_id = "binary_sensor.motion"
+    entity_id = "camera.demo_camera"
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {CONF_LINKED_MOTION_SENSOR: motion_entity_id},
+    )
+    bridge = HomeBridge("hass", run_driver, "Test Bridge")
+    bridge.add_accessory(acc)
+
+    await acc.run_handler()
+
+    assert acc.aid == 2
+    assert acc.category == 17  # Camera
+
+    assert not acc.get_service(SERV_MOTION_SENSOR)
