@@ -423,7 +423,10 @@ class HomeKit:
 
     async def async_setup(self):
         """Set up async lock."""
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self._bridge_lock = asyncio.Lock()
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        await self.hass.async_add_executor_job(self._prepare_bridge, zeroconf_instance)
 
     def setup(self):
         """Set up bridge and accessory driver."""
@@ -436,7 +439,6 @@ class HomeKit:
 
     def _prepare_bridge(self, zeroconf_instance):
         """Create the driver and bridge."""
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         # pylint: disable=import-outside-toplevel
         from .accessories import HomeBridge, HomeDriver
 
@@ -520,10 +522,11 @@ class HomeKit:
                 return
             self._async_update_bridge_status(STATUS_WAIT)
 
-        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
-        await self.hass.async_add_executor_job(self._prepare_bridge, zeroconf_instance)
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+        if not self.bridge:
+            zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+            await self.hass.async_add_executor_job(
+                self._prepare_bridge, zeroconf_instance
+            )
 
         ent_reg = await entity_registry.async_get_registry(self.hass)
         dev_reg = await device_registry.async_get_registry(self.hass)
@@ -632,6 +635,7 @@ class HomeKit:
         async with self._bridge_lock:
             if self.status != STATUS_STOPPED:
                 return
+            self.bridge = None
             self._async_update_bridge_status(STATUS_READY)
 
         return True
