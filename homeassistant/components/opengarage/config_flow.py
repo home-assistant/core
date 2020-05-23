@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_DEVICE_KEY, DEFAULT_PORT, DOMAIN
+from .const import CONF_DEVICE_KEY, DEFAULT_PORT, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
