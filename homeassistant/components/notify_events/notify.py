@@ -2,8 +2,9 @@
 import logging
 import os.path
 
-import homeassistant.helpers.config_validation as cv
+from notify_events import Message
 import voluptuous as vol
+
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
@@ -11,7 +12,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_TOKEN
-from notify_events import Message
+import homeassistant.helpers.config_validation as cv
 
 ATTR_LEVEL = "level"
 ATTR_PRIORITY = "priority"
