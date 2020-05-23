@@ -26,7 +26,6 @@ from .const import (
     ATTR_REMOTE,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
-    CONF_LISTEN_PORT,
     CONF_ON_ACTION,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -45,7 +44,6 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Required(CONF_HOST): cv.string,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_PORT): cv.port,
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
@@ -64,7 +62,7 @@ UPNP_SERVICES = [URL_EVENT_0_DMR, URL_EVENT_0_NRC]
 
 MAP_APP_NAME = {"platinum": "Browser", "Amazon": "Prime Video"}
 
-RESUBSCRIBE_INTERVAL = timedelta(seconds=90)
+RESUBSCRIBE_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup(hass, config):
@@ -92,14 +90,6 @@ async def async_setup_entry(hass, config_entry):
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
-    if CONF_LISTEN_PORT not in config:
-        config_entry = hass.config_entries.async_update_entry(
-            config_entry, data={**config, CONF_LISTEN_PORT: DEFAULT_PORT},
-        )
-        config = config_entry.data
-
-    listen_port = config[CONF_LISTEN_PORT]
-
     on_action = config[CONF_ON_ACTION]
     if on_action is not None:
         on_action = Script(hass, on_action)
@@ -109,7 +99,7 @@ async def async_setup_entry(hass, config_entry):
         params["app_id"] = config[CONF_APP_ID]
         params["encryption_key"] = config[CONF_ENCRYPTION_KEY]
 
-    remote = Remote(hass, host, port, listen_port, on_action, **params)
+    remote = Remote(hass, host, port, on_action=on_action, **params)
     await remote.async_create_remote_control(during_setup=True)
 
     panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
@@ -161,8 +151,6 @@ class Remote:
         self._host = host
         self._port = port
 
-        self._listen_port = listen_port
-
         self._on_action = on_action
 
         self._app_id = app_id
@@ -188,36 +176,31 @@ class Remote:
                 params["app_id"] = self._app_id
                 params["encryption_key"] = self._encryption_key
 
-            control = await self._hass.async_add_executor_job(
-                partial(
-                    RemoteControl,
-                    self._host,
-                    self._port,
-                    listen_port=self._listen_port,
-                    **params,
-                )
+            self._control = await self._hass.async_add_executor_job(
+                partial(RemoteControl, self._host, self._port, **params,)
             )
 
-            await control.async_start_server()
-            control.on_event = self.on_event
+            self._control.on_event = self.on_event
+            await self._control.async_start_server()
 
             for service in UPNP_SERVICES:
                 await self._hass.async_add_executor_job(
-                    partial(control.upnp_service_subscribe, service)
+                    self._control.upnp_service_subscribe, service
                 )
-
-            self._control = control
 
             self.available = True
             self.connected = True
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             if during_setup:
-                _LOGGER.debug("Could not establish remote connection: %s", err)
+                _LOGGER.info("Could not establish remote connection: %s", err)
 
+            await self.shutdown()
             self.available = self._on_action is not None
             self.connected = False
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
+
+            await self.shutdown()
             self.available = self._on_action is not None
             self.connected = False
 
@@ -237,7 +220,7 @@ class Remote:
         self.available = True
         self.connected = True
 
-    def resubscribe_all(self):
+    def resubscribe_all(self, now):
         """Resubscribe to all services."""
         if self._control is not None:
             for service in UPNP_SERVICES:
@@ -245,7 +228,7 @@ class Remote:
                     self._control.upnp_service_unsubscribe(service)
                     self._control.upnp_service_subscribe(service)
                 except (TimeoutError, URLError, OSError):
-                    _LOGGER.debug("Could resubscribe to service %s", service)
+                    _LOGGER.debug("Could not resubscribe to service %s", service)
 
     async def async_send_key(self, key):
         """Send a key to the TV and handle exceptions."""
@@ -279,7 +262,7 @@ class Remote:
         await self._handle_errors(self._control.set_volume, volume)
 
     async def async_play_media(self, media_type, media_id):
-        """Open webpage."""
+        """Play media."""
         _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
         await self._handle_errors(self._control.open_webpage, media_id)
 
@@ -293,27 +276,25 @@ class Remote:
             )
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             _LOGGER.debug("Could not establish remote connection: %s", err)
-            if self._control is not None:
-                await self.shutdown()
+            await self.shutdown()
             self.available = self._on_action is not None
             self.connected = False
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
-            if self._control is not None:
-                await self.shutdown()
+            await self.shutdown()
             self.available = self._on_action is not None
             self.connected = False
 
     async def on_event(self, service, properties):
         """Parse and store received properties."""
-        if service is URL_EVENT_0_DMR:
+        if service == URL_EVENT_0_DMR:
             if "Volume" in properties:
                 self._volume = properties["Volume"]["@val"]
             if "Mute" in properties:
                 self._mute = properties["Mute"]["@val"]
             return
 
-        if service is URL_EVENT_0_NRC:
+        if service == URL_EVENT_0_NRC:
             if "X_ScreenState" in properties:
                 self._state = properties["X_ScreenState"]
                 return
@@ -334,7 +315,7 @@ class Remote:
             for service in UPNP_SERVICES:
                 try:
                     return await self._hass.async_add_executor_job(
-                        partial(self._control.upnp_service_unsubscribe, service)
+                        self._control.upnp_service_unsubscribe, service
                     )
                 except (TimeoutError, URLError, OSError):
                     _LOGGER.debug("Could not unsubscribe from service %s", service)

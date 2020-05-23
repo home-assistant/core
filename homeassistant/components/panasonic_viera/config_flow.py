@@ -12,7 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 from .const import (  # pylint: disable=unused-import
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
-    CONF_LISTEN_PORT,
     CONF_ON_ACTION,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -38,7 +37,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: None,
             CONF_NAME: None,
             CONF_PORT: None,
-            CONF_LISTEN_PORT: None,
             CONF_ON_ACTION: None,
         }
 
@@ -145,11 +143,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._data[CONF_PORT] = (
             self._data[CONF_PORT] if CONF_PORT in self._data else DEFAULT_PORT
-        )
-        self._data[CONF_LISTEN_PORT] = (
-            self._data[CONF_LISTEN_PORT]
-            if CONF_LISTEN_PORT in self._data
-            else DEFAULT_PORT
         )
         self._data[CONF_ON_ACTION] = (
             self._data[CONF_ON_ACTION] if CONF_ON_ACTION in self._data else None

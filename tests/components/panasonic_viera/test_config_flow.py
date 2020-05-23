@@ -6,7 +6,6 @@ from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
-    CONF_LISTEN_PORT,
     CONF_ON_ACTION,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -35,7 +34,6 @@ def panasonic_viera_setup_fixture():
 
 def get_mock_remote(
     host="1.2.3.4",
-    request_error=None,
     authorize_error=None,
     encrypted=False,
     app_id=None,
@@ -49,9 +47,6 @@ def get_mock_remote(
     mock_remote.enc_key = encryption_key
 
     def request_pin_code(name=None):
-        if request_error is not None:
-            raise request_error
-
         return
 
     mock_remote.request_pin_code = request_pin_code
@@ -94,7 +89,6 @@ async def test_flow_non_encrypted(hass):
         CONF_HOST: "1.2.3.4",
         CONF_NAME: DEFAULT_NAME,
         CONF_PORT: DEFAULT_PORT,
-        CONF_LISTEN_PORT: DEFAULT_PORT,
         CONF_ON_ACTION: None,
     }
 
@@ -179,15 +173,14 @@ async def test_flow_encrypted_valid_pin_code(hass):
         CONF_HOST: "1.2.3.4",
         CONF_NAME: DEFAULT_NAME,
         CONF_PORT: DEFAULT_PORT,
-        CONF_LISTEN_PORT: DEFAULT_PORT,
         CONF_ON_ACTION: None,
         CONF_APP_ID: "test-app-id",
         CONF_ENCRYPTION_KEY: "test-encryption-key",
     }
 
 
-async def test_flow_encrypted_authorization_invalid_pin_code_error(hass):
-    """Test flow with encryption and invalid PIN code error during authorization."""
+async def test_flow_encrypted_invalid_pin_code_error(hass):
+    """Test flow with encryption and invalid PIN code error during pairing step."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -222,8 +215,8 @@ async def test_flow_encrypted_authorization_invalid_pin_code_error(hass):
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
 
 
-async def test_flow_encrypted_authorize_not_connected_abort(hass):
-    """Test flow with encryption and connection error abortion during PIN code authorization."""
+async def test_flow_encrypted_not_connected_abort(hass):
+    """Test flow with encryption and PIN code connection error abortion during pairing step."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -253,8 +246,8 @@ async def test_flow_encrypted_authorize_not_connected_abort(hass):
     assert result["reason"] == REASON_NOT_CONNECTED
 
 
-async def test_flow_encrypted_authorize_unknown_abort(hass):
-    """Test flow with encryption and unknown error abortion during PIN code authorization."""
+async def test_flow_encrypted_unknown_abort(hass):
+    """Test flow with encryption and PIN code unknown error abortion during pairing step."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -279,54 +272,6 @@ async def test_flow_encrypted_authorize_unknown_abort(hass):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PIN: "0000"},
     )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
-
-
-async def test_flow_encrypted_request_not_connected_abort(hass):
-    """Test flow with encryption and PIN code unknown error abortion during PIN code request."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-    mock_remote = get_mock_remote(encrypted=True, request_error=TimeoutError)
-
-    with patch(
-        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
-        return_value=mock_remote,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == REASON_NOT_CONNECTED
-
-
-async def test_flow_encrypted_request_unknown_abort(hass):
-    """Test flow with encryption and PIN code unknown error abortion during PIN code request."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-    mock_remote = get_mock_remote(encrypted=True, request_error=Exception)
-
-    with patch(
-        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
-        return_value=mock_remote,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
-        )
 
     assert result["type"] == "abort"
     assert result["reason"] == REASON_UNKNOWN
@@ -391,8 +336,7 @@ async def test_imported_flow_non_encrypted(hass):
             data={
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: "11111",
-                CONF_LISTEN_PORT: "22222",
+                CONF_PORT: DEFAULT_PORT,
                 CONF_ON_ACTION: "test-on-action",
             },
         )
@@ -402,8 +346,7 @@ async def test_imported_flow_non_encrypted(hass):
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_NAME: DEFAULT_NAME,
-        CONF_PORT: "11111",
-        CONF_LISTEN_PORT: "22222",
+        CONF_PORT: DEFAULT_PORT,
         CONF_ON_ACTION: "test-on-action",
     }
 
@@ -425,8 +368,7 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
             data={
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: "11111",
-                CONF_LISTEN_PORT: "22222",
+                CONF_PORT: DEFAULT_PORT,
                 CONF_ON_ACTION: "test-on-action",
             },
         )
@@ -443,16 +385,15 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_NAME: DEFAULT_NAME,
-        CONF_PORT: "11111",
-        CONF_LISTEN_PORT: "22222",
+        CONF_PORT: DEFAULT_PORT,
         CONF_ON_ACTION: "test-on-action",
         CONF_APP_ID: "test-app-id",
         CONF_ENCRYPTION_KEY: "test-encryption-key",
     }
 
 
-async def test_imported_flow_encrypted_authorize_invalid_pin_code_error(hass):
-    """Test imported flow with encryption and invalid PIN code error during authorization."""
+async def test_imported_flow_encrypted_invalid_pin_code_error(hass):
+    """Test imported flow with encryption and invalid PIN code error during pairing step."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=SOAPError)
 
@@ -466,8 +407,7 @@ async def test_imported_flow_encrypted_authorize_invalid_pin_code_error(hass):
             data={
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: "11111",
-                CONF_LISTEN_PORT: "22222",
+                CONF_PORT: DEFAULT_PORT,
                 CONF_ON_ACTION: "test-on-action",
             },
         )
@@ -488,8 +428,8 @@ async def test_imported_flow_encrypted_authorize_invalid_pin_code_error(hass):
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
 
 
-async def test_imported_flow_encrypted_authorize_not_connected_abort(hass):
-    """Test imported flow with encryption and connection error abortion during during PIN code authorization."""
+async def test_imported_flow_encrypted_not_connected_abort(hass):
+    """Test imported flow with encryption and PIN code connection error abortion during pairing step."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=TimeoutError)
 
@@ -503,8 +443,7 @@ async def test_imported_flow_encrypted_authorize_not_connected_abort(hass):
             data={
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: "11111",
-                CONF_LISTEN_PORT: "22222",
+                CONF_PORT: DEFAULT_PORT,
                 CONF_ON_ACTION: "test-on-action",
             },
         )
@@ -520,8 +459,8 @@ async def test_imported_flow_encrypted_authorize_not_connected_abort(hass):
     assert result["reason"] == REASON_NOT_CONNECTED
 
 
-async def test_imported_flow_encrypted_authorize_unknown_abort(hass):
-    """Test imported flow with encryption and unknown error abortion during PIN code authorization."""
+async def test_imported_flow_encrypted_unknown_abort(hass):
+    """Test imported flow with encryption and PIN code unknown error abortion during pairing step."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=Exception)
 
@@ -535,8 +474,7 @@ async def test_imported_flow_encrypted_authorize_unknown_abort(hass):
             data={
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: "11111",
-                CONF_LISTEN_PORT: "22222",
+                CONF_PORT: DEFAULT_PORT,
                 CONF_ON_ACTION: "test-on-action",
             },
         )
@@ -547,56 +485,6 @@ async def test_imported_flow_encrypted_authorize_unknown_abort(hass):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PIN: "0000"},
     )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
-
-
-async def test_imported_flow_encrypted_request_not_connected_abort(hass):
-    """Test imported flow with encryption and PIN code connection error abortion during PIN code request."""
-
-    mock_remote = get_mock_remote(encrypted=True, request_error=TimeoutError)
-
-    with patch(
-        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
-        return_value=mock_remote,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: "11111",
-                CONF_LISTEN_PORT: "22222",
-                CONF_ON_ACTION: "test-on-action",
-            },
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == REASON_NOT_CONNECTED
-
-
-async def test_imported_flow_encrypted_request_unknown_abort(hass):
-    """Test imported flow with encryption and PIN code unknown error abortion during PIN code request."""
-
-    mock_remote = get_mock_remote(encrypted=True, request_error=Exception)
-
-    with patch(
-        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
-        return_value=mock_remote,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: "11111",
-                CONF_LISTEN_PORT: "22222",
-                CONF_ON_ACTION: "test-on-action",
-            },
-        )
 
     assert result["type"] == "abort"
     assert result["reason"] == REASON_UNKNOWN
@@ -615,8 +503,7 @@ async def test_imported_flow_not_connected_error(hass):
             data={
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: "11111",
-                CONF_LISTEN_PORT: "22222",
+                CONF_PORT: DEFAULT_PORT,
                 CONF_ON_ACTION: "test-on-action",
             },
         )
@@ -639,8 +526,7 @@ async def test_imported_flow_unknown_abort(hass):
             data={
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: "11111",
-                CONF_LISTEN_PORT: "22222",
+                CONF_PORT: DEFAULT_PORT,
                 CONF_ON_ACTION: "test-on-action",
             },
         )
@@ -658,8 +544,7 @@ async def test_imported_flow_non_encrypted_already_configured_abort(hass):
         data={
             CONF_HOST: "1.2.3.4",
             CONF_NAME: DEFAULT_NAME,
-            CONF_PORT: "11111",
-            CONF_LISTEN_PORT: "22222",
+            CONF_PORT: DEFAULT_PORT,
             CONF_ON_ACTION: "test-on-action",
         },
     ).add_to_hass(hass)
@@ -683,8 +568,7 @@ async def test_imported_flow_encrypted_already_configured_abort(hass):
         data={
             CONF_HOST: "1.2.3.4",
             CONF_NAME: DEFAULT_NAME,
-            CONF_PORT: "11111",
-            CONF_LISTEN_PORT: "22222",
+            CONF_PORT: DEFAULT_PORT,
             CONF_ON_ACTION: "test-on-action",
             CONF_APP_ID: "test-app-id",
             CONF_ENCRYPTION_KEY: "test-encryption-key",
