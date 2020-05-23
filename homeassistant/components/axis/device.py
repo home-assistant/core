@@ -1,14 +1,15 @@
 """Axis network device abstraction."""
 
 import asyncio
-import json
 
 import async_timeout
 import axis
-from axis.event_stream import OPERATION_CHANGED, OPERATION_INITIALIZED
-from axis.streammanager import SIGNAL_PLAYING
+from axis.event_stream import OPERATION_INITIALIZED
+from axis.mqtt import json_message_to_event
+from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -21,6 +22,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.setup import async_when_setup
 
 from .const import (
     ATTR_MANUFACTURER,
@@ -124,6 +126,7 @@ class AxisNetworkDevice:
     async def async_new_address_callback(hass, entry):
         """Handle signals of device getting new address.
 
+        Called when config entry is updated.
         This is a static method because a class method (bound method),
         can not be used with weak references.
         """
@@ -144,30 +147,23 @@ class AxisNetworkDevice:
             sw_version=self.fw_version,
         )
 
-    @callback
-    def async_mqtt_message(self, msg):
-        """Axis MQTT message."""
-        message = json.loads(msg.payload)
-        topic = message["topic"].replace("onvif", "tns1").replace("axis", "tnsaxis")
-        print(topic)
-        source = ""
-        source_idx = ""
-        data_type = ""
-        data_value = ""
-        if message["message"]["source"]:
-            source, source_idx = next(iter(message["message"]["source"].items()))
-        if message["message"]["data"]:
-            data_type, data_value = next(iter(message["message"]["data"].items()))
+    async def use_mqtt(self, hass, component):
+        """Set up to use MQTT transport."""
+        status = await hass.async_add_executor_job(
+            self.api.vapix.mqtt.get_client_status
+        )
 
-        event = {
-            "operation": OPERATION_CHANGED,
-            "topic": topic,
-            "source": source,
-            "source_idx": source_idx,
-            "type": data_type,
-            "value": data_value,
-        }
-        print(event)
+        if status.get("data", {}).get("status", {}).get("state") == "active":
+            self.listeners.append(
+                await mqtt.async_subscribe(hass, f"{self.serial}/#", self.mqtt_message)
+            )
+
+    @callback
+    def mqtt_message(self, msg) -> None:
+        """Axis MQTT message."""
+        self.disconnect_from_stream()
+
+        event = json_message_to_event(msg.payload)
         self.api.event.process_event(event)
 
     async def async_setup(self):
@@ -201,35 +197,38 @@ class AxisNetworkDevice:
                 ]
             )
             if self.option_events:
-                self.api.stream.connection_status_callback = (
+                self.api.stream.connection_status_callback.append(
                     self.async_connection_status_callback
                 )
                 self.api.enable_events(event_callback=self.async_event_callback)
-                # self.api.start()
+                self.api.start()
+
+                if self.api.vapix.mqtt:
+                    async_when_setup(self.hass, MQTT_DOMAIN, self.use_mqtt)
 
         self.hass.async_create_task(start_platforms())
 
         self.config_entry.add_update_listener(self.async_new_address_callback)
 
-        await mqtt.async_subscribe(
-            self.hass, f"{self.serial}/#", self.async_mqtt_message
-        )
-
         return True
 
-    async def start(self, platform_tasks):
-        """Start the event stream when all platforms are loaded."""
-        await asyncio.gather(*platform_tasks)
-        # self.api.start()
+    @callback
+    def disconnect_from_stream(self):
+        """Stop stream."""
+        if self.api.stream.state != STATE_STOPPED:
+            self.api.stream.connection_status_callback.remove(
+                self.async_connection_status_callback
+            )
+            self.api.stop()
 
     @callback
     def shutdown(self, event):
         """Stop the event stream."""
-        self.api.stop()
+        self.disconnect_from_stream()
 
     async def async_reset(self):
         """Reset this device to default state."""
-        self.api.stop()
+        self.disconnect_from_stream()
 
         unload_ok = all(
             await asyncio.gather(
@@ -264,6 +263,7 @@ async def get_device(hass, host, port, username, password):
         with async_timeout.timeout(15):
 
             await asyncio.gather(
+                hass.async_add_executor_job(device.vapix.initialize_api_discovery),
                 hass.async_add_executor_job(device.vapix.params.update_brand),
                 hass.async_add_executor_job(device.vapix.params.update_properties),
                 hass.async_add_executor_job(device.vapix.ports.update),

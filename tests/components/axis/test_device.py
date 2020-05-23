@@ -41,6 +41,17 @@ ENTRY_CONFIG = {
     CONF_NAME: NAME,
 }
 
+DEFAULT_API_DISCOVERY = {
+    "method": "getApiList",
+    "apiVersion": "1.0",
+    "data": {
+        "apiList": [
+            {"id": "api-discovery", "version": "1.0", "name": "API Discovery Service"},
+            {"id": "param-cgi", "version": "1.0", "name": "Legacy Parameter Handling"},
+        ]
+    },
+}
+
 DEFAULT_BRAND = """root.Brand.Brand=AXIS
 root.Brand.ProdFullName=AXIS M1065-LW Network Camera
 root.Brand.ProdNbr=M1065-LW
@@ -76,6 +87,7 @@ async def setup_axis_integration(
     hass,
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
+    api_discovery=DEFAULT_API_DISCOVERY,
     brand=DEFAULT_BRAND,
     ports=DEFAULT_PORTS,
     properties=DEFAULT_PROPERTIES,
@@ -91,6 +103,9 @@ async def setup_axis_integration(
     )
     config_entry.add_to_hass(hass)
 
+    def mock_update_api_discovery(self):
+        self.process_raw(api_discovery)
+
     def mock_update_brand(self):
         self.process_raw(brand)
 
@@ -100,7 +115,9 @@ async def setup_axis_integration(
     def mock_update_properties(self):
         self.process_raw(properties)
 
-    with patch("axis.param_cgi.Brand.update_brand", new=mock_update_brand), patch(
+    with patch(
+        "axis.api_discovery.ApiDiscovery.update", new=mock_update_api_discovery
+    ), patch("axis.param_cgi.Brand.update_brand", new=mock_update_brand), patch(
         "axis.param_cgi.Ports.update_ports", new=mock_update_ports
     ), patch(
         "axis.param_cgi.Properties.update_properties", new=mock_update_properties
@@ -214,7 +231,7 @@ async def test_shutdown():
 async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
     with patch(
-        "axis.param_cgi.Params.update_brand", side_effect=axislib.Unauthorized
+        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -222,7 +239,7 @@ async def test_get_device_fails(hass):
 async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
     with patch(
-        "axis.param_cgi.Params.update_brand", side_effect=axislib.RequestError
+        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -230,6 +247,6 @@ async def test_get_device_device_unavailable(hass):
 async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
     with patch(
-        "axis.param_cgi.Params.update_brand", side_effect=axislib.AxisException
+        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")
