@@ -34,6 +34,7 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_MAIN_BRUSH_LEFT,
     ATTR_SIDE_BRUSH_LEFT,
     ATTR_TIMERS,
+    ATTR_TIMEZONE,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -105,6 +106,8 @@ def mirobo_is_got_error_fixture():
     mock_timer_2.ts = time(hour=11, minute=0)
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
+
+    mock_vacuum.timezone.return_value = "Europe/Berlin"
 
     with mock.patch(
         "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
@@ -181,6 +184,8 @@ def mirobo_is_on_fixture():
     mock_timer_2.ts = time(hour=11, minute=0)
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
+
+    mock_vacuum.timezone.return_value = "Europe/Berlin"
 
     with mock.patch(
         "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
@@ -267,6 +272,7 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
         {"enabled": True, "time": time(hour=9, minute=0)},
         {"enabled": False, "time": time(hour=11, minute=0)},
     ]
+    assert state.attributes.get(ATTR_TIMEZONE) == "Europe/Berlin"
 
     # Call services
     await hass.services.async_call(
@@ -371,6 +377,7 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
         {"enabled": True, "time": time(hour=9, minute=0)},
         {"enabled": False, "time": time(hour=11, minute=0)},
     ]
+    assert state.attributes.get(ATTR_TIMEZONE) == "Europe/Berlin"
 
     # Xiaomi vacuum specific services:
     await hass.services.async_call(

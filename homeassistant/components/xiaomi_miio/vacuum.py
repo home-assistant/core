@@ -72,6 +72,7 @@ ATTR_RC_VELOCITY = "velocity"
 ATTR_STATUS = "status"
 ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
+ATTR_TIMEZONE = "timezone"
 ATTR_TIMERS = "timers"
 
 SUPPORT_XIAOMI = (
@@ -217,6 +218,7 @@ class MiroboVacuum(StateVacuumEntity):
         self._fan_speeds = None
         self._fan_speeds_reverse = None
 
+        self.timezone = None
         self._timers = None
 
     @property
@@ -315,6 +317,9 @@ class MiroboVacuum(StateVacuumEntity):
 
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
+
+            if self.timezone:
+                attrs[ATTR_TIMEZONE] = self.timezone
 
             if self.timers:
                 attrs[ATTR_TIMERS] = self.timers
@@ -453,6 +458,7 @@ class MiroboVacuum(StateVacuumEntity):
             self.last_clean = self._vacuum.last_clean_details()
             self.dnd_state = self._vacuum.dnd_status()
 
+            self.timezone = self._vacuum.timezone()
             self._timers = self._vacuum.timer()
 
             self._available = True
