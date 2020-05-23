@@ -50,7 +50,7 @@ class HomeKitBridgeSwitch(HomeKitEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on the bridge."""
-        await self._homekit.async_stop()
+        await self._homekit.async_start()
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
