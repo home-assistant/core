@@ -308,7 +308,7 @@ async def test_user_esn_already_exists(
 
 
 async def test_user_error_on_could_not_connect(
-    hass: HomeAssistantType, vizio_cannot_connect: pytest.fixture
+    hass: HomeAssistantType, vizio_cant_connect: pytest.fixture
 ) -> None:
     """Test with could_not_connect during user_setup."""
     result = await hass.config_entries.flow.async_init(
