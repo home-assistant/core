@@ -312,19 +312,20 @@ class Volumio(MediaPlayerEntity):
                 _LOGGER.warning("Unknown playlist name %s", media_id)
             self._client.clear()
             self._client.load(media_id)
-            self._client.play()
         else:
             self._client.clear()
             self._client.add(media_id)
-            self._client.play()
-            
-            asyncio.sleep(self._client.status().get("duration", 2))
+        
+        waittimer = self._client.status().get("duration", 2)
+        self._client.play()
+        asyncio.sleep(waittimer)
     
     async def async_play_media(self, media_type, media_id, **kwargs):
         isPlaying = self.state == STATE_PLAYING
         
         if isPlaying:
             await self.send_volumio_msg("pause")
+            asyncio.sleep(0.1)
             
         self.mpd_play_media(media_type, media_id, **kwargs)
         
