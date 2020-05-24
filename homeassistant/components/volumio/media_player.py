@@ -293,26 +293,54 @@ class Volumio(MediaPlayerEntity):
     def play_media(self, *args, **kwargs):
         """Play a piece of media."""
         self.async_play_media(args, kwargs)
-            
-    async def async_play_media(self, media_type, media_id, **kwargs):
+        
+    def mpd_play_media(self, media_type, media_id, **kwargs):
+        """Send the media player the command for playing a playlist."""
+        _LOGGER.debug("Playing playlist: %s", media_id)
         if media_type == MEDIA_TYPE_PLAYLIST:
             if media_id in self._playlists:
                 self._currentplaylist = media_id
             else:
                 self._currentplaylist = None
                 _LOGGER.warning("Unknown playlist name %s", media_id)
-                
-            await self.send_volumio_msg("playPlaylist", media_id)
+            self._client.clear()
+            self._client.load(media_id)
+            self._client.play()
         else:
-            #await self.send_volumio_msg("clearQueue")
-            #await self.send_volumio_msg("addToQueue", media_id)
+            self._client.clear()
+            self._client.add(media_id)
+            self._client.play()
+    
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        svc = self._state.get("service", None)
+        
+        if svc == "spop" or svc is None:
             await self.send_volumio_msg("pause")
             self._client.clear()
             self._client.add(media_id)
             self._client.play()
             import time
-            time.sleep(2)
+            
+            while self._client.status()["state"] != "stop":
+                time.sleep(0.1)
             await self.send_volumio_msg("play")
+            
+            return
+        
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            if media_id in self._playlists:
+                self._currentplaylist = media_id
+            else:
+                self._currentplaylist = None
+                _LOGGER.warning("Unknown playlist name %s", media_id)
+            self._client.clear()
+            self._client.load(media_id)
+            self._client.play()
+        else:
+            self._client.clear()
+            self._client.add(media_id)
+            self._client.play()
+           
 
     @property
     def media_duration(self):
