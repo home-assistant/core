@@ -343,7 +343,7 @@ class Volumio(MediaPlayerEntity):
             self._client.stop()
             await self.send_volumio_msg("play")
         else:
-            await self.send_volumio_msg("pause")
+            await self.send_volumio_msg("stop")
 
     @property
     def media_duration(self):
