@@ -52,7 +52,6 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
-    EVENT_HOMEASSISTANT_SETUP,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -162,7 +161,6 @@ class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
     not_running = "NOT_RUNNING"
-    setup = "SETUP"
     starting = "STARTING"
     running = "RUNNING"
     stopping = "STOPPING"
@@ -212,9 +210,9 @@ class HomeAssistant:
         return self.state in (CoreState.starting, CoreState.running)
 
     @property
-    def is_setup(self) -> bool:
-        """Return if Home Assistant is setup and the webserver can serve."""
-        return self.state in (CoreState.setup, CoreState.starting, CoreState.running)
+    def is_stopping(self) -> bool:
+        """Return if Home Assistant is stopping."""
+        return self.state in (CoreState.stopping, CoreState.final_write)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -241,7 +239,7 @@ class HomeAssistant:
 
         This method is a coroutine.
         """
-        if self.state not in (CoreState.not_running, CoreState.setup):
+        if self.state != CoreState.not_running:
             raise RuntimeError("Home Assistant is already running")
 
         # _async_stop will set this instead of stopping the loop
@@ -1491,7 +1489,7 @@ class Config:
             # Try to migrate base_url to internal_url/external_url
             if "external_url" not in data:
                 self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_SETUP, migrate_base_url
+                    EVENT_HOMEASSISTANT_START, migrate_base_url
                 )
 
             self._update(
