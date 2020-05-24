@@ -362,7 +362,10 @@ class HomeAssistant:
 
         # If a task is scheduled
         if self._track_task:
-            _LOGGER.debug("async_add_executor_job: %s", task)
+            try:
+                assert 0
+            except Exception:
+                _LOGGER.exception("async_add_executor_job: %s", task)
             self._pending_tasks.append(task)
 
         return task
