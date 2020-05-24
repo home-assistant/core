@@ -3552,4 +3552,28 @@ DEVICES = [
         "model": "Z01-A19NAE26",
         "node_descriptor": b"\x02@\x8c`\x11RR\x00\x00\x00R\x00\x00",
     },
+    {
+        "device_no": 97,
+        "endpoints": {
+            1: {
+                "device_type": 512,
+                "endpoint_id": 1,
+                "in_clusters": [0, 3, 4, 5, 6, 8, 10, 21, 256, 64544, 64545],
+                "out_clusters": [3, 64544],
+                "profile_id": 260,
+            }
+        },
+        "entities": ["cover.unk_manufacturer_unk_model_77665544_level_on_off_shade"],
+        "entity_map": {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["level", "on_off", "shade"],
+                "entity_class": "Shade",
+                "entity_id": "cover.unk_manufacturer_unk_model_77665544_level_on_off_shade",
+            }
+        },
+        "event_channels": [],
+        "manufacturer": "unk_manufacturer",
+        "model": "unk_model",
+        "node_descriptor": b"\x01@\x8e\x10\x11RR\x00\x00\x00R\x00\x00",
+    },
 ]
