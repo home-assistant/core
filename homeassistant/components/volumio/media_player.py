@@ -159,7 +159,7 @@ class Volumio(MediaPlayerEntity):
         
         self.init_websocket()
         
-    async def init_websocket(self):
+    def init_websocket(self):
         """Initialize websocket, which handles all informations from / to volumio."""
         websession = async_get_clientsession(self.hass)
         url = f"http://{self.host}:{self.port}/socket.io"
