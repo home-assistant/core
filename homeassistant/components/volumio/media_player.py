@@ -161,8 +161,10 @@ class Volumio(MediaPlayerEntity):
     async def send_volumio_msg(self, method, params=None):
         """Handles volumio calls"""
         
-        state_name = await self.send(method, params)   
-        return getattr(self, state_name)
+        state_name = await self.send(method, params) 
+        if state_name is not None:
+            return getattr(self, state_name)
+        return None
 
     async def send(self, method, params=None):
         """Send message."""
