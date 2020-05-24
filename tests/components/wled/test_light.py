@@ -31,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -158,6 +158,7 @@ async def test_light_error(
         assert "Invalid response from API" in caplog.text
 
 
+@patch("asyncio.sleep", new=AsyncMock())
 async def test_light_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

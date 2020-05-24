@@ -5,10 +5,12 @@ from homeassistant.components.wled.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.core import HomeAssistant
 
+from tests.async_mock import AsyncMock, patch
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@patch("asyncio.sleep", new=AsyncMock())
 async def test_config_entry_not_ready(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

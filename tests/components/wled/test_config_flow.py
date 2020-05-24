@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -59,6 +60,7 @@ async def test_show_zerconf_form(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
+@patch("asyncio.sleep", new=AsyncMock())
 async def test_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -76,6 +78,7 @@ async def test_connection_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
+@patch("asyncio.sleep", new=AsyncMock())
 async def test_zeroconf_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -92,6 +95,7 @@ async def test_zeroconf_connection_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
+@patch("asyncio.sleep", new=AsyncMock())
 async def test_zeroconf_confirm_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -112,6 +116,7 @@ async def test_zeroconf_confirm_connection_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
+@patch("asyncio.sleep", new=AsyncMock())
 async def test_zeroconf_no_data(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
