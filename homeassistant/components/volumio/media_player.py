@@ -125,7 +125,7 @@ class Volumio(MediaPlayerEntity):
         self._methods = {
             "getDeviceInfo": "pushDeviceInfo",
             "getState":"pushState",
-            "getQueue","pushQueue",
+            "getQueue": "pushQueue",
             "getMultiRoomDevices":"pushMultiRoomDevices",
             "getLibraryListing": "pushLibraryListing",
             "getMenuItems": "pushMenuItems",
@@ -156,7 +156,7 @@ class Volumio(MediaPlayerEntity):
             #TODO: There are lots more, continue at L673
         }
         
-        await init_websocket()
+        self.init_websocket()
         
     async def init_websocket(self):
         """Initialize websocket, which handles all informations from / to volumio."""
@@ -164,29 +164,43 @@ class Volumio(MediaPlayerEntity):
         url = f"http://{self.host}:{self.port}/socket.io"
         self._ws = websession.ws_connect(url)
         
-    async def send(self, method, params=None):
+    async def send_volumio_msg(self, method, params=None):
         """Handles volumio calls"""
         
-        data = await self.send_volumio_msg(method, params)
-        _LOGGER.debug("received DATA: %s", data)
+        def api2websocket(method, params):
+            """Transform method and params from api to websocket calls."""
+            if method == "commands":
+                method = params["cmd"]
+
+                if method in params:
+                    params = params[method]
+                elif "value" in params:
+                    params = params["value"]
+                elif "name" in params:
+                    params = params["name"]
+                else:
+                    params = params["cmd"]
+                    
+            return method, params
         
-        if data is not None:
-            try:
-                await data = self.get_volumio_msg(self._methods[method])
-            except:
-                pass
+        method, params = api2websocket(method, params)
+        
+        self.send(method, params)        
+        await data = self.get_volumio_msg(self._methods[method])
         
         _LOGGER.debug("received DATA: %s", data)
         return data
             
-    async def get_volumio_msg(self, method):
+    async def get(self, method):
         """Handles responses from websocket."""
-        _LOGGER.debug("Get, URL: %s", url)
+        _LOGGER.debug("Get, method: %s", method)
         
         import json
         
         try:
             async for msg in self._ws:
+                _LOGGER.debug("get, METHOD: %s, received DATA: %s", method, data)
+                
                 data = json.loads(msg.data)
                 if data[0] == method:
                     return data[1]
@@ -198,9 +212,9 @@ class Volumio(MediaPlayerEntity):
            
         return None
 
-    async def send_volumio_msg(self, method, params=None):
+    async def send(self, method, params=None):
         """Send message."""
-        _LOGGER.debug("Send, URL: %s params: %s", url, params)
+        _LOGGER.debug("Send, method: %s params: %s", method, params)
 
         data = None
         
@@ -210,6 +224,8 @@ class Volumio(MediaPlayerEntity):
                 request_data.append(params)
                 
             data = await self._ws.send_json(request_data)
+            
+            _LOGGER.debug("send METHOD: %s, received DATA: %s", method, data)
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error(
                 "Failed communicating with Volumio '%s': %s", self._name, type(error)
@@ -271,6 +287,7 @@ class Volumio(MediaPlayerEntity):
     @property
     def media_seek_position(self):
         """Time in seconds of current seek position."""
+        await self.async_update()
         return self._state.get("seek", None)
     
     def media_seek(self, position):
@@ -397,4 +414,4 @@ class Volumio(MediaPlayerEntity):
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     async def _async_update_playlists(self, **kwargs):
         """Update available Volumio playlists."""
-        self._playlists = await self.send_volumio_msg("listplaylists")
+        self._playlists = await self.send_volumio_msg("listPlaylist")
