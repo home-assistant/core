@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_SETUP,
     EVENT_HOMEASSISTANT_STOP,
     REQUIRED_NEXT_PYTHON_DATE,
     REQUIRED_NEXT_PYTHON_VER,
@@ -381,6 +382,8 @@ async def _async_set_up_integrations(
 
     if stage_1_domains:
         await async_setup_multi_components(stage_1_domains)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_SETUP)
 
     # Load all integrations
     after_dependencies: Dict[str, Set[str]] = {}
