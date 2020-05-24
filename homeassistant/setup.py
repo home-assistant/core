@@ -19,7 +19,9 @@ DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
 
 SLOW_SETUP_WARNING = 10
-SLOW_SETUP_MAX_WAIT = 120
+# Since a pip install can run, we wait
+# 30 minutes to timeout
+SLOW_SETUP_MAX_WAIT = 1800
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
