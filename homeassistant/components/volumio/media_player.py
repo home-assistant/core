@@ -156,14 +156,12 @@ class Volumio(MediaPlayerEntity):
             
             #TODO: There are lots more, continue at L673
         }
-        
-        self.init_websocket()
-        
+                
     def init_websocket(self):
         """Initialize websocket, which handles all informations from / to volumio."""
         websession = async_get_clientsession(self.hass)
         url = f"http://{self.host}:{self.port}/socket.io"
-        self._ws = websession.ws_connect(url)
+        return websession.ws_connect(url)
         
     async def send_volumio_msg(self, method, params=None):
         """Handles volumio calls"""
@@ -186,27 +184,27 @@ class Volumio(MediaPlayerEntity):
         
         method, params = api2websocket(method, params)
         
-        self.send(method, params)
-        data = await self.get(self._methods[method])
+        async with init_websocket() as ws:
+            self.send(ws, method, params)
+            data = await self.get(ws, self._methods[method])
         
         _LOGGER.debug("received DATA: %s", data)
         return data
             
-    async def get(self, method):
+    async def get(self, ws, method):
         """Handles responses from websocket."""
         _LOGGER.debug("Get, method: %s", method)
         
         import json
         
         try:
-            async with self._ws as ws:
-                async for msg in ws:
-                    _LOGGER.debug("get, METHOD: %s, received DATA: %s", method, data)
+            async for msg in ws:
+                _LOGGER.debug("get, METHOD: %s, received DATA: %s", method, data)
 
-                    data = json.loads(msg.data)
-                    if data[0] == method:
-                        return data[1]
-                
+                data = json.loads(msg.data)
+                if data[0] == method:
+                    return data[1]
+
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error(
                 "Failed communicating with Volumio '%s': %s", self._name, type(error)
@@ -214,19 +212,18 @@ class Volumio(MediaPlayerEntity):
            
         return None
 
-    async def send(self, method, params=None):
+    async def send(self, ws, method, params=None):
         """Send message."""
         _LOGGER.debug("Send, method: %s params: %s", method, params)
 
         data = None
         
+        request_data = [method]
+        if params is not None:
+            request_data.append(params)
+        
         try:
-            request_data = [method]
-            if params is not None:
-                request_data.append(params)
-                
-            async with self._ws as ws:
-                data = await ws.send_json(request_data)
+            data = await ws.send_json(request_data)
             
             _LOGGER.debug("send METHOD: %s, received DATA: %s", method, data)
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
