@@ -134,8 +134,15 @@ class EmailReader:
             _LOGGER.info("Connection to %s lost, attempting to reconnect", self._server)
             try:
                 self.connect()
+                _LOGGER.info(
+                    "Reconnect to %s succeeded, trying last message", self._server
+                )
+                if self._last_id is not None:
+                    return self._fetch_message(str(self._last_id))
             except imaplib.IMAP4.error:
                 _LOGGER.error("Failed to reconnect")
+
+        return None
 
 
 class EmailContentSensor(Entity):
