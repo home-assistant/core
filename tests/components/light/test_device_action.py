@@ -9,6 +9,11 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_FLASH,
 )
+from homeassistant.components.light.device_action import (
+    TYPE_BRIGHTNESS_DECREASE,
+    TYPE_BRIGHTNESS_INCREASE,
+    TYPE_FLASH,
+)
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -152,7 +157,7 @@ async def test_get_action_capabilities_brightness(hass, device_reg, entity_reg):
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
         )
-        if action["type"] == "turn_on":
+        if action["type"] in (TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE):
             assert capabilities == expected_capabilities
         else:
             assert capabilities == {"extra_fields": []}
@@ -191,7 +196,7 @@ async def test_get_action_capabilities_flash(hass, device_reg, entity_reg):
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
         )
-        if action["type"] == "turn_on":
+        if action["type"] == TYPE_FLASH:
             assert capabilities == expected_capabilities
         else:
             assert capabilities == {"extra_fields": []}
