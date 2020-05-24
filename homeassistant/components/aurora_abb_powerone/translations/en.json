@@ -4,18 +4,21 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
-            "invalid_auth": "Invalid authentication",
+            "cannot_connect": "Unable to connect, please check serial port, address, electrical connection and that inverter is on (in daylight)",
+            "cannot_open_serial_port": "Cannot open serial port, please check and try again",
+            "invalid_serial_port": "Serial port is not a valid device or could not be openned",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "address": "Inverter Address",
+                    "port": "RS485 or USB-RS485 Adaptor Port",
+                    "usedummyonfail": "Use dummy data if connection fails (for debug)"
                 },
-                "title": "Connect to the device"
+                "description": "Select configuration options. Inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel",
+                "title": "Configure Aurora ABB PowerOne solar PV inverter"
             }
-        },
-        "title": "Aurora ABB PowerOne"
+        }
     }
 }
