@@ -186,7 +186,7 @@ class Volumio(MediaPlayerEntity):
         method, params = api2websocket(method, params)
         
         self.send(method, params)        
-        await data = self.get_volumio_msg(self._methods[method])
+        data = await self.get_volumio_msg(self._methods[method])
         
         _LOGGER.debug("received DATA: %s", data)
         return data
