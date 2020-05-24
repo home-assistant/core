@@ -12,7 +12,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up cover(s) for Velux platform."""
     entities = []
     for node in hass.data[DATA_VELUX].pyvlx.nodes:
-
         if isinstance(node, OpeningDevice):
             entities.append(VeluxCover(node))
     async_add_entities(entities)
@@ -57,7 +56,12 @@ class VeluxCover(cover.CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE | cover.SUPPORT_SET_POSITION | cover.SUPPORT_STOP
+        return (
+            cover.SUPPORT_OPEN
+            | cover.SUPPORT_CLOSE
+            | cover.SUPPORT_SET_POSITION
+            | cover.SUPPORT_STOP
+        )
 
     @property
     def current_cover_position(self):
