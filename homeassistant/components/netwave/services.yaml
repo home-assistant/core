@@ -23,7 +23,7 @@ send_parameter:
       description: Name of the camera to send update parameter on
       example: "camera.netwave_camera"
     parameter:
-      description: "Parameter on camera to update. Allowed values: mode, brightness, contrast, resolution, orientation, mirror_vertical, mirro_horizontal"
+      description: "Parameter on camera to update. Allowed values: mode, brightness, contrast, resolution, orientation, mirror_vertical, mirror_horizontal"
       example: "brightness"
     value:
       description: The value of the parameter to update with
