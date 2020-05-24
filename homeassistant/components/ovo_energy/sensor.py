@@ -108,6 +108,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
             if usage is None or usage.electricity is None:
                 _LOGGER.warning("No data found for %s", self._name)
                 self._available = False
+                return False
             last_reading: OVODailyElectricity = usage.electricity[
                 len(usage.electricity) - 1
             ]
@@ -148,6 +149,7 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
             if usage is None or usage.gas is None:
                 _LOGGER.warning("No data found for %s", self._name)
                 self._available = False
+                return False
             last_reading: OVODailyGas = usage.gas[len(usage.gas) - 1]
             self._state = last_reading.consumption
             self._attributes = {
