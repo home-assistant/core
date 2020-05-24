@@ -71,7 +71,6 @@ class TPLinkSmartBulb(LightEntity):
         self._min_mireds = None
         self._max_mireds = None
         self._is_available = True
-        self._is_setting_light_state = False
         self._supported_features = None
         self._device_state_attributes = {}
 
@@ -108,14 +107,10 @@ class TPLinkSmartBulb(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        if self._is_setting_light_state:
-            return  # we are already trying to set a state
-
         brightness = None
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
 
-        self._is_setting_light_state = True
         try:
             if brightness is not None and self.smartbulb.is_dimmable:
                 await self.smartbulb.set_brightness(
@@ -134,14 +129,10 @@ class TPLinkSmartBulb(LightEntity):
                 )
 
             await self.smartbulb.turn_on()
-            # all actions on bulbs will cause an automatic update
-            await self.async_update_ha_state(force_refresh=False)
             self._is_available = True
             return
         except (SmartDeviceException, OSError) as ex:
             _LOGGER.debug("Got error while setting the state: %s", ex)
-        finally:
-            self._is_setting_light_state = False
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
@@ -181,10 +172,6 @@ class TPLinkSmartBulb(LightEntity):
 
     async def async_update(self):
         """Update the TP-Link Bulb's state."""
-        # State is currently being set, ignore.
-        if self._is_setting_light_state:
-            return
-
         try:
             await self.smartbulb.update()
             self.update_emeter_state()
