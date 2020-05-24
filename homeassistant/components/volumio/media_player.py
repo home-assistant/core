@@ -190,12 +190,15 @@ class Volumio(MediaPlayerEntity):
         sio = socketio.AsyncClient()
         await sio.connect(url)
         
-        state_name = self._methods[method]
-        
-        @sio.on(state_name)
-        def func(data):
-            nonlocal state_name, self
-            setattr(self, state_name, data)
+        if method in self._methods:
+            state_name = self._methods[method]
+
+            @sio.on(state_name)
+            def func(data):
+                nonlocal state_name, self
+                setattr(self, state_name, data)
+        else:
+            state_name = None
         
         try:
             await sio.emit(method, params)
