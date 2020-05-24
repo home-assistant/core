@@ -13,6 +13,8 @@ import time
 import aiohttp
 import voluptuous as vol
 
+import mpd
+
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
@@ -123,6 +125,14 @@ class Volumio(MediaPlayerEntity):
         self._lastvol = self._state.get("volume", 0)
         self._playlists = []
         self._currentplaylist = None
+                
+        self._client = mpd.MPDClient()
+        self._client.timeout = 30
+        self._client.idletimeout = None
+                
+        self._client.connect(self.server, "6600)
+        if self.password is not None:
+            self._client.password(self.password)
         
         # taken from https://github.com/volumio/Volumio2/blob/master/app/plugins/user_interface/websocket/index.js
         self._methods = {
@@ -296,9 +306,12 @@ class Volumio(MediaPlayerEntity):
                 
             await self.send_volumio_msg("playPlaylist", media_id)
         else:
-            await self.send_volumio_msg("clearQueue")
-            await self.send_volumio_msg("addToQueue", media_id)
-            await self.send_volumio_msg("play")
+            #await self.send_volumio_msg("clearQueue")
+            #await self.send_volumio_msg("addToQueue", media_id)
+            #await self.send_volumio_msg("play")
+            self._client.clear()
+            self._client.add(media_id)
+            self._client.play()
 
     @property
     def media_duration(self):
