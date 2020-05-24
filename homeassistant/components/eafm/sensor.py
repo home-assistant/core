@@ -16,6 +16,12 @@ UNIT_MAPPING = {
 }
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up UK Flood Monitoring Sensors."""
+    station_key = config_entry.data["station"]
+    hass.data[DOMAIN][station_key].async_platform_loaded("sensor", async_add_entities)
+
+
 class Measurement(Entity):
     """A gauge at a flood monitoring station."""
 
@@ -93,9 +99,3 @@ class Measurement(Entity):
     def state(self):
         """Return the current sensor value."""
         return self._measure["latestReading"]["value"]
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up UK Flood Monitoring Sensors."""
-    station_key = config_entry.data["station"]
-    hass.data[DOMAIN][station_key].async_platform_loaded("sensor", async_add_entities)
