@@ -9,8 +9,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .sensor import Measurement
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=15)
@@ -43,11 +41,11 @@ class Station:
         await self.async_poll()
 
     @callback
-    def async_platform_loaded(self, platform, async_add_entities):
+    def async_platform_loaded(self, platform, async_add_entity):
         """Register a platform that this station can create entities in."""
         # We can't add entities until we get an async_add_entities from the right platform
         # Right now we only have a sensors platform.
-        self._async_add_entities = async_add_entities
+        self._async_add_entities = async_add_entity
 
     async def async_stop(self):
         """Stop polling the API."""
@@ -91,9 +89,9 @@ class Station:
                 if "latestReading" not in measure:
                     # Don't create a sensor entity for a gauge that isn't available
                     continue
-                measurement = Measurement(data, measure)
-                self._async_add_entities([measurement])
-                self.measurements[measure["@id"]] = measurement
+                self.measurements[measure["@id"]] = self._async_add_entities(
+                    data, measure
+                )
                 continue
 
             measurement = self.measurements[measure["@id"]]

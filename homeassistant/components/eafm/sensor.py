@@ -19,7 +19,14 @@ UNIT_MAPPING = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up UK Flood Monitoring Sensors."""
     station_key = config_entry.data["station"]
-    hass.data[DOMAIN][station_key].async_platform_loaded("sensor", async_add_entities)
+
+    @callback
+    def async_add_entity(station, measurement):
+        measurement = Measurement(station, measurement)
+        async_add_entities([measurement])
+        return measurement
+
+    hass.data[DOMAIN][station_key].async_platform_loaded("sensor", async_add_entity)
 
 
 class Measurement(Entity):
