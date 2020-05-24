@@ -130,9 +130,7 @@ class Volumio(MediaPlayerEntity):
         self._client.timeout = 30
         self._client.idletimeout = None
                 
-        self._client.connect(self.server, "6600")
-        if self.password is not None:
-            self._client.password(self.password)
+        self._client.connect(self.host, "6600")
         
         # taken from https://github.com/volumio/Volumio2/blob/master/app/plugins/user_interface/websocket/index.js
         self._methods = {
