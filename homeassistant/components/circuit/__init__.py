@@ -13,18 +13,11 @@ DOMAIN = "circuit"
 CONF_WEBHOOK = "webhook"
 
 WEBHOOK_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_URL): vol.All(cv.ensure_list, [cv.string]),
-    }
+    {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_URL): cv.string}
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_WEBHOOK): vol.All(cv.ensure_list, [WEBHOOK_SCHEMA])}
-        )
-    },
+    {DOMAIN: vol.Schema({vol.Required(CONF_WEBHOOK): [WEBHOOK_SCHEMA]})},
     extra=vol.ALLOW_EXTRA,
 )
 
