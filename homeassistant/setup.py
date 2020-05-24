@@ -186,7 +186,7 @@ async def _async_setup_component(
         result = await asyncio.wait_for(asyncio.shield(task), SLOW_SETUP_MAX_WAIT)
     except asyncio.TimeoutError:
         _LOGGER.error(
-            "Setup of component %s is taking longer than %s seconds."
+            "Setup of %s is taking longer than %s seconds."
             " Startup will proceed without waiting any longer.",
             domain,
             SLOW_SETUP_MAX_WAIT,
