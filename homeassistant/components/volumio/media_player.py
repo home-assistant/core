@@ -130,7 +130,7 @@ class Volumio(MediaPlayerEntity):
         self._client.timeout = 30
         self._client.idletimeout = None
                 
-        self._client.connect(self.server, "6600)
+        self._client.connect(self.server, "6600")
         if self.password is not None:
             self._client.password(self.password)
         
