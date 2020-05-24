@@ -3,7 +3,7 @@
 # TODO default update rate for temperature sensor should be slower.
 # TODO verify that sn, pn, fw read correctly at init.
 # TODO (maybe) allow setup via configuration.yaml (deprecated?)
-# TODO Extra sensors (grid voltage, frequency, etc)
+# TODO (maybe) Extra sensors (grid voltage, frequency, etc)
 #
 # Reference info:
 # https://s1.solacity.com/docs/PVI-3.0-3.6-4.2-OUTD-US%20Manual.pdf
