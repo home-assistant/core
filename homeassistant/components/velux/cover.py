@@ -2,7 +2,20 @@
 from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
-from homeassistant.components import cover
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    DEVICE_CLASS_AWNING,
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_GATE,
+    DEVICE_CLASS_SHUTTER,
+    SUPPORT_CLOSE,
+    DEVICE_CLASS_WINDOW,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    SUPPORT_STOP,
+    CoverEntity,
+)
 from homeassistant.core import callback
 
 from . import DATA_VELUX
@@ -17,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class VeluxCover(cover.CoverEntity):
+class VeluxCover(CoverEntity):
     """Representation of a Velux cover."""
 
     def __init__(self, node):
@@ -57,10 +70,10 @@ class VeluxCover(cover.CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         return (
-            cover.SUPPORT_OPEN
-            | cover.SUPPORT_CLOSE
-            | cover.SUPPORT_SET_POSITION
-            | cover.SUPPORT_STOP
+            SUPPORT_OPEN
+            | SUPPORT_CLOSE
+            | SUPPORT_SET_POSITION
+            | SUPPORT_STOP
         )
 
     @property
@@ -72,18 +85,18 @@ class VeluxCover(cover.CoverEntity):
     def device_class(self):
         """Define this cover as either awning, blind, garage, gate, shutter or window."""
         if isinstance(self.node, Awning):
-            return cover.DEVICE_CLASS_AWNING
+            return DEVICE_CLASS_AWNING
         if isinstance(self.node, Blind):
-            return cover.DEVICE_CLASS_BLIND
+            return DEVICE_CLASS_BLIND
         if isinstance(self.node, GarageDoor):
-            return cover.DEVICE_CLASS_GARAGE
+            return DEVICE_CLASS_GARAGE
         if isinstance(self.node, Gate):
-            return cover.DEVICE_CLASS_GATE
+            return DEVICE_CLASS_GATE
         if isinstance(self.node, RollerShutter):
-            return cover.DEVICE_CLASS_SHUTTER
+            return DEVICE_CLASS_SHUTTER
         if isinstance(self.node, Window):
-            return cover.DEVICE_CLASS_WINDOW
-        return cover.DEVICE_CLASS_WINDOW
+            return DEVICE_CLASS_WINDOW
+        return DEVICE_CLASS_WINDOW
 
     @property
     def is_closed(self):
@@ -100,8 +113,8 @@ class VeluxCover(cover.CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if cover.ATTR_POSITION in kwargs:
-            position_percent = 100 - kwargs[cover.ATTR_POSITION]
+        if ATTR_POSITION in kwargs:
+            position_percent = 100 - kwargs[ATTR_POSITION]
 
             await self.node.set_position(
                 Position(position_percent=position_percent), wait_for_completion=False
