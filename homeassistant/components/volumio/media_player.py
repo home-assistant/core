@@ -316,9 +316,9 @@ class Volumio(MediaPlayerEntity):
             self._client.clear()
             self._client.add(media_id)
         
-        waittimer = self._client.status().get("duration", 2)
+        waittimer = self._client.status().get("duration", 0)
         self._client.play()
-        await asyncio.sleep(waittimer)
+        await asyncio.sleep(waittimer + 1)
     
     async def async_play_media(self, media_type, media_id, **kwargs):
         isPlaying = self.state == STATE_PLAYING
