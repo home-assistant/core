@@ -1027,7 +1027,7 @@ oru==0.1.11
 orvibo==1.1.1
 
 # homeassistant.components.ovo_energy
-ovoenergy==1.1.3
+ovoenergy==1.1.6
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
