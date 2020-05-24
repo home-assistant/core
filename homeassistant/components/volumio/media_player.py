@@ -297,6 +297,13 @@ class Volumio(MediaPlayerEntity):
     def mpd_play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
         _LOGGER.debug("Playing playlist: %s", media_id)
+
+        try:
+            self._client.status()
+        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError):
+            # Cleanly disconnect in case connection is not in valid state
+            self._client.connect(self.host, "6600")
+        
         if media_type == MEDIA_TYPE_PLAYLIST:
             if media_id in self._playlists:
                 self._currentplaylist = media_id
@@ -314,17 +321,15 @@ class Volumio(MediaPlayerEntity):
             asyncio.sleep(self._client.status().get("duration", 2))
     
     async def async_play_media(self, media_type, media_id, **kwargs):
-        svc = self._state.get("service", None)
-        
         isPlaying = self.state == STATE_PLAYING
         
-        if isPlaying and svc == "spop":
+        if isPlaying:
             await self.send_volumio_msg("pause")
             
         self.mpd_play_media(media_type, media_id, **kwargs)
         
-        if isPlaying and svc == "spop":
-            await self.send_volumio_msg("play")        
+        if isPlaying:
+            await self.send_volumio_msg("play")
 
     @property
     def media_duration(self):
