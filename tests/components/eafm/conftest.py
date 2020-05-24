@@ -3,7 +3,6 @@
 
 import asyncio
 import datetime
-from unittest import mock
 
 from asynctest import patch
 import pytest
@@ -43,6 +42,6 @@ def mock_get_station():
 def utcnow(request):
     """Freeze time at a known point."""
     start_dt = datetime.datetime(2019, 1, 1, 0, 0, 0)
-    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         yield dt_utcnow
