@@ -69,12 +69,7 @@ class VeluxCover(CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return (
-            SUPPORT_OPEN
-            | SUPPORT_CLOSE
-            | SUPPORT_SET_POSITION
-            | SUPPORT_STOP
-        )
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
 
     @property
     def current_cover_position(self):
