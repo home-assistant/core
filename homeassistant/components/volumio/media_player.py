@@ -327,20 +327,7 @@ class Volumio(MediaPlayerEntity):
             
             return
         
-        if media_type == MEDIA_TYPE_PLAYLIST:
-            if media_id in self._playlists:
-                self._currentplaylist = media_id
-            else:
-                self._currentplaylist = None
-                _LOGGER.warning("Unknown playlist name %s", media_id)
-            self._client.clear()
-            self._client.load(media_id)
-            self._client.play()
-        else:
-            self._client.clear()
-            self._client.add(media_id)
-            self._client.play()
-           
+        self.mpd_play_media(media_type, media_id, kwargs)
 
     @property
     def media_duration(self):
