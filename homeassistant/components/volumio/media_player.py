@@ -194,7 +194,7 @@ class Volumio(MediaPlayerEntity):
         
         @sio.on(state_name)
         def func(data):
-            settattr(self, name, data)
+            setattr(self, name, data)
         
         try:
             await sio.emit(method, params)
