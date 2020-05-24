@@ -158,15 +158,12 @@ class Volumio(MediaPlayerEntity):
             
             #TODO: There are lots more, continue at L673
         }
-        
-        self.init_websocket()
                 
     async def init_websocket(self):
         """Initialize websocket, which handles all informations from / to volumio."""
         #websession = async_get_clientsession(self.hass)
         url = f"http://{self.host}:{self.port}"
         sio = socketio.AsyncClient()
-        self._sio = sio
         await sio.connect(url)
         return sio
         
@@ -196,8 +193,10 @@ class Volumio(MediaPlayerEntity):
         def callback(sid, data):
             lock = False
             content = data
+            
+        sio = await self.init_websocket()
         
-        self.send(self._sio, method, params, callback)
+        self.send(sio, method, params, callback)
         
         while lock:
             _LOGGER.debug("wait")
