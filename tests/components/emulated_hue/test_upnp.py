@@ -62,13 +62,10 @@ ST:ssdp:all
 Man:"ssdp:discover"
 MX:3
 
-""".replace(
-                "\n", "\r\n"
-            ).encode(
-                "utf-8"
-            )
+"""
+            encoded_request = request.replace("\n", "\r\n").encode("utf-8")
 
-            response = upnp_responder_thread._handle_request(request)
+            response = upnp_responder_thread._handle_request(encoded_request)
             expected_response = """HTTP/1.1 200 OK
 CACHE-CONTROL: max-age=60
 EXT:
@@ -95,13 +92,10 @@ MAN: "ssdp:discover"
 MX: 40
 ST: upnp:rootdevice
 
-""".replace(
-                "\n", "\r\n"
-            ).encode(
-                "utf-8"
-            )
+"""
+            encoded_request = request.replace("\n", "\r\n").encode("utf-8")
 
-            response = upnp_responder_thread._handle_request(request)
+            response = upnp_responder_thread._handle_request(encoded_request)
             expected_response = """HTTP/1.1 200 OK
 CACHE-CONTROL: max-age=60
 EXT:
