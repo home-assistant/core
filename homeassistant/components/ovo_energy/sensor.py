@@ -85,7 +85,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity):
 
 
 class OVOEnergyLastElectricityReading(OVOEnergySensor):
-    """Defines a OVO Energy card count sensor."""
+    """Defines a OVO Energy last reading sensor."""
 
     def __init__(self, client):
         """Initialize OVO Energy sensor."""
@@ -126,7 +126,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
 
 
 class OVOEnergyLastGasReading(OVOEnergySensor):
-    """Defines a OVO Energy card count sensor."""
+    """Defines a OVO Energy last reading sensor."""
 
     def __init__(self, client):
         """Initialize OVO Energy sensor."""
