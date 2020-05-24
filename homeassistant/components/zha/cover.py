@@ -294,7 +294,7 @@ class KeenVent(Shade):
         return DEVICE_CLASS_DAMPER
 
     async def async_open_cover(self, **kwargs):
-        """Open the window cover."""
+        """Open the cover."""
         position = self._position or 100
         tasks = [
             self._level_channel.move_to_level_with_on_off(position * 255 / 100, 1),
