@@ -180,7 +180,7 @@ async def _async_setup_component(
                 None, component.setup, hass, processed_config  # type: ignore
             )
         else:
-            log_error("No setup function defined for %s", domain)
+            _LOGGER.error("No setup function defined for %s", domain)
             return False
 
         result = await asyncio.wait_for(asyncio.shield(task), SLOW_SETUP_MAX_WAIT)
