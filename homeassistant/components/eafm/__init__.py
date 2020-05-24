@@ -26,7 +26,7 @@ async def async_setup_entry(hass, entry):
     )
 
     station = hass.data[DOMAIN][station_key] = Station(hass, entry)
-    hass.add_job(station.async_start)
+    hass.async_create_task(station.async_start())
 
     return True
 
