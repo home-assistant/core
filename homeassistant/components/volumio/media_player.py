@@ -332,7 +332,7 @@ class Volumio(MediaPlayerEntity):
         
         wait_seconds = 10
         split_number = 5
-        split = wait_seconds % split_number
+        split = wait_seconds / split_number
         
         counter = 0
         while self._client.status().get("state") == "play" or counter < wait_seconds:
