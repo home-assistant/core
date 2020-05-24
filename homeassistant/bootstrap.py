@@ -14,12 +14,10 @@ import voluptuous as vol
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_SETUP,
     EVENT_HOMEASSISTANT_STOP,
     REQUIRED_NEXT_PYTHON_DATE,
     REQUIRED_NEXT_PYTHON_VER,
 )
-from homeassistant.core import CoreState
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import DATA_SETUP, async_setup_component
@@ -389,9 +387,6 @@ async def _async_set_up_integrations(
         _LOGGER.info("Setting up %s", stage_1_domains)
 
         await async_setup_multi_components(stage_1_domains)
-
-    hass.state = CoreState.setup
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_SETUP)
 
     # Load all integrations
     after_dependencies: Dict[str, Set[str]] = {}
