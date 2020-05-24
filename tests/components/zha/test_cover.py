@@ -7,8 +7,16 @@ import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.cover import ATTR_CURRENT_POSITION, DOMAIN
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    DOMAIN,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
+)
 from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE
+from homeassistant.core import CoreState, State
 
 from .common import (
     async_enable_traffic,
@@ -18,7 +26,7 @@ from .common import (
 )
 
 from tests.async_mock import AsyncMock, MagicMock, call, patch
-from tests.common import mock_coro
+from tests.common import mock_coro, mock_restore_cache
 
 
 @pytest.fixture
@@ -95,7 +103,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
         "zigpy.zcl.Cluster.request", return_value=mock_coro([0x1, zcl_f.Status.SUCCESS])
     ):
         await hass.services.async_call(
-            DOMAIN, "close_cover", {"entity_id": entity_id}, blocking=True
+            DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args == call(
@@ -107,7 +115,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
         "zigpy.zcl.Cluster.request", return_value=mock_coro([0x0, zcl_f.Status.SUCCESS])
     ):
         await hass.services.async_call(
-            DOMAIN, "open_cover", {"entity_id": entity_id}, blocking=True
+            DOMAIN, SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args == call(
@@ -120,7 +128,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
     ):
         await hass.services.async_call(
             DOMAIN,
-            "set_cover_position",
+            SERVICE_SET_COVER_POSITION,
             {"entity_id": entity_id, "position": 47},
             blocking=True,
         )
@@ -140,7 +148,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
         "zigpy.zcl.Cluster.request", return_value=mock_coro([0x2, zcl_f.Status.SUCCESS])
     ):
         await hass.services.async_call(
-            DOMAIN, "stop_cover", {"entity_id": entity_id}, blocking=True
+            DOMAIN, SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args == call(
@@ -152,13 +160,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
     assert hass.states.get(entity_id).state == STATE_OPEN
 
 
-@patch(
-    "homeassistant.components.zha.core.channels.base.ZigbeeChannel.get_attribute_value",
-    return_value=0,
-)
-async def test_shade(
-    get_attr_val_mock, hass, zha_device_joined_restored, zigpy_shade_device
-):
+async def test_shade(hass, zha_device_joined_restored, zigpy_shade_device):
     """Test zha cover platform for shade device type."""
 
     # load up cover domain
@@ -187,7 +189,7 @@ async def test_shade(
     # close from UI command fails
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
         await hass.services.async_call(
-            DOMAIN, "close_cover", {"entity_id": entity_id}, blocking=True
+            DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster_on_off.request.call_count == 1
         assert cluster_on_off.request.call_args[0][0] is False
@@ -198,7 +200,7 @@ async def test_shade(
         "zigpy.zcl.Cluster.request", AsyncMock(return_value=[0x1, zcl_f.Status.SUCCESS])
     ):
         await hass.services.async_call(
-            DOMAIN, "close_cover", {"entity_id": entity_id}, blocking=True
+            DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster_on_off.request.call_count == 1
         assert cluster_on_off.request.call_args[0][0] is False
@@ -210,7 +212,7 @@ async def test_shade(
     await send_attributes_report(hass, cluster_level, {0: 0})
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
         await hass.services.async_call(
-            DOMAIN, "open_cover", {"entity_id": entity_id}, blocking=True
+            DOMAIN, SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster_on_off.request.call_count == 1
         assert cluster_on_off.request.call_args[0][0] is False
@@ -222,7 +224,7 @@ async def test_shade(
         "zigpy.zcl.Cluster.request", AsyncMock(return_value=[0x0, zcl_f.Status.SUCCESS])
     ):
         await hass.services.async_call(
-            DOMAIN, "open_cover", {"entity_id": entity_id}, blocking=True
+            DOMAIN, SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True
         )
         assert cluster_on_off.request.call_count == 1
         assert cluster_on_off.request.call_args[0][0] is False
@@ -233,7 +235,7 @@ async def test_shade(
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
         await hass.services.async_call(
             DOMAIN,
-            "set_cover_position",
+            SERVICE_SET_COVER_POSITION,
             {"entity_id": entity_id, "position": 47},
             blocking=True,
         )
@@ -249,7 +251,7 @@ async def test_shade(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "set_cover_position",
+            SERVICE_SET_COVER_POSITION,
             {"entity_id": entity_id, "position": 47},
             blocking=True,
         )
@@ -270,3 +272,37 @@ async def test_shade(
         hass, zigpy_shade_device, [cluster_level, cluster_on_off], (1,)
     )
     assert hass.states.get(entity_id).state == STATE_OPEN
+
+    # test cover stop
+    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True,
+        )
+        assert cluster_level.request.call_count == 1
+        assert cluster_level.request.call_args[0][0] is False
+        assert cluster_level.request.call_args[0][1] in (0x0003, 0x0007)
+
+
+async def test_restore_state(hass, zha_device_restored, zigpy_shade_device):
+    """Ensure states are restored on startup."""
+
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "cover.fakemanufacturer_fakemodel_e769900a_level_on_off_shade",
+                STATE_OPEN,
+                {ATTR_CURRENT_POSITION: 50},
+            ),
+        ),
+    )
+
+    hass.state = CoreState.starting
+
+    zha_device = await zha_device_restored(zigpy_shade_device)
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    assert entity_id is not None
+
+    # test that the cover was created and that it is unavailable
+    assert hass.states.get(entity_id).state == STATE_OPEN
+    assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 50
