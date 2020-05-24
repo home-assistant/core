@@ -1036,16 +1036,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1094,16 +1094,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1152,16 +1152,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
