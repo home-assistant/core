@@ -107,6 +107,45 @@ async def test_reading_no_unit(hass, mock_get_station):
     assert state.state == "5"
 
 
+async def test_ignore_invalid_latest_reading(hass, mock_get_station):
+    """
+    Test that a sensor functions even if its unit is not known.
+
+    E.g. https://environment.data.gov.uk/flood-monitoring/id/stations/L0410
+    """
+    _ = await async_setup_test_fixture(
+        hass,
+        mock_get_station,
+        {
+            "label": "My station",
+            "measures": [
+                {
+                    "@id": "really-long-unique-id",
+                    "label": "York Viking Recorder - level-stage-i-15_min----",
+                    "qualifier": "Stage",
+                    "parameterName": "Water Level",
+                    "latestReading": "http://environment.data.gov.uk/flood-monitoring/data/readings/L0410-level-stage-i-15_min----/2017-02-22T10-30-00Z",
+                    "stationReference": "L0410",
+                },
+                {
+                    "@id": "really-long-unique-id",
+                    "label": "York Viking Recorder - level-stage-i-15_min----",
+                    "qualifier": "Stage",
+                    "parameterName": "Other",
+                    "latestReading": {"value": 5},
+                    "stationReference": "L0411",
+                },
+            ],
+        },
+    )
+
+    state = hass.states.get("sensor.my_station_water_level_stage")
+    assert state is None
+
+    state = hass.states.get("sensor.my_station_other_stage")
+    assert state.state == "5"
+
+
 @pytest.mark.parametrize("exception", CONNECTION_EXCEPTIONS)
 async def test_reading_unavailable(hass, mock_get_station, exception):
     """Test that a sensor is marked as unavailable if there is a connection error."""
