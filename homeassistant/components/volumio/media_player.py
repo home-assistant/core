@@ -199,12 +199,13 @@ class Volumio(MediaPlayerEntity):
         import json
         
         try:
-            async for msg in self._ws:
-                _LOGGER.debug("get, METHOD: %s, received DATA: %s", method, data)
-                
-                data = json.loads(msg.data)
-                if data[0] == method:
-                    return data[1]
+            async with self._ws as ws:
+                async for msg in ws:
+                    _LOGGER.debug("get, METHOD: %s, received DATA: %s", method, data)
+
+                    data = json.loads(msg.data)
+                    if data[0] == method:
+                        return data[1]
                 
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error(
@@ -224,7 +225,8 @@ class Volumio(MediaPlayerEntity):
             if params is not None:
                 request_data.append(params)
                 
-            data = await self._ws.send_json(request_data)
+            async with self._ws as ws:
+                data = await ws.send_json(request_data)
             
             _LOGGER.debug("send METHOD: %s, received DATA: %s", method, data)
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
