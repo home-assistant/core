@@ -3,7 +3,6 @@ from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
 from homeassistant.components import cover
-
 from homeassistant.core import callback
 
 from . import DATA_VELUX
