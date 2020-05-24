@@ -19,6 +19,7 @@ from homeassistant.const import (
     REQUIRED_NEXT_PYTHON_DATE,
     REQUIRED_NEXT_PYTHON_VER,
 )
+from homeassistant.core import CoreState
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import DATA_SETUP, async_setup_component
@@ -390,6 +391,7 @@ async def _async_set_up_integrations(
 
         await async_setup_multi_components(http_domains)
 
+    hass.state = CoreState.setup
     hass.bus.async_fire(EVENT_HOMEASSISTANT_SETUP)
 
     # Load all integrations

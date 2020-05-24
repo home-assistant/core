@@ -162,6 +162,7 @@ class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
     not_running = "NOT_RUNNING"
+    setup = "SETUP"
     starting = "STARTING"
     running = "RUNNING"
     stopping = "STOPPING"
@@ -209,6 +210,11 @@ class HomeAssistant:
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
+
+    @property
+    def is_setup(self) -> bool:
+        """Return if Home Assistant is setup and the webserver can serve."""
+        return self.state in (CoreState.setup, CoreState.starting, CoreState.running)
 
     def start(self) -> int:
         """Start Home Assistant.
