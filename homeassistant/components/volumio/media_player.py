@@ -322,7 +322,9 @@ class Volumio(MediaPlayerEntity):
         await asyncio.sleep(waittimer)
     
     async def async_play_media(self, media_type, media_id, **kwargs):
-        isPlaying = self.state == STATE_PLAYING
+        isPlaying = False
+        if self.state == STATE_PLAYING:
+            isPlaying = True
         
         if isPlaying:
             await self.send_volumio_msg("pause")
