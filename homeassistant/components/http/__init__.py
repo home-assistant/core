@@ -11,7 +11,7 @@ from aiohttp.web_exceptions import HTTPMovedPermanently
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_SETUP,
     EVENT_HOMEASSISTANT_STOP,
     SERVER_PORT,
 )
@@ -238,7 +238,7 @@ async def async_setup(hass, config):
 
         await store.async_save(conf_to_save)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_SETUP, start_server)
 
     hass.http = server
 

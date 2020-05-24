@@ -14,10 +14,12 @@ import voluptuous as vol
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_SETUP,
     EVENT_HOMEASSISTANT_STOP,
     REQUIRED_NEXT_PYTHON_DATE,
     REQUIRED_NEXT_PYTHON_VER,
 )
+from homeassistant.core import CoreState
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import DATA_SETUP, async_setup_component
@@ -43,6 +45,7 @@ STAGE_1_INTEGRATIONS = {
     # To provide account link implementations
     "cloud",
 }
+FRONTEND_INTEGRATIONS = {"frontend"}
 
 
 async def async_setup_hass(
@@ -365,7 +368,8 @@ async def _async_set_up_integrations(
     # setup components
     logging_domains = domains & LOGGING_INTEGRATIONS
     stage_1_domains = domains & STAGE_1_INTEGRATIONS
-    stage_2_domains = domains - logging_domains - stage_1_domains
+    frontend_domains = domains & FRONTEND_INTEGRATIONS
+    stage_2_domains = domains - logging_domains - stage_1_domains - frontend_domains
 
     if logging_domains:
         _LOGGER.info("Setting up %s", logging_domains)
@@ -381,6 +385,14 @@ async def _async_set_up_integrations(
 
     if stage_1_domains:
         await async_setup_multi_components(stage_1_domains)
+
+    if frontend_domains:
+        _LOGGER.info("Setting up %s", frontend_domains)
+
+        await async_setup_multi_components(frontend_domains)
+
+    hass.state = CoreState.setup
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_SETUP)
 
     # Load all integrations
     after_dependencies: Dict[str, Set[str]] = {}

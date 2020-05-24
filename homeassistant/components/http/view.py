@@ -13,7 +13,7 @@ from aiohttp.web_exceptions import (
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK, HTTP_SERVICE_UNAVAILABLE
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
@@ -103,8 +103,11 @@ def request_handler_factory(view, handler):
 
     async def handle(request):
         """Handle incoming request."""
-        if not request.app[KEY_HASS].is_running:
-            return web.Response(status=503)
+
+        # We do not want to serve http requests when
+        # stopping.
+        if not request.app[KEY_HASS].is_setup:
+            return web.Response(status=HTTP_SERVICE_UNAVAILABLE)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
