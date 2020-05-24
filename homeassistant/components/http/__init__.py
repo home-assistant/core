@@ -403,7 +403,11 @@ class HomeAssistantHTTP:
         # pylint: disable=protected-access
         self.app._router.freeze = lambda: None
         self.app.logger.setLevel(logging.DEBUG)
-
+        self.app.logger.debug("foo")
+        server_logger = logging.getLogger("aiohttp.server")
+        server_logger.setLevel(logging.DEBUG)
+        access_logger = logging.getLogger("aiohttp.access")
+        access_logger.setLevel(logging.DEBUG)
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()
         self.site = web.TCPSite(
