@@ -44,6 +44,7 @@ STAGE_1_INTEGRATIONS = {
     # To provide account link implementations
     "cloud",
 }
+HTTP_INTEGRATIONS = {"http"}
 
 
 async def async_setup_hass(
@@ -366,7 +367,8 @@ async def _async_set_up_integrations(
     # setup components
     logging_domains = domains & LOGGING_INTEGRATIONS
     stage_1_domains = domains & STAGE_1_INTEGRATIONS
-    stage_2_domains = domains - logging_domains - stage_1_domains
+    http_domains = domains & HTTP_INTEGRATIONS
+    stage_2_domains = domains - logging_domains - stage_1_domains - http_domains
 
     if logging_domains:
         _LOGGER.info("Setting up %s", logging_domains)
@@ -382,6 +384,11 @@ async def _async_set_up_integrations(
 
     if stage_1_domains:
         await async_setup_multi_components(stage_1_domains)
+
+    if http_domains:
+        _LOGGER.info("Setting up %s", http_domains)
+
+        await async_setup_multi_components(http_domains)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_SETUP)
 
