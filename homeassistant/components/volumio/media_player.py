@@ -122,7 +122,6 @@ class Volumio(MediaPlayerEntity):
         self._lastvol = self._state.get("volume", 0)
         self._playlists = []
         self._currentplaylist = None
-        self._ws = None
         
         # taken from https://github.com/volumio/Volumio2/blob/master/app/plugins/user_interface/websocket/index.js
         self._methods = {
@@ -162,6 +161,13 @@ class Volumio(MediaPlayerEntity):
     async def send_volumio_msg(self, method, params=None):
         """Handles volumio calls"""
         
+        state_name = await self.send(method, params)   
+        return getattr(self, state_name)
+
+    async def send(self, method, params=None):
+        """Send message."""
+        _LOGGER.debug("Send, method: %s params: %s", method, params)
+        
         def api2websocket(method, params):
             """Transform method and params from api to websocket calls."""
             if method == "commands":
@@ -184,23 +190,14 @@ class Volumio(MediaPlayerEntity):
         sio = socketio.AsyncClient()
         await sio.connect(url)
         
-        lock = True
-        content = None
-        def callback(sid, data):
-            nonlocal lock, content
-            lock = False
-            content = data
-                
-        await self.send(sio, method, params, callback)
-               
-        return content
-
-    async def send(self, sio, method, params=None, callback=None):
-        """Send message."""
-        _LOGGER.debug("Send, method: %s params: %s", method, params)
+        state_name = self._methods[method]
+        
+        @sio.on(state_name)
+        def func(data):
+            settattr(self, name, data)
         
         try:
-            await sio.emit(method, params, callback=callback)
+            await sio.emit(method, params)
             
             _LOGGER.debug("send METHOD: %s", method)
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
@@ -209,7 +206,10 @@ class Volumio(MediaPlayerEntity):
             )
             return False
 
-        return True
+        await sio.sleep(1)
+        await sio.disconnect()
+        
+        return state_name
 
     async def async_update(self):
         """Update state."""
