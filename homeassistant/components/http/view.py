@@ -103,9 +103,6 @@ def request_handler_factory(view, handler):
 
     async def handle(request):
         """Handle incoming request."""
-
-        # We do not want to serve http requests when
-        # stopping.
         if request.app[KEY_HASS].is_stopping:
             return web.Response(status=HTTP_SERVICE_UNAVAILABLE)
 
