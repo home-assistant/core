@@ -254,7 +254,7 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(websocket_get_version)
     _LOGGER.info("Register ManifestJSONView")
     hass.http.register_view(ManifestJSONView)
-    _LOGGER.info("Done ManifestJSONView")
+    _LOGGER.info("Done ManifestJSONView: %s", MANIFEST_JSON)
 
     conf = config.get(DOMAIN, {})
 
