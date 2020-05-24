@@ -59,6 +59,7 @@ SUPPORT_VOLUMIO = (
     | SUPPORT_NEXT_TRACK
     | SUPPORT_SEEK
     | SUPPORT_STOP
+    | SUPPORT_PLAY_MEDIA
     | SUPPORT_PLAY
     | SUPPORT_VOLUME_STEP
     | SUPPORT_SELECT_SOURCE
@@ -118,31 +119,101 @@ class Volumio(MediaPlayerEntity):
         self._lastvol = self._state.get("volume", 0)
         self._playlists = []
         self._currentplaylist = None
-
-    async def send_volumio_msg(self, method, params=None):
-        """Send message."""
-        url = f"http://{self.host}:{self.port}/api/v1/{method}/"
-
-        _LOGGER.debug("URL: %s params: %s", url, params)
-
+        self._ws = None
+        
+        # taken from https://github.com/volumio/Volumio2/blob/master/app/plugins/user_interface/websocket/index.js
+        self._methods = {
+            "getDeviceInfo": "pushDeviceInfo",
+            "getState":"pushState",
+            "getQueue","pushQueue",
+            "getMultiRoomDevices":"pushMultiRoomDevices",
+            "getLibraryListing": "pushLibraryListing",
+            "getMenuItems": "pushMenuItems",
+            "getUiConfig": "pushUiConfig",
+            "getBrowseSources": "pushBrowseSources",
+            "browseLibrary": "pushBrowseLibrary",
+            "search": "pushBrowseLibrary",
+            "goTo": "pushBrowseLibrary",
+            "GetTrackInfo":"pushGetTrackInfo",
+            "addWebRadio":"pushAddWebRadio",
+            "removeWebRadio":"pushBrowseLibrary",
+            "getPlaylistContent":"pushPlaylistContent",
+            "createPlaylist":"pushCreatePlaylist",
+            "deletePlaylist":"pushListPlaylist",
+            "listPlaylist":"pushListPlaylist",
+            "addToPlaylist":"pushListPlaylist",
+            "removeFromPlaylist":"pushBrowseLibrary",
+            "playPlaylist":"pushPlayPlaylist",
+            "enqueue":"pushEnqueue",
+            "addToFavourites":"urifavourites",
+            "removeFromFavourites":"pushBrowseLibrary",
+            "playFavourites": "pushPlayFavourites",
+            "addToRadioFavourites":"pushAddToRadioFavourites",
+            "removeFromRadioFavourites":"pushRemoveFromRadioFavourites",
+            "playRadioFavourites":"pushPlayRadioFavourites",
+            "getSleep":"pushSleep"
+            
+            #TODO: There are lots more, continue at L673
+        }
+        
+        await init_websocket()
+        
+    async def init_websocket(self):
+        """Initialize websocket, which handles all informations from / to volumio."""
+        websession = async_get_clientsession(self.hass)
+        url = f"http://{self.host}:{self.port}/socket.io"
+        self._ws = websession.ws_connect(url)
+        
+    async def send(self, method, params=None):
+        """Handles volumio calls"""
+        
+        data = await self.send_volumio_msg(method, params)
+        _LOGGER.debug("received DATA: %s", data)
+        
+        if data is not None:
+            try:
+                await data = self.get_volumio_msg(self._methods[method])
+            except:
+                pass
+        
+        _LOGGER.debug("received DATA: %s", data)
+        return data
+            
+    async def get_volumio_msg(self, method):
+        """Handles responses from websocket."""
+        _LOGGER.debug("Get, URL: %s", url)
+        
+        import json
+        
         try:
-            websession = async_get_clientsession(self.hass)
-            response = await websession.get(url, params=params)
-            if response.status == HTTP_OK:
-                data = await response.json()
-            else:
-                _LOGGER.error(
-                    "Query failed, response code: %s Full message: %s",
-                    response.status,
-                    response,
-                )
-                return False
-
+            async for msg in self._ws:
+                data = json.loads(msg.data)
+                if data[0] == method:
+                    return data[1]
+                
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error(
                 "Failed communicating with Volumio '%s': %s", self._name, type(error)
             )
-            return False
+           
+        return None
+
+    async def send_volumio_msg(self, method, params=None):
+        """Send message."""
+        _LOGGER.debug("Send, URL: %s params: %s", url, params)
+
+        data = None
+        
+        try:
+            request_data = [method]
+            if params is not None:
+                request_data.append(params)
+                
+            data = await self._ws.send_json(request_data)
+        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
+            _LOGGER.error(
+                "Failed communicating with Volumio '%s': %s", self._name, type(error)
+            )
 
         return data
 
@@ -201,6 +272,14 @@ class Volumio(MediaPlayerEntity):
     def media_seek_position(self):
         """Time in seconds of current seek position."""
         return self._state.get("seek", None)
+    
+    def media_seek(self, position):
+        """Send seek command."""
+        raise NotImplementedError()
+        
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        raise NotImplementedError()
 
     @property
     def media_duration(self):
