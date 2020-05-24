@@ -408,6 +408,10 @@ class HomeAssistantHTTP:
         server_logger.setLevel(logging.DEBUG)
         access_logger = logging.getLogger("aiohttp.access")
         access_logger.setLevel(logging.DEBUG)
+        internal_logger = logging.getLogger("aiohttp.internal")
+        internal_logger.setLevel(logging.DEBUG)
+        web_logger = logging.getLogger("aiohttp.web")
+        web_logger.setLevel(logging.DEBUG)
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()
         self.site = web.TCPSite(
