@@ -102,13 +102,13 @@ class NotifyEventsNotificationService(BaseNotificationService):
         if ATTR_LEVEL in data:
             try:
                 msg.set_level(data[ATTR_LEVEL])
-            except Exception as error:
+            except ValueError as error:
                 _LOGGER.warning("Setting level error: %s", error)
 
         if ATTR_PRIORITY in data:
             try:
                 msg.set_priority(data[ATTR_PRIORITY])
-            except Exception as error:
+            except ValueError as error:
                 _LOGGER.warning("Setting priority error: %s", error)
 
         if ATTR_IMAGES in data:
