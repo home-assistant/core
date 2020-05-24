@@ -187,16 +187,12 @@ class Volumio(MediaPlayerEntity):
         lock = True
         content = None
         def callback(sid, data):
-            nonlocal lock
+            nonlocal lock, content
             lock = False
             content = data
                 
         await self.send(sio, method, params, callback)
-        
-        while lock:
-            _LOGGER.debug("wait")
-            time.sleep(0.05)
-        
+               
         return content
 
     async def send(self, sio, method, params=None, callback=None):
