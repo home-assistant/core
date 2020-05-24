@@ -52,6 +52,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_SETUP,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -1484,7 +1485,7 @@ class Config:
             # Try to migrate base_url to internal_url/external_url
             if "external_url" not in data:
                 self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, migrate_base_url
+                    EVENT_HOMEASSISTANT_SETUP, migrate_base_url
                 )
 
             self._update(
