@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenGarage covers."""
     covers = []
     devices = config.get(CONF_COVERS)
@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         covers.append(OpenGarageCover(device_config.get(CONF_NAME), open_garage))
 
-    add_entities(covers, True)
+    async_add_entities(covers, True)
 
 
 class OpenGarageCover(CoverEntity):

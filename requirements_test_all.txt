@@ -79,7 +79,7 @@ aiofreepybox==0.0.8
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.37
+aiohomekit[IP]==0.2.38
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -297,7 +297,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.2
+hass-nabucasa==0.34.3
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -829,7 +829,7 @@ stringcase==1.2.0
 sunwatcher==0.2.1
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.10
+tellduslive==0.10.11
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.2.8

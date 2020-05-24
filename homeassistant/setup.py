@@ -19,6 +19,7 @@ DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
 
 SLOW_SETUP_WARNING = 10
+SLOW_SETUP_MAX_WAIT = 120
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
@@ -167,16 +168,28 @@ async def _async_setup_component(
 
     try:
         if hasattr(component, "async_setup"):
-            result = await component.async_setup(  # type: ignore
+            task = component.async_setup(  # type: ignore
                 hass, processed_config
             )
         elif hasattr(component, "setup"):
-            result = await hass.async_add_executor_job(
-                component.setup, hass, processed_config  # type: ignore
+            # This should not be replaced with hass.async_add_executor_job because
+            # we don't want to track this task in case it blocks startup.
+            task = hass.loop.run_in_executor(
+                None, component.setup, hass, processed_config  # type: ignore
             )
         else:
-            log_error("No setup function defined.")
+            log_error("No setup function defined for %s", domain)
             return False
+
+        result = await asyncio.wait_for(asyncio.shield(task), SLOW_SETUP_MAX_WAIT)
+    except asyncio.TimeoutError:
+        _LOGGER.error(
+            "Setup of component %s is taking longer than %s seconds."
+            " Startup will proceed without waiting any longer.",
+            domain,
+            SLOW_SETUP_MAX_WAIT,
+        )
+        return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
         async_notify_setup_error(hass, domain, integration.documentation)

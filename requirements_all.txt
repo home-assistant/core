@@ -172,7 +172,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.37
+aiohomekit[IP]==0.2.38
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -529,7 +529,7 @@ enocean==0.50
 enturclient==0.2.1
 
 # homeassistant.components.environment_canada
-env_canada==0.0.35
+env_canada==0.0.38
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -701,7 +701,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.2
+hass-nabucasa==0.34.3
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -2060,7 +2060,7 @@ tellcore-net==0.4
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.10
+tellduslive==0.10.11
 
 # homeassistant.components.lg_soundbar
 temescal==0.1
