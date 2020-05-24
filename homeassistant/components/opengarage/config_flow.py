@@ -66,9 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if info:
                 await self.async_set_unique_id(info["unique_id"])
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST]}
-                )
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=info["title"], data=user_input)
 
