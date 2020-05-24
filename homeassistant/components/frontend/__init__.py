@@ -244,7 +244,10 @@ def _frontend_root(dev_repo_path):
 
 async def async_setup(hass, config):
     """Set up the serving of the frontend."""
+    _LOGGER.info("async setup frontend - wait for storage")
     await async_setup_frontend_storage(hass)
+    _LOGGER.info("async setup frontend - finished waiting for storage")
+
     hass.components.websocket_api.async_register_command(websocket_get_panels)
     hass.components.websocket_api.async_register_command(websocket_get_themes)
     hass.components.websocket_api.async_register_command(websocket_get_translations)
@@ -480,7 +483,7 @@ class ManifestJSONView(HomeAssistantView):
     @callback
     def get(self, request):  # pylint: disable=no-self-use
         """Return the manifest.json."""
-        _LOGGER.debug("ManifestJSONView")
+        _LOGGER.info("ManifestJSONView")
         msg = json.dumps(MANIFEST_JSON, sort_keys=True)
         return web.Response(text=msg, content_type="application/manifest+json")
 
