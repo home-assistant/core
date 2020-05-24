@@ -480,6 +480,7 @@ class ManifestJSONView(HomeAssistantView):
     @callback
     def get(self, request):  # pylint: disable=no-self-use
         """Return the manifest.json."""
+        _LOGGER.debug("ManifestJSONView")
         msg = json.dumps(MANIFEST_JSON, sort_keys=True)
         return web.Response(text=msg, content_type="application/manifest+json")
 
