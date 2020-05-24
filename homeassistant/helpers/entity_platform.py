@@ -175,7 +175,7 @@ class EntityPlatform:
         try:
             task = async_create_setup_task()
 
-            await asyncio.wait_for(asyncio.shield(task), SLOW_SETUP_MAX_WAIT)
+            await asyncio.wait_for(task, SLOW_SETUP_MAX_WAIT)
 
             # Block till all entities are done
             if self._tasks:
