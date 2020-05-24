@@ -10,6 +10,7 @@ class DeviceInfo:
     manufacturer: str = None
     model: str = None
     fw_version: str = None
+    serial_number: str = None
     mac: str = None
 
 
