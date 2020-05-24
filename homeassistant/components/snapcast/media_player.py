@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
     STATE_IDLE,
@@ -67,7 +68,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform.async_register_entity_service(SERVICE_UNJOIN, {}, handle_async_unjoin)
     platform.async_register_entity_service(
         SERVICE_SET_LATENCY,
-        {vol.Required(ATTR_LATENCY): cv.positive_int},
+        {
+            vol.Required(ATTR_LATENCY): cv.positive_int,
+            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        },
         handle_set_latency,
     )
 
