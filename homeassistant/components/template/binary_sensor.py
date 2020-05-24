@@ -1,10 +1,12 @@
 """Support for exposing a templated binary sensor."""
 import logging
+import typing
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
@@ -15,6 +17,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
     CONF_SENSORS,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
@@ -22,11 +25,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_same_state, async_track_state_change
+from homeassistant.helpers.storage import Store
 
-from . import extract_entities, initialise_templates
+from .common import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
 
 SENSOR_SCHEMA = vol.Schema(
     {
@@ -54,9 +62,60 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
 )
 
+CREATE_FIELDS = {
+    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+    vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+}
+
+UPDATE_FIELDS = {
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+    vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+}
+
+
+async def async_setup_helpers(hass):
+    """Set up the helper storage and WebSockets."""
+    _LOGGER.debug("SETUP")
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    id_manager = collection.IDManager()
+
+    storage_collection = BinarySensorStorageCollection(
+        Store(hass, STORAGE_VERSION, STORAGE_KEY),
+        logging.getLogger(f"{__name__}.storage_collection"),
+        id_manager,
+    )
+    collection.attach_entity_component_collection(
+        component, storage_collection, BinarySensorTemplate
+    )
+
+    await storage_collection.async_load()
+
+    collection.StorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    ).async_setup(hass)
+
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up template binary sensors."""
+    _LOGGER.debug("SETUP PLATFORM")
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -107,6 +166,26 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
+class BinarySensorStorageCollection(collection.StorageCollection):
+    """Input storage based collection."""
+
+    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+
+    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+        """Validate the config is valid."""
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: typing.Dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_NAME]
+
+    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+        """Return a new updated data object."""
+        return self.UPDATE_SCHEMA({**data, **update_data})
+
+
 class BinarySensorTemplate(BinarySensorEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
@@ -143,6 +222,11 @@ class BinarySensorTemplate(BinarySensorEntity):
         self._available = True
         self._attribute_templates = attribute_templates
         self._attributes = {}
+
+    @classmethod
+    def from_storage(cls, config: typing.Dict) -> "BinarySensorTemplate":
+        """Return entity instance initialized from yaml storage."""
+        return cls(**config)
 
     async def async_added_to_hass(self):
         """Register callbacks."""

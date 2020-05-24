@@ -28,7 +28,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 
-from . import extract_entities, initialise_templates
+from .common import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"

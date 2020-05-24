@@ -24,7 +24,8 @@
     "input_datetime",
     "input_text",
     "input_number",
-    "input_select"
+    "input_select",
+    "template"
   ],
   "codeowners": []
 }
