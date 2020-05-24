@@ -98,7 +98,7 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
         zigpy.profiles.zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: LIGHT,
         zigpy.profiles.zha.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
+        zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: COVER,
         zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST: SWITCH,
         zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT: LIGHT,
         zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
