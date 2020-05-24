@@ -2,6 +2,8 @@
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -10,7 +12,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_TO_CLIMATE_HVAC_MODE, BLEBOX_TO_CURRENT_HVAC_MODE
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -32,7 +33,10 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateDevice):
     @property
     def hvac_mode(self):
         """Return the desired HVAC mode."""
-        return BLEBOX_TO_CLIMATE_HVAC_MODE[self._feature.is_on]
+        if self._feature.is_on is None:
+            return None
+
+        return HVAC_MODE_HEAT if self._feature.is_on else HVAC_MODE_OFF
 
     @property
     def hvac_action(self):
@@ -41,8 +45,8 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateDevice):
         if not is_on:
             return None if is_on is None else CURRENT_HVAC_OFF
 
-        heating = self._feature.is_heating
-        return BLEBOX_TO_CURRENT_HVAC_MODE[heating]
+        # NOTE: In practice, there's no need to handle case when is_heating is None
+        return CURRENT_HVAC_HEAT if self._feature.is_heating else CURRENT_HVAC_IDLE
 
     @property
     def hvac_modes(self):
