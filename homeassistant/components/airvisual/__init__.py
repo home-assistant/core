@@ -95,13 +95,7 @@ def async_get_cloud_api_update_interval(hass, api_key):
     This will shift based on the number of active consumers, thus keeping the user
     under the monthly API limit.
     """
-    num_consumers = len(
-        {
-            config_entry
-            for config_entry in hass.config_entries.async_entries(DOMAIN)
-            if config_entry.data.get(CONF_API_KEY) == api_key
-        }
-    )
+    num_consumers = len(async_get_geo_entries_by_api_key(hass, api_key))
 
     # Assuming 10,000 calls per month and a "smallest possible month" of 28 days; note
     # that we give a buffer of 1500 API calls for any drift, restarts, etc.:
@@ -110,18 +104,34 @@ def async_get_cloud_api_update_interval(hass, api_key):
 
 
 @callback
-def async_reset_coordinator_update_intervals(hass, update_interval):
-    """Update any existing data coordinators with a new update interval."""
-    if not hass.data[DOMAIN][DATA_COORDINATOR]:
-        return
+def async_get_geo_entries_by_api_key(hass, api_key):
+    """Get all geography-based config entries that have a particular API key."""
+    return [
+        config_entry
+        for config_entry in hass.config_entries.async_entries(DOMAIN)
+        if config_entry.data.get(CONF_API_KEY) == api_key
+    ]
 
-    for coordinator in hass.data[DOMAIN][DATA_COORDINATOR].values():
+
+@callback
+def async_sync_geo_coordinator_update_intervals(hass, api_key, update_interval):
+    """Sync the update interval for geography-based data coordinators (by API key)."""
+    for config_entry in async_get_geo_entries_by_api_key(hass, api_key):
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][INTEGRATION_TYPE_GEOGRAPHY][
+            config_entry.entry_id
+        ]
+        LOGGER.error("New update interval: %s", update_interval)
         coordinator.update_interval = update_interval
 
 
 async def async_setup(hass, config):
     """Set up the AirVisual component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
+    hass.data[DOMAIN] = {
+        DATA_COORDINATOR: {
+            INTEGRATION_TYPE_GEOGRAPHY: {},
+            INTEGRATION_TYPE_NODE_PRO: {},
+        }
+    }
 
     if DOMAIN not in config:
         return True
@@ -224,9 +234,15 @@ async def async_setup_entry(hass, config_entry):
             update_method=async_update_data,
         )
 
+        hass.data[DOMAIN][DATA_COORDINATOR][INTEGRATION_TYPE_GEOGRAPHY][
+            config_entry.entry_id
+        ] = coordinator
+
         # Ensure any other, existing config entries that use this API key are updated
         # with the new scan interval:
-        async_reset_coordinator_update_intervals(hass, update_interval)
+        async_sync_geo_coordinator_update_intervals(
+            hass, config_entry.data[CONF_API_KEY], update_interval
+        )
 
         # Only geography-based entries have options:
         config_entry.add_update_listener(async_update_options)
@@ -255,9 +271,11 @@ async def async_setup_entry(hass, config_entry):
             update_method=async_update_data,
         )
 
-    await coordinator.async_refresh()
+        hass.data[DOMAIN][DATA_COORDINATOR][INTEGRATION_TYPE_NODE_PRO][
+            config_entry.entry_id
+        ] = coordinator
 
-    hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
+    await coordinator.async_refresh()
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -316,14 +334,29 @@ async def async_unload_entry(hass, config_entry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(config_entry.entry_id)
+        if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+            # Re-calculate the update interval period for any remaining consumes of this
+            # API key
+            async_sync_geo_coordinator_update_intervals(
+                hass,
+                config_entry.data[CONF_API_KEY],
+                async_get_cloud_api_update_interval(
+                    hass, config_entry.data[CONF_API_KEY]
+                ),
+            )
+
+        hass.data[DOMAIN][DATA_COORDINATOR][
+            config_entry.data[CONF_INTEGRATION_TYPE]
+        ].pop(config_entry.entry_id)
 
     return unload_ok
 
 
 async def async_update_options(hass, config_entry):
     """Handle an options update."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][
+        config_entry.data[CONF_INTEGRATION_TYPE]
+    ][config_entry.entry_id]
     await coordinator.async_request_refresh()
 
 
