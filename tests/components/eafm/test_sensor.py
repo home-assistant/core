@@ -53,6 +53,60 @@ async def async_setup_test_fixture(hass, mock_get_station, initial_value):
     return entry, poll
 
 
+async def test_reading_measures_not_list(hass, mock_get_station):
+    """
+    Test that a measure can be a dict not a list.
+
+    E.g. https://environment.data.gov.uk/flood-monitoring/id/stations/751110
+    """
+    _ = await async_setup_test_fixture(
+        hass,
+        mock_get_station,
+        {
+            "label": "My station",
+            "measures": {
+                "@id": "really-long-unique-id",
+                "label": "York Viking Recorder - level-stage-i-15_min----",
+                "qualifier": "Stage",
+                "parameterName": "Water Level",
+                "latestReading": {"value": 5},
+                "stationReference": "L1234",
+            },
+        },
+    )
+
+    state = hass.states.get("sensor.my_station_water_level_stage")
+    assert state.state == "5"
+
+
+async def test_reading_no_unit(hass, mock_get_station):
+    """
+    Test that a sensor functions even if its unit is not known.
+
+    E.g. https://environment.data.gov.uk/flood-monitoring/id/stations/L0410
+    """
+    _ = await async_setup_test_fixture(
+        hass,
+        mock_get_station,
+        {
+            "label": "My station",
+            "measures": [
+                {
+                    "@id": "really-long-unique-id",
+                    "label": "York Viking Recorder - level-stage-i-15_min----",
+                    "qualifier": "Stage",
+                    "parameterName": "Water Level",
+                    "latestReading": {"value": 5},
+                    "stationReference": "L1234",
+                }
+            ],
+        },
+    )
+
+    state = hass.states.get("sensor.my_station_water_level_stage")
+    assert state.state == "5"
+
+
 @pytest.mark.parametrize("exception", CONNECTION_EXCEPTIONS)
 async def test_reading_unavailable(hass, mock_get_station, exception):
     """Test that a sensor is marked as unavailable if there is a connection error."""

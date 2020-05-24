@@ -21,6 +21,15 @@ UNIT_MAPPING = {
 }
 
 
+def get_measures(station_data):
+    """Force measure key to always be a list."""
+    if "measures" not in station_data:
+        return []
+    if isinstance(station_data["measures"], dict):
+        return [station_data["measures"]]
+    return station_data["measures"]
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up UK Flood Monitoring Sensors."""
     station_key = config_entry.data["station"]
@@ -33,8 +42,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async with async_timeout.timeout(30):
             data = await get_station(session, station_key)
 
+        measures = get_measures(data)
+
         # Look to see if payload contains new measures
-        for measure in data["measures"]:
+        for measure in measures:
             if measure["@id"] not in measurements:
                 if "latestReading" not in measure:
                     # Don't create a sensor entity for a gauge that isn't available
@@ -48,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         # Turn data.measures into a dict rather than a list so easier for entities to
         # find themselves.
-        data["measures"] = {measure["@id"]: measure for measure in data["measures"]}
+        data["measures"] = {measure["@id"]: measure for measure in measures}
 
         return data
 
@@ -141,10 +152,10 @@ class Measurement(Entity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-
-        unit = self.coordinator.data["measures"][self.key]["unit"]
-        unit_name = self.coordinator.data["measures"][self.key]["unitName"]
-        return UNIT_MAPPING.get(unit, unit_name)
+        measure = self.coordinator.data["measures"][self.key]
+        if "unit" not in measure:
+            return None
+        return UNIT_MAPPING.get(measure["unit"], measure["unitName"])
 
     @property
     def attribution(self):
