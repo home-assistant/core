@@ -44,8 +44,11 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
+    # Get the frontend up and running as soon
+    # as possible so problem integrations can
+    # be removed
+    "frontend",
 }
-FRONTEND_INTEGRATIONS = {"frontend"}
 
 
 async def async_setup_hass(
@@ -368,8 +371,7 @@ async def _async_set_up_integrations(
     # setup components
     logging_domains = domains & LOGGING_INTEGRATIONS
     stage_1_domains = domains & STAGE_1_INTEGRATIONS
-    frontend_domains = domains & FRONTEND_INTEGRATIONS
-    stage_2_domains = domains - logging_domains - stage_1_domains - frontend_domains
+    stage_2_domains = domains - logging_domains - stage_1_domains
 
     if logging_domains:
         _LOGGER.info("Setting up %s", logging_domains)
@@ -384,21 +386,9 @@ async def _async_set_up_integrations(
     )
 
     if stage_1_domains:
+        _LOGGER.info("Setting up %s", stage_1_domains)
+
         await async_setup_multi_components(stage_1_domains)
-
-    try:
-        hass.components.persistent_notification.async_create(
-            "Integrations are being loaded.",
-            "HomeAssistant is starting up",
-            "bootstrap",
-        )
-    except Exception:  # pylint: disable=broad-except
-        pass
-
-    if frontend_domains:
-        _LOGGER.info("Setting up %s", frontend_domains)
-
-        await async_setup_multi_components(frontend_domains)
 
     hass.state = CoreState.setup
     hass.bus.async_fire(EVENT_HOMEASSISTANT_SETUP)
@@ -441,11 +431,6 @@ async def _async_set_up_integrations(
         _LOGGER.debug("Final set up: %s", stage_2_domains)
 
         await async_setup_multi_components(stage_2_domains)
-
-    try:
-        hass.components.persistent_notification.async_dismiss("bootstrap")
-    except Exception:  # pylint: disable=broad-except
-        pass
 
     # Wrap up startup
     await hass.async_block_till_done()
