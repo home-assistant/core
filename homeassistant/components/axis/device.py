@@ -149,7 +149,7 @@ class AxisNetworkDevice:
         )
 
     async def use_mqtt(self, hass: HomeAssistant, component: str) -> None:
-        """Set up to use MQTT transport."""
+        """Set up to use MQTT."""
         status = await hass.async_add_executor_job(
             self.api.vapix.mqtt.get_client_status
         )
@@ -160,7 +160,7 @@ class AxisNetworkDevice:
             )
 
     async def mqtt_message(self, message: Message) -> None:
-        """Axis MQTT message."""
+        """Receive Axis MQTT message."""
         self.disconnect_from_stream()
 
         event = mqtt_json_to_event(message.payload)
