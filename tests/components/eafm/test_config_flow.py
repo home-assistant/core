@@ -7,7 +7,7 @@ from homeassistant.components.eafm import const
 
 async def test_flow_no_discovered_stations(hass, mock_get_stations):
     """Test config flow discovers no station."""
-    mock_get_stations([])
+    mock_get_stations.return_value = []
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}
     )
@@ -17,7 +17,9 @@ async def test_flow_no_discovered_stations(hass, mock_get_stations):
 
 async def test_flow_invalid_station(hass, mock_get_stations):
     """Test config flow errors on invalid station."""
-    mock_get_stations([{"label": "My station", "stationReference": "L12345"}])
+    mock_get_stations.return_value = [
+        {"label": "My station", "stationReference": "L12345"}
+    ]
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}
@@ -32,8 +34,12 @@ async def test_flow_invalid_station(hass, mock_get_stations):
 
 async def test_flow_works(hass, mock_get_stations, mock_get_station):
     """Test config flow discovers no station."""
-    mock_get_stations([{"label": "My station", "stationReference": "L12345"}])
-    mock_get_station([{"label": "My station", "stationReference": "L12345"}])
+    mock_get_stations.return_value = [
+        {"label": "My station", "stationReference": "L12345"}
+    ]
+    mock_get_station.return_value = [
+        {"label": "My station", "stationReference": "L12345"}
+    ]
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}

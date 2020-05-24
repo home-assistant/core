@@ -22,7 +22,7 @@ CONNECTION_EXCEPTIONS = [
 
 async def async_setup_test_fixture(hass, mock_get_station, initial_value):
     """Create a dummy config entry for testing polling."""
-    mock_get_station(initial_value)
+    mock_get_station.return_value = initial_value
 
     entry = MockConfigEntry(
         version=1,
@@ -39,7 +39,13 @@ async def async_setup_test_fixture(hass, mock_get_station, initial_value):
     await hass.async_block_till_done()
 
     async def poll(value):
-        mock_get_station(value)
+        mock_get_station.reset_mock(return_value=True, side_effect=True)
+
+        if isinstance(value, Exception):
+            mock_get_station.side_effect = value
+        else:
+            mock_get_station.return_value = value
+
         next_update = dt_util.utcnow() + datetime.timedelta(60 * 15)
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
@@ -115,7 +121,7 @@ async def test_recover_from_failure(hass, mock_get_station, exception):
                     "label": "York Viking Recorder - level-stage-i-15_min----",
                     "qualifier": "Stage",
                     "parameterName": "Water Level",
-                    "latestReading": {"value": 5},
+                    "latestReading": {"value": 56},
                     "stationReference": "L1234",
                     "unit": "http://qudt.org/1.1/vocab/unit#Meter",
                     "unitName": "m",
@@ -124,7 +130,7 @@ async def test_recover_from_failure(hass, mock_get_station, exception):
         },
     )
     state = hass.states.get("sensor.my_station_water_level_stage")
-    assert state.state == "5"
+    assert state.state == "56"
 
 
 async def test_reading_is_sampled(hass, mock_get_station):
