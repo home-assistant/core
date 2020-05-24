@@ -82,7 +82,7 @@ aiofreepybox==0.0.8
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.37
+aiohomekit[IP]==0.2.38
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -138,7 +138,7 @@ arcam-fmj==0.4.4
 async-upnp-client==0.14.13
 
 # homeassistant.components.stream
-av==7.0.1
+av==8.0.1
 
 # homeassistant.components.axis
 axis==25
@@ -294,7 +294,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.2
+hass-nabucasa==0.34.3
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -312,7 +312,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200519.1
+home-assistant-frontend==20200519.4
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -414,7 +414,7 @@ numpy==1.18.4
 oauth2client==4.0.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==0.3.0
+onvif-zeep-async==0.4.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
@@ -533,7 +533,7 @@ pychromecast==5.1.0
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.0.2
+pydaikin==2.0.4
 
 # homeassistant.components.deconz
 pydeconz==70
@@ -705,7 +705,7 @@ python-miio==0.5.0.1
 python-nest==4.1.0
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.0.1
+python-openzwave-mqtt==1.0.2
 
 # homeassistant.components.songpal
 python-songpal==0.12
@@ -762,7 +762,7 @@ rflink==0.0.52
 ring_doorbell==0.6.0
 
 # homeassistant.components.roku
-rokuecp==0.4.0
+rokuecp==0.4.1
 
 # homeassistant.components.roomba
 roombapy==1.6.1
@@ -826,7 +826,7 @@ stringcase==1.2.0
 sunwatcher==0.2.1
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.10
+tellduslive==0.10.11
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.2.8
