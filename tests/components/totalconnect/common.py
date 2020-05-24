@@ -9,10 +9,6 @@ from homeassistant.setup import async_setup_component
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
-# from homeassistant.components.persistent_notification import (
-#    DOMAIN as PERSISTENT_NOTIFICATION,
-# )
-
 LOCATION_INFO_BASIC_NORMAL = {
     "LocationID": "123456",
     "LocationName": "test",
