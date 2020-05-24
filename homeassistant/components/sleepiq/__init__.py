@@ -141,7 +141,7 @@ class SleepIQData:
         for bed_id, bed_obj in self.beds.items():
             # If no bed name is specified, set on all beds.
             # Otherwise, ensure we only set on beds with the correct name.
-            if len(bed_name) == 0 or bed_name == bed_obj.name.lower():
+            if not bed_name or bed_name == bed_obj.name.lower():
                 for bed_side in sides_to_set:
                     # Check if we should use the "favorite" preset instead.
                     if new_number == PRESET_FAVORITE:
