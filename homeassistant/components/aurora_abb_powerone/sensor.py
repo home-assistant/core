@@ -9,6 +9,7 @@ from .const import ATTR_SERIAL_NUMBER, DOMAIN
 
 from homeassistant.const import (  # CONF_ADDRESS,; CONF_DEVICE,; CONF_NAME,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     TEMP_CELSIUS,
 )
@@ -76,9 +77,11 @@ class AuroraSensor(AuroraDevice):
         if typename == "instantaneouspower":
             self.type = typename
             self.units = POWER_WATT
+            self._device_class = DEVICE_CLASS_POWER
         elif typename == "temperature":
             self.type = typename
             self.units = TEMP_CELSIUS
+            self._device_class = DEVICE_CLASS_TEMPERATURE
 
         if self.type:
             self._name = f"{self.device_name} {device_params['name']}"
@@ -106,7 +109,7 @@ class AuroraSensor(AuroraDevice):
     @property
     def device_class(self):
         """Return the device class."""
-        return DEVICE_CLASS_POWER
+        return self._device_class
 
     # async io update not supported yet.
     #
