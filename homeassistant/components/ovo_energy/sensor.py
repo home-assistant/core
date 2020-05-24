@@ -31,7 +31,8 @@ async def async_setup_entry(
 
     now = datetime.utcnow()
     try:
-        await client.get_daily_usage(now.strftime("%Y-%m"))
+        usage: OVODailyUsage = await client.get_daily_usage(now.strftime("%Y-%m"))
+        currency = usage.electricity[len(usage.electricity) - 1].cost.currency_unit
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
         raise PlatformNotReady from exception
@@ -39,6 +40,8 @@ async def async_setup_entry(
     sensors = [
         OVOEnergyLastElectricityReading(client),
         OVOEnergyLastGasReading(client),
+        OVOEnergyLastElectricityCost(client, currency),
+        OVOEnergyLastGasCost(client, currency),
     ]
 
     async_add_entities(sensors, True)
@@ -87,7 +90,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity):
 class OVOEnergyLastElectricityReading(OVOEnergySensor):
     """Defines a OVO Energy last reading sensor."""
 
-    def __init__(self, client):
+    def __init__(self, client: OVOEnergy):
         """Initialize OVO Energy sensor."""
 
         super().__init__(
@@ -128,7 +131,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
 class OVOEnergyLastGasReading(OVOEnergySensor):
     """Defines a OVO Energy last reading sensor."""
 
-    def __init__(self, client):
+    def __init__(self, client: OVOEnergy):
         """Initialize OVO Energy sensor."""
 
         super().__init__(
@@ -152,6 +155,84 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
                 return False
             last_reading: OVODailyGas = usage.gas[len(usage.gas) - 1]
             self._state = last_reading.consumption
+            self._attributes = {
+                "start_time": last_reading.interval.start,
+                "end_time": last_reading.interval.end,
+            }
+            self._available = True
+        except aiohttp.ClientError as exception:
+            _LOGGER.warning(exception)
+            self._available = False
+            return False
+        return True
+
+
+class OVOEnergyLastElectricityCost(OVOEnergySensor):
+    """Defines a OVO Energy last cost sensor."""
+
+    def __init__(self, client: OVOEnergy, currency: str):
+        """Initialize OVO Energy sensor."""
+        super().__init__(
+            client,
+            f"{DOMAIN}_{client.account_id}_last_electricity_cost",
+            "OVO Last Electricity Cost",
+            "mdi:cash-multiple",
+            currency,
+        )
+
+    async def _ovo_energy_update(self) -> bool:
+        """Update OVO Energy entity."""
+        now = datetime.utcnow()
+        try:
+            usage: OVODailyUsage = await self._client.get_daily_usage(
+                now.strftime("%Y-%m")
+            )
+            if usage is None or usage.electricity is None:
+                _LOGGER.warning("No data found for %s", self._name)
+                self._available = False
+                return False
+            last_reading: OVODailyElectricity = usage.electricity[
+                len(usage.electricity) - 1
+            ]
+            self._state = last_reading.cost.amount
+            self._attributes = {
+                "start_time": last_reading.interval.start,
+                "end_time": last_reading.interval.end,
+            }
+            self._available = True
+        except aiohttp.ClientError as exception:
+            _LOGGER.warning(exception)
+            self._available = False
+            return False
+        return True
+
+
+class OVOEnergyLastGasCost(OVOEnergySensor):
+    """Defines a OVO Energy last cost sensor."""
+
+    def __init__(self, client: OVOEnergy, currency: str):
+        """Initialize OVO Energy sensor."""
+        super().__init__(
+            client,
+            f"{DOMAIN}_{client.account_id}_last_gas_cost",
+            "OVO Last Gas Cost",
+            "mdi:cash-multiple",
+            currency,
+        )
+
+    async def _ovo_energy_update(self) -> bool:
+        """Update OVO Energy entity."""
+        now = datetime.utcnow()
+        try:
+            usage: OVODailyUsage = await self._client.get_daily_usage(
+                now.strftime("%Y-%m")
+            )
+            if usage is None or usage.gas is None:
+                _LOGGER.warning("No data found for %s", self._name)
+                self._available = False
+                return False
+            last_reading: OVODailyElectricity = usage.gas[len(usage.gas) - 1]
+            self._state = last_reading.cost.amount
             self._attributes = {
                 "start_time": last_reading.interval.start,
                 "end_time": last_reading.interval.end,
