@@ -194,7 +194,7 @@ class Volumio(MediaPlayerEntity):
         
         @sio.on(state_name)
         def func(data):
-            nonlocal name, self
+            nonlocal state_name, self
             setattr(self, state_name, data)
         
         try:
