@@ -7,6 +7,8 @@ import asyncio
 from datetime import timedelta
 import logging
 import socket
+import socketio
+import time
 
 import aiohttp
 import voluptuous as vol
@@ -156,12 +158,17 @@ class Volumio(MediaPlayerEntity):
             
             #TODO: There are lots more, continue at L673
         }
+        
+        self.init_websocket()
                 
-    def init_websocket(self):
+    async def init_websocket(self):
         """Initialize websocket, which handles all informations from / to volumio."""
-        websession = async_get_clientsession(self.hass)
-        url = f"ws://{self.host}:{self.port}"
-        return websession.ws_connect(url)
+        #websession = async_get_clientsession(self.hass)
+        url = f"http://{self.host}:{self.port}"
+        sio = socketio.AsyncClient()
+        self._sio = sio
+        await sio.connect(url)
+        return sio
         
     async def send_volumio_msg(self, method, params=None):
         """Handles volumio calls"""
@@ -184,14 +191,19 @@ class Volumio(MediaPlayerEntity):
         
         method, params = api2websocket(method, params)
         
-        async with self.init_websocket() as ws:
-            self.send(ws, method, params)
-            if method in self._methods:
-                data = await self.get(ws, self._methods[method])
-                _LOGGER.debug("received DATA: %s", data)
-                
-                return data
-        return None
+        lock = True
+        content = None
+        def callback(sid, data):
+            lock = False
+            content = data
+        
+        self.send(self._sio, method, params, callback)
+        
+        while lock:
+            _LOGGER.debug("wait")
+            time.sleep(0.05)
+        
+        return content
             
     async def get(self, ws, method):
         """Handles responses from websocket."""
@@ -214,18 +226,14 @@ class Volumio(MediaPlayerEntity):
            
         return None
 
-    async def send(self, ws, method, params=None):
+    async def send(self, sio, method, params=None, callback=None):
         """Send message."""
         _LOGGER.debug("Send, method: %s params: %s", method, params)
 
         data = None
         
-        request_data = [method]
-        if params is not None:
-            request_data.append(params)
-        
         try:
-            data = await ws.send_json(request_data)
+            data = await sio.emit(method, params, callback=callback)
             
             _LOGGER.debug("send METHOD: %s, received DATA: %s", method, data)
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
