@@ -241,7 +241,7 @@ class HomeAssistant:
 
         This method is a coroutine.
         """
-        if self.state != CoreState.not_running:
+        if self.state not in (CoreState.not_running, CoreState.setup):
             raise RuntimeError("Home Assistant is already running")
 
         # _async_stop will set this instead of stopping the loop
