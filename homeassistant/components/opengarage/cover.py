@@ -29,7 +29,7 @@ class OpenGarageCover(CoverEntity):
     def __init__(self, open_garage, device_id):
         """Initialize the cover."""
         self._open_garage = open_garage
-        self._name = ""
+        self._name = None
         self._state = None
         self._state_before_move = None
         self._device_state_attributes = {}
@@ -95,8 +95,6 @@ class OpenGarageCover(CoverEntity):
         _LOGGER.debug("%s status: %s", self._name, self._state)
         if status.get("rssi") is not None:
             self._device_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
-        if status.get("name") is not None:
-            self._name = status.get("name")
         if status.get("dist") is not None:
             self._device_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
         if self._state is not None:
@@ -131,14 +129,9 @@ class OpenGarageCover(CoverEntity):
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
-    def device_id(self):
-        """Return the ID of the physical device this sensor is part of."""
-        return self._device_id
-
-    @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self.device_id}_cover"
+        return self._device_id
 
     @property
     def device_info(self):

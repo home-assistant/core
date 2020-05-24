@@ -6,10 +6,6 @@
   "requirements": [
     "open-garage==0.1.4"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@danielhiversen"
   ]
