@@ -185,6 +185,9 @@ class Volumio(MediaPlayerEntity):
                 else:
                     params = params["cmd"]
                     
+            if method == params:
+                params = None
+                    
             return method, params
         
         method, params = api2websocket(method, params)
