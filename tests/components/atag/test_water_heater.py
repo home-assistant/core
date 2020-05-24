@@ -2,11 +2,11 @@
 
 from homeassistant.components.atag import DOMAIN, WATER_HEATER
 from homeassistant.components.water_heater import SERVICE_SET_TEMPERATURE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_DEVICE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 
 from tests.async_mock import patch
-from tests.components.atag import init_integration
+from tests.components.atag import UID, init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 WATER_HEATER_ID = f"{WATER_HEATER}.{DOMAIN}"
@@ -22,7 +22,7 @@ async def test_water_heater(
 
         assert registry.async_is_registered(WATER_HEATER_ID)
         entry = registry.async_get(WATER_HEATER_ID)
-        assert entry.unique_id == f"{CONF_DEVICE}-{WATER_HEATER}"
+        assert entry.unique_id == f"{UID}-{WATER_HEATER}"
 
 
 async def test_setting_target_temperature(

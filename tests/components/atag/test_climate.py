@@ -15,17 +15,12 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    CONF_DEVICE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import PropertyMock, patch
-from tests.components.atag import init_integration
+from tests.components.atag import UID, init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIMATE_ID = f"{CLIMATE}.{DOMAIN}"
@@ -41,7 +36,7 @@ async def test_climate(
 
         assert registry.async_is_registered(CLIMATE_ID)
         entry = registry.async_get(CLIMATE_ID)
-        assert entry.unique_id == f"{CONF_DEVICE}-{CLIMATE}"
+        assert entry.unique_id == f"{UID}-{CLIMATE}"
         assert (
             hass.states.get(CLIMATE_ID).attributes[ATTR_HVAC_ACTION]
             == CURRENT_HVAC_HEAT
