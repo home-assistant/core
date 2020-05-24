@@ -17,7 +17,7 @@
             },
             "pat": {
                 "data": {
-                    "access_token": "Token d'acc\u00e9s"
+                    "access_token": "[%key::common::config_flow::data::access_token%]"
                 },
                 "description": "Introdueix un [token d'acc\u00e9s personal]({token_url}) d'SmartThings creat a partir de les [instruccions]({component_url}). S'utilitzar\u00e0 per crear la integraci\u00f3 de Home Assistant dins el teu compte de SmartThings.",
                 "title": "Introdueix el token d'acc\u00e9s personal"

@@ -14,7 +14,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP Address"
+                    "host": "IP address"
                 },
                 "title": "Connect to the PowerView Hub"
             }

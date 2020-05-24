@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nyomtat\u00f3 \u00e1llom\u00e1sneve vagy IP-c\u00edme",
+                    "host": "Hoszt",
                     "type": "A nyomtat\u00f3 t\u00edpusa"
                 },
                 "description": "A Brother nyomtat\u00f3 integr\u00e1ci\u00f3j\u00e1nak be\u00e1ll\u00edt\u00e1sa. Ha probl\u00e9m\u00e1id vannak a konfigur\u00e1ci\u00f3val, l\u00e1togass el a k\u00f6vetkez\u0151 oldalra: https://www.home-assistant.io/integrations/brother",

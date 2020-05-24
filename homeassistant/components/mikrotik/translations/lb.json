@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Verbindung net erfollegr\u00e4ich",
             "name_exists": "Numm g\u00ebtt et schonn",
-            "wrong_credentials": "Falsh Login Informatiounen"
+            "wrong_credentials": "Falsch Login Informatiounen"
         },
         "step": {
             "user": {

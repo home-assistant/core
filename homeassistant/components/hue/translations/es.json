@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Todos los puentes Philips Hue ya est\u00e1n configurados",
-            "already_configured": "El puente ya esta configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n para el puente ya est\u00e1 en curso.",
-            "cannot_connect": "No se puede conectar al puente",
-            "discover_timeout": "No se han descubierto puentes Philips Hue",
-            "no_bridges": "No se han descubierto puentes Philips Hue.",
-            "not_hue_bridge": "No es un puente Hue",
+            "all_configured": "Ya se han configurado todas las pasarelas Philips Hue",
+            "already_configured": "La pasarela ya esta configurada",
+            "already_in_progress": "La configuraci\u00f3n del flujo para la pasarela ya est\u00e1 en curso.",
+            "cannot_connect": "No se puede conectar a la pasarela",
+            "discover_timeout": "Imposible encontrar pasarelas Philips Hue",
+            "no_bridges": "No se han encontrado pasarelas Philips Hue.",
+            "not_hue_bridge": "No es una pasarela Hue",
             "unknown": "Se produjo un error desconocido"
         },
         "error": {
@@ -19,10 +19,10 @@
                 "data": {
                     "host": "Host"
                 },
-                "title": "Elige el puente de Hue"
+                "title": "Elige la pasarela Hue"
             },
             "link": {
-                "description": "Presione el bot\u00f3n en el puente para registrar Philips Hue con Home Assistant. \n\n![Ubicaci\u00f3n del bot\u00f3n en el puente](/static/images/config_philips_hue.jpg)",
+                "description": "Presione el bot\u00f3n en la pasarela para registrar Philips Hue con Home Assistant. \n\n![Ubicaci\u00f3n del bot\u00f3n en la pasarela](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
         }

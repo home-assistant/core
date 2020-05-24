@@ -6,7 +6,6 @@
         "step": {
             "geography": {
                 "data": {
-                    "api_key": "API-nyckel",
                     "latitude": "Latitud",
                     "longitude": "Longitud"
                 }

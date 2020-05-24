@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "duplicated_name": "Numm g\u00ebtt et schonn"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel (Optionell)",
+                    "name": "Numm",
+                    "ssl": "SSL benotzen",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                }
+            }
+        }
+    }
+}

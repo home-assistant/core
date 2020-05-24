@@ -10,11 +10,24 @@
             "unknown": "\u672a\u77e5\u539f\u56e0\u5931\u6557"
         },
         "error": {
-            "faulty_credentials": "\u9a57\u8b49\u5931\u6557",
-            "no_servers": "\u6b64\u5e33\u865f\u672a\u7d81\u5b9a\u4f3a\u670d\u5668",
-            "not_found": "\u627e\u4e0d\u5230 Plex \u4f3a\u670d\u5668"
+            "faulty_credentials": "\u9a57\u8b49\u5931\u6557\u3001\u78ba\u8a8d\u5bc6\u9470",
+            "host_or_token": "\u5fc5\u9808\u81f3\u5c11\u63d0\u4f9b\u4e3b\u6a5f\u7aef\u6216\u5bc6\u9470",
+            "no_servers": "Plex \u5e33\u865f\u672a\u7d81\u5b9a\u4efb\u4f55\u4f3a\u670d\u5668",
+            "not_found": "\u627e\u4e0d\u5230 Plex \u4f3a\u670d\u5668",
+            "ssl_error": "SSL \u8a8d\u8b49\u554f\u984c"
         },
+        "flow_title": "{name} ({host})",
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "ssl": "\u4f7f\u7528 SSL",
+                    "token": "\u5bc6\u9470\uff08\u9078\u9805\uff09",
+                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
+                },
+                "title": "Plex \u624b\u52d5\u8a2d\u5b9a"
+            },
             "select_server": {
                 "data": {
                     "server": "\u4f3a\u670d\u5668"
@@ -25,6 +38,16 @@
             "start_website_auth": {
                 "description": "\u7e7c\u7e8c\u65bc Plex.tv \u9032\u884c\u8a8d\u8b49\u3002",
                 "title": "\u9023\u7dda\u81f3 Plex \u4f3a\u670d\u5668"
+            },
+            "user": {
+                "description": "\u7e7c\u7e8c\u81f3 [plex.tv](https://plex.tv) \u4ee5\u9023\u7d50\u4e00\u7d44 Plex \u4f3a\u670d\u5668\u3002",
+                "title": "Plex \u5a92\u9ad4\u4f3a\u670d\u5668"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "\u8a2d\u5b9a\u6a21\u5f0f"
+                },
+                "title": "Plex \u5a92\u9ad4\u4f3a\u670d\u5668"
             }
         }
     },
@@ -33,6 +56,7 @@
             "plex_mp_settings": {
                 "data": {
                     "ignore_new_shared_users": "\u5ffd\u7565\u65b0\u589e\u7ba1\u7406/\u5206\u4eab\u4f7f\u7528\u8005",
+                    "ignore_plex_web_clients": "\u5ffd\u7565 Plex \u7db2\u9801\u5ba2\u6236\u7aef",
                     "monitored_users": "\u5df2\u76e3\u63a7\u4f7f\u7528\u8005",
                     "use_episode_art": "\u4f7f\u7528\u5f71\u96c6\u5287\u7167"
                 },

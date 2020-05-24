@@ -96,6 +96,18 @@ async def test_get_services_cached(hass):
         assert await account_link._get_services(hass) == 4
 
 
+async def test_get_services_error(hass):
+    """Test that we cache services."""
+    hass.data["cloud"] = None
+
+    with patch.object(account_link, "CACHE_TIMEOUT", 0), patch(
+        "hass_nabucasa.account_link.async_fetch_available_services",
+        side_effect=asyncio.TimeoutError,
+    ):
+        assert await account_link._get_services(hass) == []
+        assert account_link.DATA_SERVICES not in hass.data
+
+
 async def test_implementation(hass, flow_handler):
     """Test Cloud OAuth2 implementation."""
     hass.data["cloud"] = None

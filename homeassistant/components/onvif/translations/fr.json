@@ -38,7 +38,7 @@
                 "title": "Configurer l\u2019appareil ONVIF"
             },
             "user": {
-                "description": "En cliquant sur soumettre, nous rechercherons sur votre r\u00e9seau, des \u00e9quipements ONVIF qui supporte le Profile S.\n\nCertains constructeurs ont commenc\u00e9 \u00e0 d\u00e9sactiver ONvif par d\u00e9faut. Assurez vous que ONVIF est activ\u00e9 dans la configuration de votre cam\u00e9ra",
+                "description": "En cliquant sur soumettre, nous rechercherons sur votre r\u00e9seau, des \u00e9quipements ONVIF qui supporte le Profile S.\n\nCertains constructeurs ont commenc\u00e9 \u00e0 d\u00e9sactiver ONvif par d\u00e9faut. Assurez-vous qu\u2019ONVIF est activ\u00e9 dans la configuration de votre cam\u00e9ra",
                 "title": "Configuration de l'appareil ONVIF"
             }
         }

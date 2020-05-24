@@ -80,7 +80,7 @@
                     "out1": "OUT1"
                 },
                 "description": "Velg konfigurasjonen av de gjenv\u00e6rende I/O nedenfor. Du vil v\u00e6re i stand til \u00e5 konfigurere detaljerte alternativer i de neste trinnene.",
-                "title": "Konfigurer utvidet I / O"
+                "title": "Konfigurer utvidet I/O"
             },
             "options_misc": {
                 "data": {
@@ -89,7 +89,7 @@
                     "override_api_host": "Overstyre standard Home Assistant API-vertspanel-URL"
                 },
                 "description": "Vennligst velg \u00f8nsket atferd for din panel",
-                "title": "Konfigurere Diverse"
+                "title": "Konfigurer diverse"
             },
             "options_switch": {
                 "data": {
@@ -101,7 +101,7 @@
                     "repeat": "Tider \u00e5 gjenta (-1 = uendelig) (valgfritt)"
                 },
                 "description": "Velg outputalternativer for {zone} : state {state}",
-                "title": "Konfigurere Valgbare Utgang"
+                "title": "Konfigurer utskiftbar utgang"
             }
         }
     }

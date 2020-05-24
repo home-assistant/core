@@ -2,6 +2,8 @@
 import copy
 import json
 
+import pytest
+
 from homeassistant.components import alarm_control_panel
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -551,6 +553,7 @@ async def test_discovery_update_alarm(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'

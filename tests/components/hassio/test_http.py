@@ -1,8 +1,9 @@
 """The tests for the hassio component."""
 import asyncio
-from unittest.mock import patch
 
 import pytest
+
+from tests.async_mock import patch
 
 
 async def test_forward_request(hassio_client, aioclient_mock):

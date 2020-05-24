@@ -68,6 +68,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
         except asyncio.TimeoutError:
             # Forced refresh is not required for setup
             pass
+        if ATTR_POSITION_DATA not in shade.raw_data:
+            _LOGGER.info(
+                "The %s shade was skipped because it is missing position data",
+                name_before_refresh,
+            )
+            continue
         entities.append(
             PowerViewShade(
                 shade, name_before_refresh, room_data, coordinator, device_info
@@ -161,7 +167,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         self._async_update_from_command(await self._shade.stop())
         await self._async_force_refresh_state()
 
-    async def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the shade to a specific position."""
         if ATTR_POSITION not in kwargs:
             return

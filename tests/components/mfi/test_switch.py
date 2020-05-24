@@ -1,11 +1,11 @@
 """The tests for the mFi switch platform."""
 import unittest
-import unittest.mock as mock
 
 import homeassistant.components.mfi.switch as mfi
 import homeassistant.components.switch as switch
 from homeassistant.setup import setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant
 
 

@@ -1,3 +1,18 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "L'enlla\u00e7 de Cas\u00e9ta ja configurat.",
+            "cannot_connect": "S'ha cancel\u00b7lat la configuraci\u00f3 de l'enlla\u00e7 de Cas\u00e9ta per un error en la connexi\u00f3."
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar a l'enlla\u00e7 de Cas\u00e9ta; comprova la configuraci\u00f3 de l'amfitri\u00f3 i del certificat."
+        },
+        "step": {
+            "import_failed": {
+                "description": "No s'ha pogut configurar l'enlla\u00e7 (amfitri\u00f3: {host}) importat de configuration.yaml.",
+                "title": "No s'ha pogut importar la configuraci\u00f3 de l'enlla\u00e7 de Cas\u00e9ta."
+            }
+        }
+    },
     "title": "Lutron Cas\u00e9ta"
 }

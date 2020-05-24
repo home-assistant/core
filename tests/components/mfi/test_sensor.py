@@ -1,6 +1,5 @@
 """The tests for the mFi sensor platform."""
 import unittest
-import unittest.mock as mock
 
 from mficlient.client import FailedToLogin
 import requests
@@ -10,6 +9,7 @@ import homeassistant.components.sensor as sensor
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant
 
 

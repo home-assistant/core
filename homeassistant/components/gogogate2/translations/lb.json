@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Adresse"
+                },
+                "description": "G\u00ebff noutwendeg Informatioun hei \u00ebnnen un.",
+                "title": "GogoGate 2 ariichten"
+            }
+        }
+    }
+}

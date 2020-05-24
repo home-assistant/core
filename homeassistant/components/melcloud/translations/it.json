@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Password MELCloud.",
-                    "username": "Email utilizzata per accedere a MELCloud."
+                    "password": "Password",
+                    "username": "E-mail"
                 },
                 "description": "Connettiti utilizzando il tuo account MELCloud.",
                 "title": "Connettersi a MELCloud"

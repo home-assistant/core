@@ -288,7 +288,7 @@ class Thermostat(ClimateEntity):
         else:
             await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        if self.hvac_mode is not HVAC_MODE_OFF:
+        if self.hvac_mode != HVAC_MODE_OFF:
             self._last_active_hvac_mode = self.hvac_mode
 
     @property

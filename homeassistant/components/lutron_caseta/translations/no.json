@@ -1,3 +1,18 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Cas\u00e9ta bridge allerede konfigurert.",
+            "cannot_connect": "Avbrutt oppsett av Cas\u00e9ta bridge p\u00e5 grunn av tilkoblingssvikt."
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke koble til Cas\u00e9ta bridge; sjekk verts- og sertifikatkonfigurasjonen."
+        },
+        "step": {
+            "import_failed": {
+                "description": "Kunne ikke konfigurere bridge (host: {host} ) importert fra configuration.yaml.",
+                "title": "Kan ikke importere Cas\u00e9ta bridge-konfigurasjon."
+            }
+        }
+    },
     "title": ""
 }

@@ -37,6 +37,7 @@ from homeassistant.components.smartthings.const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
@@ -73,8 +74,10 @@ async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
 async def setup_component(hass, config_file, hass_storage):
     """Load the SmartThing component."""
     hass_storage[STORAGE_KEY] = {"data": config_file, "version": STORAGE_VERSION}
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://test.local"},
+    )
     await async_setup_component(hass, "smartthings", {})
-    hass.config.api.base_url = "https://test.local"
 
 
 def _create_location():
@@ -97,7 +100,7 @@ def locations_fixture(location):
 
 
 @pytest.fixture(name="app")
-def app_fixture(hass, config_file):
+async def app_fixture(hass, config_file):
     """Fixture for a single app."""
     app = Mock(AppEntity)
     app.app_name = APP_NAME_PREFIX + str(uuid4())
@@ -105,7 +108,7 @@ def app_fixture(hass, config_file):
     app.app_type = "WEBHOOK_SMART_APP"
     app.classifications = [CLASSIFICATION_AUTOMATION]
     app.display_name = "Home Assistant"
-    app.description = f"{hass.config.location_name} at {hass.config.api.base_url}"
+    app.description = f"{hass.config.location_name} at https://test.local"
     app.single_instance = True
     app.webhook_target_url = webhook.async_generate_url(
         hass, hass.data[DOMAIN][CONF_WEBHOOK_ID]

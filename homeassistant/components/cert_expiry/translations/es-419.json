@@ -1,9 +1,11 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Esta combinaci\u00f3n de host y puerto ya est\u00e1 configurada",
             "import_failed": "La importaci\u00f3n desde la configuraci\u00f3n fall\u00f3"
         },
         "error": {
+            "connection_refused": "Conexi\u00f3n rechazada al conectarse al host",
             "connection_timeout": "Tiempo de espera al conectarse a este host",
             "resolve_failed": "Este host no puede resolverse"
         },

@@ -24,6 +24,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.network import get_url
 from homeassistant.util.json import load_json, save_json
 
 _CONFIGURING = {}
@@ -180,7 +181,7 @@ def request_app_setup(hass, config, add_entities, config_path, discovery_info=No
         else:
             setup_platform(hass, config, add_entities, discovery_info)
 
-    start_url = f"{hass.config.api.base_url}{FITBIT_AUTH_CALLBACK_PATH}"
+    start_url = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
 
     description = f"""Please create a Fitbit developer app at
                        https://dev.fitbit.com/apps/new.
@@ -215,7 +216,7 @@ def request_oauth_completion(hass):
     def fitbit_configuration_callback(callback_data):
         """Handle configuration updates."""
 
-    start_url = f"{hass.config.api.base_url}{FITBIT_AUTH_START}"
+    start_url = f"{get_url(hass)}{FITBIT_AUTH_START}"
 
     description = f"Please authorize Fitbit by visiting {start_url}"
 
@@ -307,7 +308,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             config_file.get(ATTR_CLIENT_ID), config_file.get(ATTR_CLIENT_SECRET)
         )
 
-        redirect_uri = f"{hass.config.api.base_url}{FITBIT_AUTH_CALLBACK_PATH}"
+        redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
 
         fitbit_auth_start_url, _ = oauth.authorize_token_url(
             redirect_uri=redirect_uri,
@@ -352,7 +353,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
 
         result = None
         if data.get("code") is not None:
-            redirect_uri = f"{hass.config.api.base_url}{FITBIT_AUTH_CALLBACK_PATH}"
+            redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
 
             try:
                 result = self.oauth.fetch_access_token(data.get("code"), redirect_uri)

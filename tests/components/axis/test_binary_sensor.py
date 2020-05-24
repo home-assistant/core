@@ -1,7 +1,7 @@
 """Axis binary sensor platform tests."""
 
-from homeassistant.components import axis
-import homeassistant.components.binary_sensor as binary_sensor
+from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.setup import async_setup_component
 
 from .test_device import NAME, setup_axis_integration
@@ -28,19 +28,21 @@ async def test_platform_manually_configured(hass):
     """Test that nothing happens when platform is manually configured."""
     assert (
         await async_setup_component(
-            hass, binary_sensor.DOMAIN, {"binary_sensor": {"platform": axis.DOMAIN}}
+            hass,
+            BINARY_SENSOR_DOMAIN,
+            {BINARY_SENSOR_DOMAIN: {"platform": AXIS_DOMAIN}},
         )
         is True
     )
 
-    assert axis.DOMAIN not in hass.data
+    assert AXIS_DOMAIN not in hass.data
 
 
 async def test_no_binary_sensors(hass):
     """Test that no sensors in Axis results in no sensor entities."""
     await setup_axis_integration(hass)
 
-    assert not hass.states.async_entity_ids("binary_sensor")
+    assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
 
 
 async def test_binary_sensors(hass):
@@ -48,10 +50,10 @@ async def test_binary_sensors(hass):
     device = await setup_axis_integration(hass)
 
     for event in EVENTS:
-        device.api.stream.event.manage_event(event)
+        device.api.event.process_event(event)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids("binary_sensor")) == 2
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 2
 
     pir = hass.states.get(f"binary_sensor.{NAME}_pir_0")
     assert pir.state == "off"

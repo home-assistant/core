@@ -20,6 +20,7 @@ from homeassistant.components.google_assistant import (
     smart_home as sh,
     trait,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
 from homeassistant.core import EVENT_CALL_SERVICE, State
 from homeassistant.helpers import device_registry
@@ -27,7 +28,7 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import patch
 from tests.common import mock_area_registry, mock_device_registry, mock_registry
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
@@ -798,7 +799,9 @@ async def test_query_disconnect(hass):
 
 async def test_trait_execute_adding_query_data(hass):
     """Test a trait execute influencing query data."""
-    hass.config.api = Mock(base_url="http://1.1.1.1:8123")
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     hass.states.async_set(
         "camera.office", "idle", {"supported_features": camera.SUPPORT_STREAM}
     )
@@ -852,7 +855,7 @@ async def test_trait_execute_adding_query_data(hass):
                     "status": "SUCCESS",
                     "states": {
                         "online": True,
-                        "cameraStreamAccessUrl": "http://1.1.1.1:8123/api/streams/bla",
+                        "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
                     },
                 }
             ]

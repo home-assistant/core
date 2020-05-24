@@ -1,4 +1,6 @@
 """The tests for the MQTT lock platform."""
+import pytest
+
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
@@ -366,6 +368,7 @@ async def test_discovery_update_lock(hass, mqtt_mock, caplog):
     await help_test_discovery_update(hass, mqtt_mock, caplog, LOCK_DOMAIN, data1, data2)
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'

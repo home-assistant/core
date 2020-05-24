@@ -1,0 +1,21 @@
+{
+    "options": {
+        "step": {
+            "advanced": {
+                "title": "Geavanceerde configuratie"
+            },
+            "exclude": {
+                "data": {
+                    "exclude_entities": "Uit te sluiten entiteiten"
+                },
+                "description": "Kies de entiteiten die u NIET wilt overbruggen.",
+                "title": "Entiteiten in geselecteerde domeinen uitsluiten van bridge"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Op te nemen domeinen"
+                }
+            }
+        }
+    }
+}

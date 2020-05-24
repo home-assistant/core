@@ -821,6 +821,7 @@ async def test_setup_fails_without_config(hass):
     assert not await async_setup_component(hass, mqtt.DOMAIN, {})
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_message_callback_exception_gets_logged(hass, caplog):
     """Test exception raised by message handler."""
     await async_mock_mqtt_component(hass)

@@ -45,6 +45,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 def convert_condition(time, weather):
     """
@@ -289,3 +291,11 @@ class NWSWeather(WeatherEntity):
             self.coordinator_observation.last_update_success
             and self.coordinator_forecast.last_update_success
         )
+
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.coordinator_observation.async_request_refresh()
+        await self.coordinator_forecast.async_request_refresh()

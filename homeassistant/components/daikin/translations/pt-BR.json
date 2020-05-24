@@ -5,6 +5,11 @@
             "device_fail": "Erro inesperado ao criar dispositivo.",
             "device_timeout": "Excedido tempo limite conectando ao dispositivo"
         },
+        "error": {
+            "device_fail": "Erro inesperado",
+            "device_timeout": "Falha ao conectar",
+            "forbidden": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
         "step": {
             "user": {
                 "data": {

@@ -1,6 +1,4 @@
 """Tests for the AVM Fritz!Box integration."""
-from unittest.mock import Mock, call
-
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
@@ -10,6 +8,7 @@ from homeassistant.setup import async_setup_component
 
 from . import MOCK_CONFIG, FritzDeviceSwitchMock
 
+from tests.async_mock import Mock, call
 from tests.common import MockConfigEntry
 
 

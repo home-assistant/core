@@ -2,13 +2,13 @@
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
 import unittest
-from unittest.mock import patch, sentinel
 
 from homeassistant.components import history, recorder
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch, sentinel
 from tests.common import (
     get_test_home_assistant,
     init_recorder_component,
@@ -102,6 +102,11 @@ class TestComponentHistory(unittest.TestCase):
 
         # Test get_state here because we have a DB setup
         assert states[0] == history.get_state(self.hass, future, states[0].entity_id)
+
+        time_before_recorder_ran = now - timedelta(days=1000)
+        assert history.get_states(self.hass, time_before_recorder_ran) == []
+
+        assert history.get_state(self.hass, time_before_recorder_ran, "demo.id") is None
 
     def test_state_changes_during_period(self):
         """Test state change during period."""

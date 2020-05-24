@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "\u672a\u641c\u5c0b\u5230 Pulse hub"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "\u4e3b\u6a5f ID"
+                },
+                "title": "\u9078\u64c7\u6240\u8981\u65b0\u589e\u7684 Hub"
+            }
+        }
+    },
+    "title": "Rollease Acmeda Automate"
+}

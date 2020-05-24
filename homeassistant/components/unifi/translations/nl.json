@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Controller site is al geconfigureerd",
+            "no_local_user": "Geen lokale gebruiker gevonden, configureer een lokaal account op de controller en probeer het opnieuw",
             "user_privilege": "Gebruiker moet beheerder zijn"
         },
         "error": {
@@ -49,6 +50,12 @@
                 "data": {
                     "one": "Leeg",
                     "other": "Leeg"
+                }
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "Cli\u00ebnten met netwerktoegang",
+                    "track_clients": "Volg netwerkclients"
                 }
             },
             "statistics_sensors": {

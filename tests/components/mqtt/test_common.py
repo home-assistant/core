@@ -3,13 +3,13 @@ import copy
 from datetime import datetime
 import json
 from unittest import mock
-from unittest.mock import ANY
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
+from tests.async_mock import ANY
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
@@ -252,7 +252,6 @@ async def help_test_unique_id(hass, domain, config):
     """Test unique id option only creates one entity per unique_id."""
     await async_mock_mqtt_component(hass)
     assert await async_setup_component(hass, domain, config,)
-    async_fire_mqtt_message(hass, "test-topic", "payload")
     assert len(hass.states.async_entity_ids(domain)) == 1
 
 

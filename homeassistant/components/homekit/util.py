@@ -1,8 +1,10 @@
 """Collection of useful functions for the HomeKit component."""
 from collections import OrderedDict, namedtuple
 import io
+import ipaddress
 import logging
 import os
+import re
 import secrets
 import socket
 
@@ -23,11 +25,35 @@ from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
 
 from .const import (
+    AUDIO_CODEC_COPY,
+    AUDIO_CODEC_OPUS,
+    CONF_AUDIO_CODEC,
+    CONF_AUDIO_MAP,
+    CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    CONF_MAX_FPS,
+    CONF_MAX_HEIGHT,
+    CONF_MAX_WIDTH,
+    CONF_STREAM_ADDRESS,
+    CONF_STREAM_SOURCE,
+    CONF_SUPPORT_AUDIO,
+    CONF_VIDEO_CODEC,
+    CONF_VIDEO_MAP,
+    CONF_VIDEO_PACKET_SIZE,
+    DEFAULT_AUDIO_CODEC,
+    DEFAULT_AUDIO_MAP,
+    DEFAULT_AUDIO_PACKET_SIZE,
     DEFAULT_LOW_BATTERY_THRESHOLD,
+    DEFAULT_MAX_FPS,
+    DEFAULT_MAX_HEIGHT,
+    DEFAULT_MAX_WIDTH,
+    DEFAULT_SUPPORT_AUDIO,
+    DEFAULT_VIDEO_CODEC,
+    DEFAULT_VIDEO_MAP,
+    DEFAULT_VIDEO_PACKET_SIZE,
     DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
@@ -42,11 +68,16 @@ from .const import (
     TYPE_SPRINKLER,
     TYPE_SWITCH,
     TYPE_VALVE,
+    VIDEO_CODEC_COPY,
+    VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_LIBX264,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 MAX_PORT = 65535
+VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
+VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 
 BASIC_INFO_SCHEMA = vol.Schema(
     {
@@ -60,6 +91,31 @@ BASIC_INFO_SCHEMA = vol.Schema(
 
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list}
+)
+
+CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_STREAM_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
+        vol.Optional(CONF_STREAM_SOURCE): cv.string,
+        vol.Optional(CONF_AUDIO_CODEC, default=DEFAULT_AUDIO_CODEC): vol.In(
+            VALID_AUDIO_CODECS
+        ),
+        vol.Optional(CONF_SUPPORT_AUDIO, default=DEFAULT_SUPPORT_AUDIO): cv.boolean,
+        vol.Optional(CONF_MAX_WIDTH, default=DEFAULT_MAX_WIDTH): cv.positive_int,
+        vol.Optional(CONF_MAX_HEIGHT, default=DEFAULT_MAX_HEIGHT): cv.positive_int,
+        vol.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,
+        vol.Optional(CONF_AUDIO_MAP, default=DEFAULT_AUDIO_MAP): cv.string,
+        vol.Optional(CONF_VIDEO_MAP, default=DEFAULT_VIDEO_MAP): cv.string,
+        vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): vol.In(
+            VALID_VIDEO_CODECS
+        ),
+        vol.Optional(
+            CONF_AUDIO_PACKET_SIZE, default=DEFAULT_AUDIO_PACKET_SIZE
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_VIDEO_PACKET_SIZE, default=DEFAULT_VIDEO_PACKET_SIZE
+        ): cv.positive_int,
+    }
 )
 
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(
@@ -101,6 +157,40 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
 )
 
 
+HOMEKIT_CHAR_TRANSLATIONS = {
+    0: " ",  # nul
+    10: " ",  # nl
+    13: " ",  # cr
+    33: "-",  # !
+    34: " ",  # "
+    36: "-",  # $
+    37: "-",  # %
+    40: "-",  # (
+    41: "-",  # )
+    42: "-",  # *
+    43: "-",  # +
+    47: "-",  # /
+    58: "-",  # :
+    59: "-",  # ;
+    60: "-",  # <
+    61: "-",  # =
+    62: "-",  # >
+    63: "-",  # ?
+    64: "-",  # @
+    91: "-",  # [
+    92: "-",  # \
+    93: "-",  # ]
+    94: "-",  # ^
+    95: " ",  # _
+    96: "-",  # `
+    123: "-",  # {
+    124: "-",  # |
+    125: "-",  # }
+    126: "-",  # ~
+    127: "-",  # del
+}
+
+
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
     if not isinstance(values, dict):
@@ -128,6 +218,9 @@ def validate_entity_config(values):
                 feature_list[key] = params
             config[CONF_FEATURE_LIST] = feature_list
 
+        elif domain == "camera":
+            config = CAMERA_SCHEMA(config)
+
         elif domain == "switch":
             config = SWITCH_TYPE_SCHEMA(config)
 
@@ -138,8 +231,8 @@ def validate_entity_config(values):
     return entities
 
 
-def validate_media_player_features(state, feature_list):
-    """Validate features for media players."""
+def get_media_player_features(state):
+    """Determine features for media players."""
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     supported_modes = []
@@ -153,6 +246,20 @@ def validate_media_player_features(state, feature_list):
         supported_modes.append(FEATURE_PLAY_STOP)
     if features & media_player.const.SUPPORT_VOLUME_MUTE:
         supported_modes.append(FEATURE_TOGGLE_MUTE)
+    return supported_modes
+
+
+def validate_media_player_features(state, feature_list):
+    """Validate features for media players."""
+    supported_modes = get_media_player_features(state)
+
+    if not supported_modes:
+        _LOGGER.error("%s does not support any media_player features", state.entity_id)
+        return False
+
+    if not feature_list:
+        # Auto detected
+        return True
 
     error_list = []
     for feature in feature_list:
@@ -160,7 +267,9 @@ def validate_media_player_features(state, feature_list):
             error_list.append(feature)
 
     if error_list:
-        _LOGGER.error("%s does not support features: %s", state.entity_id, error_list)
+        _LOGGER.error(
+            "%s does not support media_player features: %s", state.entity_id, error_list
+        )
         return False
     return True
 
@@ -252,6 +361,16 @@ def convert_to_float(state):
         return None
 
 
+def cleanup_name_for_homekit(name):
+    """Ensure the name of the device will not crash homekit."""
+    #
+    # This is not a security measure.
+    #
+    # UNICODE_EMOJI is also not allowed but that
+    # likely isn't a problem
+    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)
+
+
 def temperature_to_homekit(temperature, unit):
     """Convert temperature to Celsius for HomeKit."""
     return round(temp_util.convert(temperature, unit, TEMP_CELSIUS), 1)
@@ -295,6 +414,14 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     return hass.config.path(
         STORAGE_DIR, get_aid_storage_filename_for_entry_id(entry_id)
     )
+
+
+def format_sw_version(version):
+    """Extract the version string in a format homekit can consume."""
+    match = re.search(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?", str(version).replace("-", "."))
+    if match:
+        return match.group(0)
+    return None
 
 
 def migrate_filesystem_state_data_for_primary_imported_entry_id(
@@ -355,3 +482,13 @@ def find_next_available_port(start_port: int):
             if port == MAX_PORT:
                 raise
             continue
+
+
+def pid_is_alive(pid):
+    """Check to see if a process is alive."""
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        pass
+    return False
