@@ -145,12 +145,12 @@ class UPNPResponderThread(threading.Thread):
             return self._prepare_response(
                 "upnp:rootdevice", f"uuid:{HUE_UUID}::upnp:rootdevice"
             )
-        else:
-            return self._prepare_response(
-                "urn:schemas-upnp-org:device:basic:1", f"uuid:{HUE_UUID}"
-            )
 
-    def _prepare_response(self, st, usn):
+        return self._prepare_response(
+            "urn:schemas-upnp-org:device:basic:1", f"uuid:{HUE_UUID}"
+        )
+
+    def _prepare_response(self, search_target, unique_service_name):
         # Note that the double newline at the end of
         # this string is required per the SSDP spec
         response = f"""HTTP/1.1 200 OK
@@ -159,8 +159,8 @@ EXT:
 LOCATION: http://{self.advertise_ip}:{self.advertise_port}/description.xml
 SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/1.16.0
 hue-bridgeid: {HUE_SERIAL_NUMBER}
-ST: {st}
-USN: {usn}
+ST: {search_target}
+USN: {unique_service_name}
 
 """
         return response.replace("\n", "\r\n").encode("utf-8")
