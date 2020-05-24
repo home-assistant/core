@@ -33,7 +33,9 @@ async def add_entity(device: Union[SmartPlug, SmartStrip], async_add_entities):
 
     entities = []
     if device.is_strip:
-        children = [SmartPlugSwitch(plug, should_poll=False) for plug in device.plugs]
+        children = [
+            SmartPlugSwitch(plug, should_poll=False) for plug in device.children
+        ]
         _LOGGER.debug("Found strip %s with %s children", device, len(children))
         entities.extend(children)
         strip = SmartPlugSwitch(device, children=children)
@@ -60,10 +62,11 @@ class SmartPlugSwitch(SwitchEntity):
     def __init__(self, smartplug: SmartPlug, children=None, should_poll=True):
         """Initialize the switch."""
         self.smartplug = smartplug
-        self._available = False
+        self._is_available = False
         self._emeter_params = {}
         self._should_poll = should_poll
         self._children = children or []
+        self._is_on = False
 
     @property
     def should_poll(self) -> bool:
@@ -97,22 +100,24 @@ class SmartPlugSwitch(SwitchEntity):
     @property
     def available(self) -> bool:
         """Return if switch is available."""
-        return self._available
+        return self._is_available
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.smartplug.is_on
+        return self._is_on
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         await self.smartplug.turn_on()
-        await self.async_update_ha_state()
+        self._is_on = True
+        self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         await self.smartplug.turn_off()
-        await self.async_update_ha_state()
+        self._is_on = False
+        self.schedule_update_ha_state()
 
     @property
     def device_state_attributes(self):
@@ -121,45 +126,45 @@ class SmartPlugSwitch(SwitchEntity):
 
     async def async_update(self):
         """Update the TP-Link switch's state."""
-        _LOGGER.debug("Going to update %s", self.name)
         try:
             if self.should_poll:
+                _LOGGER.debug("Polling device: %s", self.name)
                 await self.smartplug.update()
 
-            if self.smartplug.has_emeter:
-                emeter_readings = self.smartplug.emeter_realtime
-
-                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
-                    emeter_readings["power"]
-                )
-                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
-                    emeter_readings["total"]
-                )
-                self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
-                    emeter_readings["voltage"]
-                )
-                self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
-                    emeter_readings["current"]
-                )
-
-                consumption_today = self.smartplug.emeter_today
-                if consumption_today is not None:
-                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = consumption_today
-
-            self._available = True
-
-            _LOGGER.debug(
-                "Going to update %s children for %s: %s",
-                len(self._children),
-                self.name,
-                self._children,
-            )
-            for child in self._children:
-                child.async_schedule_update_ha_state(force_refresh=True)
-
+            self._is_available = True
+            self._is_on = self.smartplug.is_on
         except (SmartDeviceException, OSError) as ex:
-            if self._available:
+            if self._is_available:
                 _LOGGER.warning(
                     "Could not read state for %s: %s", self.smartplug.host, ex
                 )
-            self._available = False
+            self._is_available = False
+
+            return
+
+        if self.smartplug.has_emeter:
+            emeter_readings = self.smartplug.emeter_realtime
+
+            self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
+                emeter_readings["power"]
+            )
+            self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
+                emeter_readings["total"]
+            )
+            self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
+                emeter_readings["voltage"]
+            )
+            self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
+                emeter_readings["current"]
+            )
+
+            consumption_today = self.smartplug.emeter_today
+            if consumption_today is not None:
+                self._emeter_params[ATTR_TODAY_ENERGY_KWH] = consumption_today
+
+        if self._children:
+            _LOGGER.debug(
+                "Going to update %s children of %s", len(self._children), self.name
+            )
+            for child in self._children:
+                child.async_schedule_update_ha_state(force_refresh=True)
