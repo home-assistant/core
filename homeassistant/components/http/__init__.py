@@ -402,7 +402,7 @@ class HomeAssistantHTTP:
         # To work around this we now prevent the router from getting frozen
         # pylint: disable=protected-access
         self.app._router.freeze = lambda: None
-        logging.basicConfig(level=logging.DEBUG)
+        self.app.logger.setLevel(logging.DEBUG)
 
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()
