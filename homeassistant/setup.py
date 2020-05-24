@@ -156,7 +156,7 @@ async def _async_setup_component(
     start = timer()
     _LOGGER.info("Setting up %s", domain)
 
-    if 0 and hasattr(component, "PLATFORM_SCHEMA"):
+    if hasattr(component, "PLATFORM_SCHEMA"):
         # Entity components have their own warning
         warn_task = None
     else:
@@ -176,14 +176,14 @@ async def _async_setup_component(
         elif hasattr(component, "setup"):
             # This should not be replaced with hass.async_add_executor_job because
             # we don't want to track this task in case it blocks startup.
-            task = hass.loop.run_in_executor(
-                None, component.setup, hass, processed_config  # type: ignore
+            task = hass.async_add_executor_job(
+                component.setup, hass, processed_config  # type: ignore
             )
         else:
             _LOGGER.error("No setup function defined for %s", domain)
             return False
 
-        result = await asyncio.wait_for(asyncio.shield(task), SLOW_SETUP_MAX_WAIT)
+        result = await asyncio.wait_for(task, SLOW_SETUP_MAX_WAIT)
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Setup of %s is taking longer than %s seconds."
