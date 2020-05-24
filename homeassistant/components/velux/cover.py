@@ -2,14 +2,8 @@
 from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
-    CoverEntity,
-)
+from homeassistant.components import cover
+
 from homeassistant.core import callback
 
 from . import DATA_VELUX
@@ -25,7 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class VeluxCover(CoverEntity):
+class VeluxCover(cover.CoverEntity):
     """Representation of a Velux cover."""
 
     def __init__(self, node):
@@ -64,7 +58,7 @@ class VeluxCover(CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+        return cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE | cover.SUPPORT_SET_POSITION | cover.SUPPORT_STOP
 
     @property
     def current_cover_position(self):
@@ -75,18 +69,18 @@ class VeluxCover(CoverEntity):
     def device_class(self):
         """Define this cover as either awning, blind, garage, gate, shutter or window."""
         if isinstance(self.node, Awning):
-            return "awning"
+            return cover.DEVICE_CLASS_AWNING
         if isinstance(self.node, Blind):
-            return "blind"
+            return cover.DEVICE_CLASS_BLIND
         if isinstance(self.node, GarageDoor):
-            return "garage"
+            return cover.DEVICE_CLASS_GARAGE
         if isinstance(self.node, Gate):
-            return "gate"
+            return cover.DEVICE_CLASS_GATE
         if isinstance(self.node, RollerShutter):
-            return "shutter"
+            return cover.DEVICE_CLASS_SHUTTER
         if isinstance(self.node, Window):
-            return "window"
-        return "window"
+            return cover.DEVICE_CLASS_WINDOW
+        return cover.DEVICE_CLASS_WINDOW
 
     @property
     def is_closed(self):
@@ -103,8 +97,8 @@ class VeluxCover(CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position_percent = 100 - kwargs[ATTR_POSITION]
+        if cover.ATTR_POSITION in kwargs:
+            position_percent = 100 - kwargs[cover.ATTR_POSITION]
 
             await self.node.set_position(
                 Position(position_percent=position_percent), wait_for_completion=False
