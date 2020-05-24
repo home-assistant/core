@@ -343,6 +343,7 @@ class Volumio(MediaPlayerEntity):
             self._client.stop()
             await self.send_volumio_msg("play")
         else:
+            await asyncio.sleep(0.2)
             await self.send_volumio_msg("stop")
 
     @property
