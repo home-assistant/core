@@ -130,26 +130,12 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
 
 async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List action capabilities."""
-    if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
-        return {}
-
-    registry = await entity_registry.async_get_registry(hass)
-    entry = registry.async_get(config[ATTR_ENTITY_ID])
-    state = hass.states.get(config[ATTR_ENTITY_ID])
-
-    supported_features = 0
-
-    if state:
-        supported_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    elif entry:
-        supported_features = entry.supported_features
+    action_type = config[CONF_TYPE]
 
     extra_fields = {}
-
-    if supported_features & SUPPORT_BRIGHTNESS:
+    if action_type in (TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE):
         extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
-
-    if supported_features & SUPPORT_FLASH:
+    elif action_type == TYPE_FLASH:
         extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
 
     return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}
