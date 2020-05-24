@@ -158,15 +158,7 @@ class Volumio(MediaPlayerEntity):
             
             #TODO: There are lots more, continue at L673
         }
-                
-    async def init_websocket(self):
-        """Initialize websocket, which handles all informations from / to volumio."""
-        #websession = async_get_clientsession(self.hass)
-        url = f"http://{self.host}:{self.port}"
-        sio = socketio.AsyncClient()
-        await sio.connect(url)
-        return sio
-        
+                        
     async def send_volumio_msg(self, method, params=None):
         """Handles volumio calls"""
         
@@ -188,14 +180,16 @@ class Volumio(MediaPlayerEntity):
         
         method, params = api2websocket(method, params)
         
+        url = f"http://{self.host}:{self.port}"
+        sio = socketio.AsyncClient()
+        await sio.connect(url)
+        
         lock = True
         content = None
         def callback(sid, data):
             lock = False
             content = data
-            
-        sio = await self.init_websocket()
-        
+                
         self.send(sio, method, params, callback)
         
         while lock:
@@ -203,27 +197,6 @@ class Volumio(MediaPlayerEntity):
             time.sleep(0.05)
         
         return content
-            
-    async def get(self, ws, method):
-        """Handles responses from websocket."""
-        _LOGGER.debug("Get, method: %s", method)
-        
-        import json
-        
-        try:
-            async for msg in ws:
-                _LOGGER.debug("get, METHOD: %s, received DATA: %s", method, data)
-
-                data = json.loads(msg.data)
-                if data[0] == method:
-                    return data[1]
-
-        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-            _LOGGER.error(
-                "Failed communicating with Volumio '%s': %s", self._name, type(error)
-            )
-           
-        return None
 
     async def send(self, sio, method, params=None, callback=None):
         """Send message."""
@@ -232,7 +205,7 @@ class Volumio(MediaPlayerEntity):
         try:
             await sio.emit(method, params, callback=callback)
             
-            _LOGGER.debug("send METHOD: %s, received DATA: %s", method, data)
+            _LOGGER.debug("send METHOD: %s", method)
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error(
                 "Failed communicating with Volumio '%s': %s", self._name, type(error)
