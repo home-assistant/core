@@ -386,6 +386,15 @@ async def _async_set_up_integrations(
     if stage_1_domains:
         await async_setup_multi_components(stage_1_domains)
 
+    try:
+        hass.components.persistent_notification.async_create(
+            "Integrations are being loaded.",
+            "HomeAssistant is starting up",
+            "bootstrap",
+        )
+    except Exception:  # pylint: disable=broad-except
+        pass
+
     if frontend_domains:
         _LOGGER.info("Setting up %s", frontend_domains)
 
@@ -432,6 +441,11 @@ async def _async_set_up_integrations(
         _LOGGER.debug("Final set up: %s", stage_2_domains)
 
         await async_setup_multi_components(stage_2_domains)
+
+    try:
+        hass.components.persistent_notification.async_dismiss("bootstrap")
+    except Exception:  # pylint: disable=broad-except
+        pass
 
     # Wrap up startup
     await hass.async_block_till_done()
