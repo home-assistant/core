@@ -338,12 +338,13 @@ class Volumio(MediaPlayerEntity):
         while counter < wait_seconds or self._client.status().get("state") == "play":
             await asyncio.sleep(split)
             counter += split
-                    
+        
+        self._client.stop()
         if isPlaying:
-            self._client.stop()
             await self.send_volumio_msg("play")
         else:
             await asyncio.sleep(0.2)
+            self._client.stop()
             await self.send_volumio_msg("stop")
 
     @property
