@@ -316,10 +316,10 @@ class Volumio(MediaPlayerEntity):
             self._client.clear()
             self._client.add(media_id)
         
-        waittimer = self._client.status().get("duration", None)
+        waittimer = self._client.status().get("duration", 1)
         # TODO: There is no duration for TTS files. How can i get this information?
         self._client.play()
-        await asyncio.sleep(waittimer + 1)
+        await asyncio.sleep(waittimer)
     
     async def async_play_media(self, media_type, media_id, **kwargs):
         isPlaying = self.state == STATE_PLAYING
