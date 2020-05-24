@@ -222,7 +222,6 @@ async def async_setup(hass, config):
 
     async def start_server(event):
         """Start the server."""
-        _LOGGER.debug("Starting http server")
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
         await server.start()
 
@@ -402,16 +401,7 @@ class HomeAssistantHTTP:
         # To work around this we now prevent the router from getting frozen
         # pylint: disable=protected-access
         self.app._router.freeze = lambda: None
-        self.app.logger.setLevel(logging.DEBUG)
-        self.app.logger.debug("foo")
-        server_logger = logging.getLogger("aiohttp.server")
-        server_logger.setLevel(logging.DEBUG)
-        access_logger = logging.getLogger("aiohttp.access")
-        access_logger.setLevel(logging.DEBUG)
-        internal_logger = logging.getLogger("aiohttp.internal")
-        internal_logger.setLevel(logging.DEBUG)
-        web_logger = logging.getLogger("aiohttp.web")
-        web_logger.setLevel(logging.DEBUG)
+
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()
         self.site = web.TCPSite(

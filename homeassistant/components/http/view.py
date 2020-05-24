@@ -37,7 +37,6 @@ class HomeAssistantView:
     @staticmethod
     def context(request):
         """Generate a context from a request."""
-        _LOGGER.debug("context: %s", request)
         user = request.get("hass_user")
         if user is None:
             return Context()
@@ -47,8 +46,6 @@ class HomeAssistantView:
     @staticmethod
     def json(result, status_code=HTTP_OK, headers=None):
         """Return a JSON response."""
-        _LOGGER.debug("json: %s", result)
-
         try:
             msg = json.dumps(
                 result, sort_keys=True, cls=JSONEncoder, allow_nan=False
@@ -69,8 +66,6 @@ class HomeAssistantView:
         self, message, status_code=HTTP_OK, message_code=None, headers=None
     ):
         """Return a JSON message response."""
-        _LOGGER.debug("json_message: %s %s", message, status_code)
-
         data = {"message": message}
         if message_code is not None:
             data["code"] = message_code
@@ -78,8 +73,6 @@ class HomeAssistantView:
 
     def register(self, app, router):
         """Register the view with a router."""
-        _LOGGER.debug("register: %s %s", app, router)
-
         assert self.url is not None, "No url set for view"
         urls = [self.url] + self.extra_urls
         routes = []
