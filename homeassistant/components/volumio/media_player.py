@@ -330,6 +330,17 @@ class Volumio(MediaPlayerEntity):
             
         await self.mpd_play_media(media_type, media_id, **kwargs)
         
+        wait_seconds = 10
+        split_number = 5
+        split = wait_seconds % split_number
+        
+        counter = 0
+        while self._client.status().get("state") == "play" or counter < wait_seconds:
+            await asyncio.sleep(split)
+            counter += split
+            
+        self._client.stop()
+        
         if isPlaying:
             await self.send_volumio_msg("play")
 
