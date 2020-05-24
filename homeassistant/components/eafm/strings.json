@@ -1,6 +1,5 @@
 {
     "config": {
-        "title": "UK Environment Agency - Flood Gauges",
         "step": {
             "user": {
                 "title": "Track a flood monitoring station",
