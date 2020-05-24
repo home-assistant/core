@@ -1,9 +1,14 @@
 """Support for guages from flood monitoring API."""
+from datetime import timedelta
 import logging
 
+from aioeafm import get_station
+import async_timeout
+
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS
-from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -19,37 +24,80 @@ UNIT_MAPPING = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up UK Flood Monitoring Sensors."""
     station_key = config_entry.data["station"]
+    session = async_get_clientsession(hass=hass)
 
-    @callback
-    def async_add_entity(station, measurement):
-        measurement = Measurement(station, measurement)
-        async_add_entities([measurement])
-        return measurement
+    measurements = set()
 
-    hass.data[DOMAIN][station_key].async_platform_loaded("sensor", async_add_entity)
+    async def async_update_data():
+        # DataUpdateCoordinator will handle aiohttp ClientErrors and timouts
+        async with async_timeout.timeout(30):
+            data = await get_station(session, station_key)
+
+        # Look to see if payload contains new measures
+        for measure in data["measures"]:
+            if measure["@id"] not in measurements:
+                if "latestReading" not in measure:
+                    # Don't create a sensor entity for a gauge that isn't available
+                    continue
+
+                if measure["@id"] not in measurements:
+                    async_add_entities(
+                        [Measurement(hass.data[DOMAIN][station_key], measure["@id"])]
+                    )
+                    measurements.add(measure["@id"])
+
+        # Turn data.measures into a dict rather than a list so easier for entities to
+        # find themselves.
+        data["measures"] = {measure["@id"]: measure for measure in data["measures"]}
+
+        return data
+
+    hass.data[DOMAIN][station_key] = coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="sensor",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=15 * 60),
+    )
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
+
+    return len(measurements) > 0
 
 
 class Measurement(Entity):
     """A gauge at a flood monitoring station."""
 
-    def __init__(self, station, measure):
+    def __init__(self, coordinator, key):
         """Initialise the gauge with a data instance and station."""
-        self._station = station
-        self._measure = measure
-        self._available = True
+        self.coordinator = coordinator
+        self.key = key
 
-    @callback
-    def async_process_update(self, measure):
-        """Process a new reading for this gauge."""
-        self._measure = measure
-        self._available = "latestReading" in measure
-        self.async_write_ha_state()
+    @property
+    def station_name(self):
+        """Return the station name for the measure."""
+        return self.coordinator.data["label"]
 
-    @callback
-    def async_set_unavailable(self):
-        """Mark on entity that sensor failed to update."""
-        self._available = False
-        self.async_write_ha_state()
+    @property
+    def station_id(self):
+        """Return the station id for the measure."""
+        return self.coordinator.data["stationReference"]
+
+    @property
+    def qualifier(self):
+        """Return the qualifier for the station."""
+        return self.coordinator.data["measures"][self.key]["qualifier"]
+
+    @property
+    def parameter_name(self):
+        """Return the parameter name for the station."""
+        return self.coordinator.data["measures"][self.key]["parameterName"]
+
+    @property
+    def name(self):
+        """Return the name of the gauge."""
+        return f"{self.station_name} {self.parameter_name} {self.qualifier}"
 
     @property
     def should_poll(self) -> bool:
@@ -59,15 +107,7 @@ class Measurement(Entity):
     @property
     def unique_id(self):
         """Return the unique id of the gauge."""
-        return self._measure["@id"]
-
-    @property
-    def name(self):
-        """Return the name of the gauge."""
-        station_name = self._station["label"]
-        measure_qualifier = self._measure["qualifier"]
-        parameter = self._measure["parameterName"]
-        return f"{station_name} {parameter} ({measure_qualifier})"
+        return self.key
 
     @property
     def device_info(self):
@@ -76,21 +116,34 @@ class Measurement(Entity):
             "identifiers": {(DOMAIN, "measure-id", self.unique_id)},
             "name": self.name,
             "manufacturer": "https://environment.data.gov.uk/",
-            "model": self._measure["parameterName"],
-            "via_device": (DOMAIN, "station-id", self._measure["stationReference"]),
+            "model": self.parameter_name,
             "entry_type": "service",
         }
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        if not self.coordinator.last_update_success:
+            return False
+
+        # If sensor goes offline it will no longer contain a reading
+        if "latestReading" not in self.coordinator.data["measures"][self.key]:
+            return False
+
+        return True
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        unit = self._measure["unit"]
-        unit_name = self._measure["unitName"]
+
+        unit = self.coordinator.data["measures"][self.key]["unit"]
+        unit_name = self.coordinator.data["measures"][self.key]["unitName"]
         return UNIT_MAPPING.get(unit, unit_name)
 
     @property
@@ -106,4 +159,12 @@ class Measurement(Entity):
     @property
     def state(self):
         """Return the current sensor value."""
-        return self._measure["latestReading"]["value"]
+        return self.coordinator.data["measures"][self.key]["latestReading"]["value"]
+
+    async def async_update(self):
+        """
+        Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.coordinator.async_request_refresh()

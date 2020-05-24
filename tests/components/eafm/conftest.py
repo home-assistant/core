@@ -27,7 +27,7 @@ def mock_get_stations():
 @pytest.fixture()
 def mock_get_station():
     """Mock aioeafm.get_station."""
-    with patch("homeassistant.components.eafm.station.get_station") as patched:
+    with patch("homeassistant.components.eafm.sensor.get_station") as patched:
 
         def set_result(value):
             future = patched.return_value = asyncio.Future()

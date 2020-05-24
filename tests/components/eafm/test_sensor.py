@@ -5,7 +5,6 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.eafm.const import DOMAIN
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -301,19 +300,11 @@ async def test_unload_entry(hass, mock_get_station):
         },
     )
 
-    # Before unloading there should be a station object and it should be polling
-    station = hass.data[DOMAIN]["L1234"]
-    assert station.is_polling
-
     # And there should be an entity
     state = hass.states.get("sensor.my_station_water_level_stage")
     assert state.state == "5"
 
     assert await entry.async_unload(hass)
-
-    # After unloading the polling should have stopped
-    assert not station.is_polling
-    assert "L1234" not in hass.data[DOMAIN]
 
     # And the entity should be gone
     assert not hass.states.get("sensor.my_station_water_level_stage")
