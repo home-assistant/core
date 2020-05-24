@@ -287,16 +287,30 @@ class Volumio(MediaPlayerEntity):
     @property
     def media_seek_position(self):
         """Time in seconds of current seek position."""
-        await self.async_update()
+        self.async_update()
         return self._state.get("seek", None)
     
     def media_seek(self, position):
         """Send seek command."""
-        raise NotImplementedError()
+        self.send("Seek", position)
         
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, *args, **kwargs):
         """Play a piece of media."""
-        raise NotImplementedError()
+        self.async_play_media(args, kwargs)
+            
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            if media_id in self._playlists:
+                self._currentplaylist = media_id
+            else:
+                self._currentplaylist = None
+                _LOGGER.warning("Unknown playlist name %s", media_id)
+                
+            await self.send("playPlaylist", media_id)
+        else:
+            await self.send("clearQueue")
+            await self.send("addToQueue", media_id)
+            await self.send("play")
 
     @property
     def media_duration(self):
