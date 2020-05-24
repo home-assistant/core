@@ -131,7 +131,7 @@ class SleepIQData:
         bed_name = bed_name.lower()
         side = side.lower()
 
-        if len(side) == 0:
+        if not side:
             # No side specified, use both.
             sides_to_set = SIDES
         else:
