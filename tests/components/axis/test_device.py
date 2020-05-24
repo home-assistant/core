@@ -1,5 +1,6 @@
 """Test Axis device."""
 from copy import deepcopy
+from unittest import mock
 
 import axis as axislib
 from axis.event_stream import OPERATION_INITIALIZED
@@ -13,6 +14,7 @@ from homeassistant.components.axis.const import (
     CONF_MODEL,
     DOMAIN as AXIS_DOMAIN,
 )
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -23,7 +25,11 @@ from homeassistant.const import (
 )
 
 from tests.async_mock import Mock, patch
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    async_mock_mqtt_component,
+)
 
 MAC = "00408C12345"
 MODEL = "model"
@@ -149,6 +155,36 @@ async def test_device_setup(hass):
     assert device.model == ENTRY_CONFIG[CONF_MODEL]
     assert device.name == ENTRY_CONFIG[CONF_NAME]
     assert device.serial == ENTRY_CONFIG[CONF_MAC]
+
+
+async def test_device_support_mqtt(hass):
+    """Successful setup."""
+    api_discovery = deepcopy(DEFAULT_API_DISCOVERY)
+    api_discovery["data"]["apiList"].append(
+        {"id": "mqtt-client", "version": "1.0", "name": "MQTT Client API"}
+    )
+    get_client_status = {"data": {"status": {"state": "active"}}}
+
+    mock_mqtt = await async_mock_mqtt_component(hass)
+
+    with patch(
+        "axis.mqtt.MqttClient.get_client_status", return_value=get_client_status
+    ):
+        await setup_axis_integration(hass, api_discovery=api_discovery)
+
+    mock_mqtt.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
+
+    topic = f"{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
+    message = b'{"timestamp": 1590258472044, "topic": "onvif:Device/axis:Sensor/PIR", "message": {"source": {"sensor": "0"}, "key": {}, "data": {"state": "1"}}}'
+
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
+    async_fire_mqtt_message(hass, topic, message)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
+
+    pir = hass.states.get(f"binary_sensor.{NAME}_pir_0")
+    assert pir.state == "on"
+    assert pir.name == f"{NAME} PIR 0"
 
 
 async def test_update_address(hass):

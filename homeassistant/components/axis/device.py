@@ -10,6 +10,7 @@ from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
+from homeassistant.components.mqtt.models import Message
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -18,7 +19,7 @@ from homeassistant.const import (
     CONF_TRIGGER_TIME,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -147,7 +148,7 @@ class AxisNetworkDevice:
             sw_version=self.fw_version,
         )
 
-    async def use_mqtt(self, hass, component):
+    async def use_mqtt(self, hass: HomeAssistant, component: str) -> None:
         """Set up to use MQTT transport."""
         status = await hass.async_add_executor_job(
             self.api.vapix.mqtt.get_client_status
@@ -158,12 +159,11 @@ class AxisNetworkDevice:
                 await mqtt.async_subscribe(hass, f"{self.serial}/#", self.mqtt_message)
             )
 
-    @callback
-    def mqtt_message(self, msg) -> None:
+    async def mqtt_message(self, message: Message) -> None:
         """Axis MQTT message."""
         self.disconnect_from_stream()
 
-        event = mqtt_json_to_event(msg.payload)
+        event = mqtt_json_to_event(message.payload)
         self.api.event.process_event(event)
 
     async def async_setup(self):
