@@ -103,6 +103,8 @@ SEQ_OF_OPERATION = {
     0x04: (HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT),
     # cooling and heating 4-pipes
     0x05: (HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT),
+    0x06: (HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF),  # centralite specific
+    0x07: (HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF),  # centralite specific
 }
 
 
@@ -234,24 +236,39 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self._thrm.pi_heating_demand is None
             and self._thrm.pi_cooling_demand is None
         ):
-            running_state = self._thrm.running_state
-            if running_state is None:
-                return None
-            if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
-                return CURRENT_HVAC_HEAT
-            if running_state & (RunningState.COOL | RunningState.COOL_STAGE_2):
-                return CURRENT_HVAC_COOL
-            if running_state & (
-                RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
-            ):
-                return CURRENT_HVAC_FAN
-        else:
-            heating_demand = self._thrm.pi_heating_demand
-            if heating_demand is not None and heating_demand > 0:
-                return CURRENT_HVAC_HEAT
-            cooling_demand = self._thrm.pi_cooling_demand
-            if cooling_demand is not None and cooling_demand > 0:
-                return CURRENT_HVAC_COOL
+            return self._rm_rs_action
+        return self._pi_demand_action
+
+    @property
+    def _rm_rs_action(self) -> Optional[str]:
+        """Return the current HVAC action based on running mode and running state."""
+
+        running_mode = self._thrm.running_mode
+        if running_mode == SystemMode.HEAT:
+            return CURRENT_HVAC_HEAT
+        if running_mode == SystemMode.COOL:
+            return CURRENT_HVAC_COOL
+
+        running_state = self._thrm.running_state
+        if running_state and running_state & (
+            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+        ):
+            return CURRENT_HVAC_FAN
+        if self.hvac_mode != HVAC_MODE_OFF and running_mode == SystemMode.OFF:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
+
+    @property
+    def _pi_demand_action(self) -> Optional[str]:
+        """Return the current HVAC action based on pi_demands."""
+
+        heating_demand = self._thrm.pi_heating_demand
+        if heating_demand is not None and heating_demand > 0:
+            return CURRENT_HVAC_HEAT
+        cooling_demand = self._thrm.pi_cooling_demand
+        if cooling_demand is not None and cooling_demand > 0:
+            return CURRENT_HVAC_COOL
+
         if self.hvac_mode != HVAC_MODE_OFF:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
@@ -389,14 +406,11 @@ class Thermostat(ZhaEntity, ClimateEntity):
             if occupancy is True:
                 self._preset = PRESET_NONE
 
+        self.debug("Attribute '%s' = %s update", record.attr_name, record.value)
         self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        if self.fan_modes is None:
-            self.warning("Fan is not supported")
-            return
-
         if fan_mode not in self.fan_modes:
             self.warning("Unsupported '%s' fan mode", fan_mode)
             return
@@ -540,3 +554,32 @@ class SinopeTechnologiesThermostat(Thermostat):
 
         self.debug("set occupancy to %s. Status: %s", 0 if is_away else 1, res)
         return res
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    manufacturers="Zen Within",
+)
+class ZenWithinThermostat(Thermostat):
+    """Zen Within Thermostat implementation."""
+
+    @property
+    def _rm_rs_action(self) -> Optional[str]:
+        """Return the current HVAC action based on running mode and running state."""
+
+        running_state = self._thrm.running_state
+        if running_state is None:
+            return None
+        if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
+            return CURRENT_HVAC_HEAT
+        if running_state & (RunningState.COOL | RunningState.COOL_STAGE_2):
+            return CURRENT_HVAC_COOL
+        if running_state & (
+            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+        ):
+            return CURRENT_HVAC_FAN
+
+        if self.hvac_mode != HVAC_MODE_OFF:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF

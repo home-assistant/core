@@ -90,7 +90,7 @@
                 "data": {
                     "api_host": "Zast\u0119powanie adresu URL hosta API (opcjonalnie)",
                     "blink": "Miganie diody LED panelu podczas wysy\u0142ania zmiany stanu",
-                    "override_api_host": "Zast\u0105p domy\u015blny adres URL API Home Assistant'a"
+                    "override_api_host": "Zast\u0105p domy\u015blny adres URL API Home Assistanta"
                 },
                 "description": "Wybierz po\u017c\u0105dane zachowanie dla swojego panelu",
                 "title": "R\u00f3\u017cne opcje"

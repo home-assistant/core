@@ -29,9 +29,10 @@ def mock_zeroconf():
         yield mock_zc.return_value
 
 
-def service_update_mock(zeroconf, service, handlers):
+def service_update_mock(zeroconf, services, handlers):
     """Call service update handler."""
-    handlers[0](zeroconf, service, f"name.{service}", ServiceStateChange.Added)
+    for service in services:
+        handlers[0](zeroconf, service, f"name.{service}", ServiceStateChange.Added)
 
 
 def get_service_info_mock(service_type, name):
@@ -76,7 +77,7 @@ async def test_setup(hass, mock_zeroconf):
         mock_zeroconf.get_service_info.side_effect = get_service_info_mock
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
-    assert len(mock_service_browser.mock_calls) == len(zc_gen.ZEROCONF)
+    assert len(mock_service_browser.mock_calls) == 1
     expected_flow_calls = 0
     for matching_components in zc_gen.ZEROCONF.values():
         expected_flow_calls += len(matching_components)
