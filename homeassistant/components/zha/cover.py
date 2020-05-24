@@ -1,4 +1,5 @@
 """Support for ZHA covers."""
+import asyncio
 import functools
 import logging
 from typing import List, Optional
@@ -8,6 +9,7 @@ from zigpy.zcl.foundation import Status
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
+    DEVICE_CLASS_DAMPER,
     DEVICE_CLASS_SHADE,
     DOMAIN,
     CoverEntity,
@@ -278,3 +280,31 @@ class Shade(ZhaEntity, CoverEntity):
         if not isinstance(res, list) or res[1] != Status.SUCCESS:
             self.debug("couldn't stop cover: %s", res)
             return
+
+
+@STRICT_MATCH(
+    channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF}, manufacturers="Keen Home Inc"
+)
+class KeenVent(Shade):
+    """Keen vent cover."""
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_DAMPER
+
+    async def async_open_cover(self, **kwargs):
+        """Open the cover."""
+        position = self._position or 100
+        tasks = [
+            self._level_channel.move_to_level_with_on_off(position * 255 / 100, 1),
+            self._on_off_channel.on(),
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        if any([isinstance(result, Exception) for result in results]):
+            self.debug("couldn't open cover")
+            return
+
+        self._is_open = True
+        self._position = position
+        self.async_write_ha_state()
