@@ -71,6 +71,7 @@ class Measurement(Entity):
             "manufacturer": "https://environment.data.gov.uk/",
             "model": self._measure["parameterName"],
             "via_device": (DOMAIN, "station-id", self._measure["stationReference"]),
+            "entry_type": "service",
         }
 
     @property

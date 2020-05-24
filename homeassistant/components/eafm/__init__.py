@@ -23,6 +23,7 @@ async def async_setup_entry(hass, entry):
         name=entry.title,
         manufacturer="https://environment.data.gov.uk/",
         model="Real Time flood-monitoring API",
+        entry_type="service",
     )
 
     station = hass.data[DOMAIN][station_key] = Station(hass, entry)
