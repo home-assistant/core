@@ -271,3 +271,10 @@ class Shade(ZhaEntity, CoverEntity):
 
         self._position = new_pos
         self.async_write_ha_state()
+
+    async def async_stop_cover(self, **kwargs) -> None:
+        """Stop the cover."""
+        res = await self._level_channel.stop()
+        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+            self.debug("couldn't stop cover: %s", res)
+            return
