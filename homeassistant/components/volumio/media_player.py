@@ -325,7 +325,7 @@ class Volumio(MediaPlayerEntity):
         
         if isPlaying:
             await self.send_volumio_msg("pause")
-            asyncio.sleep(1)
+            asyncio.sleep(10)
             
         self.mpd_play_media(media_type, media_id, **kwargs)
         
