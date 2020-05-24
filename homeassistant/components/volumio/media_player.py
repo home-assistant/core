@@ -304,16 +304,15 @@ class Volumio(MediaPlayerEntity):
             # Cleanly disconnect in case connection is not in valid state
             self._client.connect(self.host, "6600")
         
+        self._client.clear()
         if media_type == MEDIA_TYPE_PLAYLIST:
             if media_id in self._playlists:
                 self._currentplaylist = media_id
             else:
                 self._currentplaylist = None
                 _LOGGER.warning("Unknown playlist name %s", media_id)
-            self._client.clear()
             self._client.load(media_id)
         else:
-            self._client.clear()
             self._client.add(media_id)
         
         waittimer = self._client.status().get("duration", 1)
@@ -345,9 +344,10 @@ class Volumio(MediaPlayerEntity):
         if isPlaying:
             await self.send_volumio_msg("play")
         else:
-            await asyncio.sleep(0.2)
-            self._client.stop()
             await self.send_volumio_msg("stop")
+            await asyncio.sleep(0.2)
+            await self.send_volumio_msg("stop")
+            self._client.stop()
 
     @property
     def media_duration(self):
