@@ -317,7 +317,7 @@ class Volumio(MediaPlayerEntity):
         if svc == "spop":
             await self.send_volumio_msg("pause")
             
-        self.mpd_play_media(media_type, media_id, kwargs)
+        self.mpd_play_media(media_type, media_id, **kwargs)
         
         if svc == "spop":
             import time
