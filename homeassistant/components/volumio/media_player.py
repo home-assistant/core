@@ -184,12 +184,14 @@ class Volumio(MediaPlayerEntity):
         
         method, params = api2websocket(method, params)
         
-        async with init_websocket() as ws:
+        async with self.init_websocket() as ws:
             self.send(ws, method, params)
-            data = await self.get(ws, self._methods[method])
-        
-        _LOGGER.debug("received DATA: %s", data)
-        return data
+            if method in self._methods:
+                data = await self.get(ws, self._methods[method])
+                _LOGGER.debug("received DATA: %s", data)
+                
+                return data
+        return None
             
     async def get(self, ws, method):
         """Handles responses from websocket."""
@@ -292,7 +294,7 @@ class Volumio(MediaPlayerEntity):
     
     def media_seek(self, position):
         """Send seek command."""
-        self.send("Seek", position)
+        self.send_volumio_msg("Seek", position)
         
     def play_media(self, *args, **kwargs):
         """Play a piece of media."""
@@ -306,11 +308,11 @@ class Volumio(MediaPlayerEntity):
                 self._currentplaylist = None
                 _LOGGER.warning("Unknown playlist name %s", media_id)
                 
-            await self.send("playPlaylist", media_id)
+            await self.send_volumio_msg("playPlaylist", media_id)
         else:
-            await self.send("clearQueue")
-            await self.send("addToQueue", media_id)
-            await self.send("play")
+            await self.send_volumio_msg("clearQueue")
+            await self.send_volumio_msg("addToQueue", media_id)
+            await self.send_volumio_msg("play")
 
     @property
     def media_duration(self):
