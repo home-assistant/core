@@ -321,7 +321,7 @@ class Volumio(MediaPlayerEntity):
             self._client.play()
             import time
             
-            time.sleep(self._client.status().get("duration", 0)
+            time.sleep(self._client.status().get("duration", 0))
             await self.send_volumio_msg("play")
             
             return
