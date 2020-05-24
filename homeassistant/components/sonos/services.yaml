@@ -76,7 +76,7 @@ play_queue:
       example: "0"
 
 remove_from_queue:
-  description: Removes the first item from the queue.
+  description: Removes an item from the queue.
   fields:
     entity_id:
       description: Name(s) of entities that will remove an item.
