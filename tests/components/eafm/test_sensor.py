@@ -78,11 +78,33 @@ async def test_reading_unavailable(hass, mock_get_station, exception):
 
 
 @pytest.mark.parametrize("exception", CONNECTION_EXCEPTIONS)
-async def test_recover_from_first_failure(hass, mock_get_station, exception):
-    """Test that a sensor is added and polled even if there is an error on the first attempt."""
-    _, poll = await async_setup_test_fixture(hass, mock_get_station, exception)
+async def test_recover_from_failure(hass, mock_get_station, exception):
+    """Test that a sensor recovers from failures."""
+    _, poll = await async_setup_test_fixture(
+        hass,
+        mock_get_station,
+        {
+            "label": "My station",
+            "measures": [
+                {
+                    "@id": "really-long-unique-id",
+                    "label": "York Viking Recorder - level-stage-i-15_min----",
+                    "qualifier": "Stage",
+                    "parameterName": "Water Level",
+                    "latestReading": {"value": 5},
+                    "stationReference": "L1234",
+                    "unit": "http://qudt.org/1.1/vocab/unit#Meter",
+                    "unitName": "m",
+                }
+            ],
+        },
+    )
     state = hass.states.get("sensor.my_station_water_level_stage")
-    assert state is None
+    assert state.state == "5"
+
+    await poll(exception)
+    state = hass.states.get("sensor.my_station_water_level_stage")
+    assert state.state == "unavailable"
 
     await poll(
         {
