@@ -306,10 +306,13 @@ class Volumio(MediaPlayerEntity):
         else:
             #await self.send_volumio_msg("clearQueue")
             #await self.send_volumio_msg("addToQueue", media_id)
-            #await self.send_volumio_msg("play")
+            await self.send_volumio_msg("pause")
             self._client.clear()
             self._client.add(media_id)
             self._client.play()
+            import time
+            time.sleep(2)
+            await self.send_volumio_msg("play")
 
     @property
     def media_duration(self):
