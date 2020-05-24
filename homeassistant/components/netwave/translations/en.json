@@ -1,0 +1,32 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "auth_failed": "Failed to authenticate with camera",
+      "connection_error": "Failed to connect to camera",
+      "duration_type_error": "Move duration must be a float"
+    },
+    "flow_title": "NetWave: {name}",
+    "step": {
+      "user": {
+        "data": {
+          "address": "Address (ex: 'http://ip:port')",
+          "password": "Password",
+          "timeout": "Timeout (seconds)",
+          "name": "Name (Friendly name for camera)",
+          "username": "Username",
+          "type": "Type",
+          "vertical_mirror": "Mirror Image Vertically",
+          "horizontal_mirror": "Mirror Image Horizontally",
+          "framerate": "Framerate (frames/second)",
+          "move_duration": "Move Duration (0 for manual movement stop, ex: '0.5')"
+        },
+        "description": "Please enter connection settings of your NetWave/Airsight camera",
+        "title": "NetWave Camera"
+      }
+    }
+  },
+  "title": "NetWave"
+}

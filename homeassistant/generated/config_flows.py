@@ -86,6 +86,7 @@ FLOWS = [
     "neato",
     "nest",
     "netatmo",
+    "netwave",
     "nexia",
     "notion",
     "nuheat",

@@ -1,0 +1,8 @@
+{
+  "domain": "netwave",
+  "name": "Netwave/Airsonic Camera",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/netwave",
+  "requirements": ["netwave-camera==0.0.3"],
+  "codeowners": ["@TheLogicMaster"]
+}

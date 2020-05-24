@@ -1,0 +1,40 @@
+# NetWave camera services
+
+send_command:
+  description: Sends a command to the Camera
+  fields:
+    entity_id:
+      description: Name of the camera to send a command to
+      example: "camera.netwave_camera"
+    command:
+      description: "The name of the command to send. Allowed values: stop_movement, move_up, move_down, move_left, move_right, move_up_left, move_up_right, move_down_left, move_down_right, move_center, patrol_vertical, stop_patrol_vertical, patrol_horizontal, stop_patrol_horizontal, turn_io_on, turn_io_off, set_preset, recall_preset, restart_camera, factory_reset_camera"
+      example: "move_up"
+    parameter:
+      description: Parameter for command (Only used for position preset IDs) (1-15)
+      example: "1"
+    move_duration:
+      description: The override duration for movement commands (seconds) (optional)
+      example: "0.3"
+
+send_parameter:
+  description: Sends a parameter to the Camera
+  fields:
+    entity_id:
+      description: Name of the camera to send update parameter on
+      example: "camera.netwave_camera"
+    parameter:
+      description: "Parameter on camera to update. Allowed values: mode, brightness, contrast, resolution, orientation, mirror_vertical, mirro_horizontal"
+      example: "brightness"
+    value:
+      description: The value of the parameter to update with
+      example: "10"
+
+refresh_info:
+  description: Refreshes local store of camera settings and info. Only needed if camera settings like networing are changed.
+  fields:
+    entity_id:
+      description: Name of the camera refresh info for
+      example: "camera.netwave_camera"
+
+refresh_complete:
+  description: Refreshes info and state for all NetWave cameras

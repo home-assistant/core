@@ -930,6 +930,9 @@ netdata==0.1.2
 # homeassistant.components.ssdp
 netdisco==2.6.0
 
+# homeassistant.components.netwave
+netwave-camera==0.0.3
+
 # homeassistant.components.neurio_energy
 neurio==0.3.1
 
