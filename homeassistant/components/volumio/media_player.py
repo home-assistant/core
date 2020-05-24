@@ -310,18 +310,20 @@ class Volumio(MediaPlayerEntity):
             self._client.clear()
             self._client.add(media_id)
             self._client.play()
+            
+            asyncio.sleep(self._client.status().get("duration", 2))
     
     async def async_play_media(self, media_type, media_id, **kwargs):
         svc = self._state.get("service", None)
         
-        if svc == "spop":
+        isPlaying = self.state == STATE_PLAYING
+        
+        if isPlaying and svc == "spop":
             await self.send_volumio_msg("pause")
             
         self.mpd_play_media(media_type, media_id, **kwargs)
         
-        if svc == "spop":
-            import time
-            asyncio.sleep(self._client.status().get("duration", 2))
+        if isPlaying and svc == "spop":
             await self.send_volumio_msg("play")        
 
     @property
