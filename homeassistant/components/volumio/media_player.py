@@ -173,7 +173,7 @@ class Volumio(MediaPlayerEntity):
         state_name = await self.send(method, params) 
         if state_name is not None:
             return getattr(self, state_name)
-        return None
+        return state_name
 
     async def send(self, method, params=None):
         """Send message."""
@@ -325,7 +325,7 @@ class Volumio(MediaPlayerEntity):
         
         if isPlaying:
             await self.send_volumio_msg("pause")
-            asyncio.sleep(0.5)
+            asyncio.sleep(1)
             
         self.mpd_play_media(media_type, media_id, **kwargs)
         
