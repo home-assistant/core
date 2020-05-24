@@ -1,5 +1,5 @@
 """Support for Plugwise Circle(+) nodes."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import PlugwiseNodeEntity
 from .const import (
@@ -38,7 +38,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class PlugwiseSwitch(PlugwiseNodeEntity, SwitchDevice):
+class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
     """Representation of a switch."""
 
     def __init__(self, node, mac, switch_id):
@@ -77,7 +77,7 @@ class PlugwiseSwitch(PlugwiseNodeEntity, SwitchDevice):
         return f"{self._mac}-{self.switch_id}"
 
 
-class PlugwiseSwitchWithPower(PlugwiseSwitch, SwitchDevice):
+class PlugwiseSwitchWithPower(PlugwiseSwitch, SwitchEntity):
     """Representation of a switch with power measurement."""
 
     def __init__(self, node, mac, switch_id, power_sensor_id, energy_sensor_id):
