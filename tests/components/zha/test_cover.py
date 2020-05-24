@@ -61,6 +61,22 @@ def zigpy_shade_device(zigpy_device_mock):
     return zigpy_device_mock(endpoints)
 
 
+@pytest.fixture
+def zigpy_keen_vent(zigpy_device_mock):
+    """Zigpy Keen Vent device."""
+
+    endpoints = {
+        1: {
+            "device_type": 3,
+            "in_clusters": [general.LevelControl.cluster_id, general.OnOff.cluster_id],
+            "out_clusters": [],
+        }
+    }
+    return zigpy_device_mock(
+        endpoints, manufacturer="Keen Home Inc", model="SV02-612-MP-1.3"
+    )
+
+
 @patch(
     "homeassistant.components.zha.core.channels.closures.WindowCovering.async_initialize"
 )
@@ -306,3 +322,56 @@ async def test_restore_state(hass, zha_device_restored, zigpy_shade_device):
     # test that the cover was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_OPEN
     assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 50
+
+
+async def test_keen_vent(hass, zha_device_joined_restored, zigpy_keen_vent):
+    """Test keen vent."""
+
+    # load up cover domain
+    zha_device = await zha_device_joined_restored(zigpy_keen_vent)
+
+    cluster_on_off = zigpy_keen_vent.endpoints.get(1).on_off
+    cluster_level = zigpy_keen_vent.endpoints.get(1).level
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    assert entity_id is not None
+
+    # test that the cover was created and that it is unavailable
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+    await hass.async_block_till_done()
+
+    # test that the state has changed from unavailable to off
+    await send_attributes_report(hass, cluster_on_off, {8: 0, 0: False, 1: 1})
+    assert hass.states.get(entity_id).state == STATE_CLOSED
+
+    # open from UI command fails
+    p1 = patch.object(cluster_on_off, "request", side_effect=asyncio.TimeoutError)
+    p2 = patch.object(cluster_level, "request", AsyncMock(return_value=[4, 0]))
+
+    with p1, p2:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True
+        )
+        assert cluster_on_off.request.call_count == 1
+        assert cluster_on_off.request.call_args[0][0] is False
+        assert cluster_on_off.request.call_args[0][1] == 0x0001
+        assert cluster_level.request.call_count == 1
+        assert hass.states.get(entity_id).state == STATE_CLOSED
+
+    # open from UI command success
+    p1 = patch.object(cluster_on_off, "request", AsyncMock(return_value=[1, 0]))
+    p2 = patch.object(cluster_level, "request", AsyncMock(return_value=[4, 0]))
+
+    with p1, p2:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True
+        )
+        await asyncio.sleep(0)
+        assert cluster_on_off.request.call_count == 1
+        assert cluster_on_off.request.call_args[0][0] is False
+        assert cluster_on_off.request.call_args[0][1] == 0x0001
+        assert cluster_level.request.call_count == 1
+        assert hass.states.get(entity_id).state == STATE_OPEN
+        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 100
