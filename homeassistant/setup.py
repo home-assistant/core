@@ -156,7 +156,7 @@ async def _async_setup_component(
     start = timer()
     _LOGGER.info("Setting up %s", domain)
 
-    if hasattr(component, "PLATFORM_SCHEMA"):
+    if 0 and hasattr(component, "PLATFORM_SCHEMA"):
         # Entity components have their own warning
         warn_task = None
     else:
