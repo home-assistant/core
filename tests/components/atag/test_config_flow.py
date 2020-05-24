@@ -3,14 +3,13 @@ from pyatag import errors
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.atag import DOMAIN
-from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
+from tests.async_mock import PropertyMock, patch
 from tests.components.atag import (
-    COMPLETE_ENTRY,
     PAIR_REPLY,
     RECEIVE_REPLY,
+    UID,
     USER_INPUT,
     init_integration,
 )
@@ -27,7 +26,7 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_one_config_allowed(
+async def test_adding_second_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that only one Atag configuration is allowed."""
@@ -75,5 +74,5 @@ async def test_full_flow_implementation(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == COMPLETE_ENTRY[CONF_DEVICE]
-    assert result["data"] == COMPLETE_ENTRY
+    assert result["title"] == UID
+    assert result["result"].unique_id == UID
