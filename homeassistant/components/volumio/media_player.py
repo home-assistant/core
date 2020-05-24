@@ -216,7 +216,7 @@ class Volumio(MediaPlayerEntity):
             )
             return False
 
-        await sio.sleep(1)
+        await sio.sleep(0.1)
         await sio.disconnect()
         
         return state_name
