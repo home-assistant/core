@@ -1,5 +1,5 @@
 """Tests for the Atag config flow."""
-from pyatag import AtagException
+from pyatag import errors
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.atag import DOMAIN
@@ -48,9 +48,7 @@ async def test_adding_second_device(
 
 async def test_connection_error(hass):
     """Test we show user form on Atag connection error."""
-    with patch(
-        "pyatag.AtagOne.authorize", side_effect=AtagException(),
-    ):
+    with patch("pyatag.AtagOne.authorize", side_effect=errors.AtagException()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT,
         )
@@ -58,6 +56,17 @@ async def test_connection_error(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "connection_error"}
+
+
+async def test_unauthorized(hass):
+    """Test we show correct form when Unauthorized error is raised."""
+    with patch("pyatag.AtagOne.authorize", side_effect=errors.Unauthorized()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT,
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unauthorized"}
 
 
 async def test_full_flow_implementation(
