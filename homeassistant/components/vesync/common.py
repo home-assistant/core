@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.helpers.entity import ToggleEntity
 
-from .const import VS_SWITCHES
+from .const import VS_SWITCHES, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,8 +12,13 @@ async def async_process_devices(hass, manager):
     """Assign devices to proper component."""
     devices = {}
     devices[VS_SWITCHES] = []
+    devices[VS_FANS] = []
 
     await hass.async_add_executor_job(manager.update)
+
+    if manager.fans:
+        devices[VS_FANS].extend(manager.fans)
+        _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
     if manager.outlets:
         devices[VS_SWITCHES].extend(manager.outlets)
@@ -49,7 +54,7 @@ class VeSyncDevice(ToggleEntity):
 
     @property
     def is_on(self):
-        """Return True if switch is on."""
+        """Return True if device is on."""
         return self.device.device_status == "on"
 
     @property
