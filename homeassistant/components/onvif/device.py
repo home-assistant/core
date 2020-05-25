@@ -237,7 +237,7 @@ class ONVIFDevice:
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
-        except (ONVIFError, Fault):
+        except (ONVIFError, Fault, ServerDisconnectedError):
             pass
 
         pullpoint = False
@@ -424,7 +424,7 @@ class ONVIFDevice:
                         "PTZ preset '%s' does not exist on device '%s'. Available Presets: %s",
                         preset_val,
                         self.name,
-                        profile.ptz.presets.join(", "),
+                        ", ".join(profile.ptz.presets),
                     )
                     return
 

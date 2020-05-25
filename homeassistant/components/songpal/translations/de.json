@@ -5,6 +5,7 @@
             "not_songpal_device": "Kein Songpal-Ger\u00e4t"
         },
         "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "connection": "Verbindungsfehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Endpunkt"
         },
         "flow_title": "Sony Songpal {name} ({host})",
