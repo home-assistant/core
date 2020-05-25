@@ -124,4 +124,4 @@ class InsteonEntity(Entity):
 
     def _async_add_default_links(self):
         """Add default links between the device and the modem."""
-        self.hass.async_add_job(self._insteon_device.async_add_default_links)
+        self.hass.async_add_executor_job(self._insteon_device.async_add_default_links)

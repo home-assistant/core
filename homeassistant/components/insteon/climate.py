@@ -1,4 +1,4 @@
-"""Support for Honeywell (US) Total Connect Comfort climate systems."""
+"""Support for Insteon thermostat."""
 import logging
 from typing import List, Optional
 
@@ -143,7 +143,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         high = self._insteon_device.groups[HUMIDITY_HIGH].value
         low = self._insteon_device.groups[HUMIDITY_LOW].value
         # May not be loaded yet so return a default if required
-        return (high + low) / 2 if high and low else 50
+        return (high + low) / 2 if high and low else None
 
     @property
     def min_humidity(self) -> int:
@@ -156,16 +156,13 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
 
         Need to be one of CURRENT_HVAC_*.
         """
-        hvac_action = CURRENT_HVAC_IDLE
         if self._insteon_device.groups[COOLING].value:
-            hvac_action = CURRENT_HVAC_COOL
-        elif self._insteon_device.groups[HEATING].value:
-            hvac_action = CURRENT_HVAC_HEAT
-        elif (
-            self._insteon_device.groups[FAN_MODE].value == ThermostatMode.FAN_ALWAYS_ON
-        ):
-            hvac_action = CURRENT_HVAC_FAN
-        return hvac_action
+            return CURRENT_HVAC_COOL
+        if self._insteon_device.groups[HEATING].value:
+            return CURRENT_HVAC_HEAT
+        if self._insteon_device.groups[FAN_MODE].value == ThermostatMode.FAN_ALWAYS_ON:
+            return CURRENT_HVAC_FAN
+        return CURRENT_HVAC_IDLE
 
     @property
     def device_state_attributes(self):
@@ -210,7 +207,6 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         low = self._insteon_device.groups[HUMIDITY_LOW].value + change
         await self._insteon_device.async_set_humidity_low_set_point(low)
         await self._insteon_device.async_set_humidity_high_set_point(high)
-        # await self._insteon_device.async_status()
 
     async def async_added_to_hass(self):
         """Register INSTEON update events."""
