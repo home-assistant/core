@@ -1699,6 +1699,7 @@ python-juicenet==1.0.1
 python-miio==0.5.0.1
 
 # homeassistant.components.mpd
+# homeassistant.components.volumio
 python-mpd2==1.0.0
 
 # homeassistant.components.mystrom

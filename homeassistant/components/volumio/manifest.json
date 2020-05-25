@@ -2,6 +2,6 @@
   "domain": "volumio",
   "name": "Volumio",
   "documentation": "https://www.home-assistant.io/integrations/volumio",
-  "requirements": ["volumio-websocket==1.0.3"],
+  "requirements": ["volumio-websocket==1.0.3", "python-mpd2==1.0.0"],
   "codeowners": []
 }
