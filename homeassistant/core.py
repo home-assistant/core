@@ -411,8 +411,11 @@ class HomeAssistant:
         while self._pending_tasks:
             _LOGGER.debug("Pending Tasks (all): %s", self._pending_tasks)
             pending = [task for task in self._pending_tasks if not task.done()]
+            _LOGGER.debug("Pending Tasks (all2): %s", self._pending_tasks)
             _LOGGER.debug("Pending Tasks (not done): %s", pending)
             self._pending_tasks.clear()
+            _LOGGER.debug("Pending Tasks (not done2): %s", pending)
+
             if pending:
                 await asyncio.wait(pending)
             else:
