@@ -5,6 +5,9 @@
             "device_fail": "Unerwarteter Fehler beim Erstellen des Ger\u00e4ts.",
             "device_timeout": "Zeit\u00fcberschreitung beim Verbinden mit dem Ger\u00e4t."
         },
+        "error": {
+            "device_timeout": "Verbindung fehlgeschlagen"
+        },
         "step": {
             "user": {
                 "data": {
