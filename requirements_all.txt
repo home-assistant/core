@@ -1722,9 +1722,6 @@ python-ripple-api==0.0.3
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
 
-# homeassistant.components.volumio
-python-socketio[asyncio_client]==4.6.0
-
 # homeassistant.components.songpal
 python-songpal==0.12
 
@@ -2154,6 +2151,9 @@ vilfo-api-client==0.3.2
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.1.2
+
+# homeassistant.components.volumio
+volumio-websocket==1.0.3
 
 # homeassistant.components.volvooncall
 volvooncall==0.8.7

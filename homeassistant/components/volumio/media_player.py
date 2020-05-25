@@ -8,9 +8,8 @@ from datetime import timedelta
 import logging
 import socket
 
-import aiohttp
 import mpd
-import socketio
+from volumio_websocket import request as volumio_api_request
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -128,102 +127,10 @@ class Volumio(MediaPlayerEntity):
 
         self._client.connect(self.host, "6600")
 
-        # taken from https://github.com/volumio/Volumio2/blob/master/app/plugins/user_interface/websocket/index.js
-        self._methods = {
-            "getDeviceInfo": "pushDeviceInfo",
-            "getState": "pushState",
-            "getQueue": "pushQueue",
-            "getMultiRoomDevices": "pushMultiRoomDevices",
-            "getLibraryListing": "pushLibraryListing",
-            "getMenuItems": "pushMenuItems",
-            "getUiConfig": "pushUiConfig",
-            "getBrowseSources": "pushBrowseSources",
-            "browseLibrary": "pushBrowseLibrary",
-            "search": "pushBrowseLibrary",
-            "goTo": "pushBrowseLibrary",
-            "GetTrackInfo": "pushGetTrackInfo",
-            "addWebRadio": "pushAddWebRadio",
-            "removeWebRadio": "pushBrowseLibrary",
-            "getPlaylistContent": "pushPlaylistContent",
-            "createPlaylist": "pushCreatePlaylist",
-            "deletePlaylist": "pushListPlaylist",
-            "listPlaylist": "pushListPlaylist",
-            "addToPlaylist": "pushListPlaylist",
-            "removeFromPlaylist": "pushBrowseLibrary",
-            "playPlaylist": "pushPlayPlaylist",
-            "enqueue": "pushEnqueue",
-            "addToFavourites": "urifavourites",
-            "removeFromFavourites": "pushBrowseLibrary",
-            "playFavourites": "pushPlayFavourites",
-            "addToRadioFavourites": "pushAddToRadioFavourites",
-            "removeFromRadioFavourites": "pushRemoveFromRadioFavourites",
-            "playRadioFavourites": "pushPlayRadioFavourites",
-            "getSleep": "pushSleep"
-            # TODO: There are lots more, continue at L673
-        }
-
     async def send_volumio_msg(self, method, params=None):
         """Handle volumio calls."""
 
-        state_name = await self.send(method, params)
-        if state_name is not None:
-            return getattr(self, state_name)
-        return state_name
-
-    async def send(self, method, params=None):
-        """Send message."""
-        _LOGGER.debug("Send, method: %s params: %s", method, params)
-
-        def api2websocket(method, params):
-            """Transform method and params from api to websocket calls."""
-            if method == "commands":
-                method = params["cmd"]
-
-                if method in params:
-                    params = params[method]
-                elif "value" in params:
-                    params = params["value"]
-                elif "name" in params:
-                    params = params["name"]
-                else:
-                    params = params["cmd"]
-
-            if method == params:
-                params = None
-
-            return method, params
-
-        method, params = api2websocket(method, params)
-
-        url = f"http://{self.host}:{self.port}"
-        sio = socketio.AsyncClient()
-        await sio.connect(url)
-
-        if method in self._methods:
-            state_name = self._methods[method]
-
-            @sio.on(state_name)
-            def func(data):
-                nonlocal state_name, self
-                setattr(self, state_name, data)
-
-        else:
-            state_name = None
-
-        try:
-            await sio.emit(method, params)
-
-            _LOGGER.debug("send METHOD: %s", method)
-        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-            _LOGGER.error(
-                "Failed communicating with Volumio '%s': %s", self._name, type(error)
-            )
-            return False
-
-        await sio.sleep(0.1)
-        await sio.disconnect()
-
-        return state_name
+        return volumio_api_request(self.host, "6600", method, params)
 
     async def async_update(self):
         """Update state."""
@@ -317,7 +224,7 @@ class Volumio(MediaPlayerEntity):
         await asyncio.sleep(waittimer)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
-        """Play media."""
+        """Async play media."""
         isPlaying = False
         if self.state == STATE_PLAYING:
             isPlaying = True
