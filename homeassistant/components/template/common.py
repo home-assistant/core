@@ -23,7 +23,7 @@ def extract_entities(
 ):
     """Extract entity ids from templates and attribute templates."""
     _LOGGER.debug(
-        device_name, device_type, manual_entity_ids, templates, attribute_templates
+        (device_name, device_type, manual_entity_ids, templates, attribute_templates)
     )
     if attribute_templates is None:
         attribute_templates = {}
