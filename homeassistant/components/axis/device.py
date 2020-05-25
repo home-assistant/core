@@ -159,7 +159,8 @@ class AxisNetworkDevice:
                 await mqtt.async_subscribe(hass, f"{self.serial}/#", self.mqtt_message)
             )
 
-    async def mqtt_message(self, message: Message) -> None:
+    @callback
+    def mqtt_message(self, message: Message) -> None:
         """Receive Axis MQTT message."""
         self.disconnect_from_stream()
 
@@ -262,12 +263,13 @@ async def get_device(hass, host, port, username, password):
     try:
         with async_timeout.timeout(15):
 
-            await asyncio.gather(
-                hass.async_add_executor_job(device.vapix.initialize_api_discovery),
-                hass.async_add_executor_job(device.vapix.params.update_brand),
-                hass.async_add_executor_job(device.vapix.params.update_properties),
-                hass.async_add_executor_job(device.vapix.ports.update),
-            )
+            for vapix_call in (
+                device.vapix.initialize_api_discovery,
+                device.vapix.params.update_brand,
+                device.vapix.params.update_properties,
+                device.vapix.ports.update,
+            ):
+                await hass.async_add_executor_job(vapix_call)
 
         return device
 
