@@ -28,6 +28,7 @@ from .const import (
     DEVICE_INFO,
     DEVICE_MODEL,
     DOMAIN,
+    LEGACY_DEVICE_MODEL,
     PV_API,
     PV_ROOM_DATA,
     PV_SHADE_DATA,
@@ -118,7 +119,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-        if self._device_info[DEVICE_MODEL] != "1":
+        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
             supported_features |= SUPPORT_STOP
         return supported_features
 
