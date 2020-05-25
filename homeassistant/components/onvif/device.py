@@ -8,7 +8,6 @@ from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedE
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -141,6 +139,12 @@ class ONVIFDevice:
 
         return True
 
+    async def async_stop(self, event=None):
+        """Shut it all down."""
+        if self.events:
+            await self.events.async_stop()
+        await self.device.close()
+
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
         LOGGER.debug("Setting up the ONVIF device management service")
@@ -251,7 +255,10 @@ class ONVIFDevice:
         profiles = []
         for key, onvif_profile in enumerate(result):
             # Only add H264 profiles
-            if onvif_profile.VideoEncoderConfiguration.Encoding != "H264":
+            if (
+                not onvif_profile.VideoEncoderConfiguration
+                or onvif_profile.VideoEncoderConfiguration.Encoding != "H264"
+            ):
                 continue
 
             profile = Profile(
@@ -278,9 +285,13 @@ class ONVIFDevice:
                     is not None,
                 )
 
-                ptz_service = self.device.get_service("ptz")
-                presets = await ptz_service.GetPresets(profile.token)
-                profile.ptz.presets = [preset.token for preset in presets]
+                try:
+                    ptz_service = self.device.create_ptz_service()
+                    presets = await ptz_service.GetPresets(profile.token)
+                    profile.ptz.presets = [preset.token for preset in presets]
+                except (Fault, ServerDisconnectedError):
+                    # It's OK if Presets aren't supported
+                    profile.ptz.presets = []
 
             profiles.append(profile)
 
@@ -326,7 +337,7 @@ class ONVIFDevice:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
 
-        ptz_service = self.device.get_service("ptz")
+        ptz_service = self.device.create_ptz_service()
 
         pan_val = distance * PAN_FACTOR.get(pan, 0)
         tilt_val = distance * TILT_FACTOR.get(tilt, 0)
@@ -423,13 +434,11 @@ class ONVIFDevice:
 
 def get_device(hass, host, port, username, password) -> ONVIFCamera:
     """Get ONVIFCamera instance."""
-    session = async_get_clientsession(hass)
-    transport = AsyncTransport(None, session=session)
     return ONVIFCamera(
         host,
         port,
         username,
         password,
         f"{os.path.dirname(onvif.__file__)}/wsdl/",
-        transport=transport,
+        no_cache=True,
     )
