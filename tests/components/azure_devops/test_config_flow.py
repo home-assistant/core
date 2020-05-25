@@ -10,8 +10,6 @@ from homeassistant.components.azure_devops.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import mock_coro
-
 FIXTURE_USER_INPUT_BAD = {
     CONF_ORG: "example",
     CONF_PROJECT: "something",
@@ -50,7 +48,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on Azure DevOps connection error."""
     with patch(
         "homeassistant.components.azure_devops.config_flow.AzureDevOpsFlowHandler._test_connection",
-        return_value=mock_coro(return_value="connection_error"),
+        return_value="connection_error",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
