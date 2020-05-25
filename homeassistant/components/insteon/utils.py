@@ -235,7 +235,7 @@ def async_register_services(hass):
         await async_trigger_scene_off(group)
 
     @callback
-    def add_default_links(service):
+    def async_add_default_links(service):
         """Add the default All-Link entries to a device."""
         entity_id = service.data[CONF_ENTITY_ID]
         signal = f"{entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"
@@ -282,7 +282,7 @@ def async_register_services(hass):
     hass.services.async_register(
         DOMAIN,
         SRV_ADD_DEFAULT_LINKS,
-        add_default_links,
+        async_add_default_links,
         schema=ADD_DEFAULT_LINKS_SCHEMA,
     )
     async_dispatcher_connect(hass, SIGNAL_SAVE_DEVICES, async_srv_save_devices)
