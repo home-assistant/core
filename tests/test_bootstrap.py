@@ -1,5 +1,6 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
+import asyncio
 import logging
 import os
 from unittest.mock import Mock
@@ -198,6 +199,43 @@ async def test_setup_after_deps_not_present(hass, caplog):
     assert "first_dep" not in hass.config.components
     assert "second_dep" in hass.config.components
     assert order == ["root", "second_dep"]
+
+
+async def test_setup_continues_if_blocked(hass, caplog):
+    """Test we continue after timeout if blocked."""
+    caplog.set_level(logging.DEBUG)
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass, MockModule(domain="root", async_setup=gen_domain_setup("root"))
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="second_dep",
+            async_setup=gen_domain_setup("second_dep"),
+            partial_manifest={"after_dependencies": ["first_dep"]},
+        ),
+    )
+
+    with patch.object(bootstrap, "TIMEOUT_EVENT_BOOTSTRAP", 0):
+        hass.async_create_task(asyncio.sleep(2))
+        await bootstrap._async_set_up_integrations(
+            hass, {"root": {}, "first_dep": {}, "second_dep": {}}
+        )
+
+    assert "root" in hass.config.components
+    assert "first_dep" not in hass.config.components
+    assert "second_dep" in hass.config.components
+    assert order == ["root", "second_dep"]
+    assert "blocking Home Assistant from wrapping up" in caplog.text
 
 
 @pytest.fixture
