@@ -23,7 +23,7 @@ send_parameter:
       description: Name of the camera to send update parameter on
       example: "camera.netwave_camera"
     parameter:
-      description: "Parameter on camera to update. Allowed values: mode, brightness, contrast, resolution, orientation, mirror_vertical, mirror_horizontal"
+      description: "Parameter on camera to update. Allowed values: mode, brightness, contrast, resolution, orientation, mirror_vertical, mirro_horizontal"
       example: "brightness"
     value:
       description: The value of the parameter to update with
@@ -35,6 +35,3 @@ refresh_info:
     entity_id:
       description: Name of the camera refresh info for
       example: "camera.netwave_camera"
-
-refresh_complete:
-  description: Refreshes info and state for all NetWave cameras

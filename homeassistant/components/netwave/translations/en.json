@@ -13,10 +13,10 @@
       "user": {
         "data": {
           "address": "Address (ex: 'http://ip:port')",
-          "password": "Password",
-          "timeout": "Timeout (seconds)",
-          "name": "Name (Friendly name for camera)",
           "username": "Username",
+          "password": "Password",
+          "name": "Name (Friendly name for camera)",
+          "timeout": "Timeout (seconds)",
           "type": "Type",
           "vertical_mirror": "Mirror Image Vertically",
           "horizontal_mirror": "Mirror Image Horizontally",
@@ -25,6 +25,39 @@
         },
         "description": "Please enter connection settings of your NetWave/Airsight camera",
         "title": "NetWave Camera"
+      },
+      "config": {
+        "data": {
+          "name": "Name (Friendly name for camera)",
+          "timeout": "Timeout (seconds)",
+          "type": "Type",
+          "vertical_mirror": "Mirror Image Vertically",
+          "horizontal_mirror": "Mirror Image Horizontally",
+          "framerate": "Framerate (frames/second)",
+          "move_duration": "Move Duration (0 for manual movement stop, ex: '0.5')"
+        },
+        "description": "Please enter camera options",
+        "title": "Options"
+      }
+    }
+  },"options": {
+    "error": {
+      "duration_type_error": "Move duration must be a float"
+    },
+    "flow_title": "NetWave: {name}",
+    "step": {
+      "config": {
+        "data": {
+          "name": "Name (Friendly name for camera)",
+          "timeout": "Timeout (seconds)",
+          "type": "Type",
+          "vertical_mirror": "Mirror Image Vertically",
+          "horizontal_mirror": "Mirror Image Horizontally",
+          "framerate": "Framerate (frames/second)",
+          "move_duration": "Move Duration (0 for manual movement stop, ex: '0.5')"
+        },
+        "description": "Please enter camera options",
+        "title": "Options"
       }
     }
   },
