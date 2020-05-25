@@ -9,7 +9,6 @@ ATTR_SOUND_OUTPUT = "sound_output"
 
 CONF_ON_ACTION = "turn_on_action"
 CONF_SOURCES = "sources"
-CONF_CONSECUTIVE_VOLUME_STEPS_DELAY = "consecutive_volume_steps_delay"
 
 SERVICE_BUTTON = "button"
 SERVICE_COMMAND = "command"

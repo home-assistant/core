@@ -1,6 +1,6 @@
 """Support for interface with an LG webOS Smart TV."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 from functools import wraps
 import logging
 
@@ -25,7 +25,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.webostv.const import (
     ATTR_SOUND_OUTPUT,
-    CONF_CONSECUTIVE_VOLUME_STEPS_DELAY,
     CONF_ON_ACTION,
     CONF_SOURCES,
     DOMAIN,
@@ -61,6 +60,8 @@ SUPPORT_WEBOSTV_VOLUME = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
+CONSECUTIVE_VOLUME_STEPS_DELAY = timedelta(milliseconds=500)
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the LG webOS Smart TV platform."""
@@ -72,16 +73,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = discovery_info[CONF_NAME]
     customize = discovery_info[CONF_CUSTOMIZE]
     turn_on_action = discovery_info.get(CONF_ON_ACTION)
-    consecutive_volume_steps_delay = discovery_info.get(
-        CONF_CONSECUTIVE_VOLUME_STEPS_DELAY
-    )
 
     client = hass.data[DOMAIN][host]["client"]
     on_script = Script(hass, turn_on_action) if turn_on_action else None
 
-    entity = LgWebOSMediaPlayerEntity(
-        client, name, customize, on_script, consecutive_volume_steps_delay
-    )
+    entity = LgWebOSMediaPlayerEntity(client, name, customize, on_script)
 
     async_add_entities([entity], update_before_add=False)
 
@@ -124,7 +120,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         name: str,
         customize,
         on_script=None,
-        consecutive_volume_steps_delay=None,
+        # consecutive_volume_steps_delay=None,
     ):
         """Initialize the webos device."""
         self._client = client
@@ -139,10 +135,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         self._current_source = None
         self._source_list = {}
 
-        self._consecutive_volume_steps_delay = consecutive_volume_steps_delay
-        if consecutive_volume_steps_delay is not None:
-            self._last_volume_step_datetime = None
-            self._last_volume_step_lock = asyncio.Lock()
+        # self._consecutive_volume_steps_delay = consecutive_volume_steps_delay
+        # if consecutive_volume_steps_delay is not None:
+        self._last_volume_step_lock = asyncio.Lock()
 
     async def async_added_to_hass(self):
         """Connect and subscribe to dispatcher signals and state updates."""
@@ -349,40 +344,23 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @cmd
     async def async_volume_up(self):
         """Volume up the media player."""
-        if self._should_sleep_between_consecutive_volume_steps():
-            await self._sleep_between_consecutive_volume_steps()
         await self._client.volume_up()
+        await self._sleep_between_consecutive_volume_steps()
 
     @cmd
     async def async_volume_down(self):
         """Volume down media player."""
-        if self._should_sleep_between_consecutive_volume_steps():
-            await self._sleep_between_consecutive_volume_steps()
         await self._client.volume_down()
+        await self._sleep_between_consecutive_volume_steps()
 
-    def _should_sleep_between_consecutive_volume_steps(self):
-        """Return wheteher the medial player should sleep between consecutive volume steps."""
-        return self._consecutive_volume_steps_delay is not None
+    # def _should_sleep_between_consecutive_volume_steps(self):
+    #     """Return wheteher the medial player should sleep between consecutive volume steps."""
+    #     return self._consecutive_volume_steps_delay is not None
 
     async def _sleep_between_consecutive_volume_steps(self):
-        """Sleep until the configured delay dusration has elapsed since the last volume step."""
+        """Sleep until the configured delay duration has elapsed since the last volume step."""
         async with self._last_volume_step_lock:
-            now = datetime.now()
-            sleep_time = timedelta(seconds=0)
-            if self._last_volume_step_datetime is not None:
-                since_last_volume_step = now - self._last_volume_step_datetime
-                delay = timedelta(milliseconds=self._consecutive_volume_steps_delay)
-                sleep_time = delay - since_last_volume_step
-
-                self._last_volume_step_datetime = now
-                if since_last_volume_step < delay:
-                    self._last_volume_step_datetime += sleep_time
-
-            else:
-                self._last_volume_step_datetime = now
-
-        if sleep_time.total_seconds() > 0:
-            await asyncio.sleep(sleep_time.total_seconds())
+            await asyncio.sleep(CONSECUTIVE_VOLUME_STEPS_DELAY.total_seconds())
 
     @cmd
     async def async_set_volume_level(self, volume):

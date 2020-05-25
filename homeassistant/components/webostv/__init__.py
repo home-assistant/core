@@ -6,10 +6,9 @@ from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
-from homeassistant.components.webostv.const import (
+from homeassistant.components.webostv.const import (  # CONF_CONSECUTIVE_VOLUME_STEPS_DELAY,
     ATTR_BUTTON,
     ATTR_COMMAND,
-    CONF_CONSECUTIVE_VOLUME_STEPS_DELAY,
     CONF_ON_ACTION,
     CONF_SOURCES,
     DEFAULT_NAME,
@@ -49,9 +48,6 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                         vol.Optional(CONF_ICON): cv.string,
-                        vol.Optional(
-                            CONF_CONSECUTIVE_VOLUME_STEPS_DELAY
-                        ): cv.positive_int,
                     }
                 )
             ],
