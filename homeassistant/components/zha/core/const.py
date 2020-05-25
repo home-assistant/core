@@ -169,7 +169,7 @@ class RadioType(enum.Enum):
         zigpy_cc.zigbee.application.ControllerApplication,
     )
     zigate = (
-        "ZiGate = ZiGate Serial protocol (ZiGate WiFi, ZiGate USB-TTL, PiZiGate)",
+        "ZiGate = ZiGate Serial protocol: PiZiGate, ZiGate USB-TTL, ZiGate WiFi",
         zigpy_zigate.zigbee.application.ControllerApplication,
     )
     xbee = (
