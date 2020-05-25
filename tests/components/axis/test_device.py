@@ -128,10 +128,10 @@ async def setup_axis_integration(
     ), patch(
         "axis.param_cgi.Properties.update_properties", new=mock_update_properties
     ), patch(
-        "axis.streammanager.StreamManager.start", return_value=True
+        "axis.rtsp.RTSPClient.start", return_value=True,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     return hass.data[AXIS_DOMAIN].get(config_entry.unique_id)
 
