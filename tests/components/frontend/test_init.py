@@ -345,7 +345,7 @@ async def test_get_version(hass, hass_ws_client):
     cur_version = next(
         req.split("==", 1)[1]
         for req in frontend.requirements
-        if req.startswith("home-assistant-frontend==")
+        if req.startswith("ais-dom-frontend==")
     )
 
     await async_setup_component(hass, "frontend", {})
