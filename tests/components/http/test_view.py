@@ -65,7 +65,7 @@ async def test_handling_service_not_found(mock_request):
 
 async def test_not_running(mock_request_with_stopping):
     """Test we get a 503 when not running."""
-    response = await request_handler_factory(Mock(requires_auth=False), AsyncMock())(
-        mock_request_with_stopping
-    )
+    response = await request_handler_factory(
+        Mock(requires_auth=False), AsyncMock(side_effect=Unauthorized)
+    )(mock_request_with_stopping)
     assert response.status == 503
