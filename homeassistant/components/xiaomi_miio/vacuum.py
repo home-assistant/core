@@ -6,6 +6,7 @@ import logging
 from miio import DeviceException, Vacuum  # pylint: disable=import-error
 import voluptuous as vol
 
+# import homeassistant.helpers.config_validation as cv
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
     PLATFORM_SCHEMA,
@@ -35,10 +36,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
-    DOMAIN,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
     SERVICE_MOVE_REMOTE_CONTROL,
@@ -203,38 +203,26 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities([mirobo], update_before_add=True)
 
-    async def async_service_handler(service):
+    async def async_service_handler(entity, service):
         """Map services to methods on MiroboVacuum."""
         method = SERVICE_TO_METHOD.get(service.service)
         params = {
             key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
         }
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
 
-        if entity_ids:
-            target_vacuums = [
-                vac
-                for vac in hass.data[DATA_KEY].values()
-                if vac.entity_id in entity_ids
-            ]
-        else:
-            target_vacuums = hass.data[DATA_KEY].values()
+        await getattr(entity, method["method"])(**params)
+        _LOGGER.debug("Service awaited")
 
-        update_tasks = []
-        for vacuum in target_vacuums:
-            await getattr(vacuum, method["method"])(**params)
+        update_coro = entity.async_update_ha_state(True)
+        await asyncio.wait({update_coro})
+        _LOGGER.debug("State update awaited")
 
-        for vacuum in target_vacuums:
-            update_coro = vacuum.async_update_ha_state(True)
-            update_tasks.append(update_coro)
+    platform = entity_platform.current_platform.get()
 
-        if update_tasks:
-            await asyncio.wait(update_tasks)
-
-    for vacuum_service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[vacuum_service].get("schema", VACUUM_SERVICE_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, vacuum_service, async_service_handler, schema=schema
+    for vacuum_service, method in SERVICE_TO_METHOD.items():
+        schema = method.get("schema", VACUUM_SERVICE_SCHEMA)
+        platform.async_register_entity_service(
+            vacuum_service, schema, async_service_handler
         )
 
 
