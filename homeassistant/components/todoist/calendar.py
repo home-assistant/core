@@ -500,16 +500,17 @@ class TodoistProjectData:
 
         events = []
         for task in project_task_data:
-            due_date = _parse_due_date(task["due"])
-            if start_date < due_date < end_date:
-                event = {
-                    "uid": task["id"],
-                    "title": task["content"],
-                    "start": due_date.isoformat(),
-                    "end": due_date.isoformat(),
-                    "allDay": True,
-                }
-                events.append(event)
+            if task["due"] is not None:
+                due_date = _parse_due_date(task["due"])
+                if start_date < due_date < end_date:
+                    event = {
+                        "uid": task["id"],
+                        "title": task["content"],
+                        "start": due_date.isoformat(),
+                        "end": due_date.isoformat(),
+                        "allDay": True,
+                    }
+                    events.append(event)
         return events
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
