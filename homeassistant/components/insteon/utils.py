@@ -234,13 +234,12 @@ def async_register_services(hass):
         group = service.data.get(SRV_ALL_LINK_GROUP)
         await async_trigger_scene_off(group)
 
+    @callback
     def add_default_links(service):
         """Add the default All-Link entries to a device."""
-        # For now this sends logs to the log file.
-        # Future direction is to create an INSTEON control panel.
         entity_id = service.data[CONF_ENTITY_ID]
         signal = f"{entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"
-        dispatcher_send(hass, signal)
+        async_dispatcher_send(hass, signal)
 
     hass.services.async_register(
         DOMAIN, SRV_ADD_ALL_LINK, async_srv_add_all_link, schema=ADD_ALL_LINK_SCHEMA
