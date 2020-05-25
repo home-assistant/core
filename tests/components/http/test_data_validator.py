@@ -11,7 +11,7 @@ from tests.async_mock import Mock
 async def get_client(aiohttp_client, validator):
     """Generate a client that hits a view decorated with validator."""
     app = web.Application()
-    app["hass"] = Mock(is_running=True)
+    app["hass"] = Mock(is_stopping=False)
 
     class TestView(HomeAssistantView):
         url = "/"
@@ -30,6 +30,7 @@ async def get_client(aiohttp_client, validator):
 
 async def test_validator(aiohttp_client):
     """Test the validator."""
+
     client = await get_client(
         aiohttp_client, RequestDataValidator(vol.Schema({vol.Required("test"): str}))
     )
@@ -46,6 +47,7 @@ async def test_validator(aiohttp_client):
 
 async def test_validator_allow_empty(aiohttp_client):
     """Test the validator with empty data."""
+
     client = await get_client(
         aiohttp_client,
         RequestDataValidator(
