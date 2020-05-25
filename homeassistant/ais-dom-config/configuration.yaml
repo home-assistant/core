@@ -81,15 +81,15 @@ zone:
 logger:
   default: warning
 
-# Listening for ptvsd connection
-# TODO https://github.com/microsoft/ptvsd
-# ptvsd:
-
 # set up Zeroconf and make AIS dom discoverable
-# ais_mdns:
+ais_mdns:
 #
 # ais_gm_service:
 #
+
+# Listening for ptvsd connection
+# TODO https://github.com/microsoft/ptvsd
+# ptvsd:
 
 # TODO
 # check if user is authenticated and add this to polymer
