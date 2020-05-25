@@ -223,9 +223,6 @@ aioswitcher==1.2.0
 # homeassistant.components.unifi
 aiounifi==22
 
-# homeassistant.components.wwlln
-aiowwlln==2.0.2
-
 # homeassistant.components.airly
 airly==0.0.2
 
