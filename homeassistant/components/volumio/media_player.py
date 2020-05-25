@@ -7,13 +7,11 @@ import asyncio
 from datetime import timedelta
 import logging
 import socket
-import socketio
-import time
 
 import aiohttp
-import voluptuous as vol
-
 import mpd
+import socketio
+import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -23,6 +21,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
@@ -31,18 +30,15 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_PLAY_MEDIA
 )
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    HTTP_OK,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -125,19 +121,19 @@ class Volumio(MediaPlayerEntity):
         self._lastvol = self._state.get("volume", 0)
         self._playlists = []
         self._currentplaylist = None
-                
+
         self._client = mpd.MPDClient()
         self._client.timeout = 30
         self._client.idletimeout = None
-                
+
         self._client.connect(self.host, "6600")
-        
+
         # taken from https://github.com/volumio/Volumio2/blob/master/app/plugins/user_interface/websocket/index.js
         self._methods = {
             "getDeviceInfo": "pushDeviceInfo",
-            "getState":"pushState",
+            "getState": "pushState",
             "getQueue": "pushQueue",
-            "getMultiRoomDevices":"pushMultiRoomDevices",
+            "getMultiRoomDevices": "pushMultiRoomDevices",
             "getLibraryListing": "pushLibraryListing",
             "getMenuItems": "pushMenuItems",
             "getUiConfig": "pushUiConfig",
@@ -145,32 +141,31 @@ class Volumio(MediaPlayerEntity):
             "browseLibrary": "pushBrowseLibrary",
             "search": "pushBrowseLibrary",
             "goTo": "pushBrowseLibrary",
-            "GetTrackInfo":"pushGetTrackInfo",
-            "addWebRadio":"pushAddWebRadio",
-            "removeWebRadio":"pushBrowseLibrary",
-            "getPlaylistContent":"pushPlaylistContent",
-            "createPlaylist":"pushCreatePlaylist",
-            "deletePlaylist":"pushListPlaylist",
-            "listPlaylist":"pushListPlaylist",
-            "addToPlaylist":"pushListPlaylist",
-            "removeFromPlaylist":"pushBrowseLibrary",
-            "playPlaylist":"pushPlayPlaylist",
-            "enqueue":"pushEnqueue",
-            "addToFavourites":"urifavourites",
-            "removeFromFavourites":"pushBrowseLibrary",
+            "GetTrackInfo": "pushGetTrackInfo",
+            "addWebRadio": "pushAddWebRadio",
+            "removeWebRadio": "pushBrowseLibrary",
+            "getPlaylistContent": "pushPlaylistContent",
+            "createPlaylist": "pushCreatePlaylist",
+            "deletePlaylist": "pushListPlaylist",
+            "listPlaylist": "pushListPlaylist",
+            "addToPlaylist": "pushListPlaylist",
+            "removeFromPlaylist": "pushBrowseLibrary",
+            "playPlaylist": "pushPlayPlaylist",
+            "enqueue": "pushEnqueue",
+            "addToFavourites": "urifavourites",
+            "removeFromFavourites": "pushBrowseLibrary",
             "playFavourites": "pushPlayFavourites",
-            "addToRadioFavourites":"pushAddToRadioFavourites",
-            "removeFromRadioFavourites":"pushRemoveFromRadioFavourites",
-            "playRadioFavourites":"pushPlayRadioFavourites",
-            "getSleep":"pushSleep"
-            
-            #TODO: There are lots more, continue at L673
+            "addToRadioFavourites": "pushAddToRadioFavourites",
+            "removeFromRadioFavourites": "pushRemoveFromRadioFavourites",
+            "playRadioFavourites": "pushPlayRadioFavourites",
+            "getSleep": "pushSleep"
+            # TODO: There are lots more, continue at L673
         }
-                        
+
     async def send_volumio_msg(self, method, params=None):
-        """Handles volumio calls"""
-        
-        state_name = await self.send(method, params) 
+        """Handle volumio calls."""
+
+        state_name = await self.send(method, params)
         if state_name is not None:
             return getattr(self, state_name)
         return state_name
@@ -178,7 +173,7 @@ class Volumio(MediaPlayerEntity):
     async def send(self, method, params=None):
         """Send message."""
         _LOGGER.debug("Send, method: %s params: %s", method, params)
-        
+
         def api2websocket(method, params):
             """Transform method and params from api to websocket calls."""
             if method == "commands":
@@ -192,18 +187,18 @@ class Volumio(MediaPlayerEntity):
                     params = params["name"]
                 else:
                     params = params["cmd"]
-                    
+
             if method == params:
                 params = None
-                    
+
             return method, params
-        
+
         method, params = api2websocket(method, params)
-        
+
         url = f"http://{self.host}:{self.port}"
         sio = socketio.AsyncClient()
         await sio.connect(url)
-        
+
         if method in self._methods:
             state_name = self._methods[method]
 
@@ -211,12 +206,13 @@ class Volumio(MediaPlayerEntity):
             def func(data):
                 nonlocal state_name, self
                 setattr(self, state_name, data)
+
         else:
             state_name = None
-        
+
         try:
             await sio.emit(method, params)
-            
+
             _LOGGER.debug("send METHOD: %s", method)
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error(
@@ -226,7 +222,7 @@ class Volumio(MediaPlayerEntity):
 
         await sio.sleep(0.1)
         await sio.disconnect()
-        
+
         return state_name
 
     async def async_update(self):
@@ -285,15 +281,15 @@ class Volumio(MediaPlayerEntity):
         """Time in seconds of current seek position."""
         self.async_update()
         return self._state.get("seek", None)
-    
+
     def media_seek(self, position):
         """Send seek command."""
         self.send_volumio_msg("Seek", position)
-        
+
     def play_media(self, *args, **kwargs):
         """Play a piece of media."""
         self.async_play_media(args, kwargs)
-        
+
     async def mpd_play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
         _LOGGER.debug("Playing playlist: %s", media_id)
@@ -303,7 +299,7 @@ class Volumio(MediaPlayerEntity):
         except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError):
             # Cleanly disconnect in case connection is not in valid state
             self._client.connect(self.host, "6600")
-        
+
         self._client.clear()
         if media_type == MEDIA_TYPE_PLAYLIST:
             if media_id in self._playlists:
@@ -314,32 +310,35 @@ class Volumio(MediaPlayerEntity):
             self._client.load(media_id)
         else:
             self._client.add(media_id)
-        
+
         waittimer = self._client.status().get("duration", 1)
         # TODO: There is no duration for TTS files. How can i get this information?
         self._client.play()
         await asyncio.sleep(waittimer)
-    
+
     async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play media."""
         isPlaying = False
         if self.state == STATE_PLAYING:
             isPlaying = True
-        
+
         if isPlaying:
             await self.send_volumio_msg("pause")
-            await asyncio.sleep(0.4) # small delay, otherwise pause and play confuse volumio.
-            
+            await asyncio.sleep(
+                0.4
+            )  # small delay, otherwise pause and play confuse volumio.
+
         await self.mpd_play_media(media_type, media_id, **kwargs)
-        
+
         wait_seconds = 5
         split_number = 10
         split = wait_seconds / split_number
-        
+
         counter = 0
         while counter < wait_seconds or self._client.status().get("state") == "play":
             await asyncio.sleep(split)
             counter += split
-        
+
         self._client.stop()
         if isPlaying:
             await self.send_volumio_msg("play")
