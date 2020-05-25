@@ -268,7 +268,15 @@ class ConfigEntry:
             return True
 
         if integration is None:
-            integration = await loader.async_get_integration(hass, self.domain)
+            try:
+                integration = await loader.async_get_integration(hass, self.domain)
+            except loader.IntegrationNotFound:
+                # The integration was likely a custom_component
+                # that was uninstalled, or an integration
+                # that has been renamed without removing the config
+                # entry.
+                self.state = ENTRY_STATE_NOT_LOADED
+                return True
 
         component = integration.get_component()
 
