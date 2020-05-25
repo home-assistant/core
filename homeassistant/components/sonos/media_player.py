@@ -102,7 +102,6 @@ ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
 ATTR_QUEUE = "queue"
 ATTR_IS_PLAYING_LOCAL_QUEUE = "is_playing_local_queue"
-ATTR_CURRENT_QUEUE_POSITION = "current_queue_position"
 
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
@@ -395,7 +394,7 @@ class SonosEntity(MediaPlayerEntity):
         self._media_title = None
         self._queue = []
         self._is_playing_local_queue = None
-        self._current_queue_position = None
+        self._queue_position = None
         self._night_sound = None
         self._speech_enhance = None
         self._source_name = None
@@ -713,7 +712,7 @@ class SonosEntity(MediaPlayerEntity):
 
         self._media_image_url = track_info.get("album_art")
 
-        self._current_queue_position = int(track_info.get("playlist_position")) - 1
+        self._queue_position = int(track_info.get("playlist_position")) - 1
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -1278,8 +1277,8 @@ class SonosEntity(MediaPlayerEntity):
         if self._queue is not None:
             attributes[ATTR_QUEUE] = self._queue
 
-        if self._current_queue_position is not None:
-            attributes[ATTR_CURRENT_QUEUE_POSITION] = self._current_queue_position
+        if self._queue_position is not None:
+            attributes[ATTR_QUEUE_POSITION] = self._queue_position
 
         if self._is_playing_local_queue is not None:
             attributes[ATTR_IS_PLAYING_LOCAL_QUEUE] = self._is_playing_local_queue
