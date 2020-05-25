@@ -3,7 +3,7 @@
   "name": "Azure DevOps",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/azure_devops",
-  "requirements": ["azure-devops==6.0.0b2"],
+  "requirements": ["aioazuredevops==1.1.0"],
   "dependencies": [],
   "codeowners": ["@timmo001"]
 }

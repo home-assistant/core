@@ -1,10 +1,8 @@
 """Config flow to configure the Azure DevOps integration."""
 import logging
 
-from azure.devops.connection import Connection
-from azure.devops.exceptions import AzureDevOpsServiceError
-from msrest.authentication import BasicAuthentication
-from msrest.exceptions import ClientRequestError
+from aioazuredevops.client import DevOpsClient
+import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -50,34 +48,25 @@ class AzureDevOpsFlowHandler(ConfigFlow):
 
         errors = {}
 
-        org = user_input.get(CONF_ORG)
+        organization = user_input.get(CONF_ORG)
         project = user_input.get(CONF_PROJECT)
         pat = user_input.get(CONF_PAT)
 
-        if user_input.get(CONF_PAT) is None:
-            connection = Connection(base_url=f"https://dev.azure.com/{org}")
-        else:
-            connection = Connection(
-                base_url=f"https://dev.azure.com/{org}",
-                creds=BasicAuthentication("", project),
-            )
+        client = DevOpsClient()
 
-        error = await self._test_connection(connection, project)
-        if error is not None:
-            errors["base"] = error
+        try:
+            if (
+                pat is not None
+                and await client.authorize(pat, organization) is not True
+            ):
+                errors["base"] = "authorization_error"
+                return await self._show_setup_form(errors)
+            client.get_project(organization, project)
+        except aiohttp.ClientError:
+            errors["base"] = "connection_error"
             return await self._show_setup_form(errors)
 
         return self.async_create_entry(
-            title=f"{org}/{project}",
-            data={CONF_ORG: org, CONF_PROJECT: project, CONF_PAT: pat},
+            title=f"{organization}/{project}",
+            data={CONF_ORG: organization, CONF_PROJECT: project, CONF_PAT: pat},
         )
-
-    async def _test_connection(self, connection: Connection, project: str) -> str:
-        try:
-            core_client = connection.clients.get_core_client()
-            core_client.get_project(project)
-        except AzureDevOpsServiceError:
-            return "authorization_error"
-        except ClientRequestError:
-            return "connection_error"
-        return None

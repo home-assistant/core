@@ -2,16 +2,14 @@
 import logging
 from typing import Any, Dict
 
-from azure.devops.connection import Connection
-from azure.devops.exceptions import AzureDevOpsServiceError
-from msrest.authentication import BasicAuthentication
-from msrest.exceptions import ClientRequestError
+from aioazuredevops.client import DevOpsClient
+import aiohttp
 
 from homeassistant.components.azure_devops.const import (
     CONF_ORG,
     CONF_PAT,
     CONF_PROJECT,
-    DATA_AZURE_DEVOPS_CONNECTION,
+    DATA_AZURE_DEVOPS_CLIENT,
     DATA_ORG,
     DATA_PROJECT,
     DOMAIN,
@@ -31,28 +29,25 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
-    if entry.data[CONF_PAT] is None:
-        connection = Connection(
-            base_url=f"https://dev.azure.com/{entry.data[CONF_ORG]}"
-        )
-    else:
-        connection = Connection(
-            base_url=f"https://dev.azure.com/{entry.data[CONF_ORG]}",
-            creds=BasicAuthentication("", entry.data[CONF_PAT]),
-        )
+    client = DevOpsClient()
 
     try:
-        core_client = connection.clients.get_core_client()
-        core_client.get_project(entry.data[CONF_PROJECT])
-    except AzureDevOpsServiceError as exception:
-        _LOGGER.warning(exception)
-        raise ConfigEntryNotReady from exception
-    except ClientRequestError as exception:
+        if (
+            entry.data[CONF_PAT] is not None
+            and await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
+            is not True
+        ):
+            _LOGGER.warning(
+                "Could not authorize with Azure DevOps. You may need to update your token."
+            )
+            raise ConfigEntryNotReady
+        client.get_project(entry.data[CONF_ORG], entry.data[CONF_PROJECT])
+    except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 
     instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
-    hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CONNECTION] = connection
+    hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CLIENT] = client
     hass.data.setdefault(instance_key, {})[DATA_ORG] = entry.data[CONF_ORG]
     hass.data.setdefault(instance_key, {})[DATA_PROJECT] = entry.data[CONF_PROJECT]
 
