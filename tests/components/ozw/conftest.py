@@ -27,6 +27,12 @@ def climate_data_fixture():
     return load_fixture("ozw/climate_network_dump.csv")
 
 
+@pytest.fixture(name="lock_data", scope="session")
+def lock_data_fixture():
+    """Load lock MQTT data and return it."""
+    return load_fixture("ozw/lock_network_dump.csv")
+
+
 @pytest.fixture(name="sent_messages")
 def sent_messages_fixture():
     """Fixture to capture sent messages."""
@@ -103,5 +109,16 @@ async def climate_msg_fixture(hass):
         await hass.async_add_executor_job(load_fixture, "ozw/climate.json")
     )
     message = MQTTMessage(topic=sensor_json["topic"], payload=sensor_json["payload"])
+    message.encode()
+    return message
+
+
+@pytest.fixture(name="lock_msg")
+async def lock_msg_fixture(hass):
+    """Return a mock MQTT msg with a lock actuator message."""
+    lock_json = json.loads(
+        await hass.async_add_executor_job(load_fixture, "ozw/lock.json")
+    )
+    message = MQTTMessage(topic=lock_json["topic"], payload=lock_json["payload"])
     message.encode()
     return message
