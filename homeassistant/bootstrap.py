@@ -427,13 +427,3 @@ async def _async_set_up_integrations(
         _LOGGER.debug("Final set up: %s", stage_2_domains)
 
         await async_setup_multi_components(stage_2_domains)
-
-    # The websocket has already started.
-    hass.async_stop_track_tasks()
-
-    # Wrap up startup
-    _LOGGER.debug("Waiting for startup to wrap up")
-    await hass.async_block_till_done()
-
-    # Resuming tracking tasks
-    hass.async_track_tasks()
