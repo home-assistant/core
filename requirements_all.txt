@@ -1722,6 +1722,9 @@ python-ripple-api==0.0.3
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
 
+# homeassistant.components.volumio
+python-socketio[asyncio_client]==4.6.0
+
 # homeassistant.components.songpal
 python-songpal==0.12
 
