@@ -424,7 +424,7 @@ class ONVIFDevice:
                         "PTZ preset '%s' does not exist on device '%s'. Available Presets: %s",
                         preset_val,
                         self.name,
-                        profile.ptz.presets.join(", "),
+                        ", ".join(profile.ptz.presets),
                     )
                     return
 
