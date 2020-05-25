@@ -50,28 +50,26 @@ class AzureDevOpsFlowHandler(ConfigFlow):
 
         errors = {}
 
+        org = user_input.get(CONF_ORG)
+        project = user_input.get(CONF_PROJECT)
+        pat = user_input.get(CONF_PAT)
+
         if user_input.get(CONF_PAT) is None:
-            connection = Connection(
-                base_url=f"https://dev.azure.com/{user_input.get(CONF_ORG)}"
-            )
+            connection = Connection(base_url=f"https://dev.azure.com/{org}")
         else:
             connection = Connection(
-                base_url=f"https://dev.azure.com/{user_input.get(CONF_ORG)}",
-                creds=BasicAuthentication("", user_input.get(CONF_PAT)),
+                base_url=f"https://dev.azure.com/{org}",
+                creds=BasicAuthentication("", project),
             )
 
-        error = await self._test_connection(connection, user_input.get(CONF_PROJECT))
+        error = await self._test_connection(connection, project)
         if error is not None:
             errors["base"] = error
             return await self._show_setup_form(errors)
 
         return self.async_create_entry(
-            title=f"{user_input.get(CONF_ORG)}/{user_input.get(CONF_PROJECT)}",
-            data={
-                CONF_ORG: user_input.get(CONF_ORG),
-                CONF_PROJECT: user_input.get(CONF_PROJECT),
-                CONF_PAT: user_input.get(CONF_PAT),
-            },
+            title=f"{org}/{project}",
+            data={CONF_ORG: org, CONF_PROJECT: project, CONF_PAT: pat},
         )
 
     async def _test_connection(self, connection: Connection, project: str) -> str:
