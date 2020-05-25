@@ -212,6 +212,8 @@ class HifiBerry(MediaPlayerEntity):
             artUrl = self._state.get("artUrl", None)
             externalArtUrl = self._state.get("externalArtUrl", None)
             if artUrl is not None:
+                if artUrl.startswith("static/"):
+                    return externalArtUrl
                 if artUrl.startswith("artwork/"):
                     return f"http://{self.host}:{self.port}/{artUrl}"
                 return artUrl
