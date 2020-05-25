@@ -40,7 +40,7 @@ DEFAULT_NAME = "Generic Camera"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STILL_IMAGE_URL): cv.template,
-        vol.Optional(CONF_STREAM_SOURCE, default=None): cv.template,
+        vol.Optional(CONF_STREAM_SOURCE, default=""): cv.template,
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
