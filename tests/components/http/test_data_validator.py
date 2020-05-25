@@ -30,7 +30,6 @@ async def get_client(aiohttp_client, validator):
 
 async def test_validator(aiohttp_client):
     """Test the validator."""
-
     client = await get_client(
         aiohttp_client, RequestDataValidator(vol.Schema({vol.Required("test"): str}))
     )
@@ -47,7 +46,6 @@ async def test_validator(aiohttp_client):
 
 async def test_validator_allow_empty(aiohttp_client):
     """Test the validator with empty data."""
-
     client = await get_client(
         aiohttp_client,
         RequestDataValidator(
