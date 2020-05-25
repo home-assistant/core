@@ -13,6 +13,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "IP Adresse",
                     "port": "Port"
                 },
                 "description": "Richten Sie Ihre BleBox f\u00fcr die Integration mit dem Home Assistant ein.",
