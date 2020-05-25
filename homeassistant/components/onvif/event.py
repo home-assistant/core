@@ -147,6 +147,10 @@ class EventManager:
     async def async_parse_messages(self, messages) -> None:
         """Parse notification message."""
         for msg in messages:
+            # Guard against empty message
+            if not msg.Topic:
+                continue
+
             topic = msg.Topic._value_1
             parser = PARSERS.get(topic)
             if not parser:
