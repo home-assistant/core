@@ -129,14 +129,15 @@ class Volumio(MediaPlayerEntity):
 
     async def send_volumio_msg(self, method, params=None):
         """Handle volumio calls."""
-
-        return volumio_api_request(self.host, "6600", method, params)
+        _LOGGER.debug("Request: method %s, params %s", method, params)
+        return await volumio_api_request(self.host, self.port, method, params)
 
     async def async_update(self):
         """Update state."""
         resp = await self.send_volumio_msg("getState")
+        _LOGGER.debug("Got response: %s", resp)
         await self._async_update_playlists()
-        if resp is False:
+        if resp is None:
             return
         self._state = resp.copy()
 

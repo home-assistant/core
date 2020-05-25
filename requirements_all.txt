@@ -2154,7 +2154,7 @@ vilfo-api-client==0.3.2
 volkszaehler==0.1.2
 
 # homeassistant.components.volumio
-volumio-websocket==1.0.4
+volumio-websocket==1.0.15
 
 # homeassistant.components.volvooncall
 volvooncall==0.8.7
