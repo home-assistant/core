@@ -161,7 +161,7 @@ class RadioType(enum.Enum):
         bellows.zigbee.application.ControllerApplication,
     )
     deconz = (
-        "deCONZ = dresden elektronik deCONZ protocol (ex; ConBee I/II, RaspBee I/II)",
+        "deCONZ = dresden elektronik deCONZ protocol: ConBee I/II, RaspBee I/II",
         zigpy_deconz.zigbee.application.ControllerApplication,
     )
     ti_cc = (
