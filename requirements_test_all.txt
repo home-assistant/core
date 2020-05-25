@@ -371,6 +371,9 @@ nessclient==0.9.15
 # homeassistant.components.ssdp
 netdisco==2.6.0
 
+# homeassistant.components.netwave
+netwave-camera==0.0.3
+
 # homeassistant.components.nexia
 nexia==0.9.3
 
