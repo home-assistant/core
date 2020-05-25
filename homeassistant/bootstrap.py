@@ -29,6 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ERROR_LOG_FILENAME = "home-assistant.log"
 
+# How long to wait until things that run on bootstrap have to finish.
+TIMEOUT_EVENT_BOOTSTRAP = 15
+
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
 
@@ -430,7 +433,7 @@ async def _async_set_up_integrations(
 
     # Wrap up startup
     try:
-        async with timeout(10):
+        async with timeout(TIMEOUT_EVENT_BOOTSTRAP):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         _LOGGER.warning(
