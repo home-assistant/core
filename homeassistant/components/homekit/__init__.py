@@ -584,7 +584,6 @@ class HomeKit:
                 or connection not in entry.connections
             ):
                 devices_to_purge.append(entry.id)
-                continue
 
         for device_id in devices_to_purge:
             dev_reg.async_remove_device(device_id)
