@@ -454,14 +454,14 @@ class HomeKit:
             advertised_address=self._advertise_ip,
             zeroconf_instance=zeroconf_instance,
         )
-        # If we do not load the mac address
-        # will be wrong
+
+        # If we do not load the mac address will be wrong
+        # as pyhap uses a random one until state is restored
         if os.path.exists(self._persist_file):
             self.driver.load()
         else:
             self.driver.persist()
 
-    
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
             _LOGGER.debug("Safe_mode selected for %s", self._name)
@@ -575,21 +575,12 @@ class HomeKit:
         formatted_mac = device_registry.format_mac(self.driver.state.mac)
         connection = (device_registry.CONNECTION_NETWORK_MAC, formatted_mac)
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
-        _LOGGER.debug("Current bridge: %s %s", identifier, connection)
         for entry in dev_reg.devices.values():
             if self._entry_id in entry.config_entries and (
                 identifier not in entry.identifiers
                 or connection not in entry.connections
             ):
-                _LOGGER.debug(
-                    "purging: %s %s (identifiers:%s connections:%s)",
-                    entry,
-                    entry.id,
-                    entry.identifiers,
-                    entry.connections,
-                )
                 devices_to_purge.append(entry.id)
-                continue
 
         for device_id in devices_to_purge:
             dev_reg.async_remove_device(device_id)

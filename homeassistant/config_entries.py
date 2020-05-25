@@ -327,6 +327,10 @@ class ConfigEntry:
         try:
             integration = await loader.async_get_integration(hass, self.domain)
         except loader.IntegrationNotFound:
+            # The integration was likely a custom_component
+            # that was uninstalled, or an integration
+            # that has been renamed without removing the config
+            # entry.
             return
 
         component = integration.get_component()
