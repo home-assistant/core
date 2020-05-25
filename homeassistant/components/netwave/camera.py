@@ -189,6 +189,8 @@ class NetwaveCamera(Camera):
     def __init__(self, config):
         """Initialize Netwave camera."""
 
+        self._info = None
+        self._last_image = None
         self._setup(config)
 
         super().__init__()
@@ -207,12 +209,10 @@ class NetwaveCamera(Camera):
             config[CONF_TIMEOUT],
         )
         self._frame_interval = 1 / config[CONF_FRAMERATE]
-        self._last_image = None
         self._move_duration = config[CONF_MOVE_DURATION]
 
     async def async_added_to_hass(self):
         """Register camera with integration."""
-        pass
 
     @property
     def should_poll(self):

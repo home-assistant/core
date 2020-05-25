@@ -13,7 +13,6 @@ PLATFORMS = ["camera"]
 
 async def _setup_services(hass: HomeAssistant):
     """Initialize the services for NetWave."""
-    pass
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
