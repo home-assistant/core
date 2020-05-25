@@ -362,7 +362,6 @@ class HomeAssistant:
 
         # If a task is scheduled
         if self._track_task:
-            _LOGGER.debug("async_add_executor_job: %s", task, exc_info=True)
             self._pending_tasks.append(task)
 
         return task
@@ -409,12 +408,8 @@ class HomeAssistant:
         await asyncio.sleep(0)
 
         while self._pending_tasks:
-            _LOGGER.debug("Pending Tasks (all): %s", self._pending_tasks)
             pending = [task for task in self._pending_tasks if not task.done()]
-            _LOGGER.debug("Pending Tasks (all2): %s", self._pending_tasks)
-            _LOGGER.debug("Pending Tasks (not done): %s", pending)
             self._pending_tasks.clear()
-            _LOGGER.debug("Pending Tasks (not done2): %s", pending)
 
             if pending:
                 await asyncio.wait(pending)
