@@ -324,7 +324,11 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE:
             return
 
-        integration = await loader.async_get_integration(hass, self.domain)
+        try:
+            integration = await loader.async_get_integration(hass, self.domain)
+        except loader.IntegrationNotFound:
+            return
+
         component = integration.get_component()
         if not hasattr(component, "async_remove_entry"):
             return
