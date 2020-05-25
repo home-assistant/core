@@ -61,7 +61,7 @@ class AzureDevOpsFlowHandler(ConfigFlow):
             ):
                 errors["base"] = "authorization_error"
                 return await self._show_setup_form(errors)
-            client.get_project(organization, project)
+            await client.get_project(organization, project)
         except aiohttp.ClientError:
             errors["base"] = "connection_error"
             return await self._show_setup_form(errors)

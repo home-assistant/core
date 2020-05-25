@@ -39,7 +39,7 @@ async def async_setup_entry(
     sensors = []
 
     try:
-        builds: List[DevOpsBuild] = client.get_builds(
+        builds: List[DevOpsBuild] = await client.get_builds(
             organization, project, BUILDS_QUERY
         )
         for build in builds:
@@ -108,7 +108,7 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
         self, client: DevOpsClient, organization: str, project: str, build: DevOpsBuild
     ):
         """Initialize Azure DevOps sensor."""
-        self.build = build
+        self.build: DevOpsBuild = build
         super().__init__(
             client,
             organization,
@@ -121,13 +121,13 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
     async def _azure_devops_update(self) -> bool:
         """Update Azure DevOps entity."""
         try:
-            build: DevOpsBuild = self.client.get_build(
+            build: DevOpsBuild = await self.client.get_build(
                 self.organization, self.project, self.build.id
             )
             self._state = build.build_number
             self._attributes = {
-                # "definition_id": build.definition.id,
-                # "definition_name": build.definition.name,
+                "definition_id": build.definition.id,
+                "definition_name": build.definition.name,
                 "id": build.id,
                 "reason": build.reason,
                 "result": build.result,
