@@ -32,15 +32,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     client = DevOpsClient()
 
     try:
-        if (
-            entry.data[CONF_PAT] is not None
-            and await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
-            is not True
-        ):
-            _LOGGER.warning(
-                "Could not authorize with Azure DevOps. You may need to update your token."
+        if entry.data[CONF_PAT] is not None:
+            authorized = await client.authorize(
+                entry.data[CONF_PAT], entry.data[CONF_ORG]
             )
-            raise ConfigEntryNotReady
+            if not authorized:
+                _LOGGER.warning(
+                    "Could not authorize with Azure DevOps. You may need to update your token."
+                )
+                raise ConfigEntryNotReady
         await client.get_project(entry.data[CONF_ORG], entry.data[CONF_PROJECT])
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)

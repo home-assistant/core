@@ -55,12 +55,12 @@ class AzureDevOpsFlowHandler(ConfigFlow):
         client = DevOpsClient()
 
         try:
-            if (
-                pat is not None
-                and await client.authorize(pat, organization) is not True
-            ):
-                errors["base"] = "authorization_error"
-                return await self._show_setup_form(errors)
+
+            if pat is not None:
+                authorized = await client.authorize(pat, organization)
+                if not authorized:
+                    errors["base"] = "authorization_error"
+                    return await self._show_setup_form(errors)
             await client.get_project(organization, project)
         except aiohttp.ClientError:
             errors["base"] = "connection_error"
