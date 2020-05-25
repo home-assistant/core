@@ -2,6 +2,7 @@
 import asyncio
 import ipaddress
 import logging
+import os
 
 from aiohttp import web
 import voluptuous as vol
@@ -49,6 +50,7 @@ from .const import (
     ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_NAME,
+    BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
     CONF_AUTO_START,
     CONF_ENTITY_CONFIG,
@@ -434,6 +436,13 @@ class HomeKit:
             interface_choice=self._interface_choice,
         )
 
+        # If we do not load the mac address will be wrong
+        # as pyhap uses a random one until state is restored
+        if os.path.exists(persist_file):
+            self.driver.load()
+        else:
+            self.driver.persist()
+
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
             _LOGGER.debug("Safe_mode selected for %s", self._name)
@@ -540,15 +549,44 @@ class HomeKit:
     @callback
     def _async_register_bridge(self, dev_reg):
         """Register the bridge as a device so homekit_controller and exclude it from discovery."""
+        formatted_mac = device_registry.format_mac(self.driver.state.mac)
+        # Connections and identifiers are both used here.
+        #
+        # connections exists so homekit_controller can know the
+        # virtual mac address of the bridge and know to not offer
+        # it via discovery.
+        #
+        # identifiers is used as well since the virtual mac may change
+        # because it will not survive manual pairing resets (deleting state file)
+        # which we have trained users to do over the past few years
+        # because this was the way you had to fix homekit when pairing
+        # failed.
+        #
+        connection = (device_registry.CONNECTION_NETWORK_MAC, formatted_mac)
+        identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
+        self._async_purge_old_bridges(dev_reg, identifier, connection)
         dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, self.driver.state.mac)
-            },
+            identifiers={identifier},
+            connections={connection},
             manufacturer=MANUFACTURER,
             name=self._name,
             model="Home Assistant HomeKit Bridge",
         )
+
+    @callback
+    def _async_purge_old_bridges(self, dev_reg, identifier, connection):
+        """Purge bridges that exist from failed pairing or manual resets."""
+        devices_to_purge = []
+        for entry in dev_reg.devices.values():
+            if self._entry_id in entry.config_entries and (
+                identifier not in entry.identifiers
+                or connection not in entry.connections
+            ):
+                devices_to_purge.append(entry.id)
+
+        for device_id in devices_to_purge:
+            dev_reg.async_remove_device(device_id)
 
     def _start(self, bridged_states):
         from . import (  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
