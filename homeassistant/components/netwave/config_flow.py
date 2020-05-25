@@ -146,8 +146,7 @@ class NetwaveConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 self._connection = user_input
                 return await self.async_step_config()
-            else:
-                errors["base"] = result
+            errors["base"] = result
 
         if user_input is None:
             user_input = {}
