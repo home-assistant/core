@@ -114,6 +114,7 @@ class LGDevice(MediaPlayerEntity):
         self._device.get_settings()
         self._device.get_product_info()
 
+        # Temporary fix until handling of unknown equaliser settings is integrated in the temescal library
         for equaliser in self._equalisers:
             if equaliser >= len(temescal.equalisers):
                 temescal.equalisers.append("unknown " + str(equaliser))
