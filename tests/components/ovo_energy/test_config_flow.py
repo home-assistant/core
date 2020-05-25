@@ -30,13 +30,17 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], FIXTURE_USER_INPUT,
-    )
+    with patch(
+        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
+        return_value=False,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT,
+        )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "connection_error"}
+    assert result2["errors"] == {"base": "authorization_error"}
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:
