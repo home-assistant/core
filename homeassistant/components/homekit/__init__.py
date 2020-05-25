@@ -9,8 +9,14 @@ import voluptuous as vol
 from zeroconf import InterfaceChoice
 
 from homeassistant.components import zeroconf
-from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_MOTION,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+)
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -58,6 +64,7 @@ from .const import (
     CONF_FILTER,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_MOTION_SENSOR,
     CONF_SAFE_MODE,
     CONF_ZEROCONF_DEFAULT_INTERFACE,
     CONFIG_OPTIONS,
@@ -522,8 +529,9 @@ class HomeKit:
 
         device_lookup = ent_reg.async_get_device_class_lookup(
             {
-                ("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING),
-                ("sensor", DEVICE_CLASS_BATTERY),
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING),
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION),
+                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY),
             }
         )
 
@@ -537,9 +545,7 @@ class HomeKit:
                 await self._async_set_device_info_attributes(
                     ent_reg_ent, dev_reg, state.entity_id
                 )
-                self._async_configure_linked_battery_sensors(
-                    ent_reg_ent, device_lookup, state
-                )
+                self._async_configure_linked_sensors(ent_reg_ent, device_lookup, state)
 
             bridged_states.append(state)
 
@@ -629,9 +635,7 @@ class HomeKit:
         self.hass.add_job(self.driver.stop)
 
     @callback
-    def _async_configure_linked_battery_sensors(
-        self, ent_reg_ent, device_lookup, state
-    ):
+    def _async_configure_linked_sensors(self, ent_reg_ent, device_lookup, state):
         if (
             ent_reg_ent is None
             or ent_reg_ent.device_id is None
@@ -644,7 +648,7 @@ class HomeKit:
         if ATTR_BATTERY_CHARGING not in state.attributes:
             battery_charging_binary_sensor_entity_id = device_lookup[
                 ent_reg_ent.device_id
-            ].get(("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING))
+            ].get((BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING))
             if battery_charging_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -653,11 +657,20 @@ class HomeKit:
 
         if ATTR_BATTERY_LEVEL not in state.attributes:
             battery_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                ("sensor", DEVICE_CLASS_BATTERY)
+                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY)
             )
             if battery_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_BATTERY_SENSOR, battery_sensor_entity_id
+                )
+
+        if state.entity_id.startswith(f"{CAMERA_DOMAIN}."):
+            motion_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION)
+            )
+            if motion_binary_sensor_entity_id:
+                self._config.setdefault(state.entity_id, {}).setdefault(
+                    CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id,
                 )
 
     async def _async_set_device_info_attributes(self, ent_reg_ent, dev_reg, entity_id):

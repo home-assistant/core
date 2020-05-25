@@ -6,7 +6,10 @@ import pytest
 from zeroconf import InterfaceChoice
 
 from homeassistant.components import zeroconf
-from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_MOTION,
+)
 from homeassistant.components.homekit import (
     MAX_DEVICES,
     STATUS_READY,
@@ -1030,5 +1033,80 @@ async def test_homekit_ignored_missing_devices(
             "platform": "Tesla Powerwall",
             "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
             "linked_battery_sensor": "sensor.powerwall_battery",
+        },
+    )
+
+
+async def test_homekit_finds_linked_motion_sensors(
+    hass, hk_driver, debounce_patcher, device_reg, entity_reg
+):
+    """Test HomeKit start method."""
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {"camera.camera_demo": {}},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
+    homekit.driver = hk_driver
+    homekit._filter = Mock(return_value=True)
+    homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.0",
+        model="Camera Server",
+        manufacturer="Ubq",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    binary_motion_sensor = entity_reg.async_get_or_create(
+        "binary_sensor",
+        "camera",
+        "motion_sensor",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_MOTION,
+    )
+    camera = entity_reg.async_get_or_create(
+        "camera", "camera", "demo", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        binary_motion_sensor.entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION},
+    )
+    hass.states.async_set(camera.entity_id, STATE_ON)
+
+    def _mock_get_accessory(*args, **kwargs):
+        return [None, "acc", None]
+
+    with patch.object(homekit.bridge, "add_accessory"), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start"
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+
+    mock_get_acc.assert_called_with(
+        hass,
+        hk_driver,
+        ANY,
+        ANY,
+        {
+            "manufacturer": "Ubq",
+            "model": "Camera Server",
+            "sw_version": "0.16.0",
+            "linked_motion_sensor": "binary_sensor.camera_motion_sensor",
         },
     )
