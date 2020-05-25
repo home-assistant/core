@@ -122,6 +122,7 @@ omit =
     homeassistant/components/cast/*
     homeassistant/components/cert_expiry/helper.py
     homeassistant/components/channels/*
+    homeassistant/components/circuit/*
     homeassistant/components/cisco_ios/device_tracker.py
     homeassistant/components/cisco_mobility_express/device_tracker.py
     homeassistant/components/cisco_webex_teams/notify.py
