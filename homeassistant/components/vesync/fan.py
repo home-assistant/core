@@ -1,4 +1,4 @@
-"""Support for Etekcity VeSync fans"""
+"""Support for Etekcity VeSync fans."""
 import logging
 
 from homeassistant.components.fan import FanEntity, SUPPORT_SET_SPEED
@@ -62,7 +62,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
     @property
     def is_on(self):
-        """Return True if device is on"""
+        """Return True if device is on."""
         return self.smartfan.device_status == "on"
 
     @property
@@ -78,7 +78,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
     @property
     def speed_list(self):
-        """Get the list of available speeds"""
+        """Get the list of available speeds."""
         return FAN_SPEEDS
 
     @property
@@ -103,6 +103,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         return attr
 
     def set_speed(self, speed):
+        """Sets the speed of the device."""
         if speed is None or speed == "auto":
             self.smartfan.auto_mode()
         else:
@@ -110,6 +111,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             self.smartfan.change_fan_speed(FAN_SPEEDS.index(speed))
 
     def turn_on(self, speed, **kwargs):
+        """Turn the device on."""
         self.smartfan.turn_on()
         if speed is None or speed == "auto":
             self.smartfan.auto_mode()
