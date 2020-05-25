@@ -3,7 +3,8 @@
   "name": "Axis",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/axis",
-  "requirements": ["axis==26"],
+  "requirements": ["axis==27"],
   "zeroconf": ["_axis-video._tcp.local."],
+  "after_dependencies": ["mqtt"],
   "codeowners": ["@Kane610"]
 }
