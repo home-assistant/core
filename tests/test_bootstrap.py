@@ -297,7 +297,7 @@ async def test_setup_hass(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"browser": {}, "frontend": {}},
-    ):
+    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=verbose,
@@ -334,7 +334,7 @@ async def test_setup_hass_invalid_yaml(
     """Test it works."""
     with patch(
         "homeassistant.config.async_hass_config_yaml", side_effect=HomeAssistantError
-    ):
+    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=False,
@@ -387,7 +387,9 @@ async def test_setup_hass_safe_mode(
     hass.config_entries._async_schedule_save()
     await flush_store(hass.config_entries._store)
 
-    with patch("homeassistant.components.browser.setup") as browser_setup:
+    with patch("homeassistant.components.browser.setup") as browser_setup, patch(
+        "homeassistant.components.http.start_http_server_and_save_config"
+    ):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=False,
@@ -417,7 +419,7 @@ async def test_setup_hass_invalid_core_config(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"homeassistant": {"non-existing": 1}},
-    ):
+    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=False,
@@ -447,7 +449,7 @@ async def test_setup_safe_mode_if_no_frontend(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"map": {}, "person": {"invalid": True}},
-    ):
+    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=verbose,
