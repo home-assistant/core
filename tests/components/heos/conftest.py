@@ -82,36 +82,7 @@ def player_fixture(quick_selects):
     player.now_playing_media.image_url = "http://"
     player.now_playing_media.song = "Song"
     player.get_quick_selects.return_value = quick_selects
-
-    player2 = Mock(HeosPlayer)
-    player2.player_id = 2
-    player2.name = "Test Player"
-    player2.model = "Test Model"
-    player2.version = "1.0.0"
-    player2.is_muted = False
-    player2.available = True
-    player2.state = const.PLAY_STATE_STOP
-    player2.ip_address = "127.0.0.2"
-    player2.network = "wired"
-    player2.shuffle = False
-    player2.repeat = const.REPEAT_OFF
-    player2.volume = 25
-    player2.now_playing_media.supported_controls = const.CONTROLS_ALL
-    player2.now_playing_media.album_id = 1
-    player2.now_playing_media.queue_id = 1
-    player2.now_playing_media.source_id = 1
-    player2.now_playing_media.station = "Station Name"
-    player2.now_playing_media.type = "Station"
-    player2.now_playing_media.album = "Album"
-    player2.now_playing_media.artist = "Artist"
-    player2.now_playing_media.media_id = "1"
-    player2.now_playing_media.duration = None
-    player2.now_playing_media.current_position = None
-    player2.now_playing_media.image_url = "http://"
-    player2.now_playing_media.song = "Song"
-    player2.get_quick_selects.return_value = quick_selects
-
-    return {player.player_id: player, player2.player_id: player2}
+    return {player.player_id: player}
 
 
 @pytest.fixture(name="favorites")

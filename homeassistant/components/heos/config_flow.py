@@ -43,7 +43,6 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         # raise_on_progress is False here in case ssdp discovers
         # heos first which would block the import
         await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=format_title(host), data={CONF_HOST: host})
 
     async def async_step_user(self, user_input=None):
@@ -63,15 +62,11 @@ class HeosFlowHandler(config_entries.ConfigFlow):
             try:
                 await heos.connect()
                 self.hass.data.pop(DATA_DISCOVERED_HOSTS)
+                return await self.async_step_import({CONF_HOST: host})
             except HeosError:
                 errors[CONF_HOST] = "connection_failure"
             finally:
                 await heos.disconnect()
-            if not errors:
-                await self.async_set_unique_id(DOMAIN)
-                return self.async_create_entry(
-                    title=format_title(host), data={CONF_HOST: host}
-                )
 
         # Return form
         host_type = (
