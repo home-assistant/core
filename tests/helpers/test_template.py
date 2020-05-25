@@ -1764,9 +1764,19 @@ states.sensor.pick_humidity.state ~ „ %“
     )
 
     hass.states.async_set("test_domain.object", "exists")
-    await group.Group.async_create_group(hass, "expand group", ["test_domain.object"])
+    await group.Group.async_create_group(
+        hass,
+        "expand group",
+        ["test_domain.object", "test_domain.object_not_yet_loaded"],
+    )
 
-    assert sorted(["group.expand_group", "test_domain.object"]) == sorted(
+    assert sorted(
+        [
+            "group.expand_group",
+            "test_domain.object_not_yet_loaded",
+            "test_domain.object",
+        ]
+    ) == sorted(
         template.extract_entities(
             hass, "{{ expand('group.expand_group') | list | length }}"
         )

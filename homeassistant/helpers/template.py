@@ -99,8 +99,23 @@ def extract_entities(
             extraction_final.append(variables["trigger"]["entity_id"])
         elif result.group("entity_id"):
             if result.group("func") == "expand":
-                for entity in expand(hass, result.group("entity_id")):
-                    extraction_final.append(entity.entity_id)
+                group_entity_id = result.group("entity_id")
+
+                # pylint: disable=import-outside-toplevel
+                from homeassistant.components import group
+
+                if split_entity_id(group_entity_id)[0] == group.DOMAIN:
+                    """Expand group, but do not use `expand` template function
+                    here. Group entities may not have been initialized yet and
+                    could be thrown out.
+                    """
+                    group_entity = _get_state(hass, group_entity_id)
+                    if group_entity is not None:
+                        group_entities = group_entity.attributes.get(ATTR_ENTITY_ID)
+
+                        if group_entities is not None:
+                            for entity_id in group_entities:
+                                extraction_final.append(entity_id)
 
             extraction_final.append(result.group("entity_id"))
 
