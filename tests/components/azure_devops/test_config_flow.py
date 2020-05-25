@@ -2,19 +2,8 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.azure_devops.const import (
-    CONF_ORG,
-    CONF_PAT,
-    CONF_PROJECT,
-    DOMAIN,
-)
+from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PROJECT, DOMAIN
 from homeassistant.core import HomeAssistant
-
-FIXTURE_USER_INPUT_BAD = {
-    CONF_ORG: "example",
-    CONF_PROJECT: "something",
-    CONF_PAT: "abcdef",
-}
 
 FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project"}
 
