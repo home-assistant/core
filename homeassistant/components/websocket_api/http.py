@@ -165,7 +165,9 @@ class WebSocketHandler:
             EVENT_HOMEASSISTANT_STOP, handle_hass_stop
         )
 
-        self._writer_task = self.hass.async_create_task(self._writer())
+        # As the webserver is now started before the start
+        # event we do not want to block for websocket responses
+        self._writer_task = self.hass.loop.create_task(self._writer())
 
         auth = AuthPhase(self._logger, self.hass, self._send_message, request)
         connection = None
