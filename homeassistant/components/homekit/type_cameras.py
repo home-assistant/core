@@ -12,7 +12,6 @@ from pyhap.camera import (
 )
 from pyhap.const import CATEGORY_CAMERA
 
-from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
@@ -126,7 +125,6 @@ class Camera(HomeAccessory, PyhapCamera):
         """Initialize a Camera accessory object."""
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._cur_session = None
-        self._camera = hass.data[DOMAIN_CAMERA]
         for config_key in CONFIG_DEFAULTS:
             if config_key not in config:
                 config[config_key] = CONFIG_DEFAULTS[config_key]
@@ -188,9 +186,6 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def _async_get_stream_source(self):
         """Find the camera stream source url."""
-        camera = self._camera.get_entity(self.entity_id)
-        if not camera or not camera.is_on:
-            return None
         stream_source = self.config.get(CONF_STREAM_SOURCE)
         if stream_source:
             return stream_source
