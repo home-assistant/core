@@ -1,4 +1,4 @@
-"""Representation of Z-Wave switches."""
+"""Representation of Z-Wave locks."""
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,13 +27,13 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
 
     @property
     def is_locked(self):
-        """Return a boolean for the state of the switch."""
+        """Return a boolean for the state of the lock."""
         return bool(self.values.primary.value)
 
     async def async_lock(self, **kwargs):
-        """Turn the switch on."""
+        """Lock the lock."""
         self.values.primary.send_value(True)
 
     async def async_unlock(self, **kwargs):
-        """Turn the switch off."""
+        """Unlock the lock."""
         self.values.primary.send_value(False)

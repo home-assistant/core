@@ -1,9 +1,9 @@
-"""Test Z-Wave Switches."""
+"""Test Z-Wave Locks."""
 from .common import setup_ozw
 
 
 async def test_lock(hass, lock_data, sent_messages, lock_msg):
-    """Test setting up config entry."""
+    """Test lock."""
     receive_message = await setup_ozw(hass, fixture=lock_data)
 
     # Test loaded
@@ -11,7 +11,7 @@ async def test_lock(hass, lock_data, sent_messages, lock_msg):
     assert state is not None
     assert state.state == "unlocked"
 
-    # Test turning on
+    # Test locking
     await hass.services.async_call(
         "lock", "lock", {"entity_id": "lock.danalock_v3_btze_locked"}, blocking=True
     )
@@ -31,7 +31,7 @@ async def test_lock(hass, lock_data, sent_messages, lock_msg):
     assert state is not None
     assert state.state == "locked"
 
-    # Test turning off
+    # Test unlocking
     await hass.services.async_call(
         "lock", "unlock", {"entity_id": "lock.danalock_v3_btze_locked"}, blocking=True
     )
