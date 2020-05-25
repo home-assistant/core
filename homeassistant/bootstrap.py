@@ -427,3 +427,13 @@ async def _async_set_up_integrations(
         _LOGGER.debug("Final set up: %s", stage_2_domains)
 
         await async_setup_multi_components(stage_2_domains)
+
+    # Wrap up startup
+    try:
+        async with timeout(10):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        _LOGGER.warning(
+            "Something is blocking Home Assistant from wrapping up the "
+            "bootstrap phase. We're going to continue anyway."
+        )
