@@ -165,7 +165,7 @@ class RadioType(enum.Enum):
         zigpy_deconz.zigbee.application.ControllerApplication,
     )
     ti_cc = (
-        "TI_CC = : Texas Instruments Z-Stack ZNP protocol (ex; CC253x, CC26x2, CC13x2)",
+        "TI_CC = Texas Instruments Z-Stack ZNP protocol (ex: CC253x, CC26x2, CC13x2)",
         zigpy_cc.zigbee.application.ControllerApplication,
     )
     zigate = (
