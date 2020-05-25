@@ -40,7 +40,7 @@ DEFAULT_NAME = "Generic Camera"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STILL_IMAGE_URL): cv.template,
-        vol.Optional(CONF_STREAM_SOURCE, default=None): vol.Any(None, cv.string),
+        vol.Optional(CONF_STREAM_SOURCE, default=None): cv.template,
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -166,4 +166,8 @@ class GenericCamera(Camera):
 
     async def stream_source(self):
         """Return the source of the stream."""
-        return self._stream_source
+        try:
+            return self._stream_source.async_render()
+        except TemplateError as err:
+            _LOGGER.error("Error parsing template %s: %s", self._stream_source, err)
+            return self._stream_source
