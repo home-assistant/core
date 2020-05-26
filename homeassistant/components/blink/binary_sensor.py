@@ -59,5 +59,5 @@ class BlinkBinarySensor(BinarySensorEntity):
         self.data.refresh()
         state = self._camera.attributes[self._type]
         if self._type == TYPE_BATTERY:
-            state = bool(state != "ok")
+            state = state != "ok"
         self._state = state
