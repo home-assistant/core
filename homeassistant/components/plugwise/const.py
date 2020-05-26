@@ -25,6 +25,9 @@ ATTR_ILLUMINANCE = "illuminance"
 CURRENT_HVAC_DHW = "hot_water"
 DEVICE_STATE = "device_state"
 
+SCHEDULE_ON = "true"
+SCHEDULE_OFF = "false"
+
 # Icons
 SWITCH_ICON = "mdi:electric-switch"
 THERMOSTAT_ICON = "mdi:thermometer"

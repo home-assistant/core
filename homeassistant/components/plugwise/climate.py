@@ -19,7 +19,14 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import SmileGateway
-from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, THERMOSTAT_ICON
+from .const import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    DOMAIN,
+    SCHEDULE_OFF,
+    SCHEDULE_ON,
+    THERMOSTAT_ICON,
+)
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
 HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
@@ -224,9 +231,9 @@ class PwThermostat(SmileGateway, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the hvac mode."""
-        state = "false"
+        state = SCHEDULE_OFF
         if hvac_mode == HVAC_MODE_AUTO:
-            state = "true"
+            state = SCHEDULE_ON
             try:
                 await self._api.set_temperature(self._loc_id, self._schedule_temp)
                 self._setpoint = self._schedule_temp
