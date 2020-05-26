@@ -670,12 +670,12 @@ def coordinates(
         return _get_location_from_attributes(entity)
 
     # Check if device is in a zone
-    zone_entity = _resolve_state(hass, "zone.{}".format(entity.state))
-    if loc_helper.has_location(zone_entity):
+    zone_entity = _resolve_state(hass, f"zone.{entity.state}")
+    if loc_helper.has_location(zone_entity):  # type: ignore
         _LOGGER.debug(
-            "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
+            "%s is in %s, getting zone location", entity_id, zone_entity.entity_id  # type: ignore
         )
-        return _get_location_from_attributes(zone_entity)
+        return _get_location_from_attributes(zone_entity)  # type: ignore
 
     # Resolve nested entity
     if recursion_history is None:
