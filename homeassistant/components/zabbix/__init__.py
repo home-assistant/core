@@ -2,7 +2,7 @@
 import logging
 from urllib.parse import urljoin
 
-from pyzabbix.api import ZabbixAPI, ZabbixAPIException
+from pyzabbix import ZabbixAPI, ZabbixAPIException
 import voluptuous as vol
 
 from homeassistant.const import (
