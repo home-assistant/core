@@ -4,7 +4,7 @@ from homeassistant.components.ozw.fan import SPEED_TO_VALUE
 from .common import setup_ozw
 
 
-async def test_fan(hass, fan_data, fan_msg, sent_messages):
+async def test_fan(hass, fan_data, fan_msg, sent_messages, caplog):
     """Test fan."""
     receive_message = await setup_ozw(hass, fixture=fan_data)
 
@@ -98,7 +98,7 @@ async def test_fan(hass, fan_data, fan_msg, sent_messages):
     new_speed = "off"
     await hass.services.async_call(
         "fan",
-        "turn_on",
+        "set_speed",
         {"entity_id": "fan.in_wall_smart_fan_control_level", "speed": new_speed},
         blocking=True,
     )
@@ -121,3 +121,15 @@ async def test_fan(hass, fan_data, fan_msg, sent_messages):
     state = hass.states.get("fan.in_wall_smart_fan_control_level")
     assert state is not None
     assert state.state == "off"
+
+    # Test invalid speed
+    new_speed = "invalid"
+    await hass.services.async_call(
+        "fan",
+        "set_speed",
+        {"entity_id": "fan.in_wall_smart_fan_control_level", "speed": new_speed},
+        blocking=True,
+    )
+
+    assert len(sent_messages) == 4
+    assert "Invalid speed received: invalid" in caplog.text

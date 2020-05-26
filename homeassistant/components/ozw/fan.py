@@ -1,4 +1,5 @@
 """Support for Z-Wave fans."""
+import logging
 import math
 
 from homeassistant.components.fan import (
@@ -16,14 +17,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
 
-SPEED_LIST = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
 # Value will first be divided to an integer
 VALUE_TO_SPEED = {0: SPEED_OFF, 1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
-
 SPEED_TO_VALUE = {SPEED_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 50, SPEED_HIGH: 99}
+SPEED_LIST = [*SPEED_TO_VALUE]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -50,6 +51,9 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
 
     async def async_set_speed(self, speed):
         """Set the speed of the fan."""
+        if speed not in SPEED_TO_VALUE:
+            _LOGGER.warning("Invalid speed received: %s", speed)
+            return
         self._previous_speed = speed
         self.values.primary.send_value(SPEED_TO_VALUE[speed])
 
