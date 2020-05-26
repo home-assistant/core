@@ -10,42 +10,41 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN
 
 
-@callback
-def configured_instances(hass):
-    """Return a set of configured OpenUV instances."""
-    return {
-        f"{entry.data.get(CONF_LATITUDE, hass.config.latitude)}, "
-        f"{entry.data.get(CONF_LONGITUDE, hass.config.longitude)}"
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-
-
-@config_entries.HANDLERS.register(DOMAIN)
-class OpenUvFlowHandler(config_entries.ConfigFlow):
+class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an OpenUV config flow."""
 
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def _show_form(self, errors=None):
-        """Show the form to the user."""
-        data_schema = vol.Schema(
+    @property
+    def data_schema(self):
+        """Return the data schema."""
+        return vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,
-                vol.Optional(CONF_LATITUDE): cv.latitude,
-                vol.Optional(CONF_LONGITUDE): cv.longitude,
-                vol.Optional(CONF_ELEVATION): vol.Coerce(float),
+                vol.Optional(
+                    CONF_LATITUDE, default=self.hass.config.latitude
+                ): cv.latitude,
+                vol.Optional(
+                    CONF_LONGITUDE, default=self.hass.config.longitude
+                ): cv.longitude,
+                vol.Optional(
+                    CONF_ELEVATION, default=self.hass.config.elevation
+                ): vol.Coerce(float),
             }
         )
 
+    async def _show_form(self, errors=None):
+        """Show the form to the user."""
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors if errors else {}
+            step_id="user",
+            data_schema=self.data_schema,
+            errors=errors if errors else {},
         )
 
     async def async_step_import(self, import_config):
@@ -54,16 +53,13 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-
         if not user_input:
             return await self._show_form()
 
-        identifier = (
-            f"{user_input.get(CONF_LATITUDE, self.hass.config.latitude)}, "
-            f"{user_input.get(CONF_LONGITUDE, self.hass.config.longitude)}"
-        )
-        if identifier in configured_instances(self.hass):
-            return await self._show_form({CONF_LATITUDE: "identifier_exists"})
+        identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
+
+        await self.async_set_unique_id(identifier)
+        self._abort_if_unique_id_configured()
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
         client = Client(user_input[CONF_API_KEY], 0, 0, websession)
