@@ -36,7 +36,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
-    async_add_entities([WorldClockSensor(time_zone, name, config.get(CONF_TIME_FORMAT), config.get(CONF_TRIM_ZERO))], True)
+    async_add_entities(
+        [
+            WorldClockSensor(
+                time_zone,
+                name,
+                config.get(CONF_TIME_FORMAT),
+                config.get(CONF_TRIM_ZERO),
+            )
+        ],
+        True,
+    )
 
 
 class WorldClockSensor(Entity):
@@ -68,4 +78,5 @@ class WorldClockSensor(Entity):
     async def async_update(self):
         """Get the time and updates the states."""
         self._state = dt_util.now(time_zone=self._time_zone).strftime(self._time_format)
-        if self._trim_leading_zero: self._state = self._state.lstrip("0").replace(" 0", " ")
+        if self._trim_leading_zero:
+            self._state = self._state.lstrip("0").replace(" 0", " ")
