@@ -312,7 +312,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200519.4
+home-assistant-frontend==20200519.5
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -331,7 +331,7 @@ httplib2==0.10.3
 huawei-lte-api==1.4.12
 
 # homeassistant.components.iaqualink
-iaqualink==0.3.1
+iaqualink==0.3.3
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
@@ -762,7 +762,7 @@ rflink==0.0.52
 ring_doorbell==0.6.0
 
 # homeassistant.components.roku
-rokuecp==0.4.1
+rokuecp==0.4.2
 
 # homeassistant.components.roomba
 roombapy==1.6.1
