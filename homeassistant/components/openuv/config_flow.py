@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint: disable=unused-import
 
 
 class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
