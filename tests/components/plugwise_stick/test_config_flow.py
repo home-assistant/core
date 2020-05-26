@@ -11,6 +11,8 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
+from plugwise.exceptions import NetworkDown, PortError, StickInitError, TimeoutException
+
 from tests.async_mock import AsyncMock, MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
 
@@ -20,9 +22,8 @@ def com_port():
     port = serial.tools.list_ports_common.ListPortInfo()
     port.serial_number = "1234"
     port.manufacturer = "Virtual serial port"
-    port.device = "/dev/ttyUSB1234"
+    port.device = "/dev/ttyUSB1"
     port.description = "Some serial port"
-
     return port
 
 
@@ -31,7 +32,6 @@ async def test_user_flow_show_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER},
     )
-
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
@@ -43,7 +43,6 @@ async def test_user_flow_show_form(hass):
 )
 async def test_user_flow_select(hass):
     """Test user flow when USB-stick is selected from list."""
-
     port = com_port()
     port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
@@ -51,12 +50,11 @@ async def test_user_flow_select(hass):
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: port_select},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {CONF_USB_PATH: "/dev/ttyUSB1234"}
+    assert result["data"] == {CONF_USB_PATH: "/dev/ttyUSB1"}
 
 
-async def test_user_flow_manual(hass):
+async def test_user_flow_manual_selected_show_form(hass):
     """Test user step form when manual path is selected."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
@@ -64,6 +62,26 @@ async def test_user_flow_manual(hass):
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "manual_path"
+
+
+@patch(
+    "homeassistant.components.plugwise_stick.config_flow.validate_connection",
+    AsyncMock(return_value=None),
+)
+async def test_user_flow_manual(hass):
+    """Test user flow when USB-stick is manually entered."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data={CONF_USB_PATH: config_flow.CONF_MANUAL_PATH},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_USB_PATH: "/dev/ttyUSB2"},
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {CONF_USB_PATH: "/dev/ttyUSB2"}
 
 
 async def test_invalid_connection(hass):
@@ -75,15 +93,66 @@ async def test_invalid_connection(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_duplicate_connection(hass):
-    """Test invalid connection."""
-    MockConfigEntry(domain=DOMAIN, data={CONF_USB_PATH: "/dev/null"}).add_to_hass(hass)
-    await setup.async_setup_component(hass, "persistent_notification", {})
+async def test_empty_connection(hass):
+    """Test empty connection."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: None},
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "connection_failed"}
+
+
+async def test_existing_connection(hass):
+    """Test existing connection."""
+    MockConfigEntry(domain=DOMAIN, data={CONF_USB_PATH: "/dev/ttyUSB3"}).add_to_hass(
+        hass
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data={CONF_USB_PATH: "/dev/ttyUSB3"},
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "connection_exists"}
+
+
+@patch("plugwise.stick.connect", AsyncMock(return_value=None))
+@patch("plugwise.stick.initialize_stick", AsyncMock(side_effect=(StickInitError)))
+async def test_failed_initialization(hass):
+    """Test we handle failed initialization of Plugwise USB-stick."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data={CONF_USB_PATH: "/dev/null"},
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "stick_init"}
+
+
+@patch("plugwise.stick.connect", AsyncMock(return_value=None))
+@patch("plugwise.stick.initialize_stick", AsyncMock(side_effect=(NetworkDown)))
+async def test_network_down_exception(hass):
+    """Test we handle network_down exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data={CONF_USB_PATH: "/dev/null"},
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "network_down"}
+
+
+@patch("plugwise.stick.connect", AsyncMock(return_value=None))
+@patch("plugwise.stick.initialize_stick", AsyncMock(side_effect=(TimeoutException)))
+async def test_timeout_exception(hass):
+    """Test we handle time exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data={CONF_USB_PATH: "/dev/null"},
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "network_timeout"}
 
 
 def test_get_serial_by_id_no_dir():
