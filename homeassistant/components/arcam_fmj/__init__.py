@@ -50,7 +50,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry):
-    """Set up an access point from a config entry."""
+    """Set up config entry."""
     entries = hass.data.setdefault(DOMAIN_DATA_ENTRIES, {})
     tasks = hass.data.setdefault(DOMAIN_DATA_TASKS, {})
 
