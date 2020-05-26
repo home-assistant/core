@@ -6,7 +6,7 @@ from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
-from homeassistant.components.webostv.const import (  # CONF_CONSECUTIVE_VOLUME_STEPS_DELAY,
+from homeassistant.components.webostv.const import (
     ATTR_BUTTON,
     ATTR_COMMAND,
     CONF_ON_ACTION,

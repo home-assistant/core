@@ -57,8 +57,6 @@ async def setup_webostv(hass):
         CONF_HOST: "fake",
         CONF_NAME: NAME,
     }
-    # if consecutive_volume_steps_delay is not None:
-    #     domain[CONF_CONSECUTIVE_VOLUME_STEPS_DELAY] = consecutive_volume_steps_delay
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: domain},)
     await hass.async_block_till_done()
 

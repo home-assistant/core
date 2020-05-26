@@ -115,12 +115,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
     def __init__(
-        self,
-        client: WebOsClient,
-        name: str,
-        customize,
-        on_script=None,
-        # consecutive_volume_steps_delay=None,
+        self, client: WebOsClient, name: str, customize, on_script=None,
     ):
         """Initialize the webos device."""
         self._client = client
@@ -135,8 +130,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         self._current_source = None
         self._source_list = {}
 
-        # self._consecutive_volume_steps_delay = consecutive_volume_steps_delay
-        # if consecutive_volume_steps_delay is not None:
         self._last_volume_step_lock = asyncio.Lock()
 
     async def async_added_to_hass(self):
@@ -352,10 +345,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Volume down media player."""
         await self._client.volume_down()
         await self._sleep_between_consecutive_volume_steps()
-
-    # def _should_sleep_between_consecutive_volume_steps(self):
-    #     """Return wheteher the medial player should sleep between consecutive volume steps."""
-    #     return self._consecutive_volume_steps_delay is not None
 
     async def _sleep_between_consecutive_volume_steps(self):
         """Sleep until the configured delay duration has elapsed since the last volume step."""
