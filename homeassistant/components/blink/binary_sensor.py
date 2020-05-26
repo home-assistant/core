@@ -1,11 +1,16 @@
 """Support for Blink system camera control."""
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_MOTION,
+    BinarySensorEntity,
+)
 
-from .const import DOMAIN, TYPE_CAMERA_ARMED, TYPE_MOTION_DETECTED
+from .const import DOMAIN, TYPE_BATTERY, TYPE_CAMERA_ARMED, TYPE_MOTION_DETECTED
 
 BINARY_SENSORS = {
-    TYPE_CAMERA_ARMED: ["Camera Armed", "mdi:verified"],
-    TYPE_MOTION_DETECTED: ["Motion Detected", "mdi:run-fast"],
+    TYPE_BATTERY: ["Battery", DEVICE_CLASS_BATTERY],
+    TYPE_CAMERA_ARMED: ["Camera Armed", None],
+    TYPE_MOTION_DETECTED: ["Motion Detected", DEVICE_CLASS_MOTION],
 }
 
 
@@ -27,9 +32,9 @@ class BlinkBinarySensor(BinarySensorEntity):
         """Initialize the sensor."""
         self.data = data
         self._type = sensor_type
-        name, icon = BINARY_SENSORS[sensor_type]
+        name, device_class = BINARY_SENSORS[sensor_type]
         self._name = f"{DOMAIN} {camera} {name}"
-        self._icon = icon
+        self._device_class = device_class
         self._camera = data.cameras[camera]
         self._state = None
         self._unique_id = f"{self._camera.serial}-{self._type}"
@@ -40,6 +45,11 @@ class BlinkBinarySensor(BinarySensorEntity):
         return self._name
 
     @property
+    def device_class(self):
+        """Return the class of this device."""
+        return self._device_class
+
+    @property
     def is_on(self):
         """Return the status of the sensor."""
         return self._state
@@ -47,4 +57,7 @@ class BlinkBinarySensor(BinarySensorEntity):
     def update(self):
         """Update sensor state."""
         self.data.refresh()
-        self._state = self._camera.attributes[self._type]
+        state = self._camera.attributes[self._type]
+        if self._type == TYPE_BATTERY:
+            state = state != "ok"
+        self._state = state
