@@ -1542,7 +1542,7 @@ pypca==0.0.7
 pypck==0.6.4
 
 # homeassistant.components.pjlink
-pypjlink2==1.2.0
+pypjlink2==1.2.1
 
 # homeassistant.components.point
 pypoint==1.1.2
