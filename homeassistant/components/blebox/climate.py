@@ -1,6 +1,6 @@
 """BleBox climate entity."""
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -22,7 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class BleBoxClimateEntity(BleBoxEntity, ClimateDevice):
+class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
     @property
@@ -81,9 +81,10 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateDevice):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the climate entity mode."""
         if hvac_mode == HVAC_MODE_HEAT:
-            return await self._feature.async_on()
+            await self._feature.async_on()
+            return
 
-        return await self._feature.async_off()
+        await self._feature.async_off()
 
     async def async_set_temperature(self, **kwargs):
         """Set the thermostat temperature."""
