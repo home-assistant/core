@@ -42,7 +42,7 @@ class WebsocketAPIView(HomeAssistantView):
     url = URL
     requires_auth = False
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
@@ -148,7 +148,7 @@ class WebSocketHandler:
         self._handle_task.cancel()
         self._writer_task.cancel()
 
-    async def async_handle(self):
+    async def async_handle(self) -> web.WebSocketResponse:
         """Handle a websocket response."""
         request = self.request
         wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
