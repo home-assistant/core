@@ -694,24 +694,17 @@ def coordinates(
         return coordinates(hass, entity.state, recursion_history)
 
     # Check if state is valid coordinate set
-    if _entity_state_is_valid_coordinate_set(entity.state):
-        return entity.state
-
-    _LOGGER.error(
-        "The state of %s is not a valid set of coordinates: %s", entity_id, entity.state
-    )
-    return None
-
-
-def _entity_state_is_valid_coordinate_set(state: str) -> bool:
-    """Check that the given string is a valid set of coordinates."""
-    schema = vol.Schema(cv.gps)
     try:
-        coords = state.split(",")
-        schema(coords)
-        return True
-    except (vol.MultipleInvalid):
-        return False
+        cv.gps(entity.state.split(","))
+    except vol.Invalid:
+        _LOGGER.error(
+            "The state of %s is not a valid set of coordinates: %s",
+            entity_id,
+            entity.state,
+        )
+        return None
+    else:
+        return entity.state
 
 
 def _get_location_from_attributes(entity: State) -> str:
