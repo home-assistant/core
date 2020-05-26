@@ -22,9 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_INTEGRATION_TYPE] != INTEGRATION_TYPE_NODE_PRO:
         return
 
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][INTEGRATION_TYPE_NODE_PRO][
-        config_entry.entry_id
-    ]
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
     async_add_entities([AirVisualNodeProSensor(coordinator)], True)
 

@@ -93,9 +93,7 @@ POLLUTANT_MAPPING = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][
-        config_entry.data[CONF_INTEGRATION_TYPE]
-    ][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
     if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
         sensors = [
