@@ -282,6 +282,7 @@ def play_on_sonos(hass, service_call):
         sonos_id = sonos.get_coordinator_id(entity_id)
     except HomeAssistantError as err:
         _LOGGER.error("Cannot get Sonos device: %s", err)
+        return
 
     if isinstance(content, int):
         content = {"plex_key": content}
