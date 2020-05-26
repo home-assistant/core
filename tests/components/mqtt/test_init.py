@@ -18,7 +18,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -678,23 +677,24 @@ async def test_setup_embedded_with_embedded(hass):
         assert _start.call_count == 1
 
 
-async def test_setup_fails_if_no_connect_broker(hass):
+async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = lambda *args: 1
-        assert not await mqtt.async_setup_entry(hass, entry)
+        assert await mqtt.async_setup_entry(hass, entry)
+        assert "Failed to connect to MQTT server:" in caplog.text
 
 
-async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass):
+async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplog):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = MagicMock(side_effect=OSError("Connection error"))
-        with pytest.raises(ConfigEntryNotReady):
-            await mqtt.async_setup_entry(hass, entry)
+        assert await mqtt.async_setup_entry(hass, entry)
+        assert "Failed to connect to MQTT server due to exception:" in caplog.text
 
 
 async def test_setup_uses_certificate_on_certificate_set_to_auto(hass, mock_mqtt):
