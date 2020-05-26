@@ -234,8 +234,8 @@ NODE_FILTERS = {
     COVER: {
         FILTER_UOM: ["97"],
         FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
-        FILTER_NODE_DEF_ID: [],
-        FILTER_INSTEON_TYPE: [],
+        FILTER_NODE_DEF_ID: ["DimmerMotorSwitch_ADV"],
+        FILTER_INSTEON_TYPE: [TYPE_CATEGORY_COVER],
         FILTER_ZWAVE_CAT: [],
     },
     LIGHT: {
@@ -300,6 +300,8 @@ UOM_ISYV4_NONE = "n/a"
 UOM_ISY_CELSIUS = 1
 UOM_ISY_FAHRENHEIT = 2
 
+UOM_8_BIT_RANGE = "100"
+UOM_BARRIER = "97"
 UOM_DOUBLE_TEMP = "101"
 UOM_HVAC_ACTIONS = "66"
 UOM_HVAC_MODE_GENERIC = "67"
@@ -388,7 +390,7 @@ UOM_FRIENDLY_NAME = {
     "90": FREQUENCY_HERTZ,
     "91": DEGREE,
     "92": f"{DEGREE} South",
-    "100": "",  # Range 0-255, no unit.
+    UOM_8_BIT_RANGE: "",  # Range 0-255, no unit.
     UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
     "103": "$",
@@ -556,7 +558,7 @@ UOM_TO_STATES = {
         3: "moderately polluted",
         4: "highly polluted",
     },
-    "97": {  # Barrier Status
+    UOM_BARRIER: {  # Barrier Status
         **{
             0: STATE_CLOSED,
             100: STATE_OPEN,
