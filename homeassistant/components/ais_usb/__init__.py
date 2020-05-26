@@ -30,7 +30,7 @@ if platform.machine() == "x86_64":
     G_USB_DRIVES_PATH = "/media/andrzej"
 
 
-async def _run(cmd):
+async def _run_callback(cmd):
     cmd_process = await asyncio.create_subprocess_shell(
         cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
@@ -41,6 +41,22 @@ async def _run(cmd):
         _LOGGER.info(f"[stdout]\n{stdout.decode()}")
     if stderr:
         _LOGGER.info(f"[stderr]\n{stderr.decode()}")
+
+
+async def _run(cmd, callback_cmd):
+    cmd_process = await asyncio.create_subprocess_shell(
+        cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+
+    stdout, stderr = await cmd_process.communicate()
+
+    if stdout:
+        _LOGGER.info(f"[stdout]\n{stdout.decode()}")
+    if stderr:
+        _LOGGER.info(f"[stderr]\n{stderr.decode()}")
+
+    if callback_cmd:
+        await _run_callback(callback_cmd)
 
 
 # check if usb is valid external drive
@@ -82,7 +98,7 @@ async def prepare_usb_device(hass, device_info):
 
         # check if zigbee already exists
         if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
-            # download
+            # TODO download
             await hass.services.async_call(
                 "ais_ai_service",
                 "say_it",
@@ -93,25 +109,20 @@ async def prepare_usb_device(hass, device_info):
             )
             return
 
-        # start pm2 zigbee service
-        await _run("pm2 stop zigbee")
-        await _run("pm2 delete zigbee")
-
+        # fix permitions
         uid = str(os.getuid())
         gid = str(os.getgid())
-        await _run(
-            "su -c 'chown " + uid + ":" + gid + " /dev/ttyACM0'", shell=True  # nosec
-        )
-        # TODO check the /dev/ttyACM..
-        await _run("su -c 'chmod 777 /dev/ttyACM0'")
+        await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM0'", None)
+        # TODO check the /dev/ttyACM.. number
+        await _run("su -c 'chmod 777 /dev/ttyACM0'", None)
 
-        #
+        # start pm2 zigbee service (after delete)
         await _run(
-            "cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt && pm2 start npm --name zigbee --output NULL "
-            "--error NULL --restart-delay=30000 -- run start "
+            "pm2 stop zigbee && pm2 delete zigbee",
+            "cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt && pm2 "
+            "start npm --name zigbee --output NULL "
+            "--error NULL --restart-delay=30000 -- run start ",
         )
-        await _run("pm2 save")
-
         #
         if ais_global.G_AIS_START_IS_DONE:
             await hass.services.async_call(
@@ -127,9 +138,7 @@ async def remove_usb_device(hass, device_info):
         # Unregister the built-in zigbee panel
         hass.components.frontend.async_remove_panel("lovelace/ais_zigbee")
         # stop pm2 zigbee service
-        await _run("pm2 stop zigbee")
-        await _run("pm2 delete zigbee")
-        await _run("pm2 save")
+        await _run("pm2 stop zigbee && pm2 delete zigbee && pm2 save", None)
         await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zigbee"}
         )
@@ -309,9 +318,7 @@ async def async_setup(hass, config):
 
     async def stop_devices(call):
         # remove zigbee service on start - to prevent pm2 for restarting when usb is not connected
-        await _run("pm2 stop zigbee")
-        await _run("pm2 delete zigbee")
-        await _run("pm2 save")
+        await _run("pm2 stop zigbee && pm2 delete zigbee", None)
         #
 
     async def lsusb(call):
@@ -325,7 +332,7 @@ async def async_setup(hass, config):
     async def mount_external_drives(call):
         """mount_external_drives."""
         try:
-            await _run("rm " + ais_global.G_REMOTE_DRIVES_DOM_PATH + "/*")
+            await _run("rm " + ais_global.G_REMOTE_DRIVES_DOM_PATH + "/*", None)
             dirs = os.listdir(G_USB_DRIVES_PATH)
             for d in dirs:
                 os.symlink(

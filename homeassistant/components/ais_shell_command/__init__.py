@@ -113,7 +113,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def _run(cmd):
+async def _run_callback(cmd):
     cmd_process = await asyncio.create_subprocess_shell(
         cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
@@ -124,6 +124,22 @@ async def _run(cmd):
         _LOGGER.info(f"[stdout]\n{stdout.decode()}")
     if stderr:
         _LOGGER.info(f"[stderr]\n{stderr.decode()}")
+
+
+async def _run(cmd, callback_cmd):
+    cmd_process = await asyncio.create_subprocess_shell(
+        cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+
+    stdout, stderr = await cmd_process.communicate()
+
+    if stdout:
+        _LOGGER.info(f"[stdout]\n{stdout.decode()}")
+    if stderr:
+        _LOGGER.info(f"[stderr]\n{stderr.decode()}")
+
+    if callback_cmd:
+        await _run_callback(callback_cmd)
 
 
 async def _change_host_name(hass, call):
@@ -153,22 +169,19 @@ async def _change_remote_access(hass, call):
     await hass.services.async_call("ais_ai_service", "say_it", {"text": text})
 
     if access == "on":
-        await _run("pm2 stop tunnel")
-        await _run("pm2 delete tunnel")
         await _run(
-            "pm2 start lt --name tunnel --output NULL --error NULL --restart-delay=30000 -- "
-            "-h http://paczka.pro -p 8180 -s {}".format(gate_id)
+            "pm2 stop tunnel && pm2 delete tunnel",
+            "pm2 start lt --name tunnel --output NULL --error NULL "
+            "--restart-delay=30000 -- "
+            "-h http://paczka.pro -p 8180 -s {}".format(gate_id),
         )
-        await _run("pm2 save")
     else:
-        await _run("pm2 stop tunnel")
-        await _run("pm2 delete tunnel")
-        await _run("pm2 save")
+        await _run("pm2 stop tunnel && pm2 delete tunnel && pm2 save", None)
 
 
 async def _hdmi_control_disable(hass, call):
     comm = r'su -c "settings put global hdmi_control_enabled 0"'
-    await _run(comm)
+    await _run(comm, None)
 
 
 async def _change_wm_overscan(hass, call):
@@ -300,7 +313,7 @@ async def _change_wm_overscan(hass, call):
     else:
         _LOGGER.error(f"Value for overscan provided {new_value}")
         return
-    await _run(comm)
+    await _run(comm, None)
 
 
 async def _ssh_remote_access(hass, call):
@@ -310,18 +323,16 @@ async def _ssh_remote_access(hass, call):
     gate_id = "ssh-" + hass.states.get("sensor.ais_secure_android_id_dom").state
 
     if access == "on":
-        await _run("pm2 delete ssh-tunnel")
         await _run(
-            "pm2 start lt --name ssh-tunnel --restart-delay=30000 -- -h http://paczka.pro -p 8888 -s "
-            + gate_id
+            "pm2 delete ssh-tunnel",
+            "pm2 start lt --name ssh-tunnel --restart-delay=30000 -- -h "
+            "http://paczka.pro -p 8888 -s " + gate_id,
         )
-        await _run("pm2 save")
         _LOGGER.warning(
             "You have SSH access to gate on http://" + gate_id + ".paczka.pro"
         )
     else:
-        await _run("pm2 delete ssh-tunnel")
-        await _run("pm2 save")
+        await _run("pm2 delete ssh-tunnel && pm2 save", None)
 
 
 async def _key_event(hass, call):
@@ -661,13 +672,12 @@ async def _scan_network_for_devices(hass, call):
 
 
 async def _flush_logs(hass, call):
-
     # pm2
-    await _run("pm2 flush")
-    await _run("rm /data/data/pl.sviete.dom/files/home/.pm2/logs/*.log")
+    await _run("pm2 flush", None)
+    await _run("rm /data/data/pl.sviete.dom/files/home/.pm2/logs/*.log", None)
 
     # pip cache
-    await _run("rm -rf /data/data/pl.sviete.dom/files/home/.cache/pip")
+    await _run("rm -rf /data/data/pl.sviete.dom/files/home/.cache/pip", None)
     # recorder.purge if recorder exists
     if hass.services.has_service("recorder", "purge"):
         keep_days = 1
@@ -690,8 +700,8 @@ async def _flush_logs(hass, call):
 async def _disable_irda_remote(hass, call):
     # aml_keypad -> event0 irda remote
     comm = r'su -c "rm -rf /dev/input/event0"'
-    await _run(comm)
+    await _run(comm, None)
     # cec_input -> event2 hdmi cec
     comm = r'su -c "rm -rf /dev/input/event2"'
-    await _run(comm)
+    await _run(comm, None)
     # gpio_keypad -> event0 - button behind the AV port can be used it in the future :)
