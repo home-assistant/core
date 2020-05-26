@@ -430,7 +430,7 @@ panasonic_viera==0.3.5
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
 # homeassistant.components.unifi_direct
-pexpect==4.6.0
+pexpect>=4.6.0
 
 # homeassistant.components.pilight
 pilight==0.1.1

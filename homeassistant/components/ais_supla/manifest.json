@@ -5,7 +5,7 @@
   "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "config_flow": true,
   "requirements": [
-    "pysupla==0.0.3"
+    "pysupla>=0.0.3"
   ],
   "dependencies": [],
   "codeowners": [

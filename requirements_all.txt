@@ -1049,7 +1049,7 @@ pencompy==0.0.3
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
 # homeassistant.components.unifi_direct
-pexpect==4.6.0
+pexpect>=4.6.0
 
 # homeassistant.components.pi4ioe5v9xxxx
 pi4ioe5v9xxxx==0.0.2
@@ -2268,13 +2268,3 @@ zigpy==0.20.4
 # homeassistant.components.zoneminder
 zm-py==0.4.0
 
-# components ais dom
-spotipy-homeassistant==2.4.4.dev1
-distro==1.4.0
-babel==2.7.0
-pypng==0.0.20
-fuzzywuzzy
-feedparser
-bs4
-readability-lxml
-requests_futures

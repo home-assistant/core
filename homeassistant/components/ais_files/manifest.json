@@ -6,6 +6,6 @@
     "dependencies": [],
     "codeowners": [],
      "requirements": [
-         "pillow==6.2.1"
+         "pillow>=7.1.2"
      ]
 }
