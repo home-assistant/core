@@ -60,7 +60,7 @@ SUPPORT_WEBOSTV_VOLUME = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
-CONSECUTIVE_VOLUME_STEPS_DELAY = timedelta(milliseconds=500)
+CONSECUTIVE_VOLUME_STEPS_DELAY = timedelta(milliseconds=300)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
