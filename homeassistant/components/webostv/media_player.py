@@ -2,8 +2,8 @@
 import asyncio
 from datetime import timedelta
 from functools import wraps
-import logging
 import json
+import logging
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 from websockets.exceptions import ConnectionClosed

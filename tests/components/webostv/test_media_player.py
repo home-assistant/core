@@ -10,9 +10,9 @@ from homeassistant.components.media_player.const import (
     SERVICE_SELECT_SOURCE,
 )
 from homeassistant.components.webostv.const import (
+    ATTR_ARGUMENT,
     ATTR_BUTTON,
     ATTR_COMMAND,
-    ATTR_ARGUMENT,
     DOMAIN,
     SERVICE_BUTTON,
     SERVICE_COMMAND,

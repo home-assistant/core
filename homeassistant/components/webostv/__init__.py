@@ -7,9 +7,9 @@ import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant.components.webostv.const import (
+    ATTR_ARGUMENT,
     ATTR_BUTTON,
     ATTR_COMMAND,
-    ATTR_ARGUMENT,
     CONF_ON_ACTION,
     CONF_SOURCES,
     DEFAULT_NAME,
