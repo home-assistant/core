@@ -61,7 +61,7 @@ CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
 BUTTON_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_BUTTON): cv.string})
 
 COMMAND_SCHEMA = CALL_SCHEMA.extend(
-    {vol.Required(ATTR_COMMAND): cv.string, vol.Optional(ATTR_ARGUMENT): cv.string,}
+    {vol.Required(ATTR_COMMAND): cv.string, vol.Optional(ATTR_ARGUMENT): cv.string}
 )
 
 SOUND_OUTPUT_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_SOUND_OUTPUT): cv.string})
