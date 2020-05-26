@@ -43,8 +43,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ZwaveFan(ZWaveDeviceEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
+    def __init__(self, values):
+        """Initialize the fan."""
+        super().__init__(values)
+        self._previous_speed = None
+
     async def async_set_speed(self, speed):
         """Set the speed of the fan."""
+        self._previous_speed = speed
         self.values.primary.send_value(SPEED_TO_VALUE[speed])
 
     async def async_turn_on(self, speed=None, **kwargs):
@@ -66,9 +72,13 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
 
     @property
     def speed(self):
-        """Return the current speed."""
+        """Return the current speed.
+
+        The Z-Wave speed value is a byte 0-255. 255 means previous value.
+        The normal range of the speed is 0-99. 0 means off.
+        """
         value = math.ceil(self.values.primary.value * 3 / 100)
-        return VALUE_TO_SPEED[value]
+        return VALUE_TO_SPEED.get(value, self._previous_speed)
 
     @property
     def speed_list(self):
