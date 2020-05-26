@@ -121,7 +121,7 @@ async def test_command_with_optional_arg(hass, client):
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_COMMAND: "test",
-        ATTR_ARGUMENT: '{"target": "https://www.google.com"}',
+        ATTR_ARGUMENT: {"target": "https://www.google.com"},
     }
     await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data)
     await hass.async_block_till_done()

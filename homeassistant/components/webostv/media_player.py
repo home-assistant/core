@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 from functools import wraps
-import json
 import logging
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
@@ -453,7 +452,4 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @cmd
     async def async_command(self, command, **kwargs):
         """Send a command."""
-        argument = kwargs.get("argument")
-        if argument is not None:
-            argument = json.loads(argument)
-        await self._client.request(command, payload=argument)
+        await self._client.request(command, payload=kwargs.get("payload"))
