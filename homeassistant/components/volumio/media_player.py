@@ -198,7 +198,7 @@ class Volumio(MediaPlayerEntity):
         """Play a piece of media."""
         self.async_play_media(args, kwargs)
 
-    async def mpd_play_media(self, media_type, media_id, **kwargs):
+    async def async_mpd_play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
         _LOGGER.debug("Playing playlist: %s", media_id)
 
@@ -235,7 +235,7 @@ class Volumio(MediaPlayerEntity):
                 0.4
             )  # small delay, otherwise pause and play confuse volumio.
 
-        await self.mpd_play_media(media_type, media_id, **kwargs)
+        await self.async_mpd_play_media(media_type, media_id, **kwargs)
 
         wait_seconds = 5
         split_number = 10
