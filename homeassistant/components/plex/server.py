@@ -57,6 +57,7 @@ class PlexServer:
     def __init__(self, hass, server_config, known_server_id=None, options=None):
         """Initialize a Plex server instance."""
         self.hass = hass
+        self._plex_account = None
         self._plex_server = None
         self._created_clients = set()
         self._known_clients = set()
@@ -84,6 +85,13 @@ class PlexServer:
             plexapi.X_PLEX_IDENTIFIER = server_config[CONF_CLIENT_IDENTIFIER]
         plexapi.myplex.BASE_HEADERS = plexapi.reset_base_headers()
         plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
+
+    @property
+    def account(self):
+        """Return a MyPlexAccount instance."""
+        if not self._plex_account:
+            self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
+        return self._plex_account
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
