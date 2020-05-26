@@ -96,13 +96,22 @@ async def prepare_usb_device(hass, device_info):
         # start pm2 zigbee service
         await _run("pm2 stop zigbee")
         await _run("pm2 delete zigbee")
+
+        uid = str(os.getuid())
+        gid = str(os.getgid())
+        await _run(
+            "su -c 'chown " + uid + ":" + gid + " /dev/ttyACM0'", shell=True  # nosec
+        )
+        # TODO check the /dev/ttyACM..
+        await _run("su -c 'chmod 777 /dev/ttyACM0'")
+
+        #
         await _run(
             "cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt && pm2 start npm --name zigbee --output NULL "
             "--error NULL --restart-delay=30000 -- run start "
         )
         await _run("pm2 save")
-        # TODO check the /dev/ttyACM..
-        await _run("su -c 'chmod 777 /dev/ttyACM0'")
+
         #
         if ais_global.G_AIS_START_IS_DONE:
             await hass.services.async_call(
