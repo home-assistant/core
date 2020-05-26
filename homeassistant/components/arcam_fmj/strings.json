@@ -13,7 +13,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "[%key:common::config_flow::data::host%]",
                     "port": "Port"
                 },
                 "description": "Please enter the host name or IP address of device.",
