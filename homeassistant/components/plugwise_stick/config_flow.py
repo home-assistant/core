@@ -54,10 +54,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_path = await self.hass.async_add_executor_job(
                     get_serial_by_id, user_selection
                 )
-            if device_path in plugwise_stick_entries(self.hass):
-                errors["base"] = "connection_exists"
-            else:
-                errors = await validate_connection(self.hass, device_path)
+            errors = await validate_connection(self.hass, device_path)
             if not errors:
                 return self.async_create_entry(
                     title=device_path, data={CONF_USB_PATH: device_path}
@@ -78,14 +75,11 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, user_input.get(CONF_USB_PATH)
             )
-            if device_path in plugwise_stick_entries(self.hass):
-                errors["base"] = "connection_exists"
-            else:
-                errors = await validate_connection(self.hass, device_path)
-                if not errors:
-                    return self.async_create_entry(
-                        title=device_path, data={CONF_USB_PATH: device_path}
-                    )
+            errors = await validate_connection(self.hass, device_path)
+            if not errors:
+                return self.async_create_entry(
+                    title=device_path, data={CONF_USB_PATH: device_path}
+                )
         return self.async_show_form(
             step_id="manual_path",
             data_schema=vol.Schema(
@@ -105,6 +99,11 @@ async def validate_connection(self, device_path=None) -> Dict[str, str]:
     if device_path is None:
         errors["base"] = "connection_failed"
         return errors
+
+    if device_path in plugwise_stick_entries(self):
+        errors["base"] = "connection_exists"
+        return errors
+
     stick = await self.async_add_executor_job(plugwise.stick, device_path)
     try:
         await self.async_add_executor_job(stick.connect)
