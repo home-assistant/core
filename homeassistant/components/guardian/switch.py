@@ -14,7 +14,7 @@ ATTR_TRAVEL_COUNT = "travel_count"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up RainMachine switches based on a config entry."""
+    """Set up Guardian switches based on a config entry."""
     guardian = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     async_add_entities([GuardianSwitch(guardian)], True)
 
@@ -33,30 +33,8 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
         """Return True if the valve is open."""
         return self._is_on
 
-    async def async_turn_off(self, **kwargs) -> None:
-        """Turn the valve off (closed)."""
-        try:
-            async with self._guardian.client:
-                await self._guardian.client.valve.valve_close()
-        except GuardianError as err:
-            LOGGER.error("Error while closing the valve: %s", err)
-            return
-
-        self._is_on = False
-
-    async def async_turn_on(self, **kwargs) -> None:
-        """Turn the valve on (open)."""
-        try:
-            async with self._guardian.client:
-                await self._guardian.client.valve.valve_open()
-        except GuardianError as err:
-            LOGGER.error("Error while opening the valve: %s", err)
-            return
-
-        self._is_on = True
-
     @callback
-    def update_from_latest_data(self):
+    def _update_from_latest_data(self):
         """Update the entity."""
         self._is_on = self._guardian.data[DATA_VALVE_STATUS]["state"] in (
             "start_opening",
@@ -81,3 +59,25 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
                 ],
             }
         )
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the valve off (closed)."""
+        try:
+            async with self._guardian.client:
+                await self._guardian.client.valve.valve_close()
+        except GuardianError as err:
+            LOGGER.error("Error while closing the valve: %s", err)
+            return
+
+        self._is_on = False
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Turn the valve on (open)."""
+        try:
+            async with self._guardian.client:
+                await self._guardian.client.valve.valve_open()
+        except GuardianError as err:
+            LOGGER.error("Error while opening the valve: %s", err)
+            return
+
+        self._is_on = True

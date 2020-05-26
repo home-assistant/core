@@ -335,13 +335,18 @@ class GuardianEntity(Entity):
         """Return the unique ID of the entity."""
         return f"{self._guardian.uid}_{self._kind}"
 
+    @callback
+    def _update_from_latest_data(self):
+        """Update the entity."""
+        raise NotImplementedError
+
     async def async_added_to_hass(self):
         """Register callbacks."""
 
         @callback
         def update():
             """Update the state."""
-            self.update_from_latest_data()
+            self._update_from_latest_data()
             self.async_write_ha_state()
 
         self.async_on_remove(
@@ -352,13 +357,8 @@ class GuardianEntity(Entity):
 
         await self._guardian.async_register_api_interest(self._kind)
 
-        self.update_from_latest_data()
+        self._update_from_latest_data()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         self._guardian.async_deregister_api_interest(self._kind)
-
-    @callback
-    def update_from_latest_data(self):
-        """Update the entity."""
-        raise NotImplementedError

@@ -25,7 +25,7 @@ SENSORS = [
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up RainMachine switches based on a config entry."""
+    """Set up Guardian switches based on a config entry."""
     guardian = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     async_add_entities(
         [
@@ -65,7 +65,7 @@ class GuardianSensor(GuardianEntity):
         return self._unit
 
     @callback
-    def update_from_latest_data(self):
+    def _update_from_latest_data(self):
         """Update the entity."""
         if self._kind == SENSOR_KIND_TEMPERATURE:
             self._state = self._guardian.data[DATA_SENSOR_STATUS]["temperature"]
