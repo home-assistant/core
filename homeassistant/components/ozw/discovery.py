@@ -131,6 +131,18 @@ DISCOVERY_SCHEMAS = (
             },
         },
     },
+    {  # Fan
+        const.DISC_COMPONENT: "fan",
+        const.DISC_GENERIC_DEVICE_CLASS: const_ozw.GENERIC_TYPE_SWITCH_MULTILEVEL,
+        const.DISC_SPECIFIC_DEVICE_CLASS: const_ozw.SPECIFIC_TYPE_FAN_SWITCH,
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: CommandClass.SWITCH_MULTILEVEL,
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_LEVEL,
+                const.DISC_TYPE: ValueType.BYTE,
+            },
+        },
+    },
     {  # Light
         const.DISC_COMPONENT: "light",
         const.DISC_GENERIC_DEVICE_CLASS: (
