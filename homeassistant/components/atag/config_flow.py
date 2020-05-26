@@ -1,5 +1,5 @@
 """Config flow for the Atag component."""
-import pyatag  # from pyatag import DEFAULT_PORT, AtagException, AtagOne
+import pyatag
 import voluptuous as vol
 
 from homeassistant import config_entries
