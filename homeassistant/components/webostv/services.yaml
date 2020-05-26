@@ -26,8 +26,11 @@ command:
         https://github.com/TheRealLink/pylgtv/blob/master/pylgtv/endpoints.py
       example: "system.launcher/open"
     argument:
-      description: An optional argument to provide to the endpoint in the format of a json string.
-      example: '{"target": "https://www.google.com"}'
+      description: >-
+        An optional argument to provide to the endpoint in the format of a json string.
+        Note clicking full example will not work as the curly braces and quotes will be filtered, please manually enter/paste in the json string.
+      example: >-
+        {"target": "https://www.google.com"}
 
 select_sound_output:
   description: "Send the TV the command to change sound output."
