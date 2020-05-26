@@ -453,4 +453,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @cmd
     async def async_command(self, command, **kwargs):
         """Send a command."""
-        await self._client.request(command, payload=json.loads(kwargs.get("argument"))
+        argument = kwargs.get("argument")
+        if argument is not None:
+            argument = json.loads(argument)
+        await self._client.request(command, payload=argument)
