@@ -21,8 +21,8 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from . import SmileGateway
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, THERMOSTAT_ICON
 
-HVAC_MODES_1 = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
-HVAC_MODES_2 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
+HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
+HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -123,17 +123,18 @@ class PwThermostat(SmileGateway, ClimateEntity):
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
 
-        via_device = self._api.gateway_id
-        if self._dev_id is via_device:
-            via_device = None
-
-        return {
+        device_information = {
             "identifiers": {(DOMAIN, self._dev_id)},
             "name": self._name,
             "manufacturer": "Plugwise",
             "model": self._model.replace("_", " ").title(),
-            "via_device": (DOMAIN, via_device),
+            "via_device": (DOMAIN, self._api.gateway_id),
         }
+
+        if self._dev_id is self._api.gateway_id:
+            del device_information["via_device"]
+
+        return device_information
 
     @property
     def icon(self):
@@ -166,8 +167,8 @@ class PwThermostat(SmileGateway, ClimateEntity):
         """Return the available hvac modes list."""
         if self._heating_state is not None or self._boiler_state is not None:
             if self._cooling_state is not None:
-                return HVAC_MODES_2
-            return HVAC_MODES_1
+                return HVAC_MODES_HEAT_COOL
+            return HVAC_MODES_HEAT_ONLY
 
     @property
     def hvac_mode(self):

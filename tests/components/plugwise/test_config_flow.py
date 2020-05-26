@@ -30,7 +30,7 @@ async def test_form(hass):
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
-    ) as mock_setup, patch(
+    ), patch(
         "homeassistant.components.plugwise.async_setup", return_value=True,
     ) as mock_setup, patch(
         "homeassistant.components.plugwise.async_setup_entry", return_value=True,
@@ -56,6 +56,7 @@ async def test_form_invalid_auth(hass, mock_smile):
     )
 
     mock_smile.connect.side_effect = Smile.InvalidAuthentication
+    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"host": "1.1.1.1", "password": "test-password"},
@@ -72,6 +73,7 @@ async def test_form_cannot_connect(hass, mock_smile):
     )
 
     mock_smile.connect.side_effect = Smile.ConnectionFailedError
+    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"host": "1.1.1.1", "password": "test-password"},
