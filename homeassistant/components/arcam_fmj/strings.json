@@ -14,7 +14,7 @@
             "user": {
                 "data": {
                     "host": "[%key:common::config_flow::data::host%]",
-                    "port": "Port"
+                    "port": "[%key:common::config_flow::data::port%]"
                 },
                 "description": "Please enter the host name or IP address of device.",
                 "title": "Connect to Arcam FMJ"
