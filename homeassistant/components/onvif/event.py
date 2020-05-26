@@ -62,7 +62,8 @@ class EventManager:
     @callback
     def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
         """Remove data update."""
-        self._listeners.remove(update_callback)
+        if update_callback in self._listeners:
+            self._listeners.remove(update_callback)
 
         if not self._listeners and self._unsub_refresh:
             self._unsub_refresh()
@@ -93,6 +94,8 @@ class EventManager:
 
     async def async_stop(self) -> None:
         """Unsubscribe from events."""
+        self._listeners = []
+
         if not self._subscription:
             return
 
@@ -144,6 +147,10 @@ class EventManager:
     async def async_parse_messages(self, messages) -> None:
         """Parse notification message."""
         for msg in messages:
+            # Guard against empty message
+            if not msg.Topic:
+                continue
+
             topic = msg.Topic._value_1
             parser = PARSERS.get(topic)
             if not parser:

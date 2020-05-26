@@ -764,7 +764,7 @@ hydrawiser==0.1.1
 iammeter==0.1.7
 
 # homeassistant.components.iaqualink
-iaqualink==0.3.1
+iaqualink==0.3.3
 
 # homeassistant.components.watson_tts
 ibm-watson==4.0.1
@@ -1802,7 +1802,7 @@ pyvesync==1.1.0
 pyvizio==0.1.47
 
 # homeassistant.components.velux
-pyvlx==0.2.14
+pyvlx==0.2.16
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -1871,7 +1871,7 @@ rjpl==0.3.5
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.4.1
+rokuecp==0.4.2
 
 # homeassistant.components.roomba
 roombapy==1.6.1
@@ -2267,4 +2267,3 @@ zigpy==0.20.4
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
-
