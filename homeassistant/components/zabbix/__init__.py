@@ -2,7 +2,7 @@
 import logging
 from urllib.parse import urljoin
 
-from pyzabbix import ZabbixAPI, ZabbixAPIException
+from pyzabbix.api import ZabbixAPI, ZabbixAPIException
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -46,9 +46,8 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
 
-    zapi = ZabbixAPI(url)
     try:
-        zapi.login(username, password)
+        zapi = ZabbixAPI(url=url, user=username, password=password)
         _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
     except ZabbixAPIException as login_exception:
         _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
