@@ -121,9 +121,7 @@ async def test_existing_connection(hass):
 async def test_failed_initialization(hass):
     """Test we handle failed initialization of Plugwise USB-stick."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data={CONF_USB_PATH: "/dev/null"},
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
     )
     assert result["type"] == "form"
     assert result["errors"] == {"base": "stick_init"}
@@ -134,9 +132,7 @@ async def test_failed_initialization(hass):
 async def test_network_down_exception(hass):
     """Test we handle network_down exception."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data={CONF_USB_PATH: "/dev/null"},
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
     )
     assert result["type"] == "form"
     assert result["errors"] == {"base": "network_down"}
@@ -147,9 +143,7 @@ async def test_network_down_exception(hass):
 async def test_timeout_exception(hass):
     """Test we handle time exception."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data={CONF_USB_PATH: "/dev/null"},
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
     )
     assert result["type"] == "form"
     assert result["errors"] == {"base": "network_timeout"}
