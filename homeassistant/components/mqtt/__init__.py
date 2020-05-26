@@ -29,11 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, ServiceCall, callback
-from homeassistant.exceptions import (
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    Unauthorized,
-)
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -649,13 +645,7 @@ async def async_setup_entry(hass, entry):
         tls_version=tls_version,
     )
 
-    result: str = await hass.data[DATA_MQTT].async_connect()
-
-    if result == CONNECTION_FAILED:
-        return False
-
-    if result == CONNECTION_FAILED_RECOVERABLE:
-        raise ConfigEntryNotReady
+    await hass.data[DATA_MQTT].async_connect()
 
     async def async_stop_mqtt(_event: Event):
         """Stop MQTT component."""
@@ -835,15 +825,14 @@ class MQTT:
                 self._mqttc.connect, self.broker, self.port, self.keepalive
             )
         except OSError as err:
-            _LOGGER.error("Failed to connect due to exception: %s", err)
-            return CONNECTION_FAILED_RECOVERABLE
+            _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
 
-        if result != 0:
-            _LOGGER.error("Failed to connect: %s", mqtt.error_string(result))
-            return CONNECTION_FAILED
+        if result is not None and result != 0:
+            _LOGGER.error(
+                "Failed to connect to MQTT server: %s", mqtt.error_string(result)
+            )
 
         self._mqttc.loop_start()
-        return CONNECTION_SUCCESS
 
     async def async_disconnect(self):
         """Stop the MQTT client."""
@@ -933,6 +922,7 @@ class MQTT:
             return
 
         self.connected = True
+        _LOGGER.info("Connected to MQTT server (%s)", result_code)
 
         # Group subscriptions to only re-subscribe once for each topic.
         keyfunc = attrgetter("topic")
@@ -999,7 +989,7 @@ class MQTT:
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
         self.connected = False
-        _LOGGER.warning("Disconnected from MQTT (%s).", result_code)
+        _LOGGER.warning("Disconnected from MQTT server (%s)", result_code)
 
 
 def _raise_on_error(result_code: int) -> None:
