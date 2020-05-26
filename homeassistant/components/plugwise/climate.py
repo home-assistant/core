@@ -131,7 +131,8 @@ class PwThermostat(SmileGateway, ClimateEntity):
             "via_device": (DOMAIN, self._api.gateway_id),
         }
 
-        if self._dev_id is self._api.gateway_id:
+        if self._dev_id != self._api.gateway_id:
+            device_information["via_device"] = (DOMAIN, self._api.gateway_id)
             del device_information["via_device"]
 
         return device_information
