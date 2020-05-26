@@ -199,6 +199,16 @@ DISCOVERY_SCHEMAS = (
             }
         },
     },
+    {  # Lock platform
+        const.DISC_COMPONENT: "lock",
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: (CommandClass.DOOR_LOCK,),
+                const.DISC_TYPE: ValueType.BOOL,
+                const.DISC_GENRE: ValueGenre.USER,
+            }
+        },
+    },
 )
 
 

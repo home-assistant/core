@@ -6,6 +6,9 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 ZEROCONF = {
+    "_api._udp.local.": [
+        "guardian"
+    ],
     "_axis-video._tcp.local.": [
         "axis",
         "doorbird"

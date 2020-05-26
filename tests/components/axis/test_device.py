@@ -1,5 +1,6 @@
 """Test Axis device."""
 from copy import deepcopy
+from unittest import mock
 
 import axis as axislib
 from axis.event_stream import OPERATION_INITIALIZED
@@ -13,6 +14,7 @@ from homeassistant.components.axis.const import (
     CONF_MODEL,
     DOMAIN as AXIS_DOMAIN,
 )
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -23,7 +25,11 @@ from homeassistant.const import (
 )
 
 from tests.async_mock import Mock, patch
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    async_mock_mqtt_component,
+)
 
 MAC = "00408C12345"
 MODEL = "model"
@@ -39,6 +45,17 @@ ENTRY_CONFIG = {
     CONF_MAC: MAC,
     CONF_MODEL: MODEL,
     CONF_NAME: NAME,
+}
+
+DEFAULT_API_DISCOVERY = {
+    "method": "getApiList",
+    "apiVersion": "1.0",
+    "data": {
+        "apiList": [
+            {"id": "api-discovery", "version": "1.0", "name": "API Discovery Service"},
+            {"id": "param-cgi", "version": "1.0", "name": "Legacy Parameter Handling"},
+        ]
+    },
 }
 
 DEFAULT_BRAND = """root.Brand.Brand=AXIS
@@ -76,6 +93,7 @@ async def setup_axis_integration(
     hass,
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
+    api_discovery=DEFAULT_API_DISCOVERY,
     brand=DEFAULT_BRAND,
     ports=DEFAULT_PORTS,
     properties=DEFAULT_PROPERTIES,
@@ -91,6 +109,9 @@ async def setup_axis_integration(
     )
     config_entry.add_to_hass(hass)
 
+    def mock_update_api_discovery(self):
+        self.process_raw(api_discovery)
+
     def mock_update_brand(self):
         self.process_raw(brand)
 
@@ -100,15 +121,17 @@ async def setup_axis_integration(
     def mock_update_properties(self):
         self.process_raw(properties)
 
-    with patch("axis.param_cgi.Brand.update_brand", new=mock_update_brand), patch(
+    with patch(
+        "axis.api_discovery.ApiDiscovery.update", new=mock_update_api_discovery
+    ), patch("axis.param_cgi.Brand.update_brand", new=mock_update_brand), patch(
         "axis.param_cgi.Ports.update_ports", new=mock_update_ports
     ), patch(
         "axis.param_cgi.Properties.update_properties", new=mock_update_properties
     ), patch(
-        "axis.AxisDevice.start", return_value=True
+        "axis.rtsp.RTSPClient.start", return_value=True,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     return hass.data[AXIS_DOMAIN].get(config_entry.unique_id)
 
@@ -132,6 +155,36 @@ async def test_device_setup(hass):
     assert device.model == ENTRY_CONFIG[CONF_MODEL]
     assert device.name == ENTRY_CONFIG[CONF_NAME]
     assert device.serial == ENTRY_CONFIG[CONF_MAC]
+
+
+async def test_device_support_mqtt(hass):
+    """Successful setup."""
+    api_discovery = deepcopy(DEFAULT_API_DISCOVERY)
+    api_discovery["data"]["apiList"].append(
+        {"id": "mqtt-client", "version": "1.0", "name": "MQTT Client API"}
+    )
+    get_client_status = {"data": {"status": {"state": "active"}}}
+
+    mock_mqtt = await async_mock_mqtt_component(hass)
+
+    with patch(
+        "axis.mqtt.MqttClient.get_client_status", return_value=get_client_status
+    ):
+        await setup_axis_integration(hass, api_discovery=api_discovery)
+
+    mock_mqtt.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
+
+    topic = f"{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
+    message = b'{"timestamp": 1590258472044, "topic": "onvif:Device/axis:Sensor/PIR", "message": {"source": {"sensor": "0"}, "key": {}, "data": {"state": "1"}}}'
+
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
+    async_fire_mqtt_message(hass, topic, message)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
+
+    pir = hass.states.get(f"binary_sensor.{NAME}_pir_0")
+    assert pir.state == "on"
+    assert pir.name == f"{NAME} PIR 0"
 
 
 async def test_update_address(hass):
@@ -208,13 +261,13 @@ async def test_shutdown():
 
     axis_device.shutdown(None)
 
-    assert len(axis_device.api.stop.mock_calls) == 1
+    assert len(axis_device.api.stream.stop.mock_calls) == 1
 
 
 async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
     with patch(
-        "axis.param_cgi.Params.update_brand", side_effect=axislib.Unauthorized
+        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -222,7 +275,7 @@ async def test_get_device_fails(hass):
 async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
     with patch(
-        "axis.param_cgi.Params.update_brand", side_effect=axislib.RequestError
+        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -230,6 +283,6 @@ async def test_get_device_device_unavailable(hass):
 async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
     with patch(
-        "axis.param_cgi.Params.update_brand", side_effect=axislib.AxisException
+        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")
