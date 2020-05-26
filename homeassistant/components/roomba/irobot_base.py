@@ -147,16 +147,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         return SUPPORT_IROBOT
 
     @property
-    def fan_speed(self):
-        """Return the fan speed of the vacuum cleaner."""
-        return None
-
-    @property
-    def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        return []
-
-    @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         return self._battery_level
