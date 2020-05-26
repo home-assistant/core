@@ -410,7 +410,7 @@ class PlexServer:
             _LOGGER.error("Library '%s' not found", library_name)
             return None
 
-        def lookup_music(**kwargs):
+        def lookup_music():
             """Search for music and return a Plex media object."""
             album_name = kwargs.get("album_name")
             track_name = kwargs.get("track_name")
@@ -474,7 +474,7 @@ class PlexServer:
 
             return artist
 
-        def lookup_tv(**kwargs):
+        def lookup_tv():
             """Find TV media and return a Plex media object."""
             season_number = kwargs.get("season_number")
             episode_number = kwargs.get("episode_number")
@@ -515,9 +515,9 @@ class PlexServer:
                 return None
 
         if media_type == MEDIA_TYPE_MUSIC:
-            return lookup_music(**kwargs)
+            return lookup_music()
         if media_type == MEDIA_TYPE_EPISODE:
-            return lookup_tv(**kwargs)
+            return lookup_tv()
         if media_type == MEDIA_TYPE_VIDEO:
             try:
                 video_name = kwargs["video_name"]
