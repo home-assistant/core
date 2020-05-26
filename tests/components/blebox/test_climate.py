@@ -135,6 +135,7 @@ async def test_on_when_below_desired(saunabox, hass, config):
         {"entity_id": entity_id, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
         blocking=True,
     )
+    feature_mock.async_off.assert_not_called()
     state = hass.states.get(entity_id)
 
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
@@ -169,6 +170,7 @@ async def test_on_when_above_desired(saunabox, hass, config):
         {"entity_id": entity_id, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
         blocking=True,
     )
+    feature_mock.async_off.assert_not_called()
     state = hass.states.get(entity_id)
 
     assert state.attributes[ATTR_TEMPERATURE] == 23.4
@@ -203,6 +205,7 @@ async def test_off(saunabox, hass, config):
         {"entity_id": entity_id, ATTR_HVAC_MODE: HVAC_MODE_OFF},
         blocking=True,
     )
+    feature_mock.async_on.assert_not_called()
     state = hass.states.get(entity_id)
 
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
