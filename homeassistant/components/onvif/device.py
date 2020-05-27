@@ -297,7 +297,7 @@ class ONVIFDevice:
                 try:
                     ptz_service = self.device.create_ptz_service()
                     presets = await ptz_service.GetPresets(profile.token)
-                    profile.ptz.presets = [preset.token for preset in presets]
+                    profile.ptz.presets = [preset.token for preset in presets if preset]
                 except (Fault, ServerDisconnectedError):
                     # It's OK if Presets aren't supported
                     profile.ptz.presets = []
