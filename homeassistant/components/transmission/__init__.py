@@ -362,10 +362,9 @@ class TransmissionData:
 
     def start_torrents(self):
         """Start all torrents."""
-        try:
-            self._api.start_all()
-        except ValueError:
-            pass
+        if len(self.torrents) <= 0:
+            return
+        self._api.start_all()
 
     def stop_torrents(self):
         """Stop all active torrents."""
