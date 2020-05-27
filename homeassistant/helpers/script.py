@@ -818,8 +818,6 @@ class Script:
                 self._hass, self, variables, context, self._log_exceptions, shared
             )
         else:
-            # TODO: Enforce max # of runs to guard against run away recursive parallel
-            # blocking calls to self??? And, if so, will this replace queue_max???
             if self._script_mode != SCRIPT_MODE_QUEUE:
                 cls = _ScriptRun
             else:
@@ -842,9 +840,6 @@ class Script:
         """Stop running script."""
         if not self.is_running:
             return
-        # TODO: Should runs be stopped in reverse order in case there are recursive
-        # calls??? Or is it better this way, and runs further down the chain will just
-        # already be stopped by the time we try to stop them here???
         await asyncio.shield(asyncio.gather(*(run.async_stop() for run in self._runs)))
         if update_state:
             self._changed()
