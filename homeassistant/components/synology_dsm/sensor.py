@@ -83,7 +83,7 @@ class SynoDSMUtilSensor(SynologyDSMEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._api.utilisation
+        return bool(self._api.utilisation)
 
 
 class SynoDSMStorageSensor(SynologyDSMDeviceEntity):

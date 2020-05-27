@@ -51,7 +51,7 @@ class SynoDSMSecurityBinarySensor(SynologyDSMEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._api.security
+        return bool(self._api.security)
 
 
 class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):

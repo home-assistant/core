@@ -246,7 +246,7 @@ class SynoApi:
             device_token=self._entry.data.get("device_token"),
         )
 
-        await self._should_fetch_api()
+        await self._async_should_fetch_api()
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.async_update()
@@ -261,7 +261,7 @@ class SynoApi:
             ),
         )
 
-    async def _should_fetch_api(self):
+    async def _async_should_fetch_api(self):
         """Determine if we should fetch each API, if one entity needs it."""
         entity_reg = await self._hass.helpers.entity_registry.async_get_registry()
         entity_entries = entity_registry.async_entries_for_config_entry(
@@ -328,7 +328,7 @@ class SynoApi:
 
     async def async_update(self, now=None):
         """Update function for updating API information."""
-        await self._should_fetch_api()
+        await self._async_should_fetch_api()
         await self._hass.async_add_executor_job(self.dsm.update)
         async_dispatcher_send(self._hass, self.signal_sensor_update)
 
@@ -463,7 +463,7 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._api.storage
+        return bool(self._api.storage)
 
     @property
     def device_info(self) -> Dict[str, any]:
