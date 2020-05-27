@@ -390,15 +390,15 @@ async def test_homekit_add_accessory(hass):
     with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
         mock_get_acc.side_effect = [None, "acc", None]
         homekit.add_bridge_accessory(State("light.demo", "on"))
-        mock_get_acc.assert_called_with(hass, "driver", ANY, 363398124, {})
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 1403373688, {})
         assert not mock_bridge.add_accessory.called
 
         homekit.add_bridge_accessory(State("demo.test", "on"))
-        mock_get_acc.assert_called_with(hass, "driver", ANY, 294192020, {})
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 600325356, {})
         assert mock_bridge.add_accessory.called
 
         homekit.add_bridge_accessory(State("demo.test_2", "on"))
-        mock_get_acc.assert_called_with(hass, "driver", ANY, 429982757, {})
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 1467253281, {})
         mock_bridge.add_accessory.assert_called_with("acc")
 
 
