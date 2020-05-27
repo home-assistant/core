@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 import os
+from typing import Optional
 
 import voluptuous as vol
 
@@ -17,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
@@ -122,6 +124,33 @@ MAP_SERVICE_API = {
         True,
     ),
 }
+
+
+async def async_addon_is_installed(
+    hass: HomeAssistantType, slug: str, repository: str
+) -> bool:
+    """Return True if add-on is installed.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    command = "/supervisor/info"  # only installed addons are returned
+    result = await async_send_supervisor_command(hass, command, method="get")
+    addons = result["data"]["addons"]
+    found_addon = next(
+        (_addon for _addon in addons if _addon["slug"] == f"{repository}_{slug}"), None,
+    )
+    return bool(found_addon)
+
+
+async def async_send_supervisor_command(
+    hass, command: str, method: str = "post", payload: Optional[dict] = None
+):
+    """Send a command to the Supervisor API.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    return await hassio.send_command(command, method=method, payload=payload)
 
 
 @callback
