@@ -94,7 +94,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return True if self._state else False
+        return bool(self._state)
 
     @property
     def volume_level(self):
