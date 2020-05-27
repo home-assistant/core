@@ -191,7 +191,8 @@ class DSMREntity(Entity):
     def update_data(self, telegram):
         """Update data."""
         self.telegram = telegram
-        self.async_write_ha_state()
+        if self.hass:
+            self.async_write_ha_state()
 
     def get_dsmr_object_attr(self, attribute):
         """Read attribute from last received telegram for this DSMR object."""
