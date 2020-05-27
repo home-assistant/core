@@ -225,7 +225,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             (
                 app
                 for app in self.coordinator.data.apps
-                if app.name == source or app.app_id == source
+                if source in (app.name, app.app_id)
             ),
             None,
         )
