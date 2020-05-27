@@ -183,7 +183,7 @@ async def _async_setup_component(
             log_error("No setup function defined.")
             return False
 
-        result = await asyncio.wait_for(asyncio.shield(task), SLOW_SETUP_MAX_WAIT)
+        result = await asyncio.wait_for(task, SLOW_SETUP_MAX_WAIT)
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Setup of %s is taking longer than %s seconds."
