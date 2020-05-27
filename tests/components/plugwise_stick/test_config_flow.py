@@ -2,6 +2,7 @@
 
 import os
 
+from plugwise.exceptions import NetworkDown, StickInitError, TimeoutException
 import serial.tools.list_ports
 
 from homeassistant.components.plugwise_stick import config_flow
@@ -9,8 +10,6 @@ from homeassistant.components.plugwise_stick.const import CONF_USB_PATH, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
-
-from plugwise.exceptions import NetworkDown, StickInitError, TimeoutException
 
 from tests.async_mock import AsyncMock, MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
