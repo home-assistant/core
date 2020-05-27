@@ -366,17 +366,13 @@ class HomeAssistantHTTP:
 
             async def serve_file(request):
                 """Serve file from disk."""
-                response = web.FileResponse(path, headers=CACHE_HEADERS)
-                response.enable_compression()
-                return response
+                return web.FileResponse(path, headers=CACHE_HEADERS)
 
         else:
 
             async def serve_file(request):
                 """Serve file from disk."""
-                response = web.FileResponse(path)
-                response.enable_compression()
-                return response
+                return web.FileResponse(path)
 
         self.app.router.add_route("GET", url_path, serve_file)
 
