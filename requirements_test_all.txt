@@ -533,7 +533,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==5.2.0
+pychromecast==5.3.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -906,7 +906,7 @@ xmltodict==0.12.0
 ya_ma==0.3.8
 
 # homeassistant.components.zeroconf
-zeroconf==0.26.2
+zeroconf==0.26.3
 
 # homeassistant.components.zha
 zha-quirks==0.0.39
