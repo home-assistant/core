@@ -413,7 +413,9 @@ class _ScriptRun(_ScriptRunBase):
         domain, service, service_data = self._prep_call_service_step()
 
         running_script = (
-            domain == "python_script"
+            domain == "automation"
+            and service == "trigger"
+            or domain == "python_script"
             or domain == "script"
             and service != SERVICE_TURN_OFF
         )
