@@ -27,7 +27,7 @@ async def async_setup_entry(
         raise PlatformNotReady from ex
     else:
         entities = [
-            AvriWasteUpcoming(DOMAIN, client, upcoming.name, integration_id)
+            AvriWasteUpcoming(client, upcoming.name, integration_id)
             for upcoming in each_upcoming
         ]
         async_add_entities(entities, True)
@@ -36,15 +36,13 @@ async def async_setup_entry(
 class AvriWasteUpcoming(Entity):
     """Avri Waste Sensor."""
 
-    def __init__(self, name: str, client: Avri, waste_type: str, integration_id: str):
+    def __init__(self, client: Avri, waste_type: str, integration_id: str):
         """Initialize the sensor."""
         self._waste_type = waste_type
         self._name = f"{self._waste_type}".capitalize()
         self._state = None
         self._client = client
         self._state_available = False
-        self._enabled_default = True
-        self._device_class = DEVICE_CLASS_TIMESTAMP
         self._integration_id = integration_id
 
     @property
@@ -70,7 +68,7 @@ class AvriWasteUpcoming(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return self._device_class
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def icon(self):
@@ -85,11 +83,6 @@ class AvriWasteUpcoming(Entity):
             "name": "Avri",
             "manufacturer": "Avri",
         }
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
     async def async_update(self):
         """Update the data."""
