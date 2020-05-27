@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import recorder
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.models import DB_TIMEZONE, States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_HIDDEN,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_INCLUDE,
     HTTP_BAD_REQUEST,
 )
+from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -31,6 +32,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "history"
 CONF_ORDER = "use_include_order"
+
+STATE_KEY = "state"
+LAST_CHANGED_KEY = "last_changed"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -43,6 +47,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 SIGNIFICANT_DOMAINS = ("climate", "device_tracker", "thermostat", "water_heater")
 IGNORE_DOMAINS = ("zone", "scene")
+NEED_ATTRIBUTE_DOMAINS = {"climate", "water_heater", "thermostat", "script"}
+SCRIPT_DOMAIN = "script"
+ATTR_CAN_CANCEL = "can_cancel"
 
 
 def get_significant_states(hass, *args, **kwargs):
@@ -60,6 +67,7 @@ def _get_significant_states(
     filters=None,
     include_start_time_state=True,
     significant_changes_only=True,
+    minimal_response=False,
 ):
     """
     Return states changes during UTC period start_time - end_time.
@@ -87,19 +95,15 @@ def _get_significant_states(
     if end_time is not None:
         query = query.filter(States.last_updated < end_time)
 
-    query = query.order_by(States.last_updated)
+    query = query.order_by(States.entity_id, States.last_updated)
 
-    states = (
-        state
-        for state in execute(query)
-        if (_is_significant(state) and not state.attributes.get(ATTR_HIDDEN, False))
-    )
+    states = execute(query, to_native=False)
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug("get_significant_states took %fs", elapsed)
 
-    return _states_to_json(
+    return _sorted_states_to_json(
         hass,
         session,
         states,
@@ -107,6 +111,7 @@ def _get_significant_states(
         entity_ids,
         filters,
         include_start_time_state,
+        minimal_response,
     )
 
 
@@ -127,9 +132,11 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
 
         entity_ids = [entity_id] if entity_id is not None else None
 
-        states = execute(query.order_by(States.last_updated))
+        states = execute(
+            query.order_by(States.entity_id, States.last_updated), to_native=False
+        )
 
-        return _states_to_json(hass, session, states, start_time, entity_ids)
+        return _sorted_states_to_json(hass, session, states, start_time, entity_ids)
 
 
 def get_last_state_changes(hass, number_of_states, entity_id):
@@ -146,10 +153,13 @@ def get_last_state_changes(hass, number_of_states, entity_id):
         entity_ids = [entity_id] if entity_id is not None else None
 
         states = execute(
-            query.order_by(States.last_updated.desc()).limit(number_of_states)
+            query.order_by(States.entity_id, States.last_updated.desc()).limit(
+                number_of_states
+            ),
+            to_native=False,
         )
 
-        return _states_to_json(
+        return _sorted_states_to_json(
             hass,
             session,
             reversed(states),
@@ -252,7 +262,7 @@ def _get_states_with_session(
     ]
 
 
-def _states_to_json(
+def _sorted_states_to_json(
     hass,
     session,
     states,
@@ -260,11 +270,14 @@ def _states_to_json(
     entity_ids,
     filters=None,
     include_start_time_state=True,
+    minimal_response=False,
 ):
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
     structure {'entity_id': [list of states], 'entity_id2': [list of states]}
+
+    States must be sorted by entity_id and last_updated
 
     We also need to go back and create a synthetic zero data point for
     each list of states, otherwise our graphs won't start on the Y
@@ -293,7 +306,61 @@ def _states_to_json(
 
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):
-        result[ent_id].extend(group)
+        domain = split_entity_id(ent_id)[0]
+        ent_results = result[ent_id]
+        if not minimal_response or domain in NEED_ATTRIBUTE_DOMAINS:
+            ent_results.extend(
+                [
+                    native_state
+                    for native_state in (db_state.to_native() for db_state in group)
+                    if (
+                        domain != SCRIPT_DOMAIN
+                        or native_state.attributes.get(ATTR_CAN_CANCEL)
+                    )
+                    and not native_state.attributes.get(ATTR_HIDDEN, False)
+                ]
+            )
+            continue
+
+        # With minimal response we only provide a native
+        # State for the first and last response. All the states
+        # in-between only provide the "state" and the
+        # "last_changed".
+        if not ent_results:
+            ent_results.append(next(group).to_native())
+
+        initial_state = ent_results[-1]
+        prev_state = ent_results[-1]
+        initial_state_count = len(ent_results)
+
+        for db_state in group:
+            if ATTR_HIDDEN in db_state.attributes and db_state.to_native().attributes.get(
+                ATTR_HIDDEN, False
+            ):
+                continue
+
+            # With minimal response we do not care about attribute
+            # changes so we can filter out duplicate states
+            if db_state.state == prev_state.state:
+                continue
+
+            ent_results.append(
+                {
+                    STATE_KEY: db_state.state,
+                    LAST_CHANGED_KEY: f"{str(db_state.last_changed).replace(' ','T').split('.')[0]}{DB_TIMEZONE}",
+                }
+            )
+            prev_state = db_state
+
+        if (
+            prev_state
+            and prev_state != initial_state
+            and len(ent_results) != initial_state_count
+        ):
+            # There was at least one state change
+            # replace the last minimal state with
+            # a full state
+            ent_results[-1] = prev_state.to_native()
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
@@ -378,6 +445,8 @@ class HistoryPeriodView(HomeAssistantView):
             request.query.get("significant_changes_only", "1") != "0"
         )
 
+        minimal_response = "minimal_response" in request.query
+
         hass = request.app["hass"]
 
         return cast(
@@ -390,6 +459,7 @@ class HistoryPeriodView(HomeAssistantView):
                 entity_ids,
                 include_start_time_state,
                 significant_changes_only,
+                minimal_response,
             ),
         )
 
@@ -401,6 +471,7 @@ class HistoryPeriodView(HomeAssistantView):
         entity_ids,
         include_start_time_state,
         significant_changes_only,
+        minimal_response,
     ):
         """Fetch significant stats from the database as json."""
         timer_start = time.perf_counter()
@@ -415,6 +486,7 @@ class HistoryPeriodView(HomeAssistantView):
                 self.filters,
                 include_start_time_state,
                 significant_changes_only,
+                minimal_response,
             )
 
         result = list(result.values())
@@ -500,12 +572,3 @@ class Filters:
         if self.excluded_entities:
             query = query.filter(~States.entity_id.in_(self.excluded_entities))
         return query
-
-
-def _is_significant(state):
-    """Test if state is significant for history charts.
-
-    Will only test for things that are not filtered out in SQL.
-    """
-    # scripts that are not cancellable will never change state
-    return state.domain != "script" or state.attributes.get("can_cancel")
