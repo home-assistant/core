@@ -340,7 +340,7 @@ async def test_services(
             blocking=True,
         )
 
-        launch_mock.assert_called_once_with(12)
+        launch_mock.assert_called_once_with("12")
 
     with patch("homeassistant.components.roku.Roku.launch") as launch_mock:
         await hass.services.async_call(
@@ -350,7 +350,7 @@ async def test_services(
             blocking=True,
         )
 
-        launch_mock.assert_called_once_with(12)
+        launch_mock.assert_called_once_with("12")
 
 
 async def test_tv_services(
