@@ -1,0 +1,8 @@
+{
+  "domain": "sia",
+  "name": "SIA",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sia",
+  "requirements": ["pysiaalarm==1.0.0"],
+  "codeowners": ["@eavanvalkenburg"]
+}
