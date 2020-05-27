@@ -288,6 +288,7 @@ def play_on_sonos(hass, service_call):
         content = {"plex_key": content}
 
     plex_server_name = content.get("plex_server")
+    shuffle = content.pop("shuffle", 0)
 
     plex_servers = hass.data[PLEX_DOMAIN][SERVERS].values()
     if plex_server_name:
@@ -315,4 +316,5 @@ def play_on_sonos(hass, service_call):
         return
 
     _LOGGER.debug("Attempting to play '%s' on %s", media, sonos_speaker)
-    sonos_speaker.playMedia(media)
+    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+    sonos_speaker.playMedia(playqueue)
