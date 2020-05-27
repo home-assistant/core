@@ -222,7 +222,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             await self.coordinator.roku.remote("home")
 
         appl = next(
-            (app for app in self.coordinator.data.apps if app.name == source), None
+            (
+                app
+                for app in self.coordinator.data.apps
+                if source in (app.name, app.app_id)
+            ),
+            None,
         )
 
         if appl is not None:
