@@ -1245,7 +1245,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==5.2.0
+pychromecast==5.3.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -2239,7 +2239,7 @@ youtube_dl==2020.05.08
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.26.2
+zeroconf==0.26.3
 
 # homeassistant.components.zha
 zha-quirks==0.0.39
