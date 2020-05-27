@@ -225,6 +225,8 @@ class TestComponentHistory(unittest.TestCase):
             process_timestamp(input_state.last_changed.replace(microsecond=0)),
             cls=JSONEncoder,
         ).replace('"', "")
+        if orig_last_changed.endswith("+00:00"):
+            orig_last_changed = f"{orig_last_changed[:-6]}{recorder.models.DB_TIMEZONE}"
         orig_state = input_state.state
         states["media_player.test"][1] = {
             "last_changed": orig_last_changed,
