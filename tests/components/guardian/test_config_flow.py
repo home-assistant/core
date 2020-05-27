@@ -4,17 +4,21 @@ from asynctest import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.guardian import CONF_UID, DOMAIN
+from homeassistant.components.guardian.config_flow import (
+    async_get_pin_from_discovery_hostname,
+    async_get_pin_from_uid,
+)
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
 from tests.common import MockConfigEntry
 
 
-async def test_duplicate_error(hass):
+async def test_duplicate_error(hass, ping_client):
     """Test that errors are shown when duplicate entries are added."""
     conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
 
-    MockConfigEntry(domain=DOMAIN, unique_id="192.168.1.100", data=conf).add_to_hass(
+    MockConfigEntry(domain=DOMAIN, unique_id="guardian_3456", data=conf).add_to_hass(
         hass
     )
 
@@ -40,6 +44,18 @@ async def test_connect_error(hass):
         assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
+async def test_get_pin_from_discovery_hostname():
+    """Test getting a device PIN from the zeroconf-discovered hostname."""
+    pin = async_get_pin_from_discovery_hostname("GVC1-3456.local.")
+    assert pin == "3456"
+
+
+async def test_get_pin_from_uid():
+    """Test getting a device PIN from its UID."""
+    pin = async_get_pin_from_uid("ABCDEF123456")
+    assert pin == "3456"
+
+
 async def test_step_user(hass, ping_client):
     """Test the user step."""
     conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
@@ -54,7 +70,7 @@ async def test_step_user(hass, ping_client):
         DOMAIN, context={"source": SOURCE_USER}, data=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Elexa Guardian (192.168.1.100)"
+    assert result["title"] == "ABCDEF123456"
     assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PORT: 7777,
@@ -83,7 +99,7 @@ async def test_step_zeroconf(hass, ping_client):
         result["flow_id"], user_input={}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Elexa Guardian (192.168.1.100)"
+    assert result["title"] == "ABCDEF123456"
     assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PORT: 7777,
