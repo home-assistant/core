@@ -1,9 +1,11 @@
 """Test Axis device."""
 from copy import deepcopy
+import json
 from unittest import mock
 
 import axis as axislib
 from axis.event_stream import OPERATION_INITIALIZED
+from axis.param_cgi import BRAND, INPUT, IOPORT, OUTPUT, PROPERTIES
 import pytest
 
 from homeassistant import config_entries
@@ -89,15 +91,19 @@ root.Properties.System.SerialNumber=00408C12345
 """
 
 
-async def setup_axis_integration(
-    hass,
-    config=ENTRY_CONFIG,
-    options=ENTRY_OPTIONS,
-    api_discovery=DEFAULT_API_DISCOVERY,
-    brand=DEFAULT_BRAND,
-    ports=DEFAULT_PORTS,
-    properties=DEFAULT_PROPERTIES,
-):
+def vapix_session_request(session, url, **kwargs):
+    """Return data based on url."""
+    if "apidiscovery.cgi" in url:
+        return json.dumps(DEFAULT_API_DISCOVERY)
+    if BRAND in url:
+        return DEFAULT_BRAND
+    if PROPERTIES in url:
+        return DEFAULT_PROPERTIES
+    if IOPORT in url or INPUT in url or OUTPUT in url:
+        return DEFAULT_PORTS
+
+
+async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS):
     """Create the Axis device."""
     config_entry = MockConfigEntry(
         domain=AXIS_DOMAIN,
@@ -109,25 +115,7 @@ async def setup_axis_integration(
     )
     config_entry.add_to_hass(hass)
 
-    def mock_update_api_discovery(self):
-        self.process_raw(api_discovery)
-
-    def mock_update_brand(self):
-        self.process_raw(brand)
-
-    def mock_update_ports(self):
-        self.process_raw(ports)
-
-    def mock_update_properties(self):
-        self.process_raw(properties)
-
-    with patch(
-        "axis.api_discovery.ApiDiscovery.update", new=mock_update_api_discovery
-    ), patch("axis.param_cgi.Brand.update_brand", new=mock_update_brand), patch(
-        "axis.param_cgi.Ports.update_ports", new=mock_update_ports
-    ), patch(
-        "axis.param_cgi.Properties.update_properties", new=mock_update_properties
-    ), patch(
+    with patch("axis.vapix.session_request", new=vapix_session_request), patch(
         "axis.rtsp.RTSPClient.start", return_value=True,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -167,10 +155,10 @@ async def test_device_support_mqtt(hass):
 
     mock_mqtt = await async_mock_mqtt_component(hass)
 
-    with patch(
+    with patch.dict(DEFAULT_API_DISCOVERY, api_discovery), patch(
         "axis.mqtt.MqttClient.get_client_status", return_value=get_client_status
     ):
-        await setup_axis_integration(hass, api_discovery=api_discovery)
+        await setup_axis_integration(hass)
 
     mock_mqtt.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
 

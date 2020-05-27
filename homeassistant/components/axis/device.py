@@ -186,8 +186,8 @@ class AxisNetworkDevice:
             LOGGER.error("Unknown error connecting with Axis device on %s", self.host)
             return False
 
-        self.fw_version = self.api.vapix.params.firmware_version
-        self.product_type = self.api.vapix.params.prodtype
+        self.fw_version = self.api.vapix.firmware_version
+        self.product_type = self.api.vapix.product_type
 
         async def start_platforms():
             await asyncio.gather(
