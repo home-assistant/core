@@ -60,7 +60,7 @@ async def async_setup_entry(hass, entry):
 @bind_hass
 def get_coordinator_id(hass, entity_id):
     """Obtain the unique_id of a device's coordinator.
-    
+
     This function is safe to run inside the event loop.
     """
     if DATA_SONOS not in hass.data:
