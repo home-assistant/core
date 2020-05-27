@@ -32,6 +32,8 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
 
+LOG_SLOW_STARTUP_INTERVAL = 30
+
 DEBUGGER_INTEGRATIONS = {"ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
 LOGGING_INTEGRATIONS = {"logger", "system_log", "sentry"}
@@ -325,11 +327,26 @@ async def _async_set_up_integrations(
 
     async def async_setup_multi_components(domains: Set[str]) -> None:
         """Set up multiple domains. Log on failure."""
+
+        async def _async_log_pending_setups() -> None:
+            """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
+            while True:
+                await asyncio.sleep(LOG_SLOW_STARTUP_INTERVAL)
+                remaining = [
+                    domain for domain in domains if domain not in hass.config.components
+                ]
+                _LOGGER.info(
+                    "Waiting on integrations to complete setup: %s",
+                    ", ".join(remaining),
+                )
+
         futures = {
             domain: hass.async_create_task(async_setup_component(hass, domain, config))
             for domain in domains
         }
+        log_task = hass.loop.create_task(_async_log_pending_setups())
         await asyncio.wait(futures.values())
+        log_task.cancel()
         errors = [domain for domain in domains if futures[domain].exception()]
         for domain in errors:
             exception = futures[domain].exception()
