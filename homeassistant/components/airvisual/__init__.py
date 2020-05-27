@@ -376,6 +376,14 @@ class AirVisualEntity(Entity):
         return self._icon
 
     @property
+    def should_poll(self) -> bool:
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+        return False
+
+    @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
