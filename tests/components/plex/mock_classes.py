@@ -69,6 +69,10 @@ class MockPlexAccount:
         """Mock the PlexAccount resources listing method."""
         return self._resources
 
+    def sonos_speaker_by_id(self, machine_identifier):
+        """Mock the PlexAccount Sonos lookup method."""
+        return MockPlexSonosClient(machine_identifier)
+
 
 class MockPlexSystemAccount:
     """Mock a PlexSystemAccount instance."""
@@ -351,3 +355,15 @@ class MockPlexMediaTrack(MockPlexMediaItem):
         """Initialize the object."""
         super().__init__(f"Track {index}", "track")
         self.index = index
+
+
+class MockPlexSonosClient:
+    """Mock a PlexSonosClient instance."""
+
+    def __init__(self, machine_identifier):
+        """Initialize the object."""
+        self.machineIdentifier = machine_identifier
+
+    def playMedia(self, item):
+        """Mock the playMedia method."""
+        pass
