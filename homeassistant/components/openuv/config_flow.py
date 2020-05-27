@@ -14,6 +14,15 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN  # pylint: disable=unused-import
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_ELEVATION): vol.Coerce(float),
+    }
+)
+
 
 class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an OpenUV config flow."""
@@ -21,30 +30,10 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    @property
-    def data_schema(self):
-        """Return the data schema."""
-        return vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): str,
-                vol.Optional(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Optional(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
-                vol.Optional(
-                    CONF_ELEVATION, default=self.hass.config.elevation
-                ): vol.Coerce(float),
-            }
-        )
-
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
-            step_id="user",
-            data_schema=self.data_schema,
-            errors=errors if errors else {},
+            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors if errors else {},
         )
 
     async def async_step_import(self, import_config):
