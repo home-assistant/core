@@ -90,14 +90,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLAY_ON_SONOS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_MEDIA_CONTENT_ID): str,
-        vol.Optional(ATTR_MEDIA_CONTENT_TYPE): vol.In("music"),
-    }
-)
-
 _LOGGER = logging.getLogger(__package__)
 
 
@@ -233,11 +225,19 @@ async def async_setup_entry(hass, entry):
     async def async_play_on_sonos_service(service_call):
         await hass.async_add_executor_job(play_on_sonos, hass, service_call)
 
+    play_on_sonos_schema = vol.Schema(
+        {
+            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+            vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+            vol.Optional(ATTR_MEDIA_CONTENT_TYPE): vol.In("music"),
+        }
+    )
+
     hass.services.async_register(
         PLEX_DOMAIN,
         SERVICE_PLAY_ON_SONOS,
         async_play_on_sonos_service,
-        schema=PLAY_ON_SONOS_SCHEMA,
+        schema=play_on_sonos_schema,
     )
 
     return True
