@@ -209,6 +209,11 @@ class HomeAssistant:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
 
+    @property
+    def is_stopping(self) -> bool:
+        """Return if Home Assistant is stopping."""
+        return self.state in (CoreState.stopping, CoreState.final_write)
+
     def start(self) -> int:
         """Start Home Assistant.
 
@@ -260,6 +265,7 @@ class HomeAssistant:
 
         setattr(self.loop, "_thread_ident", threading.get_ident())
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        self.config.start_complete = True
 
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
@@ -1328,6 +1334,9 @@ class Config:
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
 
+        # If Home Assistant completed startup
+        self.start_complete: bool = False
+
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.
 
@@ -1391,6 +1400,7 @@ class Config:
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,
+            "state": self.hass.state,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
         }
