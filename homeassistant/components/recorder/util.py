@@ -71,11 +71,16 @@ def execute(qry, to_native=True):
 
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 elapsed = time.perf_counter() - timer_start
-                _LOGGER.debug(
-                    "converting %d rows to native objects took %fs",
-                    len(result),
-                    elapsed,
-                )
+                if to_native:
+                    _LOGGER.debug(
+                        "converting %d rows to native objects took %fs",
+                        len(result),
+                        elapsed,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "querying %d rows took %fs", len(result), elapsed,
+                    )
 
             return result
         except SQLAlchemyError as err:
