@@ -181,6 +181,7 @@ def setup(hass, config):
         if not service_info:
             # Prevent the browser thread from collapsing as
             # service_info can be None
+            _LOGGER.debug("Failed to get info for device %s", name)
             return
 
         info = info_from_service(service_info)
