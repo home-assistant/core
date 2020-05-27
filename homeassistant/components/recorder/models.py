@@ -28,7 +28,7 @@ SCHEMA_VERSION = 7
 
 _LOGGER = logging.getLogger(__name__)
 
-DB_TIMEZONE = "+00:00"
+DB_TIMEZONE = "Z"
 
 
 class Events(Base):  # type: ignore
