@@ -78,11 +78,11 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         state = STATE_OFF
         if "playback_position" in self._state:
             state = STATE_PLAYING
-        if self._state["player_state"] in ("playing", "buffering"):
+        if self._state.get("player_state") in ("playing", "buffering"):
             state = STATE_PLAYING
         if int(self._state.get("playback_speed", 1234)) == 0:
             state = STATE_PAUSED
-        if self._state["player_state"] == "navigator":
+        if self._state.get("player_state") == "navigator":
             state = STATE_ON
         return state
 
@@ -153,7 +153,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         return self._state.get("playback_url", "Not playing")
 
     def __update_title(self):
-        if self._state["player_state"] == "bluray_playback":
+        if self._state.get("player_state") == "bluray_playback":
             self._media_title = "Blu-Ray"
         elif "playback_url" in self._state:
             sources = self._sources
