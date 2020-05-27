@@ -10,9 +10,9 @@ from homeassistant.components.media_player.const import (
     SERVICE_SELECT_SOURCE,
 )
 from homeassistant.components.webostv.const import (
-    ATTR_ARGUMENT,
     ATTR_BUTTON,
     ATTR_COMMAND,
+    ATTR_PAYLOAD,
     DOMAIN,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
@@ -113,6 +113,8 @@ async def test_command(hass, client):
     await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data)
     await hass.async_block_till_done()
 
+    client.request.assert_called_with("test")
+
 
 async def test_command_with_optional_arg(hass, client):
     """Test generic command functionality."""
@@ -121,7 +123,9 @@ async def test_command_with_optional_arg(hass, client):
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_COMMAND: "test",
-        ATTR_ARGUMENT: {"target": "https://www.google.com"},
+        ATTR_PAYLOAD: {"target": "https://www.google.com"},
     }
     await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data)
     await hass.async_block_till_done()
+
+    client.request.assert_called_with("test")
