@@ -4,7 +4,6 @@ import os
 
 import serial.tools.list_ports
 
-from homeassistant import setup
 from homeassistant.components.plugwise_stick import config_flow
 from homeassistant.components.plugwise_stick.const import CONF_USB_PATH, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
