@@ -1,7 +1,9 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
+from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DATA_CLIENT, DOMAIN
 
@@ -9,6 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SWITCH_PREFIX = "Switch"
 ICON = "mdi:toggle-switch"
+SCAN_INTERVAL = timedelta(seconds=2)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -71,6 +74,11 @@ class SmappeeActuator(SwitchEntity):
         self._connection_state = self._service_location.actuators.get(
             actuator_id
         ).connection_state
+
+        async def async_refresh(event_time):
+            await self.async_update()
+
+        async_track_time_interval(self._smappee_base.hass, async_refresh, SCAN_INTERVAL)
 
     @property
     def name(self):
@@ -174,8 +182,11 @@ class SmappeeActuator(SwitchEntity):
 
     async def async_update(self):
         """Update state value for this switch."""
-        await self._smappee_base.async_update()
-        self._state = self._service_location.actuators.get(self._actuator_id).state
+        new_state = self._service_location.actuators.get(self._actuator_id).state
+        if new_state != self._state:
+            self._state = new_state
+            self.async_write_ha_state()
+
         self._connection_state = self._service_location.actuators.get(
             self._actuator_id
         ).connection_state
