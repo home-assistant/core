@@ -55,10 +55,9 @@ class AzureDevOpsFlowHandler(ConfigFlow):
         client = DevOpsClient()
 
         try:
-
             if pat is not None:
-                authorized = await client.authorize(pat, organization)
-                if not authorized:
+                await client.authorize(pat, organization)
+                if not client.authorized:
                     errors["base"] = "authorization_error"
                     return await self._show_setup_form(errors)
             await client.get_project(organization, project)

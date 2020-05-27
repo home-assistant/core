@@ -33,10 +33,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         if entry.data[CONF_PAT] is not None:
-            authorized = await client.authorize(
-                entry.data[CONF_PAT], entry.data[CONF_ORG]
-            )
-            if not authorized:
+            await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
+            if not client.authorized:
                 _LOGGER.warning(
                     "Could not authorize with Azure DevOps. You may need to update your token."
                 )

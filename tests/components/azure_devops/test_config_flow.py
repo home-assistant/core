@@ -1,7 +1,6 @@
 """Test the Azure DevOps config flow."""
 from unittest.mock import patch
 
-from aioazuredevops.core import DevOpsProject
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
@@ -12,6 +11,8 @@ from homeassistant.components.azure_devops.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project", CONF_PAT: "abc123"}
 
@@ -35,13 +36,9 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
-        return_value=False,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], FIXTURE_USER_INPUT,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT,
+    )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
@@ -70,8 +67,16 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "connection_error"}
 
 
-async def test_full_flow_implementation(hass: HomeAssistant) -> None:
+async def test_full_flow_implementation(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test registering an integration and finishing flow works."""
+    aioclient_mock.get(
+        f"https://dev.azure.com/{FIXTURE_USER_INPUT[CONF_ORG]}/_apis/projects/{FIXTURE_USER_INPUT[CONF_PROJECT]}",
+        json={"id": "abcd-abcd-abcd-abcd", "name": "project"},
+        headers={"Content-Type": "application/json"},
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -80,16 +85,12 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
     ):
-        with patch(
-            "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
-            return_value=DevOpsProject("12345", "test"),
-        ):
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"], FIXTURE_USER_INPUT,
-            )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT,
+        )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert (
