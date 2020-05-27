@@ -17,8 +17,8 @@ from .const import DOMAIN  # pylint: disable=unused-import
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Inclusive(CONF_LATITUDE, "coords"): cv.latitude,
+        vol.Inclusive(CONF_LONGITUDE, "coords"): cv.longitude,
         vol.Optional(CONF_ELEVATION): vol.Coerce(float),
     }
 )
@@ -45,7 +45,10 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return await self._show_form()
 
-        identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
+        if user_input.get(CONF_LATITUDE):
+            identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
+        else:
+            identifier = "Default Coordinates"
 
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
