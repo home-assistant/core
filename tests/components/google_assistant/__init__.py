@@ -168,7 +168,7 @@ DEMO_DEVICES = [
             "action.devices.traits.Volume",
             "action.devices.traits.Modes",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
@@ -179,14 +179,14 @@ DEMO_DEVICES = [
             "action.devices.traits.Volume",
             "action.devices.traits.Modes",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
         "id": "media_player.lounge_room",
         "name": {"name": "Lounge room"},
         "traits": ["action.devices.traits.OnOff", "action.devices.traits.Modes"],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
@@ -197,7 +197,7 @@ DEMO_DEVICES = [
             "action.devices.traits.Volume",
             "action.devices.traits.Modes",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
