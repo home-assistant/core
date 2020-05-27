@@ -113,7 +113,7 @@ async def test_command(hass, client):
     await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data)
     await hass.async_block_till_done()
 
-    client.request.assert_called_with("test")
+    client.request.assert_called_with("test", payload=None)
 
 
 async def test_command_with_optional_arg(hass, client):
@@ -128,4 +128,6 @@ async def test_command_with_optional_arg(hass, client):
     await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data)
     await hass.async_block_till_done()
 
-    client.request.assert_called_with("test")
+    client.request.assert_called_with(
+        "test", payload={"target": "https://www.google.com"}
+    )
