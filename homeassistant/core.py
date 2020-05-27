@@ -1402,7 +1402,7 @@ class Config:
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,
-            "start_complete": self.start_complete,
+            "state": self.hass.state,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
         }

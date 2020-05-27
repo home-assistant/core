@@ -901,6 +901,7 @@ class TestConfig(unittest.TestCase):
     def test_as_dict(self):
         """Test as dict."""
         self.config.config_dir = "/test/ha-config"
+        self.config.hass = MagicMock(state="RUNNING")
         expected = {
             "latitude": 0,
             "longitude": 0,
@@ -914,7 +915,7 @@ class TestConfig(unittest.TestCase):
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
-            "start_complete": False,
+            "state": "RUNNING",
             "external_url": None,
             "internal_url": None,
         }
