@@ -4,6 +4,7 @@ import asyncio
 
 import async_timeout
 import axis
+from axis.configuration import Configuration
 from axis.event_stream import OPERATION_INITIALIZED
 from axis.mqtt import mqtt_json_to_event
 from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
@@ -254,7 +255,7 @@ async def get_device(hass, host, port, username, password):
     """Create a Axis device."""
 
     device = axis.AxisDevice(
-        host=host, port=port, username=username, password=password, web_proto="http",
+        Configuration(host, port=port, username=username, password=password)
     )
 
     device.vapix.initialize_params(preload_data=False)

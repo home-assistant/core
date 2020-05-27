@@ -20,12 +20,9 @@ from tests.common import MockConfigEntry
 def setup_mock_axis_device(mock_device):
     """Prepare mock axis device."""
 
-    def mock_constructor(host, username, password, port, web_proto):
+    def mock_constructor(configuration):
         """Fake the controller constructor."""
-        mock_device.host = host
-        mock_device.username = username
-        mock_device.password = password
-        mock_device.port = port
+        mock_device.config = configuration
         return mock_device
 
     mock_device.side_effect = mock_constructor
