@@ -1,6 +1,7 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
 import contextlib
+from datetime import timedelta
 import logging
 import logging.handlers
 import os
@@ -19,6 +20,7 @@ from homeassistant.const import (
     REQUIRED_NEXT_PYTHON_VER,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import DATA_SETUP, async_setup_component
 from homeassistant.util.logging import async_activate_log_queue_handler
@@ -31,6 +33,8 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
+
+LOG_SLOW_STARTUP_INTERVAL = timedelta(seconds=30)
 
 DEBUGGER_INTEGRATIONS = {"ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
@@ -325,10 +329,23 @@ async def _async_set_up_integrations(
 
     async def async_setup_multi_components(domains: Set[str]) -> None:
         """Set up multiple domains. Log on failure."""
+
+        async def _async_log_pending_setups(event_time: core.Event) -> None:
+            """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
+            remaining = [
+                domain for domain in domains if domain not in hass.config.components
+            ]
+            _LOGGER.info(
+                "Waiting on integrations to complete setup: %s", ", ".join(remaining)
+            )
+
         futures = {
             domain: hass.async_create_task(async_setup_component(hass, domain, config))
             for domain in domains
         }
+        _log_pending_setups = async_track_time_interval(
+            hass, _async_log_pending_setups, LOG_SLOW_STARTUP_INTERVAL
+        )
         await asyncio.wait(futures.values())
         errors = [domain for domain in domains if futures[domain].exception()]
         for domain in errors:
@@ -338,6 +355,7 @@ async def _async_set_up_integrations(
                 domain,
                 exc_info=(type(exception), exception, exception.__traceback__),
             )
+        _log_pending_setups()
 
     domains = _get_domains(hass, config)
 
