@@ -517,19 +517,19 @@ async def test_platform_no_warn_slow(hass):
 async def test_platform_error_slow_setup(hass, caplog):
     """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
 
-    with patch.object(setup, "SLOW_SETUP_MAX_WAIT", 0):
+    with patch.object(setup, "SLOW_SETUP_MAX_WAIT", 1):
         called = []
 
         async def async_setup(*args):
             """Tracking Setup."""
             called.append(1)
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
 
         mock_integration(hass, MockModule("test_component1", async_setup=async_setup))
         result = await setup.async_setup_component(hass, "test_component1", {})
         assert len(called) == 1
         assert not result
-        assert "test_component1 is taking longer than 0 seconds" in caplog.text
+        assert "test_component1 is taking longer than 1 seconds" in caplog.text
 
 
 async def test_when_setup_already_loaded(hass):
