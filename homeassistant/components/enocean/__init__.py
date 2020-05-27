@@ -42,8 +42,7 @@ async def async_setup_entry(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Set up an EnOcean dongle for the given entry."""
-    default_enocean_data = {}
-    enocean_data = hass.data.setdefault(DATA_ENOCEAN, default_enocean_data)
+    enocean_data = hass.data.setdefault(DATA_ENOCEAN, {})
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
     await usb_dongle.async_setup()
     enocean_data[ENOCEAN_DONGLE] = usb_dongle
