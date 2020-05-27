@@ -32,7 +32,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
 
-LOG_SLOW_STARTUP_INTERVAL = 30
+LOG_SLOW_STARTUP_INTERVAL = 60
 
 DEBUGGER_INTEGRATIONS = {"ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
