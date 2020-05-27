@@ -274,10 +274,13 @@ async def test_services(
 
     with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+            MP_DOMAIN,
+            SERVICE_MEDIA_PAUSE,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+            blocking=True,
         )
 
-        remote_mock.assert_called_once_with("poweroff")
+        remote_mock.assert_called_once_with("pause")
 
     with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
         await hass.services.async_call(
