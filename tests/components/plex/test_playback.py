@@ -61,7 +61,7 @@ async def test_sonos_playback(hass):
         hass.components.sonos,
         "get_coordinator_id",
         return_value="media_player.sonos_kitchen",
-    ):
+    ), patch("plexapi.playqueue.PlayQueue.create"):
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_ON_SONOS,
@@ -78,7 +78,7 @@ async def test_sonos_playback(hass):
         hass.components.sonos,
         "get_coordinator_id",
         return_value="media_player.sonos_kitchen",
-    ):
+    ), patch("plexapi.playqueue.PlayQueue.create"):
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_ON_SONOS,
