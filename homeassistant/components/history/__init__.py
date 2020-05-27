@@ -444,9 +444,7 @@ class HistoryPeriodView(HomeAssistantView):
             request.query.get("significant_changes_only", "1") != "0"
         )
 
-        minimal_response = False
-        if "minimal_response" in request.query:
-            minimal_response = True
+        minimal_response = "minimal_response" in request.query
 
         hass = request.app["hass"]
 
