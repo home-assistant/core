@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "keba"
-SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock"]
+SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock", "notify"]
 
 CONF_RFID = "rfid"
 CONF_FS = "failsafe"
@@ -238,10 +238,3 @@ class KebaHandler(KebaKeContact):
                 "failsafe_persist value are not correct. %s",
                 ex,
             )
-
-    async def async_set_text(self, param):
-        """Set text in async way."""
-        text = param["text"].replace(" ", "$")
-        min_time = param["min_time"]
-        max_time = param["max_time"]
-        await self.set_text(text, int(min_time), int(max_time))
