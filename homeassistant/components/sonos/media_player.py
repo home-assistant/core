@@ -100,8 +100,6 @@ ATTR_WITH_GROUP = "with_group"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
-ATTR_QUEUE = "queue"
-ATTR_IS_PLAYING_LOCAL_QUEUE = "is_playing_local_queue"
 
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
@@ -392,7 +390,6 @@ class SonosEntity(MediaPlayerEntity):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
-        self._queue = []
         self._is_playing_local_queue = None
         self._queue_position = None
         self._night_sound = None
@@ -545,19 +542,12 @@ class SonosEntity(MediaPlayerEntity):
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
 
-    def _set_queue(self):
-        """Set available queue."""
-        self._queue = []
-        for item in self.soco.get_queue():
-            self._queue.append(item.title)
-
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
         try:
             self._shuffle = self.soco.shuffle
             self.update_volume()
             self._set_favorites()
-            self._set_queue()
 
             player = self.soco
 
@@ -811,7 +801,6 @@ class SonosEntity(MediaPlayerEntity):
     def update_content(self, event=None):
         """Update information about available content."""
         self._set_favorites()
-        self._set_queue()
         self.schedule_update_ha_state()
 
     @property
@@ -1274,13 +1263,7 @@ class SonosEntity(MediaPlayerEntity):
         if self._speech_enhance is not None:
             attributes[ATTR_SPEECH_ENHANCE] = self._speech_enhance
 
-        if self._queue is not None:
-            attributes[ATTR_QUEUE] = self._queue
-
-        if self._queue_position is not None:
+        if self._queue_position is not None and self._is_playing_local_queue:
             attributes[ATTR_QUEUE_POSITION] = self._queue_position
-
-        if self._is_playing_local_queue is not None:
-            attributes[ATTR_IS_PLAYING_LOCAL_QUEUE] = self._is_playing_local_queue
 
         return attributes
