@@ -1,7 +1,6 @@
 """Plugwise Climate component for Home Assistant."""
 
 import logging
-from typing import Dict
 
 from Plugwise_Smile.Smile import Smile
 
@@ -80,6 +79,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
         super().__init__(api, coordinator)
 
         self._api = api
+        self._gateway_id = self._api.gateway_id
         self._name = name
         self._dev_id = dev_id
         self._loc_id = loc_id
@@ -92,9 +92,9 @@ class PwThermostat(SmileGateway, ClimateEntity):
         self._preset_mode = None
         self._presets = None
         self._presets_list = None
-        self._boiler_state = None
         self._heating_state = None
         self._cooling_state = None
+        self._compressor_state = None
         self._dhw_state = None
         self._hvac_mode = None
         self._schema_names = None
@@ -105,48 +105,22 @@ class PwThermostat(SmileGateway, ClimateEntity):
         self._schedule_temp = None
         self._hvac_mode = None
         self._single_thermostat = self._api.single_master_thermostat()
+        self._icon = THERMOSTAT_ICON
         self._unique_id = f"{dev_id}-climate"
 
     @property
     def hvac_action(self):
         """Return the current action."""
         if self._single_thermostat:
-            if self._heating_state or self._boiler_state:
+            if self._heating_state:
                 return CURRENT_HVAC_HEAT
             if self._cooling_state:
                 return CURRENT_HVAC_COOL
             return CURRENT_HVAC_IDLE
-        if self._heating_state is not None or self._boiler_state is not None:
+        if self._heating_state is not None:
             if self._setpoint > self._temperature:
                 return CURRENT_HVAC_HEAT
             return CURRENT_HVAC_IDLE
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self._name
-
-    @property
-    def device_info(self) -> Dict[str, any]:
-        """Return the device information."""
-
-        device_information = {
-            "identifiers": {(DOMAIN, self._dev_id)},
-            "name": self._name,
-            "manufacturer": "Plugwise",
-            "model": self._model.replace("_", " ").title(),
-        }
-
-        if self._dev_id != self._api.gateway_id:
-            device_information["via_device"] = (DOMAIN, self._api.gateway_id)
-            del device_information["via_device"]
-
-        return device_information
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return THERMOSTAT_ICON
 
     @property
     def supported_features(self):
@@ -172,8 +146,8 @@ class PwThermostat(SmileGateway, ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the available hvac modes list."""
-        if self._heating_state is not None or self._boiler_state is not None:
-            if self._cooling_state is not None:
+        if self._heating_state is not None:
+            if self._compressor_state is not None:
                 return HVAC_MODES_HEAT_COOL
             return HVAC_MODES_HEAT_ONLY
 
@@ -286,21 +260,21 @@ class PwThermostat(SmileGateway, ClimateEntity):
         if "active_preset" in climate_data:
             self._preset_mode = climate_data["active_preset"]
 
-        if "boiler_state" in heater_central_data:
-            if heater_central_data["boiler_state"] is not None:
-                self._boiler_state = heater_central_data["boiler_state"]
         if "heating_state" in heater_central_data:
             if heater_central_data["heating_state"] is not None:
                 self._heating_state = heater_central_data["heating_state"]
         if "cooling_state" in heater_central_data:
             if heater_central_data["cooling_state"] is not None:
                 self._cooling_state = heater_central_data["cooling_state"]
+        if "compressor_state" in heater_central_data:
+            if heater_central_data["compressor_state"] is not None:
+                self._compressor_state = heater_central_data["compressor_state"]
 
         if self._schema_status:
             self._hvac_mode = HVAC_MODE_AUTO
-        elif self._heating_state is not None or self._boiler_state is not None:
+        elif self._heating_state is not None:
             self._hvac_mode = HVAC_MODE_HEAT
-            if self._cooling_state is not None:
+            if self._compressor_state is not None:
                 self._hvac_mode = HVAC_MODE_HEAT_COOL
 
         self.async_write_ha_state()
