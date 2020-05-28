@@ -19,6 +19,8 @@ SERVICE_DISABLE_ATTR_NAME = "name"
 SERVICE_ENABLE = "enable"
 SERVICE_ENABLE_ATTR_NAME = SERVICE_DISABLE_ATTR_NAME
 
+STATUS_ENABLED = "enabled"
+
 ATTR_BLOCKED_DOMAINS = "domains_blocked"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
@@ -48,3 +50,9 @@ SENSOR_DICT = {
 }
 
 SENSOR_LIST = list(SENSOR_DICT)
+
+BINARY_SENSOR_DICT = {
+    "status": ["Status", "status", "enabled", None],
+}
+
+BINARY_SENSOR_LIST = list(BINARY_SENSOR_DICT)

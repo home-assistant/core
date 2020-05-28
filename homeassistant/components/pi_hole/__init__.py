@@ -5,6 +5,7 @@ from hole import Hole
 from hole.exceptions import HoleError
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -184,6 +185,9 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
     )
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, BINARY_SENSOR_DOMAIN)
+    )
 
     return True
 
@@ -191,6 +195,7 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload pi-hole entry."""
     hass.data[DOMAIN].pop(entry.data[CONF_NAME])
+    await hass.config_entries.async_forward_entry_unload(entry, BINARY_SENSOR_DOMAIN)
     return await hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN)
 
 
