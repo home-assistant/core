@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Dict
 
 from Plugwise_Smile.Smile import Smile
 import async_timeout
@@ -16,13 +17,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, THERMOSTAT_ICON
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
-ALL_PLATFORMS = ["climate"]
+SENSOR_PLATFORMS = ["sensor"]
+ALL_PLATFORMS = ["climate", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -100,7 +102,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=api.smile_version[0],
     )
 
-    for component in ALL_PLATFORMS:
+    platforms = ALL_PLATFORMS
+
+    single_master_thermostat = api.single_master_thermostat()
+    if single_master_thermostat is None:
+        platforms = SENSOR_PLATFORMS
+
+    for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -128,10 +136,15 @@ class SmileGateway(Entity):
     """Represent Smile Gateway."""
 
     def __init__(self, api, coordinator):
-        """Initialise the sensor."""
+        """Initialise the gateway."""
         self._api = api
         self._coordinator = coordinator
         self._unique_id = None
+        self._name = None
+        self._icon = None
+        self._dev_id = None
+        self._model = None
+        self._gateway_id = None
 
     @property
     def unique_id(self):
@@ -148,6 +161,38 @@ class SmileGateway(Entity):
         """Return True if entity is available."""
         return self._coordinator.last_update_success
 
+    @property
+    def name(self):
+        """Return the name of the entity, if any."""
+        if not self._name:
+            pass
+        return self._name
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        if not self._icon:
+            return THERMOSTAT_ICON
+        return self._icon
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+
+        device_information = {
+            "identifiers": {(DOMAIN, self._dev_id)},
+            "name": self._name,
+            "manufacturer": "Plugwise",
+        }
+
+        if self._model is not None:
+            device_information["model"] = self._model.replace("_", " ").title()
+
+        if self._dev_id != self._gateway_id:
+            device_information["via_device"] = (DOMAIN, self._gateway_id)
+
+        return device_information
+
     async def async_added_to_hass(self):
         """Subscribe to updates."""
         self.async_on_remove(self._coordinator.async_add_listener(self._process_data))
@@ -159,3 +204,36 @@ class SmileGateway(Entity):
     async def async_update(self):
         """Update the entity."""
         await self._coordinator.async_request_refresh()
+
+
+class SmileSensor(SmileGateway):
+    """Represent Smile Sensors."""
+
+    def __init__(self, api, coordinator):
+        """Initialise the sensor."""
+        super().__init__(api, coordinator)
+
+        self._dev_class = None
+        self._state = None
+        self._unit_of_measurement = None
+
+    @property
+    def device_class(self):
+        """Device class of this entity."""
+        if not self._dev_class:
+            pass
+        return self._dev_class
+
+    @property
+    def state(self):
+        """Device class of this entity."""
+        if not self._state:
+            pass
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        if not self._unit_of_measurement:
+            pass
+        return self._unit_of_measurement
