@@ -92,10 +92,10 @@ class ToonFlowHandler(config_entries.ConfigFlow):
             displays = toon.display_names
 
         except InvalidConsumerKey:
-            return self.async_abort(reason="client_id")
+            return self.async_abort(reason=CONF_CLIENT_ID)
 
         except InvalidConsumerSecret:
-            return self.async_abort(reason="client_secret")
+            return self.async_abort(reason=CONF_CLIENT_SECRET)
 
         except InvalidCredentials:
             return await self._show_authenticaticate_form({"base": "credentials"})

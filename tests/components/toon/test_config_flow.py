@@ -75,8 +75,8 @@ async def test_show_authenticate_form(hass):
 @pytest.mark.parametrize(
     "side_effect,reason",
     [
-        (InvalidConsumerKey, "client_id"),
-        (InvalidConsumerSecret, "client_secret"),
+        (InvalidConsumerKey, CONF_CLIENT_ID),
+        (InvalidConsumerSecret, CONF_CLIENT_SECRET),
         (AgreementsRetrievalError, "no_agreements"),
         (Exception, "unknown_auth_fail"),
     ],

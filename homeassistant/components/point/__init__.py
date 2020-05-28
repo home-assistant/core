@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # Force token update.
     entry.data[CONF_TOKEN]["expires_in"] = -1
     session = PointSession(
-        entry.data["refresh_args"]["client_id"],
+        entry.data["refresh_args"][CONF_CLIENT_ID],
         token=entry.data[CONF_TOKEN],
         auto_refresh_kwargs=entry.data["refresh_args"],
         token_saver=token_saver,

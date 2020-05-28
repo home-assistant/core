@@ -13,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
+    CONF_CLIENT_ID,
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
@@ -29,7 +30,6 @@ from .const import (  # pylint: disable=unused-import
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
     AUTOMATIC_SETUP_STRING,
-    CONF_CLIENT_IDENTIFIER,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -227,7 +227,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         entry_config = {CONF_URL: url}
         if self.client_id:
-            entry_config[CONF_CLIENT_IDENTIFIER] = self.client_id
+            entry_config[CONF_CLIENT_ID] = self.client_id
         if token:
             entry_config[CONF_TOKEN] = token
         if url.startswith("https"):
