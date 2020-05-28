@@ -15,6 +15,7 @@ from axis.param_cgi import (
     OUTPUT as OUTPUT_URL,
     PROPERTIES as PROPERTIES_URL,
 )
+from axis.port_management import URL as PORT_MANAGEMENT_URL
 import pytest
 
 from homeassistant import config_entries
@@ -75,6 +76,11 @@ API_DISCOVERY_BASIC_DEVICE_INFO = {
     "name": "Basic Device Information",
 }
 API_DISCOVERY_MQTT = {"id": "mqtt-client", "version": "1.0", "name": "MQTT Client API"}
+API_DISCOVERY_PORT_MANAGEMENT = {
+    "id": "io-port-management",
+    "version": "1.0",
+    "name": "IO Port Management",
+}
 
 
 BASIC_DEVICE_INFO_RESPONSE = {
@@ -94,6 +100,25 @@ MQTT_CLIENT_RESPONSE = {
     "context": "some context",
     "method": "getClientStatus",
     "data": {"status": {"state": "active", "connectionStatus": "Connected"}},
+}
+
+PORT_MANAGEMENT_RESPONSE = {
+    "apiVersion": "1.0",
+    "method": "getPorts",
+    "data": {
+        "numberOfPorts": 1,
+        "items": [
+            {
+                "port": "0",
+                "configurable": False,
+                "usage": "",
+                "name": "PIR sensor",
+                "direction": "input",
+                "state": "open",
+                "normalState": "open",
+            }
+        ],
+    },
 }
 
 BRAND_RESPONSE = """root.Brand.Brand=AXIS
@@ -135,6 +160,8 @@ def vapix_session_request(session, url, **kwargs):
         return json.dumps(BASIC_DEVICE_INFO_RESPONSE)
     if MQTT_CLIENT_URL in url:
         return json.dumps(MQTT_CLIENT_RESPONSE)
+    if PORT_MANAGEMENT_URL in url:
+        return json.dumps(PORT_MANAGEMENT_RESPONSE)
     if BRAND_URL in url:
         return BRAND_RESPONSE
     if IOPORT_URL in url or INPUT_URL in url or OUTPUT_URL in url:
