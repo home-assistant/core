@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import CONN_CLASS_ASSUMED
 from homeassistant.const import CONF_DEVICE
 
-from . import EnOceanDongle
+from . import dongle
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
 
 
@@ -37,14 +37,14 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         dongle_path = data[CONF_DEVICE]
         path_is_valid = await self.hass.async_add_executor_job(
-            EnOceanDongle.validate_path, dongle_path
+            dongle.validate_path, dongle_path
         )
         if not path_is_valid:
             LOGGER.warning(
                 "Cannot import yaml configuration: %s is not a valid dongle path.",
                 dongle_path,
             )
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(reason="invalid_dongle_path")
 
         return self.create_enocean_entry(data)
 
@@ -53,21 +53,19 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        if user_input is None:
-            return await self.async_step_detect()
-        if await self.validate_enocean_conf(user_input):
-            return self.create_enocean_entry(user_input)
-        return await self.async_step_manual(user_input)
+        return await self.async_step_detect()
 
     async def async_step_detect(self, user_input=None):
         """Propose a list of detected dongles."""
+        errors = {}
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
                 return await self.async_step_manual(None)
             if await self.validate_enocean_conf(user_input):
                 return self.create_enocean_entry(user_input)
+            errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
-        bridges = await self.hass.async_add_executor_job(EnOceanDongle.detect)
+        bridges = await self.hass.async_add_executor_job(dongle.detect)
         if len(bridges) == 0:
             return await self.async_step_manual(user_input)
 
@@ -75,6 +73,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="detect",
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(bridges)}),
+            errors=errors,
         )
 
     async def async_step_manual(self, user_input=None):
@@ -97,12 +96,9 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def validate_enocean_conf(self, user_input) -> bool:
         """Return True if the user_input contains a valid dongle path."""
-        if user_input is None:
-            return False
-
         dongle_path = user_input[CONF_DEVICE]
         path_is_valid = await self.hass.async_add_executor_job(
-            EnOceanDongle.validate_path, dongle_path
+            dongle.validate_path, dongle_path
         )
         return path_is_valid
 

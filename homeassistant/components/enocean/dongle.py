@@ -21,32 +21,6 @@ class EnOceanDongle:
     creating devices if needed, and dispatching messages to platforms.
     """
 
-    @staticmethod
-    def detect():
-        """Return a list of candidate paths for USB ENOcean dongles.
-
-        This method is currently a bit simplistic, it may need to be
-        improved to support more configurations and OS.
-        """
-        globs_to_test = ["/dev/tty*FTOA2PV*", "/dev/serial/by-id/*EnOcean*"]
-        found_paths = []
-        for current_glob in globs_to_test:
-            found_paths.extend(glob.glob(current_glob))
-
-        return found_paths
-
-    @staticmethod
-    def validate_path(path: str):
-        """Return True if the provided path points to a valid serial port, False otherwise."""
-        try:
-            # Creating the serial communicator will raise an exception
-            # if it cannot connect
-            SerialCommunicator(port=path)
-            return True
-        except serial.SerialException as e:
-            _LOGGER.warning("Dongle path %s is invalid: %s", path, str(e))
-            return False
-
     def __init__(self, hass, serial_path):
         """Initialize the EnOcean dongle."""
 
@@ -84,3 +58,29 @@ class EnOceanDongle:
         if isinstance(packet, RadioPacket):
             _LOGGER.debug("Received radio packet: %s", packet)
             self.hass.helpers.dispatcher.dispatcher_send(SIGNAL_RECEIVE_MESSAGE, packet)
+
+
+def detect():
+    """Return a list of candidate paths for USB ENOcean dongles.
+
+    This method is currently a bit simplistic, it may need to be
+    improved to support more configurations and OS.
+    """
+    globs_to_test = ["/dev/tty*FTOA2PV*", "/dev/serial/by-id/*EnOcean*"]
+    found_paths = []
+    for current_glob in globs_to_test:
+        found_paths.extend(glob.glob(current_glob))
+
+    return found_paths
+
+
+def validate_path(path: str):
+    """Return True if the provided path points to a valid serial port, False otherwise."""
+    try:
+        # Creating the serial communicator will raise an exception
+        # if it cannot connect
+        SerialCommunicator(port=path)
+        return True
+    except serial.SerialException as e:
+        _LOGGER.warning("Dongle path %s is invalid: %s", path, str(e))
+        return False
