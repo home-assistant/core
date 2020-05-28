@@ -43,6 +43,9 @@ Mastodon.py==1.5.1
 # homeassistant.components.orangepi_gpio
 OPi.GPIO==0.4.0
 
+# homeassistant.components.plugwise
+Plugwise_Smile==0.2.10
+
 # homeassistant.components.essent
 PyEssent==0.13
 
@@ -696,9 +699,6 @@ ha-ffmpeg==2.0
 
 # homeassistant.components.philips_js
 ha-philipsjs==0.0.8
-
-# homeassistant.components.plugwise
-haanna==0.15.0
 
 # homeassistant.components.habitica
 habitipy==0.2.0

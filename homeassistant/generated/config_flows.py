@@ -114,6 +114,7 @@ FLOWS = [
     "pi_hole",
     "plaato",
     "plex",
+    "plugwise",
     "point",
     "powerwall",
     "ps4",
