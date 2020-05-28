@@ -1,0 +1,27 @@
+--- __init__.py.orig	2020-05-28 10:03:10.000000000 +0200
++++ __init__.py.sensor	2020-05-28 10:08:09.000000000 +0200
+@@ -22,7 +22,8 @@
+ 
+ _LOGGER = logging.getLogger(__name__)
+ 
+-ALL_PLATFORMS = ["climate"]
++SENSOR_PLATFORMS = ["sensor"]
++ALL_PLATFORMS = ["climate", "sensor"]
+ 
+ 
+ async def async_setup(hass: HomeAssistant, config: dict):
+@@ -100,7 +101,13 @@
+         sw_version=api.smile_version[0],
+     )
+ 
+-    for component in ALL_PLATFORMS:
++    platforms = ALL_PLATFORMS
++
++    single_master_thermostat = api.single_master_thermostat()
++    if single_master_thermostat is None:
++        platforms = SENSOR_PLATFORMS
++
++    for component in platforms:
+         hass.async_create_task(
+             hass.config_entries.async_forward_entry_setup(entry, component)
+         )
