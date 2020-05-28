@@ -1,5 +1,6 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
+import asyncio
 import logging
 import os
 from unittest.mock import Mock
@@ -303,10 +304,17 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     log_file = Mock()
     log_no_color = Mock()
 
+    async def _async_setup_that_blocks_startup(*args, **kwargs):
+        await asyncio.sleep(0.6)
+        return True
+
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"browser": {}, "frontend": {}},
-    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0):
+    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch(
+        "homeassistant.components.frontend.async_setup",
+        side_effect=_async_setup_that_blocks_startup,
+    ):
         await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=verbose,
