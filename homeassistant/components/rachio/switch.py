@@ -55,6 +55,7 @@ ATTR_SCHEDULE_DURATION = "Duration"
 ATTR_ZONE_NUMBER = "Zone number"
 ATTR_ZONE_SHADE = "Shade"
 ATTR_ZONE_SLOPE = "Slope"
+ATTR_ZONE_SUMMARY = "Summary"
 ATTR_ZONE_TYPE = "Type"
 
 
@@ -237,6 +238,7 @@ class RachioZone(RachioSwitch):
         self._shade_type = data.get(KEY_CUSTOM_SHADE, {}).get(KEY_NAME)
         self._zone_type = data.get(KEY_CUSTOM_CROP, {}).get(KEY_NAME)
         self._slope_type = data.get(KEY_CUSTOM_SLOPE, {}).get(KEY_NAME)
+        self._summary = ""
         self._current_schedule = current_schedule
         super().__init__(controller)
 
@@ -277,7 +279,7 @@ class RachioZone(RachioSwitch):
     @property
     def device_state_attributes(self) -> dict:
         """Return the optional state attributes."""
-        props = {ATTR_ZONE_NUMBER: self._zone_number}
+        props = {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
         if self._shade_type:
             props[ATTR_ZONE_SHADE] = self._shade_type
         if self._zone_type:
@@ -321,6 +323,8 @@ class RachioZone(RachioSwitch):
         """Handle incoming webhook zone data."""
         if args[0][KEY_ZONE_ID] != self.zone_id:
             return
+
+        self._summary = args[0][KEY_SUMMARY]
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True
