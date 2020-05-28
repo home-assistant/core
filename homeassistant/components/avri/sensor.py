@@ -39,7 +39,7 @@ class AvriWasteUpcoming(Entity):
     def __init__(self, client: Avri, waste_type: str, integration_id: str):
         """Initialize the sensor."""
         self._waste_type = waste_type
-        self._name = f"{self._waste_type}".capitalize()
+        self._name = f"{self._waste_type}".title()
         self._state = None
         self._client = client
         self._state_available = False
