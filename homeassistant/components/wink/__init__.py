@@ -14,6 +14,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_NAME,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_EMAIL,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
@@ -38,8 +40,6 @@ DOMAIN = "wink"
 
 SUBSCRIPTION_HANDLER = None
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_USER_AGENT = "user_agent"
 CONF_OAUTH = "oauth"
 CONF_LOCAL_CONTROL = "local_control"

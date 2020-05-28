@@ -13,17 +13,15 @@ from toonapilib.toonapilibexceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
-
-from .const import (
+from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_DISPLAY,
-    CONF_TENANT,
-    DATA_TOON_CONFIG,
-    DOMAIN,
+    CONF_PASSWORD,
+    CONF_USERNAME,
 )
+from homeassistant.core import callback
+
+from .const import CONF_DISPLAY, CONF_TENANT, DATA_TOON_CONFIG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
