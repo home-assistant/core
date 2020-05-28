@@ -87,7 +87,7 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
         if position and self._node.uom == UOM_8_BIT_RANGE:
             position = int(position * 255 / 100)
         if not self._node.turn_on(val=position):
-            _LOGGER.error("Unable to open the cover")
+            _LOGGER.error("Unable to set cover position")
 
 
 class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
