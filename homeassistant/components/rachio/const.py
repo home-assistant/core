@@ -24,6 +24,7 @@ KEY_MODEL = "model"
 KEY_ON = "on"
 KEY_DURATION = "totalDuration"
 KEY_RAIN_DELAY = "rainDelayExpirationDate"
+KEY_RAIN_SENSOR_TRIPPED = "rainSensorTripped"
 KEY_STATUS = "status"
 KEY_SUBTYPE = "subType"
 KEY_SUMMARY = "summary"
@@ -40,9 +41,7 @@ KEY_FLEX_SCHEDULES = "flexScheduleRules"
 KEY_SCHEDULE_ID = "scheduleId"
 KEY_CUSTOM_SHADE = "customShade"
 KEY_CUSTOM_CROP = "customCrop"
-
-ATTR_ZONE_TYPE = "type"
-ATTR_ZONE_SHADE = "shade"
+KEY_CUSTOM_SLOPE = "customSlope"
 
 # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
 RACHIO_API_EXCEPTIONS = (
@@ -57,6 +56,7 @@ STATUS_ONLINE = "ONLINE"
 SIGNAL_RACHIO_UPDATE = f"{DOMAIN}_update"
 SIGNAL_RACHIO_CONTROLLER_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_controller"
 SIGNAL_RACHIO_RAIN_DELAY_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_rain_delay"
+SIGNAL_RACHIO_RAIN_SENSOR_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_rain_sensor"
 SIGNAL_RACHIO_ZONE_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_zone"
 SIGNAL_RACHIO_SCHEDULE_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_schedule"
 
