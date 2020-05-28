@@ -65,7 +65,7 @@ async def async_setup(hass, config):
             _LOGGER.error("Unknown notification service specified")
             return
 
-        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
+        _LOGGER.info("Setting up %s.%s - %s", DOMAIN, p_type, p_config.get("name"))
         notify_service = None
         try:
             if hasattr(platform, "async_get_service"):
