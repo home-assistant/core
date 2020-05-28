@@ -20,6 +20,7 @@ from .const import (
     ISY994_NODES,
     ISY994_PROGRAMS,
     UOM_8_BIT_RANGE,
+    UOM_BARRIER,
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
@@ -71,10 +72,8 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
 
     def open_cover(self, **kwargs) -> None:
         """Send the open cover command to the ISY994 cover device."""
-        position = kwargs.get(ATTR_POSITION)
-        if position and self._node.uom == UOM_8_BIT_RANGE:
-            position = int(position * 255 / 100)
-        if not self._node.turn_on(val=position):
+        val = 100 if self._node.uom == UOM_BARRIER else None
+        if not self._node.turn_on(val=val):
             _LOGGER.error("Unable to open the cover")
 
     def close_cover(self, **kwargs) -> None:
@@ -84,7 +83,11 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.open_cover(**kwargs)
+        position = kwargs.get(ATTR_POSITION)
+        if position and self._node.uom == UOM_8_BIT_RANGE:
+            position = int(position * 255 / 100)
+        if not self._node.turn_on(val=position):
+            _LOGGER.error("Unable to open the cover")
 
 
 class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
