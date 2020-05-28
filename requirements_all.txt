@@ -1040,7 +1040,7 @@ panasonic_viera==0.3.5
 pcal9535a==0.7
 
 # homeassistant.components.dunehd
-pdunehd==1.3
+pdunehd==1.3.1
 
 # homeassistant.components.pencom
 pencompy==0.0.3
@@ -1263,7 +1263,7 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.0.4
+pydaikin==2.1.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
