@@ -16,6 +16,9 @@ ZEROCONF = {
     "_daap._tcp.local.": [
         "forked_daapd"
     ],
+    "_dkapi._tcp.local.": [
+        "daikin"
+    ],
     "_elg._tcp.local.": [
         "elgato"
     ],
