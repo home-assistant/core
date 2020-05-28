@@ -1,6 +1,7 @@
 """Support to embed Plex."""
 import asyncio
 import functools
+import json
 import logging
 
 import plexapi.exceptions
@@ -10,7 +11,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+)
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
@@ -19,7 +25,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -44,6 +50,7 @@ from .const import (
     PLEX_SERVER_CONFIG,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
+    SERVICE_PLAY_ON_SONOS,
     WEBSOCKETS,
 )
 from .errors import ShouldUpdateConfigEntry
@@ -215,6 +222,24 @@ async def async_setup_entry(hass, entry):
         )
         task.add_done_callback(functools.partial(start_websocket_session, platform))
 
+    async def async_play_on_sonos_service(service_call):
+        await hass.async_add_executor_job(play_on_sonos, hass, service_call)
+
+    play_on_sonos_schema = vol.Schema(
+        {
+            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+            vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+            vol.Optional(ATTR_MEDIA_CONTENT_TYPE): vol.In("music"),
+        }
+    )
+
+    hass.services.async_register(
+        PLEX_DOMAIN,
+        SERVICE_PLAY_ON_SONOS,
+        async_play_on_sonos_service,
+        schema=play_on_sonos_schema,
+    )
+
     return True
 
 
@@ -244,3 +269,52 @@ async def async_options_updated(hass, entry):
     """Triggered by config entry options updates."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
     hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
+
+
+def play_on_sonos(hass, service_call):
+    """Play Plex media on a linked Sonos device."""
+    entity_id = service_call.data[ATTR_ENTITY_ID]
+    content_id = service_call.data[ATTR_MEDIA_CONTENT_ID]
+    content = json.loads(content_id)
+
+    sonos = hass.components.sonos
+    try:
+        sonos_id = sonos.get_coordinator_id(entity_id)
+    except HomeAssistantError as err:
+        _LOGGER.error("Cannot get Sonos device: %s", err)
+        return
+
+    if isinstance(content, int):
+        content = {"plex_key": content}
+
+    plex_server_name = content.get("plex_server")
+    shuffle = content.pop("shuffle", 0)
+
+    plex_servers = hass.data[PLEX_DOMAIN][SERVERS].values()
+    if plex_server_name:
+        plex_server = [x for x in plex_servers if x.friendly_name == plex_server_name]
+        if not plex_server:
+            _LOGGER.error(
+                "Requested Plex server '%s' not found in %s",
+                plex_server_name,
+                list(map(lambda x: x.friendly_name, plex_servers)),
+            )
+            return
+    else:
+        plex_server = next(iter(plex_servers))
+
+    sonos_speaker = plex_server.account.sonos_speaker_by_id(sonos_id)
+    if sonos_speaker is None:
+        _LOGGER.error(
+            "Sonos speaker '%s' could not be found on this Plex account", sonos_id
+        )
+        return
+
+    media = plex_server.lookup_media("music", **content)
+    if media is None:
+        _LOGGER.error("Media could not be found: %s", content)
+        return
+
+    _LOGGER.debug("Attempting to play '%s' on %s", media, sonos_speaker)
+    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+    sonos_speaker.playMedia(playqueue)

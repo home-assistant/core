@@ -7,6 +7,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
@@ -29,6 +30,7 @@ SUPPORT_ROKU = (
     | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PAUSE
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_TURN_ON
@@ -167,9 +169,20 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Turn off the Roku."""
         await self.coordinator.roku.remote("poweroff")
 
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
+
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
+
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        await self.coordinator.roku.remote("play")
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
@@ -209,7 +222,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             await self.coordinator.roku.remote("home")
 
         appl = next(
-            (app for app in self.coordinator.data.apps if app.name == source), None
+            (
+                app
+                for app in self.coordinator.data.apps
+                if source in (app.name, app.app_id)
+            ),
+            None,
         )
 
         if appl is not None:

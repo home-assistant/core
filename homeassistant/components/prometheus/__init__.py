@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
+    STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
@@ -249,7 +250,7 @@ class PrometheusMetrics:
         )
 
         try:
-            if "brightness" in state.attributes:
+            if "brightness" in state.attributes and state.state == STATE_ON:
                 value = state.attributes["brightness"] / 255.0
             else:
                 value = self.state_as_number(state)

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "These coordinates are already registered."
+        },
         "error": {
             "identifier_exists": "Coordinates already registered",
             "invalid_api_key": "Invalid API key"
@@ -7,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key",
+                    "api_key": "[%key:common::config_flow::data::api_key%]",
                     "elevation": "Elevation",
                     "latitude": "Latitude",
                     "longitude": "Longitude"

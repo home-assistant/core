@@ -82,12 +82,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if device.capabilities.events and await device.events.async_start():
         platforms += ["binary_sensor", "sensor"]
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.events.async_stop)
 
     for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
 
     return True
 

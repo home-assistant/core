@@ -1,12 +1,14 @@
 """Decorator for view methods to help with data validation."""
 from functools import wraps
 import logging
+from typing import Any, Awaitable, Callable
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.const import HTTP_BAD_REQUEST
 
-# mypy: allow-untyped-defs
+from .view import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ class RequestDataValidator:
     Will return a 400 if no JSON provided or doesn't match schema.
     """
 
-    def __init__(self, schema, allow_empty=False):
+    def __init__(self, schema: vol.Schema, allow_empty: bool = False) -> None:
         """Initialize the decorator."""
         if isinstance(schema, dict):
             schema = vol.Schema(schema)
@@ -28,11 +30,15 @@ class RequestDataValidator:
         self._schema = schema
         self._allow_empty = allow_empty
 
-    def __call__(self, method):
+    def __call__(
+        self, method: Callable[..., Awaitable[web.StreamResponse]]
+    ) -> Callable:
         """Decorate a function."""
 
         @wraps(method)
-        async def wrapper(view, request, *args, **kwargs):
+        async def wrapper(
+            view: HomeAssistantView, request: web.Request, *args: Any, **kwargs: Any
+        ) -> web.StreamResponse:
             """Wrap a request handler with data validation."""
             data = None
             try:
