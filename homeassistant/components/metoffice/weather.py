@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     try:
-        site = datapoint.get_nearest_site(latitude=latitude, longitude=longitude)
+        site = datapoint.get_nearest_forecast_site(latitude=latitude, longitude=longitude)
     except dp.exceptions.APIException as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return
