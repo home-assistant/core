@@ -160,7 +160,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         _LOGGER.warning("alarm_control_panel::watch_area: %s", changeset)
         self._changed_by_keypad = None
         self._changed_by_id = area.log_number + 1
-        self._change_by = username(self._elk, area.log_number)
+        self._changed_by = username(self._elk, area.log_number)
         self._changed_by_time = "%04d-%02d-%02dT%02d:%02d" % (
             area.log_year, area.log_month, area.log_day,
             area.log_hour, area.log_minute
