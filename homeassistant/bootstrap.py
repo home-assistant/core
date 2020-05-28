@@ -47,6 +47,8 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
+    # Ensure supervisor is available
+    "hassio",
     # Get the frontend up and running as soon
     # as possible so problem integrations can
     # be removed
