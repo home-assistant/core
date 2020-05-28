@@ -125,7 +125,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Register callback for ElkM1 changes."""
         await super().async_added_to_hass()
-        if len(self._elk.areas) == 1:
+        if len(self._elk.areas.elements) == 1:
             for keypad in self._elk.keypads:
                 keypad.add_callback(self._watch_keypad)
         self._element.add_callback(self._watch_area)
