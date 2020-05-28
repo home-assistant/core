@@ -122,7 +122,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     data = MetOfficeData(hass, datapoint, site)
     data.update()
-    if data.data is None:
+    if data.current is None:
         return
 
     sensors = []
