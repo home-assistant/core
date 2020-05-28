@@ -526,7 +526,7 @@ elgato==0.2.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.17
+elkm1-lib==0.7.18
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
