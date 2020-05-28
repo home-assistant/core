@@ -202,25 +202,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         )
                     _LOGGER.info("Added sensor.%s", entity["name"])
 
-        if single_thermostat is not None and not single_thermostat:
-            idx = 1
+        if single_thermostat is False:
             for state in INDICATE_ACTIVE_LOCAL_DEVICE:
                 if state in data:
-                    if idx == 1:
-                        entities.append(
-                            PwThermostatSensor(
-                                api,
-                                coordinator,
-                                entity["name"],
-                                dev_id,
-                                DEVICE_STATE,
-                                None,
-                            )
+                    entities.append(
+                        PwThermostatSensor(
+                            api,
+                            coordinator,
+                            entity["name"],
+                            dev_id,
+                            DEVICE_STATE,
+                            None,
                         )
-                        _LOGGER.info(
-                            "Added sensor.%s_state", "{}".format(entity["name"])
-                        )
-                        idx += 1
+                    )
+                    _LOGGER.info("Added sensor.%s_state", "{}".format(entity["name"]))
+                    break
 
     async_add_entities(entities, True)
 
