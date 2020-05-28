@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.pi_hole.const import (  # pylint: disable=unused-import
+    CONF_DISABLE_SECONDS,
     CONF_LOCATION,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -56,6 +57,7 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             tls = user_input[CONF_SSL]
             verify_tls = user_input[CONF_VERIFY_SSL]
             api_token = user_input.get(CONF_API_KEY)
+            disable_seconds = user_input.get(CONF_DISABLE_SECONDS)
             endpoint = f"{host}/{location}"
 
             if await self._async_endpoint_existed(endpoint):
@@ -78,6 +80,7 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SSL: tls,
                         CONF_VERIFY_SSL: verify_tls,
                         CONF_API_KEY: api_token,
+                        CONF_DISABLE_SECONDS: disable_seconds,
                     },
                 )
             except HoleError as ex:
@@ -108,6 +111,10 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_API_KEY, default=user_input.get(CONF_API_KEY) or ""
                     ): str,
+                    vol.Optional(
+                        CONF_DISABLE_SECONDS,
+                        default=user_input.get(CONF_DISABLE_SECONDS) or None,
+                    ): int,
                     vol.Required(
                         CONF_SSL, default=user_input.get(CONF_SSL) or DEFAULT_SSL
                     ): bool,

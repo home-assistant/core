@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_API_KEY,
@@ -21,6 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
 from .const import (
+    CONF_DISABLE_SECONDS,
     CONF_LOCATION,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -43,6 +45,7 @@ PI_HOLE_SCHEMA = vol.Schema(
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_API_KEY): cv.string,
+            vol.Optional(CONF_DISABLE_SECONDS): cv.positive_int,
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
             vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
             vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
@@ -160,6 +163,7 @@ async def async_setup_entry(hass, entry):
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
     api_key = entry.data.get(CONF_API_KEY)
+    disable_seconds = entry.data.get(CONF_DISABLE_SECONDS)
 
     LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
@@ -175,6 +179,7 @@ async def async_setup_entry(hass, entry):
                 api_token=api_key,
             ),
             name,
+            disable_seconds,
         )
         await pi_hole.async_update()
         hass.data[DOMAIN][name] = pi_hole
@@ -188,6 +193,17 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, BINARY_SENSOR_DOMAIN)
     )
+    if api_key and disable_seconds:
+        LOGGER.debug("Register switch for pihole %s", name)
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, SWITCH_DOMAIN)
+        )
+    else:
+        LOGGER.debug(
+            "No switch. api_key = %s and disable_seconds = %s",
+            api_key,
+            disable_seconds,
+        )
 
     return True
 
@@ -196,17 +212,19 @@ async def async_unload_entry(hass, entry):
     """Unload pi-hole entry."""
     hass.data[DOMAIN].pop(entry.data[CONF_NAME])
     await hass.config_entries.async_forward_entry_unload(entry, BINARY_SENSOR_DOMAIN)
+    await hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN)
     return await hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN)
 
 
 class PiHoleData:
     """Get the latest data and update the states."""
 
-    def __init__(self, api, name):
+    def __init__(self, api, name, disable_seconds):
         """Initialize the data object."""
         self.api = api
         self.name = name
         self.available = True
+        self.disable_seconds = disable_seconds
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):

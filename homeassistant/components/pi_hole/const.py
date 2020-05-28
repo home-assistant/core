@@ -5,6 +5,7 @@ from homeassistant.const import UNIT_PERCENTAGE
 
 DOMAIN = "pi_hole"
 
+CONF_DISABLE_SECONDS = "disable_seconds"
 CONF_LOCATION = "location"
 
 DEFAULT_LOCATION = "admin"
@@ -23,7 +24,7 @@ STATUS_ENABLED = "enabled"
 
 ATTR_BLOCKED_DOMAINS = "domains_blocked"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
 SENSOR_DICT = {
     "ads_blocked_today": ["Ads Blocked Today", "ads", "mdi:close-octagon-outline"],
