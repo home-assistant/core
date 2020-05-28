@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
-from samsungtvws.exceptions import ConnectionFailure
+from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException
 
 from homeassistant.const import (
@@ -247,7 +247,11 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Try to gather infos of this TV."""
         remote = self._get_remote()
         if remote:
-            return remote.rest_device_info()
+            try:
+                return remote.rest_device_info()
+            except HttpApiError:
+                # unable to get, ignore
+                pass
         return None
 
     def _send_key(self, key):
@@ -274,7 +278,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure:
                 self._notify_callback()
-                raise
-            except WebSocketException:
+            except (WebSocketException, OSError):
                 self._remote = None
         return self._remote

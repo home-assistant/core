@@ -1,4 +1,5 @@
 """Config flow for Samsung TV."""
+from socket import gethostbyname
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -13,6 +14,8 @@ from homeassistant.components.ssdp import (
 from homeassistant.components.zeroconf import ATTR_PROPERTIES
 from homeassistant.const import (
     CONF_HOST,
+    CONF_ID,
+    CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
@@ -31,6 +34,7 @@ from .const import (
     METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_NOT_SUCCESSFUL,
+    RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     WEBSOCKET_PORTS,
 )
@@ -74,21 +78,31 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self._title, data=data)
 
     def _abort_if_already_configured(self):
+        device_ip = gethostbyname(self._host)
         for entry in self.hass.config_entries.async_entries(DOMAIN):
+
+            # update user configured or unique_id=ip entries
+            if self._id and not entry.unique_id or device_ip == entry.unique_id:
+                data = {
+                    key: value
+                    for key, value in entry.data.items()
+                    # clean up old entries
+                    if key != CONF_ID and key != CONF_IP_ADDRESS
+                }
+                if self._manufacturer and not data.get(CONF_MANUFACTURER):
+                    data[CONF_MANUFACTURER] = self._manufacturer
+                if self._model and not data.get(CONF_MODEL):
+                    data[CONF_MODEL] = self._model
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=self._id, data=data
+                )
+                raise data_entry_flow.AbortFlow("already_configured")
+
             if (
                 self._host == entry.data[CONF_HOST]
                 or (self._id and self._id == entry.unique_id)
-                or (self._mac and self._mac == entry.data[CONF_MAC])
+                or (self._mac and self._mac == entry.data.get(CONF_MAC))
             ):
-                data = dict(entry.data)
-                if self._manufacturer and not data[CONF_MANUFACTURER]:
-                    data[CONF_MANUFACTURER] = self._manufacturer
-                if self._model and not data[CONF_MODEL]:
-                    data[CONF_MODEL] = self._model
-                if self._id and not entry.unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        entry, unique_id=self._id, data=data
-                    )
                 raise data_entry_flow.AbortFlow("already_configured")
 
     def _try_connect(self):
@@ -101,18 +115,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("No working config found")
         return RESULT_NOT_SUCCESSFUL
 
-    def _get_device_info(self):
+    def _get_and_check_device_info(self):
         """Try to get the device info."""
         for port in WEBSOCKET_PORTS:
-            try:
-                self._device_info = SamsungTVBridge.get_bridge(
-                    METHOD_WEBSOCKET, self._host, port
-                ).device_info()
-                if self._device_info:
-                    break
-            except Exception:
-                # ignore any error
-                pass
+            self._device_info = SamsungTVBridge.get_bridge(
+                METHOD_WEBSOCKET, self._host, port
+            ).device_info()
+            if self._device_info:
+                device_type = self._device_info.get("device", {}).get("type")
+                if device_type and device_type != "Samsung SmartTV":
+                    raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+                self._model = self._device_info.get("device", {}).get("modelName")
+                break
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -139,10 +153,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by ssdp discovery."""
         self._host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
         self._id = user_input.get(ATTR_UPNP_UDN)
-        self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
-        self._model = user_input.get(ATTR_UPNP_MODEL_NAME)
-        self._name = f"{self._manufacturer} {self._model}"
-        self._title = self._model
 
         # probably access denied
         if self._id is None:
@@ -151,9 +161,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._id = self._id[5:]
 
         await self.async_set_unique_id(self._id)
-        self._abort_if_unique_id_configured(
-            {CONF_MANUFACTURER: self._manufacturer, CONF_MODEL: self._model}
-        )
+        await self.hass.async_add_executor_job(self._get_and_check_device_info)
+
+        self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
+        if not self._model:
+            self._model = user_input.get(ATTR_UPNP_MODEL_NAME)
+        self._name = f"{self._manufacturer} {self._model}"
+        self._title = self._model
 
         self._abort_if_already_configured()
 
@@ -167,15 +181,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self._id:
             await self.async_set_unique_id(self._id)
-
-        await self.hass.async_add_executor_job(self._get_device_info)
-        if self._device_info:
-            self._model = self._device_info.get("device", {}).get("modelName")
-        if not self._model:
-            self._model = user_input[ATTR_PROPERTIES].get("model")
+        await self.hass.async_add_executor_job(self._get_and_check_device_info)
 
         self._mac = user_input[ATTR_PROPERTIES].get("deviceid")
         self._manufacturer = user_input[ATTR_PROPERTIES].get("manufacturer")
+        if not self._model:
+            self._model = user_input[ATTR_PROPERTIES].get("model")
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
 

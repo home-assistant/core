@@ -42,7 +42,11 @@ REMOTE_CALL = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.config_flow.gethostbyname"
+    ):
         remote = Mock()
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
@@ -52,7 +56,9 @@ def remote_fixture():
 
 async def test_setup(hass, remote):
     """Test Samsung TV integration is setup."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
+        "homeassistant.components.samsungtv.config_flow.gethostbyname"
+    ):
         await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
         await hass.async_block_till_done()
         state = hass.states.get(ENTITY_ID)

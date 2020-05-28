@@ -82,7 +82,11 @@ AUTODETECT_WEBSOCKET_SSL = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.config_flow.gethostbyname"
+    ):
         remote = Mock()
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
@@ -95,7 +99,9 @@ def remotews_fixture():
     """Patch the samsungtvws SamsungTVWS."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remotews_class:
+    ) as remotews_class, patch(
+        "homeassistant.components.samsungtv.config_flow.gethostbyname"
+    ):
         remotews = Mock()
         remotews.__enter__ = Mock()
         remotews.__exit__ = Mock()
@@ -155,7 +161,7 @@ async def test_user_websocket(hass, remotews):
         assert result["result"].unique_id is None
 
 
-async def test_user_legacy_missing_auth(hass):
+async def test_user_legacy_missing_auth(hass, remote):
     """Test starting a flow by user with authentication."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -169,7 +175,7 @@ async def test_user_legacy_missing_auth(hass):
         assert result["reason"] == "auth_missing"
 
 
-async def test_user_legacy_not_supported(hass):
+async def test_user_legacy_not_supported(hass, remote):
     """Test starting a flow by user for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -183,7 +189,7 @@ async def test_user_legacy_not_supported(hass):
         assert result["reason"] == "not_supported"
 
 
-async def test_user_websocket_not_supported(hass):
+async def test_user_websocket_not_supported(hass, remotews):
     """Test starting a flow by user for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
@@ -199,7 +205,7 @@ async def test_user_websocket_not_supported(hass):
         assert result["reason"] == "not_supported"
 
 
-async def test_user_not_successful(hass):
+async def test_user_not_successful(hass, remotews):
     """Test starting a flow by user but no connection found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
@@ -214,7 +220,7 @@ async def test_user_not_successful(hass):
         assert result["reason"] == "not_successful"
 
 
-async def test_user_not_successful_2(hass):
+async def test_user_not_successful_2(hass, remotews):
     """Test starting a flow by user but no connection found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
@@ -292,7 +298,7 @@ async def test_ssdp_noprefix(hass, remote):
     assert result["result"].unique_id == "fake2_uuid"
 
 
-async def test_ssdp_legacy_missing_auth(hass):
+async def test_ssdp_legacy_missing_auth(hass, remote):
     """Test starting a flow from discovery with authentication."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -314,7 +320,7 @@ async def test_ssdp_legacy_missing_auth(hass):
         assert result["reason"] == "auth_missing"
 
 
-async def test_ssdp_legacy_not_supported(hass):
+async def test_ssdp_legacy_not_supported(hass, remote):
     """Test starting a flow from discovery for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -336,7 +342,7 @@ async def test_ssdp_legacy_not_supported(hass):
         assert result["reason"] == "not_supported"
 
 
-async def test_ssdp_websocket_not_supported(hass):
+async def test_ssdp_websocket_not_supported(hass, remote):
     """Test starting a flow from discovery for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
@@ -359,7 +365,7 @@ async def test_ssdp_websocket_not_supported(hass):
         assert result["reason"] == "not_supported"
 
 
-async def test_ssdp_not_successful(hass):
+async def test_ssdp_not_successful(hass, remote):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
@@ -383,7 +389,7 @@ async def test_ssdp_not_successful(hass):
         assert result["reason"] == "not_successful"
 
 
-async def test_ssdp_not_successful_2(hass):
+async def test_ssdp_not_successful_2(hass, remote):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),

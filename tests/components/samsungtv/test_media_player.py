@@ -112,7 +112,11 @@ MOCK_CONFIG_NOTURNON = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.config_flow.gethostbyname"
+    ):
         remote = Mock()
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
@@ -123,7 +127,11 @@ def remote_fixture():
 @pytest.fixture(name="remotews")
 def remotews_fixture():
     """Patch the samsungtvws SamsungTVWS."""
-    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.config_flow.gethostbyname"
+    ):
         remote = Mock()
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
