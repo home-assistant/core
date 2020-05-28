@@ -336,7 +336,7 @@ async def test_shutdown():
 async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
     with patch(
-        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.Unauthorized
+        "axis.vapix.session_request", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -344,7 +344,7 @@ async def test_get_device_fails(hass):
 async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
     with patch(
-        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.RequestError
+        "axis.vapix.session_request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -352,6 +352,6 @@ async def test_get_device_device_unavailable(hass):
 async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
     with patch(
-        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.AxisException
+        "axis.vapix.session_request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")

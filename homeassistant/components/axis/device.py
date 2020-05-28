@@ -258,19 +258,9 @@ async def get_device(hass, host, port, username, password):
         Configuration(host, port=port, username=username, password=password)
     )
 
-    device.vapix.initialize_params(preload_data=False)
-    device.vapix.initialize_ports()
-
     try:
         with async_timeout.timeout(15):
-
-            for vapix_call in (
-                device.vapix.initialize_api_discovery,
-                device.vapix.params.update_brand,
-                device.vapix.params.update_properties,
-                device.vapix.ports.update,
-            ):
-                await hass.async_add_executor_job(vapix_call)
+            await hass.async_add_executor_job(device.vapix.initialize)
 
         return device
 
