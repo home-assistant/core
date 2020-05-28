@@ -80,6 +80,9 @@ async def async_setup(hass, config):
     async def change_remote_access(service):
         await _change_remote_access(hass, service)
 
+    async def set_scaling_governor(service):
+        await _set_scaling_governor(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "execute_command", execute_command)
@@ -110,6 +113,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "hdmi_control_disable", hdmi_control_disable)
     hass.services.async_register(DOMAIN, "change_wm_overscan", change_wm_overscan)
     hass.services.async_register(DOMAIN, "disable_irda_remote", disable_irda_remote)
+    hass.services.async_register(DOMAIN, "set_scaling_governor", set_scaling_governor)
     return True
 
 
@@ -155,8 +159,8 @@ async def _change_remote_access(hass, call):
     if access == "on":
         await _run("pm2 stop tunnel && pm2 delete tunnel")
         await _run(
-            "pm2 start lt --name tunnel --output NULL --error NULL "
-            "--restart-delay=30000 -- "
+            "pm2 start lt --name tunnel --output /dev/null --error /dev/null "
+            "--restart-delay=150000 -- "
             "-h http://paczka.pro -p 8180 -s {}".format(gate_id)
         )
     else:
@@ -309,7 +313,7 @@ async def _ssh_remote_access(hass, call):
     if access == "on":
         await _run("pm2 delete ssh-tunnel")
         await _run(
-            "pm2 start lt --name ssh-tunnel --restart-delay=30000 -- -h "
+            "pm2 start lt --name ssh-tunnel --restart-delay=150000 --output /dev/null --error /dev/null -- -h "
             "http://paczka.pro -p 8888 -s " + gate_id
         )
         _LOGGER.warning(
@@ -689,3 +693,29 @@ async def _disable_irda_remote(hass, call):
     comm = r'su -c "rm -rf /dev/input/event2"'
     await _run(comm)
     # gpio_keypad -> event0 - button behind the AV port can be used it in the future :)
+
+
+async def _set_scaling_governor(hass, call):
+    # physical CPU cores TODO do this dynamically
+    physical_cores = ["0", "1", "2", "3"]
+
+    # interactive is default scaling
+    scaling = "interactive"
+    if "scaling" in call.data:
+        scaling = call.data["scaling"]
+
+    freq = "1000000"
+    if scaling == "performance":
+        freq = "1200000"
+        comm = r'su -c "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"'
+        await _run(comm)
+
+    for pc in physical_cores:
+        comm = (
+            r'su -c "echo '
+            + freq
+            + " > /sys/devices/system/cpu/cpu"
+            + pc
+            + '/cpufreq/scaling_max_freq"'
+        )
+        await _run(comm)

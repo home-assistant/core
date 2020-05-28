@@ -104,9 +104,10 @@ async def prepare_usb_device(hass, device_info):
         # ecosystem_config = str(os.path.dirname(__file__))
         # ecosystem_config += "/pm2/zigbee.ecosystem.config.js"
         # cmd_to_run = "pm2 startOrReload " + ecosystem_config
+        # restart-delay 150000 milisecond == 2.5 minutes
         cmd_to_run = (
             "cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt "
-            "&& pm2 start npm --name zigbee --output NULL --error NULL --restart-delay=30000 -- run start "
+            "&& pm2 start npm --name zigbee --output /dev/null --error /dev/null --restart-delay=150000 -- run start "
         )
         await _run(cmd_to_run)
         await _run("pm2 save")
