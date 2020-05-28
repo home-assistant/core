@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import DATA_SETUP, async_setup_component
+from homeassistant.setup import DATA_SETUP, DATA_SETUP_STARTED, async_setup_component
 from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
@@ -325,6 +325,8 @@ async def _async_set_up_integrations(
 ) -> None:
     """Set up all the integrations."""
 
+    hass.data[DATA_SETUP_STARTED] = {}
+
     async def async_setup_multi_components(domains: Set[str]) -> None:
         """Set up multiple domains. Log on failure."""
 
@@ -333,12 +335,16 @@ async def _async_set_up_integrations(
             while True:
                 await asyncio.sleep(LOG_SLOW_STARTUP_INTERVAL)
                 remaining = [
-                    domain for domain in domains if domain not in hass.config.components
+                    domain
+                    for domain in domains
+                    if domain not in hass.config.components
+                    and domain in hass.data[DATA_SETUP_STARTED]
                 ]
-                _LOGGER.info(
-                    "Waiting on integrations to complete setup: %s",
-                    ", ".join(remaining),
-                )
+                if remaining:
+                    _LOGGER.info(
+                        "Waiting on integrations to complete setup: %s",
+                        ", ".join(remaining),
+                    )
 
         futures = {
             domain: hass.async_create_task(async_setup_component(hass, domain, config))
