@@ -105,14 +105,13 @@ async def prepare_usb_device(hass, device_info):
         ecosystem_config += "/pm2/zigbee.ecosystem.config.js"
 
         cmd_to_run = "pm2 startOrReload " + ecosystem_config
-        _LOGGER.error("start pm2 zigbee service (after delete) " + cmd_to_run)
         await _run(cmd_to_run)
 
         #
-        if ais_global.G_AIS_START_IS_DONE:
-            await hass.services.async_call(
-                "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
-            )
+        # if ais_global.G_AIS_START_IS_DONE:
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
+        )
 
 
 async def remove_usb_device(hass, device_info):
