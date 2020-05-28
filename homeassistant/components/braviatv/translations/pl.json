@@ -13,7 +13,7 @@
                 "data": {
                     "pin": "Kod PIN"
                 },
-                "description": "Wprowad\u017a kod PIN wy\u015bwietlany na telewizorze Sony Bravia. \n\nJe\u015bli kod PIN nie jest wy\u015bwietlany, musisz wyrejestrowa\u0107 Home Assistant'a na swoim telewizorze, przejd\u017a do Ustawienia -> Sie\u0107 -> Ustawienia urz\u0105dzenia zdalnego -> Wyrejestruj urz\u0105dzenie zdalne.",
+                "description": "Wprowad\u017a kod PIN wy\u015bwietlany na telewizorze Sony Bravia. \n\nJe\u015bli kod PIN nie jest wy\u015bwietlany, musisz wyrejestrowa\u0107 Home Assistanta na swoim telewizorze, przejd\u017a do Ustawienia -> Sie\u0107 -> Ustawienia urz\u0105dzenia zdalnego -> Wyrejestruj urz\u0105dzenie zdalne.",
                 "title": "Autoryzacja Sony Bravia TV"
             },
             "user": {

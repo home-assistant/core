@@ -422,4 +422,5 @@ async def _async_set_up_integrations(
         await async_setup_multi_components(stage_2_domains)
 
     # Wrap up startup
+    _LOGGER.debug("Waiting for startup to wrap up")
     await hass.async_block_till_done()

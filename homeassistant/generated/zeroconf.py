@@ -9,6 +9,9 @@ ZEROCONF = {
     "_airplay._tcp.local.": [
         "samsungtv"
     ],
+    "_api._udp.local.": [
+        "guardian"
+    ],
     "_axis-video._tcp.local.": [
         "axis",
         "doorbird"

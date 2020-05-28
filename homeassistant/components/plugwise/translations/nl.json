@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met de Smile",
+        "description": "Gegevens",
+        "data": {
+          "host": "IP adres van de Smile",
+          "password": "Smile ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+      "invalid_auth": "Authenticatie mislukt, voer de 8 karakters van je Smile goed in",
+      "unknown": "Overwachte fout"
+    },
+    "abort": {
+      "already_configured": "Deze Smile is al geconfigureerd"
+    }
+  }
+}

@@ -9,6 +9,7 @@
             "invalid_host": "Wpis hosta nie by\u0142 w pe\u0142nym formacie URL, np. http://192.168.10.100:80.",
             "unknown": "Nieoczekiwany b\u0142\u0105d."
         },
+        "flow_title": "Urz\u0105dzenia uniwersalne ISY994 {name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -21,5 +22,20 @@
                 "title": "Po\u0142\u0105czenie z ISY994"
             }
         }
-    }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Ci\u0105g ignorowania",
+                    "restore_light_state": "Przywr\u00f3\u0107 jasno\u015b\u0107 \u015bwiat\u0142a",
+                    "sensor_string": "Ci\u0105g sensora w\u0119z\u0142a",
+                    "variable_sensor_string": "Ci\u0105g zmiennej sensora"
+                },
+                "description": "Ustaw opcje dla integracji ISY: \n \u2022 Ci\u0105g sensora w\u0119z\u0142a: ka\u017cde urz\u0105dzenie lub folder, kt\u00f3ry zawiera w nazwie ci\u0105g sensora w\u0119z\u0142a, b\u0119dzie traktowane jako sensor lub sensor binarny. \n \u2022 Ci\u0105g ignorowania: ka\u017cde urz\u0105dzenie z 'ci\u0105giem ignorowania' w nazwie zostanie zignorowane. \n \u2022 Ci\u0105g sensora zmiennej: ka\u017cda zmienna zawieraj\u0105ca 'ci\u0105g sensora zmiennej' zostanie dodana jako sensor. \n \u2022 Przywr\u00f3\u0107 jasno\u015b\u0107 \u015bwiat\u0142a: je\u015bli ta opcja jest w\u0142\u0105czona, poprzednia warto\u015b\u0107 jasno\u015bci zostanie przywr\u00f3cona po w\u0142\u0105czeniu \u015bwiat\u0142a zamiast domy\u015blnej warto\u015bci jasno\u015bci dla urz\u0105dzenia.",
+                "title": "Opcje ISY994"
+            }
+        }
+    },
+    "title": "Urz\u0105dzenia uniwersalne ISY994"
 }

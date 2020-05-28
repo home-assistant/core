@@ -126,6 +126,8 @@ class Inputs:
     """
 
     VALID_SOURCE_NAME_MAP = {
+        "antenna": "TUNER",
+        "antennatv": "TUNER",
         "aux": "AUX 1",
         "aux1": "AUX 1",
         "aux2": "AUX 2",
@@ -135,6 +137,7 @@ class Inputs:
         "aux6": "AUX 6",
         "aux7": "AUX 7",
         "bluray": "BLURAY",
+        "blurayplayer": "BLURAY",
         "cable": "CABLE",
         "cd": "CD",
         "coax": "COAX 1",
@@ -186,6 +189,7 @@ class Inputs:
         "playstation": "PLAYSTATION",
         "playstation3": "PLAYSTATION 3",
         "playstation4": "PLAYSTATION 4",
+        "rokumediaplayer": "MEDIA PLAYER",
         "satellite": "SATELLITE",
         "satellitetv": "SATELLITE",
         "smartcast": "SMARTCAST",

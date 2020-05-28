@@ -7,6 +7,7 @@
         "error": {
             "cant_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
             "complete_pairing failed": "Nie mo\u017cna uko\u0144czy\u0107 parowania. Upewnij si\u0119, \u017ce podany kod PIN jest prawid\u0142owy, a telewizor jest zasilany i pod\u0142\u0105czony do sieci przed ponownym przes\u0142aniem.",
+            "complete_pairing_failed": "Nie mo\u017cna uko\u0144czy\u0107 parowania. Upewnij si\u0119, \u017ce podany kod PIN jest prawid\u0142owy, a telewizor jest zasilany i pod\u0142\u0105czony do sieci przed ponownym przes\u0142aniem.",
             "host_exists": "Urz\u0105dzenie Vizio z okre\u015blonym hostem jest ju\u017c skonfigurowane.",
             "name_exists": "Urz\u0105dzenie Vizio o okre\u015blonej nazwie jest ju\u017c skonfigurowane."
         },
@@ -19,11 +20,11 @@
                 "title": "Ko\u0144czenie procesu parowania"
             },
             "pairing_complete": {
-                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant'em.",
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistantem.",
                 "title": "Parowanie zako\u0144czone"
             },
             "pairing_complete_import": {
-                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant'em.\n\nToken dost\u0119pu to '**{access_token}**'.",
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistantem.\n\nToken dost\u0119pu to '**{access_token}**'.",
                 "title": "Parowanie zako\u0144czone"
             },
             "user": {
