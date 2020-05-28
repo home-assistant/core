@@ -287,6 +287,7 @@ async def test_setup_hass(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
+    caplog,
 ):
     """Test it works."""
     verbose = Mock()
@@ -297,7 +298,11 @@ async def test_setup_hass(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"browser": {}, "frontend": {}},
-    ), patch("homeassistant.components.http.start_http_server_and_save_config"):
+    ), patch(
+        "homeassistant.components.http.start_http_server_and_save_config"
+    ), patch.object(
+        bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000
+    ):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=verbose,
@@ -307,6 +312,8 @@ async def test_setup_hass(
             skip_pip=True,
             safe_mode=False,
         )
+
+    assert "Waiting on integrations to complete setup" not in caplog.text
 
     assert "browser" in hass.config.components
     assert "safe_mode" not in hass.config.components
@@ -322,6 +329,37 @@ async def test_setup_hass(
     assert len(mock_mount_local_lib_path.mock_calls) == 1
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
+
+
+async def test_setup_hass_takes_longer_than_log_slow_startup(
+    mock_enable_logging,
+    mock_is_virtual_env,
+    mock_mount_local_lib_path,
+    mock_ensure_config_exists,
+    mock_process_ha_config_upgrade,
+    caplog,
+):
+    """Test it works."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    with patch(
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"browser": {}, "frontend": {}},
+    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0):
+        await bootstrap.async_setup_hass(
+            config_dir=get_test_config_dir(),
+            verbose=verbose,
+            log_rotate_days=log_rotate_days,
+            log_file=log_file,
+            log_no_color=log_no_color,
+            skip_pip=True,
+            safe_mode=False,
+        )
+
+    assert "Waiting on integrations to complete setup" in caplog.text
 
 
 async def test_setup_hass_invalid_yaml(
