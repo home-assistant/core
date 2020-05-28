@@ -87,7 +87,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     key: value
                     for key, value in entry.data.items()
                     # clean up old entries
-                    if key != CONF_ID and key != CONF_IP_ADDRESS
+                    if key not in (CONF_ID, CONF_IP_ADDRESS)
                 }
                 if self._manufacturer and not data.get(CONF_MANUFACTURER):
                     data[CONF_MANUFACTURER] = self._manufacturer
