@@ -110,10 +110,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for method in SUPPORTED_METHODS:
             self._bridge = SamsungTVBridge.get_bridge(method, self._host)
             result = self._bridge.try_connect()
+            if result == RESULT_SUCCESS:
+                return
             if result != RESULT_NOT_SUCCESSFUL:
-                return result
+                raise data_entry_flow.AbortFlow(result)
         LOGGER.debug("No working config found")
-        return RESULT_NOT_SUCCESSFUL
+        raise data_entry_flow.AbortFlow(RESULT_NOT_SUCCESSFUL)
 
     def _get_and_check_device_info(self):
         """Try to get the device info."""
@@ -141,10 +143,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._abort_if_already_configured()
 
-            result = await self.hass.async_add_executor_job(self._try_connect)
+            await self.hass.async_add_executor_job(self._try_connect)
 
-            if result != RESULT_SUCCESS:
-                return self.async_abort(reason=result)
             return self._get_entry()
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
@@ -198,10 +198,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
-            result = await self.hass.async_add_executor_job(self._try_connect)
+            await self.hass.async_add_executor_job(self._try_connect)
 
-            if result != RESULT_SUCCESS:
-                return self.async_abort(reason=result)
             return self._get_entry()
 
         return self.async_show_form(
