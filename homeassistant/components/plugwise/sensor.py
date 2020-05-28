@@ -1,7 +1,6 @@
 """Plugwise Sensor component for Home Assistant."""
 
 import logging
-from typing import Dict
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -14,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-from . import SmileGateway
+from . import SmileSensor
 from .const import (
     COOL_ICON,
     DEVICE_CLASS_GAS,
@@ -170,36 +169,38 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         data = api.get_device_data(dev_id)
         for sensor, sensor_type in SENSOR_MAP.items():
             if sensor in data:
-                if data[sensor] is not None:
-                    if "power" in entity["types"]:
-                        model = None
+                if data[sensor] is None:
+                    continue
 
-                        if "plug" in entity["types"]:
-                            model = "Metered Switch"
+                if "power" in entity["types"]:
+                    model = None
 
-                        entities.append(
-                            PwPowerSensor(
-                                api,
-                                coordinator,
-                                entity["name"],
-                                dev_id,
-                                sensor,
-                                sensor_type,
-                                model,
-                            )
+                    if "plug" in entity["types"]:
+                        model = "Metered Switch"
+
+                    entities.append(
+                        PwPowerSensor(
+                            api,
+                            coordinator,
+                            entity["name"],
+                            dev_id,
+                            sensor,
+                            sensor_type,
+                            model,
                         )
-                    else:
-                        entities.append(
-                            PwThermostatSensor(
-                                api,
-                                coordinator,
-                                entity["name"],
-                                dev_id,
-                                sensor,
-                                sensor_type,
-                            )
+                    )
+                else:
+                    entities.append(
+                        PwThermostatSensor(
+                            api,
+                            coordinator,
+                            entity["name"],
+                            dev_id,
+                            sensor,
+                            sensor_type,
                         )
-                    _LOGGER.info("Added sensor.%s", entity["name"])
+                    )
+                _LOGGER.info("Added sensor.%s", entity["name"])
 
         if single_thermostat is False:
             for state in INDICATE_ACTIVE_LOCAL_DEVICE:
@@ -220,7 +221,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class PwThermostatSensor(SmileGateway, Entity):
+class PwThermostatSensor(SmileSensor, Entity):
     """Thermostat (or generic) sensor entities."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type):
@@ -228,9 +229,10 @@ class PwThermostatSensor(SmileGateway, Entity):
         super().__init__(api, coordinator)
 
         self._api = api
+        self._gateway_id = self._api.gateway_id
         self._dev_id = dev_id
         self._sensor_type = sensor_type
-        self._name = name
+        self._entity_name = name
         self._sensor = sensor
         self._state = None
         self._model = None
@@ -247,98 +249,58 @@ class PwThermostatSensor(SmileGateway, Entity):
         self._cooling_state = False
 
         if self._dev_id == self._api.heater_id:
-            self._name = "Auxiliary"
+            self._entity_name = "Auxiliary"
         sensorname = sensor.replace("_", " ").title()
-        self._sensorname = f"{self._name} {sensorname}"
+        self._name = f"{self._entity_name} {sensorname}"
 
         if self._dev_id == self._api.gateway_id:
-            self._name = f"Smile {self._name}"
+            self._entity_name = f"Smile {self._entity_name}"
 
         self._unique_id = f"{dev_id}-{sensor}"
-
-    @property
-    def device_class(self):
-        """Device class of this entity."""
-        return self._dev_class
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self._sensorname
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_info(self) -> Dict[str, any]:
-        """Return the device information."""
-
-        device_information = {
-            "identifiers": {(DOMAIN, self._dev_id)},
-            "name": self._name,
-            "manufacturer": "Plugwise",
-        }
-
-        if self._model is not None:
-            device_information["model"] = self._model
-
-        if self._dev_id != self._api.gateway_id:
-            device_information["via_device"] = (DOMAIN, self._api.gateway_id)
-
-        return device_information
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon for the sensor."""
-        if self._sensor_type is None:
-            if self._heating_state:
-                return FLAME_ICON
-            if self._cooling_state:
-                return COOL_ICON
-            return IDLE_ICON
-        return self._icon
 
     def _process_data(self):
         """Update the entity."""
         data = self._api.get_device_data(self._dev_id)
 
         if not data:
-            _LOGGER.error("Received no data for device %s.", self._name)
-        else:
-            if self._sensor in data:
-                if data[self._sensor] is not None:
-                    measurement = data[self._sensor]
-                    if self._sensor == "battery" or self._sensor == "valve_position":
-                        measurement = measurement * 100
-                    if self._unit_of_measurement == "%":
-                        measurement = int(measurement)
-                    self._state = measurement
+            _LOGGER.error("Received no data for device %s.", self._entity_name)
+            self.async_write_ha_state()
+            return
 
-            if "heating_state" in data:
-                if data["heating_state"] is not None:
-                    self._heating_state = data["heating_state"]
-            if "cooling_state" in data:
-                if data["cooling_state"] is not None:
-                    self._cooling_state = data["cooling_state"]
-            if self._sensor == DEVICE_STATE:
-                if self._heating_state:
-                    self._state = "heating"
-                elif self._cooling_state:
-                    self._state = "cooling"
-                else:
-                    self._state = "idle"
+        if self._sensor in data:
+            if data[self._sensor] is not None:
+                measurement = data[self._sensor]
+                if self._sensor == "battery" or self._sensor == "valve_position":
+                    measurement = measurement * 100
+                if self._unit_of_measurement == "%":
+                    measurement = int(measurement)
+                self._state = measurement
+
+        if "heating_state" in data:
+            if data["heating_state"] is not None:
+                self._heating_state = data["heating_state"]
+        if "cooling_state" in data:
+            if data["cooling_state"] is not None:
+                self._cooling_state = data["cooling_state"]
+        if self._sensor == DEVICE_STATE:
+            if self._heating_state:
+                self._state = "heating"
+            elif self._cooling_state:
+                self._state = "cooling"
+            else:
+                self._state = "idle"
+
+        if self._sensor_type is None:
+            self._icon = IDLE_ICON
+            if self._heating_state:
+                self._icon = FLAME_ICON
+            if self._cooling_state:
+                self._icon = COOL_ICON
 
         self.async_write_ha_state()
 
 
-class PwPowerSensor(SmileGateway, Entity):
+class PwPowerSensor(SmileSensor, Entity):
     """Power sensor entities."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type, model):
@@ -346,8 +308,9 @@ class PwPowerSensor(SmileGateway, Entity):
         super().__init__(api, coordinator)
 
         self._api = api
+        self._gateway_id = self._api.gateway_id
         self._model = model
-        self._name = name
+        self._entity_name = name
         self._dev_id = dev_id
         self._device = sensor_type[0]
         self._unit_of_measurement = sensor_type[1]
@@ -357,66 +320,27 @@ class PwPowerSensor(SmileGateway, Entity):
         self._state = None
 
         sensorname = sensor.replace("_", " ").title()
-        self._sensorname = f"{name} {sensorname}"
+        self._name = f"{name} {sensorname}"
 
         if self._dev_id == self._api.gateway_id:
-            self._name = f"Smile {self._name}"
+            self._entity_name = f"Smile {self._entity_name}"
 
         self._unique_id = f"{dev_id}-{sensor}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._sensorname
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Device class of this entity."""
-        return self._dev_class
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_info(self) -> Dict[str, any]:
-        """Return the device information."""
-
-        device_information = {
-            "identifiers": {(DOMAIN, self._dev_id)},
-            "name": self._name,
-            "manufacturer": "Plugwise",
-            "model": self._device,
-        }
-
-        if self._dev_id != self._api.gateway_id:
-            device_information["via_device"] = (DOMAIN, self._api.gateway_id)
-
-        return device_information
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
 
     def _process_data(self):
         """Update the entity."""
         data = self._api.get_device_data(self._dev_id)
 
         if not data:
-            _LOGGER.error("Received no data for device %s.", self._name)
-        else:
-            if self._sensor in data:
-                if data[self._sensor] is not None:
-                    measurement = data[self._sensor]
-                    if self._unit_of_measurement == "kWh":
-                        measurement = int(measurement / 1000)
-                    self._state = measurement
+            _LOGGER.error("Received no data for device %s.", self._entity_name)
+            self.async_write_ha_state()
+            return
+
+        if self._sensor in data:
+            if data[self._sensor] is not None:
+                measurement = data[self._sensor]
+                if self._unit_of_measurement == "kWh":
+                    measurement = int(measurement / 1000)
+                self._state = measurement
 
         self.async_write_ha_state()
