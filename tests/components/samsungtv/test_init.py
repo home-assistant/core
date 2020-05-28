@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, call, patch
@@ -54,7 +55,7 @@ def remote_fixture():
         yield remote
 
 
-async def test_setup(hass, remote):
+async def test_setup(hass: HomeAssistantType, remote: Mock):
     """Test Samsung TV integration is setup."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
         "homeassistant.components.samsungtv.config_flow.gethostbyname"
@@ -78,7 +79,7 @@ async def test_setup(hass, remote):
         assert remote.call_args == call(REMOTE_CALL)
 
 
-async def test_setup_duplicate_config(hass, remote, caplog):
+async def test_setup_duplicate_config(hass: HomeAssistantType, remote: Mock, caplog):
     """Test duplicate setup of platform."""
     DUPLICATE = {
         SAMSUNGTV_DOMAIN: [
@@ -93,7 +94,7 @@ async def test_setup_duplicate_config(hass, remote, caplog):
     assert "duplicate host entries found" in caplog.text
 
 
-async def test_setup_duplicate_entries(hass, remote, caplog):
+async def test_setup_duplicate_entries(hass: HomeAssistantType, remote: Mock, caplog):
     """Test duplicate setup of platform."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
