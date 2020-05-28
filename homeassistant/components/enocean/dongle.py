@@ -81,6 +81,6 @@ def validate_path(path: str):
         # if it cannot connect
         SerialCommunicator(port=path)
         return True
-    except serial.SerialException as e:
-        _LOGGER.warning("Dongle path %s is invalid: %s", path, str(e))
+    except serial.SerialException as exception:
+        _LOGGER.warning("Dongle path %s is invalid: %s", path, str(exception))
         return False
