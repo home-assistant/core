@@ -4,7 +4,16 @@ import logging
 import datapoint as dp
 import voluptuous as vol
 
-from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
+    PLATFORM_SCHEMA,
+    WeatherEntity,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -14,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .sensor import ATTRIBUTION, CONDITION_CLASSES, MetOfficeCurrentData
+from .sensor import ATTRIBUTION, CONDITION_CLASSES, MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +56,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     try:
-        site = datapoint.get_nearest_forecast_site(latitude=latitude, longitude=longitude)
+        site = datapoint.get_nearest_forecast_site(
+            latitude=latitude, longitude=longitude
+        )
     except dp.exceptions.APIException as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return
@@ -56,9 +67,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to get nearest Met Office forecast site")
         return
 
-    data = MetOfficeCurrentData(hass, datapoint, site)
+    data = MetOfficeData(hass, datapoint, site)
     try:
-        data.update()
+        data.update(forecast=True)
     except (ValueError, dp.exceptions.APIException) as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return
@@ -77,7 +88,7 @@ class MetOfficeWeather(WeatherEntity):
 
     def update(self):
         """Update current conditions."""
-        self.data.update()
+        self.data.update(forecast=True)
 
     @property
     def name(self):
@@ -88,13 +99,15 @@ class MetOfficeWeather(WeatherEntity):
     def condition(self):
         """Return the current condition."""
         return [
-            k for k, v in CONDITION_CLASSES.items() if self.data.data.weather.value in v
+            k
+            for k, v in CONDITION_CLASSES.items()
+            if self.data.current.weather.value in v
         ][0]
 
     @property
     def temperature(self):
         """Return the platform temperature."""
-        return self.data.data.temperature.value
+        return self.data.current.temperature.value
 
     @property
     def temperature_unit(self):
@@ -109,19 +122,40 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the relative humidity."""
-        return self.data.data.humidity.value
+        return self.data.current.humidity.value
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self.data.data.wind_speed.value
+        return self.data.current.wind_speed.value
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self.data.data.wind_direction.value
+        return self.data.current.wind_direction.value
 
     @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
+
+    @property
+    def forecast(self):
+        """Return the forecast array."""
+        data = [
+            {
+                ATTR_FORECAST_TIME: day.timesteps[1].date,
+                ATTR_FORECAST_TEMP: day.timesteps[1].temperature.value,
+                ATTR_FORECAST_TEMP_LOW: day.timesteps[0].temperature.value,
+                ATTR_FORECAST_WIND_SPEED: day.timesteps[1].wind_speed.value,
+                ATTR_FORECAST_WIND_BEARING: day.timesteps[1].wind_direction.value,
+                ATTR_FORECAST_CONDITION: [
+                    k
+                    for k, v in CONDITION_CLASSES.items()
+                    if day.timesteps[1].weather.value in v
+                ][0],
+            }
+            for day in self.data.forecast
+        ]
+
+        return data

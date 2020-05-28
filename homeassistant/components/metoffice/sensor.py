@@ -120,7 +120,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to get nearest Met Office forecast site")
         return
 
-    data = MetOfficeCurrentData(hass, datapoint, site)
+    data = MetOfficeData(hass, datapoint, site)
     data.update()
     if data.data is None:
         return
@@ -151,10 +151,10 @@ class MetOfficeCurrentSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         if self._condition == "visibility_distance" and hasattr(
-            self.data.data, "visibility"
+            self.data.current, "visibility"
         ):
-            return VISIBILITY_CLASSES.get(self.data.data.visibility.value)
-        if hasattr(self.data.data, self._condition):
+            return VISIBILITY_CLASSES.get(self.data.current.visibility.value)
+        if hasattr(self.data.current, self._condition):
             variable = getattr(self.data.data, self._condition)
             if self._condition == "weather":
                 return [
@@ -175,7 +175,7 @@ class MetOfficeCurrentSensor(Entity):
         """Return the state attributes of the device."""
         attr = {}
         attr[ATTR_ATTRIBUTION] = ATTRIBUTION
-        attr[ATTR_LAST_UPDATE] = self.data.data.date
+        attr[ATTR_LAST_UPDATE] = self.data.current.date
         attr[ATTR_SENSOR_ID] = self._condition
         attr[ATTR_SITE_ID] = self.site.id
         attr[ATTR_SITE_NAME] = self.site.name
@@ -186,21 +186,29 @@ class MetOfficeCurrentSensor(Entity):
         self.data.update()
 
 
-class MetOfficeCurrentData:
+class MetOfficeData:
     """Get data from Datapoint."""
 
     def __init__(self, hass, datapoint, site):
         """Initialize the data object."""
         self._datapoint = datapoint
         self._site = site
-        self.data = None
+        self.current = None
+        self.forecast = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self, forecast: bool = False):
         """Get the latest data from Datapoint."""
         try:
-            forecast = self._datapoint.get_forecast_for_site(self._site.id, "3hourly")
-            self.data = forecast.now()
+            current = self._datapoint.get_forecast_for_site(self._site.id, "3hourly")
+            self.current = current.now()
         except (ValueError, dp.exceptions.APIException) as err:
             _LOGGER.error("Check Met Office %s", err.args)
-            self.data = None
+            self.current = None
+        if forecast:
+            try:
+                future = self._datapoint.get_forecast_for_site(self._site.id, "daily")
+                self.forecast = future.days
+            except (ValueError, dp.exceptions.APIException) as err:
+                _LOGGER.error("Check Met Office %s", err.args)
+                self.forecast = None
