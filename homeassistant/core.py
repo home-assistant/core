@@ -265,6 +265,7 @@ class HomeAssistant:
 
         setattr(self.loop, "_thread_ident", threading.get_ident())
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.config.start_complete = True
 
         try:

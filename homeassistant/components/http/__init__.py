@@ -246,7 +246,7 @@ async def async_setup(hass, config):
         hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_wait_frontend_load)
     )
     startup_listeners.append(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_START, start_server)
     )
 
     hass.http = server
