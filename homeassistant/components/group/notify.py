@@ -1,11 +1,11 @@
 """Group platform for notify component."""
-import time
 import asyncio
 from collections import deque
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
 import threading
+import time
 
 import voluptuous as vol
 
