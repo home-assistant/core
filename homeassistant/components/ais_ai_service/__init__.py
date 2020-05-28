@@ -3252,7 +3252,8 @@ def _process_command_from_frame(hass, service):
         desc = ""
         speed = 0
         if "ais_gate_id" in cci:
-            ais_global.G_AIS_SECURE_ANDROID_ID_DOM = cci["ais_gate_id"]
+            pass
+            # ais_global.G_AIS_SECURE_ANDROID_ID_DOM = cci["ais_gate_id"]
         if "pass" in cci:
             ais_global.set_my_wifi_pass(cci["pass"])
         if "ssid" in cci:

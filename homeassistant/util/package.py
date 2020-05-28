@@ -62,8 +62,10 @@ def install_package(
     _LOGGER.info("Attempting install of %s", package)
     from homeassistant.components.ais_dom import ais_global
 
+    package_name = str(package).split("==")[0]
+    package_name = package_name.split(">=")[0]
     ais_global.say_direct(
-        "Instaluje zależności pakietu: " + str(package).split("==")[0] + "; poczekaj."
+        "Instaluje zależności pakietu: " + package_name + "; poczekaj."
     )
     env = os.environ.copy()
     # AIS dom prefer to use the version of libsodium provided by distribution
