@@ -42,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def _create_entities(hass, config_entry):
     entities = []
     for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
-        entities.append(RachioControllerOnlineBinarySensor(controller)),
+        entities.append(RachioControllerOnlineBinarySensor(controller))
         entities.append(RachioRainSensor(controller))
     return entities
 

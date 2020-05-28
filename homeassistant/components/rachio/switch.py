@@ -322,8 +322,6 @@ class RachioZone(RachioSwitch):
         if args[0][KEY_ZONE_ID] != self.zone_id:
             return
 
-        self._summary = kwargs.get(KEY_SUMMARY, "")
-
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True
         elif args[0][KEY_SUBTYPE] in [SUBTYPE_ZONE_STOPPED, SUBTYPE_ZONE_COMPLETED]:
