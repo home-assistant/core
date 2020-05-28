@@ -155,12 +155,12 @@ class MetOfficeCurrentSensor(Entity):
         ):
             return VISIBILITY_CLASSES.get(self.data.current.visibility.value)
         if hasattr(self.data.current, self._condition):
-            variable = getattr(self.data.data, self._condition)
+            variable = getattr(self.data.current, self._condition)
             if self._condition == "weather":
                 return [
                     k
                     for k, v in CONDITION_CLASSES.items()
-                    if self.data.data.weather.value in v
+                    if self.data.current.weather.value in v
                 ][0]
             return variable.value
         return None
