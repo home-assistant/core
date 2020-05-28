@@ -7,6 +7,9 @@ from homeassistant.const import CONF_DEVICE
 from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
+DONGLE_VALIDATE_PATH_METHOD = "homeassistant.components.enocean.dongle.validate_path"
+DONGLE_DETECT_METHOD = "homeassistant.components.enocean.dongle.detect"
+
 
 async def test_user_flow_cannot_create_multiple_instances(hass):
     """Test that the user flow aborts if an instance is already configured."""
@@ -15,9 +18,7 @@ async def test_user_flow_cannot_create_multiple_instances(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.enocean.dongle.validate_path", Mock(return_value=True)
-    ):
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
         )
@@ -30,10 +31,7 @@ async def test_user_flow_with_detected_dongle(hass):
     """Test the user flow with a detected ENOcean dongle."""
     FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with patch(
-        "homeassistant.components.enocean.dongle.detect",
-        Mock(return_value=[FAKE_DONGLE_PATH]),
-    ):
+    with patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
         )
@@ -47,7 +45,7 @@ async def test_user_flow_with_detected_dongle(hass):
 
 async def test_user_flow_with_no_detected_dongle(hass):
     """Test the user flow with a detected ENOcean dongle."""
-    with patch("homeassistant.components.enocean.dongle.detect", Mock(return_value=[])):
+    with patch(DONGLE_DETECT_METHOD, Mock(return_value=[])):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
         )
@@ -60,9 +58,7 @@ async def test_detection_flow_with_valid_path(hass):
     """Test the detection flow with a valid path selected."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
-    with patch(
-        "homeassistant.components.enocean.dongle.validate_path", Mock(return_value=True)
-    ):
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "detect"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
@@ -74,13 +70,15 @@ async def test_detection_flow_with_valid_path(hass):
 async def test_detection_flow_with_custom_path(hass):
     """Test the detection flow with custom path selected."""
     USER_PROVIDED_PATH = EnOceanFlowHandler.MANUAL_PATH_VALUE
+    FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with patch(
-        "homeassistant.components.enocean.dongle.validate_path", Mock(return_value=True)
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "detect"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
-        )
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+        with patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "detect"},
+                data={CONF_DEVICE: USER_PROVIDED_PATH},
+            )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "manual"
@@ -89,14 +87,15 @@ async def test_detection_flow_with_custom_path(hass):
 async def test_detection_flow_with_invalid_path(hass):
     """Test the detection flow with an invalid path selected."""
     USER_PROVIDED_PATH = "/invalid/path"
+    FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with patch(
-        "homeassistant.components.enocean.dongle.validate_path",
-        Mock(return_value=False),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "detect"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
-        )
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False)):
+        with patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "detect"},
+                data={CONF_DEVICE: USER_PROVIDED_PATH},
+            )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "detect"
