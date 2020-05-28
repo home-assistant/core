@@ -167,22 +167,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     all_entities = api.get_all_devices()
     single_thermostat = api.single_master_thermostat()
-    for dev_id, device in all_entities.items():
+    for dev_id, entity in all_entities.items():
         data = api.get_device_data(dev_id)
         for sensor, sensor_type in SENSOR_MAP.items():
             if sensor in data:
                 if data[sensor] is not None:
-                    if "power" in device["types"]:
+                    if "power" in entity["types"]:
                         model = None
 
-                        if "plug" in device["types"]:
+                        if "plug" in entity["types"]:
                             model = "Metered Switch"
 
                         entities.append(
                             PwPowerSensor(
                                 api,
                                 coordinator,
-                                device["name"],
+                                entity["name"],
                                 dev_id,
                                 sensor,
                                 sensor_type,
@@ -194,13 +194,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             PwThermostatSensor(
                                 api,
                                 coordinator,
-                                device["name"],
+                                entity["name"],
                                 dev_id,
                                 sensor,
                                 sensor_type,
                             )
                         )
-                    _LOGGER.info("Added sensor.%s", device["name"])
+                    _LOGGER.info("Added sensor.%s", entity["name"])
 
         if single_thermostat is not None and not single_thermostat:
             idx = 1
@@ -211,14 +211,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             PwThermostatSensor(
                                 api,
                                 coordinator,
-                                device["name"],
+                                entity["name"],
                                 dev_id,
                                 DEVICE_STATE,
                                 None,
                             )
                         )
                         _LOGGER.info(
-                            "Added sensor.%s_state", "{}".format(device["name"])
+                            "Added sensor.%s_state", "{}".format(entity["name"])
                         )
                         idx += 1
 
