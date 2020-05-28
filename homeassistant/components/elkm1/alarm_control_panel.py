@@ -161,8 +161,11 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         self._changed_by_id = area.log_number
         self._changed_by = username(self._elk, area.log_number - 1)
         self._changed_by_time = "%04d-%02d-%02dT%02d:%02d" % (
-            area.log_year, area.log_month, area.log_day,
-            area.log_hour, area.log_minute
+            area.log_year,
+            area.log_month,
+            area.log_day,
+            area.log_hour,
+            area.log_minute,
         )
         self.async_write_ha_state()
 
