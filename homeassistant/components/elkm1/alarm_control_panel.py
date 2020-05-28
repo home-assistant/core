@@ -157,7 +157,6 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     def _watch_area(self, area, changeset):
         if not changeset.get("log_event"):
             return
-        _LOGGER.warning("alarm_control_panel::watch_area: %s", changeset)
         self._changed_by_keypad = None
         self._changed_by_id = area.log_number
         self._changed_by = username(self._elk, area.log_number - 1)
