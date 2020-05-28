@@ -47,6 +47,7 @@ from . import (
     CONF_ADVERTISE_ADDR,
     CONF_HOSTS,
     CONF_INTERFACE_ADDR,
+    DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
 )
 
@@ -69,8 +70,6 @@ SUPPORT_SONOS = (
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_CLEAR_PLAYLIST
 )
-
-DATA_SONOS = "sonos_media_player"
 
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
