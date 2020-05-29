@@ -73,13 +73,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
             CONF_PORT: port,
         }
         entry = await self.async_set_unique_id(uuid)
-        if not entry:
-            return
-
-        if config == entry.data:
-            raise AbortFlow("already_setup")
-        self.hass.config_entries.async_update_entry(entry, data=config)
-        raise AbortFlow("updated_instance")
+        await self._abort_if_unique_id_configured(config)
 
     async def _async_create_entry(self, host, port):
         return self.async_create_entry(
