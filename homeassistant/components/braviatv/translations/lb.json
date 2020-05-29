@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebse Fernseh ass scho konfigur\u00e9iert."
+            "already_configured": "D\u00ebse Fernseh ass scho konfigur\u00e9iert.",
+            "no_ip_control": "IP Kontroll ass d\u00e9aktiv\u00e9iert um TV oder den TV g\u00ebtt net \u00ebnnerst\u00ebtzt."
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen, ong\u00ebltege Numm oder PIN code.",

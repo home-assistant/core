@@ -34,10 +34,6 @@
                 "description": "Mehrere Server verf\u00fcgbar, w\u00e4hle einen aus:",
                 "title": "Plex-Server ausw\u00e4hlen"
             },
-            "start_website_auth": {
-                "description": "Weiter zur Autorisierung unter plex.tv.",
-                "title": "Plex Server verbinden"
-            },
             "user": {
                 "description": "Gehen Sie zu [plex.tv] (https://plex.tv), um einen Plex-Server zu verbinden",
                 "title": "Plex Media Server"

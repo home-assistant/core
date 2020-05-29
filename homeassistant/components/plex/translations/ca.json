@@ -35,10 +35,6 @@
                 "description": "Hi ha diversos servidors disponibles, selecciona'n un:",
                 "title": "Selecciona servidor Plex"
             },
-            "start_website_auth": {
-                "description": "Continua l'autoritzaci\u00f3 a plex.tv.",
-                "title": "Connexi\u00f3 amb el servidor Plex"
-            },
             "user": {
                 "description": "V\u00e9s a [plex.tv](https://plex.tv) per enlla\u00e7ar un servidor Plex.",
                 "title": "Servidor Multim\u00e8dia Plex"

@@ -14,14 +14,12 @@
                     "one": "eins",
                     "other": "andere"
                 },
-                "description": "M\u00f6chten Sie {name} einrichten?",
-                "title": "Stellen Sie eine Verbindung zum DirecTV-Empf\u00e4nger her"
+                "description": "M\u00f6chten Sie {name} einrichten?"
             },
             "user": {
                 "data": {
                     "host": "Host oder IP-Adresse"
-                },
-                "title": "Schlie\u00dfen Sie den DirecTV-Empf\u00e4nger an"
+                }
             }
         }
     }

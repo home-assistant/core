@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller-Site ist bereits konfiguriert",
-            "no_local_user": "Kein lokaler Benutzer gefunden, konfigurieren Sie ein lokales Konto auf dem Controller und versuchen Sie es erneut",
-            "user_privilege": "Der Benutzer muss Administrator sein"
+            "already_configured": "Controller-Site ist bereits konfiguriert"
         },
         "error": {
             "faulty_credentials": "Ung\u00fcltige Anmeldeinformationen",
@@ -29,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients mit Netzwerkzugriffskontrolle",
-                    "new_client": "F\u00fcgen Sie einen neuen Client f\u00fcr die Netzwerkzugangskontrolle hinzu",
                     "poe_clients": "POE-Kontrolle von Clients zulassen"
                 },
                 "description": "Konfigurieren Sie Client-Steuerelemente \n\nErstellen Sie Switches f\u00fcr Seriennummern, f\u00fcr die Sie den Netzwerkzugriff steuern m\u00f6chten.",

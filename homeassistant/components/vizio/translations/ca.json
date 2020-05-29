@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Aquesta entrada ja ha estat configurada.",
+            "already_configured_device": "El dispositiu ja est\u00e0 configurat",
             "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom i les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, s'han actualitzat."
         },
         "error": {
-            "cant_connect": "No s'ha pogut connectar",
-            "complete_pairing failed": "No s'ha pogut completar l'emparellament. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
+            "cannot_connect": "No s'ha pogut connectar",
             "complete_pairing_failed": "No s'ha pogut completar l'emparellament. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
             "host_exists": "Dispositiu Vizio amb aquest nom d'amfitri\u00f3 ja configurat.",
             "name_exists": "Dispositiu Vizio amb aquest nom ja configurat."

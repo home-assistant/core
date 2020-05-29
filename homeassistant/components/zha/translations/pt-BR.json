@@ -21,9 +21,6 @@
                 "title": "Configura\u00e7\u00f5es"
             },
             "user": {
-                "data": {
-                    "radio_type": "Tipo de r\u00e1dio"
-                },
                 "title": "ZHA"
             }
         }
