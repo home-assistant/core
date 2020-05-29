@@ -69,7 +69,7 @@ def state_fixture(state_1):
 @pytest.fixture(name="player")
 def player_fixture(hass, state):
     """Get standard player."""
-    player = ArcamFmj(state, MOCK_UUID)
+    player = ArcamFmj(MOCK_NAME, state, MOCK_UUID)
     player.entity_id = MOCK_ENTITY_ID
     player.hass = hass
     player.async_write_ha_state = Mock()
@@ -79,7 +79,9 @@ def player_fixture(hass, state):
 @pytest.fixture(name="player_setup")
 async def player_setup_fixture(hass, state_1, state_2, client):
     """Get standard player."""
-    config_entry = MockConfigEntry(domain="arcam_fmj", data=MOCK_CONFIG_ENTRY)
+    config_entry = MockConfigEntry(
+        domain="arcam_fmj", data=MOCK_CONFIG_ENTRY, title=MOCK_NAME
+    )
     config_entry.add_to_hass(hass)
 
     def state_mock(cli, zone):

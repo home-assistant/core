@@ -22,7 +22,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .config_flow import get_entry_client
 from .const import (
-    DEFAULT_NAME,
     DOMAIN,
     EVENT_TURN_ON,
     SIGNAL_CLIENT_DATA,
@@ -45,7 +44,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             ArcamFmj(
-                State(client, zone), config_entry.unique_id or config_entry.entry_id,
+                config_entry.title,
+                State(client, zone),
+                config_entry.unique_id or config_entry.entry_id,
             )
             for zone in [1, 2]
         ],
@@ -59,11 +60,12 @@ class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
     def __init__(
-        self, state: State, uuid: str,
+        self, device_name, state: State, uuid: str,
     ):
         """Initialize device."""
         self._state = state
-        self._name = f"{DEFAULT_NAME} ({self._state.client.host}) - Zone: {state.zn}"
+        self._device_name = device_name
+        self._name = f"{device_name} - Zone: {state.zn}"
         self._uuid = uuid
         self._support = (
             SUPPORT_SELECT_SOURCE
@@ -103,7 +105,7 @@ class ArcamFmj(MediaPlayerEntity):
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            "name": f"{DEFAULT_NAME} ({self._state.client.host})",
+            "name": self._device_name,
             "identifiers": {
                 (DOMAIN, self._uuid),
                 (DOMAIN, self._state.client.host, self._state.client.port),
