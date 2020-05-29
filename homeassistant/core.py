@@ -266,7 +266,6 @@ class HomeAssistant:
         setattr(self.loop, "_thread_ident", threading.get_ident())
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
-        self.config.start_complete = True
 
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
@@ -1336,9 +1335,6 @@ class Config:
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
-
-        # If Home Assistant completed startup
-        self.start_complete: bool = False
 
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.
