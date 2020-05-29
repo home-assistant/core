@@ -3,8 +3,8 @@
   "name": "Google Cast",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cast",
-  "requirements": ["pychromecast==5.1.0"],
-  "after_dependencies": ["cloud"],
+  "requirements": ["pychromecast==5.3.0"],
+  "after_dependencies": ["cloud","zeroconf"],
   "zeroconf": ["_googlecast._tcp.local."],
   "codeowners": ["@emontnemery"]
 }
