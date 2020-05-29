@@ -45,8 +45,15 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "authorization_error"}
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
+async def test_connection_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show user form on Azure DevOps connection error."""
+    aioclient_mock.get(
+        f"https://dev.azure.com/{FIXTURE_USER_INPUT[CONF_ORG]}/_apis/projects",
+        status=403,
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
