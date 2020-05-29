@@ -1087,7 +1087,7 @@ plexapi==3.6.0
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.8
+plexwebsocket==0.0.10
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11

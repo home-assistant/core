@@ -3,7 +3,11 @@
   "name": "Plex Media Server",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/plex",
-  "requirements": ["plexapi==3.6.0", "plexauth==0.0.5", "plexwebsocket==0.0.8"],
+  "requirements": [
+      "plexapi==3.6.0",
+      "plexauth==0.0.5",
+      "plexwebsocket==0.0.10"
+  ],
   "dependencies": ["http"],
   "after_dependencies": ["sonos"],
   "codeowners": ["@jjlawren"]
