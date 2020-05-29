@@ -45,6 +45,7 @@ async def test_get_image_http(hass, aiohttp_client):
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("media_player.bedroom")
     assert "entity_picture_local" not in state.attributes
@@ -72,6 +73,7 @@ async def test_get_image_http_remote(hass, aiohttp_client):
         await async_setup_component(
             hass, "media_player", {"media_player": {"platform": "demo"}}
         )
+        await hass.async_block_till_done()
 
         state = hass.states.get("media_player.bedroom")
         assert "entity_picture_local" in state.attributes
