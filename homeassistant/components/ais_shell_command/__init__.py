@@ -696,26 +696,27 @@ async def _disable_irda_remote(hass, call):
 
 
 async def _set_scaling_governor(hass, call):
-    # physical CPU cores TODO do this dynamically
-    physical_cores = ["0", "1", "2", "3"]
+    # /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+    scaling_available_governors = ["hotplug", "interactive", "performance"]
 
     # interactive is default scaling
     scaling = "interactive"
     if "scaling" in call.data:
         scaling = call.data["scaling"]
-
+    # default powersave freq
+    # /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+    # scaling_available_frequencies = 100000 250000 500000 667000 1000000 1200000
     freq = "1000000"
     if scaling == "performance":
         freq = "1200000"
+
+    if scaling in scaling_available_governors:
         comm = r'su -c "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"'
         await _run(comm)
 
-    for pc in physical_cores:
-        comm = (
-            r'su -c "echo '
-            + freq
-            + " > /sys/devices/system/cpu/cpu"
-            + pc
-            + '/cpufreq/scaling_max_freq"'
-        )
-        await _run(comm)
+    comm = (
+        r'su -c "echo '
+        + freq
+        + ' > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"'
+    )
+    await _run(comm)

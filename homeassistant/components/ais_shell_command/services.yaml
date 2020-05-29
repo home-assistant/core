@@ -39,5 +39,5 @@ set_scaling_governor:
   description: Ustawienie trybu zarządzania częstotliwością procesora.
   fields:
     scaling:
-      description: Tryb zarządzania częstotliwością procesora. Domyślnie interactive, inne możliwe wartości to performance i powersave.
+      description: Tryb zarządzania częstotliwością procesora. Domyślnie interactive, inne możliwe wartości to hotplug i performance.
       example: 'interactive'
