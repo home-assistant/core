@@ -92,32 +92,32 @@ class GroupNotifyPlatform(BaseNotificationService):
             self.calls_day = deque()
             self.lock = asyncio.Lock()
 
-    def _calls_minute_span(self):
+    def _calls_minute_span(self, current_time):
         if not self.calls_minute:
             return 0
-        return self.calls_minute[-1] - self.calls_minute[0]
+        return current_time - self.calls_minute[0]
 
-    def _calls_hour_span(self):
+    def _calls_hour_span(self, current_time):
         if not self.calls_hour:
             return 0
-        return self.calls_hour[-1] - self.calls_hour[0]
+        return current_time - self.calls_hour[0]
 
-    def _calls_day_span(self):
+    def _calls_day_span(self, current_time):
         if not self.calls_day:
             return 0
-        return self.calls_day[-1] - self.calls_day[0]
+        return current_time - self.calls_day[0]
 
     async def _rate_limit_gate(self):
         """Return true iff we are rate-limited."""
-        answer = False
         if self.lock:
             async with self.lock:
+                current_time = time.time()
                 # trim our deques for each time frame before testing len
-                while self._calls_minute_span() >= 60:
+                while self._calls_minute_span(current_time) >= 60:
                     self.calls_minute.popleft()
-                while self._calls_hour_span() >= 3600:
+                while self._calls_hour_span(current_time) >= 3600:
                     self.calls_hour.popleft()
-                while self._calls_day_span() >= 86400:
+                while self._calls_day_span(current_time) >= 86400:
                     self.calls_day.popleft()
 
                 # check length of each deque for each time frame
@@ -128,27 +128,26 @@ class GroupNotifyPlatform(BaseNotificationService):
                     _LOGGER.debug(
                         "%s rate-limited to %s/minute", self.name, self.max_per_minute
                     )
-                    answer = True
+                    return True
                 if self.max_per_hour and len(self.calls_hour) >= self.max_per_hour:
                     _LOGGER.debug(
                         "%s rate-limited to %s/hour", self.name, self.max_per_hour
                     )
-                    answer = True
+                    return True
                 if self.max_per_day and len(self.calls_day) >= self.max_per_day:
                     _LOGGER.debug(
                         "%s rate-limited to %s/day", self.name, self.max_per_day
                     )
-                    answer = True
+                    return True
 
                 # update each active deque
-                current_time = time.time()
                 if self.max_per_minute:
                     self.calls_minute.append(current_time)
                 if self.max_per_hour:
                     self.calls_hour.append(current_time)
                 if self.max_per_day:
                     self.calls_day.append(current_time)
-        return answer
+        return False
 
     async def async_send_message(self, message="", **kwargs):
         """Send message to all entities in the group."""
