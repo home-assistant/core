@@ -4,7 +4,7 @@ from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, cast
+from typing import TYPE_CHECKING, Dict, Iterable, Optional
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import CALLBACK_TYPE, callback, split_entity_id, valid_entity_id
@@ -51,7 +51,6 @@ class EntityPlatform:
         self.entity_namespace = entity_namespace
         self.config_entry = None
         self.entities: Dict[str, Entity] = {}  # pylint: disable=used-before-assignment
-        self._tasks: List[asyncio.Future] = []
         # Method to cancel the state change listener
         self._async_unsub_polling: Optional[CALLBACK_TYPE] = None
         # Method to cancel the retry of setup
@@ -177,14 +176,6 @@ class EntityPlatform:
 
             await asyncio.wait_for(asyncio.shield(task), SLOW_SETUP_MAX_WAIT)
 
-            # Block till all entities are done
-            if self._tasks:
-                pending = [task for task in self._tasks if not task.done()]
-                self._tasks.clear()
-
-                if pending:
-                    await asyncio.gather(*pending)
-
             hass.config.components.add(full_name)
             return True
         except PlatformNotReady:
@@ -239,15 +230,8 @@ class EntityPlatform:
         self, new_entities: Iterable["Entity"], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform async."""
-        self._tasks.append(
-            cast(
-                asyncio.Future,
-                self.hass.async_add_job(
-                    self.async_add_entities(  # type: ignore
-                        new_entities, update_before_add=update_before_add
-                    ),
-                ),
-            )
+        self.hass.async_create_task(
+            self.async_add_entities(new_entities, update_before_add=update_before_add),
         )
 
     def add_entities(
