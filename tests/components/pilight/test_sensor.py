@@ -78,6 +78,7 @@ def test_disregard_wrong_payload():
                 }
             },
         )
+        HASS.block_till_done()
 
         # Try set value from data with incorrect payload
         fire_pilight_message(
@@ -121,6 +122,7 @@ def test_variable_missing(caplog):
                 }
             },
         )
+        HASS.block_till_done()
 
         # Create code without sensor variable
         fire_pilight_message(
