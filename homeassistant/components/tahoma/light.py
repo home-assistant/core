@@ -30,16 +30,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices = []
 
     for device in hass.data[TAHOMA_DOMAIN]["devices"]["light"]:
-        name = device.label
         devices.append(TahomaLight(device, controller))
 
     async_add_entities(devices, True)
 
 
 class TahomaLight(TahomaDevice, LightEntity):
-    """Representation of a Tahome light"""
+    """Representation of a Tahome light."""
 
     def __init__(self, tahoma_device, controller):
+        """Initialize the device."""
         super().__init__(tahoma_device, controller)
         self._skip_update = False
         self._effect = None
@@ -121,10 +121,7 @@ class TahomaLight(TahomaDevice, LightEntity):
         return self._unique_id
 
     def update(self):
-        """Fetch new state data for this light.
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        # Postpone the immediate state check for changes that take time.
+        """Fetch new state data for this light."""
         if self._skip_update:
             self._skip_update = False
             return
