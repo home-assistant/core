@@ -4,7 +4,7 @@ import logging
 import os
 import ssl
 from traceback import extract_stack
-from typing import Dict, Optional, cast
+from typing import Optional, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
@@ -15,7 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVER_PORT,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
@@ -216,25 +216,29 @@ async def async_setup(hass, config):
         ssl_profile=ssl_profile,
     )
 
-    startup_listeners = []
-
-    async def stop_server(event: Event) -> None:
+    async def stop_server(event):
         """Stop the server."""
         await server.stop()
 
-    async def start_server(event: Event) -> None:
+    async def start_server(event):
         """Start the server."""
-
-        for listener in startup_listeners:
-            listener()
-
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
+        await server.start()
 
-        await start_http_server_and_save_config(hass, dict(conf), server)
+        # If we are set up successful, we store the HTTP settings for safe mode.
+        store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
-    startup_listeners.append(
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_START, start_server)
-    )
+        if CONF_TRUSTED_PROXIES in conf:
+            conf_to_save = dict(conf)
+            conf_to_save[CONF_TRUSTED_PROXIES] = [
+                str(ip.network_address) for ip in conf_to_save[CONF_TRUSTED_PROXIES]
+            ]
+        else:
+            conf_to_save = conf
+
+        await store.async_save(conf_to_save)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
     hass.http = server
 
@@ -414,20 +418,3 @@ class HomeAssistantHTTP:
         """Stop the aiohttp server."""
         await self.site.stop()
         await self.runner.cleanup()
-
-
-async def start_http_server_and_save_config(
-    hass: HomeAssistant, conf: Dict, server: HomeAssistantHTTP
-) -> None:
-    """Startup the http server and save the config."""
-    await server.start()  # type: ignore
-
-    # If we are set up successful, we store the HTTP settings for safe mode.
-    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-
-    if CONF_TRUSTED_PROXIES in conf:
-        conf[CONF_TRUSTED_PROXIES] = [
-            str(ip.network_address) for ip in conf[CONF_TRUSTED_PROXIES]
-        ]
-
-    await store.async_save(conf)
