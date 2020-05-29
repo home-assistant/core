@@ -103,6 +103,7 @@ async def test_auth_active_with_token(
 ):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
 
     await no_auth_websocket_client.send_json(
         {"type": TYPE_AUTH, "access_token": hass_access_token}
