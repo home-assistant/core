@@ -265,7 +265,9 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         """Update the state of the device."""
         try:
             self._state = await self.device.async_request(self.device.api.check_power)
-            self._load_power = await self.device.async_request(self.device.api.get_energy)
+            self._load_power = await self.device.async_request(
+                self.device.api.get_energy
+            )
         except CommandNotSupportedError:
             return
         except BroadlinkException as err_msg:
