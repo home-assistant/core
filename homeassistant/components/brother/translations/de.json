@@ -16,8 +16,7 @@
                     "host": "Drucker Hostname oder IP-Adresse",
                     "type": "Typ des Druckers"
                 },
-                "description": "Einrichten der Brother-Drucker-Integration. Wenn Du Probleme mit der Konfiguration hast, gehe zu: https://www.home-assistant.io/integrations/brother",
-                "title": "Brother Drucker"
+                "description": "Einrichten der Brother-Drucker-Integration. Wenn Du Probleme mit der Konfiguration hast, gehe zu: https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

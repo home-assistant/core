@@ -242,9 +242,10 @@ async def async_setup(hass, config):
 
         await start_server(event)
 
-    startup_listeners.append(
-        hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_wait_frontend_load)
-    )
+    if 0:
+        startup_listeners.append(
+            hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_wait_frontend_load)
+        )
     startup_listeners.append(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_START, start_server)
     )

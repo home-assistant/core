@@ -20,7 +20,6 @@
             },
             "link": {
                 "data": {
-                    "api_version": "DSM Versioun",
                     "password": "Passwuert",
                     "port": "Port (Optionell)",
                     "ssl": "Benotz SSL/TLS fir d'Verbindung mam NAS",
@@ -31,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM Versioun",
                     "host": "Apparat",
                     "password": "Passwuert",
                     "port": "Port (Optionell)",

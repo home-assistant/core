@@ -2,12 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD ja est\u00e0 configurat",
-            "incomplete_device": "Ignorant el dispositiu incomplet UPnP",
             "incomplete_discovery": "Descoberta incompleta",
             "no_devices_discovered": "No s'ha trobat cap UPnP/IGD",
-            "no_devices_found": "No s'han trobat dispositius UPnP/IGD a la xarxa.",
-            "no_sensors_or_port_mapping": "Activa, com a m\u00ednim, els sensors o l'assignaci\u00f3 de ports",
-            "single_instance_allowed": "Nom\u00e9s cal una sola configuraci\u00f3 de UPnP/IGD."
+            "no_devices_found": "No s'han trobat dispositius UPnP/IGD a la xarxa."
         },
         "error": {
             "one": "un",
@@ -15,22 +12,14 @@
         },
         "flow_title": "UPnP/IGD: {name}",
         "step": {
-            "confirm": {
-                "description": "Vols configurar UPnP/IGD?",
-                "title": "UPnP/IGD"
-            },
             "ssdp_confirm": {
                 "description": "Vols configurar aquest dispositiu UPnP/IGD?"
             },
             "user": {
                 "data": {
-                    "enable_port_mapping": "Activa l'assignaci\u00f3 de ports per a Home Assistant",
-                    "enable_sensors": "Afegeix sensors de tr\u00e0nsit",
-                    "igd": "UPnP/IGD",
                     "scan_interval": "Interval d'actualitzaci\u00f3 (en segons, m\u00ednim 30)",
                     "usn": "Dispositiu"
-                },
-                "title": "Opcions de configuraci\u00f3 d'UPnP/IGD"
+                }
             }
         }
     }

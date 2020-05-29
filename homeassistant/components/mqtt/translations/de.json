@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein.",
-                "title": "MQTT"
+                "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein."
             },
             "hassio_confirm": {
                 "data": {

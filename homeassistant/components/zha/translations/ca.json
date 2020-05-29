@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Ruta del port s\u00e8rie al dispositiu",
-                    "radio_type": "Tipus de r\u00e0dio",
-                    "usb_path": "[%key::common::config_flow::data::usb_path%]"
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
                 },
                 "description": "Selecciona el port s\u00e8rie per a la r\u00e0dio Zigbee",
                 "title": "ZHA"
