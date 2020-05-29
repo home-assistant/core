@@ -55,19 +55,19 @@ def events(hass):
 
 
 @pytest.fixture
-def mock_camera(hass):
+async def mock_camera(hass):
     """Initialize a demo camera platform."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "camera", {camera.DOMAIN: {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
-def mock_stream(hass):
+async def mock_stream(hass):
     """Initialize a demo camera platform with streaming."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "stream", {"stream": {}})
-    )
+    assert await async_setup_component(hass, "stream", {"stream": {}})
+    await hass.async_block_till_done()
 
 
 def test_create_api_message_defaults(hass):
