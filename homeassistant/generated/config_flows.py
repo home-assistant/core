@@ -137,6 +137,7 @@ FLOWS = [
     "somfy",
     "songpal",
     "sonos",
+    "speedtestdotnet",
     "spotify",
     "starline",
     "synology_dsm",

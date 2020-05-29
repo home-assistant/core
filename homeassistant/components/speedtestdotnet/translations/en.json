@@ -1,0 +1,28 @@
+{
+  "title": "SpeedTest.net",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up SpeedTest",
+        "description": "Are you sure you want to set up SpeedTest?"
+      }
+    },
+    "abort": {
+      "one_instance_allowed": "Only a single instance is necessary."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Update frequency (minutes)",
+          "manual": "Scan Manually",
+          "server_name": "Select test server"
+        }
+      }
+    },
+    "error": {
+      "retrive_error": "Error retriving servers list"
+    }
+  }
+}

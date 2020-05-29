@@ -812,6 +812,9 @@ somecomfort==0.5.2
 # homeassistant.components.marytts
 speak2mary==1.4.0
 
+# homeassistant.components.speedtestdotnet
+speedtest-cli==2.1.2
+
 # homeassistant.components.spotify
 spotipy==2.12.0
 

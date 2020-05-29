@@ -1,7 +1,13 @@
 {
   "domain": "speedtestdotnet",
-  "name": "Speedtest.net",
+  "name": "Speedtestdotnet",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/speedtestdotnet",
-  "requirements": ["speedtest-cli==2.1.2"],
-  "codeowners": ["@rohankapoorcom"]
+  "requirements": [
+    "speedtest-cli==2.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@engrbm87"
+  ]
 }
