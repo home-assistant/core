@@ -63,7 +63,7 @@ async def async_get_service(hass, config, discovery_info=None):
         hass,
         config.get(CONF_NAME),
         config.get(CONF_SERVICES),
-        config.get(CONF_SWITCH),
+        config.get(CONF_ENABLE_ENTITY_ID),
         config.get(CONF_MAX_PER_MINUTE),
         config.get(CONF_MAX_PER_HOUR),
         config.get(CONF_MAX_PER_DAY),
