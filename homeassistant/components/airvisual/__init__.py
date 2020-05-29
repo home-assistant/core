@@ -376,6 +376,11 @@ class AirVisualEntity(Entity):
         return self._icon
 
     @property
+    def should_poll(self) -> bool:
+        """Disable polling."""
+        return False
+
+    @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
