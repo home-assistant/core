@@ -55,6 +55,7 @@ STAGE_1_INTEGRATIONS = {
     "frontend",
     "config",
 }
+PLATFORM_DOMAINS = {"light", "switch", "climate", "sensor"}
 
 
 async def async_setup_hass(
@@ -413,6 +414,12 @@ async def _async_set_up_integrations(
         _LOGGER.info("Setting up %s", stage_1_domains)
 
         await async_setup_multi_components(stage_1_domains)
+
+    platforms = {domain for domain in PLATFORM_DOMAINS if domain in domains}
+    if platforms:
+        _LOGGER.info("Setting up %s", platforms)
+
+        await async_setup_multi_components(platforms)
 
     # Load all integrations
     after_dependencies: Dict[str, Set[str]] = {}
