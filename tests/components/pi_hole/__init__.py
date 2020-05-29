@@ -1,7 +1,7 @@
 """Tests for the pi_hole component."""
 from hole.exceptions import HoleError
 
-from homeassistant.components.pi_hole.const import CONF_LOCATION
+from homeassistant.components.pi_hole.const import CONF_DISABLE_SECONDS, CONF_LOCATION
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -33,6 +33,7 @@ NAME = "name"
 API_KEY = "apikey"
 SSL = False
 VERIFY_SSL = True
+DISABLE_SECONDS = 30
 
 CONF_DATA = {
     CONF_HOST: f"{HOST}:{PORT}",
@@ -41,6 +42,7 @@ CONF_DATA = {
     CONF_API_KEY: API_KEY,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
+    CONF_DISABLE_SECONDS: DISABLE_SECONDS,
 }
 
 CONF_CONFIG_FLOW = {
@@ -51,6 +53,7 @@ CONF_CONFIG_FLOW = {
     CONF_API_KEY: API_KEY,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
+    CONF_DISABLE_SECONDS: DISABLE_SECONDS,
 }
 
 

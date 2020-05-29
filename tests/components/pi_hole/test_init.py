@@ -69,6 +69,26 @@ async def test_setup_minimal_config(hass):
     assert hass.states.get("binary_sensor.pi_hole_status").name == "Pi-Hole Status"
     assert hass.states.get("binary_sensor.pi_hole_status").state == "off"
 
+    # Since no api_key was provided, there should be no switch
+    assert hass.states.get("switch.pi_hole") is None
+
+
+async def test_setup_minimal_switch_config(hass):
+    """Tests component setup with minimal config with an api key."""
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        assert await async_setup_component(
+            hass,
+            pi_hole.DOMAIN,
+            {pi_hole.DOMAIN: [{"host": "pi.hole", "api_key": "abc"}]},
+        )
+
+    await hass.async_block_till_done()
+
+    # Since no api_key was provided, there should be no switch
+    assert hass.states.get("switch.pi_hole").name == "Pi-Hole"
+    assert hass.states.get("switch.pi_hole").state == "off"
+
 
 async def test_setup_name_config(hass):
     """Tests component setup with a custom name."""

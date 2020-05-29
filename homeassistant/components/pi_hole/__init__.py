@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
@@ -96,9 +97,6 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
                 )
             )
 
-    # TODO: Service stuff below
-
-    # TODO: Check this? May need to refactor where we get API client
     def get_pi_hole_from_name(name):
         pi_hole = hass.data[DOMAIN].get(name)
         if pi_hole is None:
@@ -190,7 +188,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         disable_seconds,
     )
     await coordinator.async_refresh()
-    LOGGER.debug("Finished refreshing from %s, %s", host, name)
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
@@ -248,8 +245,8 @@ class PiHoleDataUpdateCoordinator(DataUpdateCoordinator):
             await self.api.get_data()
             data = self.api.data
             self.available = True
-            LOGGER.debug("We got data from the client for %s", self.name)
-            # TODO: Decide if we should raise an exception here if we have no data
+            if not data:
+                raise PlatformNotReady(f"Data not yet retrieved from {self.name}")
             return data
         except HoleError as error:
             self.available = False
