@@ -6,7 +6,7 @@ import pathlib
 import re
 import subprocess
 
-from .const import CLI_1_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
+from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
 from .util import get_current_branch, get_lokalise_token
 
@@ -26,21 +26,21 @@ def run_upload_docker():
             "-v",
             f"{LOCAL_FILE}:{CONTAINER_FILE}",
             "--rm",
-            f"lokalise/lokalise-cli@sha256:{CLI_1_DOCKER_IMAGE}",
+            f"lokalise/lokalise-cli-2:{CLI_2_DOCKER_IMAGE}",
             # Lokalise command
-            "lokalise",
+            "lokalise2",
             "--token",
             get_lokalise_token(),
-            "import",
+            "--project-id",
             CORE_PROJECT_ID,
+            "file",
+            "upload",
             "--file",
             CONTAINER_FILE,
-            "--lang_iso",
+            "--lang-iso",
             LANG_ISO,
-            "--convert_placeholders",
-            "0",
-            "--replace",
-            "1",
+            "--convert-placeholders=false",
+            "--replace-modified",
         ],
     )
     print()
