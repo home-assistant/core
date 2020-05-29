@@ -83,6 +83,9 @@ async def async_setup(hass, config):
     async def set_scaling_governor(service):
         await _set_scaling_governor(hass, service)
 
+    async def set_io_scheduler(service):
+        await _set_io_scheduler(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "execute_command", execute_command)
@@ -114,6 +117,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "change_wm_overscan", change_wm_overscan)
     hass.services.async_register(DOMAIN, "disable_irda_remote", disable_irda_remote)
     hass.services.async_register(DOMAIN, "set_scaling_governor", set_scaling_governor)
+    hass.services.async_register(DOMAIN, "set_io_scheduler", set_io_scheduler)
     return True
 
 
@@ -711,7 +715,11 @@ async def _set_scaling_governor(hass, call):
         freq = "1200000"
 
     if scaling in scaling_available_governors:
-        comm = r'su -c "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"'
+        comm = (
+            r'su -c "echo '
+            + scaling
+            + ' > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"'
+        )
         await _run(comm)
 
     comm = (
@@ -720,3 +728,17 @@ async def _set_scaling_governor(hass, call):
         + ' > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"'
     )
     await _run(comm)
+
+
+async def _set_io_scheduler(hass, call):
+    # /sys/block/mmcblk0/queue/scheduler
+    available_io_schedulers = ["noop", "deadline", "cfq"]
+
+    # noop is now default scheduler
+    scheduler = "noop"
+    if "scheduler" in call.data:
+        scheduler = call.data["scheduler"]
+
+    if scheduler in available_io_schedulers:
+        comm = r'su -c "echo ' + scheduler + ' > /sys/block/mmcblk0/queue/scheduler"'
+        await _run(comm)

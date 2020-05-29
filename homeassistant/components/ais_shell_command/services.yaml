@@ -34,10 +34,16 @@ led:
       description: Parametr do przekazania, 0 - czerwony, 255 - niebieski, timer - utuchomienie funkcji mrugania, heartbeat - uruchomienie funkcji bicia serca. Inne funkcje to (none, rc-feedback, nand-disk, oneshot, backlight, emmc, sd, sdio, breathe, scpi, scpistop, disturb, rfkill0, rfkill1).
       example: '255'
 
-
 set_scaling_governor:
   description: Ustawienie trybu zarządzania częstotliwością procesora.
   fields:
     scaling:
       description: Tryb zarządzania częstotliwością procesora. Domyślnie interactive, inne możliwe wartości to hotplug i performance.
       example: 'interactive'
+
+set_io_scheduler:
+  description: Ustawienie trybu zarządzania danymi wchodzącymi i wychodzącymi
+  fields:
+    scheduler:
+      description: Tryb zarządzania I/O. Domyślnie noop, inne możliwe wartości to deadline cfq.
+      example: 'noop'
