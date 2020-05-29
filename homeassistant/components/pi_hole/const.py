@@ -13,6 +13,7 @@ DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "Pi-Hole"
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
+DEFAULT_DISABLE_SECONDS = 30
 
 SERVICE_DISABLE = "disable"
 SERVICE_DISABLE_ATTR_DURATION = "duration"
@@ -53,7 +54,7 @@ SENSOR_DICT = {
 SENSOR_LIST = list(SENSOR_DICT)
 
 BINARY_SENSOR_DICT = {
-    "status": ["Status", "status", "enabled", None],
+    "status": ["Status", "enabled", None],
 }
 
 BINARY_SENSOR_LIST = list(BINARY_SENSOR_DICT)

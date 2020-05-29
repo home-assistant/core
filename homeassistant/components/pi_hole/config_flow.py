@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.pi_hole.const import (  # pylint: disable=unused-import
     CONF_DISABLE_SECONDS,
     CONF_LOCATION,
+    DEFAULT_DISABLE_SECONDS,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
@@ -113,7 +114,8 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                     vol.Optional(
                         CONF_DISABLE_SECONDS,
-                        default=user_input.get(CONF_DISABLE_SECONDS) or None,
+                        default=user_input.get(CONF_DISABLE_SECONDS)
+                        or DEFAULT_DISABLE_SECONDS,
                     ): int,
                     vol.Required(
                         CONF_SSL, default=user_input.get(CONF_SSL) or DEFAULT_SSL

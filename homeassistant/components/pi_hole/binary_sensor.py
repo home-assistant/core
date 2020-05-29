@@ -2,89 +2,60 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_NAME
 
-from .const import (
-    BINARY_SENSOR_DICT,
-    BINARY_SENSOR_LIST,
-    DOMAIN as PIHOLE_DOMAIN,
-    STATUS_ENABLED,
-)
+from . import PiHoleDataUpdateCoordinator, PiHoleEntity
+from .const import BINARY_SENSOR_DICT, BINARY_SENSOR_LIST, DOMAIN as PIHOLE_DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the pi-hole sensor."""
-    pi_hole = hass.data[PIHOLE_DOMAIN][entry.data[CONF_NAME]]
+    coordinator = hass.data[PIHOLE_DOMAIN][entry.entry_id]
+    server_unique_id = coordinator.unique_id
     sensors = [
-        PiHoleBinarySensor(pi_hole, sensor_name, entry.entry_id)
+        PiHoleBinarySensor(coordinator, sensor_name, server_unique_id)
         for sensor_name in BINARY_SENSOR_LIST
     ]
     async_add_entities(sensors, True)
 
 
-class PiHoleBinarySensor(BinarySensorEntity):
+class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     """Representation of a Pi-hole binary sensor."""
 
-    def __init__(self, pi_hole, sensor_name, server_unique_id):
+    def __init__(
+        self,
+        coordinator: PiHoleDataUpdateCoordinator,
+        sensor_name: str,
+        server_unique_id: str,
+    ):
         """Initialize a Pi-hole sensor."""
-        LOGGER.debug("Setting up pi-hole binary sensor %s", sensor_name)
-        self.pi_hole = pi_hole
-        self._name = pi_hole.name
-        self._condition = sensor_name
         self._server_unique_id = server_unique_id
-
         variable_info = BINARY_SENSOR_DICT[sensor_name]
-        self._condition_name = variable_info[0]
-        self._condition = variable_info[1]
-        self._on_value = variable_info[2]
-        self._device_class = variable_info[3]
-        self.data = {}
+        self._condition = sensor_name
+        condition_name = variable_info[0]
+        self._on_value = variable_info[1]
+        self._device_class = variable_info[2]
+        super().__init__(
+            coordinator=coordinator,
+            name=f"{coordinator.name} {condition_name}",
+            device_id=server_unique_id,
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {self._condition_name}"
-
-    @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id of the sensor."""
-        return f"{self._server_unique_id}/{self._condition_name}"
+        return f"{self._server_unique_id}_{self._condition}"
 
     @property
-    def device_info(self):
-        """Return the device information of the sensor."""
-        return {
-            "identifiers": {(PIHOLE_DOMAIN, self._server_unique_id)},
-            "name": self._name,
-            "manufacturer": "Pi-hole",
-        }
-
-    @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._device_class
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the device."""
-        LOGGER.debug("Condition: %s", self._condition)
-        # return self.data[self._condition] == self._on_value
-        return self.data["status"] == STATUS_ENABLED
+        if self.coordinator.data is not None:
+            return self.coordinator.data.get(self._condition) == self._on_value
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the Pi-Hole."""
-        return self.data
-
-    @property
-    def available(self):
-        """Could the device be accessed during the last update call."""
-        return self.pi_hole.available
-
-    async def async_update(self):
-        """Get the latest data from the Pi-hole API."""
-        LOGGER.debug("Getting updates for pihole binary sensor")
-        await self.pi_hole.async_update()
-        self.data = self.pi_hole.api.data
+        return None
