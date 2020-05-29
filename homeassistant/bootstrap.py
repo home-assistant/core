@@ -29,6 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ERROR_LOG_FILENAME = "home-assistant.log"
 
+# How long to wait until things that run on bootstrap have to finish.
+TIMEOUT_EVENT_BOOTSTRAP = 15
+
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
 
@@ -451,4 +454,11 @@ async def _async_set_up_integrations(
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
-    await hass.async_block_till_done()
+    try:
+        async with timeout(TIMEOUT_EVENT_BOOTSTRAP):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        _LOGGER.warning(
+            "Something is blocking Home Assistant from wrapping up the "
+            "bootstrap phase. We're going to continue anyway."
+        )
