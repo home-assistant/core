@@ -46,9 +46,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "zone_thermostat",
         "thermostatic_radiator_valve",
     ]
-    all_entities = api.get_all_devices()
+    all_devices = api.get_all_devices()
 
-    for dev_id, device in all_entities.items():
+    for dev_id, device in all_devices.items():
 
         if device["class"] not in thermostat_classes:
             continue
@@ -260,15 +260,12 @@ class PwThermostat(SmileGateway, ClimateEntity):
         if "active_preset" in climate_data:
             self._preset_mode = climate_data["active_preset"]
 
-        if "heating_state" in heater_central_data:
-            if heater_central_data["heating_state"] is not None:
-                self._heating_state = heater_central_data["heating_state"]
-        if "cooling_state" in heater_central_data:
-            if heater_central_data["cooling_state"] is not None:
-                self._cooling_state = heater_central_data["cooling_state"]
-        if "compressor_state" in heater_central_data:
-            if heater_central_data["compressor_state"] is not None:
-                self._compressor_state = heater_central_data["compressor_state"]
+        if heater_central_data.get("heating_state") is not None:
+            self._heating_state = heater_central_data["heating_state"]
+        if heater_central_data.get("cooling_state") is not None:
+            self._cooling_state = heater_central_data["cooling_state"]
+        if heater_central_data.get("compressor_state") is not None:
+            self._compressor_state = heater_central_data["compressor_state"]
 
         if self._schema_status:
             self._hvac_mode = HVAC_MODE_AUTO

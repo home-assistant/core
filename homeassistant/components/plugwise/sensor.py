@@ -163,9 +163,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
     entities = []
-    all_entities = api.get_all_devices()
+    all_devices = api.get_all_devices()
     single_thermostat = api.single_master_thermostat()
-    for dev_id, entity in all_entities.items():
+    for dev_id, entity in all_devices.items():
         data = api.get_device_data(dev_id)
         for sensor, sensor_type in SENSOR_MAP.items():
             if sensor in data:
