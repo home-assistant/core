@@ -36,7 +36,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         entry = await self.async_set_unique_id(uuid)
         await self._abort_if_unique_id_configured(config)
 
-    async def _async_create_entry(self, host, port):
+    def _async_create_standard_entry(self, host, port):
         return self.async_create_entry(
             title=f"{DEFAULT_NAME} ({host})", data={CONF_HOST: host, CONF_PORT: port},
         )
@@ -54,7 +54,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
                     user_info[CONF_HOST], user_info[CONF_PORT], uuid
                 )
 
-            return await self._async_create_entry(
+            return self._async_create_standard_entry(
                 user_info[CONF_HOST], user_info[CONF_PORT]
             )
 
@@ -76,7 +76,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         context["title_placeholders"] = placeholders
 
         if user_input is not None:
-            return await self._async_create_entry(
+            return self._async_create_standard_entry(
                 context[CONF_HOST], context[CONF_PORT]
             )
 
