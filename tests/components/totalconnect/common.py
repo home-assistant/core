@@ -1,7 +1,6 @@
 """Common methods used across tests for TotalConnect."""
 from total_connect_client import TotalConnectClient
 
-import homeassistant.components.persistent_notification as pn
 from homeassistant.components.totalconnect import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
@@ -131,7 +130,6 @@ async def setup_platform(hass, platform):
         return_value=True,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
-        assert await async_setup_component(hass, pn.DOMAIN, {})
         assert mock_request.call_count == 2
     await hass.async_block_till_done()
 

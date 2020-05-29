@@ -1,7 +1,6 @@
 """Interfaces with TotalConnect alarm control panels."""
 import logging
 
-from homeassistant.components import persistent_notification
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -18,6 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -117,39 +117,19 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if self._client.disarm(self._location_id) is not True:
-            persistent_notification.async_create(
-                self._hass,
-                f"TotalConnect failed to disarm {self._name}.",
-                "TotalConnect",
-                "totalconnect_disarm",
-            )
+            raise HomeAssistantError(f"TotalConnect failed to disarm {self._name}.")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if self._client.arm_stay(self._location_id) is not True:
-            persistent_notification.async_create(
-                self._hass,
-                f"TotalConnect failed to arm home {self._name}.",
-                "TotalConnect",
-                "totalconnect_arm_home",
-            )
+            raise HomeAssistantError(f"TotalConnect failed to arm home {self._name}.")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if self._client.arm_away(self._location_id) is not True:
-            persistent_notification.async_create(
-                self._hass,
-                f"TotalConnect failed to arm away {self._name}.",
-                "TotalConnect",
-                "totalconnect_arm_away",
-            )
+            raise HomeAssistantError(f"TotalConnect failed to arm away {self._name}.")
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
         if self._client.arm_stay_night(self._location_id) is not True:
-            persistent_notification.async_create(
-                self._hass,
-                f"TotalConnect failed to arm night {self._name}.",
-                "TotalConnect",
-                "totalconnect_arm_night",
-            )
+            raise HomeAssistantError(f"TotalConnect failed to arm night {self._name}.")

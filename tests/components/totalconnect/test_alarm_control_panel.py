@@ -1,4 +1,6 @@
 """Tests for the TotalConnect alarm control panel device."""
+import pytest
+
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -63,8 +65,10 @@ async def test_arm_home_failure(hass):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
-        await common.async_alarm_arm_home(hass)
-        await hass.async_block_till_done()
+        with pytest.raises(Exception) as e:
+            await common.async_alarm_arm_home(hass)
+            await hass.async_block_till_done()
+        assert f"{e.value}" == "TotalConnect failed to arm home test."
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
 
@@ -93,8 +97,10 @@ async def test_arm_away_failure(hass):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
-        await common.async_alarm_arm_away(hass)
-        await hass.async_block_till_done()
+        with pytest.raises(Exception) as e:
+            await common.async_alarm_arm_away(hass)
+            await hass.async_block_till_done()
+        assert f"{e.value}" == "TotalConnect failed to arm away test."
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
 
@@ -123,6 +129,8 @@ async def test_disarm_failure(hass):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
 
-        await common.async_alarm_disarm(hass)
-        await hass.async_block_till_done()
+        with pytest.raises(Exception) as e:
+            await common.async_alarm_disarm(hass)
+            await hass.async_block_till_done()
+        assert f"{e.value}" == "TotalConnect failed to disarm test."
         assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
