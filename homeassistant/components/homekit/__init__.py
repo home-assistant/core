@@ -65,6 +65,7 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_SAFE_MODE,
+    CONF_ZEROCONF_DEFAULT_INTERFACE,
     CONFIG_OPTIONS,
     DEFAULT_AUTO_START,
     DEFAULT_PORT,
@@ -122,6 +123,9 @@ BRIDGE_SCHEMA = vol.Schema(
         vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
         vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+        cv.deprecated(
+            CONF_ZEROCONF_DEFAULT_INTERFACE, invalidation_version="0.115"
+        ): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,
 )
