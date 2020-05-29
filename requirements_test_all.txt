@@ -203,7 +203,7 @@ defusedxml==0.6.0
 denonavr==0.8.1
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.10.0
+devolo-home-control-api==0.11.0
 
 # homeassistant.components.directv
 directv==0.3.0
@@ -527,7 +527,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==5.1.0
+pychromecast==5.3.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -900,7 +900,7 @@ xmltodict==0.12.0
 ya_ma==0.3.8
 
 # homeassistant.components.zeroconf
-zeroconf==0.26.1
+zeroconf==0.26.3
 
 # homeassistant.components.zha
 zha-quirks==0.0.39

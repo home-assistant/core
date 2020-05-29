@@ -97,7 +97,7 @@ class HaServiceBrowser(ServiceBrowser):
         # To avoid overwhemling the system we pre-filter here and only process
         # DNSPointers for the configured record name (type)
         #
-        if record.name != self.type or not isinstance(record, DNSPointer):
+        if record.name not in self.types or not isinstance(record, DNSPointer):
             return
         super().update_record(zc, now, record)
 
@@ -181,6 +181,7 @@ def setup(hass, config):
         if not service_info:
             # Prevent the browser thread from collapsing as
             # service_info can be None
+            _LOGGER.debug("Failed to get info for device %s", name)
             return
 
         info = info_from_service(service_info)
@@ -216,11 +217,12 @@ def setup(hass, config):
                 )
             )
 
-    for service in ZEROCONF:
-        HaServiceBrowser(zeroconf, service, handlers=[service_update])
+    types = list(ZEROCONF)
 
     if HOMEKIT_TYPE not in ZEROCONF:
-        HaServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
+        types.append(HOMEKIT_TYPE)
+
+    HaServiceBrowser(zeroconf, types, handlers=[service_update])
 
     return True
 
