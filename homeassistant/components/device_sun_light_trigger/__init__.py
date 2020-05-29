@@ -74,9 +74,10 @@ async def async_setup(hass, config):
 
     if hass.is_running:
         await activate_on_start(None)
-        return True
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, activate_on_start)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, activate_on_start)
+    return True
 
 
 async def activate_automation(
