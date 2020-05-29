@@ -35,7 +35,7 @@ from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.async_mock import MagicMock, Mock, PropertyMock, patch
+from tests.async_mock import MagicMock, Mock, patch
 from tests.common import async_mock_service, get_test_home_assistant
 
 PST = pytz.timezone("America/Los_Angeles")
@@ -901,8 +901,6 @@ class TestConfig(unittest.TestCase):
     def test_as_dict(self):
         """Test as dict."""
         self.config.config_dir = "/test/ha-config"
-        self.config.hass = MagicMock()
-        type(self.config.hass.state).value = PropertyMock(return_value="RUNNING")
         expected = {
             "latitude": 0,
             "longitude": 0,
@@ -916,7 +914,6 @@ class TestConfig(unittest.TestCase):
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
-            "state": "RUNNING",
             "external_url": None,
             "internal_url": None,
         }
