@@ -194,9 +194,9 @@ class Volumio(MediaPlayerEntity):
         """Send seek command."""
         self.send_volumio_msg("Seek", position)
 
-    def play_media(self, *args, **kwargs):
+    def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        self.async_play_media(args, kwargs)
+        self.async_play_media(media_type, media_id, **kwargs)
 
     async def async_mpd_play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
