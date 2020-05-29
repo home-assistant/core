@@ -346,7 +346,7 @@ async def _async_set_up_integrations(
             domain: hass.async_create_task(async_setup_component(hass, domain, config))
             for domain in domains
         }
-        log_task = hass.loop.create_task(_async_log_pending_setups())
+        log_task = asyncio.create_task(_async_log_pending_setups())
         await asyncio.wait(futures.values())
         log_task.cancel()
         errors = [domain for domain in domains if futures[domain].exception()]
