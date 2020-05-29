@@ -57,8 +57,8 @@ class TahomaSensor(TahomaDevice, Entity):
         if self.tahoma_device.type == "rtds:RTDSMotionSensor":
             return None
         if (
-                self.tahoma_device.type
-                == "somfythermostat:SomfyThermostatTemperatureSensor"
+            self.tahoma_device.type
+            == "somfythermostat:SomfyThermostatTemperatureSensor"
         ):
             return TEMP_CELSIUS
         if self.tahoma_device.type == "somfythermostat:SomfyThermostatHumiditySensor":
