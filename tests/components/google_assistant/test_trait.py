@@ -1349,7 +1349,7 @@ async def test_inputselector(hass):
             },
             {"key": "plex", "names": [{"name_synonym": ["plex"], "lang": "en"}]},
         ],
-        "orderedInputs": False,
+        "orderedInputs": True,
     }
 
     assert trt.query_attributes() == {

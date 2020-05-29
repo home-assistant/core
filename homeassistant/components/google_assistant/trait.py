@@ -1383,7 +1383,7 @@ class InputSelectorTrait(_Trait):
             for source in attrs.get(media_player.ATTR_INPUT_SOURCE_LIST, [])
         ]
 
-        payload = {"availableInputs": inputs, "orderedInputs": False}
+        payload = {"availableInputs": inputs, "orderedInputs": True}
 
         return payload
 
