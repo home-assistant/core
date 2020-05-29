@@ -9,7 +9,6 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
