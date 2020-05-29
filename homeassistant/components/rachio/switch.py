@@ -32,6 +32,10 @@ from .const import (
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE,
+    SLOPE_FLAT,
+    SLOPE_MODERATE,
+    SLOPE_SLIGHT,
+    SLOPE_STEEP,
 )
 from .entity import RachioDevice
 from .webhooks import (
@@ -285,13 +289,13 @@ class RachioZone(RachioSwitch):
         if self._zone_type:
             props[ATTR_ZONE_TYPE] = self._zone_type
         if self._slope_type:
-            if self._slope_type == "ZERO_THREE":
+            if self._slope_type == SLOPE_FLAT:
                 props[ATTR_ZONE_SLOPE] = "Flat"
-            elif self._slope_type == "FOUR_SIX":
+            elif self._slope_type == SLOPE_SLIGHT:
                 props[ATTR_ZONE_SLOPE] = "Slight"
-            elif self._slope_type == "SEVEN_TWELVE":
+            elif self._slope_type == SLOPE_MODERATE:
                 props[ATTR_ZONE_SLOPE] = "Moderate"
-            elif self._slope_type == "OVER_TWELVE":
+            elif self._slope_type == SLOPE_STEEP:
                 props[ATTR_ZONE_SLOPE] = "Steep"
         return props
 

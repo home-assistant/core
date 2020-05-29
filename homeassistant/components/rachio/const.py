@@ -12,6 +12,12 @@ CONF_CUSTOM_URL = "hass_url_override"
 CONF_MANUAL_RUN_MINS = "manual_run_mins"
 DEFAULT_MANUAL_RUN_MINS = 10
 
+# Slope constants
+SLOPE_FLAT = "ZERO_THREE"
+SLOPE_SLIGHT = "FOUR_SIX"
+SLOPE_MODERATE = "SEVEN_TWELVE"
+SLOPE_STEEP = "OVER_TWELVE"
+
 # Keys used in the API JSON
 KEY_DEVICE_ID = "deviceId"
 KEY_IMAGE_URL = "imageUrl"
