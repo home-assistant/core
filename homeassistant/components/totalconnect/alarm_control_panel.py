@@ -32,7 +32,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
 
     for location_id, location in client.locations.items():
         location_name = location.location_name
-        alarms.append(TotalConnectAlarm(location_name, location_id, client, hass))
+        alarms.append(TotalConnectAlarm(location_name, location_id, client))
 
     async_add_entities(alarms, True)
 
@@ -40,12 +40,11 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
 class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
     """Represent an TotalConnect status."""
 
-    def __init__(self, name, location_id, client, hass):
+    def __init__(self, name, location_id, client):
         """Initialize the TotalConnect status."""
         self._name = name
         self._location_id = location_id
         self._client = client
-        self._hass = hass
         self._state = None
         self._device_state_attributes = {}
 
