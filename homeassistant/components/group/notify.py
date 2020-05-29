@@ -111,7 +111,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         """Return true iff we are rate-limited."""
         answer = False
         if self.lock:
-            with self.lock:
+            async with self.lock:
                 # trim our deques for each time frame before testing len
                 while self._calls_minute_span() >= 60:
                     self.calls_minute.popleft()
