@@ -59,6 +59,7 @@ class TestImageProcessing:
         config = {ip.DOMAIN: {"platform": "test"}, "camera": {"platform": "demo"}}
 
         setup_component(self.hass, ip.DOMAIN, config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
         self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
@@ -113,6 +114,7 @@ class TestImageProcessingAlpr:
             new_callable=PropertyMock(return_value=False),
         ):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
         self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
@@ -218,6 +220,7 @@ class TestImageProcessingFace:
             new_callable=PropertyMock(return_value=False),
         ):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
         self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
