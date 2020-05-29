@@ -50,7 +50,6 @@ _SERVICE_MAP = {
     "enable": "async_enable_ev",
     "disable": "async_disable_ev",
     "set_failsafe": "async_set_failsafe",
-    "set_text": "async_set_text",
 }
 
 
