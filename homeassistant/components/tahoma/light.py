@@ -39,11 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class TahomaLight(TahomaDevice, LightEntity):
     """Representation of a Tahome light"""
 
-    def __init__(
-        self,
-        tahoma_device,
-        controller
-    ):
+    def __init__(self, tahoma_device, controller):
         super().__init__(tahoma_device, controller)
         self._skip_update = False
         self._effect = None
@@ -53,7 +49,6 @@ class TahomaLight(TahomaDevice, LightEntity):
             self._type = "io"
             self._unique_id = self.tahoma_device.url
             self.update()
-
 
     @property
     def brightness(self) -> int:
@@ -81,7 +76,7 @@ class TahomaLight(TahomaDevice, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = int(float(kwargs[ATTR_BRIGHTNESS]) / 255 * 100)
             self.apply_action("setIntensity", self._brightness)
-        elif  ATTR_EFFECT in kwargs:
+        elif ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
             self.apply_action("wink", 100)
         else:
@@ -136,7 +131,9 @@ class TahomaLight(TahomaDevice, LightEntity):
 
         _LOGGER.debug("[THM] Updating state...")
         self.controller.get_states([self.tahoma_device])
-        self._brightness = self.tahoma_device.active_states.get("core:LightIntensityState")
+        self._brightness = self.tahoma_device.active_states.get(
+            "core:LightIntensityState"
+        )
         if self.tahoma_device.active_states.get("core:OnOffState") == "on":
             self._state = STATE_ON
         else:
