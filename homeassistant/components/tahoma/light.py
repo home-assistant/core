@@ -3,11 +3,11 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.light import (
-    LightEntity,
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_EFFECT,
+    LightEntity,
 )
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
