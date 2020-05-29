@@ -1,19 +1,16 @@
 """Tahoma light platform that implements dimmable tahoma lights."""
-import logging
 from datetime import timedelta
+import logging
 
-try:
-    from homeassistant.components.light import LightEntity
-except ImportError:
-    from homeassistant.components.light import Light as LightEntity
-
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.components.light import (
+    LightEntity,
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_EFFECT,
 )
+
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
