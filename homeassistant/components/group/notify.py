@@ -107,7 +107,7 @@ class GroupNotifyPlatform(BaseNotificationService):
             return 0
         return self.calls_day[-1] - self.calls_day[0]
 
-    def _rate_limit_gate(self):
+    async def _rate_limit_gate(self):
         """Return true iff we are rate-limited."""
         answer = False
         if self.lock:
@@ -158,7 +158,7 @@ class GroupNotifyPlatform(BaseNotificationService):
             )
             return
 
-        if self._rate_limit_gate():
+        if await self._rate_limit_gate():
             return
 
         payload = {ATTR_MESSAGE: message}
