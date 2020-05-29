@@ -815,7 +815,10 @@ def grant_write_to_sdcard():
 
 
 def do_download_upgrade(hass, call):
-
+    # performance scaling to speed up update
+    hass.services.call(
+        "ais_shell_command", "set_scaling_governor", {"scaling": "performance"}
+    )
     # get the version status from sensor
     state = hass.states.get(ENTITY_ID)
     attr = state.attributes
@@ -902,11 +905,6 @@ def do_fix_scripts_permissions():
 
 
 def do_install_upgrade(hass, call):
-    # performance scaling to speed up update
-    hass.services.call(
-        "ais_shell_command", "set_scaling_governor", {"scaling": "performance"}
-    )
-
     # get the version status from sensor
     state = hass.states.get(ENTITY_ID)
     attr = state.attributes
