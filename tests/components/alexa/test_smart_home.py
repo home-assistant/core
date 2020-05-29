@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 import homeassistant.components.vacuum as vacuum
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entityfilter
@@ -3784,8 +3785,11 @@ async def test_camera_discovery(hass, mock_stream):
         "idle",
         {"friendly_name": "Test camera", "supported_features": 3},
     )
-    with patch(
-        "homeassistant.helpers.network.async_get_external_url",
+
+    hass.config.components.add("cloud")
+    with patch.object(
+        hass.components.cloud,
+        "async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
@@ -3812,8 +3816,11 @@ async def test_camera_discovery_without_stream(hass):
         "idle",
         {"friendly_name": "Test camera", "supported_features": 3},
     )
-    with patch(
-        "homeassistant.helpers.network.async_get_external_url",
+
+    hass.config.components.add("cloud")
+    with patch.object(
+        hass.components.cloud,
+        "async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
@@ -3826,8 +3833,7 @@ async def test_camera_discovery_without_stream(hass):
     [
         ("http://nohttpswrongport.org:8123", 2),
         ("http://nohttpsport443.org:443", 2),
-        ("tls://nohttpsport443.org:443", 2),
-        ("https://httpsnnonstandport.org:8123", 3),
+        ("https://httpsnnonstandport.org:8123", 2),
         ("https://correctschemaandport.org:443", 3),
         ("https://correctschemaandport.org", 3),
     ],
@@ -3839,11 +3845,12 @@ async def test_camera_hass_urls(hass, mock_stream, url, result):
         "idle",
         {"friendly_name": "Test camera", "supported_features": 3},
     )
-    with patch(
-        "homeassistant.helpers.network.async_get_external_url", return_value=url
-    ):
-        appliance = await discovery_test(device, hass)
-        assert len(appliance["capabilities"]) == result
+    await async_process_ha_core_config(
+        hass, {"external_url": url},
+    )
+
+    appliance = await discovery_test(device, hass)
+    assert len(appliance["capabilities"]) == result
 
 
 async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
@@ -3852,12 +3859,13 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
         "Alexa.CameraStreamController", "InitializeCameraStreams", "camera#demo_camera"
     )
 
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://mycamerastream.test"},
+    )
+
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="rtsp://example.local",
-    ), patch(
-        "homeassistant.helpers.network.async_get_external_url",
-        return_value="https://mycamerastream.test",
     ):
         msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
         await hass.async_block_till_done()

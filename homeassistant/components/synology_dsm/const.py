@@ -9,10 +9,17 @@ from homeassistant.const import (
 DOMAIN = "synology_dsm"
 BASE_NAME = "Synology"
 
+# Entry keys
+SYNO_API = "syno_api"
+UNDO_UPDATE_LISTENER = "undo_update_listener"
+
+# Configuration
 CONF_VOLUMES = "volumes"
 DEFAULT_SSL = True
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
+# Options
+DEFAULT_SCAN_INTERVAL = 15  # min
 
 UTILISATION_SENSORS = {
     "cpu_other_load": ["CPU Load (Other)", UNIT_PERCENTAGE, "mdi:chip"],

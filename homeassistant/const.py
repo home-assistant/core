@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 110
+MINOR_VERSION = 111
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -88,6 +88,7 @@ CONF_EVENT = "event"
 CONF_EVENT_DATA = "event_data"
 CONF_EVENT_DATA_TEMPLATE = "event_data_template"
 CONF_EXCLUDE = "exclude"
+CONF_EXTERNAL_URL = "external_url"
 CONF_FILE_PATH = "file_path"
 CONF_FILENAME = "filename"
 CONF_FOR = "for"
@@ -102,6 +103,7 @@ CONF_ICON = "icon"
 CONF_ICON_TEMPLATE = "icon_template"
 CONF_ID = "id"
 CONF_INCLUDE = "include"
+CONF_INTERNAL_URL = "internal_url"
 CONF_IP_ADDRESS = "ip_address"
 CONF_LATITUDE = "latitude"
 CONF_LIGHTS = "lights"
@@ -346,6 +348,7 @@ ATTR_TEMPERATURE = "temperature"
 # #### UNITS OF MEASUREMENT ####
 # Power units
 POWER_WATT = "W"
+POWER_KILO_WATT = f"k{POWER_WATT}"
 
 # Voltage units
 VOLT = "V"
@@ -353,6 +356,10 @@ VOLT = "V"
 # Energy units
 ENERGY_WATT_HOUR = f"{POWER_WATT}h"
 ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
+
+# Electrical units
+ELECTRICAL_CURRENT_AMPERE = "A"
+ELECTRICAL_VOLT_AMPERE = f"{VOLT}{ELECTRICAL_CURRENT_AMPERE}"
 
 # Degree units
 DEGREE = "°"

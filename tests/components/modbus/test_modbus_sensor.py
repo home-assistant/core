@@ -13,6 +13,7 @@ from homeassistant.components.modbus.const import (
     CONF_SCALE,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
+    DATA_TYPE_STRING,
     DATA_TYPE_UINT,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -356,4 +357,24 @@ async def test_float_data_type(hass, mock_hub):
         SENSOR_DOMAIN,
         register_words=[16286, 1617],
         expected="1.23457",
+    )
+
+
+async def test_string_data_type(hass, mock_hub):
+    """Test byte string register data type."""
+    register_config = {
+        CONF_COUNT: 8,
+        CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+        CONF_DATA_TYPE: DATA_TYPE_STRING,
+        CONF_SCALE: 1,
+        CONF_OFFSET: 0,
+        CONF_PRECISION: 0,
+    }
+    await run_test(
+        hass,
+        mock_hub,
+        register_config,
+        SENSOR_DOMAIN,
+        register_words=[0x3037, 0x2D30, 0x352D, 0x3230, 0x3230, 0x2031, 0x343A, 0x3335],
+        expected="07-05-2020 14:35",
     )

@@ -19,8 +19,8 @@
     },
     "state": {
         "_": {
-            "off": "Apagada",
-            "on": "Encesa"
+            "off": "OFF",
+            "on": "ON"
         }
     },
     "title": "Llums"

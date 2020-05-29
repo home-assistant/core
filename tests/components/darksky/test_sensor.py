@@ -195,3 +195,7 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state.attributes.get("friendly_name") == "Dark Sky Summary"
         state = self.hass.states.get("sensor.dark_sky_alerts")
         assert state.state == "2"
+
+        state = self.hass.states.get("sensor.dark_sky_daytime_high_temperature_1d")
+        assert state is not None
+        assert state.attributes.get("device_class") == "temperature"

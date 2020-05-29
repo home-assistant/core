@@ -6,7 +6,7 @@
         "description": "Set up Airly air quality integration. To generate API key go to https://developer.airly.eu/register",
         "data": {
           "name": "Name of the integration",
-          "api_key": "Airly API key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "Latitude",
           "longitude": "Longitude"
         }

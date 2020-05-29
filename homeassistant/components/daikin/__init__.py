@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import config_flow  # noqa: F401
-from .const import CONF_KEY, CONF_UUID, TIMEOUT
+from .const import CONF_KEY, CONF_UUID, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,11 +28,18 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 COMPONENT_TYPES = ["climate", "sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Optional(CONF_HOSTS, default=[]): vol.All(cv.ensure_list, [cv.string])}
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN, invalidation_version="0.113.0"),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Optional(CONF_HOSTS, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    )
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -61,6 +68,9 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with Daikin."""
     conf = entry.data
+    # For backwards compat, set unique ID
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
     daikin_api = await daikin_api_setup(
         hass,
         conf[CONF_HOST],
@@ -119,7 +129,7 @@ async def daikin_api_setup(hass, host, key, uuid, password):
 class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
-    def __init__(self, device):
+    def __init__(self, device: Appliance):
         """Initialize the Daikin Handle."""
         self.device = device
         self.name = device.values.get("name", "Daikin AC")

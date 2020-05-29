@@ -1,7 +1,9 @@
 """Axis switch platform tests."""
 
-from homeassistant.components import axis
-import homeassistant.components.switch as switch
+from axis.port_cgi import ACTION_HIGH, ACTION_LOW
+
+from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.setup import async_setup_component
 
 from .test_device import NAME, setup_axis_integration
@@ -31,17 +33,17 @@ EVENTS = [
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when platform is manually configured."""
     assert await async_setup_component(
-        hass, switch.DOMAIN, {"switch": {"platform": axis.DOMAIN}}
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": AXIS_DOMAIN}}
     )
 
-    assert axis.DOMAIN not in hass.data
+    assert AXIS_DOMAIN not in hass.data
 
 
 async def test_no_switches(hass):
     """Test that no output events in Axis results in no switch entities."""
     await setup_axis_integration(hass)
 
-    assert not hass.states.async_entity_ids("switch")
+    assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
 
 
 async def test_switches(hass):
@@ -53,10 +55,10 @@ async def test_switches(hass):
     device.api.vapix.ports["1"].name = ""
 
     for event in EVENTS:
-        device.api.stream.event.manage_event(event)
+        device.api.event.process_event(event)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids("switch")) == 2
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
     relay_0 = hass.states.get(f"switch.{NAME}_doorbell")
     assert relay_0.state == "off"
@@ -69,14 +71,20 @@ async def test_switches(hass):
     device.api.vapix.ports["0"].action = Mock()
 
     await hass.services.async_call(
-        "switch", "turn_on", {"entity_id": f"switch.{NAME}_doorbell"}, blocking=True
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": f"switch.{NAME}_doorbell"},
+        blocking=True,
     )
 
     await hass.services.async_call(
-        "switch", "turn_off", {"entity_id": f"switch.{NAME}_doorbell"}, blocking=True
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": f"switch.{NAME}_doorbell"},
+        blocking=True,
     )
 
     assert device.api.vapix.ports["0"].action.call_args_list == [
-        mock_call("/"),
-        mock_call("\\"),
+        mock_call(ACTION_HIGH),
+        mock_call(ACTION_LOW),
     ]

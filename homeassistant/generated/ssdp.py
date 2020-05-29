@@ -53,6 +53,12 @@ SSDP = {
             "modelName": "Philips hue bridge 2015"
         }
     ],
+    "isy994": [
+        {
+            "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
+            "manufacturer": "Universal Devices Inc."
+        }
+    ],
     "konnected": [
         {
             "manufacturer": "konnected.io"
@@ -68,6 +74,12 @@ SSDP = {
     "samsungtv": [
         {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
+        }
+    ],
+    "songpal": [
+        {
+            "manufacturer": "Sony Corporation",
+            "st": "urn:schemas-sony-com:service:ScalarWebAPI:1"
         }
     ],
     "sonos": [

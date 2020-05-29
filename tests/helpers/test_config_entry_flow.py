@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
 
 from tests.async_mock import Mock, patch
@@ -232,7 +233,9 @@ async def test_webhook_config_flow_registers_webhook(hass, webhook_flow_conf):
     flow = config_entries.HANDLERS["test_single"]()
     flow.hass = hass
 
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     result = await flow.async_step_user(user_input={})
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

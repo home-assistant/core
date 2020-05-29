@@ -98,7 +98,6 @@ async def async_setup_entry(hass, config_entry):
         continuous=config_entry.options[CONF_CONTINUOUS],
         delay=config_entry.options[CONF_DELAY],
     )
-    roomba.exclude = "wifistat"  # ignore wifistat to avoid unnecessary updates
 
     try:
         if not await async_connect_or_timeout(hass, roomba):

@@ -15,11 +15,10 @@
             },
             "user": {
                 "data": {
-                    "host": "Host o indirizzo IP",
+                    "host": "Host",
                     "name": "Nome"
                 },
-                "description": "Inserisci le informazioni del tuo Samsung TV. Se non hai mai connesso Home Assistant in precedenza, dovresti vedere un messaggio sul TV in cui \u00e8 richiesta l'autorizzazione.",
-                "title": "Samsung TV"
+                "description": "Inserisci le informazioni del tuo Samsung TV. Se non hai mai connesso Home Assistant in precedenza, dovresti vedere un messaggio sul TV in cui \u00e8 richiesta l'autorizzazione."
             }
         }
     }

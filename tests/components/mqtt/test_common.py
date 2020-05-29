@@ -252,7 +252,6 @@ async def help_test_unique_id(hass, domain, config):
     """Test unique id option only creates one entity per unique_id."""
     await async_mock_mqtt_component(hass)
     assert await async_setup_component(hass, domain, config,)
-    async_fire_mqtt_message(hass, "test-topic", "payload")
     assert len(hass.states.async_entity_ids(domain)) == 1
 
 

@@ -7,7 +7,7 @@ import re
 import subprocess
 from typing import Dict, List, Union
 
-from .const import CORE_PROJECT_ID, DOCKER_IMAGE
+from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID
 from .error import ExitApp
 from .util import get_lokalise_token
 
@@ -25,18 +25,23 @@ def run_download_docker():
             "-v",
             f"{DOWNLOAD_DIR}:/opt/dest/locale",
             "--rm",
-            f"lokalise/lokalise-cli@sha256:{DOCKER_IMAGE}",
+            f"lokalise/lokalise-cli-2:{CLI_2_DOCKER_IMAGE}",
             # Lokalise command
-            "lokalise",
+            "lokalise2",
             "--token",
             get_lokalise_token(),
-            "export",
+            "--project-id",
             CORE_PROJECT_ID,
-            "--export_empty",
+            "file",
+            "download",
+            CORE_PROJECT_ID,
+            "--original-filenames=false",
+            "--replace-breaks=false",
+            "--export-empty-as",
             "skip",
-            "--type",
+            "--format",
             "json",
-            "--unzip_to",
+            "--unzip-to",
             "/opt/dest",
         ]
     )

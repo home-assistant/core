@@ -10,6 +10,10 @@
         "flow_title": "Roku: {name}",
         "step": {
             "ssdp_confirm": {
+                "data": {
+                    "one": "Vide",
+                    "other": "Vide"
+                },
                 "description": "Voulez-vous configurer {name} ?",
                 "title": "Roku"
             },
@@ -17,8 +21,7 @@
                 "data": {
                     "host": "H\u00f4te ou adresse IP"
                 },
-                "description": "Entrez vos informations Roku.",
-                "title": "Roku"
+                "description": "Entrez vos informations Roku."
             }
         }
     }

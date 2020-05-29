@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta
 import json
 
+import pytest
+
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.components.sensor as sensor
@@ -361,6 +363,7 @@ async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",' '  "state_topic": "test_topic#" }'

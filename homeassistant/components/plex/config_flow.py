@@ -4,6 +4,7 @@ import logging
 
 from aiohttp import web_response
 import plexapi.exceptions
+from plexapi.gdm import GDM
 from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
@@ -22,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import get_url
 
 from .const import (  # pylint: disable=unused-import
     AUTH_CALLBACK_NAME,
@@ -29,6 +31,7 @@ from .const import (  # pylint: disable=unused-import
     AUTOMATIC_SETUP_STRING,
     CONF_CLIENT_IDENTIFIER,
     CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
@@ -58,6 +61,18 @@ def configured_servers(hass):
         entry.data[CONF_SERVER_IDENTIFIER]
         for entry in hass.config_entries.async_entries(DOMAIN)
     }
+
+
+async def async_discover(hass):
+    """Scan for available Plex servers."""
+    gdm = GDM()
+    await hass.async_add_executor_job(gdm.scan)
+    for server_data in gdm.entries:
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=server_data,
+        )
 
 
 class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -264,6 +279,19 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Imported Plex configuration")
         return await self.async_step_server_validate(import_config)
 
+    async def async_step_integration_discovery(self, discovery_info):
+        """Handle GDM discovery."""
+        machine_identifier = discovery_info["data"]["Resource-Identifier"]
+        await self.async_set_unique_id(machine_identifier)
+        self._abort_if_unique_id_configured()
+        host = f"{discovery_info['from'][0]}:{discovery_info['data']['Port']}"
+        name = discovery_info["data"]["Name"]
+        self.context["title_placeholders"] = {  # pylint: disable=no-member
+            "host": host,
+            "name": name,
+        }
+        return await self.async_step_user()
+
     async def async_step_plex_website_auth(self):
         """Begin external auth flow on Plex website."""
         self.hass.http.register_view(PlexAuthorizationCallbackView)
@@ -278,7 +306,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         self.plexauth = PlexAuth(payload, session)
         await self.plexauth.initiate_auth()
-        forward_url = f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
+        forward_url = f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
         auth_url = self.plexauth.auth_url(forward_url)
         return self.async_external_step(step_id="obtain_token", url=auth_url)
 
@@ -326,6 +354,9 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS] = user_input[
                 CONF_IGNORE_NEW_SHARED_USERS
             ]
+            self.options[MP_DOMAIN][CONF_IGNORE_PLEX_WEB_CLIENTS] = user_input[
+                CONF_IGNORE_PLEX_WEB_CLIENTS
+            ]
 
             account_data = {
                 user: {"enabled": bool(user in user_input[CONF_MONITORED_USERS])}
@@ -369,6 +400,10 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_IGNORE_NEW_SHARED_USERS,
                         default=plex_server.option_ignore_new_shared_users,
+                    ): bool,
+                    vol.Required(
+                        CONF_IGNORE_PLEX_WEB_CLIENTS,
+                        default=plex_server.option_ignore_plexweb_clients,
                     ): bool,
                 }
             ),

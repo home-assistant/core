@@ -16,8 +16,7 @@
                     "host": "Printer Numm oder IP Adresse",
                     "type": "Typ vum Printer"
                 },
-                "description": "Brother Printer Integratioun ariichten. Am Fall vun Problemer kuckt op: https://www.home-assistant.io/integrations/brother",
-                "title": "Brother Printer"
+                "description": "Brother Printer Integratioun ariichten. Am Fall vun Problemer kuckt op: https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

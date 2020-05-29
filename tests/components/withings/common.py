@@ -124,7 +124,7 @@ async def configure_integration(
         assert result["url"] == (
             "https://account.withings.com/oauth2_user/authorize2?"
             "response_type=code&client_id=my_client_id&"
-            "redirect_uri=http://127.0.0.1:8080/auth/external/callback&"
+            "redirect_uri=http://example.local/auth/external/callback&"
             f"state={state}"
             "&scope=user.info,user.metrics,user.activity"
         )

@@ -23,3 +23,5 @@ DISCOVERY_UDN = "udn"
 DISCOVERY_USN = "usn"
 CONFIG_ENTRY_UDN = "udn"
 CONFIG_ENTRY_ST = "st"
+CONFIG_ENTRY_SCAN_INTERVAL = "scan_interval"
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).seconds

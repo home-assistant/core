@@ -1,7 +1,13 @@
 """Support for the Mediaroom Set-up-box."""
 import logging
 
-from pymediaroom import PyMediaroomError, Remote, State, install_mediaroom_protocol
+from pymediaroom import (
+    COMMANDS,
+    PyMediaroomError,
+    Remote,
+    State,
+    install_mediaroom_protocol,
+)
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -40,6 +46,8 @@ DATA_MEDIAROOM = "mediaroom_known_stb"
 DEFAULT_NAME = "Mediaroom STB"
 DEFAULT_TIMEOUT = 9
 DISCOVERY_MEDIAROOM = "mediaroom_discovery_installed"
+
+MEDIA_TYPE_MEDIAROOM = "mediaroom"
 
 SIGNAL_STB_NOTIFY = "mediaroom_stb_discovered"
 SUPPORT_MEDIAROOM = (
@@ -190,15 +198,21 @@ class MediaroomDevice(MediaPlayerEntity):
         _LOGGER.debug(
             "STB(%s) Play media: %s (%s)", self.stb.stb_ip, media_id, media_type
         )
-        if media_type != MEDIA_TYPE_CHANNEL:
-            _LOGGER.error("invalid media type")
-            return
-        if not media_id.isdigit():
-            _LOGGER.error("media_id must be a channel number")
+        if media_type == MEDIA_TYPE_CHANNEL:
+            if not media_id.isdigit():
+                _LOGGER.error("Invalid media_id %s: Must be a channel number", media_id)
+                return
+            media_id = int(media_id)
+        elif media_type == MEDIA_TYPE_MEDIAROOM:
+            if media_id not in COMMANDS:
+                _LOGGER.error("Invalid media_id %s: Must be a command", media_id)
+                return
+        else:
+            _LOGGER.error("Invalid media type %s", media_type)
             return
 
         try:
-            await self.stb.send_cmd(int(media_id))
+            await self.stb.send_cmd(media_id)
             if self._optimistic:
                 self._state = STATE_PLAYING
             self._available = True

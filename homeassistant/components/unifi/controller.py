@@ -290,8 +290,10 @@ class UniFiController:
             for site in sites.values():
                 if self.site == site["name"]:
                     self._site_name = site["desc"]
-                    self._site_role = site["role"]
                     break
+
+            description = await self.api.site_description()
+            self._site_role = description[0]["site_role"]
 
         except CannotConnect:
             raise ConfigEntryNotReady
