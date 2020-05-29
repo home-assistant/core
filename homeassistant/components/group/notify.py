@@ -4,7 +4,6 @@ from collections import deque
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-import threading
 import time
 
 import voluptuous as vol
@@ -17,7 +16,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.components.switch import is_on
-from homeassistant.const import CONF_NAME, ATTR_SERVICE
+from homeassistant.const import ATTR_SERVICE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -91,7 +90,7 @@ class GroupNotifyPlatform(BaseNotificationService):
             self.calls_minute = deque()
             self.calls_hour = deque()
             self.calls_day = deque()
-            self.lock = threading.Lock()
+            self.lock = asyncio.Lock()
 
     def _calls_minute_span(self):
         if not self.calls_minute:
