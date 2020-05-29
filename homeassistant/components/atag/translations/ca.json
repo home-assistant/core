@@ -4,7 +4,8 @@
             "already_configured": "Nom\u00e9s es pot afegir un sol dispositiu Atag a Home Assistant"
         },
         "error": {
-            "connection_error": "No s'ha pogut connectar, torna-ho a provar"
+            "connection_error": "No s'ha pogut connectar, torna-ho a provar",
+            "unauthorized": "L'emparellament s'ha denegat, comprova si hi ha una sol\u00b7licitud d'autenticaci\u00f3 al dispositiu"
         },
         "step": {
             "user": {

@@ -15,8 +15,7 @@
                 "data": {
                     "password": "Passwuert"
                 },
-                "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an fir {name}.",
-                "title": "Passwuert aginn"
+                "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an fir {name}."
             },
             "discovery_confirm": {
                 "description": "W\u00ebllt dir den ESPHome Provider `{name}` am Home Assistant dob\u00e4isetzen?",
@@ -27,8 +26,7 @@
                     "host": "Apparat",
                     "port": "Port"
                 },
-                "description": "Gitt Verbindungs Informatioune vun \u00e4rem [ESPHome](https://esphomelib.com/) an.",
-                "title": "ESPHome"
+                "description": "Gitt Verbindungs Informatioune vun \u00e4rem [ESPHome](https://esphomelib.com/) an."
             }
         }
     }
