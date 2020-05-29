@@ -49,13 +49,13 @@ class TahomaLight(TahomaDevice, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        _LOGGER.debug(f"[THM] Called to get brightness {self._brightness}")
+        _LOGGER.debug("[THM] Called to get brightness %s", self._brightness)
         return int(self._brightness * (255 / 100))
 
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        _LOGGER.debug(f"[THM] Called to check is on {self._state}")
+        _LOGGER.debug("[THM] Called to check is on %s", self._state)
         return self._state == STATE_ON
 
     @property
@@ -65,7 +65,7 @@ class TahomaLight(TahomaDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the light on."""
-        _LOGGER.debug(f"[THM] Called to turn on ({kwargs}, {self._brightness})")
+        _LOGGER.debug("[THM] Called to turn on (%s, %s)", kwargs, self._brightness)
         self._state = STATE_ON
         self._skip_update = True
 
