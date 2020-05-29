@@ -1661,7 +1661,21 @@ class AlexaDoorbellEventSource(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-doorbelleventsource.html
     """
 
-    supported_locales = {"en-US"}
+    supported_locales = {
+        "en-US",
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "fr-CA",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    }
 
     def name(self):
         """Return the Alexa API name of this interface."""
