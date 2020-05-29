@@ -23,8 +23,7 @@
                     "host": "Adresse IP de l\u2019appareil Konnected",
                     "port": "Port de l'appareil Konnected"
                 },
-                "description": "Veuillez saisir les informations de l\u2019h\u00f4te de votre panneau Konnected.",
-                "title": "D\u00e9couverte d\u2019appareil Konnected"
+                "description": "Veuillez saisir les informations de l\u2019h\u00f4te de votre panneau Konnected."
             }
         }
     },

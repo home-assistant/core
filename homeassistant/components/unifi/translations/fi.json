@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "user_privilege": "K\u00e4ytt\u00e4j\u00e4n on oltava j\u00e4rjestelm\u00e4nvalvoja"
-        },
         "error": {
             "faulty_credentials": "Virheellinen tunnistautuminen",
             "service_unavailable": "Yhdist\u00e4minen ep\u00e4onnistui"

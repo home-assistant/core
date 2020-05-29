@@ -1,14 +1,12 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
-            "unknown": "Unerwarteter Fehler"
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
         },
         "step": {
             "user": {
                 "data": {
                     "blid": "BLID",
-                    "certificate": "Zertifikat",
                     "continuous": "Kontinuierlich",
                     "delay": "Verz\u00f6gerung",
                     "host": "Hostname oder IP-Adresse",

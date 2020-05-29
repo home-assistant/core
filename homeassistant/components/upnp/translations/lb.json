@@ -2,12 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD ass scho konfigur\u00e9iert",
-            "incomplete_device": "Ignor\u00e9iert onvollst\u00e4nnegen UPnP-Apparat",
             "incomplete_discovery": "Entdeckung net komplett",
             "no_devices_discovered": "Keng UPnP/IGDs entdeckt",
-            "no_devices_found": "Keng UPnP/IGD Apparater am Netzwierk fonnt.",
-            "no_sensors_or_port_mapping": "Aktiv\u00e9ier op mannst Sensoren oder Port Mapping",
-            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun UPnP/IGD ass n\u00e9ideg."
+            "no_devices_found": "Keng UPnP/IGD Apparater am Netzwierk fonnt."
         },
         "error": {
             "one": "Een",
@@ -15,22 +12,14 @@
         },
         "flow_title": "UPnP/IGD: {name}",
         "step": {
-            "confirm": {
-                "description": "Soll UPnP/IGD konfigur\u00e9iert ginn?",
-                "title": "UPnP/IGD"
-            },
             "ssdp_confirm": {
                 "description": "Soll d\u00ebsen UPnP/IGD Apparat konfigur\u00e9iert ginn?"
             },
             "user": {
                 "data": {
-                    "enable_port_mapping": "Port Mapping fir Home Assistant aktiv\u00e9ieren",
-                    "enable_sensors": "Trafic Sensoren dob\u00e4isetzen",
-                    "igd": "UPnP/IGD",
                     "scan_interval": "Update Intervall (Sekonnen, minimum 30)",
                     "usn": "Apparat"
-                },
-                "title": "Konfiguratiouns Optiounen"
+                }
             }
         }
     }

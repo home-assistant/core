@@ -28,10 +28,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API Klju\u010d",
                     "cloud_api": "Geografska lokacija",
-                    "latitude": "Zemljepisna \u0161irina",
-                    "longitude": "Zemljepisna dol\u017eina",
                     "node_pro": "AirVisual Node Pro",
                     "type": "Vrsta integracije"
                 },
@@ -46,7 +43,6 @@
                 "data": {
                     "show_on_map": "Prika\u017ei nadzorovano obmo\u010dje na zemljevidu"
                 },
-                "description": "Nastavite razli\u010dne mo\u017enosti za integracijo AirVisual.",
                 "title": "Nastavite AirVisual"
             }
         }

@@ -23,8 +23,7 @@
                     "host": "Konnected Apparat IP Adress",
                     "port": "Konnected Apparat Port"
                 },
-                "description": "Informatioune vum Konnected Panel aginn.",
-                "title": "Konnected Apparat entdecken"
+                "description": "Informatioune vum Konnected Panel aginn."
             }
         }
     },

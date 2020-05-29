@@ -28,10 +28,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API-n\u00f8kkel",
                     "cloud_api": "Geografisk plassering",
-                    "latitude": "Breddegrad",
-                    "longitude": "Lengdegrad",
                     "node_pro": "",
                     "type": "Integrasjonstype"
                 },
@@ -46,7 +43,6 @@
                 "data": {
                     "show_on_map": "Vis overv\u00e5ket geografi p\u00e5 kartet"
                 },
-                "description": "Angi forskjellige alternativer for AirVisual-integrasjonen.",
                 "title": "Konfigurer AirVisual"
             }
         }

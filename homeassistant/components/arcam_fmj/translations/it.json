@@ -3,6 +3,5 @@
         "trigger_type": {
             "turn_on": "\u00c8 stato richiesto di attivare {entity_name}"
         }
-    },
-    "title": "Arcam FMJ"
+    }
 }

@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "\u662f\u5426\u8981\u8bbe\u7f6e Home Assistant iOS \u7ec4\u4ef6\uff1f",
-                "title": "Home Assistant iOS"
+                "description": "\u662f\u5426\u8981\u8bbe\u7f6e Home Assistant iOS \u7ec4\u4ef6\uff1f"
             }
         }
     }
