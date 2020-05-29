@@ -33,7 +33,7 @@ PACKAGES = find_packages(exclude=["tests", "tests.*"])
 
 REQUIRES = [
     "aiohttp==3.6.1",
-    "astral==2.1",
+    "astral==2.2",
     "async_timeout==3.0.1",
     "attrs==19.3.0",
     "bcrypt==3.1.7",
