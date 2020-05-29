@@ -24,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERVICES = "services"
-CONF_SWITCH = "switch"
+CONF_ENABLE_ENTITY_ID = "enable_entity_id"
 CONF_MAX_PER_MINUTE = "max_per_minute"
 CONF_MAX_PER_HOUR = "max_per_hour"
 CONF_MAX_PER_DAY = "max_per_day"
@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list,
             [{vol.Required(ATTR_SERVICE): cv.slug, vol.Optional(ATTR_DATA): dict}],
         ),
-        vol.Optional(CONF_SWITCH): cv.entity_id,
+        vol.Optional(CONF_ENABLE_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_MAX_PER_MINUTE): vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_MAX_PER_HOUR): vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_MAX_PER_DAY): vol.All(vol.Coerce(int), vol.Range(min=1)),
