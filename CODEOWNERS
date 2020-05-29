@@ -310,7 +310,7 @@ homeassistant/components/pilight/* @trekky12
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/plex/* @jjlawren
-homeassistant/components/plugwise/* @laetificat @CoMPaTech @bouwew
+homeassistant/components/plugwise/* @CoMPaTech @bouwew
 homeassistant/components/plum_lightpad/* @ColinHarrington
 homeassistant/components/point/* @fredrike
 homeassistant/components/powerwall/* @bdraco @jrester

@@ -14,8 +14,7 @@
                     "host": "Nazwa hosta lub adres IP",
                     "port": "Port"
                 },
-                "description": "Konfiguracja Elgato Key Light w celu integracji z Home Assistantem.",
-                "title": "Po\u0142\u0105cz swoje Elgato Key Light"
+                "description": "Konfiguracja Elgato Key Light w celu integracji z Home Assistantem."
             },
             "zeroconf_confirm": {
                 "description": "Czy chcesz doda\u0107 urz\u0105dzenie Elgato Key Light o numerze seryjnym `{serial_number}` do Home Assistanta?",

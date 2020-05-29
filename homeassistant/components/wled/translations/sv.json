@@ -13,8 +13,7 @@
                 "data": {
                     "host": "V\u00e4rd eller IP-adress"
                 },
-                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
             },
             "zeroconf_confirm": {
                 "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Aquestes coordenades ja estan registrades."
+        },
         "error": {
             "identifier_exists": "Les coordenades ja estan registrades",
             "invalid_api_key": "Clau API no v\u00e0lida"

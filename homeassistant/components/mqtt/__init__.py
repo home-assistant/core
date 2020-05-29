@@ -887,6 +887,7 @@ class MQTT:
 
         This method is a coroutine.
         """
+        _LOGGER.debug("Unsubscribing from %s", topic)
         async with self._paho_lock:
             result: int = None
             result, _ = await self.hass.async_add_executor_job(

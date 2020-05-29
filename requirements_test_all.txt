@@ -6,6 +6,9 @@
 # homeassistant.components.homekit
 HAP-python==2.8.4
 
+# homeassistant.components.plugwise
+Plugwise_Smile==0.2.10
+
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -230,7 +233,7 @@ eebrightbox==0.0.4
 elgato==0.2.0
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.17
+elkm1-lib==0.7.18
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -300,7 +303,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.3
+hass-nabucasa==0.34.4
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -539,7 +542,7 @@ pychromecast==5.3.0
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.0.4
+pydaikin==2.1.0
 
 # homeassistant.components.deconz
 pydeconz==70

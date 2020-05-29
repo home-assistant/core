@@ -20,7 +20,6 @@
             },
             "link": {
                 "data": {
-                    "api_version": "DSM \u7248\u672c",
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",
                     "ssl": "\u4f7f\u7528 SSL/TLS \u9023\u7dda\u81f3 NAS",
@@ -31,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM \u7248\u672c",
                     "host": "\u4e3b\u6a5f\u7aef",
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",

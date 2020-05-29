@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El lloc del controlador ja est\u00e0 configurat",
-            "no_local_user": "No s'ha trobat cap usuari local, configura un compte local al controlador i torna-ho a provar",
-            "user_privilege": "L'usuari ha de ser administrador"
+            "already_configured": "El lloc del controlador ja est\u00e0 configurat"
         },
         "error": {
             "faulty_credentials": "[%key::common::config_flow::error::invalid_auth%]",
@@ -29,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients controlats amb acc\u00e9s a la xarxa",
-                    "new_client": "Afegeix un client nou per al control d'acc\u00e9s a la xarxa",
                     "poe_clients": "Permet control POE dels clients"
                 },
                 "description": "Configura els controls del client \n\nConfigura interruptors per als n\u00fameros de s\u00e8rie als quals vulguis controlar l'acc\u00e9s a la xarxa.",
@@ -38,6 +35,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Temps (en segons) des de s'ha vist per \u00faltima vegada fins que es considera a fora",
+                    "ignore_wired_bug": "Desactiva la l\u00f2gica d\u2019errors amb UniFi",
                     "ssid_filter": "Selecciona els SSID's on fer-hi el seguiment de clients",
                     "track_clients": "Segueix clients de la xarxa",
                     "track_devices": "Segueix dispositius de la xarxa (dispositius Ubiquiti)",

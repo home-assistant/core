@@ -23,8 +23,7 @@
                     "username": "Nome utente",
                     "verify_ssl": "AdGuard Home utilizza un certificato appropriato"
                 },
-                "description": "Configura l'istanza di AdGuard Home per consentire il monitoraggio e il controllo.",
-                "title": "Collega la tua AdGuard Home."
+                "description": "Configura l'istanza di AdGuard Home per consentire il monitoraggio e il controllo."
             }
         }
     }
