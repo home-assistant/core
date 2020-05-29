@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_UDN
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
@@ -29,12 +28,8 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _async_set_unique_id_and_update(self, host, port, uuid):
-        config = {
-            CONF_HOST: host,
-            CONF_PORT: port,
-        }
-        entry = await self.async_set_unique_id(uuid)
-        await self._abort_if_unique_id_configured(config)
+        await self.async_set_unique_id(uuid)
+        self._abort_if_unique_id_configured({CONF_HOST: host, CONF_PORT: port})
 
     def _async_create_standard_entry(self, host, port):
         return self.async_create_entry(

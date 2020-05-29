@@ -2,9 +2,8 @@
     "title": "Arcam FMJ",
     "config": {
         "abort": {
-            "already_setup": "Device was already setup.",
-            "already_in_progress": "Config flow for device is already in progress.",
-            "updated_instance": "Updated instance with new host address."
+            "already_configured": "Device was already setup.",
+            "already_in_progress": "Config flow for device is already in progress."
         },
         "error": {},
         "flow_title": "Arcam FMJ on {host}",

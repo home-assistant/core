@@ -74,7 +74,9 @@ async def test_ssdp_abort(hass, flow):
     )
     entry.add_to_hass(hass)
 
-    with pytest.raises(data_entry_flow.AbortFlow, match="Flow aborted: already_setup"):
+    with pytest.raises(
+        data_entry_flow.AbortFlow, match="Flow aborted: already_configured"
+    ):
         await flow.async_step_ssdp(MOCK_DISCOVER)
 
 
@@ -89,9 +91,10 @@ async def test_ssdp_update(hass, flow):
     entry.add_to_hass(hass)
 
     with pytest.raises(
-        data_entry_flow.AbortFlow, match="Flow aborted: updated_instance"
+        data_entry_flow.AbortFlow, match="Flow aborted: already_configured"
     ):
         await flow.async_step_ssdp(MOCK_DISCOVER)
+    assert entry.data[CONF_HOST] == MOCK_HOST
 
 
 async def test_user(hass, flow, aioclient_mock):
