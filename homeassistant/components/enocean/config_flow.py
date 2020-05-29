@@ -7,8 +7,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import CONN_CLASS_ASSUMED
 from homeassistant.const import CONF_DEVICE
 
-from . import dongle
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
+from . import const, dongle
 
 
 class DongleSetupStates(Enum):
@@ -20,7 +19,7 @@ class DongleSetupStates(Enum):
     CREATE_ENTRY = 4
 
 
-class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class EnOceanFlowHandler(config_entries.ConfigFlow, domain=const.DOMAIN):
     """Handle the enOcean config flows."""
 
     VERSION = 1
@@ -40,7 +39,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             dongle.validate_path, dongle_path
         )
         if not path_is_valid:
-            LOGGER.warning(
+            const.LOGGER.warning(
                 "Cannot import yaml configuration: %s is not a valid dongle path.",
                 dongle_path,
             )
@@ -63,7 +62,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_manual(None)
             if await self.validate_enocean_conf(user_input):
                 return self.create_enocean_entry(user_input)
-            errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
+            errors = {CONF_DEVICE: const.ERROR_INVALID_DONGLE_PATH}
 
         bridges = await self.hass.async_add_executor_job(dongle.detect)
         if len(bridges) == 0:
@@ -84,7 +83,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if await self.validate_enocean_conf(user_input):
                 return self.create_enocean_entry(user_input)
             default_value = user_input[CONF_DEVICE]
-            errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
+            errors = {CONF_DEVICE: const.ERROR_INVALID_DONGLE_PATH}
 
         return self.async_show_form(
             step_id="manual",
