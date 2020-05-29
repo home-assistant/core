@@ -15,6 +15,7 @@ async def test_websocket_api(
         await async_setup_component(
             hass, "sensor", {"sensor": {"platform": "websocket_api"}}
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.connected_clients")
     assert state.state == "0"

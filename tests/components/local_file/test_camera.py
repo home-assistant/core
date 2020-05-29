@@ -143,6 +143,7 @@ async def test_update_file_path(hass):
             "file_path": "mock/path_2.jpg",
         }
         await async_setup_component(hass, "camera", {"camera": [camera_1, camera_2]})
+        await hass.async_block_till_done()
 
         # Fetch state and check motion detection attribute
         state = hass.states.get("camera.local_file")

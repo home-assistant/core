@@ -39,6 +39,7 @@ async def test_apply_service(hass):
     """Test the apply service."""
     assert await async_setup_component(hass, "scene", {})
     assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         "scene", "apply", {"entities": {"light.bed_light": "off"}}, blocking=True

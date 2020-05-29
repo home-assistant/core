@@ -50,6 +50,7 @@ async def test_capped_setup(hass, aioclient_mock):
     )
 
     await async_setup_component(hass, "sensor", {"sensor": config})
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.start_ca_usage_ratio")
     assert state.attributes.get("unit_of_measurement") == UNIT_PERCENTAGE

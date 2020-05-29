@@ -48,6 +48,7 @@ def test_sensor_value_from_code():
                 }
             },
         )
+        HASS.block_till_done()
 
         state = HASS.states.get("sensor.test")
         assert state.state == "unknown"
