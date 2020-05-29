@@ -111,23 +111,24 @@ def _has_all_unique_names_and_ports(bridges):
     return bridges
 
 
-BRIDGE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=BRIDGE_NAME): vol.All(
-            cv.string, vol.Length(min=3, max=25)
-        ),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(CONF_ADVERTISE_IP): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
-        vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
-        vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
-        vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
-        cv.deprecated(
-            CONF_ZEROCONF_DEFAULT_INTERFACE, invalidation_version="0.115"
-        ): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
+BRIDGE_SCHEMA = vol.All(
+    cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE, invalidation_version="0.115"),
+    vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=BRIDGE_NAME): vol.All(
+                cv.string, vol.Length(min=3, max=25)
+            ),
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
+            vol.Optional(CONF_ADVERTISE_IP): vol.All(ipaddress.ip_address, cv.string),
+            vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
+            vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
+            vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
+            vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+            vol.Optional(CONF_ZEROCONF_DEFAULT_INTERFACE): cv.boolean,
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema(
