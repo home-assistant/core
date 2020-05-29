@@ -11,7 +11,6 @@ from aiohttp.web_exceptions import HTTPMovedPermanently
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     SERVER_PORT,
@@ -20,7 +19,6 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
-from homeassistant.setup import ATTR_COMPONENT
 import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
 
@@ -234,18 +232,6 @@ async def async_setup(hass, config):
 
         await start_http_server_and_save_config(hass, dict(conf), server)
 
-    async def async_wait_frontend_load(event: Event) -> None:
-        """Wait for the frontend to load."""
-
-        if event.data[ATTR_COMPONENT] != "frontend":
-            return
-
-        await start_server(event)
-
-    if 0:
-        startup_listeners.append(
-            hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_wait_frontend_load)
-        )
     startup_listeners.append(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_START, start_server)
     )

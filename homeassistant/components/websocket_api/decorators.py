@@ -1,4 +1,5 @@
 """Decorators for the Websocket API."""
+import asyncio
 from functools import wraps
 import logging
 from typing import Awaitable, Callable
@@ -33,7 +34,7 @@ def async_response(
         """Schedule the handler."""
         # As the webserver is now started before the start
         # event we do not want to block for websocket responders
-        hass.loop.create_task(_handle_async_response(func, hass, connection, msg))
+        asyncio.create_task(_handle_async_response(func, hass, connection, msg))
 
     return schedule_handler
 
