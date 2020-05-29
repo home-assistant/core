@@ -1,10 +1,8 @@
 """Config flow to configure the Arcam FMJ component."""
-import asyncio
 import logging
 from urllib.parse import urlparse
 
-import aiohttp
-from defusedxml import ElementTree
+from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,43 +14,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _strip_uuid_prefix(data):
-    return data[5:].split("-")[4]
-
-
-def _log_exception(msg, *args):
-    """Log an error and turn on traceback if debug is on."""
-    _LOGGER.error(msg, *args, exc_info=_LOGGER.getEffectiveLevel() == logging.DEBUG)
-
-
-async def _get_uniqueid_from_device_description(hass, url):
-    """Retrieve and extract unique id from url."""
-    try:
-        session = async_get_clientsession(hass)
-        async with session.get(url) as req:
-            req.raise_for_status()
-            data = await req.text()
-    except (aiohttp.ClientError, asyncio.TimeoutError):
-        _log_exception("Unable to get device description from %s", url)
-        return None
-
-    try:
-        xml = ElementTree.fromstring(data)
-    except ElementTree.ParseError:
-        _log_exception("Unable to parse xml from %s", url)
-        return None
-
-    udn = xml.findtext("d:device/d:UDN", None, {"d": "urn:schemas-upnp-org:device-1-0"})
-    return _strip_uuid_prefix(udn)
-
-
-async def _get_uniqueid_from_host(hass, host):
-    """Try to deduce a unique id from a host based on ssdp/upnp."""
-    return await _get_uniqueid_from_device_description(
-        hass, f"http://{host}:8080/dd.xml"
-    )
 
 
 def get_entry_client(hass, entry):
@@ -85,7 +46,9 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         errors = {}
 
         if user_info is not None:
-            uuid = await _get_uniqueid_from_host(self.hass, user_info[CONF_HOST])
+            uuid = await get_uniqueid_from_host(
+                async_get_clientsession(self.hass), user_info[CONF_HOST]
+            )
             if uuid:
                 await self._async_set_unique_id_and_update(
                     user_info[CONF_HOST], user_info[CONF_PORT], uuid
@@ -125,7 +88,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         """Handle a discovered device."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         port = DEFAULT_PORT
-        uuid = _strip_uuid_prefix(discovery_info[ATTR_UPNP_UDN])
+        uuid = get_uniqueid_from_udn(discovery_info[ATTR_UPNP_UDN])
 
         await self._async_set_unique_id_and_update(host, port, uuid)
 

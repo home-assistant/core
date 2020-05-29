@@ -3,6 +3,7 @@
     "config": {
         "abort": {
             "already_setup": "Device was already setup.",
+            "already_in_progress": "Config flow for device is already in progress.",
             "updated_instance": "Updated instance with new host address."
         },
         "error": {},
