@@ -298,7 +298,9 @@ async def test_setup_hass(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"browser": {}, "frontend": {}},
-    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000), patch("homeassistant.components.http.start_http_server_and_save_config"):
+    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000), patch(
+        "homeassistant.components.http.start_http_server_and_save_config"
+    ):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=verbose,
