@@ -51,8 +51,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry):
     """Set up config entry."""
-    entries = hass.data.setdefault(DOMAIN_DATA_ENTRIES, {})
-    tasks = hass.data.setdefault(DOMAIN_DATA_TASKS, {})
+    entries = hass.data[DOMAIN_DATA_ENTRIES]
+    tasks = hass.data[DOMAIN_DATA_TASKS]
 
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
     entries[entry.entry_id] = client
