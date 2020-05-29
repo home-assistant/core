@@ -1,4 +1,5 @@
 """The tests for the hassio component."""
+import json
 import os
 
 import pytest
@@ -9,6 +10,7 @@ from homeassistant.components.hassio import STORAGE_KEY
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
+from tests.common import load_fixture
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
@@ -43,6 +45,30 @@ def mock_all(aioclient_mock):
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
+
+
+@pytest.fixture(name="supervisor_info", scope="session")
+def supervisor_info_fixture():
+    """Return the /supervisor/info api result."""
+    return json.loads(load_fixture("hassio/supervisor_info.json"))
+
+
+async def test_addon_is_installed(hass, aioclient_mock, supervisor_info, hassio_env):
+    """Test addon is installed."""
+    aioclient_mock.get("http://127.0.0.1/supervisor/info", json=supervisor_info)
+    assert await async_setup_component(hass, "hassio", {})
+
+    installed = await hass.components.hassio.async_addon_is_installed(
+        hass, "mosquitto", "core"
+    )
+
+    assert installed
+
+    installed = await hass.components.hassio.async_addon_is_installed(
+        hass, "ssh", "core"
+    )
+
+    assert not installed
 
 
 async def test_setup_api_ping(hass, aioclient_mock):
