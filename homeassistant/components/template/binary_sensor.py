@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import (
+    ATTR_EDITABLE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
@@ -33,6 +34,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_same_state, async_track_state_change
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import extract_entities, initialise_templates, register_component
 from .const import CONF_AVAILABILITY_TEMPLATE
@@ -142,7 +144,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
     collection.attach_entity_component_collection(
-        component, yaml_collection, partial(BinarySensorTemplate.from_storage, hass)
+        component, yaml_collection, partial(BinarySensorTemplate.from_config, hass)
     )
 
     await yaml_collection.async_load(
@@ -175,44 +177,38 @@ class BinarySensorStorageCollection(collection.StorageCollection):
 class BinarySensorTemplate(BinarySensorEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
-    def __init__(
-        self,
-        hass,
-        id_=None,
-        friendly_name=None,
-        device_class=None,
-        value_template=None,
-        icon_template=None,
-        entity_picture_template=None,
-        availability_template=None,
-        entity_id=None,
-        delay_on=None,
-        delay_off=None,
-        attribute_templates={},
-    ):
+    def __init__(self, hass: HomeAssistantType, config: ConfigType):
         """Initialize the Template binary sensor."""
         self.hass = hass
-        self._id = id_
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, id_, hass=hass)
-        self._name = friendly_name
-        self._device_class = device_class
-        self._template = value_template
+        self.editable = False
+        self._id = config[CONF_ID]
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, self._id, hass=hass)
+        self._name = config.get(CONF_FRIENDLY_NAME)
+        self._device_class = config.get(CONF_DEVICE_CLASS)
+        self._template = config.get(CONF_VALUE_TEMPLATE)
         self._state = None
-        self._icon_template = icon_template
-        self._availability_template = availability_template
-        self._entity_picture_template = entity_picture_template
+        self._icon_template = config.get(CONF_ICON_TEMPLATE)
+        self._availability_template = config.get(CONF_AVAILABILITY_TEMPLATE)
+        self._entity_picture_template = config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         self._icon = None
         self._entity_picture = None
-        self._entities = entity_id
-        self._delay_on = delay_on
-        self._delay_off = delay_off
+        self._entities = config.get(CONF_ENTITY_ID)
+        self._delay_on = config.get(CONF_DELAY_ON)
+        self._delay_off = config.get(CONF_DELAY_OFF)
         self._available = True
-        self._attribute_templates = attribute_templates
+        self._attribute_templates = config.get(CONF_ATTRIBUTE_TEMPLATES, {})
         self._attributes = {}
 
     @classmethod
     def from_storage(cls, hass, config: typing.Dict) -> "BinarySensorTemplate":
-        """Return entity instance initialized from yaml storage."""
+        """Return entity instance initialized from storage."""
+        binary_sensor = cls.from_config(hass, config)
+        binary_sensor.editable = True
+        return binary_sensor
+
+    @classmethod
+    def from_config(cls, hass, config: typing.Dict) -> "BinarySensorTemplate":
+        """Return entity instance initialized from a config."""
         config = CONVERT_TEMPLATE_SCHEMA(config)  # Converts strings to templates
 
         templates = {
@@ -233,10 +229,7 @@ class BinarySensorTemplate(BinarySensorEntity):
             attribute_templates,
         )
 
-        # Don't override builtin id function
-        config["id_"] = config.pop(CONF_ID)
-
-        return cls(hass, **config)
+        return cls(hass, config)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -294,7 +287,7 @@ class BinarySensorTemplate(BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return self._attributes
+        return {**self._attributes, ATTR_EDITABLE: self.editable}
 
     @property
     def should_poll(self):
@@ -323,14 +316,12 @@ class BinarySensorTemplate(BinarySensorEntity):
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        attrs = {}
         if self._attribute_templates is not None:
             for key, value in self._attribute_templates.items():
                 try:
-                    attrs[key] = value.async_render()
+                    self._attributes[key] = value.async_render()
                 except TemplateError as err:
                     _LOGGER.error("Error rendering attribute %s: %s", key, err)
-            self._attributes = attrs
 
         templates = {
             "_icon": self._icon_template,
