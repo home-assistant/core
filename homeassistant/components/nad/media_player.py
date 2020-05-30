@@ -81,25 +81,25 @@ class NAD(MediaPlayerEntity):
         """Initialize the NAD Receiver device."""
         self.config = config
         self._instantiate_nad_receiver()
-        self._min_volume = config.get(CONF_MIN_VOLUME)
-        self._max_volume = config.get(CONF_MAX_VOLUME)
-        self._source_dict = config.get(CONF_SOURCE_DICT)
+        self._min_volume = config[CONF_MIN_VOLUME]
+        self._max_volume = config[CONF_MAX_VOLUME]
+        self._source_dict = config[CONF_SOURCE_DICT]
         self._reverse_mapping = {value: key for key, value in self._source_dict.items()}
 
         self._volume = self._state = self._mute = self._source = None
 
     def _instantiate_nad_receiver(self) -> NADReceiver:
-        if self.config.get(CONF_TYPE) == "RS232":
-            self._nad_receiver = NADReceiver(self.config.get(CONF_SERIAL_PORT))
+        if self.config[CONF_TYPE] == "RS232":
+            self._nad_receiver = NADReceiver(self.config[CONF_SERIAL_PORT])
         else:
             host = self.config.get(CONF_HOST)
-            port = self.config.get(CONF_PORT)
+            port = self.config[CONF_PORT]
             self._nad_receiver = NADReceiverTelnet(host, port)
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.config.get(CONF_NAME)
+        return self.config[CONF_NAME]
 
     @property
     def state(self):
@@ -206,15 +206,15 @@ class NADtcp(MediaPlayerEntity):
 
     def __init__(self, config):
         """Initialize the amplifier."""
-        self._name = config.get(CONF_NAME)
+        self._name = config[CONF_NAME]
         self._nad_receiver = NADReceiverTCP(config.get(CONF_HOST))
         self._min_vol = (
-            config.get(CONF_MIN_VOLUME) + 90
+            config[CONF_MIN_VOLUME] + 90
         ) * 2  # from dB to nad vol (0-200)
         self._max_vol = (
-            config.get(CONF_MAX_VOLUME) + 90
+            config[CONF_MAX_VOLUME] + 90
         ) * 2  # from dB to nad vol (0-200)
-        self._volume_step = config.get(CONF_VOLUME_STEP)
+        self._volume_step = config[CONF_VOLUME_STEP]
         self._state = None
         self._mute = None
         self._nad_volume = None
