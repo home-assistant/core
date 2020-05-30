@@ -195,6 +195,7 @@ class SmileGateway(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
+        self._process_data()
         self.async_on_remove(self._coordinator.async_add_listener(self._process_data))
 
     def _process_data(self):
