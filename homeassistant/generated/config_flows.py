@@ -161,6 +161,7 @@ FLOWS = [
     "vizio",
     "wemo",
     "wiffi",
+    "wiser",
     "withings",
     "wled",
     "wwlln",

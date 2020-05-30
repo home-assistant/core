@@ -1,0 +1,40 @@
+{
+    "config": {
+        "flow_title": "Wiser Heat Hub: {name}",
+        "step": {
+            "user": {
+                "title": "Wiser Heat Hub Setup",
+                "description": "Please enter the ip address and secret key obtained from the hub.",
+                "data": {
+                    "host": "IP Address",
+                    "password": "Secret Key",
+                    "boost_temp": "Default Boost Temperature",
+                    "boost_time": "Defualt Boost Duration",
+                    "scan_interval": "Scan Interval"
+                }
+            }
+        },
+        "abort": {
+            "already_in_progress": "Wiser Heat Hub configuration is already in progress.",
+            "already_configured": "This device is already configured.",
+            "auth_failure": "Unable to authenticate with the Wiser Hub.  Check the secret key and try again.",
+            "timeout_error": "Timed out trying to connect to the Wiser Hub.  Check the IP address and try again.",
+            "not_successful": "Unable to connect to the Wiser hub.",
+            "not_wiser_device": "This device is currently not supported.",
+            "one_instance_only": "Only 1 instance of the wiser hub is supported.  Check in ignored devices."
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "boost_temp": "Default Boost Temperature",
+                    "boost_time": "Default Boost Duration",
+                    "scan_interval": "Scan Interval"
+                },
+                "description": "Amend Wiser parameters.",
+                "title": "Wiser Heat Hub Options"
+            }
+        }
+    }
+}
