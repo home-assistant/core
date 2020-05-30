@@ -8,6 +8,9 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
     PRESSURE_BAR,
     TEMP_CELSIUS,
 )
@@ -101,7 +104,7 @@ SENSOR_MAP = {
     ],
     "electricity_produced_off_peak_point": [
         "Current Consumed Power (off peak)",
-        "POWER_WATT,
+        POWER_WATT,
         DEVICE_CLASS_POWER,
         "mdi:white-balance-sunny",
     ],
