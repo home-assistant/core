@@ -113,7 +113,7 @@ SENSOR_MAP = {
     ],
     "electricity_produced_off_peak_cumulative": [
         "Cumulative Consumed Power (off peak)",
-        "kWh",
+        ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
         "mdi:gauge",
     ],
