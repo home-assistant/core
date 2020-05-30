@@ -19,16 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from . import SmileGateway
-from .const import (
-    COOL_ICON,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_VALVE,
-    DEVICE_STATE,
-    DOMAIN,
-    FLAME_ICON,
-    IDLE_ICON,
-    UNIT_LUMEN,
-)
+from .const import COOL_ICON, DEVICE_STATE, DOMAIN, FLAME_ICON, IDLE_ICON, UNIT_LUMEN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,13 +129,13 @@ ENERGY_SENSOR_MAP = {
     "gas_consumed_interval": [
         "Current Consumed Gas",
         VOLUME_CUBIC_METERS,
-        DEVICE_CLASS_GAS,
+        None,
         "mdi:gas-cylinder",
     ],
     "gas_consumed_cumulative": [
         "Cumulative Consumed Gas",
         VOLUME_CUBIC_METERS,
-        DEVICE_CLASS_GAS,
+        None,
         "mdi:gauge",
     ],
     "net_electricity_point": [
@@ -170,12 +161,7 @@ MISC_SENSOR_MAP = {
         "modulation",
         "mdi:percent",
     ],
-    "valve_position": [
-        "Valve Position",
-        UNIT_PERCENTAGE,
-        DEVICE_CLASS_VALVE,
-        "mdi:valve",
-    ],
+    "valve_position": ["Valve Position", UNIT_PERCENTAGE, None, "mdi:valve"],
     "water_pressure": ATTR_PRESSURE,
 }
 
@@ -302,19 +288,18 @@ class PwThermostatSensor(SmileSensor, Entity):
         self._state = None
         self._model = None
         self._unit_of_measurement = None
+        self._heating_state = False
+        self._cooling_state = False
+
         if self._sensor_type is not None:
             self._model = self._sensor_type[0]
             self._unit_of_measurement = self._sensor_type[1]
             self._dev_class = self._sensor_type[2]
             self._icon = self._sensor_type[3]
-        else:
-            self._dev_class = "auxiliary"
-
-        self._heating_state = False
-        self._cooling_state = False
 
         if self._dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
+
         sensorname = sensor.replace("_", " ").title()
         self._name = f"{self._entity_name} {sensorname}"
 
