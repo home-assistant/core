@@ -292,10 +292,10 @@ class PwThermostatSensor(SmileSensor, Entity):
         self._cooling_state = False
 
         if self._sensor_type is not None:
-            self._model = self._sensor_type[0]
-            self._unit_of_measurement = self._sensor_type[1]
-            self._dev_class = self._sensor_type[2]
-            self._icon = self._sensor_type[3]
+            self._model = self._sensor_type[SENSOR_MAP_MODEL]
+            self._unit_of_measurement = self._sensor_type[SENSOR_MAP_UOM]
+            self._dev_class = self._sensor_type[SENSOR_MAP_DEVICE_CLASS]
+            self._icon = self._sensor_type[SENSOR_MAP_ICON]
 
         if self._dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
