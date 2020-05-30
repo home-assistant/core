@@ -31,6 +31,7 @@ async def test_auth_events(
     )
 
     await test_auth_active_with_token(hass, no_auth_websocket_client, hass_access_token)
+    await hass.async_block_till_done()
 
     assert len(connected_evt) == 1
     assert not disconnected_evt
