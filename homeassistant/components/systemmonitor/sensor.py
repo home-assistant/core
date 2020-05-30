@@ -129,6 +129,7 @@ class SystemMonitorSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._available = True
         if sensor_type in ["throughput_network_out", "throughput_network_in"]:
             self._last_value = None
             self._last_update_time = None
@@ -157,6 +158,11 @@ class SystemMonitorSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     def update(self):
         """Get the latest system information."""
@@ -195,8 +201,8 @@ class SystemMonitorSensor(Entity):
                 self._state = round(temps["coretemp"][0].current, 1)
             # Fallback if no CPU sensor data available
             else:
-                self._state = "N/A"
-                self._unit_of_measurement = None
+                self._state = None
+                self._available = False
         elif self.type == "process":
             for proc in psutil.process_iter():
                 try:
