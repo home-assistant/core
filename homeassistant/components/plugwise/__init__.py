@@ -165,7 +165,7 @@ class SmileGateway(Entity):
     def name(self):
         """Return the name of the entity, if any."""
         if not self._name:
-            pass
+            return None
         return self._name
 
     @property
