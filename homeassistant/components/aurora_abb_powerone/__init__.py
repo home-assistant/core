@@ -1,7 +1,6 @@
 """The Aurora ABB Powerone PV inverter sensor integration."""
 
 # TODO default update rate for temperature sensor should be slower.
-# TODO (maybe) allow setup via configuration.yaml (deprecated?)
 # TODO (maybe) Extra sensors (grid voltage, frequency, etc)
 #
 # Reference info:
