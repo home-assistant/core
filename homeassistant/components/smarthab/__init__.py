@@ -12,6 +12,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 DOMAIN = "smarthab"
 DATA_HUB = "hub"
+COMPONENTS = ["light", "cover"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,12 +64,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # Pass hub object to child platforms
     hass.data[DOMAIN][entry.entry_id] = {DATA_HUB: hub}
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "light")
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "cover")
-    )
+    for component in COMPONENTS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
     return True
 
 
@@ -78,8 +78,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     result = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, "light"),
-                hass.config_entries.async_forward_entry_unload(entry, "cover"),
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in COMPONENTS
             ]
         )
     )
