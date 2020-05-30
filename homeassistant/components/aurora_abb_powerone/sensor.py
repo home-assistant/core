@@ -59,7 +59,6 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
     entities = []
     client = hass.data[DOMAIN][config.entry_id]["client"]
     serialnum = config.data[ATTR_SERIAL_NUMBER]
-    # sensor.type = instantaneouspower, temperature, etc.
     for sensor in hass.data[DOMAIN][config.entry_id]["devices"][serialnum]["sensor"]:
         if sensor["parameter"] == "temperature":
             entities.append(AuroraSensor(client, config, sensor["name"], "temperature"))
@@ -74,7 +73,7 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
 
 
 class AuroraSensor(AuroraDevice):
-    """Representation of a Sensor."""
+    """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
     def __init__(self, client: AuroraSerialClient, config_entry, name, typename):
         """Initialize the sensor."""

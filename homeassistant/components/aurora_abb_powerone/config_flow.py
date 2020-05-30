@@ -7,7 +7,7 @@ import serial.tools.list_ports
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_ADDRESS, CONF_PORT  # CONF_NAME,
+from homeassistant.const import CONF_ADDRESS, CONF_PORT
 
 from .const import (
     ATTR_FIRMWARE,
@@ -21,9 +21,6 @@ from .const import (
     MIN_ADDRESS,
 )
 
-# import homeassistant.helpers.config_validation as cv
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -32,8 +29,6 @@ def validate_and_connect(hass: core.HomeAssistant, data, populate_on_fail: False
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    # If you cannot connect:
-    # throw CannotConnect
     comport = data[CONF_PORT]
     address = data[CONF_ADDRESS]
     _LOGGER.debug("Intitialising com port=%s", comport)
@@ -43,13 +38,10 @@ def validate_and_connect(hass: core.HomeAssistant, data, populate_on_fail: False
         client = AuroraSerialClient(address, comport, parity="N", timeout=1)
         client.connect()
         ret[ATTR_SERIAL_NUMBER] = client.serial_number()
-        # print(f"sn='{sn}'")
         ver = client.version()
         partnum = client.pn()
         ret[ATTR_MODEL] = f"{ver} ({partnum})"
-        # print(f"pn='{pn}'")
         ret[ATTR_FIRMWARE] = client.firmware(1)
-        # print(f"fw1='{fw}'")
         _LOGGER.info("Returning device info=%s", ret)
     except AuroraError as err:
         _LOGGER.warning("Could not connect to device=%s", comport)
@@ -135,7 +127,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         error,
                     )
         # If no user input, must be first pass through the config.  Show  initial form.
-        # DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
         config_options = {
             vol.Required(CONF_PORT, default=self._defaultcomport): vol.In(
                 self._comportslist
@@ -144,6 +135,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 range(MIN_ADDRESS, MAX_ADDRESS + 1)
             ),
         }
+        # Only show the debug option if debugging is active.
         if _LOGGER.level == DEBUG:
             config_options[vol.Required(CONF_USEDUMMYONFAIL, default=False)] = bool
         DATA_SCHEMA = vol.Schema(config_options)
