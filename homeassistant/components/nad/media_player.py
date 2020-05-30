@@ -208,12 +208,8 @@ class NADtcp(MediaPlayerEntity):
         """Initialize the amplifier."""
         self._name = config[CONF_NAME]
         self._nad_receiver = NADReceiverTCP(config.get(CONF_HOST))
-        self._min_vol = (
-            config[CONF_MIN_VOLUME] + 90
-        ) * 2  # from dB to nad vol (0-200)
-        self._max_vol = (
-            config[CONF_MAX_VOLUME] + 90
-        ) * 2  # from dB to nad vol (0-200)
+        self._min_vol = (config[CONF_MIN_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
+        self._max_vol = (config[CONF_MAX_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
         self._volume_step = config[CONF_VOLUME_STEP]
         self._state = None
         self._mute = None
