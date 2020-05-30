@@ -161,11 +161,6 @@ class HumidifierEntity(ToggleEntity):
         """Return the list of supported features."""
 
     @property
-    def device_class(self) -> str:
-        """Return the device class of the humidifier."""
-        return DEVICE_CLASS_HUMIDIFIER
-
-    @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
         return DEFAULT_MIN_HUMIDITY
