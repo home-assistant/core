@@ -2,6 +2,7 @@
 import logging
 import os
 import socket
+import sys
 
 import psutil
 import voluptuous as vol
@@ -26,6 +27,14 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = "arg"
+
+DOMAIN = "sensor"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+
+if sys.maxsize > 2 ** 32:
+    CPU_ICON = "mdi:cpu-64-bit"
+else:
+    CPU_ICON = "mdi:cpu-32-bit"
 
 SENSOR_TYPES = {
     "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None],
@@ -56,8 +65,8 @@ SENSOR_TYPES = {
         "mdi:server-network",
         None,
     ],
-    "process": ["Process", " ", "mdi:memory", None],
-    "processor_use": ["Processor use", UNIT_PERCENTAGE, "mdi:memory", None],
+    "process": ["Process", " ", CPU_ICON, None],
+    "processor_use": ["Processor use (percent)", UNIT_PERCENTAGE, CPU_ICON, None],
     "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None],
     "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None],
     "swap_use_percent": ["Swap use (percent)", UNIT_PERCENTAGE, "mdi:harddisk", None],
@@ -95,8 +104,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the system monitor sensors."""
     dev = []
     for resource in config[CONF_RESOURCES]:
+        # Initialize the sensor argument if none was provided.
+        # For disk monitoring default to "/" (root) to prevent runtime errors, if argument was not specified.
         if CONF_ARG not in resource:
-            resource[CONF_ARG] = ""
+            if resource[CONF_TYPE].startswith("disk_"):
+                resource[CONF_ARG] = "/"
+            else:
+                resource[CONF_ARG] = ""
         dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource[CONF_ARG]))
 
     add_entities(dev, True)
@@ -108,6 +122,7 @@ class SystemMonitorSensor(Entity):
     def __init__(self, sensor_type, argument=""):
         """Initialize the sensor."""
         self._name = "{} {}".format(SENSOR_TYPES[sensor_type][0], argument)
+        self.entity_id = ENTITY_ID_FORMAT.format(sensor_type)
         self.argument = argument
         self.type = sensor_type
         self._state = None
