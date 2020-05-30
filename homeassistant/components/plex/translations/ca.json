@@ -10,9 +10,9 @@
             "unknown": "Ha fallat per motiu desconegut"
         },
         "error": {
-            "faulty_credentials": "Ha fallat l'autoritzaci\u00f3",
+            "faulty_credentials": "Ha fallat l'autoritzaci\u00f3, comprova el Token",
             "host_or_token": "Has de proporcionar almenys o un amfitri\u00f3 (host) o un token",
-            "no_servers": "No hi ha servidors enlla\u00e7ats amb el compte",
+            "no_servers": "No hi ha servidors vinculats amb el compte de Plex",
             "not_found": "No s'ha trobat el servidor Plex",
             "ssl_error": "Problema amb el certificat SSL"
         },

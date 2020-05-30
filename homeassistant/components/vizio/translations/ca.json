@@ -2,13 +2,13 @@
     "config": {
         "abort": {
             "already_configured_device": "El dispositiu ja est\u00e0 configurat",
-            "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom i les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, s'han actualitzat."
+            "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom, les aplicacions i/o les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, l'entrada de configuraci\u00f3 s'ha actualitzat."
         },
         "error": {
             "cannot_connect": "No s'ha pogut connectar",
             "complete_pairing_failed": "No s'ha pogut completar l'emparellament. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
-            "host_exists": "Dispositiu Vizio amb aquest nom d'amfitri\u00f3 ja configurat.",
-            "name_exists": "Dispositiu Vizio amb aquest nom ja configurat."
+            "host_exists": "Dispositiu VIZIO SmartCast amb aquest nom d'amfitri\u00f3 ja configurat.",
+            "name_exists": "Dispositiu VIZIO SmartCast amb aquest nom ja configurat."
         },
         "step": {
             "pair_tv": {
@@ -19,11 +19,11 @@
                 "title": "Proc\u00e9s d'aparellament complet"
             },
             "pairing_complete": {
-                "description": "El dispositiu Vizio SmartCast est\u00e0 connectat a Home Assistant.",
+                "description": "El Dispositiu VIZIO SmartCast est\u00e0 connectat a Home Assistant.",
                 "title": "Emparellament completat"
             },
             "pairing_complete_import": {
-                "description": "El dispositiu VIZIO SmartCast TV est\u00e0 connectat a Home Assistant.\n\nEl teu [%key::common::config_flow::data::access_token%] \u00e9s '**{access_token}**'.",
+                "description": "El Dispositiu VIZIO SmartCast est\u00e0 connectat a Home Assistant.\n\nEl teu [%key::common::config_flow::data::access_token%] \u00e9s '**{access_token}**'.",
                 "title": "Emparellament completat"
             },
             "user": {
@@ -34,7 +34,7 @@
                     "name": "Nom"
                 },
                 "description": "Nom\u00e9s es necessita el [%key::common::config_flow::data::access_token%] per als televisors. Si est\u00e0s configurant un televisor i encara no tens un [%key::common::config_flow::data::access_token%], deixa-ho en blanc per poder fer el proc\u00e9s d'emparellament.",
-                "title": "Configuraci\u00f3 del client de Vizio SmartCast"
+                "title": "Dispositiu VIZIO SmartCast"
             }
         }
     },
@@ -47,7 +47,7 @@
                     "volume_step": "Mida del pas de volum"
                 },
                 "description": "Si tens una Smart TV, pots filtrar de manera opcional la teva llista de canals escollint quines aplicacions vols incloure o excloure de la llista.",
-                "title": "Actualitzaci\u00f3 de les opcions de Vizo SmartCast"
+                "title": "Actualitzaci\u00f3 de les opcions del Dispositiu VIZIO SmartCast"
             }
         }
     }

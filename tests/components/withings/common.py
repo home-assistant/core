@@ -19,7 +19,12 @@ import homeassistant.components.http as http
 import homeassistant.components.withings.const as const
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_METRIC,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
@@ -55,9 +60,9 @@ async def setup_hass(hass: HomeAssistant) -> dict:
         api.DOMAIN: {"base_url": "http://localhost/"},
         http.DOMAIN: {"server_port": 8080},
         const.DOMAIN: {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: profiles,
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_PROFILES: profiles,
         },
     }
 

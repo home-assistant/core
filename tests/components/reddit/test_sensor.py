@@ -15,7 +15,13 @@ from homeassistant.components.reddit.sensor import (
     CONF_SORT_BY,
     DOMAIN,
 )
-from homeassistant.const import CONF_MAXIMUM, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_MAXIMUM,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.setup import setup_component
 
 from tests.async_mock import patch
@@ -24,8 +30,8 @@ from tests.common import get_test_home_assistant
 VALID_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],
@@ -35,8 +41,8 @@ VALID_CONFIG = {
 VALID_LIMITED_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],
@@ -48,8 +54,8 @@ VALID_LIMITED_CONFIG = {
 INVALID_SORT_BY_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],

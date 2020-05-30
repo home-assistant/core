@@ -21,8 +21,8 @@
             "idle": "Inactiu",
             "off": "OFF",
             "on": "ON",
-            "paused": "Pausat",
-            "returning": "Retornant a la base"
+            "paused": "Pausat/da",
+            "returning": "Retornant a base"
         }
     },
     "title": "Aspirador"

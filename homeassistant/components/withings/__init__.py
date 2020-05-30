@@ -7,23 +7,21 @@ import voluptuous as vol
 from withings_api import WithingsAuth
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import config_flow, const
+from . import config_flow
 from .common import _LOGGER, NotAuthenticatedError, get_data_manager
-
-DOMAIN = const.DOMAIN
+from .const import CONF_PROFILES, CONFIG, CREDENTIALS, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(const.CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
-                vol.Required(const.CLIENT_SECRET): vol.All(
-                    cv.string, vol.Length(min=1)
-                ),
-                vol.Required(const.PROFILES): vol.All(
+                vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
+                vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Length(min=1)),
+                vol.Required(CONF_PROFILES): vol.All(
                     cv.ensure_list,
                     vol.Unique(),
                     vol.Length(min=1),
@@ -42,15 +40,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     if not conf:
         return True
 
-    hass.data[DOMAIN] = {const.CONFIG: conf}
+    hass.data[DOMAIN] = {CONFIG: conf}
 
     config_flow.WithingsFlowHandler.async_register_implementation(
         hass,
         config_entry_oauth2_flow.LocalOAuth2Implementation(
             hass,
-            const.DOMAIN,
-            conf[const.CLIENT_ID],
-            conf[const.CLIENT_SECRET],
+            DOMAIN,
+            conf[CONF_CLIENT_ID],
+            conf[CONF_CLIENT_SECRET],
             f"{WithingsAuth.URL}/oauth2_user/authorize2",
             f"{WithingsAuth.URL}/oauth2/token",
         ),
@@ -65,12 +63,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     if "auth_implementation" not in entry.data:
         _LOGGER.debug("Upgrading existing config entry")
         data = entry.data
-        creds = data.get(const.CREDENTIALS, {})
+        creds = data.get(CREDENTIALS, {})
         hass.config_entries.async_update_entry(
             entry,
             data={
-                "auth_implementation": const.DOMAIN,
-                "implementation": const.DOMAIN,
+                "auth_implementation": DOMAIN,
+                "implementation": DOMAIN,
                 "profile": data.get("profile"),
                 "token": {
                     "access_token": creds.get("access_token"),
