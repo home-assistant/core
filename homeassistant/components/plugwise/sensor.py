@@ -119,7 +119,7 @@ SENSOR_MAP = {
     ],
     "electricity_produced_peak_cumulative": [
         "Cumulative Consumed Power",
-        "kWh",
+        ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
         "mdi:gauge",
     ],
