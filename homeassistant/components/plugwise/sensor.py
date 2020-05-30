@@ -101,7 +101,7 @@ SENSOR_MAP = {
     ],
     "electricity_produced_off_peak_point": [
         "Current Consumed Power (off peak)",
-        "W",
+        "POWER_WATT,
         DEVICE_CLASS_POWER,
         "mdi:white-balance-sunny",
     ],
