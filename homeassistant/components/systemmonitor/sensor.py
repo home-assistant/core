@@ -185,19 +185,18 @@ class SystemMonitorSensor(Entity):
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == "processor_temperature":
             temps = psutil.sensors_temperatures()
-            if not temps:
+            # There might be additional keys to be added for different
+            # platforms / hardware combinations.
+            # Raspberry 4
+            if "cpu-thermal" in temps:
+                self._state = round(temps["cpu-thermal"][0].current, 1)
+            # Linux default
+            elif "coretemp" in temps:
+                self._state = round(temps["coretemp"][0].current, 1)
+            # Fallback if no CPU sensor data available
+            else:
                 self._state = "N/A"
                 self._unit_of_measurement = None
-            else:
-                # There might be additional keys to be added for different
-                # platforms / hardware combinations
-
-                # Raspberry 4
-                if "cpu-thermal" in temps:
-                    self._state = round(temps["cpu-thermal"][0].current, 1)
-                # Linux default
-                elif "coretemp" in temps:
-                    self._state = round(temps["coretemp"][0].current, 1)
         elif self.type == "process":
             for proc in psutil.process_iter():
                 try:
