@@ -18,6 +18,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.const import (
+    CONF_CLIENT_ID,
     CONF_DEVICE,
     CONF_NAME,
     CONF_PASSWORD,
@@ -70,7 +71,6 @@ SERVICE_DUMP = "dump"
 
 CONF_EMBEDDED = "embedded"
 
-CONF_CLIENT_ID = "client_id"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_KEEPALIVE = "keepalive"
 CONF_CERTIFICATE = "certificate"
@@ -887,6 +887,7 @@ class MQTT:
 
         This method is a coroutine.
         """
+        _LOGGER.debug("Unsubscribing from %s", topic)
         async with self._paho_lock:
             result: int = None
             result, _ = await self.hass.async_add_executor_job(

@@ -14,8 +14,7 @@
                     "host": "Numm oder IP Adresse",
                     "port": "Port Nummer"
                 },
-                "description": "\u00c4ren Elgator Key Light als Integratioun mam Home Assistant ariichten.",
-                "title": "\u00c4ren Elgato Key Light verbannen"
+                "description": "\u00c4ren Elgator Key Light als Integratioun mam Home Assistant ariichten."
             },
             "zeroconf_confirm": {
                 "description": "W\u00ebllt dir den Elgato Key Light mat der Seriennummer  `{serial_number}` am Home Assistant dob\u00e4isetzen?",

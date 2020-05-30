@@ -107,12 +107,12 @@
             "on": "Connectat"
         },
         "door": {
-            "off": "Tancada",
-            "on": "Oberta"
+            "off": "Tancat/da",
+            "on": "Obert/a"
         },
         "garage_door": {
-            "off": "Tancada",
-            "on": "Oberta"
+            "off": "Tancat/da",
+            "on": "Obert/a"
         },
         "gas": {
             "off": "Lliure",
@@ -139,7 +139,7 @@
             "on": "Detectat"
         },
         "opening": {
-            "off": "Tancat",
+            "off": "Tancat/da",
             "on": "Obert"
         },
         "presence": {
@@ -167,8 +167,8 @@
             "on": "Detectat"
         },
         "window": {
-            "off": "Tancada",
-            "on": "Oberta"
+            "off": "Tancat/da",
+            "on": "Obert/a"
         }
     },
     "title": "Sensor binari"

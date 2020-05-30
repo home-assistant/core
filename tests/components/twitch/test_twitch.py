@@ -3,6 +3,7 @@ from requests import HTTPError
 from twitch.resources import Channel, Follow, Stream, Subscription, User
 
 from homeassistant.components import sensor
+from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import MagicMock, patch
@@ -11,14 +12,14 @@ ENTITY_ID = "sensor.channel123"
 CONFIG = {
     sensor.DOMAIN: {
         "platform": "twitch",
-        "client_id": "1234",
+        CONF_CLIENT_ID: "1234",
         "channels": ["channel123"],
     }
 }
 CONFIG_WITH_OAUTH = {
     sensor.DOMAIN: {
         "platform": "twitch",
-        "client_id": "1234",
+        CONF_CLIENT_ID: "1234",
         "channels": ["channel123"],
         "token": "9876",
     }

@@ -16,8 +16,7 @@
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 {name}?",
-                "title": "AVM FRITZ! Box"
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
             },
             "user": {
                 "data": {
@@ -25,8 +24,7 @@
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a informacje o urz\u0105dzeniu AVM FRITZ! Box.",
-                "title": "AVM FRITZ! Box"
+                "description": "Wprowad\u017a informacje o urz\u0105dzeniu AVM FRITZ! Box."
             }
         }
     }

@@ -7,9 +7,14 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 
-from .const import BASE_TOKEN_FILENAME, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from .const import BASE_TOKEN_FILENAME
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
