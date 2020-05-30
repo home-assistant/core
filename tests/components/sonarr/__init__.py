@@ -74,43 +74,43 @@ def mock_connection(
 
     aioclient_mock.get(
         f"{sonarr_url}/system/status",
-        text=load_fixture(f"sonarr/system-status.json"),
+        text=load_fixture("sonarr/system-status.json"),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/diskspace",
-        text=load_fixture(f"sonarr/diskspace.json"),
+        text=load_fixture("sonarr/diskspace.json"),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/calendar",
-        text=load_fixture(f"sonarr/calendar.json"),
+        text=load_fixture("sonarr/calendar.json"),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/command",
-        text=load_fixture(f"sonarr/command.json"),
+        text=load_fixture("sonarr/command.json"),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/queue",
-        text=load_fixture(f"sonarr/queue.json"),
+        text=load_fixture("sonarr/queue.json"),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/series",
-        text=load_fixture(f"sonarr/series.json"),
+        text=load_fixture("sonarr/series.json"),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
         f"{sonarr_url}/wanted/missing",
-        text=load_fixture(f"sonarr/wanted-missing.json"),
+        text=load_fixture("sonarr/wanted-missing.json"),
         headers={"Content-Type": "application/json"},
     )
 
