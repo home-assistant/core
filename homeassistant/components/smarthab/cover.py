@@ -22,17 +22,8 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up SmartHab covers from a config entry."""
-    hub = hass.data[DOMAIN][DATA_HUB]
-    await _async_setup(hass, hub, async_add_entities)
+    hub = hass.data[DOMAIN][config_entry.entry_id][DATA_HUB]
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the SmartHab roller shutters platform."""
-    hub = hass.data[DOMAIN][DATA_HUB]
-    await _async_setup(hass, hub, async_add_entities)
-
-
-async def _async_setup(hass, hub, async_add_entities):
     devices = await hass.async_add_executor_job(hub.get_device_list)
     _LOGGER.debug("Found a total of %s devices", str(len(devices)))
 
