@@ -43,6 +43,7 @@ class EnOceanDongle:
         """Disconnect callbacks established at init time."""
         if self.dispatcher_disconnect_handle:
             self.dispatcher_disconnect_handle()
+            self.dispatcher_disconnect_handle = None
 
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""

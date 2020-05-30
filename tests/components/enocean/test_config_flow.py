@@ -106,9 +106,7 @@ async def test_manual_flow_with_valid_path(hass):
     """Test the manual flow with a valid path."""
     USER_PROVIDED_PATH = "/user/provided/path"
 
-    with patch(
-        "homeassistant.components.enocean.dongle.validate_path", Mock(return_value=True)
-    ):
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
@@ -122,8 +120,7 @@ async def test_manual_flow_with_invalid_path(hass):
     USER_PROVIDED_PATH = "/user/provided/path"
 
     with patch(
-        "homeassistant.components.enocean.dongle.validate_path",
-        Mock(return_value=False),
+        DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
@@ -138,9 +135,7 @@ async def test_import_flow_with_valid_path(hass):
     """Test the import flow with a valid path."""
     DATA_TO_IMPORT = {CONF_DEVICE: "/valid/path/to/import"}
 
-    with patch(
-        "homeassistant.components.enocean.dongle.validate_path", Mock(return_value=True)
-    ):
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data=DATA_TO_IMPORT
         )
@@ -154,8 +149,7 @@ async def test_import_flow_with_invalid_path(hass):
     DATA_TO_IMPORT = {CONF_DEVICE: "/invalid/path/to/import"}
 
     with patch(
-        "homeassistant.components.enocean.dongle.validate_path",
-        Mock(return_value=False),
+        DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data=DATA_TO_IMPORT

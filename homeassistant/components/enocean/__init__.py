@@ -1,4 +1,5 @@
 """Support for EnOcean devices."""
+import asyncio
 
 import voluptuous as vol
 
@@ -7,7 +8,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_DEVICE
 import homeassistant.helpers.config_validation as cv
 
-from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE
+from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, PLATFORMS
 from .dongle import EnOceanDongle
 
 CONFIG_SCHEMA = vol.Schema(
@@ -21,10 +22,7 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    configured_dongle = {
-        entry.data[CONF_DEVICE] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-    if configured_dongle:
+    if hass.config_entries.async_entries(DOMAIN):
         # We can only have one dongle. If there is already one in the config,
         # there is no need to import the yaml based config.
         return True
@@ -47,12 +45,28 @@ async def async_setup_entry(
     await usb_dongle.async_setup()
     enocean_data[ENOCEAN_DONGLE] = usb_dongle
 
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
+        )
+
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload ENOcean config entry."""
-    enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
-    enocean_dongle.unload()
-    hass.data[DATA_ENOCEAN] = None
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+
+    if unload_ok:
+        enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
+        enocean_dongle.unload()
+        hass.data.pop(DATA_ENOCEAN)
+
     return True

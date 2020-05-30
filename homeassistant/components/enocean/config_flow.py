@@ -1,5 +1,4 @@
 """Config flows for the ENOcean integration."""
-from enum import Enum
 
 import voluptuous as vol
 
@@ -10,15 +9,6 @@ from homeassistant.const import CONF_DEVICE
 from . import dongle
 from .const import DOMAIN  # pylint:disable=unused-import
 from .const import ERROR_INVALID_DONGLE_PATH, LOGGER
-
-
-class DongleSetupStates(Enum):
-    """The statuses of the enocean dongle configuration state machine."""
-
-    SELECT_AUTO = 1
-    SELECT_MANUAL = 2
-    VALIDATE = 3
-    CREATE_ENTRY = 4
 
 
 class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -36,14 +26,10 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, data=None):
         """Import a yaml configuration."""
 
-        dongle_path = data[CONF_DEVICE]
-        path_is_valid = await self.hass.async_add_executor_job(
-            dongle.validate_path, dongle_path
-        )
-        if not path_is_valid:
+        if not await self.validate_enocean_conf(data):
             LOGGER.warning(
-                "Cannot import yaml configuration: %s is not a valid dongle path.",
-                dongle_path,
+                "Cannot import yaml configuration: %s is not a valid dongle path",
+                data[CONF_DEVICE],
             )
             return self.async_abort(reason="invalid_dongle_path")
 
