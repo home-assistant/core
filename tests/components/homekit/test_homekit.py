@@ -915,7 +915,6 @@ async def test_homekit_ignored_missing_devices(
         {"light.demo": {}},
         DEFAULT_SAFE_MODE,
         advertise_ip=None,
-        interface_choice=None,
         entry_id=entry.entry_id,
     )
     homekit.driver = hk_driver
@@ -995,7 +994,6 @@ async def test_homekit_finds_linked_motion_sensors(
         {"camera.camera_demo": {}},
         DEFAULT_SAFE_MODE,
         advertise_ip=None,
-        interface_choice=None,
         entry_id=entry.entry_id,
     )
     homekit.driver = hk_driver
