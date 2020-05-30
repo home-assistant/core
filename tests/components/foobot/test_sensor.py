@@ -2,7 +2,6 @@
 
 import asyncio
 import re
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -20,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import MagicMock
 from tests.common import load_fixture
 
 VALID_CONFIG = {

@@ -10,10 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Solar-Log \uae30\uae30\uc758 \ud638\uc2a4\ud2b8 \uc774\ub984 \ub610\ub294 IP \uc8fc\uc18c",
+                    "host": "\ud638\uc2a4\ud2b8",
                     "name": "Solar-Log \uc13c\uc11c\uc5d0 \uc0ac\uc6a9\ub420 \uc811\ub450\uc0ac"
                 },
-                "title": "Solar-Log \uc5f0\uacb0 \uc815\uc758"
+                "title": "Solar-Log \uc5f0\uacb0 \uc815\uc758\ud558\uae30"
             }
         }
     }

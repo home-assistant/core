@@ -14,7 +14,7 @@
         "step": {
             "init": {
                 "data": {
-                    "calc_method": "Gebieder Berechnungsmethod"
+                    "calculation_method": "Gebieder Berechnungsmethod"
                 }
             }
         }

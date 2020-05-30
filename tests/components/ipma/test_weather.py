@@ -1,8 +1,6 @@
 """The tests for the IPMA weather component."""
 from collections import namedtuple
 
-from asynctest import patch
-
 from homeassistant.components import weather
 from homeassistant.components.weather import (
     ATTR_FORECAST,
@@ -23,6 +21,7 @@ from homeassistant.components.weather import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 TEST_CONFIG = {"name": "HomeTown", "latitude": "40.00", "longitude": "-8.00"}

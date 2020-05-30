@@ -14,7 +14,7 @@
         "step": {
             "init": {
                 "data": {
-                    "calc_method": "Metoda kalkulacji modlitwy"
+                    "calculation_method": "Metoda kalkulacji modlitwy"
                 }
             }
         }

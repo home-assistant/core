@@ -2,13 +2,14 @@
 from math import isclose
 
 from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceCodes
-from asynctest.mock import ANY, MagicMock, Mock, PropertyMock, patch
 import pytest
 
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_ENTITY_ID, MOCK_HOST, MOCK_NAME, MOCK_PORT
+
+from tests.async_mock import ANY, MagicMock, Mock, PropertyMock, patch
 
 MOCK_TURN_ON = {
     "service": "switch.turn_on",

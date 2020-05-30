@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada"
+        },
         "error": {
             "access": "No se pudo acceder a Enedis.fr, compruebe su conexi\u00f3n a Internet.",
             "enedis": "Enedis.fr respondi\u00f3 con un error: vuelva a intentarlo m\u00e1s tarde (normalmente no entre las 11 p.m. y las 2 a.m.)",

@@ -7,10 +7,22 @@
             "cannot_connect": "Impossible de se connecter au p\u00e9riph\u00e9rique ZHA."
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Type de radio"
+                },
+                "description": "Choisissez un type de radio Zigbee",
+                "title": "Type de radio"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "vitesse du port"
+                },
+                "title": "R\u00e9glages"
+            },
             "user": {
                 "data": {
-                    "radio_type": "Type de radio",
-                    "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
+                    "radio_type": "Type de radio"
                 },
                 "title": "ZHA"
             }

@@ -12,7 +12,7 @@
                     "access_token": "Vert",
                     "host": "Vert"
                 },
-                "description": "Vennligst skriv inn vertsnavnet eller IP-adressen til en Heos-enhet (helst en tilkoblet via kabel til nettverket).",
+                "description": "Vennligst fyll inn vertsnavnet eller IP-adressen til en Heos-enhet (helst en tilkoblet nettverket via kabel).",
                 "title": "Koble til Heos"
             }
         }

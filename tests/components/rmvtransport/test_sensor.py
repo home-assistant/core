@@ -1,9 +1,9 @@
 """The tests for the rmvtransport platform."""
 import datetime
 
-from asynctest import patch
-
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 VALID_CONFIG_MINIMAL = {
     "sensor": {"platform": "rmvtransport", "next_departure": [{"station": "3000010"}]}

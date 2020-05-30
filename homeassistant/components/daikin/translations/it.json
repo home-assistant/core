@@ -5,10 +5,17 @@
             "device_fail": "Errore inatteso durante la creazione del dispositivo.",
             "device_timeout": "Tempo scaduto per la connessione al dispositivo."
         },
+        "error": {
+            "device_fail": "Errore imprevisto",
+            "device_timeout": "Impossibile connettersi",
+            "forbidden": "Autenticazione non valida"
+        },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "key": "Chiave API",
+                    "password": "Password"
                 },
                 "description": "Inserisci l'indirizzo IP del tuo Daikin AC.",
                 "title": "Configura Daikin AC"

@@ -14,7 +14,7 @@
         "step": {
             "init": {
                 "data": {
-                    "calc_method": "M\u00e8tode de c\u00e0lcul dels temps"
+                    "calculation_method": "M\u00e8tode de c\u00e0lcul dels temps"
                 }
             }
         }

@@ -1,4 +1,6 @@
 """The tests for the MQTT cover platform."""
+import pytest
+
 from homeassistant.components import cover
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -1831,6 +1833,7 @@ async def test_discovery_update_cover(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",' '  "command_topic": "test_topic#" }'

@@ -5,6 +5,7 @@
             "already_configured": "Este servidor Plex ya est\u00e1 configurado",
             "already_in_progress": "Plex se est\u00e1 configurando",
             "invalid_import": "La configuraci\u00f3n importada no es v\u00e1lida",
+            "non-interactive": "Importaci\u00f3n no interactiva",
             "token_request_timeout": "Se agot\u00f3 el tiempo de espera para obtener el token",
             "unknown": "Fall\u00f3 por razones desconocidas"
         },
@@ -20,12 +21,21 @@
                 },
                 "description": "M\u00faltiples servidores disponibles, seleccione uno:",
                 "title": "Seleccionar servidor Plex"
+            },
+            "start_website_auth": {
+                "description": "Continuar autorizando en plex.tv.",
+                "title": "Conectar a servidor Plex"
             }
         }
     },
     "options": {
         "step": {
             "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Ignorar nuevos usuarios administrados/compartidos",
+                    "monitored_users": "Usuarios monitoreados",
+                    "use_episode_art": "Usa el arte del episodio"
+                },
                 "description": "Opciones para reproductores multimedia Plex"
             }
         }

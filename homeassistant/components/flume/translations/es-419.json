@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Esta cuenta ya est\u00e1 configurada"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, intente nuevamente",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Identificaci\u00f3n del cliente",
+                    "client_secret": "Secreto del cliente",
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                },
+                "description": "Para acceder a la API personal de Flume, deber\u00e1 solicitar un 'ID de cliente' y un 'Secreto de cliente' en https://portal.flumetech.com/settings#token",
+                "title": "Con\u00e9ctese a su cuenta Flume"
+            }
+        }
+    }
+}

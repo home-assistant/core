@@ -1,15 +1,16 @@
 """Test Hue bridge."""
-from asynctest import CoroutineMock, Mock, patch
 import pytest
 
 from homeassistant.components.hue import bridge, errors
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from tests.async_mock import AsyncMock, Mock, patch
+
 
 async def test_bridge_setup(hass):
     """Test a successful setup."""
     entry = Mock()
-    api = Mock(initialize=CoroutineMock())
+    api = Mock(initialize=AsyncMock())
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 
@@ -92,7 +93,7 @@ async def test_reset_unloads_entry_if_setup(hass):
 
 async def test_handle_unauthorized(hass):
     """Test handling an unauthorized error on update."""
-    entry = Mock(async_setup=CoroutineMock())
+    entry = Mock(async_setup=AsyncMock())
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 

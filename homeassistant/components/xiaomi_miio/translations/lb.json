@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "connect_error": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "no_device_selected": "Keen Apparat ausgewielt, wiel een Apparat aus w.e.g."
+        },
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP Adresse",
+                    "name": "Numm vum Gateway",
+                    "token": "API Jeton"
+                },
+                "description": "Du brauchs den API Jeton, kuck https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token fir Instruktiounen.",
+                "title": "Mat enger Xiaomi Gateway verbannen"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Mat enger Xiaomi Gateway verbannen"
+                },
+                "description": "Wielt den Apparat aus dee soll verbonne ginn",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

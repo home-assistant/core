@@ -1,5 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Deze nexia-woning is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
         "step": {
             "user": {
                 "data": {

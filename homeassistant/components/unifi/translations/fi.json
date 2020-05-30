@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "user_privilege": "K\u00e4ytt\u00e4j\u00e4n on oltava j\u00e4rjestelm\u00e4nvalvoja"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Palvelin",
+                    "password": "Salasana",
+                    "port": "Portti",
+                    "site": "Sivuston ID"
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,4 @@
 """Tests for the Abode switch device."""
-from unittest.mock import patch
-
 from homeassistant.components.abode import (
     DOMAIN as ABODE_DOMAIN,
     SERVICE_TRIGGER_AUTOMATION,
@@ -15,6 +13,8 @@ from homeassistant.const import (
 )
 
 from .common import setup_platform
+
+from tests.async_mock import patch
 
 AUTOMATION_ID = "switch.test_automation"
 AUTOMATION_UID = "47fae27488f74f55b964a81a066c3a01"

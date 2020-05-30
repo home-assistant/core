@@ -1,10 +1,11 @@
 """The tests for the integration sensor platform."""
 from datetime import timedelta
-from unittest.mock import patch
 
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, TIME_SECONDS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from tests.async_mock import patch
 
 
 async def test_state(hass):

@@ -1,6 +1,4 @@
 """Tests for the Abode module."""
-from unittest.mock import patch
-
 from homeassistant.components.abode import (
     DOMAIN as ABODE_DOMAIN,
     SERVICE_CAPTURE_IMAGE,
@@ -10,6 +8,8 @@ from homeassistant.components.abode import (
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 
 from .common import setup_platform
+
+from tests.async_mock import patch
 
 
 async def test_change_settings(hass):

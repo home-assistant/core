@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Esta impresora ya est\u00e1 configurada.",
-            "connection_error": "No se pudo conectar con la impresora.",
+            "already_configured": "Dispositivo ya configurado",
+            "connection_error": "Error al conectar",
             "connection_upgrade": "No se pudo conectar con la impresora debido a que se requiere una actualizaci\u00f3n de la conexi\u00f3n.",
             "ipp_error": "Error IPP encontrado.",
             "ipp_version_error": "Versi\u00f3n de IPP no compatible con la impresora.",
             "parse_error": "Error al analizar la respuesta de la impresora."
         },
         "error": {
-            "connection_error": "No se pudo conectar con la impresora.",
+            "connection_error": "Error al conectar",
             "connection_upgrade": "No se pudo conectar con la impresora. Int\u00e9ntalo de nuevo con la opci\u00f3n SSL/TLS marcada."
         },
         "flow_title": "Impresora: {name}",
@@ -26,7 +26,7 @@
                 "title": "Vincula tu impresora"
             },
             "zeroconf_confirm": {
-                "description": "\u00bfQuieres a\u00f1adir la impresora llamada `{name}` a Home Assistant?",
+                "description": "\u00bfQuieres configurar {name}?",
                 "title": "Impresora encontrada"
             }
         }

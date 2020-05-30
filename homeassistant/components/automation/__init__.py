@@ -1,4 +1,5 @@
 """Allow to set up simple automation rules via the config file."""
+import asyncio
 import importlib
 import logging
 from typing import Any, Awaitable, Callable, List, Optional, Set
@@ -127,13 +128,11 @@ def automations_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
     component = hass.data[DOMAIN]
 
-    results = []
-
-    for automation_entity in component.entities:
-        if entity_id in automation_entity.referenced_entities:
-            results.append(automation_entity.entity_id)
-
-    return results
+    return [
+        automation_entity.entity_id
+        for automation_entity in component.entities
+        if entity_id in automation_entity.referenced_entities
+    ]
 
 
 @callback
@@ -160,13 +159,11 @@ def automations_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
 
     component = hass.data[DOMAIN]
 
-    results = []
-
-    for automation_entity in component.entities:
-        if device_id in automation_entity.referenced_devices:
-            results.append(automation_entity.entity_id)
-
-    return results
+    return [
+        automation_entity.entity_id
+        for automation_entity in component.entities
+        if device_id in automation_entity.referenced_devices
+    ]
 
 
 @callback
@@ -443,25 +440,28 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self, home_assistant_start: bool
     ) -> Optional[Callable[[], None]]:
         """Set up the triggers."""
-        removes = []
         info = {"name": self._name, "home_assistant_start": home_assistant_start}
 
+        triggers = []
         for conf in self._trigger_config:
             platform = importlib.import_module(f".{conf[CONF_PLATFORM]}", __name__)
 
-            remove = await platform.async_attach_trigger(  # type: ignore
-                self.hass, conf, self.async_trigger, info
+            triggers.append(
+                platform.async_attach_trigger(  # type: ignore
+                    self.hass, conf, self.async_trigger, info
+                )
             )
 
-            if not remove:
-                _LOGGER.error("Error setting up trigger %s", self._name)
-                continue
+        results = await asyncio.gather(*triggers)
 
-            _LOGGER.info("Initialized trigger %s", self._name)
-            removes.append(remove)
+        if None in results:
+            _LOGGER.error("Error setting up trigger %s", self._name)
 
+        removes = [remove for remove in results if remove is not None]
         if not removes:
             return None
+
+        _LOGGER.info("Initialized trigger %s", self._name)
 
         @callback
         def remove_triggers():

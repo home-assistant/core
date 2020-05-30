@@ -30,6 +30,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -39,7 +40,6 @@ from .const import (
     CONF_CLOUDHOOK_URL,
     CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID,
-    CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN,
     DATA_BROKERS,
     DATA_MANAGER,
@@ -51,6 +51,11 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def format_unique_id(app_id: str, location_id: str) -> str:
+    """Format the unique id for a config entry."""
+    return f"{app_id}_{location_id}"
 
 
 async def find_app(hass: HomeAssistantType, api):
@@ -107,7 +112,11 @@ def get_webhook_url(hass: HomeAssistantType) -> str:
 
 
 def _get_app_template(hass: HomeAssistantType):
-    endpoint = f"at {hass.config.api.base_url}"
+    try:
+        endpoint = f"at {get_url(hass, allow_cloud=False, prefer_external=True)}"
+    except NoURLAvailableError:
+        endpoint = ""
+
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
     if cloudhook_url is not None:
         endpoint = "via Nabu Casa"
@@ -366,13 +375,20 @@ async def smartapp_sync_subscriptions(
         _LOGGER.debug("Subscriptions for app '%s' are up-to-date", installed_app_id)
 
 
-async def smartapp_install(hass: HomeAssistantType, req, resp, app):
-    """Handle a SmartApp installation and continue the config flow."""
+async def _continue_flow(
+    hass: HomeAssistantType,
+    app_id: str,
+    location_id: str,
+    installed_app_id: str,
+    refresh_token: str,
+):
+    """Continue a config flow if one is in progress for the specific installed app."""
+    unique_id = format_unique_id(app_id, location_id)
     flow = next(
         (
             flow
             for flow in hass.config_entries.flow.async_progress()
-            if flow["handler"] == DOMAIN
+            if flow["handler"] == DOMAIN and flow["context"]["unique_id"] == unique_id
         ),
         None,
     )
@@ -380,18 +396,23 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
         await hass.config_entries.flow.async_configure(
             flow["flow_id"],
             {
-                CONF_INSTALLED_APP_ID: req.installed_app_id,
-                CONF_LOCATION_ID: req.location_id,
-                CONF_REFRESH_TOKEN: req.refresh_token,
+                CONF_INSTALLED_APP_ID: installed_app_id,
+                CONF_REFRESH_TOKEN: refresh_token,
             },
         )
         _LOGGER.debug(
             "Continued config flow '%s' for SmartApp '%s' under parent app '%s'",
             flow["flow_id"],
-            req.installed_app_id,
-            app.app_id,
+            installed_app_id,
+            app_id,
         )
 
+
+async def smartapp_install(hass: HomeAssistantType, req, resp, app):
+    """Handle a SmartApp installation and continue the config flow."""
+    await _continue_flow(
+        hass, app.app_id, req.location_id, req.installed_app_id, req.refresh_token
+    )
     _LOGGER.debug(
         "Installed SmartApp '%s' under parent app '%s'",
         req.installed_app_id,
@@ -420,30 +441,9 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
             app.app_id,
         )
 
-    flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["handler"] == DOMAIN
-        ),
-        None,
+    await _continue_flow(
+        hass, app.app_id, req.location_id, req.installed_app_id, req.refresh_token
     )
-    if flow is not None:
-        await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {
-                CONF_INSTALLED_APP_ID: req.installed_app_id,
-                CONF_LOCATION_ID: req.location_id,
-                CONF_REFRESH_TOKEN: req.refresh_token,
-            },
-        )
-        _LOGGER.debug(
-            "Continued config flow '%s' for SmartApp '%s' under parent app '%s'",
-            flow["flow_id"],
-            req.installed_app_id,
-            app.app_id,
-        )
-
     _LOGGER.debug(
         "Updated SmartApp '%s' under parent app '%s'", req.installed_app_id, app.app_id
     )

@@ -26,5 +26,22 @@
                 "title": "L\u00e4nka hub"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f6rsta knappen",
+            "button_2": "Andra knappen",
+            "button_3": "Tredje knappen",
+            "button_4": "Fj\u00e4rde knappen",
+            "dim_down": "Dimma ned",
+            "dim_up": "Dimma upp",
+            "turn_off": "St\u00e4ng av",
+            "turn_on": "Starta"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" knappen sl\u00e4pptes efter ett l\u00e5ngt tryck",
+            "remote_button_short_press": "\"{subtype}\" knappen nedtryckt",
+            "remote_button_short_release": "\"{subtype}\"-knappen sl\u00e4ppt"
+        }
     }
 }

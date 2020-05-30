@@ -197,7 +197,10 @@ class NAD(MediaPlayerEntity):
         else:
             self._mute = True
 
-        self._volume = self.calc_volume(self._nad_receiver.main_volume("?"))
+        volume = self._nad_receiver.main_volume("?")
+        # Some receivers cannot report the volume, e.g. C 356BEE,
+        # instead they only support stepping the volume up or down
+        self._volume = self.calc_volume(volume) if volume is not None else None
         self._source = self._source_dict.get(self._nad_receiver.main_source("?"))
 
     def calc_volume(self, decibel):

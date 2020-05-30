@@ -134,8 +134,6 @@ class DemoClimate(ClimateEntity):
             self._support_flags = self._support_flags | SUPPORT_TARGET_HUMIDITY
         if swing_mode is not None:
             self._support_flags = self._support_flags | SUPPORT_SWING_MODE
-        if hvac_action is not None:
-            self._support_flags = self._support_flags
         if aux is not None:
             self._support_flags = self._support_flags | SUPPORT_AUX_HEAT
         if HVAC_MODE_HEAT_COOL in hvac_modes or HVAC_MODE_AUTO in hvac_modes:

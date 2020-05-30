@@ -11,10 +11,22 @@
         },
         "error": {
             "faulty_credentials": "Feeler beider Autorisatioun",
+            "host_or_token": "Op manst een Apparat oder Jeton muss ugi sinn.",
             "no_servers": "Kee Server as mam Kont verbonnen",
-            "not_found": "Kee Plex Server fonnt"
+            "not_found": "Kee Plex Server fonnt",
+            "ssl_error": "SSL Zertifikat Problem"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Apparat (Optionell)",
+                    "port": "Port",
+                    "ssl": "SSL benotzen",
+                    "token": "Jeton (Optionell)",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                },
+                "title": "Manuell Plex Konfiguratioun"
+            },
             "select_server": {
                 "data": {
                     "server": "Server"
@@ -25,6 +37,16 @@
             "start_website_auth": {
                 "description": "Weiderfueren op plex.tv fir d'Autorisatioun.",
                 "title": "Plex Server verbannen"
+            },
+            "user": {
+                "description": "Verbann dech mat [plex.tv](https://pley.tv) fir ee Plex Server ze verlinken.",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Setup Method"
+                },
+                "title": "Plex Media Server"
             }
         }
     },
@@ -33,6 +55,7 @@
             "plex_mp_settings": {
                 "data": {
                     "ignore_new_shared_users": "Nei verwalt / gedeelt Benotzer ignor\u00e9ieren",
+                    "ignore_plex_web_clients": "Plex Web Cliente ignor\u00e9ieren",
                     "monitored_users": "Iwwerwaachte Benotzer",
                     "use_episode_art": "Benotz Biller vun der Episode"
                 },

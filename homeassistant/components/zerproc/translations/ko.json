@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "\ub124\ud2b8\uc6cc\ud06c\uc5d0\uc11c \uae30\uae30\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
+        },
+        "step": {
+            "confirm": {
+                "description": "\uc124\uc815\uc744 \uc2dc\uc791\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
+            }
+        }
+    },
+    "title": "Zerproc"
+}

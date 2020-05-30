@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Un p\u00e9riph\u00e9rique BleBox est d\u00e9j\u00e0 configur\u00e9 \u00e0 {address}.",
+            "already_configured": "Ce p\u00e9riph\u00e9rique BleBox est d\u00e9j\u00e0 configur\u00e9."
+        },
+        "error": {
+            "cannot_connect": "Impossible de connecter le p\u00e9riph\u00e9rique BleBox. (V\u00e9rifiez les journaux pour les erreurs.)",
+            "unknown": "Erreur inconnue lors de la connexion au p\u00e9riph\u00e9rique BleBox. (V\u00e9rifiez les journaux pour les erreurs.)"
+        },
+        "flow_title": "P\u00e9riph\u00e9rique Blebox: {name} ({host)}",
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Configurez votre BleBox pour l'int\u00e9grer \u00e0 Home Assistant.",
+                "title": "Configurer votre appareil BleBox"
+            }
+        }
+    }
+}

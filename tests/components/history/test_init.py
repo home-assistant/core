@@ -2,13 +2,13 @@
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
 import unittest
-from unittest.mock import patch, sentinel
 
 from homeassistant.components import history, recorder
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch, sentinel
 from tests.common import (
     get_test_home_assistant,
     init_recorder_component,

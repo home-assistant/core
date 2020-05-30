@@ -7,13 +7,13 @@
         "error": {
             "connection_error": "Kunne ikke koble til WLED-enheten."
         },
-        "flow_title": "",
+        "flow_title": "WLED: {name}",
         "step": {
             "user": {
                 "data": {
                     "host": "Vert eller IP-adresse"
                 },
-                "description": "Konfigurer WLED til \u00e5 integreres med Home Assistant.",
+                "description": "Sett opp WLED til \u00e5 integreres med Home Assistant.",
                 "title": "Linken din WLED"
             },
             "zeroconf_confirm": {

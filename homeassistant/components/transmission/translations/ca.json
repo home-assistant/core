@@ -25,7 +25,7 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Freq\u00fc\u00e8ncia d\u2019actualitzaci\u00f3"
+                    "scan_interval": "Freq\u00fc\u00e8ncia d'actualitzaci\u00f3"
                 },
                 "title": "Opcions de configuraci\u00f3 de Transmission"
             }

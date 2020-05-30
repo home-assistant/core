@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u05d3\u05e7\u05d5\u05ea \u05d1\u05d9\u05df \u05e1\u05e8\u05d9\u05e7\u05d5\u05ea."
+                }
+            }
+        }
+    }
+}

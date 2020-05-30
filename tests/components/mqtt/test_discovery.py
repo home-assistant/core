@@ -1,7 +1,6 @@
 """The tests for the MQTT discovery."""
 from pathlib import Path
 import re
-from unittest.mock import patch
 
 import pytest
 
@@ -13,10 +12,10 @@ from homeassistant.components.mqtt.abbreviations import (
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
 from homeassistant.const import STATE_OFF, STATE_ON
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
-    mock_coro,
     mock_device_registry,
     mock_registry,
 )
@@ -57,7 +56,7 @@ async def test_invalid_topic(hass, mqtt_mock):
             domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
         )
 
-        mock_dispatcher_send.return_value = mock_coro()
+        mock_dispatcher_send = AsyncMock(return_value=None)
         await async_start(hass, "homeassistant", {}, entry)
 
         async_fire_mqtt_message(
@@ -76,7 +75,7 @@ async def test_invalid_json(hass, mqtt_mock, caplog):
             domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
         )
 
-        mock_dispatcher_send.return_value = mock_coro()
+        mock_dispatcher_send = AsyncMock(return_value=None)
         await async_start(hass, "homeassistant", {}, entry)
 
         async_fire_mqtt_message(
@@ -96,7 +95,7 @@ async def test_only_valid_components(hass, mqtt_mock, caplog):
 
         invalid_component = "timer"
 
-        mock_dispatcher_send.return_value = mock_coro()
+        mock_dispatcher_send = AsyncMock(return_value=None)
         await async_start(hass, "homeassistant", {}, entry)
 
         async_fire_mqtt_message(

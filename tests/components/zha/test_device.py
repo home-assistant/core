@@ -3,7 +3,6 @@ from datetime import timedelta
 import time
 from unittest import mock
 
-import asynctest
 import pytest
 import zigpy.zcl.clusters.general as general
 
@@ -13,6 +12,7 @@ import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, make_zcl_header
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 
@@ -90,7 +90,7 @@ def _send_time_changed(hass, seconds):
     async_fire_time_changed(hass, now)
 
 
-@asynctest.patch(
+@patch(
     "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
     new=mock.MagicMock(),
 )
@@ -144,7 +144,7 @@ async def test_check_available_success(
     assert zha_device.available is True
 
 
-@asynctest.patch(
+@patch(
     "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
     new=mock.MagicMock(),
 )
@@ -187,7 +187,7 @@ async def test_check_available_unsuccessful(
     assert zha_device.available is False
 
 
-@asynctest.patch(
+@patch(
     "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
     new=mock.MagicMock(),
 )

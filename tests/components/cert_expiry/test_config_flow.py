@@ -2,14 +2,13 @@
 import socket
 import ssl
 
-from asynctest import patch
-
 from homeassistant import data_entry_flow
 from homeassistant.components.cert_expiry.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from .const import HOST, PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

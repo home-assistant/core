@@ -1,11 +1,11 @@
 """Tests for the Abode camera device."""
-from unittest.mock import patch
-
 from homeassistant.components.abode.const import DOMAIN as ABODE_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_IDLE
 
 from .common import setup_platform
+
+from tests.async_mock import patch
 
 
 async def test_entity_registry(hass):

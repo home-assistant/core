@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, intente nuevamente",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "La clave API para la cuenta Rachio."
+                },
+                "description": "Necesitar\u00e1 la clave API de https://app.rach.io/. Seleccione 'Configuraci\u00f3n de la cuenta y luego haga clic en' OBTENER CLAVE API '.",
+                "title": "Con\u00e9ctese a su dispositivo Rachio"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Por cu\u00e1nto tiempo, en minutos, encender una estaci\u00f3n cuando el interruptor est\u00e1 habilitado."
+                }
+            }
+        }
+    }
+}

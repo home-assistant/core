@@ -5,10 +5,17 @@
             "device_fail": "Unexpected error creating device.",
             "device_timeout": "Timeout connecting to the device."
         },
+        "error": {
+            "device_fail": "Unexpected error",
+            "device_timeout": "Failed to connect",
+            "forbidden": "Invalid authentication"
+        },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "key": "API Key",
+                    "password": "Password"
                 },
                 "description": "Enter IP address of your Daikin AC.",
                 "title": "Configure Daikin AC"

@@ -3,10 +3,10 @@
 import json
 import logging
 import unittest
-from unittest.mock import Mock, mock_open, patch
 
 import homeassistant.components.remember_the_milk as rtm
 
+from tests.async_mock import Mock, mock_open, patch
 from tests.common import get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)

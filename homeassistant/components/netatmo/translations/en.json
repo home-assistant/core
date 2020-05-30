@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_setup": "You can only configure one Netatmo account.",
+            "already_setup": "Already configured. Only a single configuration possible.",
             "authorize_url_timeout": "Timeout generating authorize url.",
-            "missing_configuration": "The Netatmo component is not configured. Please follow the documentation."
+            "missing_configuration": "The component is not configured. Please follow the documentation."
         },
         "create_entry": {
-            "default": "Successfully authenticated with Netatmo."
+            "default": "Successfully authenticated"
         },
         "step": {
             "pick_implementation": {

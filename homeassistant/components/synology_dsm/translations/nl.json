@@ -6,6 +6,7 @@
         "error": {
             "connection": "Verbindingsfout: controleer uw host, poort & ssl",
             "login": "Aanmeldingsfout: controleer uw gebruikersnaam en wachtwoord",
+            "missing_data": "Ontbrekende gegevens: probeer het later opnieuw of een andere configuratie",
             "otp_failed": "Tweestapsverificatie is mislukt, probeer het opnieuw met een nieuwe toegangscode",
             "unknown": "Onbekende fout: controleer de logs voor meer informatie"
         },

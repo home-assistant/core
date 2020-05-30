@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Un dispositivo BleBox \u00e8 gi\u00e0 configurato in {address}.",
+            "already_configured": "Questo dispositivo BleBox \u00e8 gi\u00e0 configurato."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi al dispositivo BleBox. (Controllare i registri per errori).",
+            "unknown": "Errore sconosciuto durante la connessione al dispositivo BleBox. (Controllare i registri per errori).",
+            "unsupported_version": "Il dispositivo BleBox ha un firmware obsoleto. Si prega di aggiornarlo prima."
+        },
+        "flow_title": "Dispositivo BleBox: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Porta"
+                },
+                "description": "Configura BleBox per l'integrazione con Home Assistant.",
+                "title": "Configura il tuo dispositivo BleBox"
+            }
+        }
+    }
+}

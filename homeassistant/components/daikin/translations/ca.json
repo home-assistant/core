@@ -5,10 +5,17 @@
             "device_fail": "S'ha produ\u00eft un error inesperat al crear el dispositiu.",
             "device_timeout": "S'ha acabat el temps d'espera en la connexi\u00f3 amb el dispositiu."
         },
+        "error": {
+            "device_fail": "Error inesperat",
+            "device_timeout": "No s'ha pogut connectar",
+            "forbidden": "Autenticaci\u00f3 inv\u00e0lida"
+        },
         "step": {
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3"
+                    "host": "Amfitri\u00f3",
+                    "key": "Clau API",
+                    "password": "Contrasenya"
                 },
                 "description": "Introdueix l'adre\u00e7a IP del teu Daikin AC.",
                 "title": "Configuraci\u00f3 de Daikin AC"

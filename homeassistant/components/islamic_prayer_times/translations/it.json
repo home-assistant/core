@@ -5,8 +5,8 @@
         },
         "step": {
             "user": {
-                "description": "Vuoi impostare i tempi di preghiera islamici?",
-                "title": "Impostare i tempi di preghiera islamici"
+                "description": "Vuoi impostare gli Orari di Preghiera Islamici?",
+                "title": "Impostare gli Orari di Preghiera Islamici"
             }
         }
     },
@@ -14,10 +14,10 @@
         "step": {
             "init": {
                 "data": {
-                    "calc_method": "Metodo di calcolo della preghiera"
+                    "calculation_method": "Metodo di calcolo della preghiera"
                 }
             }
         }
     },
-    "title": "Tempi di preghiera islamica"
+    "title": "Orari di Preghiera Islamici"
 }
