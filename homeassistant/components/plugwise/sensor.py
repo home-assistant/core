@@ -137,7 +137,7 @@ SENSOR_MAP = {
     ],
     "net_electricity_point": [
         "Current net Power",
-        "W",
+        POWER_WATT,
         DEVICE_CLASS_POWER,
         "mdi:solar-power",
     ],
