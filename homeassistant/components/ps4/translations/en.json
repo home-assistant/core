@@ -37,5 +37,19 @@
                 "title": "PlayStation 4"
             }
         }
+    },
+    "options": {
+        "error": {
+            "port_unavailable": "Port is already being used or is not available."
+        },
+        "step": {
+            "port": {
+                "data": {
+                    "port": "Port Number"
+                },
+                "description": "Specify local UDP port to use. Defaults to 0 (any).",
+                "title": "PlayStation 4 Options - Port"
+            }
+        }
     }
 }

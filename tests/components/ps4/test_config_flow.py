@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_NAME,
+    CONF_PORT,
     CONF_REGION,
     CONF_TOKEN,
 )
@@ -55,6 +56,7 @@ MOCK_CONFIG_ADDITIONAL = {
 MOCK_DATA = {CONF_TOKEN: MOCK_CREDS, "devices": [MOCK_DEVICE]}
 MOCK_UDP_PORT = int(987)
 MOCK_TCP_PORT = int(997)
+MOCK_OPTIONS_PORT = int(9870)
 
 MOCK_AUTO = {"Config Mode": "Auto Discover"}
 MOCK_MANUAL = {"Config Mode": "Manual Entry", CONF_IP_ADDRESS: MOCK_HOST}
@@ -538,3 +540,47 @@ async def test_manual_mode_no_ip_error(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "mode"
     assert result["errors"] == {CONF_IP_ADDRESS: "no_ipaddress"}
+
+
+async def test_option_flow(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "user"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "port"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_PORT: MOCK_OPTIONS_PORT},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        CONF_PORT: MOCK_OPTIONS_PORT,
+    }
+
+
+async def test_option_port_error(hass):
+    """Test errors for port options."""
+    entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "user"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "port"
+
+    # Test that port binding error returns step port
+    with patch("pyps4_2ndscreen.Helper.port_bind", return_value=MOCK_OPTIONS_PORT):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_PORT: MOCK_OPTIONS_PORT},
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "port"
+    assert result["errors"] == {"base": "port_unavailable"}

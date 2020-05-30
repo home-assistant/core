@@ -22,6 +22,7 @@ from homeassistant.const import (
     ATTR_LOCKED,
     CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
@@ -34,6 +35,7 @@ from homeassistant.helpers import device_registry, entity_registry
 from .const import (
     ATTR_MEDIA_IMAGE_URL,
     DEFAULT_ALIAS,
+    DEFAULT_PORT,
     DOMAIN as PS4_DOMAIN,
     PS4_DATA,
     REGIONS as deprecated_regions,
@@ -58,15 +60,25 @@ DEFAULT_RETRIES = 2
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up PS4 from a config entry."""
     config = config_entry
+    config.add_update_listener(update_listener)
     creds = config.data[CONF_TOKEN]
+    port = config.options.get(CONF_PORT) or DEFAULT_PORT
     device_list = []
     for device in config.data["devices"]:
         host = device[CONF_HOST]
         region = device[CONF_REGION]
         name = device[CONF_NAME]
-        ps4 = pyps4.Ps4Async(host, creds, device_name=DEFAULT_ALIAS)
+        ps4 = pyps4.Ps4Async(host, creds, device_name=DEFAULT_ALIAS, port=port)
         device_list.append(PS4Device(config, name, host, region, ps4, creds))
     async_add_entities(device_list, update_before_add=True)
+
+
+async def update_listener(hass, config_entry):
+    """Handle PS4 options update."""
+    _LOGGER.debug("PS4 options applied")
+    for device in hass.data[PS4_DATA].devices:
+        if device._entry_id == config_entry.entry_id:
+            await device.async_options_port_update(config_entry.options[CONF_PORT])
 
 
 class PS4Device(MediaPlayerEntity):
@@ -102,14 +114,12 @@ class PS4Device(MediaPlayerEntity):
     @callback
     def subscribe_to_protocol(self):
         """Notify protocol to callback with update changes."""
-        self.hass.data[PS4_DATA].protocol.add_callback(self._ps4, self.status_callback)
+        self._ps4.ddp_protocol.add_callback(self._ps4, self.status_callback)
 
     @callback
     def unsubscribe_to_protocol(self):
         """Notify protocol to remove callback."""
-        self.hass.data[PS4_DATA].protocol.remove_callback(
-            self._ps4, self.status_callback
-        )
+        self._ps4.ddp_protocol.remove_callback(self._ps4, self.status_callback)
 
     def check_region(self):
         """Display logger msg if region is deprecated."""
@@ -127,6 +137,51 @@ class PS4Device(MediaPlayerEntity):
         """Subscribe PS4 events."""
         self.hass.data[PS4_DATA].devices.append(self)
         self.check_region()
+
+    async def async_options_port_update(self, port):
+        """Handle port options updated."""
+        if self._ps4.port == port:
+            _LOGGER.debug("Port options unchanged")
+            return False
+
+        close_old_protocol = False
+        _LOGGER.debug("Options_Port: Old Port: %s, New Port: %s", self._ps4.port, port)
+
+        if self._ps4.port != DEFAULT_PORT:
+            close_old_protocol = True
+
+        if (
+            port == DEFAULT_PORT
+            and self._ps4.ddp_protocol != self.hass.data[PS4_DATA].protocol
+        ):
+            # Manually set protocol to default protocol.
+            protocol = self._ps4.ddp_protocol
+            protocol.close()
+            self._ps4._port = DEFAULT_PORT
+            self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
+            _LOGGER.debug("Closing: %s; Using Default", protocol)
+        else:
+            _LOGGER.debug("Close old port: %s", close_old_protocol)
+            if not await self._ps4.change_ddp_endpoint(port, close_old_protocol):
+                _LOGGER.warning("Failed to assign port for entity; Restart required",)
+                return False
+
+        _LOGGER.debug(
+            "DDP Port changed for: %s to %s", self, self._ps4.ddp_protocol.local_port
+        )
+        self.subscribe_to_protocol()
+        return True
+
+    async def async_options_port_startup(self):
+        """Assign endpoint/protocol with options port at startup."""
+        port = self._ps4.port
+        # New Protocol will be assigned if port available.
+        port_available = await self._ps4.get_ddp_endpoint()
+        if not port_available:
+            self._ps4._port = DEFAULT_PORT
+            _LOGGER.warning(
+                "Port %s is unavailable, Using default port", port,
+            )
 
     async def async_update(self):
         """Retrieve the latest data."""
@@ -154,6 +209,10 @@ class PS4Device(MediaPlayerEntity):
                 # Add entity to registry.
                 await self.async_get_device_info(self._ps4.status)
             self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
+
+            if self._ps4.port != DEFAULT_PORT:
+                await self.async_options_port_startup()
+
             self.subscribe_to_protocol()
 
         self._parse_status()
@@ -369,6 +428,10 @@ class PS4Device(MediaPlayerEntity):
         if self._ps4.connected:
             await self._ps4.close()
         self.unsubscribe_to_protocol()
+
+        # Close DDP protocol if not default/main.
+        if self._ps4.ddp_protocol != self.hass.data[PS4_DATA].protocol:
+            self._ps4.ddp_protocol.close()
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property

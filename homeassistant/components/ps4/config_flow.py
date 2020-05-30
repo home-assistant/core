@@ -13,12 +13,20 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_NAME,
+    CONF_PORT,
     CONF_REGION,
     CONF_TOKEN,
 )
+from homeassistant.core import callback
 from homeassistant.util import location
 
-from .const import CONFIG_ENTRY_VERSION, DEFAULT_ALIAS, DEFAULT_NAME, DOMAIN
+from .const import (
+    CONFIG_ENTRY_VERSION,
+    DEFAULT_ALIAS,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +47,12 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     VERSION = CONFIG_ENTRY_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return PS4OptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the config flow."""
@@ -194,3 +208,47 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         return self.async_show_form(
             step_id="link", data_schema=vol.Schema(link_schema), errors=errors
         )
+
+
+class PS4OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle PS4 options."""
+
+    def __init__(self, config_entry):
+        """Initialize PS4 options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Start PS4 Options Flow."""
+        return await self.async_step_port()
+
+    async def async_step_port(self, user_input=None):
+        """Configure local port option."""
+        errors = {}
+        failed = None
+        if user_input is not None:
+            # Checking port is not necessary if port is the same or Default Port
+            if user_input[CONF_PORT] != (self.options.get(CONF_PORT) or DEFAULT_PORT):
+                # Check if port is in use/can bind
+                helper = Helper()
+                failed = await self.hass.async_add_executor_job(
+                    helper.port_bind, [user_input[CONF_PORT]]
+                )
+
+            if failed is not None:
+                _LOGGER.debug("Port failed to bind: %s", failed)
+                errors["base"] = "port_unavailable"
+            else:
+                self.options.update(user_input)
+                return await self._update_options()
+
+        port = self.options.get(CONF_PORT) or DEFAULT_PORT
+        return self.async_show_form(
+            step_id="port",
+            data_schema=vol.Schema({vol.Required(CONF_PORT, default=port): int}),
+            errors=errors,
+        )
+
+    async def _update_options(self):
+        """Update config entry options."""
+        return self.async_create_entry(title="", data=self.options)

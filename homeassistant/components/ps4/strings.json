@@ -37,5 +37,19 @@
       "port_987_bind_error": "Could not bind to port 987. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
       "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info."
     }
+  },
+  "options": {
+    "step": {
+      "port": {
+        "description": "Specify local UDP port to use. Defaults to 0 (any).",
+        "title": "PlayStation 4 Options - Port",
+        "data": {
+          "port": "Port Number"
+        }
+      }
+    },
+    "error": {
+      "port_unavailable": "Port is already being used or is not available."
+    }
   }
 }

@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.ps4.const import (
     ATTR_MEDIA_IMAGE_URL,
     CONFIG_ENTRY_VERSION as VERSION,
+    DEFAULT_PORT,
     DEFAULT_REGION,
     DOMAIN,
     GAMES_FILE,
@@ -24,6 +25,7 @@ from homeassistant.const import (
     ATTR_LOCKED,
     CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
@@ -49,6 +51,8 @@ MOCK_STATUS_REST = "Server Standby"
 MOCK_STATUS_ON = "Ok"
 MOCK_STANDBY_CODE = 620
 MOCK_ON_CODE = 200
+MOCK_OPTIONS_PORT = 9870
+MOCK_OPTIONS_PORT_2 = 9871
 MOCK_TCP_PORT = 997
 MOCK_DDP_PORT = 987
 MOCK_DDP_VERSION = "00020020"
@@ -520,3 +524,156 @@ async def test_entry_is_unloaded(hass):
     assert not hass.data[PS4_DATA].protocol.callbacks
 
     assert hass.states.get(mock_entity_id) is None
+
+
+async def test_options_port_startup(hass):
+    """Test options port used on startup."""
+    mock_options = {CONF_PORT: MOCK_OPTIONS_PORT}
+    mock_entry = MockConfigEntry(
+        domain=ps4.DOMAIN,
+        data=MOCK_DATA,
+        version=VERSION,
+        entry_id=MOCK_ENTRY_ID,
+        options=mock_options,
+    )
+
+    with patch(
+        "pyps4_2ndscreen.ps4.async_create_ddp_endpoint",
+        return_value=(MagicMock(), MagicMock()),
+    ):
+        await setup_mock_component(hass, mock_entry)
+
+    # Test that entity does not subscribe to default protocol
+    assert not hass.data[PS4_DATA].protocol.callbacks
+
+
+async def test_options_port_startup_fail(hass):
+    """Test options port fails on startup."""
+    mock_options = {CONF_PORT: MOCK_OPTIONS_PORT}
+    mock_entry = MockConfigEntry(
+        domain=ps4.DOMAIN,
+        data=MOCK_DATA,
+        version=VERSION,
+        entry_id=MOCK_ENTRY_ID,
+        options=mock_options,
+    )
+
+    with patch(
+        "pyps4_2ndscreen.ps4.async_create_ddp_endpoint", return_value=(None, None)
+    ):
+        await setup_mock_component(hass, mock_entry)
+
+    # Test that entity subscribes to default protocol
+    assert len(hass.data[PS4_DATA].protocol.callbacks) == 1
+
+
+async def test_options_port_fail(hass):
+    """Test port options fail."""
+    mock_options_default = {CONF_PORT: DEFAULT_PORT}
+    mock_options_1 = {CONF_PORT: MOCK_OPTIONS_PORT}
+    mock_entry = MockConfigEntry(
+        domain=ps4.DOMAIN,
+        data=MOCK_DATA,
+        version=VERSION,
+        entry_id=MOCK_ENTRY_ID,
+        options=mock_options_default,
+    )
+    await setup_mock_component(hass, mock_entry)
+    hass.data[PS4_DATA].protocol.close = MagicMock()
+    mock_entry.options = mock_options_1
+    with patch(
+        "pyps4_2ndscreen.ps4.Ps4Async.change_ddp_endpoint", return_value=False
+    ) as mock_call, patch(
+        "homeassistant.components.ps4.media_player.PS4Device.subscribe_to_protocol"
+    ) as mock_subscribe:
+        await ps4.media_player.update_listener(hass, mock_entry)
+    mock_call.assert_awaited_once_with(MOCK_OPTIONS_PORT, False)
+    mock_subscribe.assert_not_called()
+
+    # Test No-OP if options port is same as current port.
+    mock_entry.options = mock_options_default
+    with patch("pyps4_2ndscreen.ps4.Ps4Async.change_ddp_endpoint") as mock_call, patch(
+        "homeassistant.components.ps4.media_player.PS4Device.subscribe_to_protocol"
+    ) as mock_subscribe:
+        await ps4.media_player.update_listener(hass, mock_entry)
+    mock_call.assert_not_awaited()
+    mock_subscribe.assert_not_called()
+    hass.data[PS4_DATA].protocol.close.assert_not_called()
+
+
+async def test_options_port_updated(hass):
+    """Test port options updated. 3 cases.
+
+    Case 1: Default port -> Options port
+    Case 2: Options port -> Default port
+    Case 3: Options port -> Options port
+    """
+    mock_options_default = {CONF_PORT: DEFAULT_PORT}
+    mock_options_1 = {CONF_PORT: MOCK_OPTIONS_PORT}
+    mock_options_2 = {CONF_PORT: MOCK_OPTIONS_PORT_2}
+    mock_entry_default = MockConfigEntry(
+        domain=ps4.DOMAIN,
+        data=MOCK_DATA,
+        version=VERSION,
+        entry_id=MOCK_ENTRY_ID,
+        options=mock_options_default,
+    )
+    mock_entry_1 = MockConfigEntry(
+        domain=ps4.DOMAIN,
+        data=MOCK_DATA,
+        version=VERSION,
+        entry_id=f"{MOCK_ENTRY_ID}1",
+        options=mock_options_1,
+    )
+    mock_entry_2 = MockConfigEntry(
+        domain=ps4.DOMAIN,
+        data=MOCK_DATA,
+        version=VERSION,
+        entry_id=f"{MOCK_ENTRY_ID}2",
+        options=mock_options_2,
+    )
+    mock_entry_1.add_to_hass(hass)
+    mock_entry_2.add_to_hass(hass)
+
+    await setup_mock_component(hass, mock_entry_default)
+    hass.data[PS4_DATA].protocol.close = MagicMock()
+    assert len(hass.states.async_entity_ids()) == 3
+
+    # Test Default port to Options port
+    mock_entry_default.options = mock_options_1
+    with patch(
+        "pyps4_2ndscreen.ps4.Ps4Async.change_ddp_endpoint", return_value=True
+    ) as mock_call, patch(
+        "homeassistant.components.ps4.media_player.PS4Device.subscribe_to_protocol"
+    ) as mock_subscribe:
+        await ps4.media_player.update_listener(hass, mock_entry_default)
+    # Default protocol should not close with arg[1] as False
+    mock_call.assert_awaited_once_with(MOCK_OPTIONS_PORT, False)
+    mock_subscribe.assert_called_once()
+
+    # Test Options port to Default port
+    mock_entry_1.options = mock_options_default
+    with patch(
+        "pyps4_2ndscreen.ps4.Ps4Async.change_ddp_endpoint", return_value=True
+    ) as mock_call, patch(
+        "homeassistant.components.ps4.media_player.PS4Device.subscribe_to_protocol"
+    ) as mock_subscribe:
+        await ps4.media_player.update_listener(hass, mock_entry_1)
+    # Endpoint is manually set to default endpoint/protocol
+    mock_call.assert_not_awaited()
+    mock_subscribe.assert_called_once()
+
+    # Test Options port to Options port
+    mock_entry_2.options = mock_options_1
+    with patch(
+        "pyps4_2ndscreen.ps4.Ps4Async.change_ddp_endpoint", return_value=True
+    ) as mock_call, patch(
+        "homeassistant.components.ps4.media_player.PS4Device.subscribe_to_protocol"
+    ) as mock_subscribe:
+        await ps4.media_player.update_listener(hass, mock_entry_2)
+    # Non-default protocol should close with arg[1] as True
+    mock_call.assert_awaited_once_with(MOCK_OPTIONS_PORT, True)
+    mock_subscribe.assert_called_once()
+
+    # Assert default protocol is never closed
+    hass.data[PS4_DATA].protocol.close.assert_not_called()

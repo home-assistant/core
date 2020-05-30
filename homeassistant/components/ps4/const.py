@@ -4,6 +4,7 @@ CONFIG_ENTRY_VERSION = 3
 DEFAULT_NAME = "PlayStation 4"
 DEFAULT_REGION = "United States"
 DEFAULT_ALIAS = "Home-Assistant"
+DEFAULT_PORT = 0
 DOMAIN = "ps4"
 GAMES_FILE = ".ps4-games.{}.json"
 PS4_DATA = "ps4_data"
