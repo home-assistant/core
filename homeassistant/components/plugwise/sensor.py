@@ -13,6 +13,7 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_BAR,
     TEMP_CELSIUS,
+    VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -128,13 +129,13 @@ SENSOR_MAP = {
     ],
     "gas_consumed_interval": [
         "Current Consumed Gas",
-        "m3",
+        VOLUME_CUBIC_METERS,
         DEVICE_CLASS_GAS,
         "mdi:gas-cylinder",
     ],
     "gas_consumed_cumulative": [
         "Cumulative Consumed Gas",
-        "m3",
+        VOLUME_CUBIC_METERS,
         DEVICE_CLASS_GAS,
         "mdi:gauge",
     ],
