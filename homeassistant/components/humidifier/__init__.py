@@ -97,7 +97,7 @@ class HumidifierEntity(ToggleEntity):
     @property
     def capability_attributes(self) -> Dict[str, Any]:
         """Return capability attributes."""
-        supported_features = self.supported_features
+        supported_features = self.supported_features or 0
         data = {
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
@@ -111,7 +111,7 @@ class HumidifierEntity(ToggleEntity):
     @property
     def state_attributes(self) -> Dict[str, Any]:
         """Return the optional state attributes."""
-        supported_features = self.supported_features
+        supported_features = self.supported_features or 0
         data = {}
 
         if self.target_humidity is not None:
@@ -158,11 +158,6 @@ class HumidifierEntity(ToggleEntity):
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode."""
         await self.hass.async_add_executor_job(self.set_mode, mode)
-
-    @property
-    @abstractmethod
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
 
     @property
     def min_humidity(self) -> int:
