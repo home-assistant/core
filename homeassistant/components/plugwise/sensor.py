@@ -322,7 +322,7 @@ class PwThermostatSensor(SmileSensor, Entity):
                 measurement = data[self._sensor]
                 if self._sensor == "battery" or self._sensor == "valve_position":
                     measurement = measurement * 100
-                if self._unit_of_measurement == "%":
+                if self._unit_of_measurement == UNIT_PERCENTAGE:
                     measurement = int(measurement)
                 self._state = measurement
 
