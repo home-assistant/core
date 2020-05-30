@@ -6,7 +6,7 @@ from aiohttp import ClientError
 from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
-from homeassistant.components.daikin.const import KEY_IP, KEY_MAC
+from homeassistant.components.daikin.const import KEY_HOSTNAME, KEY_IP, KEY_MAC
 from homeassistant.config_entries import (
     SOURCE_DISCOVERY,
     SOURCE_IMPORT,
@@ -112,7 +112,11 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
     "source, data, unique_id",
     [
         (SOURCE_DISCOVERY, {KEY_IP: HOST, KEY_MAC: MAC}, MAC),
-        (SOURCE_ZEROCONF, {CONF_HOST: HOST}, HOST),
+        (
+            SOURCE_ZEROCONF,
+            {CONF_HOST: HOST, KEY_HOSTNAME: "DaikinUNIQE.local"},
+            "DaikinUNIQE.local",
+        ),
     ],
 )
 async def test_discovery_zeroconf(hass, mock_daikin, source, data, unique_id):
