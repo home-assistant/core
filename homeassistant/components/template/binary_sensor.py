@@ -34,7 +34,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_same_state, async_track_state_change
 from homeassistant.helpers.storage import Store
 
-from .common import extract_entities, initialise_templates
+from .common import extract_entities, initialise_templates, register_component
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
-STORAGE_KEY = DOMAIN
+STORAGE_KEY = f"template.{DOMAIN}"
 STORAGE_VERSION = 1
 
 SENSOR_SCHEMA = vol.Schema(
@@ -102,15 +102,23 @@ CONVERT_TEMPLATE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_helpers(hass, register_component):
+def getComponent(hass):
+    """Get the EntityComponent for this platform."""
+    if STORAGE_KEY not in hass.data:
+        component = EntityComponent(_LOGGER, DOMAIN, hass)
+        register_component(component)
+        hass.data[STORAGE_KEY] = component
+
+    return hass.data[STORAGE_KEY]
+
+
+async def async_setup_helpers(hass):
     """Set up the helper storage and WebSockets."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-    id_manager = collection.IDManager()
+    component = getComponent(hass)
 
     storage_collection = BinarySensorStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
         logging.getLogger(f"{__name__}.storage_collection"),
-        id_manager,
     )
     collection.attach_entity_component_collection(
         component, storage_collection, partial(BinarySensorTemplate.from_storage, hass)
@@ -124,59 +132,24 @@ async def async_setup_helpers(hass, register_component):
 
     collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
-    register_component(component)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up template binary sensors."""
-    sensors = []
+    component = getComponent(hass)
 
-    for device, device_config in config[CONF_SENSORS].items():
-        value_template = device_config[CONF_VALUE_TEMPLATE]
-        icon_template = device_config.get(CONF_ICON_TEMPLATE)
-        entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
-        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
-        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection")
+    )
 
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-        device_class = device_config.get(CONF_DEVICE_CLASS)
-        delay_on = device_config.get(CONF_DELAY_ON)
-        delay_off = device_config.get(CONF_DELAY_OFF)
+    collection.attach_entity_component_collection(
+        component, yaml_collection, partial(BinarySensorTemplate.from_storage, hass)
+    )
 
-        templates = {
-            CONF_VALUE_TEMPLATE: value_template,
-            CONF_ICON_TEMPLATE: icon_template,
-            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
-            CONF_AVAILABILITY_TEMPLATE: availability_template,
-        }
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **cfg} for id_, cfg in config.get(CONF_SENSORS, {}).items()]
+    )
 
-        initialise_templates(hass, templates, attribute_templates)
-        entity_ids = extract_entities(
-            device,
-            "binary sensor",
-            device_config.get(CONF_ENTITY_ID),
-            templates,
-            attribute_templates,
-        )
-
-        sensors.append(
-            BinarySensorTemplate(
-                hass,
-                id=device,
-                friendly_name=friendly_name,
-                device_class=device_class,
-                value_template=value_template,
-                icon_template=icon_template,
-                entity_picture_template=entity_picture_template,
-                availability_template=availability_template,
-                entity_ids=entity_ids,
-                delay_on=delay_on,
-                delay_off=delay_off,
-                attribute_templates=attribute_templates,
-            )
-        )
-
-    async_add_entities(sensors)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
 
 
 class BinarySensorStorageCollection(collection.StorageCollection):
@@ -205,7 +178,7 @@ class BinarySensorTemplate(BinarySensorEntity):
     def __init__(
         self,
         hass,
-        id=None,
+        id_=None,
         friendly_name=None,
         device_class=None,
         value_template=None,
@@ -219,8 +192,8 @@ class BinarySensorTemplate(BinarySensorEntity):
     ):
         """Initialize the Template binary sensor."""
         self.hass = hass
-        self._id = id
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, id, hass=hass)
+        self._id = id_
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, id_, hass=hass)
         self._name = friendly_name
         self._device_class = device_class
         self._template = value_template
@@ -259,6 +232,9 @@ class BinarySensorTemplate(BinarySensorEntity):
             templates,
             attribute_templates,
         )
+
+        # Don't override builtin id function
+        config["id_"] = config.pop(CONF_ID)
 
         return cls(hass, **config)
 

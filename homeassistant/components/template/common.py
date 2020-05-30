@@ -2,10 +2,20 @@
 
 from itertools import chain
 import logging
+from typing import List
 
 from homeassistant.const import MATCH_ALL
+from homeassistant.helpers.entity_component import EntityComponent
 
 _LOGGER = logging.getLogger(__name__)
+
+TEMPLATE_COMPONENTS: List[EntityComponent] = []
+
+
+def register_component(component: EntityComponent):
+    """Register an template EntityComponent."""
+    if component not in TEMPLATE_COMPONENTS:
+        TEMPLATE_COMPONENTS.append(component)
 
 
 def initialise_templates(hass, templates, attribute_templates=None):
