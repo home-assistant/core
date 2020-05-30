@@ -23,8 +23,7 @@
                     "host": "Adres IP",
                     "port": "Port"
                 },
-                "description": "Wprowad\u017a informacje o ho\u015bcie panelu Konnected.",
-                "title": "Wykryj urz\u0105dzenie Konnected"
+                "description": "Wprowad\u017a informacje o ho\u015bcie panelu Konnected."
             }
         }
     },

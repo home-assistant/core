@@ -16,8 +16,7 @@
                     "password": "Geslo",
                     "username": "Uporabni\u0161ko ime"
                 },
-                "description": "Ali \u017eelite nastaviti {name} ?",
-                "title": "AVM FRITZ!Box"
+                "description": "Ali \u017eelite nastaviti {name} ?"
             },
             "user": {
                 "data": {
@@ -25,8 +24,7 @@
                     "password": "Geslo",
                     "username": "Uporabni\u0161ko ime"
                 },
-                "description": "Vnesite svoje podatke za AVM FRITZ! Box.",
-                "title": "AVM FRITZ!Box"
+                "description": "Vnesite svoje podatke za AVM FRITZ! Box."
             }
         }
     }

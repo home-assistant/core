@@ -1,12 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Denne oppf\u00f8ringen er allerede konfigurert.",
             "updated_entry": "Dette innlegget har allerede v\u00e6rt oppsett, men navnet, apps, og/eller alternativer som er definert i konfigurasjon som ikke stemmer med det som tidligere er importert konfigurasjon, s\u00e5 konfigurasjonen innlegget har blitt oppdatert i henhold til dette."
         },
         "error": {
-            "cant_connect": "Kunne ikke koble til enheten. [Se gjennom dokumentene](https://www.home-assistant.io/integrations/vizio/) og bekreft at: \n - Enheten er sl\u00e5tt p\u00e5 \n - Enheten er koblet til nettverket \n - Verdiene du fylte ut er n\u00f8yaktige \n f\u00f8r du pr\u00f8ver \u00e5 sende inn p\u00e5 nytt.",
-            "complete_pairing failed": "Kan ikke fullf\u00f8re sammenkoblingen. Forsikre deg om at PIN-koden du oppga er riktig, og at TV-en fortsatt er p\u00e5 og tilkoblet nettverket f\u00f8r du sender inn p\u00e5 nytt.",
             "complete_pairing_failed": "Kan ikke fullf\u00f8re sammenkoblingen. Forsikre deg om at PIN-koden du oppga er riktig, og at TV-en fortsatt er p\u00e5 og tilkoblet nettverket f\u00f8r du sender inn p\u00e5 nytt.",
             "host_exists": "VIZIO-enhet med spesifisert vert allerede konfigurert.",
             "name_exists": "VIZIO-enhet med spesifisert navn allerede konfigurert."
@@ -20,11 +17,9 @@
                 "title": "Fullf\u00f8r sammenkoblingsprosess"
             },
             "pairing_complete": {
-                "description": "Din VIZIO SmartCast enheten er n\u00e5 koblet til Home Assistant.",
                 "title": "Sammenkoblingen fullf\u00f8rt"
             },
             "pairing_complete_import": {
-                "description": "VIZIO SmartCast TV er n\u00e5 koblet til Home Assistant\n\nTilgangstokenet er '**{access_token}**'.",
                 "title": "Sammenkoblingen fullf\u00f8rt"
             },
             "user": {
@@ -34,8 +29,7 @@
                     "host": "Vert",
                     "name": "Navn"
                 },
-                "description": "En tilgangstoken er bare n\u00f8dvendig for TV-er. Hvis du konfigurerer en TV og ikke har tilgangstoken enda, m\u00e5 du la den st\u00e5 tom for \u00e5 g\u00e5 gjennom en sammenkoblingsprosess.",
-                "title": "Konfigurer VIZIO SmartCast-enhet"
+                "title": "VIZIO SmartCast-enhet"
             }
         }
     },
@@ -47,8 +41,7 @@
                     "include_or_exclude": "Inkluder eller ekskludere apper?",
                     "volume_step": "St\u00f8rrelse p\u00e5 volum trinn"
                 },
-                "description": "Hvis du har en Smart-TV, kan du eventuelt filtrere kildelisten ved \u00e5 velge hvilke apper som skal inkluderes eller utelates i kildelisten.",
-                "title": "Oppdater VIZIO SmartCast-alternativer"
+                "description": "Hvis du har en Smart-TV, kan du eventuelt filtrere kildelisten ved \u00e5 velge hvilke apper som skal inkluderes eller utelates i kildelisten."
             }
         }
     }

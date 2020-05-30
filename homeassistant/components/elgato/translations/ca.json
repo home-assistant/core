@@ -14,8 +14,7 @@
                     "host": "Amfitri\u00f3",
                     "port": "Port"
                 },
-                "description": "Configura l'Elgato Key Light per integrar-lo amb Home Assistant.",
-                "title": "Enlla\u00e7 amb Elgato Key Light"
+                "description": "Configura l'Elgato Key Light per integrar-lo amb Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Vols afegir l'Elgato Key Light amb n\u00famero de s\u00e8rie `{serial_number}` a Home Assistant?",

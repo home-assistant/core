@@ -6,7 +6,10 @@ import pytest
 from zeroconf import InterfaceChoice
 
 from homeassistant.components import zeroconf
-from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_MOTION,
+)
 from homeassistant.components.homekit import (
     MAX_DEVICES,
     STATUS_READY,
@@ -19,6 +22,7 @@ from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     AID_STORAGE,
     BRIDGE_NAME,
+    BRIDGE_SERIAL_NUMBER,
     CONF_AUTO_START,
     CONF_ENTRY_INDEX,
     CONF_SAFE_MODE,
@@ -386,15 +390,15 @@ async def test_homekit_add_accessory(hass):
     with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
         mock_get_acc.side_effect = [None, "acc", None]
         homekit.add_bridge_accessory(State("light.demo", "on"))
-        mock_get_acc.assert_called_with(hass, "driver", ANY, 363398124, {})
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 1403373688, {})
         assert not mock_bridge.add_accessory.called
 
         homekit.add_bridge_accessory(State("demo.test", "on"))
-        mock_get_acc.assert_called_with(hass, "driver", ANY, 294192020, {})
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 600325356, {})
         assert mock_bridge.add_accessory.called
 
         homekit.add_bridge_accessory(State("demo.test_2", "on"))
-        mock_get_acc.assert_called_with(hass, "driver", ANY, 429982757, {})
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 1467253281, {})
         mock_bridge.add_accessory.assert_called_with("acc")
 
 
@@ -458,7 +462,7 @@ async def test_homekit_entity_filter(hass):
         assert mock_get_acc.called is False
 
 
-async def test_homekit_start(hass, hk_driver, debounce_patcher):
+async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
 
@@ -479,6 +483,15 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
     homekit.bridge.accessories = []
     homekit.driver = hk_driver
     homekit._filter = Mock(return_value=True)
+
+    connection = (device_registry.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")
+    bridge_with_wrong_mac = device_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={connection},
+        manufacturer="Any",
+        name="Any",
+        model="Home Assistant HomeKit Bridge",
+    )
 
     hass.states.async_set("light.demo", "on")
     state = hass.states.async_all()[0]
@@ -504,6 +517,35 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
     await homekit.async_start()
     await hass.async_block_till_done()
     assert not hk_driver_start.called
+
+    assert device_reg.async_get(bridge_with_wrong_mac.id) is None
+
+    device = device_reg.async_get_device(
+        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}, {}
+    )
+    assert device
+    formatted_mac = device_registry.format_mac(homekit.driver.state.mac)
+    assert (device_registry.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+
+    # Start again to make sure the registry entry is kept
+    homekit.status = STATUS_READY
+    with patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc, patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ) as mock_setup_msg, patch(
+        "pyhap.accessory_driver.AccessoryDriver.add_accessory"
+    ) as hk_driver_add_acc, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start"
+    ) as hk_driver_start:
+        await homekit.async_start()
+
+    device = device_reg.async_get_device(
+        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}, {}
+    )
+    assert device
+    formatted_mac = device_registry.format_mac(homekit.driver.state.mac)
+    assert (device_registry.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
+
+    assert len(device_reg.devices) == 1
 
 
 async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_patcher):
@@ -991,5 +1033,80 @@ async def test_homekit_ignored_missing_devices(
             "platform": "Tesla Powerwall",
             "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
             "linked_battery_sensor": "sensor.powerwall_battery",
+        },
+    )
+
+
+async def test_homekit_finds_linked_motion_sensors(
+    hass, hk_driver, debounce_patcher, device_reg, entity_reg
+):
+    """Test HomeKit start method."""
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {"camera.camera_demo": {}},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
+    homekit.driver = hk_driver
+    homekit._filter = Mock(return_value=True)
+    homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.0",
+        model="Camera Server",
+        manufacturer="Ubq",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    binary_motion_sensor = entity_reg.async_get_or_create(
+        "binary_sensor",
+        "camera",
+        "motion_sensor",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_MOTION,
+    )
+    camera = entity_reg.async_get_or_create(
+        "camera", "camera", "demo", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        binary_motion_sensor.entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION},
+    )
+    hass.states.async_set(camera.entity_id, STATE_ON)
+
+    def _mock_get_accessory(*args, **kwargs):
+        return [None, "acc", None]
+
+    with patch.object(homekit.bridge, "add_accessory"), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start"
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+
+    mock_get_acc.assert_called_with(
+        hass,
+        hk_driver,
+        ANY,
+        ANY,
+        {
+            "manufacturer": "Ubq",
+            "model": "Camera Server",
+            "sw_version": "0.16.0",
+            "linked_motion_sensor": "binary_sensor.camera_motion_sensor",
         },
     )

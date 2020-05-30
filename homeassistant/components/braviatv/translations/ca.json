@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquest televisor ja est\u00e0 configurat."
+            "already_configured": "Aquest televisor ja est\u00e0 configurat.",
+            "no_ip_control": "El control IP del teu televisor est\u00e0 desactivat o aquest no \u00e9s compatible."
         },
         "error": {
             "cannot_connect": "No s'ha pogut connectar, amfitri\u00f3 o codi PIN inv\u00e0lids.",

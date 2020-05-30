@@ -24,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Serieel apparaatpad",
-                    "radio_type": "Radio Type"
+                    "path": "Serieel apparaatpad"
                 },
                 "description": "Selecteer seri\u00eble poort voor Zigbee-radio",
                 "title": "ZHA"

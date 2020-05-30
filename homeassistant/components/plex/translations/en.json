@@ -35,10 +35,6 @@
                 "description": "Multiple servers available, select one:",
                 "title": "Select Plex server"
             },
-            "start_website_auth": {
-                "description": "Continue to authorize at plex.tv.",
-                "title": "Connect Plex server"
-            },
             "user": {
                 "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server.",
                 "title": "Plex Media Server"

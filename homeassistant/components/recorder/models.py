@@ -28,6 +28,8 @@ SCHEMA_VERSION = 7
 
 _LOGGER = logging.getLogger(__name__)
 
+DB_TIMEZONE = "Z"
+
 
 class Events(Base):  # type: ignore
     """Event history data."""
@@ -64,7 +66,7 @@ class Events(Base):  # type: ignore
                 self.event_type,
                 json.loads(self.event_data),
                 EventOrigin(self.origin),
-                _process_timestamp(self.time_fired),
+                process_timestamp(self.time_fired),
                 context=context,
             )
         except ValueError:
@@ -133,8 +135,8 @@ class States(Base):  # type: ignore
                 self.entity_id,
                 self.state,
                 json.loads(self.attributes),
-                _process_timestamp(self.last_changed),
-                _process_timestamp(self.last_updated),
+                process_timestamp(self.last_changed),
+                process_timestamp(self.last_updated),
                 context=context,
                 # Temp, because database can still store invalid entity IDs
                 # Remove with 1.0 or in 2020.
@@ -193,7 +195,7 @@ class SchemaChanges(Base):  # type: ignore
     changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
 
 
-def _process_timestamp(ts):
+def process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
         return None

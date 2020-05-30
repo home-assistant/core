@@ -171,15 +171,18 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self.coordinator.roku.remote("play")
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self.coordinator.roku.remote("play")
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
 
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        await self.coordinator.roku.remote("play")
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
@@ -219,7 +222,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             await self.coordinator.roku.remote("home")
 
         appl = next(
-            (app for app in self.coordinator.data.apps if app.name == source), None
+            (
+                app
+                for app in self.coordinator.data.apps
+                if source in (app.name, app.app_id)
+            ),
+            None,
         )
 
         if appl is not None:

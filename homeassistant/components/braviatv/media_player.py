@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from bravia_tv.braviarc import NoIPControl
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -162,9 +163,12 @@ class BraviaTVDevice(MediaPlayerEntity):
         )
         if power_status == "active":
             if self._need_refresh:
-                connected = await self.hass.async_add_executor_job(
-                    self._braviarc.connect, self._pin, CLIENTID_PREFIX, NICKNAME
-                )
+                try:
+                    connected = await self.hass.async_add_executor_job(
+                        self._braviarc.connect, self._pin, CLIENTID_PREFIX, NICKNAME
+                    )
+                except NoIPControl:
+                    _LOGGER.error("IP Control is disabled in the TV settings")
                 self._need_refresh = False
             else:
                 connected = self._braviarc.is_connected()

@@ -9,7 +9,6 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Host",
                     "host": "Host"
                 },
                 "description": "Bitte gib den Hostnamen oder die IP-Adresse eines Heos-Ger\u00e4ts ein (vorzugsweise eines, das per Kabel mit dem Netzwerk verbunden ist).",
