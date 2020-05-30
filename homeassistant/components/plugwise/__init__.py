@@ -235,5 +235,5 @@ class SmileSensor(SmileGateway):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if not self._unit_of_measurement:
-            pass
+            return None
         return self._unit_of_measurement
