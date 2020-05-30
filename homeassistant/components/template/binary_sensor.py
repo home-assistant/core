@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_ICON_TEMPLATE,
     CONF_ID,
-    CONF_NAME,
     CONF_SENSORS,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
@@ -167,11 +166,38 @@ class BinarySensorStorageCollection(collection.StorageCollection):
     @callback
     def _get_suggested_id(self, info: typing.Dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return info[CONF_FRIENDLY_NAME]
 
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
-        return self.UPDATE_SCHEMA({**data, **update_data})
+        self.UPDATE_SCHEMA(update_data)
+        return {**data, **update_data}
+
+
+def convert_templates(hass, device: str, config: typing.Dict):
+    """Convert template strings to templates, and initialises them."""
+    config = CONVERT_TEMPLATE_SCHEMA(config)  # Converts strings to templates
+
+    templates = {
+        CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
+        CONF_ICON_TEMPLATE: config.get(CONF_ICON_TEMPLATE),
+        CONF_ENTITY_PICTURE_TEMPLATE: config.get(CONF_ENTITY_PICTURE_TEMPLATE),
+        CONF_AVAILABILITY_TEMPLATE: config.get(CONF_AVAILABILITY_TEMPLATE),
+    }
+
+    attribute_templates = config.get(CONF_ATTRIBUTE_TEMPLATES, {})
+
+    initialise_templates(hass, templates, attribute_templates)
+    _LOGGER.debug(config)
+    config[CONF_ENTITY_ID] = extract_entities(
+        device,
+        "binary sensor",
+        config.get(CONF_ENTITY_ID),
+        templates,
+        attribute_templates,
+    )
+
+    return config
 
 
 class BinarySensorTemplate(BinarySensorEntity):
@@ -181,22 +207,14 @@ class BinarySensorTemplate(BinarySensorEntity):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.editable = False
-        self._id = config[CONF_ID]
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, self._id, hass=hass)
-        self._name = config.get(CONF_FRIENDLY_NAME)
-        self._device_class = config.get(CONF_DEVICE_CLASS)
-        self._template = config.get(CONF_VALUE_TEMPLATE)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, config.get(CONF_ID), hass=hass
+        )
+        self._config = config
         self._state = None
-        self._icon_template = config.get(CONF_ICON_TEMPLATE)
-        self._availability_template = config.get(CONF_AVAILABILITY_TEMPLATE)
-        self._entity_picture_template = config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         self._icon = None
         self._entity_picture = None
-        self._entities = config.get(CONF_ENTITY_ID)
-        self._delay_on = config.get(CONF_DELAY_ON)
-        self._delay_off = config.get(CONF_DELAY_OFF)
         self._available = True
-        self._attribute_templates = config.get(CONF_ATTRIBUTE_TEMPLATES, {})
         self._attributes = {}
 
     @classmethod
@@ -209,27 +227,7 @@ class BinarySensorTemplate(BinarySensorEntity):
     @classmethod
     def from_config(cls, hass, config: typing.Dict) -> "BinarySensorTemplate":
         """Return entity instance initialized from a config."""
-        config = CONVERT_TEMPLATE_SCHEMA(config)  # Converts strings to templates
-
-        templates = {
-            CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
-            CONF_ICON_TEMPLATE: config.get(CONF_ICON_TEMPLATE),
-            CONF_ENTITY_PICTURE_TEMPLATE: config.get(CONF_ENTITY_PICTURE_TEMPLATE),
-            CONF_AVAILABILITY_TEMPLATE: config.get(CONF_AVAILABILITY_TEMPLATE),
-        }
-
-        attribute_templates = config.get(CONF_ATTRIBUTE_TEMPLATES, {})
-
-        initialise_templates(hass, templates, attribute_templates)
-        config[CONF_ENTITY_ID] = extract_entities(
-            config[CONF_ID],
-            "binary sensor",
-            config.get(CONF_ENTITY_ID),
-            templates,
-            attribute_templates,
-        )
-
-        return cls(hass, config)
+        return cls(hass, convert_templates(hass, config[CONF_ID], config))
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -242,10 +240,12 @@ class BinarySensorTemplate(BinarySensorEntity):
         @callback
         def template_bsensor_startup(event):
             """Update template on startup."""
-            if self._entities != MATCH_ALL:
+            if self._config.get(CONF_ENTITY_ID) != MATCH_ALL:
                 # Track state change only for valid templates
                 async_track_state_change(
-                    self.hass, self._entities, template_bsensor_state_listener
+                    self.hass,
+                    self._config.get(CONF_ENTITY_ID),
+                    template_bsensor_state_listener,
                 )
 
             self.async_check_state()
@@ -254,15 +254,21 @@ class BinarySensorTemplate(BinarySensorEntity):
             EVENT_HOMEASSISTANT_START, template_bsensor_startup
         )
 
+    async def async_update_config(self, config: typing.Dict) -> None:
+        """Handle when the config is updated."""
+        self._config = convert_templates(self.hass, config[CONF_ID], config)
+        await self.async_update()
+        self.async_write_ha_state()
+
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self._config.get(CONF_FRIENDLY_NAME)
 
     @property
     def unique_id(self) -> typing.Optional[str]:
         """Return unique id for the entity."""
-        return self._id
+        return self._config.get(CONF_ID)
 
     @property
     def icon(self):
@@ -282,7 +288,7 @@ class BinarySensorTemplate(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the sensor class of the sensor."""
-        return self._device_class
+        return self._config.get(CONF_DEVICE_CLASS)
 
     @property
     def device_state_attributes(self):
@@ -304,29 +310,33 @@ class BinarySensorTemplate(BinarySensorEntity):
         """Get the state of template."""
         state = None
         try:
-            state = self._template.async_render().lower() == "true"
+            state = self._config[CONF_VALUE_TEMPLATE].async_render().lower() == "true"
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                 "UndefinedError: 'None' has no attribute"
             ):
                 # Common during HA startup - so just a warning
                 _LOGGER.warning(
-                    "Could not render template %s, the state is unknown", self._name
+                    "Could not render template %s, the state is unknown",
+                    self._config.get(CONF_FRIENDLY_NAME),
                 )
                 return
-            _LOGGER.error("Could not render template %s: %s", self._name, ex)
+            _LOGGER.error(
+                "Could not render template %s: %s",
+                self._config.get(CONF_FRIENDLY_NAME),
+                ex,
+            )
 
-        if self._attribute_templates is not None:
-            for key, value in self._attribute_templates.items():
-                try:
-                    self._attributes[key] = value.async_render()
-                except TemplateError as err:
-                    _LOGGER.error("Error rendering attribute %s: %s", key, err)
+        for key, value in self._config.get(CONF_ATTRIBUTE_TEMPLATES, {}).items():
+            try:
+                self._attributes[key] = value.async_render()
+            except TemplateError as err:
+                _LOGGER.error("Error rendering attribute %s: %s", key, err)
 
         templates = {
-            "_icon": self._icon_template,
-            "_entity_picture": self._entity_picture_template,
-            "_available": self._availability_template,
+            "_icon": self._config.get(CONF_ICON_TEMPLATE),
+            "_entity_picture": self._config.get(CONF_ENTITY_PICTURE_TEMPLATE),
+            "_available": self._config.get(CONF_AVAILABILITY_TEMPLATE),
         }
 
         for property_name, template in templates.items():
@@ -347,13 +357,13 @@ class BinarySensorTemplate(BinarySensorEntity):
                     _LOGGER.warning(
                         "Could not render %s template %s, the state is unknown.",
                         friendly_property_name,
-                        self._name,
+                        self._config.get(CONF_FRIENDLY_NAME),
                     )
                 else:
                     _LOGGER.error(
                         "Could not render %s template %s: %s",
                         friendly_property_name,
-                        self._name,
+                        self._config.get(CONF_FRIENDLY_NAME),
                         ex,
                     )
                 return state
@@ -376,11 +386,17 @@ class BinarySensorTemplate(BinarySensorEntity):
             self.async_write_ha_state()
 
         # state without delay
-        if (state and not self._delay_on) or (not state and not self._delay_off):
+        if (state and not self._config.get(CONF_DELAY_ON)) or (
+            not state and not self._config.get(CONF_DELAY_OFF)
+        ):
             set_state()
             return
 
-        period = self._delay_on if state else self._delay_off
+        period = (
+            self._config.get(CONF_DELAY_ON)
+            if state
+            else self._config.get(CONF_DELAY_OFF)
+        )
         async_track_same_state(
             self.hass,
             period,
