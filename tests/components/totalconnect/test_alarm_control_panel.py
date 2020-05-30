@@ -46,10 +46,10 @@ async def test_attributes(hass):
 
 async def test_arm_home_success(hass):
     """Test arm home method success."""
-    RESPONSES = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
     with patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
-        side_effect=RESPONSES,
+        side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
@@ -64,10 +64,10 @@ async def test_arm_home_success(hass):
 
 async def test_arm_home_failure(hass):
     """Test arm home method failure."""
-    RESPONSES = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE, RESPONSE_DISARMED]
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE, RESPONSE_DISARMED]
     with patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
-        side_effect=RESPONSES,
+        side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
@@ -83,10 +83,10 @@ async def test_arm_home_failure(hass):
 
 async def test_arm_away_success(hass):
     """Test arm away method success."""
-    RESPONSES = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
     with patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
-        side_effect=RESPONSES,
+        side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
@@ -100,10 +100,10 @@ async def test_arm_away_success(hass):
 
 async def test_arm_away_failure(hass):
     """Test arm away method failure."""
-    RESPONSES = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE, RESPONSE_DISARMED]
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE, RESPONSE_DISARMED]
     with patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
-        side_effect=RESPONSES,
+        side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
@@ -119,10 +119,10 @@ async def test_arm_away_failure(hass):
 
 async def test_disarm_success(hass):
     """Test disarm method success."""
-    RESPONSES = [RESPONSE_ARMED_AWAY, RESPONSE_DISARM_SUCCESS, RESPONSE_DISARMED]
+    responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARM_SUCCESS, RESPONSE_DISARMED]
     with patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
-        side_effect=RESPONSES,
+        side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
@@ -136,10 +136,10 @@ async def test_disarm_success(hass):
 
 async def test_disarm_failure(hass):
     """Test disarm method failure."""
-    RESPONSES = [RESPONSE_ARMED_AWAY, RESPONSE_DISARM_FAILURE, RESPONSE_ARMED_AWAY]
+    responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARM_FAILURE, RESPONSE_ARMED_AWAY]
     with patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
-        side_effect=RESPONSES,
+        side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state

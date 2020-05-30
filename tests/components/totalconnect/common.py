@@ -50,15 +50,9 @@ PARTITION_ARMED_AWAY = {
     "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_AWAY,
 }
 
-PARTITION_INFO_DISARMED = {}
-PARTITION_INFO_DISARMED[0] = PARTITION_DISARMED
-
-PARTITION_INFO_ARMED_STAY = {}
-PARTITION_INFO_ARMED_STAY[0] = PARTITION_ARMED_STAY
-
-PARTITION_INFO_ARMED_AWAY = {}
-PARTITION_INFO_ARMED_AWAY[0] = PARTITION_ARMED_AWAY
-
+PARTITION_INFO_DISARMED = {0: PARTITION_DISARMED}
+PARTITION_INFO_ARMED_STAY = {0: PARTITION_ARMED_STAY}
+PARTITION_INFO_ARMED_AWAY = {0: PARTITION_ARMED_AWAY}
 
 PARTITIONS_DISARMED = {"PartitionInfo": PARTITION_INFO_DISARMED}
 PARTITIONS_ARMED_STAY = {"PartitionInfo": PARTITION_INFO_ARMED_STAY}
@@ -71,8 +65,7 @@ ZONE_NORMAL = {
     "PartitionId": "1",
 }
 
-ZONE_INFO = []
-ZONE_INFO.append(ZONE_NORMAL)
+ZONE_INFO = [ZONE_NORMAL]
 ZONES = {"ZoneInfo": ZONE_INFO}
 
 METADATA_DISARMED = {
@@ -118,13 +111,13 @@ async def setup_platform(hass, platform):
     )
     mock_entry.add_to_hass(hass)
 
-    RESPONSES = [RESPONSE_AUTHENTICATE, RESPONSE_DISARMED]
+    responses = [RESPONSE_AUTHENTICATE, RESPONSE_DISARMED]
 
     with patch("homeassistant.components.totalconnect.PLATFORMS", [platform]), patch(
         "zeep.Client", autospec=True
     ), patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
-        side_effect=RESPONSES,
+        side_effect=responses,
     ) as mock_request, patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.get_zone_details",
         return_value=True,
