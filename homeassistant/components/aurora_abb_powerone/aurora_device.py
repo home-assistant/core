@@ -8,12 +8,12 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import (
+    ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
-    ICONS,
     MANUFACTURER,
 )
 
@@ -23,21 +23,16 @@ _LOGGER = logging.getLogger(__name__)
 class AuroraDevice(Entity):
     """Representation of an Aurora ABB PowerOne device."""
 
-    def __init__(
-        self, device_params, client: AuroraSerialClient, config_entry: ConfigEntry
-    ):
+    def __init__(self, client: AuroraSerialClient, config_entry: ConfigEntry):
         """Initialise the basic device."""
         self.config_entry = config_entry
         self._id = config_entry.entry_id
         self.type = "device"
-        # self._display_name = config_entry.
         self.serialnum = config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn")
         self._sw_version = config_entry.data.get(ATTR_FIRMWARE, "0.0.0")
         self._model = config_entry.data.get(ATTR_MODEL, "Model unknown")
         self.client = client
-        self.device_name = DEFAULT_DEVICE_NAME
-        self._icon = ICONS.get(self.type)
-        # self.should_poll(True)
+        self.device_name = config_entry.data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME)
 
     @property
     def unique_id(self) -> str:

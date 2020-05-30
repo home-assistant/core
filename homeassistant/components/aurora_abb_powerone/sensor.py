@@ -3,30 +3,55 @@
 import logging
 
 from aurorapy.client import AuroraError, AuroraSerialClient
+import voluptuous as vol
 
-from .aurora_device import AuroraDevice
-from .const import ATTR_SERIAL_NUMBER, DOMAIN
-
-from homeassistant.const import (  # CONF_ADDRESS,; CONF_DEVICE,; CONF_NAME,
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DEVICE,
+    CONF_NAME,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 
-# import voluptuous as vol
-# import homeassistant.helpers.config_validation as cv
-
+from .aurora_device import AuroraDevice
+from .const import ATTR_SERIAL_NUMBER, DEFAULT_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-#     {
-#         vol.Required(CONF_DEVICE): cv.string,
-#         vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
-#         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-#     }
-# )
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DEVICE): cv.string,
+        vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_NAME, default="Solar PV"): cv.string,
+    }
+)
+
+
+def setup_platform(hass, config: ConfigEntry, add_entities, discovery_info=None):
+    """Set up single sensor based on configuration.yaml (DEPRECATED)."""
+    devices = []
+    comport = config[CONF_DEVICE]
+    address = config.get(CONF_ADDRESS, DEFAULT_ADDRESS)
+    name = config.get(CONF_NAME, "Solar PV")
+    _LOGGER.warning(
+        "DEPRECATED: setting up %s via configuration.yaml will "
+        "soon be unsupported.  Please remove the entries from your "
+        "configuration.yaml file and the set up the integration via the UI",
+        DOMAIN,
+    )
+    _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
+    client = AuroraSerialClient(address, comport, parity="N", timeout=1)
+
+    config.data = {"device_name": name}
+    config.entry_id = "undefined_entry_id"
+    devices.append(AuroraSensor(client, config, "Power", "instantaneouspower"))
+    add_entities(devices, True)
 
 
 async def async_setup_entry(hass, config, async_add_entities) -> None:
@@ -37,42 +62,24 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
     # sensor.type = instantaneouspower, temperature, etc.
     for sensor in hass.data[DOMAIN][config.entry_id]["devices"][serialnum]["sensor"]:
         if sensor["parameter"] == "temperature":
-            entities.append(AuroraSensor(sensor, client, config, "temperature"))
+            entities.append(AuroraSensor(client, config, sensor["name"], "temperature"))
         elif sensor["parameter"] == "instantaneouspower":
-            entities.append(AuroraSensor(sensor, client, config, "instantaneouspower"))
+            entities.append(
+                AuroraSensor(client, config, sensor["name"], "instantaneouspower")
+            )
         else:
             _LOGGER.error("Unrecognised sensor parameter '%s'", sensor["parameter"])
     _LOGGER.debug("async_setup_entry adding %d entitites", len(entities))
     async_add_entities(entities, True)
 
 
-# def setup_platform(hass, config, add_entities, discovery_info=None):
-#     """Set up the Aurora ABB PowerOne device."""
-#     print("sync setup entry={}".format(config))
-#     entities = []
-#     comport = config[CONF_DEVICE]
-#     address = config[CONF_ADDRESS]
-#     name = config[CONF_NAME]
-
-#     _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
-#     client = AuroraSerialClient(address, comport, parity="N", timeout=1)
-#     for device in hass.data[AURORA_DOMAIN][config_entry.entry_id]["devices"]["sensor"]:
-#         if device.type == "temperature":
-#             entities.append(AuroraSensor(device, client, config, "temperature"))
-#         elif device.type == "instantaneouspower":
-#             entities.append(AuroraSensor(device, client, config, "instantaneouspower"))
-#     add_entities(entities, True)
-
-
 class AuroraSensor(AuroraDevice):
     """Representation of a Sensor."""
 
-    def __init__(
-        self, device_params, client: AuroraSerialClient, config_entry, typename
-    ):
+    def __init__(self, client: AuroraSerialClient, config_entry, name, typename):
         """Initialize the sensor."""
         self._state = None
-        super().__init__(device_params, client, config_entry)
+        super().__init__(client, config_entry)
 
         if typename == "instantaneouspower":
             self.type = typename
@@ -82,9 +89,10 @@ class AuroraSensor(AuroraDevice):
             self.type = typename
             self.units = TEMP_CELSIUS
             self._device_class = DEVICE_CLASS_TEMPERATURE
-
+        else:
+            _LOGGER.warning("Unrecognised typename '%s'", typename)
         if self.type:
-            self._name = f"{self.device_name} {device_params['name']}"
+            self._name = f"{self.device_name} {name}"
 
     @property
     def name(self):

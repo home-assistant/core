@@ -1,5 +1,6 @@
 """Config flow for Aurora ABB PowerOne integration."""
 import logging
+from logging import DEBUG
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import serial.tools.list_ports
@@ -106,7 +107,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = validate_and_connect(
-                    self.hass, user_input, user_input[CONF_USEDUMMYONFAIL]
+                    self.hass, user_input, user_input.get(CONF_USEDUMMYONFAIL, False)
                 )
                 info.update(user_input)
                 # Bomb out early if someone has already set up this device.
@@ -135,18 +136,18 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
         # If no user input, must be first pass through the config.  Show  initial form.
         # DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
-        DATA_SCHEMA = vol.Schema(
-            {
-                vol.Required(CONF_PORT, default=self._defaultcomport): vol.In(
-                    self._comportslist
-                ),
-                vol.Required(CONF_ADDRESS, default=DEFAULT_ADDRESS): vol.In(
-                    range(MIN_ADDRESS, MAX_ADDRESS + 1)
-                ),
-                vol.Required(CONF_USEDUMMYONFAIL, default=False): bool,
-                # vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            }
-        )
+        config_options = {
+            vol.Required(CONF_PORT, default=self._defaultcomport): vol.In(
+                self._comportslist
+            ),
+            vol.Required(CONF_ADDRESS, default=DEFAULT_ADDRESS): vol.In(
+                range(MIN_ADDRESS, MAX_ADDRESS + 1)
+            ),
+        }
+        if _LOGGER.level == DEBUG:
+            config_options[vol.Required(CONF_USEDUMMYONFAIL, default=False)] = bool
+        DATA_SCHEMA = vol.Schema(config_options)
+
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
