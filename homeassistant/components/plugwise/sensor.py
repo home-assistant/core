@@ -61,7 +61,7 @@ SENSOR_MAP = {
     ],
     "electricity_consumed_interval": [
         "Consumed Power Interval",
-        "Wh",
+        ENERGY_WATT_HOUR,
         DEVICE_CLASS_POWER,
         "mdi:flash",
     ],
