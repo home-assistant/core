@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "bad_config_file": "Dades incorrectes del fitxer de configuraci\u00f3",
+            "bad_config_file": "Dades del fitxer de configuraci\u00f3 incorrectes",
             "link_local_address": "L'enlla\u00e7 d'adreces locals no est\u00e0 disponible",
             "not_axis_device": "El dispositiu descobert no \u00e9s un dispositiu Axis"
         },
