@@ -3,16 +3,15 @@ import logging
 import os.path
 
 from notify_events import Message
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
-    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN
 
 ATTR_LEVEL = "level"
 ATTR_PRIORITY = "priority"
@@ -31,22 +30,18 @@ ATTR_FILE_KIND_IMAGE = "image"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
-
 
 def get_service(hass, config, discovery_info=None):
     """Get the Notify.Events notification service."""
-    token = config[CONF_TOKEN]
-    return NotifyEventsNotificationService(hass, token)
+    return NotifyEventsNotificationService(hass.data[DOMAIN][CONF_TOKEN])
 
 
 class NotifyEventsNotificationService(BaseNotificationService):
     """Implement the notification service for Notify.Events."""
 
-    def __init__(self, hass, token):
+    def __init__(self, token):
         """Initialize the service."""
         self.token = token
-        self.hass = hass
 
     def file_exists(self, filename) -> bool:
         """Check if a file exists on disk and is in authorized path."""
