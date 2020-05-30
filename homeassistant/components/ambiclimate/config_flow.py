@@ -5,6 +5,7 @@ import ambiclimate
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
@@ -12,8 +13,6 @@ from homeassistant.helpers.network import get_url
 from .const import (
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     DOMAIN,
     STORAGE_KEY,
     STORAGE_VERSION,
