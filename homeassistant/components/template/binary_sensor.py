@@ -102,7 +102,7 @@ CONVERT_TEMPLATE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_helpers(hass):
+async def async_setup_helpers(hass, register_component):
     """Set up the helper storage and WebSockets."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
@@ -123,6 +123,8 @@ async def async_setup_helpers(hass):
     ).async_setup(hass)
 
     collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
+
+    register_component(component)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
