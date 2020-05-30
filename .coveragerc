@@ -564,7 +564,9 @@ omit =
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
     homeassistant/components/opengarage/cover.py
+    homeassistant/components/openhome/__init__.py
     homeassistant/components/openhome/media_player.py
+    homeassistant/components/openhome/const.py
     homeassistant/components/opensensemap/air_quality.py
     homeassistant/components/opensky/sensor.py
     homeassistant/components/opentherm_gw/__init__.py

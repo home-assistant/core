@@ -1012,7 +1012,7 @@ openerz-api==0.1.0
 openevsewifi==0.4
 
 # homeassistant.components.openhome
-openhomedevice==0.6.3
+openhomedevice==0.7.2
 
 # homeassistant.components.opensensemap
 opensensemap-api==0.1.5
