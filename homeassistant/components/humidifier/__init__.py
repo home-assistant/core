@@ -1,5 +1,4 @@
 """Provides functionality to interact with humidifier devices."""
-from abc import abstractmethod
 from datetime import timedelta
 import logging
 from typing import Any, Dict, List, Optional
