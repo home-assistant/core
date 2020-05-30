@@ -19,7 +19,18 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from . import SmileGateway
-from .const import COOL_ICON, DEVICE_STATE, DOMAIN, FLAME_ICON, IDLE_ICON, UNIT_LUMEN
+from .const import (
+    COOL_ICON,
+    DEVICE_STATE,
+    DOMAIN,
+    FLAME_ICON,
+    IDLE_ICON,
+    SENSOR_MAP_DEVICE_CLASS,
+    SENSOR_MAP_ICON,
+    SENSOR_MAP_MODEL,
+    SENSOR_MAP_UOM,
+    UNIT_LUMEN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -285,6 +296,7 @@ class PwThermostatSensor(SmileSensor, Entity):
         self._sensor_type = sensor_type
         self._entity_name = name
         self._sensor = sensor
+
         self._state = None
         self._model = None
         self._unit_of_measurement = None
@@ -362,12 +374,14 @@ class PwPowerSensor(SmileSensor, Entity):
         self._model = model
         self._entity_name = name
         self._dev_id = dev_id
-        self._device = sensor_type[0]
-        self._unit_of_measurement = sensor_type[1]
-        self._dev_class = sensor_type[2]
-        self._icon = sensor_type[3]
         self._sensor = sensor
+
         self._state = None
+
+        self._model = sensor_type[SENSOR_MAP_MODEL]
+        self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
+        self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
+        self._icon = sensor_type[SENSOR_MAP_ICON]
 
         sensorname = sensor.replace("_", " ").title()
         self._name = f"{name} {sensorname}"

@@ -1,6 +1,12 @@
 """Constant for Plugwise component."""
 DOMAIN = "plugwise"
 
+# Sensor mapping
+SENSOR_MAP_MODEL = 0
+SENSOR_MAP_UOM = 1
+SENSOR_MAP_DEVICE_CLASS = 2
+SENSOR_MAP_ICON = 3
+
 # Default directives
 DEFAULT_NAME = "Smile"
 DEFAULT_USERNAME = "smile"
