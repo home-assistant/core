@@ -235,16 +235,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             for state in INDICATE_ACTIVE_LOCAL_DEVICE:
                 if state in data:
                     entities.append(
-                        PwThermostatSensor(
-                            api,
-                            coordinator,
-                            entity["name"],
-                            dev_id,
-                            DEVICE_STATE,
-                            None,
+                        PwAuxDeviceSensor(
+                            api, coordinator, entity["name"], dev_id, DEVICE_STATE,
                         )
                     )
-                    _LOGGER.info("Added sensor.%s_state", "{}".format(entity["name"]))
+                    _LOGGER.info(
+                        "Added auxiliary sensor.%s_state", "{}".format(entity["name"])
+                    )
                     break
 
     async_add_entities(entities, True)
@@ -284,7 +281,7 @@ class SmileSensor(SmileGateway):
 
 
 class PwThermostatSensor(SmileSensor, Entity):
-    """Thermostat (or generic) sensor entities."""
+    """Thermostat and climate sensor entities."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type):
         """Set up the Plugwise API."""
@@ -297,17 +294,10 @@ class PwThermostatSensor(SmileSensor, Entity):
         self._entity_name = name
         self._sensor = sensor
 
-        self._state = None
-        self._model = None
-        self._unit_of_measurement = None
-        self._heating_state = False
-        self._cooling_state = False
-
-        if self._sensor_type is not None:
-            self._model = self._sensor_type[SENSOR_MAP_MODEL]
-            self._unit_of_measurement = self._sensor_type[SENSOR_MAP_UOM]
-            self._dev_class = self._sensor_type[SENSOR_MAP_DEVICE_CLASS]
-            self._icon = self._sensor_type[SENSOR_MAP_ICON]
+        self._model = self._sensor_type[SENSOR_MAP_MODEL]
+        self._unit_of_measurement = self._sensor_type[SENSOR_MAP_UOM]
+        self._dev_class = self._sensor_type[SENSOR_MAP_DEVICE_CLASS]
+        self._icon = self._sensor_type[SENSOR_MAP_ICON]
 
         if self._dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
@@ -329,35 +319,67 @@ class PwThermostatSensor(SmileSensor, Entity):
             self.async_write_ha_state()
             return
 
-        if self._sensor in data:
-            if data[self._sensor] is not None:
-                measurement = data[self._sensor]
-                if self._sensor == "battery" or self._sensor == "valve_position":
-                    measurement = measurement * 100
-                if self._unit_of_measurement == UNIT_PERCENTAGE:
-                    measurement = int(measurement)
-                self._state = measurement
+        if data.get(self._sensor) is not None:
+            measurement = data[self._sensor]
+            if self._sensor == "battery" or self._sensor == "valve_position":
+                measurement = measurement * 100
+            if self._unit_of_measurement == UNIT_PERCENTAGE:
+                measurement = int(measurement)
+            self._state = measurement
 
-        if "heating_state" in data:
-            if data["heating_state"] is not None:
-                self._heating_state = data["heating_state"]
-        if "cooling_state" in data:
-            if data["cooling_state"] is not None:
-                self._cooling_state = data["cooling_state"]
-        if self._sensor == DEVICE_STATE:
-            if self._heating_state:
-                self._state = "heating"
-            elif self._cooling_state:
-                self._state = "cooling"
-            else:
-                self._state = "idle"
+        self.async_write_ha_state()
 
-        if self._sensor_type is None:
-            self._icon = IDLE_ICON
-            if self._heating_state:
-                self._icon = FLAME_ICON
-            if self._cooling_state:
-                self._icon = COOL_ICON
+
+class PwAuxDeviceSensor(SmileSensor, Entity):
+    """Auxiliary sensor entities for the heating/cooling device."""
+
+    def __init__(self, api, coordinator, name, dev_id, sensor):
+        """Set up the Plugwise API."""
+        super().__init__(api, coordinator)
+
+        self._api = api
+        self._gateway_id = self._api.gateway_id
+        self._dev_id = dev_id
+        self._entity_name = name
+        self._sensor = sensor
+
+        self._model = None
+        self._heating_state = False
+        self._cooling_state = False
+
+        if self._dev_id == self._api.heater_id:
+            self._entity_name = "Auxiliary"
+
+        sensorname = sensor.replace("_", " ").title()
+        self._name = f"{self._entity_name} {sensorname}"
+
+        self._unique_id = f"{dev_id}-{sensor}"
+
+    def _process_data(self):
+        """Update the entity."""
+        data = self._api.get_device_data(self._dev_id)
+
+        if not data:
+            _LOGGER.error("Received no data for device %s.", self._entity_name)
+            self.async_write_ha_state()
+            return
+
+        if data.get("heating_state") is not None:
+            self._heating_state = data["heating_state"]
+        if data.get("cooling_state") is not None:
+            self._cooling_state = data["cooling_state"]
+
+        self._state = "idle"
+        if self._heating_state:
+            self._state = "heating"
+        if self._cooling_state:
+            self._state = "cooling"
+
+        self._icon = IDLE_ICON
+        if self._heating_state:
+            self._icon = FLAME_ICON
+        if self._cooling_state:
+            self._icon = COOL_ICON
 
         self.async_write_ha_state()
 
@@ -375,8 +397,6 @@ class PwPowerSensor(SmileSensor, Entity):
         self._entity_name = name
         self._dev_id = dev_id
         self._sensor = sensor
-
-        self._state = None
 
         self._model = sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
@@ -400,11 +420,10 @@ class PwPowerSensor(SmileSensor, Entity):
             self.async_write_ha_state()
             return
 
-        if self._sensor in data:
-            if data[self._sensor] is not None:
-                measurement = data[self._sensor]
-                if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-                    measurement = int(measurement / 1000)
-                self._state = measurement
+        if data.get(self._sensor) is not None:
+            measurement = data[self._sensor]
+            if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+                measurement = int(measurement / 1000)
+            self._state = measurement
 
         self.async_write_ha_state()
