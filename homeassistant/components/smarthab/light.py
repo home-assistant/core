@@ -15,7 +15,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up SmartHab covers from a config entry."""
+    """Set up SmartHab lights from a config entry."""
     hub = hass.data[DOMAIN][config_entry.entry_id][DATA_HUB]
 
     devices = await hass.async_add_executor_job(hub.get_device_list)

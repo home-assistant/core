@@ -50,7 +50,7 @@ class SmartHabCover(CoverEntity):
 
     @property
     def name(self) -> str:
-        """Return the display name of this light."""
+        """Return the display name of this cover."""
         return self._cover.label
 
     @property
