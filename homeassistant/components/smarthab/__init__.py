@@ -1,4 +1,5 @@
 """Support for SmartHab device integration."""
+import asyncio
 import logging
 
 import pysmarthab
@@ -73,5 +74,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload config entry from SmartHab integration."""
-    await hass.config_entries.async_forward_entry_unload(entry, "light")
-    await hass.config_entries.async_forward_entry_unload(entry, "cover")
+
+    result = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, "light"),
+                hass.config_entries.async_forward_entry_unload(entry, "cover"),
+            ]
+        )
+    )
+
+    if result:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return result
