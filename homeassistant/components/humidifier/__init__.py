@@ -112,9 +112,10 @@ class HumidifierEntity(ToggleEntity):
     def state_attributes(self) -> Dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features
-        data = {
-            ATTR_HUMIDITY: self.target_humidity,
-        }
+        data = {}
+
+        if self.target_humidity is not None:
+            data[ATTR_HUMIDITY] = self.target_humidity
 
         if supported_features & SUPPORT_MODES:
             data[ATTR_MODE] = self.mode
