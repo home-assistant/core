@@ -16,6 +16,7 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
     STATE_OFF,
     STATE_ON,
+    TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
@@ -67,6 +68,7 @@ SENSOR_TYPES = {
     ],
     "process": ["Process", " ", CPU_ICON, None],
     "processor_use": ["Processor use (percent)", UNIT_PERCENTAGE, CPU_ICON, None],
+    "processor_temperature": ["Processor temperature", TEMP_CELSIUS, CPU_ICON, None],
     "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None],
     "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None],
     "swap_use_percent": ["Swap use (percent)", UNIT_PERCENTAGE, "mdi:harddisk", None],
@@ -181,6 +183,21 @@ class SystemMonitorSensor(Entity):
             self._state = round(psutil.swap_memory().free / 1024 ** 2, 1)
         elif self.type == "processor_use":
             self._state = round(psutil.cpu_percent(interval=None))
+        elif self.type == "processor_temperature":
+            temps = psutil.sensors_temperatures()
+            if not temps:
+                self._state = "N/A"
+                self._unit_of_measurement = None
+            else:
+                # There might be additional keys to be added for different
+                # platforms / hardware combinations
+
+                # Raspberry 4
+                if "cpu-thermal" in temps:
+                    self._state = round(temps["cpu-thermal"][0].current, 1)
+                # Linux default
+                elif "coretemp" in temps:
+                    self._state = round(temps["coretemp"][0].current, 1)
         elif self.type == "process":
             for proc in psutil.process_iter():
                 try:
