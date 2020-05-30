@@ -12,7 +12,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -65,13 +64,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(
         SERVICE_SET_MODE,
-        make_entity_service_schema({vol.Required(ATTR_MODE): cv.string}),
+        {vol.Required(ATTR_MODE): cv.string},
         "async_set_mode",
         [SUPPORT_MODES],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
-        make_entity_service_schema({vol.Required(ATTR_HUMIDITY): vol.Coerce(int)}),
+        {vol.Required(ATTR_HUMIDITY): vol.Coerce(int)},
         "async_set_humidity",
     )
 
