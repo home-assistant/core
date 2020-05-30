@@ -119,7 +119,7 @@ async def async_setup_helpers(hass):
     await storage_collection.async_load()
 
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+        storage_collection, f"template/{DOMAIN}", DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
     collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
