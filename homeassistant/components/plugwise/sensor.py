@@ -13,11 +13,12 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_BAR,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers.entity import Entity
 
-from . import SmileSensor
+from . import SmileGateway
 from .const import (
     COOL_ICON,
     DEVICE_CLASS_GAS,
@@ -26,6 +27,7 @@ from .const import (
     DOMAIN,
     FLAME_ICON,
     IDLE_ICON,
+    UNIT_LUMEN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,30 +38,40 @@ ATTR_TEMPERATURE = [
     DEVICE_CLASS_TEMPERATURE,
     "mdi:thermometer",
 ]
-ATTR_BATTERY_LEVEL = ["Charge", "%", DEVICE_CLASS_BATTERY, "mdi:battery-high"]
+ATTR_BATTERY_LEVEL = [
+    "Charge",
+    UNIT_PERCENTAGE,
+    DEVICE_CLASS_BATTERY,
+    "mdi:battery-high",
+]
 ATTR_ILLUMINANCE = [
     "Illuminance",
-    "lm",
+    UNIT_LUMEN,
     DEVICE_CLASS_ILLUMINANCE,
     "mdi:lightbulb-on-outline",
 ]
 ATTR_PRESSURE = ["Pressure", PRESSURE_BAR, DEVICE_CLASS_PRESSURE, "mdi:water"]
-SENSOR_MAP = {
+
+TEMP_SENSOR_MAP = {
     "setpoint": ATTR_TEMPERATURE,
     "temperature": ATTR_TEMPERATURE,
     "intended_boiler_temperature": ATTR_TEMPERATURE,
-    "battery": ATTR_BATTERY_LEVEL,
-    "water_pressure": ATTR_PRESSURE,
     "temperature_difference": ATTR_TEMPERATURE,
+    "outdoor_temperature": ATTR_TEMPERATURE,
+    "water_temperature": ATTR_TEMPERATURE,
+    "return_temperature": ATTR_TEMPERATURE,
+}
+
+ENERGY_SENSOR_MAP = {
     "electricity_consumed": [
         "Current Consumed Power",
-        "W",
+        POWER_WATT,
         DEVICE_CLASS_POWER,
         "mdi:flash",
     ],
     "electricity_produced": [
         "Current Produced Power",
-        "W",
+        POWER_WATT,
         DEVICE_CLASS_POWER,
         "mdi:flash",
     ],
@@ -71,23 +83,19 @@ SENSOR_MAP = {
     ],
     "electricity_produced_interval": [
         "Produced Power Interval",
-        "Wh",
+        ENERGY_WATT_HOUR,
         DEVICE_CLASS_POWER,
         "mdi:flash",
     ],
-    "outdoor_temperature": ATTR_TEMPERATURE,
-    "illuminance": ATTR_ILLUMINANCE,
-    "water_temperature": ATTR_TEMPERATURE,
-    "return_temperature": ATTR_TEMPERATURE,
     "electricity_consumed_off_peak_point": [
         "Current Consumed Power (off peak)",
-        "W",
+        POWER_WATT,
         DEVICE_CLASS_POWER,
         "mdi:flash",
     ],
     "electricity_consumed_peak_point": [
         "Current Consumed Power",
-        "W",
+        POWER_WATT,
         DEVICE_CLASS_POWER,
         "mdi:flash",
     ],
@@ -151,8 +159,24 @@ SENSOR_MAP = {
         DEVICE_CLASS_POWER,
         "mdi:gauge",
     ],
-    "valve_position": ["Valve Position", "%", DEVICE_CLASS_VALVE, "mdi:valve"],
-    "modulation_level": ["Heater Modulation Level", "%", "modulation", "mdi:percent"],
+}
+
+MISC_SENSOR_MAP = {
+    "battery": ATTR_BATTERY_LEVEL,
+    "illuminance": ATTR_ILLUMINANCE,
+    "modulation_level": [
+        "Heater Modulation Level",
+        UNIT_PERCENTAGE,
+        "modulation",
+        "mdi:percent",
+    ],
+    "valve_position": [
+        "Valve Position",
+        UNIT_PERCENTAGE,
+        DEVICE_CLASS_VALVE,
+        "mdi:valve",
+    ],
+    "water_pressure": ATTR_PRESSURE,
 }
 
 INDICATE_ACTIVE_LOCAL_DEVICE = [
@@ -171,7 +195,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     single_thermostat = api.single_master_thermostat()
     for dev_id, entity in all_devices.items():
         data = api.get_device_data(dev_id)
-        for sensor, sensor_type in SENSOR_MAP.items():
+        for sensor, sensor_type in {
+            **TEMP_SENSOR_MAP,
+            **ENERGY_SENSOR_MAP,
+            **MISC_SENSOR_MAP,
+        }.items():
             if sensor in data:
                 if data[sensor] is None:
                     continue
@@ -223,6 +251,39 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     break
 
     async_add_entities(entities, True)
+
+
+class SmileSensor(SmileGateway):
+    """Represent Smile Sensors."""
+
+    def __init__(self, api, coordinator):
+        """Initialise the sensor."""
+        super().__init__(api, coordinator)
+
+        self._dev_class = None
+        self._state = None
+        self._unit_of_measurement = None
+
+    @property
+    def device_class(self):
+        """Device class of this entity."""
+        if not self._dev_class:
+            return None
+        return self._dev_class
+
+    @property
+    def state(self):
+        """Device class of this entity."""
+        if not self._state:
+            return None
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        if not self._unit_of_measurement:
+            return None
+        return self._unit_of_measurement
 
 
 class PwThermostatSensor(SmileSensor, Entity):

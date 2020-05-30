@@ -23,7 +23,10 @@ CONF_SOLAR = "solar"
 CONF_GAS = "gas"
 
 ATTR_ILLUMINANCE = "illuminance"
+UNIT_LUMEN = "lm"
+
 CURRENT_HVAC_DHW = "hot_water"
+
 DEVICE_STATE = "device_state"
 
 SCHEDULE_ON = "true"
@@ -40,4 +43,5 @@ GAS_ICON = "mdi:fire"
 POWER_ICON = "mdi:flash"
 POWER_FAILURE_ICON = "mdi:flash-off"
 SWELL_SAG_ICON = "mdi:pulse"
-VALVE_ICON = "mdi:valve"
+VALVE_OPEN_ICON = "mdi:valve-open"
+VALVE_CLOSED_ICON = "mdi:valve-closed"
