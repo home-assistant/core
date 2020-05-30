@@ -92,13 +92,13 @@ SENSOR_MAP = {
     ],
     "electricity_consumed_off_peak_cumulative": [
         "Cumulative Consumed Power (off peak)",
-        "kWh",
+        ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
         "mdi:gauge",
     ],
     "electricity_consumed_peak_cumulative": [
         "Cumulative Consumed Power",
-        "kWh",
+        ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
         "mdi:gauge",
     ],
@@ -342,7 +342,7 @@ class PwPowerSensor(SmileSensor, Entity):
         if self._sensor in data:
             if data[self._sensor] is not None:
                 measurement = data[self._sensor]
-                if self._unit_of_measurement == "kWh":
+                if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
                     measurement = int(measurement / 1000)
                 self._state = measurement
 
