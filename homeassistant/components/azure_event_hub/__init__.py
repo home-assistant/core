@@ -56,7 +56,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PAUSE_WHEN_EMPTY = 5
 ADDITIONAL_ARGS = {"logging_enable": False}
 
 
