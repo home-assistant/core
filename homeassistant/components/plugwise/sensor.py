@@ -143,7 +143,7 @@ SENSOR_MAP = {
     ],
     "net_electricity_cumulative": [
         "Cumulative net Power",
-        "kWh",
+        ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
         "mdi:gauge",
     ],
