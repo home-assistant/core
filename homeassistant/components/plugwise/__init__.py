@@ -221,7 +221,7 @@ class SmileSensor(SmileGateway):
     def device_class(self):
         """Device class of this entity."""
         if not self._dev_class:
-            pass
+            return None
         return self._dev_class
 
     @property
