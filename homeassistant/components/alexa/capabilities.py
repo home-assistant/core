@@ -1803,7 +1803,7 @@ class AlexaEqualizerController(AlexaCapability):
     """
 
     supported_locales = {"en-US"}
-    valid_sound_modes = {
+    VALID_SOUND_MODES = {
         "MOVIE",
         "MUSIC",
         "NIGHT",
@@ -1828,7 +1828,7 @@ class AlexaEqualizerController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         sound_mode = self.entity.attributes.get(media_player.ATTR_SOUND_MODE)
-        if sound_mode and sound_mode.upper() in self.valid_sound_modes:
+        if sound_mode and sound_mode.upper() in self.VALID_SOUND_MODES:
             return sound_mode.upper()
 
         return None
@@ -1851,7 +1851,7 @@ class AlexaEqualizerController(AlexaCapability):
         for sound_mode in sound_mode_list:
             sound_mode = sound_mode.upper()
 
-            if sound_mode in cls.valid_sound_modes:
+            if sound_mode in cls.VALID_SOUND_MODES:
                 input_list.append({"name": sound_mode})
 
         return input_list
