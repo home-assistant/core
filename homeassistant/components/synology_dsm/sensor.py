@@ -5,6 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_DISKS,
+    CONF_NAME,
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
@@ -77,9 +78,14 @@ class SynoNasSensor(Entity):
         monitored_device: str = None,
     ):
         """Initialize the sensor."""
+        if api._entry.data[CONF_NAME] is None:
+            base_name = BASE_NAME
+        else:
+            base_name = api._entry.data[CONF_NAME]
+
         self._api = api
         self.sensor_type = sensor_type
-        self._name = f"{BASE_NAME} {sensor_info[0]}"
+        self._name = f"{base_name} {sensor_info[0]}"
         self._unit = sensor_info[1]
         self._icon = sensor_info[2]
         self.monitored_device = monitored_device

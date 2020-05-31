@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
+    CONF_NAME,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -34,6 +35,7 @@ from .const import (
 
 CONFIG_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
