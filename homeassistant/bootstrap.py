@@ -35,7 +35,7 @@ TIMEOUT_EVENT_BOOTSTRAP = 15
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
 
-LOG_SLOW_STARTUP_INTERVAL = 60
+LOG_SLOW_STARTUP_INTERVAL = 1
 
 DEBUGGER_INTEGRATIONS = {"ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
