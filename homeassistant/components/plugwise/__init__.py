@@ -135,16 +135,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SmileGateway(Entity):
     """Represent Smile Gateway."""
 
-    def __init__(self, api, coordinator):
+    def __init__(self, api, coordinator, name, dev_id):
         """Initialise the gateway."""
         self._api = api
         self._coordinator = coordinator
+        self._name = name
+        self._dev_id = dev_id
+
         self._unique_id = None
-        self._name = None
-        self._entity_name = None
-        self._dev_id = None
         self._model = None
-        self._gateway_id = None
+
+        self._entity_name = self._name
 
     @property
     def unique_id(self):
@@ -181,8 +182,8 @@ class SmileGateway(Entity):
         if self._model is not None:
             device_information["model"] = self._model.replace("_", " ").title()
 
-        if self._dev_id != self._gateway_id:
-            device_information["via_device"] = (DOMAIN, self._gateway_id)
+        if self._dev_id != self._api.gateway_id:
+            device_information["via_device"] = (DOMAIN, self._api.gateway_id)
 
         return device_information
 

@@ -203,33 +203,40 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmileSensor(SmileGateway):
     """Represent Smile Sensors."""
 
-    def __init__(self, api, coordinator):
+    def __init__(self, api, coordinator, name, dev_id, sensor):
         """Initialise the sensor."""
-        super().__init__(api, coordinator)
+        super().__init__(api, coordinator, name, dev_id)
+
+        self._sensor = sensor
 
         self._dev_class = None
         self._state = None
         self._unit_of_measurement = None
 
+        if dev_id == self._api.heater_id:
+            self._entity_name = "Auxiliary"
+
+        sensorname = sensor.replace("_", " ").title()
+        self._name = f"{self._entity_name} {sensorname}"
+
+        if dev_id == self._api.gateway_id:
+            self._entity_name = f"Smile {self._entity_name}"
+
+        self._unique_id = f"{dev_id}-{sensor}"
+
     @property
     def device_class(self):
         """Device class of this entity."""
-        if not self._dev_class:
-            return None
         return self._dev_class
 
     @property
     def state(self):
         """Device class of this entity."""
-        if not self._state:
-            return None
         return self._state
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if not self._unit_of_measurement:
-            return None
         return self._unit_of_measurement
 
 
@@ -238,29 +245,14 @@ class PwThermostatSensor(SmileSensor, Entity):
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type):
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator)
+        super().__init__(api, coordinator, name, dev_id, sensor)
 
         self._api = api
-        self._gateway_id = self._api.gateway_id
-        self._dev_id = dev_id
         self._sensor_type = sensor_type
-        self._entity_name = name
-        self._sensor = sensor
 
         self._model = self._sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = self._sensor_type[SENSOR_MAP_UOM]
         self._dev_class = self._sensor_type[SENSOR_MAP_DEVICE_CLASS]
-
-        if self._dev_id == self._api.heater_id:
-            self._entity_name = "Auxiliary"
-
-        sensorname = sensor.replace("_", " ").title()
-        self._name = f"{self._entity_name} {sensorname}"
-
-        if self._dev_id == self._api.gateway_id:
-            self._entity_name = f"Smile {self._entity_name}"
-
-        self._unique_id = f"{dev_id}-{sensor}"
 
     @callback
     def _async_process_data(self):
@@ -288,28 +280,13 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
 
     def __init__(self, api, coordinator, name, dev_id, sensor):
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator)
+        super().__init__(api, coordinator, name, dev_id, sensor)
 
         self._api = api
-        self._gateway_id = self._api.gateway_id
-        self._dev_id = dev_id
-        self._entity_name = name
-        self._sensor = sensor
 
         self._model = None
         self._heating_state = False
         self._cooling_state = False
-
-        if self._dev_id == self._api.heater_id:
-            self._entity_name = "Auxiliary"
-
-        sensorname = sensor.replace("_", " ").title()
-        self._name = f"{self._entity_name} {sensorname}"
-
-        if self._dev_id == self._api.gateway_id:
-            self._entity_name = f"Smile {self._entity_name}"
-
-        self._unique_id = f"{dev_id}-{sensor}"
 
     @callback
     def _async_process_data(self):
@@ -340,26 +317,14 @@ class PwPowerSensor(SmileSensor, Entity):
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type, model):
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator)
+        super().__init__(api, coordinator, name, dev_id, sensor)
 
         self._api = api
-        self._gateway_id = self._api.gateway_id
         self._model = model
-        self._entity_name = name
-        self._dev_id = dev_id
-        self._sensor = sensor
 
         self._model = sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
         self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
-
-        sensorname = sensor.replace("_", " ").title()
-        self._name = f"{name} {sensorname}"
-
-        if self._dev_id == self._api.gateway_id:
-            self._entity_name = f"Smile {self._entity_name}"
-
-        self._unique_id = f"{dev_id}-{sensor}"
 
     @callback
     def _async_process_data(self):

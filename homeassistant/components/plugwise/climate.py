@@ -70,12 +70,9 @@ class PwThermostat(SmileGateway, ClimateEntity):
         self, api, coordinator, name, dev_id, loc_id, model, min_temp, max_temp
     ):
         """Set up the Plugwise API."""
-        super().__init__(api, coordinator)
+        super().__init__(api, coordinator, name, dev_id)
 
         self._api = api
-        self._gateway_id = self._api.gateway_id
-        self._name = name
-        self._dev_id = dev_id
         self._loc_id = loc_id
         self._model = model
         self._min_temp = min_temp
@@ -98,7 +95,6 @@ class PwThermostat(SmileGateway, ClimateEntity):
         self._water_pressure = None
         self._schedule_temp = None
         self._hvac_mode = None
-        self._entity_name = self._name
         self._single_thermostat = self._api.single_master_thermostat()
         self._unique_id = f"{dev_id}-climate"
 
