@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sonarr is already configured",
+            "already_configured": "Service is already configured",
             "unknown": "Unexpected error"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication"
         },
         "flow_title": "Sonarr: {name}",
@@ -14,7 +14,7 @@
                 "data": {
                     "api_key": "API Key",
                     "base_path": "Path to API",
-                    "host": "Host or IP address",
+                    "host": "Host",
                     "port": "Port",
                     "ssl": "Sonarr uses a SSL certificate",
                     "verify_ssl": "Sonarr uses a proper certificate"
