@@ -1,6 +1,8 @@
 """Test auth of websocket API."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_INVALID,
@@ -12,34 +14,52 @@ from homeassistant.components.websocket_api.const import (
     SIGNAL_WEBSOCKET_DISCONNECTED,
     URL,
 )
+from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 
 
-async def test_auth_events(
-    hass, no_auth_websocket_client, legacy_auth, hass_access_token
-):
-    """Test authenticating."""
+@pytest.fixture
+def track_connected(hass):
+    """Track connected and disconnected events."""
     connected_evt = []
+
+    @callback
+    def track_connected():
+        connected_evt.append(1)
+
     hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_WEBSOCKET_CONNECTED, lambda: connected_evt.append(1)
+        SIGNAL_WEBSOCKET_CONNECTED, track_connected
     )
     disconnected_evt = []
+
+    @callback
+    def track_disconnected():
+        disconnected_evt.append(1)
+
     hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_WEBSOCKET_DISCONNECTED, lambda: disconnected_evt.append(1)
+        SIGNAL_WEBSOCKET_DISCONNECTED, track_disconnected
     )
+
+    return {"connected": connected_evt, "disconnected": disconnected_evt}
+
+
+async def test_auth_events(
+    hass, no_auth_websocket_client, legacy_auth, hass_access_token, track_connected
+):
+    """Test authenticating."""
 
     await test_auth_active_with_token(hass, no_auth_websocket_client, hass_access_token)
     await hass.async_block_till_done()
 
-    assert len(connected_evt) == 1
-    assert not disconnected_evt
+    assert len(track_connected["connected"]) == 1
+    assert not track_connected["disconnected"]
 
     await no_auth_websocket_client.close()
     await hass.async_block_till_done()
 
-    assert len(disconnected_evt) == 1
+    assert len(track_connected["disconnected"]) == 1
 
 
 async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
@@ -59,27 +79,21 @@ async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
     assert msg["message"] == "Invalid access token or password"
 
 
-async def test_auth_events_incorrect_pass(hass, no_auth_websocket_client):
+async def test_auth_events_incorrect_pass(
+    hass, no_auth_websocket_client, track_connected
+):
     """Test authenticating."""
-    connected_evt = []
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_WEBSOCKET_CONNECTED, lambda: connected_evt.append(1)
-    )
-    disconnected_evt = []
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_WEBSOCKET_DISCONNECTED, lambda: disconnected_evt.append(1)
-    )
 
     await test_auth_via_msg_incorrect_pass(no_auth_websocket_client)
 
-    assert not connected_evt
-    assert not disconnected_evt
+    assert not track_connected["connected"]
+    assert not track_connected["disconnected"]
 
     await no_auth_websocket_client.close()
     await hass.async_block_till_done()
 
-    assert not connected_evt
-    assert not disconnected_evt
+    assert not track_connected["connected"]
+    assert not track_connected["disconnected"]
 
 
 async def test_pre_auth_only_auth_allowed(no_auth_websocket_client):
