@@ -26,7 +26,7 @@ class TestTemplateSensor:
 
     def test_template(self):
         """Test template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "sensor"):
             assert setup_component(
                 self.hass,
                 "sensor",
@@ -55,7 +55,7 @@ class TestTemplateSensor:
 
     def test_icon_template(self):
         """Test icon template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "sensor"):
             assert setup_component(
                 self.hass,
                 "sensor",
@@ -88,7 +88,7 @@ class TestTemplateSensor:
 
     def test_entity_picture_template(self):
         """Test entity_picture template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "sensor"):
             assert setup_component(
                 self.hass,
                 "sensor",
@@ -121,7 +121,7 @@ class TestTemplateSensor:
 
     def test_friendly_name_template(self):
         """Test friendly_name template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "sensor"):
             assert setup_component(
                 self.hass,
                 "sensor",
@@ -151,7 +151,7 @@ class TestTemplateSensor:
 
     def test_friendly_name_template_with_unknown_state(self):
         """Test friendly_name template with an unknown value_template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "sensor"):
             assert setup_component(
                 self.hass,
                 "sensor",
@@ -181,7 +181,7 @@ class TestTemplateSensor:
 
     def test_attribute_templates(self):
         """Test attribute_templates template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "sensor"):
             assert setup_component(
                 self.hass,
                 "sensor",
@@ -235,7 +235,7 @@ class TestTemplateSensor:
 
     def test_template_attribute_missing(self):
         """Test missing attribute template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "sensor"):
             assert setup_component(
                 self.hass,
                 "sensor",
@@ -355,7 +355,7 @@ class TestTemplateSensor:
 
     def test_setup_valid_device_class(self):
         """Test setup with valid device_class."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "sensor"):
             assert setup_component(
                 self.hass,
                 "sensor",
@@ -384,7 +384,7 @@ class TestTemplateSensor:
     def test_available_template_with_entities(self):
         """Test availability tempalates with values from other entities."""
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, "sensor"):
             assert setup_component(
                 self.hass,
                 "sensor",

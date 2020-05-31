@@ -6,6 +6,11 @@ from unittest import mock
 from homeassistant import setup
 from homeassistant.components.template import binary_sensor as template
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
+    CONF_FRIENDLY_NAME,
+    CONF_ID,
+    CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
     STATE_OFF,
@@ -52,7 +57,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                 },
             }
         }
-        with assert_setup_component(1):
+        with assert_setup_component(1, "binary_sensor"):
             assert setup.setup_component(self.hass, "binary_sensor", config)
 
     def test_setup_no_sensors(self):
@@ -106,7 +111,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_icon_template(self):
         """Test icon template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "binary_sensor"):
             assert setup.setup_component(
                 self.hass,
                 "binary_sensor",
@@ -140,7 +145,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_entity_picture_template(self):
         """Test entity_picture template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "binary_sensor"):
             assert setup.setup_component(
                 self.hass,
                 "binary_sensor",
@@ -174,7 +179,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_attribute_templates(self):
         """Test attribute_templates template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "binary_sensor"):
             assert setup.setup_component(
                 self.hass,
                 "binary_sensor",
@@ -210,7 +215,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
     )
     def test_match_all(self, _async_render):
         """Test MATCH_ALL in template."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, "binary_sensor"):
             assert setup.setup_component(
                 self.hass,
                 "binary_sensor",
@@ -238,17 +243,13 @@ class TestBinarySensorTemplate(unittest.TestCase):
             self.hass.loop,
             template.BinarySensorTemplate,
             self.hass,
-            "parent",
-            "Parent",
-            "motion",
-            template_hlpr.Template("{{ 1 > 1 }}", self.hass),
-            None,
-            None,
-            None,
-            MATCH_ALL,
-            None,
-            None,
-            None,
+            {
+                CONF_ID: "parent",
+                CONF_FRIENDLY_NAME: "Parent",
+                CONF_DEVICE_CLASS: "motion",
+                CONF_VALUE_TEMPLATE: template_hlpr.Template("{{ 1 > 1 }}", self.hass),
+                CONF_ENTITY_ID: MATCH_ALL,
+            },
         ).result()
         assert not vs.should_poll
         assert "motion" == vs.device_class
@@ -258,7 +259,9 @@ class TestBinarySensorTemplate(unittest.TestCase):
         assert not vs.is_on
 
         # pylint: disable=protected-access
-        vs._template = template_hlpr.Template("{{ 2 > 1 }}", self.hass)
+        vs._config[CONF_VALUE_TEMPLATE] = template_hlpr.Template(
+            "{{ 2 > 1 }}", self.hass
+        )
 
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
         assert vs.is_on
@@ -277,7 +280,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                 },
             }
         }
-        with assert_setup_component(1):
+        with assert_setup_component(1, "binary_sensor"):
             assert setup.setup_component(self.hass, "binary_sensor", config)
 
         self.hass.start()
@@ -299,17 +302,13 @@ class TestBinarySensorTemplate(unittest.TestCase):
             self.hass.loop,
             template.BinarySensorTemplate,
             self.hass,
-            "parent",
-            "Parent",
-            "motion",
-            template_hlpr.Template("{{ 1 > 1 }}", self.hass),
-            None,
-            None,
-            None,
-            MATCH_ALL,
-            None,
-            None,
-            None,
+            {
+                CONF_ID: "parent",
+                CONF_FRIENDLY_NAME: "Parent",
+                CONF_DEVICE_CLASS: "motion",
+                CONF_VALUE_TEMPLATE: template_hlpr.Template("{{ 1 > 1 }}", self.hass),
+                CONF_ENTITY_ID: MATCH_ALL,
+            },
         ).result()
         mock_render.side_effect = TemplateError("foo")
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
@@ -576,22 +575,22 @@ async def test_no_update_template_match_all(hass, caplog):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 5
     assert (
-        "Template binary sensor 'all_state' has no entity ids "
+        "Template binary sensor 'binary_sensor.all_state' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the value template"
     ) in caplog.text
     assert (
-        "Template binary sensor 'all_icon' has no entity ids "
+        "Template binary sensor 'binary_sensor.all_icon' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the icon template"
     ) in caplog.text
     assert (
-        "Template binary sensor 'all_entity_picture' has no entity ids "
+        "Template binary sensor 'binary_sensor.all_entity_picture' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the entity_picture template"
     ) in caplog.text
     assert (
-        "Template binary sensor 'all_attribute' has no entity ids "
+        "Template binary sensor 'binary_sensor.all_attribute' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the test_attribute template"
     ) in caplog.text
