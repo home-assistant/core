@@ -65,42 +65,33 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
 )
 
+STORAGE_SCHEMA = SENSOR_SCHEMA.extend({vol.Required(CONF_ID): cv.string})
+
 CREATE_FIELDS = {
     vol.Required(CONF_FRIENDLY_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Required(CONF_VALUE_TEMPLATE): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_ICON_TEMPLATE): str,
-    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): str,
-    vol.Optional(CONF_AVAILABILITY_TEMPLATE): str,
+    vol.Required(CONF_VALUE_TEMPLATE): vol.All(cv.template, vol.Length(min=1)),
+    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+    vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: str}),
+    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
 }
 
 UPDATE_FIELDS = {
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): str,
-    vol.Optional(CONF_ICON_TEMPLATE): str,
-    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): str,
-    vol.Optional(CONF_AVAILABILITY_TEMPLATE): str,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+    vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: str}),
+    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
 }
-
-CONVERT_TEMPLATE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
-    },
-    extra=True,
-)
 
 
 def getComponent(hass):
@@ -174,10 +165,8 @@ class BinarySensorStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-def convert_templates(hass, device: str, config: typing.Dict):
-    """Convert template strings to templates, and initialises them."""
-    config = CONVERT_TEMPLATE_SCHEMA(config)  # Converts strings to templates
-
+def init_config(hass, device: str, config: typing.Dict):
+    """Initialise templates and entities to be watched."""
     templates = {
         CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
         CONF_ICON_TEMPLATE: config.get(CONF_ICON_TEMPLATE),
@@ -210,7 +199,8 @@ class BinarySensorTemplate(BinarySensorEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, config.get(CONF_ID), hass=hass
         )
-        self._config = config
+
+        self._config = init_config(hass, self.entity_id, config)
         self._state = None
         self._icon = None
         self._entity_picture = None
@@ -227,7 +217,7 @@ class BinarySensorTemplate(BinarySensorEntity):
     @classmethod
     def from_config(cls, hass, config: typing.Dict) -> "BinarySensorTemplate":
         """Return entity instance initialized from a config."""
-        return cls(hass, convert_templates(hass, config[CONF_ID], config))
+        return cls(hass, STORAGE_SCHEMA(config))
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -256,7 +246,10 @@ class BinarySensorTemplate(BinarySensorEntity):
 
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""
-        self._config = convert_templates(self.hass, config[CONF_ID], config)
+        self._config = init_config(self.hass, config[CONF_ID], config)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, config.get(CONF_ID), hass=self.hass
+        )
         await self.async_update()
         self.async_write_ha_state()
 
@@ -401,7 +394,7 @@ class BinarySensorTemplate(BinarySensorEntity):
             self.hass,
             period,
             set_state,
-            entity_ids=self._entities,
+            entity_ids=self._config.get(CONF_ENTITY_ID),
             async_check_same_func=lambda *args: self._async_render() == state,
         )
 
