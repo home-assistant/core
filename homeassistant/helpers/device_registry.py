@@ -381,6 +381,7 @@ class DeviceRegistry:
         if data is not None:
             for device in data["devices"]:
                 devices[device["id"]] = deserialize_device_entry(device)
+            # Introduced in 0.111
             if "deleted_devices" in data:
                 for device in data["deleted_devices"]:
                     deleted_devices[device["id"]] = deserialize_device_entry(device)
