@@ -30,7 +30,12 @@ async def test_auth_events(
         SIGNAL_WEBSOCKET_DISCONNECTED, lambda: disconnected_evt.append(1)
     )
 
-    await test_auth_active_with_token(hass, no_auth_websocket_client, hass_access_token)
+    await no_auth_websocket_client.send_json(
+        {"type": TYPE_AUTH, "access_token": hass_access_token}
+    )
+
+    auth_msg = await no_auth_websocket_client.receive_json()
+    assert auth_msg["type"] == TYPE_AUTH_OK
 
     assert len(connected_evt) == 1
     assert not disconnected_evt
