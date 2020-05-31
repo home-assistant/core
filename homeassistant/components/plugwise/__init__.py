@@ -17,7 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, THERMOSTAT_ICON
+from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -142,7 +142,6 @@ class SmileGateway(Entity):
         self._unique_id = None
         self._name = None
         self._entity_name = None
-        self._icon = None
         self._dev_id = None
         self._model = None
         self._gateway_id = None
@@ -168,13 +167,6 @@ class SmileGateway(Entity):
         if not self._name:
             return None
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        if not self._icon:
-            return THERMOSTAT_ICON
-        return self._icon
 
     @property
     def device_info(self) -> Dict[str, any]:

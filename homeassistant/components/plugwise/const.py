@@ -5,7 +5,6 @@ DOMAIN = "plugwise"
 SENSOR_MAP_MODEL = 0
 SENSOR_MAP_UOM = 1
 SENSOR_MAP_DEVICE_CLASS = 2
-SENSOR_MAP_ICON = 3
 
 # Default directives
 DEFAULT_NAME = "Smile"
@@ -34,17 +33,3 @@ DEVICE_STATE = "device_state"
 
 SCHEDULE_ON = "true"
 SCHEDULE_OFF = "false"
-
-# Icons
-SWITCH_ICON = "mdi:electric-switch"
-THERMOSTAT_ICON = "mdi:thermometer"
-WATER_ICON = "mdi:water-pump"
-FLAME_ICON = "mdi:fire"
-COOL_ICON = "mdi:snowflake"
-IDLE_ICON = "mdi:circle-off-outline"
-GAS_ICON = "mdi:fire"
-POWER_ICON = "mdi:flash"
-POWER_FAILURE_ICON = "mdi:flash-off"
-SWELL_SAG_ICON = "mdi:pulse"
-VALVE_OPEN_ICON = "mdi:valve-open"
-VALVE_CLOSED_ICON = "mdi:valve-closed"

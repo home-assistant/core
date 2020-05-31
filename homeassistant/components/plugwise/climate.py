@@ -19,14 +19,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 
 from . import SmileGateway
-from .const import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    DOMAIN,
-    SCHEDULE_OFF,
-    SCHEDULE_ON,
-    THERMOSTAT_ICON,
-)
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SCHEDULE_OFF, SCHEDULE_ON
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
 HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
@@ -107,7 +100,6 @@ class PwThermostat(SmileGateway, ClimateEntity):
         self._hvac_mode = None
         self._entity_name = self._name
         self._single_thermostat = self._api.single_master_thermostat()
-        self._icon = THERMOSTAT_ICON
         self._unique_id = f"{dev_id}-climate"
 
     @property

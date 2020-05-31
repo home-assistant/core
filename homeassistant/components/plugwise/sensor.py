@@ -21,13 +21,9 @@ from homeassistant.helpers.entity import Entity
 
 from . import SmileGateway
 from .const import (
-    COOL_ICON,
     DEVICE_STATE,
     DOMAIN,
-    FLAME_ICON,
-    IDLE_ICON,
     SENSOR_MAP_DEVICE_CLASS,
-    SENSOR_MAP_ICON,
     SENSOR_MAP_MODEL,
     SENSOR_MAP_UOM,
     UNIT_LUMEN,
@@ -39,21 +35,18 @@ ATTR_TEMPERATURE = [
     "Temperature",
     TEMP_CELSIUS,
     DEVICE_CLASS_TEMPERATURE,
-    "mdi:thermometer",
 ]
 ATTR_BATTERY_LEVEL = [
     "Charge",
     UNIT_PERCENTAGE,
     DEVICE_CLASS_BATTERY,
-    "mdi:battery-high",
 ]
 ATTR_ILLUMINANCE = [
     "Illuminance",
     UNIT_LUMEN,
     DEVICE_CLASS_ILLUMINANCE,
-    "mdi:lightbulb-on-outline",
 ]
-ATTR_PRESSURE = ["Pressure", PRESSURE_BAR, DEVICE_CLASS_PRESSURE, "mdi:water"]
+ATTR_PRESSURE = ["Pressure", PRESSURE_BAR, DEVICE_CLASS_PRESSURE]
 
 TEMP_SENSOR_MAP = {
     "setpoint": ATTR_TEMPERATURE,
@@ -66,114 +59,73 @@ TEMP_SENSOR_MAP = {
 }
 
 ENERGY_SENSOR_MAP = {
-    "electricity_consumed": [
-        "Current Consumed Power",
-        POWER_WATT,
-        DEVICE_CLASS_POWER,
-        "mdi:flash",
-    ],
-    "electricity_produced": [
-        "Current Produced Power",
-        POWER_WATT,
-        DEVICE_CLASS_POWER,
-        "mdi:flash",
-    ],
+    "electricity_consumed": ["Current Consumed Power", POWER_WATT, DEVICE_CLASS_POWER],
+    "electricity_produced": ["Current Produced Power", POWER_WATT, DEVICE_CLASS_POWER],
     "electricity_consumed_interval": [
         "Consumed Power Interval",
         ENERGY_WATT_HOUR,
         DEVICE_CLASS_POWER,
-        "mdi:flash",
     ],
     "electricity_produced_interval": [
         "Produced Power Interval",
         ENERGY_WATT_HOUR,
         DEVICE_CLASS_POWER,
-        "mdi:flash",
     ],
     "electricity_consumed_off_peak_point": [
         "Current Consumed Power (off peak)",
         POWER_WATT,
         DEVICE_CLASS_POWER,
-        "mdi:flash",
     ],
     "electricity_consumed_peak_point": [
         "Current Consumed Power",
         POWER_WATT,
         DEVICE_CLASS_POWER,
-        "mdi:flash",
     ],
     "electricity_consumed_off_peak_cumulative": [
         "Cumulative Consumed Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
-        "mdi:gauge",
     ],
     "electricity_consumed_peak_cumulative": [
         "Cumulative Consumed Power",
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
-        "mdi:gauge",
     ],
     "electricity_produced_off_peak_point": [
         "Current Consumed Power (off peak)",
         POWER_WATT,
         DEVICE_CLASS_POWER,
-        "mdi:white-balance-sunny",
     ],
     "electricity_produced_peak_point": [
         "Current Consumed Power",
         POWER_WATT,
         DEVICE_CLASS_POWER,
-        "mdi:white-balance-sunny",
     ],
     "electricity_produced_off_peak_cumulative": [
         "Cumulative Consumed Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
-        "mdi:gauge",
     ],
     "electricity_produced_peak_cumulative": [
         "Cumulative Consumed Power",
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
-        "mdi:gauge",
     ],
-    "gas_consumed_interval": [
-        "Current Consumed Gas",
-        VOLUME_CUBIC_METERS,
-        None,
-        "mdi:gas-cylinder",
-    ],
-    "gas_consumed_cumulative": [
-        "Cumulative Consumed Gas",
-        VOLUME_CUBIC_METERS,
-        None,
-        "mdi:gauge",
-    ],
-    "net_electricity_point": [
-        "Current net Power",
-        POWER_WATT,
-        DEVICE_CLASS_POWER,
-        "mdi:solar-power",
-    ],
+    "gas_consumed_interval": ["Current Consumed Gas", VOLUME_CUBIC_METERS, None],
+    "gas_consumed_cumulative": ["Cumulative Consumed Gas", VOLUME_CUBIC_METERS, None],
+    "net_electricity_point": ["Current net Power", POWER_WATT, DEVICE_CLASS_POWER],
     "net_electricity_cumulative": [
         "Cumulative net Power",
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
-        "mdi:gauge",
     ],
 }
 
 MISC_SENSOR_MAP = {
     "battery": ATTR_BATTERY_LEVEL,
     "illuminance": ATTR_ILLUMINANCE,
-    "modulation_level": [
-        "Heater Modulation Level",
-        UNIT_PERCENTAGE,
-        "modulation",
-        "mdi:percent",
-    ],
-    "valve_position": ["Valve Position", UNIT_PERCENTAGE, None, "mdi:valve"],
+    "modulation_level": ["Heater Modulation Level", UNIT_PERCENTAGE, "modulation"],
+    "valve_position": ["Valve Position", UNIT_PERCENTAGE, None],
     "water_pressure": ATTR_PRESSURE,
 }
 
@@ -298,7 +250,6 @@ class PwThermostatSensor(SmileSensor, Entity):
         self._model = self._sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = self._sensor_type[SENSOR_MAP_UOM]
         self._dev_class = self._sensor_type[SENSOR_MAP_DEVICE_CLASS]
-        self._icon = self._sensor_type[SENSOR_MAP_ICON]
 
         if self._dev_id == self._api.heater_id:
             self._entity_name = "Auxiliary"
@@ -381,12 +332,6 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
         if self._cooling_state:
             self._state = "cooling"
 
-        self._icon = IDLE_ICON
-        if self._heating_state:
-            self._icon = FLAME_ICON
-        if self._cooling_state:
-            self._icon = COOL_ICON
-
         self.async_write_ha_state()
 
 
@@ -407,7 +352,6 @@ class PwPowerSensor(SmileSensor, Entity):
         self._model = sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
         self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
-        self._icon = sensor_type[SENSOR_MAP_ICON]
 
         sensorname = sensor.replace("_", " ").title()
         self._name = f"{name} {sensorname}"
