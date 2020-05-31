@@ -297,9 +297,12 @@ time_period_dict = vol.All(
             "minutes": vol.Coerce(int),
             "seconds": vol.Coerce(int),
             "milliseconds": vol.Coerce(int),
+            "microseconds": vol.Coerce(int),
         }
     ),
-    has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
+    has_at_least_one_key(
+        "days", "hours", "minutes", "seconds", "milliseconds", "microseconds"
+    ),
     lambda value: timedelta(**value),
 )
 

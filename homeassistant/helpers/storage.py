@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Type, Union
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.json import JSONEncoder as HelperJSONEncoder
 from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
 
@@ -66,7 +67,7 @@ class Store:
         key: str,
         private: bool = False,
         *,
-        encoder: Optional[Type[JSONEncoder]] = None,
+        encoder: Optional[Type[JSONEncoder]] = HelperJSONEncoder,
     ):
         """Initialize storage class."""
         self.version = version
