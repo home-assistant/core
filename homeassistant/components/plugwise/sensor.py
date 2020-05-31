@@ -243,10 +243,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             DEVICE_STATE,
                         )
                     )
-                    _LOGGER.info(
-                        "Added auxiliary sensor %s",
-                        "{}".format(device_properties["name"]),
-                    )
+                    _LOGGER.info("Added auxiliary sensor %s", device_properties["name"])
                     break
 
     async_add_entities(entities, True)
