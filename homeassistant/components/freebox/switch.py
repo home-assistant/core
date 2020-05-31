@@ -20,6 +20,7 @@ async def async_setup_entry(
     """Set up the switch."""
     router = hass.data[DOMAIN][entry.unique_id]
     async_add_entities([FreeboxWifiSwitch(router)], True)
+    async_add_entities([FreeboxLteSwitch(router)], True)
 
 
 class FreeboxWifiSwitch(SwitchEntity):
