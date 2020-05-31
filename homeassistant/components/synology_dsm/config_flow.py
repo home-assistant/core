@@ -57,7 +57,6 @@ def _user_schema_with_defaults(user_input):
 
 def _ordered_shared_schema(schema_input):
     return {
-        vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
         vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
         vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
         vol.Optional(CONF_PORT, default=schema_input.get(CONF_PORT, "")): str,
@@ -112,7 +111,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.discovered_conf:
             user_input.update(self.discovered_conf)
 
-        name = user_input[CONF_NAME]
         host = user_input[CONF_HOST]
         port = user_input.get(CONF_PORT)
         username = user_input[CONF_USERNAME]
@@ -158,7 +156,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         config_data = {
-            CONF_NAME: name,
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_SSL: use_ssl,
