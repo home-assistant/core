@@ -30,12 +30,11 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_same_state, async_track_state_change
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .common import extract_entities, initialise_templates, register_component
+from .common import attach_template_listener, extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,27 +93,18 @@ UPDATE_FIELDS = {
 }
 
 
-def getComponent(hass):
-    """Get the EntityComponent for this platform."""
-    if STORAGE_KEY not in hass.data:
-        component = EntityComponent(_LOGGER, DOMAIN, hass)
-        register_component(component)
-        hass.data[STORAGE_KEY] = component
-
-    return hass.data[STORAGE_KEY]
-
-
 async def async_setup_helpers(hass):
     """Set up the helper storage and WebSockets."""
-    component = getComponent(hass)
-
     storage_collection = BinarySensorStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
         logging.getLogger(f"{__name__}.storage_collection"),
     )
     collection.attach_entity_component_collection(
-        component, storage_collection, partial(BinarySensorTemplate.from_storage, hass)
+        hass.data[DOMAIN],
+        storage_collection,
+        partial(BinarySensorTemplate.from_storage, hass),
     )
+    attach_template_listener(hass, DOMAIN, DOMAIN, storage_collection)
 
     await storage_collection.async_load()
 
@@ -127,15 +117,16 @@ async def async_setup_helpers(hass):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up template binary sensors."""
-    component = getComponent(hass)
-
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection")
     )
 
     collection.attach_entity_component_collection(
-        component, yaml_collection, partial(BinarySensorTemplate.from_config, hass)
+        hass.data[DOMAIN],
+        yaml_collection,
+        partial(BinarySensorTemplate.from_config, hass),
     )
+    attach_template_listener(hass, DOMAIN, DOMAIN, yaml_collection)
 
     await yaml_collection.async_load(
         [{CONF_ID: id_, **cfg} for id_, cfg in config.get(CONF_SENSORS, {}).items()]
@@ -177,7 +168,6 @@ def init_config(hass, device: str, config: typing.Dict):
     attribute_templates = config.get(CONF_ATTRIBUTE_TEMPLATES, {})
 
     initialise_templates(hass, templates, attribute_templates)
-    _LOGGER.debug(config)
     config[CONF_ENTITY_ID] = extract_entities(
         device,
         "binary sensor",
