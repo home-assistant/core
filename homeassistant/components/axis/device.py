@@ -4,6 +4,7 @@ import asyncio
 
 import async_timeout
 import axis
+from axis.configuration import Configuration
 from axis.event_stream import OPERATION_INITIALIZED
 from axis.mqtt import mqtt_json_to_event
 from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
@@ -185,8 +186,8 @@ class AxisNetworkDevice:
             LOGGER.error("Unknown error connecting with Axis device on %s", self.host)
             return False
 
-        self.fw_version = self.api.vapix.params.firmware_version
-        self.product_type = self.api.vapix.params.prodtype
+        self.fw_version = self.api.vapix.firmware_version
+        self.product_type = self.api.vapix.product_type
 
         async def start_platforms():
             await asyncio.gather(
@@ -254,22 +255,12 @@ async def get_device(hass, host, port, username, password):
     """Create a Axis device."""
 
     device = axis.AxisDevice(
-        host=host, port=port, username=username, password=password, web_proto="http",
+        Configuration(host, port=port, username=username, password=password)
     )
-
-    device.vapix.initialize_params(preload_data=False)
-    device.vapix.initialize_ports()
 
     try:
         with async_timeout.timeout(15):
-
-            for vapix_call in (
-                device.vapix.initialize_api_discovery,
-                device.vapix.params.update_brand,
-                device.vapix.params.update_properties,
-                device.vapix.ports.update,
-            ):
-                await hass.async_add_executor_job(vapix_call)
+            await hass.async_add_executor_job(device.vapix.initialize)
 
         return device
 
