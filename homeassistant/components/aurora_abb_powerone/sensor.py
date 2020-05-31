@@ -75,6 +75,8 @@ async def async_setup_entry(hass, config, async_add_entities) -> None:
 class AuroraSensor(AuroraDevice):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
+    availableprev = True
+
     def __init__(self, client: AuroraSerialClient, config_entry, name, typename):
         """Initialize the sensor."""
         self._state = None
@@ -165,6 +167,7 @@ class AuroraSensor(AuroraDevice):
                 temperature_c = self.client.measure(21)
                 self._state = round(temperature_c, 1)
         except AuroraError as error:
+            self._state = None
             # aurorapy does not have different exceptions (yet) for dealing
             # with timeout vs other comms errors.
             # This means the (normal) situation of no response during darkness
@@ -177,7 +180,16 @@ class AuroraSensor(AuroraDevice):
                 _LOGGER.debug("No response from inverter (could be dark)")
             else:
                 raise error
-            self._attr_state = None
         finally:
+            self._available = bool(self._state is not None)
+            if self._available != self.availableprev:
+                if self._available:
+                    _LOGGER.info("Communication with %s back online", self._name)
+                else:
+                    _LOGGER.warning(
+                        "Communication with %s lost (could be dark)",
+                        self._name,
+                    )
+            self.availableprev = self._available
             if self.client.serline.isOpen():
                 self.client.close()

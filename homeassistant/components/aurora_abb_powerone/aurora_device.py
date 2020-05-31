@@ -33,11 +33,17 @@ class AuroraDevice(Entity):
         self._model = config_entry.data.get(ATTR_MODEL, "Model unknown")
         self.client = client
         self.device_name = config_entry.data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME)
+        self._available = True
 
     @property
     def unique_id(self) -> str:
         """Return the unique id for this device."""
         return slugify(f"{self.serialnum}_{self.type}")
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def device_info(self):
