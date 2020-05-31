@@ -5,7 +5,6 @@
       "user": {
         "title": "Synology DSM",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "Use SSL/TLS to connect to your NAS",
