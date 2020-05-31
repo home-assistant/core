@@ -93,6 +93,7 @@ async def test_camera_content_type(hass, hass_client):
         "camera",
         {"camera": [cam_config_jpg, cam_config_png, cam_config_svg, cam_config_noext]},
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 

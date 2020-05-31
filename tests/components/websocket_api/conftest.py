@@ -24,6 +24,7 @@ async def no_auth_websocket_client(hass, aiohttp_client):
     auth_ok = await ws.receive_json()
     assert auth_ok["type"] == TYPE_AUTH_REQUIRED
 
+    ws.client = client
     yield ws
 
     if not ws.closed:
