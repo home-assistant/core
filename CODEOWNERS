@@ -87,7 +87,7 @@ homeassistant/components/cups/* @fabaff
 homeassistant/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
 homeassistant/components/deconz/* @Kane610
-homeassistant/components/delijn/* @bollewolle
+homeassistant/components/delijn/* @bollewolle @Emilv2
 homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/denonavr/* @scarface-4711 @starkillerOG
 homeassistant/components/derivative/* @afaucogney
