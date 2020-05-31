@@ -28,6 +28,7 @@ class FreeboxWifiSwitch(SwitchEntity):
     def __init__(self, router: FreeboxRouter) -> None:
         """Initialize the Wifi switch."""
         self._name = "Freebox WiFi"
+        self._icon = "mdi:wifi"
         self._state = None
         self._router = router
         self._unique_id = f"{self._router.mac} {self._name}"
@@ -41,6 +42,11 @@ class FreeboxWifiSwitch(SwitchEntity):
     def name(self) -> str:
         """Return the name of the switch."""
         return self._name
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return self._icon
 
     @property
     def is_on(self) -> bool:
@@ -73,5 +79,33 @@ class FreeboxWifiSwitch(SwitchEntity):
     async def async_update(self):
         """Get the state and update it."""
         datas = await self._router.wifi.get_global_config()
+        active = datas["enabled"]
+        self._state = bool(active)
+
+
+class FreeboxLteSwitch(FreeboxWifiSwitch):
+    """Representation of a freebox LTE switch."""
+
+    def __init__(self, router: FreeboxRouter) -> None:
+        """Initialize the LTE switch."""
+        self._name = "Freebox LTE"
+        self._icon = "mdi:signal-4g"
+        self._state = None
+        self._router = router
+        self._unique_id = f"{self._router.mac} {self._name}"
+
+    async def _async_set_state(self, enabled: bool):
+        """Turn the switch on or off."""
+        lte_config = {"enabled": enabled}
+        try:
+            await self._router.connection.set_lte_config(lte_config)
+        except InsufficientPermissionsError:
+            _LOGGER.warning(
+                "Home Assistant does not have permissions to modify the Freebox LTE settings. Please refer to documentation."
+            )
+
+    async def async_update(self):
+        """Get the state and update it."""
+        datas = await self._router.connection.get_lte_config()
         active = datas["enabled"]
         self._state = bool(active)

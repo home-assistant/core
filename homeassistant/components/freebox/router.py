@@ -6,6 +6,7 @@ from typing import Dict, Optional
 
 from aiofreepybox import Freepybox
 from aiofreepybox.api.wifi import Wifi
+from aiofreepybox.api.connection import Connection
 from aiofreepybox.exceptions import HttpRequestError
 
 from homeassistant.config_entries import ConfigEntry
@@ -181,6 +182,11 @@ class FreeboxRouter:
     def wifi(self) -> Wifi:
         """Return the wifi."""
         return self._api.wifi
+
+    @property
+    def connection(self) -> Connection:
+        """Return the connection."""
+        return self._api.connection
 
 
 async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
