@@ -1,9 +1,22 @@
 """Test Axis device."""
 from copy import deepcopy
+import json
 from unittest import mock
 
 import axis as axislib
+from axis.api_discovery import URL as API_DISCOVERY_URL
+from axis.basic_device_info import URL as BASIC_DEVICE_INFO_URL
 from axis.event_stream import OPERATION_INITIALIZED
+from axis.mqtt import URL_CLIENT as MQTT_CLIENT_URL
+from axis.param_cgi import (
+    BRAND as BRAND_URL,
+    INPUT as INPUT_URL,
+    IOPORT as IOPORT_URL,
+    OUTPUT as OUTPUT_URL,
+    PROPERTIES as PROPERTIES_URL,
+    STREAM_PROFILES as STREAM_PROFILES_URL,
+)
+from axis.port_management import URL as PORT_MANAGEMENT_URL
 import pytest
 
 from homeassistant import config_entries
@@ -47,7 +60,7 @@ ENTRY_CONFIG = {
     CONF_NAME: NAME,
 }
 
-DEFAULT_API_DISCOVERY = {
+API_DISCOVERY_RESPONSE = {
     "method": "getApiList",
     "apiVersion": "1.0",
     "data": {
@@ -58,7 +71,58 @@ DEFAULT_API_DISCOVERY = {
     },
 }
 
-DEFAULT_BRAND = """root.Brand.Brand=AXIS
+API_DISCOVERY_BASIC_DEVICE_INFO = {
+    "id": "basic-device-info",
+    "version": "1.1",
+    "name": "Basic Device Information",
+}
+API_DISCOVERY_MQTT = {"id": "mqtt-client", "version": "1.0", "name": "MQTT Client API"}
+API_DISCOVERY_PORT_MANAGEMENT = {
+    "id": "io-port-management",
+    "version": "1.0",
+    "name": "IO Port Management",
+}
+
+
+BASIC_DEVICE_INFO_RESPONSE = {
+    "apiVersion": "1.1",
+    "data": {
+        "propertyList": {
+            "ProdNbr": "M1065-LW",
+            "ProdType": "Network Camera",
+            "SerialNumber": "00408C12345",
+            "Version": "9.80.1",
+        }
+    },
+}
+
+MQTT_CLIENT_RESPONSE = {
+    "apiVersion": "1.0",
+    "context": "some context",
+    "method": "getClientStatus",
+    "data": {"status": {"state": "active", "connectionStatus": "Connected"}},
+}
+
+PORT_MANAGEMENT_RESPONSE = {
+    "apiVersion": "1.0",
+    "method": "getPorts",
+    "data": {
+        "numberOfPorts": 1,
+        "items": [
+            {
+                "port": "0",
+                "configurable": False,
+                "usage": "",
+                "name": "PIR sensor",
+                "direction": "input",
+                "state": "open",
+                "normalState": "open",
+            }
+        ],
+    },
+}
+
+BRAND_RESPONSE = """root.Brand.Brand=AXIS
 root.Brand.ProdFullName=AXIS M1065-LW Network Camera
 root.Brand.ProdNbr=M1065-LW
 root.Brand.ProdShortName=AXIS M1065-LW
@@ -67,7 +131,7 @@ root.Brand.ProdVariant=
 root.Brand.WebURL=http://www.axis.com
 """
 
-DEFAULT_PORTS = """root.Input.NbrOfInputs=1
+PORTS_RESPONSE = """root.Input.NbrOfInputs=1
 root.IOPort.I0.Configurable=no
 root.IOPort.I0.Direction=input
 root.IOPort.I0.Input.Name=PIR sensor
@@ -75,7 +139,7 @@ root.IOPort.I0.Input.Trig=closed
 root.Output.NbrOfOutputs=0
 """
 
-DEFAULT_PROPERTIES = """root.Properties.API.HTTP.Version=3
+PROPERTIES_RESPONSE = """root.Properties.API.HTTP.Version=3
 root.Properties.API.Metadata.Metadata=yes
 root.Properties.API.Metadata.Version=1.0
 root.Properties.Firmware.BuildDate=Feb 15 2019 09:42
@@ -89,15 +153,27 @@ root.Properties.System.SerialNumber=00408C12345
 """
 
 
-async def setup_axis_integration(
-    hass,
-    config=ENTRY_CONFIG,
-    options=ENTRY_OPTIONS,
-    api_discovery=DEFAULT_API_DISCOVERY,
-    brand=DEFAULT_BRAND,
-    ports=DEFAULT_PORTS,
-    properties=DEFAULT_PROPERTIES,
-):
+def vapix_session_request(session, url, **kwargs):
+    """Return data based on url."""
+    if API_DISCOVERY_URL in url:
+        return json.dumps(API_DISCOVERY_RESPONSE)
+    if BASIC_DEVICE_INFO_URL in url:
+        return json.dumps(BASIC_DEVICE_INFO_RESPONSE)
+    if MQTT_CLIENT_URL in url:
+        return json.dumps(MQTT_CLIENT_RESPONSE)
+    if PORT_MANAGEMENT_URL in url:
+        return json.dumps(PORT_MANAGEMENT_RESPONSE)
+    if BRAND_URL in url:
+        return BRAND_RESPONSE
+    if IOPORT_URL in url or INPUT_URL in url or OUTPUT_URL in url:
+        return PORTS_RESPONSE
+    if PROPERTIES_URL in url:
+        return PROPERTIES_RESPONSE
+    if STREAM_PROFILES_URL in url:
+        return ""
+
+
+async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS):
     """Create the Axis device."""
     config_entry = MockConfigEntry(
         domain=AXIS_DOMAIN,
@@ -109,25 +185,7 @@ async def setup_axis_integration(
     )
     config_entry.add_to_hass(hass)
 
-    def mock_update_api_discovery(self):
-        self.process_raw(api_discovery)
-
-    def mock_update_brand(self):
-        self.process_raw(brand)
-
-    def mock_update_ports(self):
-        self.process_raw(ports)
-
-    def mock_update_properties(self):
-        self.process_raw(properties)
-
-    with patch(
-        "axis.api_discovery.ApiDiscovery.update", new=mock_update_api_discovery
-    ), patch("axis.param_cgi.Brand.update_brand", new=mock_update_brand), patch(
-        "axis.param_cgi.Ports.update_ports", new=mock_update_ports
-    ), patch(
-        "axis.param_cgi.Properties.update_properties", new=mock_update_properties
-    ), patch(
+    with patch("axis.vapix.session_request", new=vapix_session_request), patch(
         "axis.rtsp.RTSPClient.start", return_value=True,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -144,7 +202,12 @@ async def test_device_setup(hass):
     ) as forward_entry_setup:
         device = await setup_axis_integration(hass)
 
-        entry = device.config_entry
+    assert device.api.vapix.firmware_version == "9.10.1"
+    assert device.api.vapix.product_number == "M1065-LW"
+    assert device.api.vapix.product_type == "Network Camera"
+    assert device.api.vapix.serial_number == "00408C12345"
+
+    entry = device.config_entry
 
     assert len(forward_entry_setup.mock_calls) == 3
     assert forward_entry_setup.mock_calls[0][1] == (entry, "binary_sensor")
@@ -157,20 +220,29 @@ async def test_device_setup(hass):
     assert device.serial == ENTRY_CONFIG[CONF_MAC]
 
 
+async def test_device_info(hass):
+    """Verify other path of device information works."""
+    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
+    api_discovery["data"]["apiList"].append(API_DISCOVERY_BASIC_DEVICE_INFO)
+
+    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
+        device = await setup_axis_integration(hass)
+
+    assert device.api.vapix.firmware_version == "9.80.1"
+    assert device.api.vapix.product_number == "M1065-LW"
+    assert device.api.vapix.product_type == "Network Camera"
+    assert device.api.vapix.serial_number == "00408C12345"
+
+
 async def test_device_support_mqtt(hass):
     """Successful setup."""
-    api_discovery = deepcopy(DEFAULT_API_DISCOVERY)
-    api_discovery["data"]["apiList"].append(
-        {"id": "mqtt-client", "version": "1.0", "name": "MQTT Client API"}
-    )
-    get_client_status = {"data": {"status": {"state": "active"}}}
+    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
+    api_discovery["data"]["apiList"].append(API_DISCOVERY_MQTT)
 
     mock_mqtt = await async_mock_mqtt_component(hass)
 
-    with patch(
-        "axis.mqtt.MqttClient.get_client_status", return_value=get_client_status
-    ):
-        await setup_axis_integration(hass, api_discovery=api_discovery)
+    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
+        await setup_axis_integration(hass)
 
     mock_mqtt.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
 
@@ -267,7 +339,7 @@ async def test_shutdown():
 async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
     with patch(
-        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.Unauthorized
+        "axis.vapix.session_request", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -275,7 +347,7 @@ async def test_get_device_fails(hass):
 async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
     with patch(
-        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.RequestError
+        "axis.vapix.session_request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -283,6 +355,6 @@ async def test_get_device_device_unavailable(hass):
 async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
     with patch(
-        "axis.api_discovery.ApiDiscovery.update", side_effect=axislib.AxisException
+        "axis.vapix.session_request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")
