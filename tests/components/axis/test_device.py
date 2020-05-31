@@ -14,6 +14,7 @@ from axis.param_cgi import (
     IOPORT as IOPORT_URL,
     OUTPUT as OUTPUT_URL,
     PROPERTIES as PROPERTIES_URL,
+    STREAM_PROFILES as STREAM_PROFILES_URL,
 )
 from axis.port_management import URL as PORT_MANAGEMENT_URL
 import pytest
@@ -168,6 +169,8 @@ def vapix_session_request(session, url, **kwargs):
         return PORTS_RESPONSE
     if PROPERTIES_URL in url:
         return PROPERTIES_RESPONSE
+    if STREAM_PROFILES_URL in url:
+        return ""
 
 
 async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS):
