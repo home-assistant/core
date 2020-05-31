@@ -9,6 +9,9 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 
+# pylint doesn't think DOMAIN is unused.  But it is used!
+# Might be this bug? https://github.com/PyCQA/pylint/issues/3445
+# pylint: disable=unused-import
 from .const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
