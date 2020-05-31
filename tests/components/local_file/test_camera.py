@@ -25,6 +25,7 @@ async def test_loading_file(hass, hass_client):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -57,6 +58,7 @@ async def test_file_not_readable(hass, caplog):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     assert "Could not read" in caplog.text
     assert "config_test" in caplog.text
