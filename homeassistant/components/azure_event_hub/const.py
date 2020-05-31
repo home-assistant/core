@@ -9,3 +9,5 @@ CONF_EVENT_HUB_CON_STRING = "event_hub_connection_string"
 CONF_SEND_INTERVAL = "send_interval"
 CONF_MAX_DELAY = "max_delay"
 CONF_FILTER = "filter"
+
+ADDITIONAL_ARGS = {"logging_enable": False}

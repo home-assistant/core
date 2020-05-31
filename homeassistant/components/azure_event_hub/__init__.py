@@ -1,4 +1,5 @@
 """Support for Azure Event Hubs."""
+import asyncio
 import json
 import logging
 import time
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_STATE_CHANGED,
+    MATCH_ALL,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -22,6 +23,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
 
 from .const import (
+    ADDITIONAL_ARGS,
     CONF_EVENT_HUB_CON_STRING,
     CONF_EVENT_HUB_INSTANCE_NAME,
     CONF_EVENT_HUB_NAMESPACE,
@@ -39,8 +41,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_EVENT_HUB_CON_STRING): cv.string,
-                vol.Optional(CONF_EVENT_HUB_NAMESPACE): cv.string,
+                vol.Exclusive(CONF_EVENT_HUB_CON_STRING, "setup_methods"): cv.string,
+                vol.Exclusive(CONF_EVENT_HUB_NAMESPACE, "setup_methods"): cv.string,
                 vol.Optional(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
                 vol.Optional(CONF_EVENT_HUB_SAS_POLICY): cv.string,
                 vol.Optional(CONF_EVENT_HUB_SAS_KEY): cv.string,
@@ -55,8 +57,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-ADDITIONAL_ARGS = {"logging_enable": False}
 
 
 async def async_setup(hass, yaml_config):
@@ -85,10 +85,8 @@ async def async_setup(hass, yaml_config):
         config[CONF_MAX_DELAY],
     )
 
-    instance.initialize()
-    return await instance.async_ready
-
-    encoder = JSONEncoder()
+    hass.async_create_task(instance.async_start())
+    return True
 
 
 class AzureEventHub:
@@ -105,38 +103,41 @@ class AzureEventHub:
     ):
         """Initialize the listener."""
         self.hass = hass
-        self.queue = asyncio.Queue()
+        self.queue = asyncio.PriorityQueue()
         self._client_args = client_args
         self._conn_str_client = conn_str_client
         self._entities_filter = entities_filter
         self._send_interval = send_interval
         self._max_delay = max_delay + send_interval
-        self.async_ready = asyncio.Future()
-        self._remove_listener = None
+        self._listener_remover = None
+        self._next_send_remover = None
         self.shutdown = False
 
-    def initialize(self):
-        """Initialize the recorder, suppress logging and register the callbacks and do the first send."""
+    async def async_start(self):
+        """Start the recorder, suppress logging and register the callbacks and do the first send after five seconds, to capture the startup events."""
         # suppress the INFO and below logging on the underlying packages, they are very verbose, even at INFO
         logging.getLogger("uamqp").setLevel(logging.WARNING)
         logging.getLogger("azure.eventhub").setLevel(logging.WARNING)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
-        self._remove_listener = self.hass.bus.async_listen(MATCH_ALL, self.async_listen)
-        self.hass.async_run_job(self.async_send, None)
-        self.async_ready.set_result(True)
+        self._listener_remover = self.hass.bus.async_listen(
+            MATCH_ALL, self.async_listen
+        )
+        # schedule the first send after 10 seconds to capture startup events, after that each send will schedule the next after the interval.
+        self._next_send_remover = async_call_later(self.hass, 10, self.async_send)
 
-    @callback
-    def async_shutdown(self, _: Event):
+    async def async_shutdown(self, _: Event):
         """Shut down the AEH by queueing None and calling send."""
-        self._remove_listener()
-        self.hass.async_create_task(self.queue.put((time.monotonic(), None)))
-        self.hass.async_create_task(self.async_send(None))
+        if self._next_send_remover:
+            self._next_send_remover()
+        if self._listener_remover:
+            self._listener_remover()
+        await self.queue.put((3, (time.monotonic(), None)))
+        await self.async_send(None)
 
-    @callback
-    def async_listen(self, event: Event):
+    async def async_listen(self, event: Event):
         """Listen for new messages on the bus and queue them for AEH."""
-        self.hass.async_create_task(self.queue.put((time.monotonic(), event)))
+        await self.queue.put((2, (time.monotonic(), event)))
 
     async def async_send(self, _):
         """Write preprocessed events to eventhub, with retry."""
@@ -160,34 +161,40 @@ class AzureEventHub:
         await client.close()
 
         if not self.shutdown:
-            async_call_later(self.hass, self._send_interval, self.async_send)
+            self._next_send_remover = async_call_later(
+                self.hass, self._send_interval, self.async_send
+            )
 
     async def fill_batch(self, client):
-        """Return a batch of events formatted for writing."""
+        """Return a batch of events formatted for writing.
+
+        Uses get_nowait instead of await get, because the functions batches and doesn't wait for each single event, the send function is called.
+
+        Throws ValueError on add to batch when the EventDataBatch object reaches max_size. Put the item back in the queue and the next batch will include it.
+        """
         event_batch = await client.create_batch()
         dequeue_count = 0
         dropped = 0
         while not self.shutdown:
             try:
-                # nowait is used because send func is run regularly
-                timestamp, event = self.queue.get_nowait()
+                _, (timestamp, event) = self.queue.get_nowait()
             except asyncio.QueueEmpty:
                 break
             dequeue_count += 1
-
             if not event:
                 self.shutdown = True
                 break
-
             event_data = self._event_to_filtered_event_data(event)
-            if event_data:
-                if time.monotonic() - timestamp <= self._max_delay:
-                    try:
-                        event_batch.add(event_data)
-                    except ValueError:
-                        break  # EventDataBatch object reaches max_size.
-                else:
-                    dropped += 1
+            if not event_data:
+                continue
+            if time.monotonic() - timestamp <= self._max_delay:
+                try:
+                    event_batch.add(event_data)
+                except ValueError:
+                    self.queue.put_nowait((1, (timestamp, event)))
+                    break
+            else:
+                dropped += 1
 
         if dropped:
             _LOGGER.warning(
@@ -197,7 +204,7 @@ class AzureEventHub:
         return event_batch, dequeue_count
 
     def _event_to_filtered_event_data(self, event: Event):
-        """Send states to Event Hub."""
+        """Filter event states and create EventData object."""
         state = event.data.get("new_state")
         if (
             state is None
@@ -213,5 +220,4 @@ class AzureEventHub:
             return EventHubProducerClient.from_connection_string(
                 **self._client_args, **ADDITIONAL_ARGS
             )
-        else:
-            return EventHubProducerClient(**self._client_args, **ADDITIONAL_ARGS)
+        return EventHubProducerClient(**self._client_args, **ADDITIONAL_ARGS)
