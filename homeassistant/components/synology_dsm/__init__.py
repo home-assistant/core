@@ -4,6 +4,7 @@ from datetime import timedelta
 from synology_dsm import SynologyDSM
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
+from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
 import voluptuous as vol
 
