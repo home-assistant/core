@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -31,6 +32,7 @@ from .const import (
     CONF_WAKE_ON_START,
     DATA_LISTENER,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VERIFY_SSL,
     DEFAULT_WAKE_ON_START,
     DOMAIN,
     ICONS,
@@ -49,6 +51,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
+                vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
             }
         )
     },
@@ -98,6 +101,7 @@ async def async_setup(hass, base_config):
             data={
                 CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
                 CONF_TOKEN: info[CONF_TOKEN],
+                CONF_VERIFY_SSL: info[CONF_VERIFY_SSL],
             },
             options={CONF_SCAN_INTERVAL: scan_interval},
         )
@@ -106,7 +110,11 @@ async def async_setup(hass, base_config):
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
-                data={CONF_USERNAME: email, CONF_PASSWORD: password},
+                data={
+                    CONF_USERNAME: email,
+                    CONF_PASSWORD: password,
+                    CONF_VERIFY_SSL: config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                },
             )
         )
         hass.data.setdefault(DOMAIN, {})
@@ -119,7 +127,9 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data.setdefault(DOMAIN, {})
     config = config_entry.data
-    websession = aiohttp_client.async_get_clientsession(hass)
+    websession = aiohttp_client.async_get_clientsession(
+        hass, verify_ssl=config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+    )
     email = config_entry.title
     if email in hass.data[DOMAIN] and CONF_SCAN_INTERVAL in hass.data[DOMAIN][email]:
         scan_interval = hass.data[DOMAIN][email][CONF_SCAN_INTERVAL]
@@ -150,7 +160,10 @@ async def async_setup_entry(hass, config_entry):
         "devices": defaultdict(list),
         DATA_LISTENER: [config_entry.add_update_listener(update_listener)],
     }
-    _LOGGER.debug("Connected to the Tesla API.")
+    _LOGGER.debug(
+        "Connected to the Tesla API with verify_ssl: %s.",
+        config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+    )
     all_devices = entry_data["controller"].get_homeassistant_components()
 
     if not all_devices:

@@ -5,6 +5,7 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.tesla.const import (
     CONF_WAKE_ON_START,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VERIFY_SSL,
     DEFAULT_WAKE_ON_START,
     DOMAIN,
     MIN_SCAN_INTERVAL,
@@ -15,6 +16,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     HTTP_NOT_FOUND,
 )
 
@@ -48,6 +50,7 @@ async def test_form(hass):
     assert result2["data"] == {
         CONF_TOKEN: "test-refresh-token",
         CONF_ACCESS_TOKEN: "test-access-token",
+        CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -123,12 +126,17 @@ async def test_import(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_PASSWORD: "test-password", CONF_USERNAME: "test-username"},
+            data={
+                CONF_PASSWORD: "test-password",
+                CONF_USERNAME: "test-username",
+                CONF_VERIFY_SSL: False,
+            },
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"][CONF_ACCESS_TOKEN] == "test-access-token"
     assert result["data"][CONF_TOKEN] == "test-refresh-token"
+    assert result["data"][CONF_VERIFY_SSL] is False
     assert result["description_placeholders"] is None
 
 

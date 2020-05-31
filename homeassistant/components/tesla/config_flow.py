@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -18,6 +19,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import (
     CONF_WAKE_ON_START,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VERIFY_SSL,
     DEFAULT_WAKE_ON_START,
     DOMAIN,
     MIN_SCAN_INTERVAL,
@@ -26,7 +28,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+    }
 )
 
 
@@ -128,7 +134,9 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     config = {}
-    websession = aiohttp_client.async_get_clientsession(hass)
+    websession = aiohttp_client.async_get_clientsession(
+        hass, verify_ssl=data[CONF_VERIFY_SSL]
+    )
     try:
         controller = TeslaAPI(
             websession,
@@ -146,6 +154,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
         raise CannotConnect()
     _LOGGER.debug("Credentials successfully connected to the Tesla API")
+    config[CONF_VERIFY_SSL] = data[CONF_VERIFY_SSL]
     return config
 
 

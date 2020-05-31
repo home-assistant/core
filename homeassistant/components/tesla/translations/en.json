@@ -10,7 +10,8 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Email"
+                    "username": "Email",
+                    "verify_ssl": "Verify SSL certificate"
                 },
                 "description": "Please enter your information.",
                 "title": "Tesla - Configuration"
