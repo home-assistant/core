@@ -124,9 +124,9 @@ class SynoApi:
 
         self.dsm: SynologyDSM = None
         self.information: SynoDSMInformation = None
+        self.network: SynoDSMNetwork = None
         self.utilisation: SynoCoreUtilization = None
         self.storage: SynoStorage = None
-        self.network: SynoDSMNetwork = None
 
         self._unsub_dispatcher = None
 
