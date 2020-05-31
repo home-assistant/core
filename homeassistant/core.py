@@ -316,7 +316,6 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         task = None
-        _LOGGER.info("async_add_job: %s", target, exc_info=True)
 
         # Check for partials to properly determine if coroutine function
         check_target = target
