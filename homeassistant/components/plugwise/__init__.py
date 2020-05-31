@@ -10,7 +10,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -196,10 +196,13 @@ class SmileGateway(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._process_data()
-        self.async_on_remove(self._coordinator.async_add_listener(self._process_data))
+        self._async_process_data()
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self._async_process_data)
+        )
 
-    def _process_data(self):
+    @callback
+    def _async_process_data(self):
         """Interpret and process API data."""
         raise NotImplementedError
 

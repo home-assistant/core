@@ -16,6 +16,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from . import SmileGateway
@@ -229,7 +230,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             sensor_type,
                         )
                     )
-                _LOGGER.info("Added sensor %s", device_properties["name"])
 
         if single_thermostat is False:
             for state in INDICATE_ACTIVE_LOCAL_DEVICE:
@@ -243,7 +243,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             DEVICE_STATE,
                         )
                     )
-                    _LOGGER.info("Added auxiliary sensor %s", device_properties["name"])
                     break
 
     async_add_entities(entities, True)
@@ -312,7 +311,8 @@ class PwThermostatSensor(SmileSensor, Entity):
 
         self._unique_id = f"{dev_id}-{sensor}"
 
-    def _process_data(self):
+    @callback
+    def _async_process_data(self):
         """Update the entity."""
         data = self._api.get_device_data(self._dev_id)
 
@@ -360,7 +360,8 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
 
         self._unique_id = f"{dev_id}-{sensor}"
 
-    def _process_data(self):
+    @callback
+    def _async_process_data(self):
         """Update the entity."""
         data = self._api.get_device_data(self._dev_id)
 
@@ -416,7 +417,8 @@ class PwPowerSensor(SmileSensor, Entity):
 
         self._unique_id = f"{dev_id}-{sensor}"
 
-    def _process_data(self):
+    @callback
+    def _async_process_data(self):
         """Update the entity."""
         data = self._api.get_device_data(self._dev_id)
 

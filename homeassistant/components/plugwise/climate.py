@@ -16,6 +16,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import callback
 
 from . import SmileGateway
 from .const import (
@@ -233,7 +234,8 @@ class PwThermostat(SmileGateway, ClimateEntity):
         except Smile.PlugwiseError:
             _LOGGER.error("Error while communicating to device")
 
-    def _process_data(self):
+    @callback
+    def _async_process_data(self):
         """Update the data for this climate device."""
         climate_data = self._api.get_device_data(self._dev_id)
         heater_central_data = self._api.get_device_data(self._api.heater_id)
