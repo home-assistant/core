@@ -1240,7 +1240,7 @@ class ModesTrait(_Trait):
             )
 
             return
-        elif self.state.domain != media_player.DOMAIN:
+        if self.state.domain != media_player.DOMAIN:
             _LOGGER.info(
                 "Received an Options command for unrecognised domain %s",
                 self.state.domain,
