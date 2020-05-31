@@ -8,9 +8,11 @@ import voluptuous as vol
 from homeassistant import core as ha
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
     ENTITY_MATCH_ALL,
@@ -73,6 +75,7 @@ GROUP_SCHEMA = vol.All(
             CONF_NAME: cv.string,
             CONF_ICON: cv.icon,
             CONF_ALL: cv.boolean,
+            vol.Optional(CONF_DEVICE_CLASS): cv.string,
         }
     )
 )
@@ -332,11 +335,18 @@ async def _async_process_config(hass, config, component):
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         mode = conf.get(CONF_ALL)
+        device_class = conf.get(CONF_DEVICE_CLASS)
 
         # Don't create tasks and await them all. The order is important as
         # groups get a number based on creation order.
         await Group.async_create_group(
-            hass, name, entity_ids, icon=icon, object_id=object_id, mode=mode
+            hass,
+            name,
+            entity_ids,
+            icon=icon,
+            object_id=object_id,
+            mode=mode,
+            device_class=device_class,
         )
 
 
@@ -352,6 +362,7 @@ class Group(Entity):
         user_defined=True,
         entity_ids=None,
         mode=None,
+        device_class=None,
     ):
         """Initialize a group.
 
@@ -374,6 +385,7 @@ class Group(Entity):
         self._order = order
         self._assumed_state = False
         self._async_unsub_state_changed = None
+        self._device_class = device_class
 
     @staticmethod
     def create_group(
@@ -384,11 +396,19 @@ class Group(Entity):
         icon=None,
         object_id=None,
         mode=None,
+        device_class=None,
     ):
         """Initialize a group."""
         return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
-                hass, name, entity_ids, user_defined, icon, object_id, mode
+                hass,
+                name,
+                entity_ids,
+                user_defined,
+                icon,
+                object_id,
+                mode,
+                device_class,
             ),
             hass.loop,
         ).result()
@@ -402,6 +422,7 @@ class Group(Entity):
         icon=None,
         object_id=None,
         mode=None,
+        device_class=None,
     ):
         """Initialize a group.
 
@@ -415,6 +436,7 @@ class Group(Entity):
             user_defined=user_defined,
             entity_ids=entity_ids,
             mode=mode,
+            device_class=device_class,
         )
 
         group.entity_id = async_generate_entity_id(
@@ -467,6 +489,8 @@ class Group(Entity):
         data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
         if not self.user_defined:
             data[ATTR_AUTO] = True
+        if self._device_class is not None:
+            data[ATTR_DEVICE_CLASS] = self._device_class
         return data
 
     @property
