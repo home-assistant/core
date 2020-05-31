@@ -1141,7 +1141,7 @@ class ModesTrait(_Trait):
         if domain == input_select.DOMAIN:
             return True
 
-        if domain == media_player.DOMAIN:
+        if domain != media_player.DOMAIN:
             return False
 
         return (
