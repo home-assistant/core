@@ -1,8 +1,5 @@
 """The Aurora ABB Powerone PV inverter sensor integration."""
 
-# TODO default update rate for temperature sensor should be slower.
-# TODO (maybe) Extra sensors (grid voltage, frequency, etc)
-#
 # Reference info:
 # https://s1.solacity.com/docs/PVI-3.0-3.6-4.2-OUTD-US%20Manual.pdf
 # http://www.drhack.it/images/PDF/AuroraCommunicationProtocol_4_2.pdf

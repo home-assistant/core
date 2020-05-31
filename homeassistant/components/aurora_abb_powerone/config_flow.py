@@ -138,8 +138,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Only show the debug option if debugging is active.
         if _LOGGER.level == DEBUG:
             config_options[vol.Required(CONF_USEDUMMYONFAIL, default=False)] = bool
-        DATA_SCHEMA = vol.Schema(config_options)
+        schema = vol.Schema(config_options)
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
