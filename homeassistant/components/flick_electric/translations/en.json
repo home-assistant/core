@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "That account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Client ID (Optional)",
+                    "client_secret": "Client Secret (Optional)",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Flick Login Credentials"
+            }
+        }
+    },
+    "title": "Flick Electric"
+}

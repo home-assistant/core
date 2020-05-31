@@ -1,11 +1,16 @@
-"""Test homeassistant distance utility functions."""
+"""Test Home Assistant distance utility functions."""
 
 import pytest
 
+from homeassistant.const import (
+    LENGTH_FEET,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+    LENGTH_MILES,
+)
 import homeassistant.util.distance as distance_util
-from homeassistant.const import (LENGTH_KILOMETERS, LENGTH_METERS, LENGTH_FEET,
-                                 LENGTH_MILES)
-INVALID_SYMBOL = 'bob'
+
+INVALID_SYMBOL = "bob"
 VALID_SYMBOL = LENGTH_KILOMETERS
 
 
@@ -29,17 +34,15 @@ def test_convert_invalid_unit():
 def test_convert_nonnumeric_value():
     """Test exception is thrown for nonnumeric type."""
     with pytest.raises(TypeError):
-        distance_util.convert('a', LENGTH_KILOMETERS, LENGTH_METERS)
+        distance_util.convert("a", LENGTH_KILOMETERS, LENGTH_METERS)
 
 
 def test_convert_from_miles():
     """Test conversion from miles to other units."""
     miles = 5
-    assert distance_util.convert(miles, LENGTH_MILES, LENGTH_KILOMETERS) == \
-        8.04672
+    assert distance_util.convert(miles, LENGTH_MILES, LENGTH_KILOMETERS) == 8.04672
     assert distance_util.convert(miles, LENGTH_MILES, LENGTH_METERS) == 8046.72
-    assert distance_util.convert(miles, LENGTH_MILES, LENGTH_FEET) == \
-        26400.0008448
+    assert distance_util.convert(miles, LENGTH_MILES, LENGTH_FEET) == 26400.0008448
 
 
 def test_convert_from_feet():
@@ -47,8 +50,7 @@ def test_convert_from_feet():
     feet = 5000
     assert distance_util.convert(feet, LENGTH_FEET, LENGTH_KILOMETERS) == 1.524
     assert distance_util.convert(feet, LENGTH_FEET, LENGTH_METERS) == 1524
-    assert distance_util.convert(feet, LENGTH_FEET, LENGTH_MILES) == \
-        0.9469694040000001
+    assert distance_util.convert(feet, LENGTH_FEET, LENGTH_MILES) == 0.9469694040000001
 
 
 def test_convert_from_kilometers():
@@ -56,8 +58,7 @@ def test_convert_from_kilometers():
     km = 5
     assert distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_FEET) == 16404.2
     assert distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_METERS) == 5000
-    assert distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_MILES) == \
-        3.106855
+    assert distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_MILES) == 3.106855
 
 
 def test_convert_from_meters():

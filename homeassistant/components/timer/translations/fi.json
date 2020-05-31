@@ -1,0 +1,9 @@
+{
+    "state": {
+        "_": {
+            "active": "aktiivinen",
+            "idle": "Lepotilassa",
+            "paused": "Pys\u00e4ytetty"
+        }
+    }
+}

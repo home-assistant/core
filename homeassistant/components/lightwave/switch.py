@@ -1,12 +1,11 @@
 """Support for LightwaveRF switches."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 
 from . import LIGHTWAVE_LINK
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Find and return LightWave switches."""
     if not discovery_info:
         return
@@ -21,7 +20,7 @@ async def async_setup_platform(
     async_add_entities(switches)
 
 
-class LWRFSwitch(SwitchDevice):
+class LWRFSwitch(SwitchEntity):
     """Representation of a LightWaveRF switch."""
 
     def __init__(self, name, device_id, lwlink):
@@ -50,10 +49,10 @@ class LWRFSwitch(SwitchDevice):
         """Turn the LightWave switch on."""
         self._state = True
         self._lwlink.turn_on_switch(self._device_id, self._name)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the LightWave switch off."""
         self._state = False
         self._lwlink.turn_off(self._device_id, self._name)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

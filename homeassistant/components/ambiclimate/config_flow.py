@@ -5,12 +5,20 @@ import ambiclimate
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from .const import (AUTH_CALLBACK_NAME, AUTH_CALLBACK_PATH, CONF_CLIENT_ID,
-                    CONF_CLIENT_SECRET, DOMAIN, STORAGE_VERSION, STORAGE_KEY)
+from homeassistant.helpers.network import get_url
 
-DATA_AMBICLIMATE_IMPL = 'ambiclimate_flow_implementation'
+from .const import (
+    AUTH_CALLBACK_NAME,
+    AUTH_CALLBACK_PATH,
+    DOMAIN,
+    STORAGE_KEY,
+    STORAGE_VERSION,
+)
+
+DATA_AMBICLIMATE_IMPL = "ambiclimate_flow_implementation"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +38,7 @@ def register_flow_implementation(hass, client_id, client_secret):
     }
 
 
-@config_entries.HANDLERS.register('ambiclimate')
+@config_entries.HANDLERS.register("ambiclimate")
 class AmbiclimateFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
@@ -45,54 +53,52 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle external yaml configuration."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason='already_setup')
+            return self.async_abort(reason="already_setup")
 
         config = self.hass.data.get(DATA_AMBICLIMATE_IMPL, {})
 
         if not config:
             _LOGGER.debug("No config")
-            return self.async_abort(reason='no_config')
+            return self.async_abort(reason="no_config")
 
         return await self.async_step_auth()
 
     async def async_step_auth(self, user_input=None):
         """Handle a flow start."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason='already_setup')
+            return self.async_abort(reason="already_setup")
 
         errors = {}
 
         if user_input is not None:
-            errors['base'] = 'follow_link'
+            errors["base"] = "follow_link"
 
         if not self._registered_view:
             self._generate_view()
 
         return self.async_show_form(
-            step_id='auth',
-            description_placeholders={'authorization_url':
-                                      await self._get_authorize_url(),
-                                      'cb_url': self._cb_url()},
+            step_id="auth",
+            description_placeholders={
+                "authorization_url": await self._get_authorize_url(),
+                "cb_url": self._cb_url(),
+            },
             errors=errors,
         )
 
     async def async_step_code(self, code=None):
         """Received code for authentication."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason='already_setup')
+            return self.async_abort(reason="already_setup")
 
         token_info = await self._get_token_info(code)
 
         if token_info is None:
-            return self.async_abort(reason='access_token')
+            return self.async_abort(reason="access_token")
 
         config = self.hass.data[DATA_AMBICLIMATE_IMPL].copy()
-        config['callback_url'] = self._cb_url()
+        config["callback_url"] = self._cb_url()
 
-        return self.async_create_entry(
-            title="Ambiclimate",
-            data=config,
-        )
+        return self.async_create_entry(title="Ambiclimate", data=config)
 
     async def _get_token_info(self, code):
         oauth = self._generate_oauth()
@@ -116,15 +122,15 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         clientsession = async_get_clientsession(self.hass)
         callback_url = self._cb_url()
 
-        oauth = ambiclimate.AmbiclimateOAuth(config.get(CONF_CLIENT_ID),
-                                             config.get(CONF_CLIENT_SECRET),
-                                             callback_url,
-                                             clientsession)
-        return oauth
+        return ambiclimate.AmbiclimateOAuth(
+            config.get(CONF_CLIENT_ID),
+            config.get(CONF_CLIENT_SECRET),
+            callback_url,
+            clientsession,
+        )
 
     def _cb_url(self):
-        return '{}{}'.format(self.hass.config.api.base_url,
-                             AUTH_CALLBACK_PATH)
+        return f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}"
 
     async def _get_authorize_url(self):
         oauth = self._generate_oauth()
@@ -140,14 +146,13 @@ class AmbiclimateAuthCallbackView(HomeAssistantView):
 
     async def get(self, request):
         """Receive authorization token."""
-        code = request.query.get('code')
+        code = request.query.get("code")
         if code is None:
             return "No code"
-        hass = request.app['hass']
+        hass = request.app["hass"]
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={'source': 'code'},
-                data=code,
-            ))
+                DOMAIN, context={"source": "code"}, data=code
+            )
+        )
         return "OK!"

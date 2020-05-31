@@ -1,30 +1,40 @@
 """Support for the CO2signal platform."""
 import logging
 
+import CO2Signal
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_TOKEN, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_TOKEN,
+    ENERGY_KILO_WATT_HOUR,
+)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 CONF_COUNTRY_CODE = "country_code"
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = 'Data provided by CO2signal'
+ATTRIBUTION = "Data provided by CO2signal"
 
-MSG_LOCATION = "Please use either coordinates or the country code. " \
-               "For the coordinates, " \
-               "you need to use both latitude and longitude."
-CO2_INTENSITY_UNIT = "CO2eq/kWh"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TOKEN): cv.string,
-    vol.Inclusive(CONF_LATITUDE, 'coords', msg=MSG_LOCATION): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coords', msg=MSG_LOCATION): cv.longitude,
-    vol.Optional(CONF_COUNTRY_CODE): cv.string,
-})
+MSG_LOCATION = (
+    "Please use either coordinates or the country code. "
+    "For the coordinates, "
+    "you need to use both latitude and longitude."
+)
+CO2_INTENSITY_UNIT = f"CO2eq/{ENERGY_KILO_WATT_HOUR}"
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Inclusive(CONF_LATITUDE, "coords", msg=MSG_LOCATION): cv.latitude,
+        vol.Inclusive(CONF_LONGITUDE, "coords", msg=MSG_LOCATION): cv.longitude,
+        vol.Optional(CONF_COUNTRY_CODE): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -38,10 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devs = []
 
-    devs.append(CO2Sensor(token,
-                          country_code,
-                          lat,
-                          lon))
+    devs.append(CO2Sensor(token, country_code, lat, lon))
     add_entities(devs, True)
 
 
@@ -59,11 +66,9 @@ class CO2Sensor(Entity):
         if country_code is not None:
             device_name = country_code
         else:
-            device_name = '{lat}/{lon}'\
-                .format(lat=round(self._latitude, 2),
-                        lon=round(self._longitude, 2))
+            device_name = f"{round(self._latitude, 2)}/{round(self._longitude, 2)}"
 
-        self._friendly_name = 'CO2 intensity - {}'.format(device_name)
+        self._friendly_name = f"CO2 intensity - {device_name}"
 
     @property
     def name(self):
@@ -73,7 +78,7 @@ class CO2Sensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return 'mdi:periodic-table-co2'
+        return "mdi:periodic-table-co2"
 
     @property
     def state(self):
@@ -92,16 +97,16 @@ class CO2Sensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        import CO2Signal
 
         _LOGGER.debug("Update data for %s", self._friendly_name)
 
         if self._country_code is not None:
             self._data = CO2Signal.get_latest_carbon_intensity(
-                self._token, country_code=self._country_code)
+                self._token, country_code=self._country_code
+            )
         else:
             self._data = CO2Signal.get_latest_carbon_intensity(
-                self._token,
-                latitude=self._latitude, longitude=self._longitude)
+                self._token, latitude=self._latitude, longitude=self._longitude
+            )
 
         self._data = round(self._data, 2)

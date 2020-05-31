@@ -1,11 +1,30 @@
 {
     "alerts": [
         {
-            "description": "...BEACH HAZARDS STATEMENT REMAINS IN EFFECT UNTIL 9 PM PDT THIS\nEVENING...\n* HAZARDS...STRONG RIP CURRENTS AND LARGE SHORE BREAK.\n* TIMING...THROUGH THIS EVENING.\n* LOCATION...COASTLINE FROM SONOMA COUNTY SOUTH THROUGH MONTEREY\nCOUNTY. IN PARTICULAR SOUTHWEST FACING BEACHES...INCLUDING BUT\nNOT LIMITED TO...STINSON BEACH...SANTA CRUZ BOARDWALK BEACH\nAND TWIN LAKES BEACH.\n* POTENTIAL IMPACTS...STRONG RIP CURRENTS CAN PULL EVEN THE\nSTRONGEST SWIMMERS AWAY FROM SHORE. LARGE SHORE BREAK CAN\nRESULT IN SERIOUS NECK AND BACK INJURIES.\n",
-            "expires": 1464926400,
-            "time": 1464904560,
-            "title": "Beach Hazards Statement for San Francisco, CA",
-            "uri": "http://alerts.weather.gov/cap/wwacapget.php?x=CA1256018894B0.BeachHazardsStatement.125601952900CA.MTRCFWMTR.aba33b94542100e878a14a443e621995"
+            "title": "Winter Storm Watch",
+            "regions": [
+                "Burney Basin / Eastern Shasta County",
+                "Mountains Southwestern Shasta County to Northern Lake County",
+                "West Slope Northern Sierra Nevada",
+                "Western Plumas County/Lassen Park"
+            ],
+            "severity": "watch",
+            "time": 1554422400,
+            "expires": 1554552000,
+            "description": "...Hazardous mountain travel expected over 6000 feet Thursday through late Friday night... .Snow is expected to begin Thursday afternoon increasing in intensity during the evening hours. Heavy snow and gusty winds are forecast Friday afternoon which will lead to hazardous travel over the mountains. Snow will begin to diminish during the late evening and overnight hours Friday night into Saturday morning. ...WINTER STORM WATCH IN EFFECT FROM THURSDAY AFTERNOON THROUGH LATE FRIDAY NIGHT... * WHAT...Periods of heavy snow possible. Plan on difficult travel conditions, including during the afternoon and evening hours on Friday. Total snow accumulations of 8 to 12 inches, with localized amounts up to 2 and a half feet possible. * WHERE...Western Plumas County/Lassen Park and West Slope Northern Sierra Nevada. * WHEN...From Thursday afternoon through late Friday night. * ADDITIONAL DETAILS...Be prepared for reduced visibilities at times. PRECAUTIONARY/PREPAREDNESS ACTIONS... A Winter Storm Watch means there is potential for significant snow, sleet or ice accumulations that may impact travel. Continue to monitor the latest forecasts.\n",
+            "uri": "https://alerts.weather.gov/cap/wwacapget.php?x=CA125CF1CFB088.WinterStormWatch.125CF1FC1240CA.STOWSWSTO.1fc288d0ac8e931cb17b5f5be62efff0"
+        },
+        {
+            "title": "Red Flag Warning",
+            "regions": [
+                "Guadalupe Mountains",
+                "Southeast Plains"
+            ],
+            "severity": "warning",
+            "time": 1554300000,
+            "expires": 1554350400,
+            "description": "...RED FLAG WARNING IN EFFECT FROM 9 AM CDT /8 AM MDT/ THIS MORNING TO 11 PM CDT /10 PM MDT/ THIS EVENING FOR RELATIVE HUMIDITY OF 15% OR LESS, 20 FT WINDS OF 20 MPH OR MORE, AND HIGH TO EXTREME FIRE DANGER FOR THE GUADALUPE, DAVIS, AND APACHE MOUNTAINS, SOUTHEAST NEW MEXICO PLAINS, REEVES COUNTY AND THE UPPER TRANS PECOS, AND VAN HORN AND THE HIGHWAY 54 CORRIDOR... .Critical fire weather conditions are expected today and this evening across Southeastern New Mexico and areas south as far as the Davis and Apache Mountains. Southwest to west 20 ft winds will increase as an upper-level disturbance passes through the region. Combined with unseasonably warm temperatures, consequent low relative humidity, and cured fuels, potential for fire growth will increase. ...RED FLAG WARNING IN EFFECT FROM 9 AM CDT /8 AM MDT/ THIS MORNING TO 11 PM CDT /10 PM MDT/ THIS EVENING FOR RELATIVE HUMIDITY OF 15% OR LESS, 20 FT WINDS OF 20 MPH OR MORE, AND HIGH TO EXTREME FIRE DANGER... * WIND...Mountains...West 20 to 25 mph increasing to 30 to 40 mph in the afternoon. Plains...Southwest 20 to 25 mph. * HUMIDITY...8% to 15%. * IMPACTS...any fires that develop will likely spread rapidly. Outdoor burning is not recommended.\n",
+            "uri": "https://alerts.weather.gov/cap/wwacapget.php?x=NM125CF1CDEA3C.RedFlagWarning.125CF1DC5540NM.MAFRFWMAF.085066acdafda6aecf61d10224f5133e"
         }
     ],
     "currently": {

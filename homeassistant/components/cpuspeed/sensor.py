@@ -1,34 +1,35 @@
 """Support for displaying the current CPU speed."""
 import logging
 
+from cpuinfo import cpuinfo
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, FREQUENCY_GIGAHERTZ
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BRAND = 'Brand'
-ATTR_HZ = 'GHz Advertised'
-ATTR_ARCH = 'arch'
+ATTR_BRAND = "Brand"
+ATTR_HZ = "GHz Advertised"
+ATTR_ARCH = "arch"
 
-HZ_ACTUAL_RAW = 'hz_actual_raw'
-HZ_ADVERTISED_RAW = 'hz_advertised_raw'
+HZ_ACTUAL_RAW = "hz_actual_raw"
+HZ_ADVERTISED_RAW = "hz_advertised_raw"
 
-DEFAULT_NAME = 'CPU speed'
+DEFAULT_NAME = "CPU speed"
 
-ICON = 'mdi:pulse'
+ICON = "mdi:pulse"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CPU speed sensor."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     add_entities([CpuSpeedSensor(name)], True)
 
@@ -41,7 +42,6 @@ class CpuSpeedSensor(Entity):
         self._name = name
         self._state = None
         self.info = None
-        self._unit_of_measurement = 'GHz'
 
     @property
     def name(self):
@@ -56,21 +56,16 @@ class CpuSpeedSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        return FREQUENCY_GIGAHERTZ
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.info is not None:
-            attrs = {
-                ATTR_ARCH: self.info['arch'],
-                ATTR_BRAND: self.info['brand'],
-            }
+            attrs = {ATTR_ARCH: self.info["arch"], ATTR_BRAND: self.info["brand"]}
 
             if HZ_ADVERTISED_RAW in self.info:
-                attrs[ATTR_HZ] = round(
-                    self.info[HZ_ADVERTISED_RAW][0] / 10 ** 9, 2
-                )
+                attrs[ATTR_HZ] = round(self.info[HZ_ADVERTISED_RAW][0] / 10 ** 9, 2)
             return attrs
 
     @property
@@ -80,12 +75,9 @@ class CpuSpeedSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        from cpuinfo import cpuinfo
 
         self.info = cpuinfo.get_cpu_info()
         if HZ_ACTUAL_RAW in self.info:
-            self._state = round(
-                float(self.info[HZ_ACTUAL_RAW][0]) / 10 ** 9, 2
-            )
+            self._state = round(float(self.info[HZ_ACTUAL_RAW][0]) / 10 ** 9, 2)
         else:
             self._state = None

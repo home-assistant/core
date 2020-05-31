@@ -4,12 +4,15 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    SIGNAL_WEBSOCKET_CONNECTED, SIGNAL_WEBSOCKET_DISCONNECTED,
-    DATA_CONNECTIONS)
+    DATA_CONNECTIONS,
+    SIGNAL_WEBSOCKET_CONNECTED,
+    SIGNAL_WEBSOCKET_DISCONNECTED,
+)
+
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the API streams platform."""
     entity = APICount()
 
@@ -25,10 +28,16 @@ class APICount(Entity):
 
     async def async_added_to_hass(self):
         """Added to hass."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_WEBSOCKET_CONNECTED, self._update_count)
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_WEBSOCKET_DISCONNECTED, self._update_count)
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_WEBSOCKET_CONNECTED, self._update_count
+            )
+        )
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_WEBSOCKET_DISCONNECTED, self._update_count
+            )
+        )
         self._update_count()
 
     @property
@@ -49,4 +58,4 @@ class APICount(Entity):
     @callback
     def _update_count(self):
         self.count = self.hass.data.get(DATA_CONNECTIONS, 0)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

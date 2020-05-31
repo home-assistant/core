@@ -1,16 +1,14 @@
 """Test event helpers."""
 # pylint: disable=protected-access
-import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import patch
 
 from astral import Astral
 import pytest
 
-from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
-import homeassistant.core as ha
+from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
+import homeassistant.core as ha
+from homeassistant.core import callback
 from homeassistant.helpers.event import (
     async_call_later,
     async_track_point_in_time,
@@ -25,9 +23,10 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.components import sun
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
@@ -52,7 +51,8 @@ async def test_track_point_in_time(hass):
     runs = []
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(1)), birthday_paulus)
+        hass, callback(lambda x: runs.append(1)), birthday_paulus
+    )
 
     _send_time_changed(hass, before_birthday)
     await hass.async_block_till_done()
@@ -68,14 +68,16 @@ async def test_track_point_in_time(hass):
     assert len(runs) == 1
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(1)), birthday_paulus)
+        hass, callback(lambda x: runs.append(1)), birthday_paulus
+    )
 
     _send_time_changed(hass, after_birthday)
     await hass.async_block_till_done()
     assert len(runs) == 2
 
     unsub = async_track_point_in_time(
-        hass, callback(lambda x: runs.append(1)), birthday_paulus)
+        hass, callback(lambda x: runs.append(1)), birthday_paulus
+    )
     unsub()
 
     _send_time_changed(hass, after_birthday)
@@ -93,17 +95,15 @@ async def test_track_state_change(hass):
     def specific_run_callback(entity_id, old_state, new_state):
         specific_runs.append(1)
 
-    async_track_state_change(
-        hass, 'light.Bowl', specific_run_callback, 'on', 'off')
+    async_track_state_change(hass, "light.Bowl", specific_run_callback, "on", "off")
 
     @ha.callback
     def wildcard_run_callback(entity_id, old_state, new_state):
         wildcard_runs.append((old_state, new_state))
 
-    async_track_state_change(hass, 'light.Bowl', wildcard_run_callback)
+    async_track_state_change(hass, "light.Bowl", wildcard_run_callback)
 
-    @asyncio.coroutine
-    def wildercard_run_callback(entity_id, old_state, new_state):
+    async def wildercard_run_callback(entity_id, old_state, new_state):
         wildercard_runs.append((old_state, new_state))
 
     async_track_state_change(hass, MATCH_ALL, wildercard_run_callback)
@@ -118,34 +118,34 @@ async def test_track_state_change(hass):
     assert wildcard_runs[-1][1] is not None
 
     # Set same state should not trigger a state change/listener
-    hass.states.async_set('light.Bowl', 'on')
+    hass.states.async_set("light.Bowl", "on")
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
     assert len(wildcard_runs) == 1
     assert len(wildercard_runs) == 1
 
     # State change off -> on
-    hass.states.async_set('light.Bowl', 'off')
+    hass.states.async_set("light.Bowl", "off")
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 2
     assert len(wildercard_runs) == 2
 
     # State change off -> off
-    hass.states.async_set('light.Bowl', 'off', {"some_attr": 1})
+    hass.states.async_set("light.Bowl", "off", {"some_attr": 1})
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 3
     assert len(wildercard_runs) == 3
 
     # State change off -> on
-    hass.states.async_set('light.Bowl', 'on')
+    hass.states.async_set("light.Bowl", "on")
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 4
     assert len(wildercard_runs) == 4
 
-    hass.states.async_remove('light.bowl')
+    hass.states.async_remove("light.bowl")
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 5
@@ -156,7 +156,7 @@ async def test_track_state_change(hass):
     assert wildercard_runs[-1][1] is None
 
     # Set state for different entity id
-    hass.states.async_set('switch.kitchen', 'on')
+    hass.states.async_set("switch.kitchen", "on")
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 5
@@ -169,16 +169,12 @@ async def test_track_template(hass):
     wildcard_runs = []
     wildercard_runs = []
 
-    template_condition = Template(
-        "{{states.switch.test.state == 'on'}}",
-        hass
-    )
+    template_condition = Template("{{states.switch.test.state == 'on'}}", hass)
     template_condition_var = Template(
-        "{{states.switch.test.state == 'on' and test == 5}}",
-        hass
+        "{{states.switch.test.state == 'on' and test == 5}}", hass
     )
 
-    hass.states.async_set('switch.test', 'off')
+    hass.states.async_set("switch.test", "off")
 
     def specific_run_callback(entity_id, old_state, new_state):
         specific_runs.append(1)
@@ -191,43 +187,42 @@ async def test_track_template(hass):
 
     async_track_template(hass, template_condition, wildcard_run_callback)
 
-    @asyncio.coroutine
-    def wildercard_run_callback(entity_id, old_state, new_state):
+    async def wildercard_run_callback(entity_id, old_state, new_state):
         wildercard_runs.append((old_state, new_state))
 
     async_track_template(
-        hass, template_condition_var, wildercard_run_callback,
-        {'test': 5})
+        hass, template_condition_var, wildercard_run_callback, {"test": 5}
+    )
 
-    hass.states.async_set('switch.test', 'on')
+    hass.states.async_set("switch.test", "on")
     await hass.async_block_till_done()
 
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
     assert len(wildercard_runs) == 1
 
-    hass.states.async_set('switch.test', 'on')
+    hass.states.async_set("switch.test", "on")
     await hass.async_block_till_done()
 
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
     assert len(wildercard_runs) == 1
 
-    hass.states.async_set('switch.test', 'off')
+    hass.states.async_set("switch.test", "off")
     await hass.async_block_till_done()
 
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
     assert len(wildercard_runs) == 1
 
-    hass.states.async_set('switch.test', 'off')
+    hass.states.async_set("switch.test", "off")
     await hass.async_block_till_done()
 
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
     assert len(wildercard_runs) == 1
 
-    hass.states.async_set('switch.test', 'on')
+    hass.states.async_set("switch.test", "on")
     await hass.async_block_till_done()
 
     assert len(specific_runs) == 2
@@ -246,26 +241,31 @@ async def test_track_same_state_simple_trigger(hass):
         thread_runs.append(1)
 
     async_track_same_state(
-        hass, period, thread_run_callback,
-        lambda _, _2, to_s: to_s.state == 'on',
-        entity_ids='light.Bowl')
+        hass,
+        period,
+        thread_run_callback,
+        lambda _, _2, to_s: to_s.state == "on",
+        entity_ids="light.Bowl",
+    )
 
     @ha.callback
     def callback_run_callback():
         callback_runs.append(1)
 
     async_track_same_state(
-        hass, period, callback_run_callback,
-        lambda _, _2, to_s: to_s.state == 'on',
-        entity_ids='light.Bowl')
+        hass,
+        period,
+        callback_run_callback,
+        lambda _, _2, to_s: to_s.state == "on",
+        entity_ids="light.Bowl",
+    )
 
-    @asyncio.coroutine
-    def coroutine_run_callback():
+    async def coroutine_run_callback():
         coroutine_runs.append(1)
 
     async_track_same_state(
-        hass, period, coroutine_run_callback,
-        lambda _, _2, to_s: to_s.state == 'on')
+        hass, period, coroutine_run_callback, lambda _, _2, to_s: to_s.state == "on"
+    )
 
     # Adding state to state machine
     hass.states.async_set("light.Bowl", "on")
@@ -293,9 +293,12 @@ async def test_track_same_state_simple_no_trigger(hass):
         callback_runs.append(1)
 
     async_track_same_state(
-        hass, period, callback_run_callback,
-        lambda _, _2, to_s: to_s.state == 'on',
-        entity_ids='light.Bowl')
+        hass,
+        period,
+        callback_run_callback,
+        lambda _, _2, to_s: to_s.state == "on",
+        entity_ids="light.Bowl",
+    )
 
     # Adding state to state machine
     hass.states.async_set("light.Bowl", "on")
@@ -330,15 +333,19 @@ async def test_track_same_state_simple_trigger_check_funct(hass):
         return True
 
     async_track_same_state(
-        hass, period, callback_run_callback,
-        entity_ids='light.Bowl', async_check_same_func=async_check_func)
+        hass,
+        period,
+        callback_run_callback,
+        entity_ids="light.Bowl",
+        async_check_same_func=async_check_func,
+    )
 
     # Adding state to state machine
     hass.states.async_set("light.Bowl", "on")
     await hass.async_block_till_done()
     assert len(callback_runs) == 0
-    assert check_func[-1][2].state == 'on'
-    assert check_func[-1][0] == 'light.bowl'
+    assert check_func[-1][2].state == "on"
+    assert check_func[-1][0] == "light.bowl"
 
     # change time to track and see if they trigger
     future = dt_util.utcnow() + period
@@ -353,8 +360,7 @@ async def test_track_time_interval(hass):
 
     utc_now = dt_util.utcnow()
     unsub = async_track_time_interval(
-        hass, lambda x: specific_runs.append(1),
-        timedelta(seconds=10)
+        hass, lambda x: specific_runs.append(1), timedelta(seconds=10)
     )
 
     _send_time_changed(hass, utc_now + timedelta(seconds=5))
@@ -384,8 +390,9 @@ async def test_track_sunrise(hass):
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {
-        sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+    assert await async_setup_component(
+        hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
+    )
 
     # Get next sunrise/sunset
     astral = Astral()
@@ -394,22 +401,22 @@ async def test_track_sunrise(hass):
 
     mod = -1
     while True:
-        next_rising = (astral.sunrise_utc(
-            utc_today + timedelta(days=mod), latitude, longitude))
+        next_rising = astral.sunrise_utc(
+            utc_today + timedelta(days=mod), latitude, longitude
+        )
         if next_rising > utc_now:
             break
         mod += 1
 
     # Track sunrise
     runs = []
-    with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
+    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
         unsub = async_track_sunrise(hass, lambda: runs.append(1))
 
     offset_runs = []
     offset = timedelta(minutes=30)
-    with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
-        unsub2 = async_track_sunrise(hass, lambda: offset_runs.append(1),
-                                     offset)
+    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+        unsub2 = async_track_sunrise(hass, lambda: offset_runs.append(1), offset)
 
     # run tests
     _send_time_changed(hass, next_rising - offset)
@@ -441,8 +448,9 @@ async def test_track_sunrise_update_location(hass):
     # Setup sun component
     hass.config.latitude = 32.87336
     hass.config.longitude = 117.22743
-    assert await async_setup_component(hass, sun.DOMAIN, {
-        sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+    assert await async_setup_component(
+        hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
+    )
 
     # Get next sunrise
     astral = Astral()
@@ -451,32 +459,29 @@ async def test_track_sunrise_update_location(hass):
 
     mod = -1
     while True:
-        next_rising = (astral.sunrise_utc(
-            utc_today + timedelta(days=mod),
-            hass.config.latitude, hass.config.longitude))
+        next_rising = astral.sunrise_utc(
+            utc_today + timedelta(days=mod), hass.config.latitude, hass.config.longitude
+        )
         if next_rising > utc_now:
             break
         mod += 1
 
     # Track sunrise
     runs = []
-    with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
+    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
         async_track_sunrise(hass, lambda: runs.append(1))
 
-    # Mimick sunrise
+    # Mimic sunrise
     _send_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     assert len(runs) == 1
 
     # Move!
-    with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
-        await hass.config.async_update(
-            latitude=40.755931,
-            longitude=-73.984606,
-        )
+    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+        await hass.config.async_update(latitude=40.755931, longitude=-73.984606)
         await hass.async_block_till_done()
 
-    # Mimick sunrise
+    # Mimic sunrise
     _send_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     # Did not increase
@@ -485,14 +490,14 @@ async def test_track_sunrise_update_location(hass):
     # Get next sunrise
     mod = -1
     while True:
-        next_rising = (astral.sunrise_utc(
-            utc_today + timedelta(days=mod),
-            hass.config.latitude, hass.config.longitude))
+        next_rising = astral.sunrise_utc(
+            utc_today + timedelta(days=mod), hass.config.latitude, hass.config.longitude
+        )
         if next_rising > utc_now:
             break
         mod += 1
 
-    # Mimick sunrise at new location
+    # Mimic sunrise at new location
     _send_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     assert len(runs) == 2
@@ -506,8 +511,9 @@ async def test_track_sunset(hass):
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {
-        sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+    assert await async_setup_component(
+        hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
+    )
 
     # Get next sunrise/sunset
     astral = Astral()
@@ -516,22 +522,22 @@ async def test_track_sunset(hass):
 
     mod = -1
     while True:
-        next_setting = (astral.sunset_utc(
-            utc_today + timedelta(days=mod), latitude, longitude))
+        next_setting = astral.sunset_utc(
+            utc_today + timedelta(days=mod), latitude, longitude
+        )
         if next_setting > utc_now:
             break
         mod += 1
 
     # Track sunset
     runs = []
-    with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
+    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
         unsub = async_track_sunset(hass, lambda: runs.append(1))
 
     offset_runs = []
     offset = timedelta(minutes=30)
-    with patch('homeassistant.util.dt.utcnow', return_value=utc_now):
-        unsub2 = async_track_sunset(
-            hass, lambda: offset_runs.append(1), offset)
+    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+        unsub2 = async_track_sunset(hass, lambda: offset_runs.append(1), offset)
 
     # Run tests
     _send_time_changed(hass, next_setting - offset)
@@ -563,10 +569,10 @@ async def test_async_track_time_change(hass):
     wildcard_runs = []
     specific_runs = []
 
-    unsub = async_track_time_change(hass,
-                                    lambda x: wildcard_runs.append(1))
+    unsub = async_track_time_change(hass, lambda x: wildcard_runs.append(1))
     unsub_utc = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), second=[0, 30])
+        hass, lambda x: specific_runs.append(1), second=[0, 30]
+    )
 
     _send_time_changed(hass, datetime(2014, 5, 24, 12, 0, 0))
     await hass.async_block_till_done()
@@ -597,8 +603,8 @@ async def test_periodic_task_minute(hass):
     specific_runs = []
 
     unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), minute='/5',
-        second=0)
+        hass, lambda x: specific_runs.append(1), minute="/5", second=0
+    )
 
     _send_time_changed(hass, datetime(2014, 5, 24, 12, 0, 0))
     await hass.async_block_till_done()
@@ -624,8 +630,8 @@ async def test_periodic_task_hour(hass):
     specific_runs = []
 
     unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), hour='/2',
-        minute=0, second=0)
+        hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
+    )
 
     _send_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
@@ -660,7 +666,8 @@ async def test_periodic_task_wrong_input(hass):
 
     with pytest.raises(ValueError):
         async_track_utc_time_change(
-            hass, lambda x: specific_runs.append(1), hour='/two')
+            hass, lambda x: specific_runs.append(1), hour="/two"
+        )
 
     _send_time_changed(hass, datetime(2014, 5, 2, 0, 0, 0))
     await hass.async_block_till_done()
@@ -672,8 +679,8 @@ async def test_periodic_task_clock_rollback(hass):
     specific_runs = []
 
     unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), hour='/2', minute=0,
-        second=0)
+        hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
+    )
 
     _send_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
@@ -707,8 +714,8 @@ async def test_periodic_task_duplicate_time(hass):
     specific_runs = []
 
     unsub = async_track_utc_time_change(
-        hass, lambda x: specific_runs.append(1), hour='/2', minute=0,
-        second=0)
+        hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
+    )
 
     _send_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
@@ -727,27 +734,27 @@ async def test_periodic_task_duplicate_time(hass):
 
 async def test_periodic_task_entering_dst(hass):
     """Test periodic task behavior when entering dst."""
-    tz = dt_util.get_time_zone('Europe/Vienna')
-    dt_util.set_default_time_zone(tz)
+    timezone = dt_util.get_time_zone("Europe/Vienna")
+    dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
     unsub = async_track_time_change(
-        hass, lambda x: specific_runs.append(1), hour=2, minute=30,
-        second=0)
+        hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+    )
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 3, 25, 1, 50, 0)))
+    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 1, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 3, 25, 3, 50, 0)))
+    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 3, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 3, 26, 1, 50, 0)))
+    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 1, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 3, 26, 2, 50, 0)))
+    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 2, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
@@ -756,31 +763,35 @@ async def test_periodic_task_entering_dst(hass):
 
 async def test_periodic_task_leaving_dst(hass):
     """Test periodic task behavior when leaving dst."""
-    tz = dt_util.get_time_zone('Europe/Vienna')
-    dt_util.set_default_time_zone(tz)
+    timezone = dt_util.get_time_zone("Europe/Vienna")
+    dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
     unsub = async_track_time_change(
-        hass, lambda x: specific_runs.append(1), hour=2, minute=30,
-        second=0)
+        hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
+    )
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 10, 28, 2, 5, 0),
-                                         is_dst=False))
+    _send_time_changed(
+        hass, timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 10, 28, 2, 55, 0),
-                                         is_dst=False))
+    _send_time_changed(
+        hass, timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 10, 28, 2, 5, 0),
-                                         is_dst=True))
+    _send_time_changed(
+        hass, timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 10, 28, 2, 55, 0),
-                                         is_dst=True))
+    _send_time_changed(
+        hass, timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
@@ -789,13 +800,15 @@ async def test_periodic_task_leaving_dst(hass):
 
 async def test_call_later(hass):
     """Test calling an action later."""
+
     def action():
         pass
+
     now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
 
-    with patch('homeassistant.helpers.event'
-               '.async_track_point_in_utc_time') as mock, \
-            patch('homeassistant.util.dt.utcnow', return_value=now):
+    with patch(
+        "homeassistant.helpers.event.async_track_point_in_utc_time"
+    ) as mock, patch("homeassistant.util.dt.utcnow", return_value=now):
         async_call_later(hass, 3, action)
 
     assert len(mock.mock_calls) == 1
@@ -807,13 +820,15 @@ async def test_call_later(hass):
 
 async def test_async_call_later(hass):
     """Test calling an action later."""
+
     def action():
         pass
+
     now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
 
-    with patch('homeassistant.helpers.event'
-               '.async_track_point_in_utc_time') as mock, \
-            patch('homeassistant.util.dt.utcnow', return_value=now):
+    with patch(
+        "homeassistant.helpers.event.async_track_point_in_utc_time"
+    ) as mock, patch("homeassistant.util.dt.utcnow", return_value=now):
         remove = async_call_later(hass, 3, action)
 
     assert len(mock.mock_calls) == 1

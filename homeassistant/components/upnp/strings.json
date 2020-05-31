@@ -1,15 +1,24 @@
 {
   "config": {
-    "title": "UPnP/IGD",
+    "flow_title": "UPnP/IGD: {name}",
     "step": {
-      "confirm": {
-        "title": "UPnP/IGD",
-        "description": "Do you want to set up UPnP/IGD?"
+      "init": {
+      },
+      "ssdp_confirm": {
+        "description": "Do you want to set up this UPnP/IGD device?"
+      },
+      "user": {
+        "data": {
+          "usn": "Device",
+          "scan_interval": "Update interval (seconds, minimal 30)"
+        }
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of UPnP/IGD is necessary.",
-      "no_devices_found": "No UPnP/IGD devices found on the network."
+      "already_configured": "UPnP/IGD is already configured",
+      "no_devices_discovered": "No UPnP/IGDs discovered",
+      "no_devices_found": "No UPnP/IGD devices found on the network.",
+      "incomplete_discovery": "Incomplete discovery"
     }
   }
 }

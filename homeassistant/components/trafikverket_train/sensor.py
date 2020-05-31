@@ -8,7 +8,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS, DEVICE_CLASS_TIMESTAMP)
+    CONF_API_KEY,
+    CONF_NAME,
+    CONF_WEEKDAY,
+    DEVICE_CLASS_TIMESTAMP,
+    WEEKDAYS,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -32,20 +37,25 @@ ATTR_DEVIATIONS = "deviations"
 ICON = "mdi:train"
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_TRAINS): [{
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Required(CONF_FROM): cv.string,
-        vol.Optional(CONF_TIME): cv.time,
-        vol.Optional(CONF_WEEKDAY, default=WEEKDAYS):
-            vol.All(cv.ensure_list, [vol.In(WEEKDAYS)])}]
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_TRAINS): [
+            {
+                vol.Required(CONF_NAME): cv.string,
+                vol.Required(CONF_TO): cv.string,
+                vol.Required(CONF_FROM): cv.string,
+                vol.Optional(CONF_TIME): cv.time,
+                vol.Optional(CONF_WEEKDAY, default=WEEKDAYS): vol.All(
+                    cv.ensure_list, [vol.In(WEEKDAYS)]
+                ),
+            }
+        ],
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the departure sensor."""
     httpsession = async_get_clientsession(hass)
     train_api = TrafikverketTrain(httpsession, config[CONF_API_KEY])
@@ -56,25 +66,30 @@ async def async_setup_platform(
             trainstops = [train[CONF_FROM], train[CONF_TO]]
             for station in trainstops:
                 if station not in station_cache:
-                    station_cache[station] = await \
-                        train_api.async_get_train_station(station)
+                    station_cache[station] = await train_api.async_get_train_station(
+                        station
+                    )
 
         except ValueError as station_error:
             if "Invalid authentication" in station_error.args[0]:
-                _LOGGER.error("Unable to set up up component: %s",
-                              station_error)
+                _LOGGER.error("Unable to set up up component: %s", station_error)
                 return
-            _LOGGER.error("Problem when trying station %s to %s. Error: %s ",
-                          train[CONF_FROM], train[CONF_TO],
-                          station_error)
+            _LOGGER.error(
+                "Problem when trying station %s to %s. Error: %s ",
+                train[CONF_FROM],
+                train[CONF_TO],
+                station_error,
+            )
             continue
 
-        sensor = TrainSensor(train_api,
-                             train[CONF_NAME],
-                             station_cache[train[CONF_FROM]],
-                             station_cache[train[CONF_TO]],
-                             train[CONF_WEEKDAY],
-                             train.get(CONF_TIME))
+        sensor = TrainSensor(
+            train_api,
+            train[CONF_NAME],
+            station_cache[train[CONF_FROM]],
+            station_cache[train[CONF_TO]],
+            train[CONF_WEEKDAY],
+            train.get(CONF_TIME),
+        )
         sensors.append(sensor)
 
     async_add_entities(sensors, update_before_add=True)
@@ -104,8 +119,7 @@ def next_departuredate(departure):
 class TrainSensor(Entity):
     """Contains data about a train depature."""
 
-    def __init__(self, train_api, name,
-                 from_station, to_station, weekday, time):
+    def __init__(self, train_api, name, from_station, to_station, weekday, time):
         """Initialize the sensor."""
         self._train_api = train_api
         self._name = name
@@ -123,17 +137,18 @@ class TrainSensor(Entity):
             departure_day = next_departuredate(self._weekday)
             when = datetime.combine(departure_day, self._time)
             try:
-                self._state = await \
-                    self._train_api.async_get_train_stop(
-                        self._from_station, self._to_station, when)
+                self._state = await self._train_api.async_get_train_stop(
+                    self._from_station, self._to_station, when
+                )
             except ValueError as output_error:
-                _LOGGER.error("Departure %s encountered a problem: %s",
-                              when, output_error)
+                _LOGGER.error(
+                    "Departure %s encountered a problem: %s", when, output_error
+                )
         else:
             when = datetime.now()
-            self._state = await \
-                self._train_api.async_get_next_train_stop(
-                    self._from_station, self._to_station, when)
+            self._state = await self._train_api.async_get_next_train_stop(
+                self._from_station, self._to_station, when
+            )
         self._departure_state = self._state.get_state().name
         self._delay_in_minutes = self._state.get_delay_time()
 
@@ -150,16 +165,17 @@ class TrainSensor(Entity):
         if state.deviations is not None:
             deviations = ", ".join(state.deviations)
         if self._delay_in_minutes is not None:
-            self._delay_in_minutes = \
-                self._delay_in_minutes.total_seconds() / 60
-        return {ATTR_DEPARTURE_STATE: self._departure_state,
-                ATTR_CANCELED: state.canceled,
-                ATTR_DELAY_TIME: self._delay_in_minutes,
-                ATTR_PLANNED_TIME: state.advertised_time_at_location,
-                ATTR_ESTIMATED_TIME: state.estimated_time_at_location,
-                ATTR_ACTUAL_TIME: state.time_at_location,
-                ATTR_OTHER_INFORMATION: other_information,
-                ATTR_DEVIATIONS: deviations}
+            self._delay_in_minutes = self._delay_in_minutes.total_seconds() / 60
+        return {
+            ATTR_DEPARTURE_STATE: self._departure_state,
+            ATTR_CANCELED: state.canceled,
+            ATTR_DELAY_TIME: self._delay_in_minutes,
+            ATTR_PLANNED_TIME: state.advertised_time_at_location,
+            ATTR_ESTIMATED_TIME: state.estimated_time_at_location,
+            ATTR_ACTUAL_TIME: state.time_at_location,
+            ATTR_OTHER_INFORMATION: other_information,
+            ATTR_DEVIATIONS: deviations,
+        }
 
     @property
     def device_class(self):

@@ -1,8 +1,6 @@
 {
   "domain": "garadget",
   "name": "Garadget",
-  "documentation": "https://www.home-assistant.io/components/garadget",
-  "requirements": [],
-  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/garadget",
   "codeowners": []
 }

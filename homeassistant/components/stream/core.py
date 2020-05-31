@@ -2,17 +2,17 @@
 import asyncio
 from collections import deque
 import io
-from typing import List, Any
+from typing import Any, List
 
-import attr
 from aiohttp import web
+import attr
 
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, ATTR_STREAMS
+from .const import ATTR_STREAMS, DOMAIN
 
 PROVIDERS = Registry()
 
@@ -22,8 +22,8 @@ class StreamBuffer:
     """Represent a segment."""
 
     segment = attr.ib(type=io.BytesIO)
-    output = attr.ib()               # type=av.OutputContainer
-    vstream = attr.ib()              # type=av.VideoStream
+    output = attr.ib()  # type=av.OutputContainer
+    vstream = attr.ib()  # type=av.VideoStream
     astream = attr.ib(default=None)  # type=av.AudioStream
 
 
@@ -79,8 +79,11 @@ class StreamOutput:
     @property
     def target_duration(self) -> int:
         """Return the average duration of the segments in seconds."""
+        segment_length = len(self._segments)
+        if not segment_length:
+            return 0
         durations = [s.duration for s in self._segments]
-        return round(sum(durations) // len(self._segments)) or 1
+        return round(sum(durations) // segment_length) or 1
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""
@@ -88,8 +91,7 @@ class StreamOutput:
         # Reset idle timeout
         if self._unsub is not None:
             self._unsub()
-        self._unsub = async_call_later(
-            self._stream.hass, self.timeout, self._timeout)
+        self._unsub = async_call_later(self._stream.hass, self.timeout, self._timeout)
 
         if not sequence:
             return self._segments
@@ -115,10 +117,11 @@ class StreamOutput:
     @callback
     def put(self, segment: Segment) -> None:
         """Store output."""
-        # Start idle timeout when we start recieving data
+        # Start idle timeout when we start receiving data
         if self._unsub is None:
             self._unsub = async_call_later(
-                self._stream.hass, self.timeout, self._timeout)
+                self._stream.hass, self.timeout, self._timeout
+            )
 
         if segment is None:
             self._event.set()
@@ -161,11 +164,16 @@ class StreamView(HomeAssistantView):
 
     async def get(self, request, token, sequence=None):
         """Start a GET request."""
-        hass = request.app['hass']
+        hass = request.app["hass"]
 
-        stream = next((
-            s for s in hass.data[DOMAIN][ATTR_STREAMS].values()
-            if s.access_token == token), None)
+        stream = next(
+            (
+                s
+                for s in hass.data[DOMAIN][ATTR_STREAMS].values()
+                if s.access_token == token
+            ),
+            None,
+        )
 
         if not stream:
             raise web.HTTPNotFound()

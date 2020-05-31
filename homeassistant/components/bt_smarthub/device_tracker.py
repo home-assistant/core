@@ -1,25 +1,38 @@
 """Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
 import logging
 
+from btsmarthub_devicelist import BTSmartHub
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_IP = '192.168.1.254'
+CONF_DEFAULT_IP = "192.168.1.254"
+CONF_SMARTHUB_MODEL = "smarthub_model"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+        vol.Optional(CONF_SMARTHUB_MODEL): vol.In([1, 2]),
+    }
+)
 
 
 def get_scanner(hass, config):
     """Return a BT Smart Hub scanner if successful."""
-    scanner = BTSmartHubScanner(config[DOMAIN])
+    info = config[DOMAIN]
+    smarthub_client = BTSmartHub(
+        router_ip=info[CONF_HOST], smarthub_model=info.get(CONF_SMARTHUB_MODEL)
+    )
+
+    scanner = BTSmartHubScanner(smarthub_client)
 
     return scanner if scanner.success_init else None
 
@@ -27,10 +40,9 @@ def get_scanner(hass, config):
 class BTSmartHubScanner(DeviceScanner):
     """This class queries a BT Smart Hub."""
 
-    def __init__(self, config):
+    def __init__(self, smarthub_client):
         """Initialise the scanner."""
-        _LOGGER.debug("Initialising BT Smart Hub")
-        self.host = config[CONF_HOST]
+        self.smarthub = smarthub_client
         self.last_results = {}
         self.success_init = False
 
@@ -39,20 +51,20 @@ class BTSmartHubScanner(DeviceScanner):
         if data:
             self.success_init = True
         else:
-            _LOGGER.info("Failed to connect to %s", self.host)
+            _LOGGER.info("Failed to connect to %s", self.smarthub.router_ip)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client['mac'] for client in self.last_results]
+        return [client["mac"] for client in self.last_results]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
-            if client['mac'] == device:
-                return client['host']
+            if client["mac"] == device:
+                return client["host"]
         return None
 
     def _update_info(self):
@@ -66,24 +78,24 @@ class BTSmartHubScanner(DeviceScanner):
             _LOGGER.warning("Error scanning devices")
             return
 
-        clients = [client for client in data.values()]
+        clients = list(data.values())
         self.last_results = clients
 
     def get_bt_smarthub_data(self):
         """Retrieve data from BT Smart Hub and return parsed result."""
-        import btsmarthub_devicelist
+
         # Request data from bt smarthub into a list of dicts.
-        data = btsmarthub_devicelist.get_devicelist(
-            router_ip=self.host, only_active_devices=True)
+        data = self.smarthub.get_devicelist(only_active_devices=True)
+
         # Renaming keys from parsed result.
         devices = {}
         for device in data:
             try:
-                devices[device['UserHostName']] = {
-                    'ip': device['IPAddress'],
-                    'mac': device['PhysAddress'],
-                    'host': device['UserHostName'],
-                    'status': device['Active']
+                devices[device["UserHostName"]] = {
+                    "ip": device["IPAddress"],
+                    "mac": device["PhysAddress"],
+                    "host": device["UserHostName"],
+                    "status": device["Active"],
                 }
             except KeyError:
                 pass

@@ -5,7 +5,7 @@ set_away_mode:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'water_heater.water_heater'
+      example: "water_heater.water_heater"
     away_mode:
       description: New value of away mode.
       example: true
@@ -15,7 +15,7 @@ set_temperature:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'water_heater.water_heater'
+      example: "water_heater.water_heater"
     temperature:
       description: New target temperature for water heater.
       example: 25
@@ -25,27 +25,7 @@ set_operation_mode:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'water_heater.water_heater'
+      example: "water_heater.water_heater"
     operation_mode:
       description: New value of operation mode.
       example: eco
-
-econet_add_vacation:
-  description: Add a vacation to your water heater.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'water_heater.econet'
-    start_date:
-      description: The timestamp of when the vacation should start. (Optional, defaults to now)
-      example: 1513186320
-    end_date:
-      description: The timestamp of when the vacation should end.
-      example: 1513445520
-
-econet_delete_vacation:
-  description: Delete your existing vacation from your water heater.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'water_heater.econet'

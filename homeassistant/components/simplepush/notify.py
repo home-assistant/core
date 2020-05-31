@@ -1,28 +1,34 @@
 """Simplepush notification service."""
 import logging
 
+from simplepush import send, send_encrypted
 import voluptuous as vol
 
+from homeassistant.components.notify import (
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ENCRYPTED = 'encrypted'
+ATTR_ENCRYPTED = "encrypted"
 
-CONF_DEVICE_KEY = 'device_key'
-CONF_EVENT = 'event'
-CONF_SALT = 'salt'
+CONF_DEVICE_KEY = "device_key"
+CONF_EVENT = "event"
+CONF_SALT = "salt"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE_KEY): cv.string,
-    vol.Optional(CONF_EVENT): cv.string,
-    vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): cv.string,
-    vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DEVICE_KEY): cv.string,
+        vol.Optional(CONF_EVENT): cv.string,
+        vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): cv.string,
+        vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): cv.string,
+    }
+)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -40,14 +46,19 @@ class SimplePushNotificationService(BaseNotificationService):
         self._password = config.get(CONF_PASSWORD)
         self._salt = config.get(CONF_SALT)
 
-    def send_message(self, message='', **kwargs):
+    def send_message(self, message="", **kwargs):
         """Send a message to a Simplepush user."""
-        from simplepush import send, send_encrypted
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         if self._password:
-            send_encrypted(self._device_key, self._password, self._salt, title,
-                           message, event=self._event)
+            send_encrypted(
+                self._device_key,
+                self._password,
+                self._salt,
+                title,
+                message,
+                event=self._event,
+            )
         else:
             send(self._device_key, title, message, event=self._event)

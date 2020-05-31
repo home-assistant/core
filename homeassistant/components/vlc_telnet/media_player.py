@@ -1,50 +1,82 @@
 """Provide functionality to interact with the vlc telnet interface."""
 import logging
+
+from python_telnet_vlc import ConnectionError as ConnErr, VLCTelnet
 import voluptuous as vol
 
-from python_telnet_vlc import VLCTelnet, ConnectionError as ConnErr
-
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_STOP, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_NEXT_TRACK, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET)
+    MEDIA_TYPE_MUSIC,
+    SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
+    SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+)
 from homeassistant.const import (
-    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE,
-    CONF_HOST, CONF_PORT, CONF_PASSWORD)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_UNAVAILABLE,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'vlc_telnet'
+DOMAIN = "vlc_telnet"
 
-DEFAULT_NAME = 'VLC-TELNET'
+DEFAULT_NAME = "VLC-TELNET"
 DEFAULT_PORT = 4212
 
-SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_SEEK | SUPPORT_VOLUME_SET \
-              | SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK \
-              | SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_STOP \
-              | SUPPORT_CLEAR_PLAYLIST | SUPPORT_PLAY \
-              | SUPPORT_SHUFFLE_SET
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+SUPPORT_VLC = (
+    SUPPORT_PAUSE
+    | SUPPORT_SEEK
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_STOP
+    | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_PLAY
+    | SUPPORT_SHUFFLE_SET
+)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the vlc platform."""
-    add_entities([VlcDevice(config.get(CONF_NAME),
-                            config.get(CONF_HOST),
-                            config.get(CONF_PORT),
-                            config.get(CONF_PASSWORD))], True)
+    add_entities(
+        [
+            VlcDevice(
+                config.get(CONF_NAME),
+                config.get(CONF_HOST),
+                config.get(CONF_PORT),
+                config.get(CONF_PASSWORD),
+            )
+        ],
+        True,
+    )
 
 
-class VlcDevice(MediaPlayerDevice):
+class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
 
     def __init__(self, name, host, port, passwd):
@@ -80,11 +112,11 @@ class VlcDevice(MediaPlayerDevice):
             try:
                 status = self._vlc.status()
                 if status:
-                    if 'volume' in status:
-                        self._volume = int(status['volume']) / 500.0
+                    if "volume" in status:
+                        self._volume = int(status["volume"]) / 500.0
                     else:
                         self._volume = None
-                    if 'state' in status:
+                    if "state" in status:
                         state = status["state"]
                         if state == "playing":
                             self._state = STATE_PLAYING
@@ -100,8 +132,8 @@ class VlcDevice(MediaPlayerDevice):
 
                 info = self._vlc.info()
                 if info:
-                    self._media_artist = info[0].get('artist')
-                    self._media_title = info[0].get('title')
+                    self._media_artist = info[0].get("artist")
+                    self._media_title = info[0].get("title")
 
             except (ConnErr, EOFError):
                 self._available = False
@@ -211,7 +243,9 @@ class VlcDevice(MediaPlayerDevice):
         if media_type != MEDIA_TYPE_MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
-                media_type, MEDIA_TYPE_MUSIC)
+                media_type,
+                MEDIA_TYPE_MUSIC,
+            )
             return
         self._vlc.add(media_id)
         self._state = STATE_PLAYING

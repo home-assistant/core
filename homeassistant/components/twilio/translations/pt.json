@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "A sua inst\u00e2ncia Home Assistant precisa de ser acess\u00edvel a partir da internet para receber mensagens Twilio.",
+            "one_instance_allowed": "Apenas uma \u00fanica inst\u00e2ncia \u00e9 necess\u00e1ria."
+        },
+        "create_entry": {
+            "default": "Para enviar eventos para o Home Assistant, \u00e9 necess\u00e1rio configurar [Webhooks with Twilio] ({twilio_url}). \n\nPreencha as seguintes informa\u00e7\u00f5es: \n\n- URL: `{webhook_url}`\n- M\u00e9todo: POST \n- Tipo de Conte\u00fado: application/x-www-form-urlencoded \n\nVeja [a documenta\u00e7\u00e3o] ({docs_url}) sobre como configurar automa\u00e7\u00f5es para manipular dados de entrada."
+        },
+        "step": {
+            "user": {
+                "description": "Tem certeza de que deseja configurar o Twilio?",
+                "title": "Configurar o Twilio Webhook"
+            }
+        }
+    }
+}

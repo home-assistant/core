@@ -1,11 +1,12 @@
 """The test for the sql sensor platform."""
 import unittest
+
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.sql.sensor import validate_sql_select
-from homeassistant.setup import setup_component
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -24,22 +25,24 @@ class TestSQLSensor(unittest.TestCase):
     def test_query(self):
         """Test the SQL sensor."""
         config = {
-            'sensor': {
-                'platform': 'sql',
-                'db_url': 'sqlite://',
-                'queries': [{
-                    'name': 'count_tables',
-                    'query': 'SELECT 5 as value',
-                    'column': 'value',
-                }]
+            "sensor": {
+                "platform": "sql",
+                "db_url": "sqlite://",
+                "queries": [
+                    {
+                        "name": "count_tables",
+                        "query": "SELECT 5 as value",
+                        "column": "value",
+                    }
+                ],
             }
         }
 
-        assert setup_component(self.hass, 'sensor', config)
+        assert setup_component(self.hass, "sensor", config)
 
-        state = self.hass.states.get('sensor.count_tables')
-        assert state.state == '5'
-        assert state.attributes['value'] == 5
+        state = self.hass.states.get("sensor.count_tables")
+        assert state.state == "5"
+        assert state.attributes["value"] == 5
 
     def test_invalid_query(self):
         """Test the SQL sensor for invalid queries."""
@@ -47,18 +50,20 @@ class TestSQLSensor(unittest.TestCase):
             validate_sql_select("DROP TABLE *")
 
         config = {
-            'sensor': {
-                'platform': 'sql',
-                'db_url': 'sqlite://',
-                'queries': [{
-                    'name': 'count_tables',
-                    'query': 'SELECT * value FROM sqlite_master;',
-                    'column': 'value',
-                }]
+            "sensor": {
+                "platform": "sql",
+                "db_url": "sqlite://",
+                "queries": [
+                    {
+                        "name": "count_tables",
+                        "query": "SELECT * value FROM sqlite_master;",
+                        "column": "value",
+                    }
+                ],
             }
         }
 
-        assert setup_component(self.hass, 'sensor', config)
+        assert setup_component(self.hass, "sensor", config)
 
-        state = self.hass.states.get('sensor.count_tables')
+        state = self.hass.states.get("sensor.count_tables")
         assert state.state == STATE_UNKNOWN

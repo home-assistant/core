@@ -1,0 +1,8 @@
+{
+  "domain": "arcam_fmj",
+  "name": "Arcam FMJ Receivers",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/arcam_fmj",
+  "requirements": ["arcam-fmj==0.4.6"],
+  "codeowners": ["@elupus"]
+}

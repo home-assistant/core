@@ -1,0 +1,13 @@
+play_on_sonos:
+  description: Play music hosted on a Plex server on a linked Sonos speaker.
+  fields:
+    entity_id:
+      description: Entity ID of a media_player from the Sonos integration.
+      example: "media_player.sonos_living_room"
+    media_content_id:
+      description: The ID of the content to play. See https://www.home-assistant.io/integrations/plex/#music for details.
+      example: >-
+          '{ "library_name": "Music", "artist_name": "Stevie Wonder" }'
+    media_content_type:
+      description: The type of content to play. Must be "music".
+      example: "music"

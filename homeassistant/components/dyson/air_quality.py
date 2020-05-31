@@ -1,21 +1,24 @@
 """Support for Dyson Pure Cool Air Quality Sensors."""
 import logging
 
-from homeassistant.components.air_quality import AirQualityEntity, DOMAIN
+from libpurecool.dyson_pure_cool import DysonPureCool
+from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
+
+from homeassistant.components.air_quality import DOMAIN, AirQualityEntity
+
 from . import DYSON_DEVICES
 
-ATTRIBUTION = 'Dyson purifier air quality sensor'
+ATTRIBUTION = "Dyson purifier air quality sensor"
 
 _LOGGER = logging.getLogger(__name__)
 
-DYSON_AIQ_DEVICES = 'dyson_aiq_devices'
+DYSON_AIQ_DEVICES = "dyson_aiq_devices"
 
-ATTR_VOC = 'volatile_organic_compounds'
+ATTR_VOC = "volatile_organic_compounds"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson Sensors."""
-    from libpurecool.dyson_pure_cool import DysonPureCool
 
     if discovery_info is None:
         return
@@ -25,8 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Get Dyson Devices from parent component
     device_ids = [device.unique_id for device in hass.data[DYSON_AIQ_DEVICES]]
     for device in hass.data[DYSON_DEVICES]:
-        if isinstance(device, DysonPureCool) and \
-                device.serial not in device_ids:
+        if isinstance(device, DysonPureCool) and device.serial not in device_ids:
             hass.data[DYSON_AIQ_DEVICES].append(DysonAirSensor(device))
     add_entities(hass.data[DYSON_AIQ_DEVICES])
 
@@ -43,18 +45,18 @@ class DysonAirSensor(AirQualityEntity):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.async_add_executor_job(
-            self._device.add_message_listener, self.on_message)
+            self._device.add_message_listener, self.on_message
+        )
 
     def on_message(self, message):
         """Handle new messages which are received from the fan."""
-        from libpurecool.dyson_pure_state_v2 import \
-            DysonEnvironmentalSensorV2State
-
-        _LOGGER.debug('%s: Message received for %s device: %s',
-                      DOMAIN, self.name, message)
-        if (self._old_value is None or
-                self._old_value != self._device.environmental_state) and \
-                isinstance(message, DysonEnvironmentalSensorV2State):
+        _LOGGER.debug(
+            "%s: Message received for %s device: %s", DOMAIN, self.name, message
+        )
+        if (
+            self._old_value is None
+            or self._old_value != self._device.environmental_state
+        ) and isinstance(message, DysonEnvironmentalSensorV2State):
             self._old_value = self._device.environmental_state
             self.schedule_update_ha_state()
 
@@ -76,10 +78,12 @@ class DysonAirSensor(AirQualityEntity):
     @property
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
-        return max(self.particulate_matter_2_5,
-                   self.particulate_matter_10,
-                   self.nitrogen_dioxide,
-                   self.volatile_organic_compounds)
+        return max(
+            self.particulate_matter_2_5,
+            self.particulate_matter_10,
+            self.nitrogen_dioxide,
+            self.volatile_organic_compounds,
+        )
 
     @property
     def particulate_matter_2_5(self):
@@ -106,8 +110,7 @@ class DysonAirSensor(AirQualityEntity):
     def volatile_organic_compounds(self):
         """Return the VOC (Volatile Organic Compounds) level."""
         if self._device.environmental_state:
-            return int(self._device.
-                       environmental_state.volatile_organic_compounds)
+            return int(self._device.environmental_state.volatile_organic_compounds)
         return None
 
     @property

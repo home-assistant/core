@@ -4,11 +4,20 @@ from datetime import timedelta
 import logging
 import math
 
+from python_awair import AwairClient
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN, CONF_DEVICES, DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONF_ACCESS_TOKEN,
+    CONF_DEVICES,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -17,48 +26,64 @@ from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SCORE = 'score'
-ATTR_TIMESTAMP = 'timestamp'
-ATTR_LAST_API_UPDATE = 'last_api_update'
-ATTR_COMPONENT = 'component'
-ATTR_VALUE = 'value'
-ATTR_SENSORS = 'sensors'
+ATTR_SCORE = "score"
+ATTR_TIMESTAMP = "timestamp"
+ATTR_LAST_API_UPDATE = "last_api_update"
+ATTR_COMPONENT = "component"
+ATTR_VALUE = "value"
+ATTR_SENSORS = "sensors"
 
-CONF_UUID = 'uuid'
+CONF_UUID = "uuid"
 
-DEVICE_CLASS_PM2_5 = 'PM2.5'
-DEVICE_CLASS_PM10 = 'PM10'
-DEVICE_CLASS_CARBON_DIOXIDE = 'CO2'
-DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = 'VOC'
-DEVICE_CLASS_SCORE = 'score'
+DEVICE_CLASS_PM2_5 = "PM2.5"
+DEVICE_CLASS_PM10 = "PM10"
+DEVICE_CLASS_CARBON_DIOXIDE = "CO2"
+DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
+DEVICE_CLASS_SCORE = "score"
 
 SENSOR_TYPES = {
-    'TEMP': {'device_class': DEVICE_CLASS_TEMPERATURE,
-             'unit_of_measurement': TEMP_CELSIUS,
-             'icon': 'mdi:thermometer'},
-    'HUMID': {'device_class': DEVICE_CLASS_HUMIDITY,
-              'unit_of_measurement': '%',
-              'icon': 'mdi:water-percent'},
-    'CO2': {'device_class': DEVICE_CLASS_CARBON_DIOXIDE,
-            'unit_of_measurement': 'ppm',
-            'icon': 'mdi:periodic-table-co2'},
-    'VOC': {'device_class': DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-            'unit_of_measurement': 'ppb',
-            'icon': 'mdi:cloud'},
+    "TEMP": {
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+        "unit_of_measurement": TEMP_CELSIUS,
+        "icon": "mdi:thermometer",
+    },
+    "HUMID": {
+        "device_class": DEVICE_CLASS_HUMIDITY,
+        "unit_of_measurement": UNIT_PERCENTAGE,
+        "icon": "mdi:water-percent",
+    },
+    "CO2": {
+        "device_class": DEVICE_CLASS_CARBON_DIOXIDE,
+        "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
+        "icon": "mdi:periodic-table-co2",
+    },
+    "VOC": {
+        "device_class": DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+        "unit_of_measurement": CONCENTRATION_PARTS_PER_BILLION,
+        "icon": "mdi:cloud",
+    },
     # Awair docs don't actually specify the size they measure for 'dust',
     # but 2.5 allows the sensor to show up in HomeKit
-    'DUST': {'device_class': DEVICE_CLASS_PM2_5,
-             'unit_of_measurement': 'µg/m3',
-             'icon': 'mdi:cloud'},
-    'PM25': {'device_class': DEVICE_CLASS_PM2_5,
-             'unit_of_measurement': 'µg/m3',
-             'icon': 'mdi:cloud'},
-    'PM10': {'device_class': DEVICE_CLASS_PM10,
-             'unit_of_measurement': 'µg/m3',
-             'icon': 'mdi:cloud'},
-    'score': {'device_class': DEVICE_CLASS_SCORE,
-              'unit_of_measurement': '%',
-              'icon': 'mdi:percent'},
+    "DUST": {
+        "device_class": DEVICE_CLASS_PM2_5,
+        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        "icon": "mdi:cloud",
+    },
+    "PM25": {
+        "device_class": DEVICE_CLASS_PM2_5,
+        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        "icon": "mdi:cloud",
+    },
+    "PM10": {
+        "device_class": DEVICE_CLASS_PM10,
+        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        "icon": "mdi:cloud",
+    },
+    "score": {
+        "device_class": DEVICE_CLASS_SCORE,
+        "unit_of_measurement": UNIT_PERCENTAGE,
+        "icon": "mdi:percent",
+    },
 }
 
 AWAIR_QUOTA = 300
@@ -67,15 +92,14 @@ AWAIR_QUOTA = 300
 # Don't bother asking us for state more often than that.
 SCAN_INTERVAL = timedelta(minutes=5)
 
-AWAIR_DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_UUID): cv.string,
-})
+AWAIR_DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_UUID): cv.string})
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_DEVICES): vol.All(
-        cv.ensure_list, [AWAIR_DEVICE_SCHEMA]),
-})
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
+        vol.Optional(CONF_DEVICES): vol.All(cv.ensure_list, [AWAIR_DEVICE_SCHEMA]),
+    }
+)
 
 
 # Awair *heavily* throttles calls that get user information,
@@ -84,10 +108,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 # list of devices, and they may provide the same set of information
 # that the devices() call would return. However, the only thing
 # used at this time is the `uuid` value.
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Connect to the Awair API and find devices."""
-    from python_awair import AwairClient
 
     token = config[CONF_ACCESS_TOKEN]
     client = AwairClient(token, session=async_get_clientsession(hass))
@@ -106,8 +128,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             await awair_data.async_update()
             for sensor in SENSOR_TYPES:
                 if sensor in awair_data.data:
-                    awair_sensor = AwairSensor(awair_data, device,
-                                               sensor, throttle)
+                    awair_sensor = AwairSensor(awair_data, device, sensor, throttle)
                     all_devices.append(awair_sensor)
 
         async_add_entities(all_devices, True)
@@ -116,8 +137,11 @@ async def async_setup_platform(hass, config, async_add_entities,
         _LOGGER.error("Awair API access_token invalid")
     except AwairClient.RatelimitError:
         _LOGGER.error("Awair API ratelimit exceeded.")
-    except (AwairClient.QueryError, AwairClient.NotFoundError,
-            AwairClient.GenericError) as error:
+    except (
+        AwairClient.QueryError,
+        AwairClient.NotFoundError,
+        AwairClient.GenericError,
+    ) as error:
         _LOGGER.error("Unexpected Awair API error: %s", error)
 
     raise PlatformNotReady
@@ -129,9 +153,9 @@ class AwairSensor(Entity):
     def __init__(self, data, device, sensor_type, throttle):
         """Initialize the sensor."""
         self._uuid = device[CONF_UUID]
-        self._device_class = SENSOR_TYPES[sensor_type]['device_class']
-        self._name = 'Awair {}'.format(self._device_class)
-        unit = SENSOR_TYPES[sensor_type]['unit_of_measurement']
+        self._device_class = SENSOR_TYPES[sensor_type]["device_class"]
+        self._name = f"Awair {self._device_class}"
+        unit = SENSOR_TYPES[sensor_type]["unit_of_measurement"]
         self._unit_of_measurement = unit
         self._data = data
         self._type = sensor_type
@@ -150,7 +174,7 @@ class AwairSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return SENSOR_TYPES[self._type]['icon']
+        return SENSOR_TYPES[self._type]["icon"]
 
     @property
     def state(self):
@@ -182,7 +206,7 @@ class AwairSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id of this entity."""
-        return "{}_{}".format(self._uuid, self._type)
+        return f"{self._uuid}_{self._type}"
 
     @property
     def unit_of_measurement(self):

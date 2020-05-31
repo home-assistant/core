@@ -1,8 +1,6 @@
 {
   "domain": "clicksend_tts",
-  "name": "Clicksend tts",
-  "documentation": "https://www.home-assistant.io/components/clicksend_tts",
-  "requirements": [],
-  "dependencies": [],
+  "name": "ClickSend TTS",
+  "documentation": "https://www.home-assistant.io/integrations/clicksend_tts",
   "codeowners": []
 }

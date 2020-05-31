@@ -2,41 +2,77 @@
 import random
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
-    ATTR_WHITE_VALUE, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT, SUPPORT_WHITE_VALUE, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    ATTR_WHITE_VALUE,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
+    SUPPORT_WHITE_VALUE,
+    LightEntity,
+)
 
-LIGHT_COLORS = [
-    (56, 86),
-    (345, 75),
-]
+from . import DOMAIN
 
-LIGHT_EFFECT_LIST = ['rainbow', 'none']
+LIGHT_COLORS = [(56, 86), (345, 75)]
+
+LIGHT_EFFECT_LIST = ["rainbow", "none"]
 
 LIGHT_TEMPS = [240, 380]
 
-SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
-                SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
+SUPPORT_DEMO = (
+    SUPPORT_BRIGHTNESS
+    | SUPPORT_COLOR_TEMP
+    | SUPPORT_EFFECT
+    | SUPPORT_COLOR
+    | SUPPORT_WHITE_VALUE
+)
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the demo light platform."""
-    add_entities_callback([
-        DemoLight(1, "Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
-                  effect=LIGHT_EFFECT_LIST[0]),
-        DemoLight(2, "Ceiling Lights", True, True,
-                  LIGHT_COLORS[0], LIGHT_TEMPS[1]),
-        DemoLight(3, "Kitchen Lights", True, True,
-                  LIGHT_COLORS[1], LIGHT_TEMPS[0])
-    ])
+    async_add_entities(
+        [
+            DemoLight(
+                "light_1",
+                "Bed Light",
+                False,
+                True,
+                effect_list=LIGHT_EFFECT_LIST,
+                effect=LIGHT_EFFECT_LIST[0],
+            ),
+            DemoLight("light_2", "Ceiling Lights", True, True, ct=LIGHT_TEMPS[1]),
+            DemoLight(
+                "light_3", "Kitchen Lights", True, True, LIGHT_COLORS[1], LIGHT_TEMPS[0]
+            ),
+        ]
+    )
 
 
-class DemoLight(Light):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
+
+
+class DemoLight(LightEntity):
     """Representation of a demo light."""
 
-    def __init__(self, unique_id, name, state, available=False, hs_color=None,
-                 ct=None, brightness=180, white=200, effect_list=None,
-                 effect=None):
+    def __init__(
+        self,
+        unique_id,
+        name,
+        state,
+        available=False,
+        hs_color=None,
+        ct=None,
+        brightness=180,
+        white=200,
+        effect_list=None,
+        effect=None,
+    ):
         """Initialize the light."""
         self._unique_id = unique_id
         self._name = name
@@ -48,6 +84,18 @@ class DemoLight(Light):
         self._effect_list = effect_list
         self._effect = effect
         self._available = True
+        self._color_mode = "ct" if ct is not None and hs_color is None else "hs"
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id)
+            },
+            "name": self.name,
+        }
 
     @property
     def should_poll(self) -> bool:
@@ -79,12 +127,16 @@ class DemoLight(Light):
     @property
     def hs_color(self) -> tuple:
         """Return the hs color value."""
-        return self._hs_color
+        if self._color_mode == "hs":
+            return self._hs_color
+        return None
 
     @property
     def color_temp(self) -> int:
         """Return the CT color temperature."""
-        return self._ct
+        if self._color_mode == "ct":
+            return self._ct
+        return None
 
     @property
     def white_value(self) -> int:
@@ -111,14 +163,16 @@ class DemoLight(Light):
         """Flag supported features."""
         return SUPPORT_DEMO
 
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the light on."""
         self._state = True
 
         if ATTR_HS_COLOR in kwargs:
+            self._color_mode = "hs"
             self._hs_color = kwargs[ATTR_HS_COLOR]
 
         if ATTR_COLOR_TEMP in kwargs:
+            self._color_mode = "ct"
             self._ct = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -132,12 +186,12 @@ class DemoLight(Light):
 
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the light off."""
         self._state = False
 
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

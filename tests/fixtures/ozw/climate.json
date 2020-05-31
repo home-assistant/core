@@ -1,0 +1,54 @@
+{
+    "topic": "OpenZWave/1/node/7/instance/1/commandclass/64/value/122683412/",
+    "payload": {
+        "Label": "Mode",
+        "Value": {
+            "List": [
+                {
+                    "Value": 0,
+                    "Label": "Off"
+                },
+                {
+                    "Value": 1,
+                    "Label": "Heat"
+                },
+                {
+                    "Value": 2,
+                    "Label": "Cool"
+                },
+                {
+                    "Value": 3,
+                    "Label": "Auto"
+                },
+                {
+                    "Value": 11,
+                    "Label": "Heat Econ"
+                },
+                {
+                    "Value": 12,
+                    "Label": "Cool Econ"
+                }
+            ],
+            "Selected": "Auto",
+            "Selected_id": 3
+        },
+        "Units": "",
+        "Min": 0,
+        "Max": 0,
+        "Type": "List",
+        "Instance": 1,
+        "CommandClass": "COMMAND_CLASS_THERMOSTAT_MODE",
+        "Index": 0,
+        "Node": 7,
+        "Genre": "User",
+        "Help": "Set the Thermostat Mode",
+        "ValueIDKey": 122683412,
+        "ReadOnly": false,
+        "WriteOnly": false,
+        "ValueSet": false,
+        "ValuePolled": false,
+        "ChangeVerified": false,
+        "Event": "valueAdded",
+        "TimeStamp": 1588264894
+    }
+}

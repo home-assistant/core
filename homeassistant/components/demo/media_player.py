@@ -1,53 +1,99 @@
 """Demo implementation of the media player."""
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    MEDIA_TYPE_MOVIE,
+    MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_TVSHOW,
+    SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
+    SUPPORT_SELECT_SOUND_MODE,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_SHUFFLE_SET,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 import homeassistant.util.dt as dt_util
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the media player demo platform."""
-    add_entities([
-        DemoYoutubePlayer(
-            'Living Room', 'eyU3bRy2x44',
-            '♥♥ The Best Fireplace Video (3 hours)', 300),
-        DemoYoutubePlayer(
-            'Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours', 360000),
-        DemoMusicPlayer(), DemoTVShowPlayer(),
-    ])
+    async_add_entities(
+        [
+            DemoYoutubePlayer(
+                "Living Room",
+                "eyU3bRy2x44",
+                "♥♥ The Best Fireplace Video (3 hours)",
+                300,
+            ),
+            DemoYoutubePlayer(
+                "Bedroom", "kxopViU98Xo", "Epic sax guy 10 hours", 360000
+            ),
+            DemoMusicPlayer(),
+            DemoTVShowPlayer(),
+        ]
+    )
 
 
-YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/hqdefault.jpg'
-SOUND_MODE_LIST = ['Dummy Music', 'Dummy Movie']
-DEFAULT_SOUND_MODE = 'Dummy Music'
-
-YOUTUBE_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | \
-    SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOUND_MODE | SUPPORT_SELECT_SOURCE | \
-    SUPPORT_SEEK
-
-MUSIC_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST | \
-    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | SUPPORT_VOLUME_STEP | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SELECT_SOUND_MODE
-
-NETFLIX_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SELECT_SOUND_MODE
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
-class AbstractDemoPlayer(MediaPlayerDevice):
+SOUND_MODE_LIST = ["Dummy Music", "Dummy Movie"]
+DEFAULT_SOUND_MODE = "Dummy Music"
+
+YOUTUBE_PLAYER_SUPPORT = (
+    SUPPORT_PAUSE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PLAY
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_SELECT_SOUND_MODE
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_SEEK
+)
+
+MUSIC_PLAYER_SUPPORT = (
+    SUPPORT_PAUSE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_PLAY
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_SELECT_SOUND_MODE
+)
+
+NETFLIX_PLAYER_SUPPORT = (
+    SUPPORT_PAUSE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PLAY
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_SELECT_SOUND_MODE
+)
+
+
+class AbstractDemoPlayer(MediaPlayerEntity):
     """A demo media players."""
 
     # We only implement the methods that we support
@@ -170,7 +216,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         self.youtube_id = youtube_id
         self._media_title = media_title
         self._duration = duration
-        self._progress = int(duration * .15)
+        self._progress = int(duration * 0.15)
         self._progress_updated_at = dt_util.utcnow()
 
     @property
@@ -191,7 +237,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return YOUTUBE_COVER_URL_FORMAT.format(self.youtube_id)
+        return f"https://img.youtube.com/vi/{self.youtube_id}/hqdefault.jpg"
 
     @property
     def media_title(self):
@@ -217,8 +263,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         position = self._progress
 
         if self._player_state == STATE_PLAYING:
-            position += (dt_util.utcnow() -
-                         self._progress_updated_at).total_seconds()
+            position += (dt_util.utcnow() - self._progress_updated_at).total_seconds()
 
         return position
 
@@ -249,36 +294,37 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     # We only implement the methods that we support
 
     tracks = [
-        ('Technohead', 'I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)'),
-        ('Paul Elstak', 'Luv U More'),
-        ('Dune', 'Hardcore Vibes'),
-        ('Nakatomi', 'Children Of The Night'),
-        ('Party Animals',
-         'Have You Ever Been Mellow? (Flamman & Abraxas Radio Mix)'),
-        ('Rob G.*', 'Ecstasy, You Got What I Need'),
-        ('Lipstick', "I'm A Raver"),
-        ('4 Tune Fairytales', 'My Little Fantasy (Radio Edit)'),
-        ('Prophet', "The Big Boys Don't Cry"),
-        ('Lovechild', 'All Out Of Love (DJ Weirdo & Sim Remix)'),
-        ('Stingray & Sonic Driver', 'Cold As Ice (El Bruto Remix)'),
-        ('Highlander', 'Hold Me Now (Bass-D & King Matthew Remix)'),
-        ('Juggernaut', 'Ruffneck Rules Da Artcore Scene (12" Edit)'),
-        ('Diss Reaction', 'Jiiieehaaaa '),
-        ('Flamman And Abraxas', 'Good To Go (Radio Mix)'),
-        ('Critical Mass', 'Dancing Together'),
-        ('Charly Lownoise & Mental Theo',
-         'Ultimate Sex Track (Bass-D & King Matthew Remix)'),
+        ("Technohead", "I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)"),
+        ("Paul Elstak", "Luv U More"),
+        ("Dune", "Hardcore Vibes"),
+        ("Nakatomi", "Children Of The Night"),
+        ("Party Animals", "Have You Ever Been Mellow? (Flamman & Abraxas Radio Mix)"),
+        ("Rob G.*", "Ecstasy, You Got What I Need"),
+        ("Lipstick", "I'm A Raver"),
+        ("4 Tune Fairytales", "My Little Fantasy (Radio Edit)"),
+        ("Prophet", "The Big Boys Don't Cry"),
+        ("Lovechild", "All Out Of Love (DJ Weirdo & Sim Remix)"),
+        ("Stingray & Sonic Driver", "Cold As Ice (El Bruto Remix)"),
+        ("Highlander", "Hold Me Now (Bass-D & King Matthew Remix)"),
+        ("Juggernaut", 'Ruffneck Rules Da Artcore Scene (12" Edit)'),
+        ("Diss Reaction", "Jiiieehaaaa "),
+        ("Flamman And Abraxas", "Good To Go (Radio Mix)"),
+        ("Critical Mass", "Dancing Together"),
+        (
+            "Charly Lownoise & Mental Theo",
+            "Ultimate Sex Track (Bass-D & King Matthew Remix)",
+        ),
     ]
 
     def __init__(self):
         """Initialize the demo device."""
-        super().__init__('Walkman')
+        super().__init__("Walkman")
         self._cur_track = 0
 
     @property
     def media_content_id(self):
         """Return the content ID of current playing media."""
-        return 'bounzz-1'
+        return "bounzz-1"
 
     @property
     def media_content_type(self):
@@ -293,8 +339,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return 'https://graph.facebook.com/v2.5/107771475912710/' \
-            'picture?type=large'
+        return "https://graph.facebook.com/v2.5/107771475912710/picture?type=large"
 
     @property
     def media_title(self):
@@ -348,15 +393,15 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
 
     def __init__(self):
         """Initialize the demo device."""
-        super().__init__('Lounge room')
+        super().__init__("Lounge room")
         self._cur_episode = 1
         self._episode_count = 13
-        self._source = 'dvd'
+        self._source = "dvd"
 
     @property
     def media_content_id(self):
         """Return the content ID of current playing media."""
-        return 'house-of-cards-1'
+        return "house-of-cards-1"
 
     @property
     def media_content_type(self):
@@ -371,17 +416,17 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return 'https://graph.facebook.com/v2.5/HouseofCards/picture?width=400'
+        return "https://graph.facebook.com/v2.5/HouseofCards/picture?width=400"
 
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        return 'Chapter {}'.format(self._cur_episode)
+        return f"Chapter {self._cur_episode}"
 
     @property
     def media_series_title(self):
         """Return the series title of current playing media (TV Show only)."""
-        return 'House of Cards'
+        return "House of Cards"
 
     @property
     def media_season(self):

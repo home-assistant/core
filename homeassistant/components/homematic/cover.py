@@ -2,10 +2,13 @@
 import logging
 
 from homeassistant.components.cover import (
-    ATTR_POSITION, ATTR_TILT_POSITION, CoverDevice)
-from homeassistant.const import STATE_UNKNOWN
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    CoverEntity,
+)
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,10 +23,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMCover(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
-class HMCover(HMDevice, CoverDevice):
+class HMCover(HMDevice, CoverEntity):
     """Representation a HomeMatic Cover."""
 
     @property
@@ -65,10 +68,9 @@ class HMCover(HMDevice, CoverDevice):
     def _init_data_struct(self):
         """Generate a data dictionary (self._data) from metadata."""
         self._state = "LEVEL"
-        self._data.update({self._state: STATE_UNKNOWN})
+        self._data.update({self._state: None})
         if "LEVEL_2" in self._hmdevice.WRITENODE:
-            self._data.update(
-                {'LEVEL_2': STATE_UNKNOWN})
+            self._data.update({"LEVEL_2": None})
 
     @property
     def current_cover_tilt_position(self):
@@ -76,10 +78,10 @@ class HMCover(HMDevice, CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if 'LEVEL_2' not in self._data:
+        if "LEVEL_2" not in self._data:
             return None
 
-        return int(self._data.get('LEVEL_2', 0) * 100)
+        return int(self._data.get("LEVEL_2", 0) * 100)
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""

@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u4e3b\u6a5f\u7aef\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "connection": "\u9023\u7dda\u932f\u8aa4\uff1a\u8acb\u6aa2\u67e5\u4e3b\u6a5f\u7aef\u3001\u901a\u8a0a\u57e0\u8207 SSL",
+            "login": "\u767b\u5165\u932f\u8aa4\uff1a\u8acb\u78ba\u8a8d\u96fb\u5b50\u90f5\u4ef6\u8207\u5bc6\u78bc",
+            "missing_data": "\u7f3a\u5c11\u8cc7\u6599\uff1a\u8acb\u7a0d\u5f8c\u91cd\u8a66\u6216\u4f7f\u7528\u5176\u4ed6\u8a2d\u5b9a",
+            "otp_failed": "\u5169\u6b65\u9a5f\u9a57\u8b49\u5931\u6557\uff0c\u8acb\u91cd\u65b0\u53d6\u5f97\u4ee3\u78bc\u5f8c\u91cd\u8a66",
+            "unknown": "\u672a\u77e5\u932f\u8aa4\uff1a\u8acb\u53c3\u95b1\u65e5\u8a8c\u4ee5\u7372\u5f97\u66f4\u8a73\u7d30\u8cc7\u8a0a"
+        },
+        "flow_title": "\u7fa4\u6689 DSM {name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "\u4ee3\u78bc"
+                },
+                "title": "Synology DSM\uff1a\u96d9\u91cd\u9a57\u8b49"
+            },
+            "link": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "ssl": "\u4f7f\u7528 SSL/TLS \u9023\u7dda\u81f3 NAS",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f",
+                "title": "\u7fa4\u6689 DSM"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "ssl": "\u4f7f\u7528 SSL/TLS \u9023\u7dda\u81f3 NAS",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "\u7fa4\u6689 DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u6383\u63cf\u9593\u9694\u5206\u6578"
+                }
+            }
+        }
+    }
+}

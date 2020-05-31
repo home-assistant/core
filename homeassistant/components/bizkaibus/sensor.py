@@ -2,34 +2,35 @@
 
 import logging
 
-import voluptuous as vol
 from bizkaibus.bizkaibus import BizkaibusData
-import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, TIME_MINUTES
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DUE_IN = 'Due in'
+ATTR_DUE_IN = "Due in"
 
-CONF_STOP_ID = 'stopid'
-CONF_ROUTE = 'route'
+CONF_STOP_ID = "stopid"
+CONF_ROUTE = "route"
 
-DEFAULT_NAME = 'Next bus'
+DEFAULT_NAME = "Next bus"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STOP_ID): cv.string,
-    vol.Required(CONF_ROUTE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STOP_ID): cv.string,
+        vol.Required(CONF_ROUTE): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bizkaibus public transport sensor."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     stop = config[CONF_STOP_ID]
     route = config[CONF_ROUTE]
 
@@ -61,7 +62,7 @@ class BizkaibusSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
-        return 'minutes'
+        return TIME_MINUTES
 
     def update(self):
         """Get the latest data from the webservice."""

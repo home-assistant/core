@@ -1,10 +1,7 @@
 {
   "domain": "greeneye_monitor",
-  "name": "Greeneye monitor",
-  "documentation": "https://www.home-assistant.io/components/greeneye_monitor",
-  "requirements": [
-    "greeneye_monitor==1.0"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "name": "GreenEye Monitor (GEM)",
+  "documentation": "https://www.home-assistant.io/integrations/greeneye_monitor",
+  "requirements": ["greeneye_monitor==2.0"],
+  "codeowners": ["@jkeljo"]
 }

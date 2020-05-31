@@ -4,52 +4,49 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components import arduino
 from homeassistant.const import CONF_NAME
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PINS = 'pins'
-CONF_TYPE = 'analog'
+CONF_PINS = "pins"
+CONF_TYPE = "analog"
 
-PIN_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-})
+PIN_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PINS):
-        vol.Schema({cv.positive_int: PIN_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_PINS): vol.Schema({cv.positive_int: PIN_SCHEMA})}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
-    if arduino.BOARD is None:
-        _LOGGER.error("A connection has not been made to the Arduino board")
-        return False
+    board = hass.data[DOMAIN]
 
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
 
     sensors = []
     for pinnum, pin in pins.items():
-        sensors.append(ArduinoSensor(pin.get(CONF_NAME), pinnum, CONF_TYPE))
+        sensors.append(ArduinoSensor(pin.get(CONF_NAME), pinnum, CONF_TYPE, board))
     add_entities(sensors)
 
 
 class ArduinoSensor(Entity):
     """Representation of an Arduino Sensor."""
 
-    def __init__(self, name, pin, pin_type):
+    def __init__(self, name, pin, pin_type, board):
         """Initialize the sensor."""
         self._pin = pin
         self._name = name
         self.pin_type = pin_type
-        self.direction = 'in'
+        self.direction = "in"
         self._value = None
 
-        arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type)
+        board.set_mode(self._pin, self.direction, self.pin_type)
+        self._board = board
 
     @property
     def state(self):
@@ -63,4 +60,4 @@ class ArduinoSensor(Entity):
 
     def update(self):
         """Get the latest value from the pin."""
-        self._value = arduino.BOARD.get_analog_inputs()[self._pin][1]
+        self._value = self._board.get_analog_inputs()[self._pin][1]

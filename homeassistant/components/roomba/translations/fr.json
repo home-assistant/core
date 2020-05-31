@@ -1,0 +1,25 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "continuous": "En continu",
+                    "delay": "D\u00e9lai",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "password": "Mot de passe"
+                },
+                "title": "Se connecter \u00e0 l'appareil"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Continue",
+                    "delay": "D\u00e9lai"
+                }
+            }
+        }
+    }
+}

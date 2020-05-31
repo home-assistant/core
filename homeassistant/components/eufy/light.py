@@ -1,15 +1,22 @@
 """Support for Eufy lights."""
 import logging
 
+import lakeside
+
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_COLOR, Light)
-
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    LightEntity,
+)
 import homeassistant.util.color as color_util
-
 from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
-    color_temperature_kelvin_to_mired as kelvin_to_mired)
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,21 +31,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EufyLight(discovery_info)], True)
 
 
-class EufyLight(Light):
+class EufyLight(LightEntity):
     """Representation of a Eufy light."""
 
     def __init__(self, device):
         """Initialize the light."""
-        import lakeside
 
         self._temp = None
         self._brightness = None
         self._hs = None
         self._state = None
-        self._name = device['name']
-        self._address = device['address']
-        self._code = device['code']
-        self._type = device['type']
+        self._name = device["name"]
+        self._address = device["address"]
+        self._code = device["code"]
+        self._type = device["type"]
         self._bulb = lakeside.bulb(self._address, self._code, self._type)
         self._colormode = False
         if self._type == "T1011":
@@ -46,8 +52,7 @@ class EufyLight(Light):
         elif self._type == "T1012":
             self._features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
         elif self._type == "T1013":
-            self._features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | \
-                             SUPPORT_COLOR
+            self._features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
         self._bulb.connect()
 
     def update(self):
@@ -96,9 +101,9 @@ class EufyLight(Light):
     @property
     def color_temp(self):
         """Return the color temperature of this light."""
-        temp_in_k = int(EUFY_MIN_KELVIN + (self._temp *
-                                           (EUFY_MAX_KELVIN - EUFY_MIN_KELVIN)
-                                           / 100))
+        temp_in_k = int(
+            EUFY_MIN_KELVIN + (self._temp * (EUFY_MAX_KELVIN - EUFY_MIN_KELVIN) / 100)
+        )
         return kelvin_to_mired(temp_in_k)
 
     @property
@@ -131,28 +136,29 @@ class EufyLight(Light):
             self._colormode = False
             temp_in_k = mired_to_kelvin(colortemp)
             relative_temp = temp_in_k - EUFY_MIN_KELVIN
-            temp = int(relative_temp * 100 /
-                       (EUFY_MAX_KELVIN - EUFY_MIN_KELVIN))
+            temp = int(relative_temp * 100 / (EUFY_MAX_KELVIN - EUFY_MIN_KELVIN))
         else:
             temp = None
 
         if hs is not None:
-            rgb = color_util.color_hsv_to_RGB(
-                hs[0], hs[1], brightness / 255 * 100)
+            rgb = color_util.color_hsv_to_RGB(hs[0], hs[1], brightness / 255 * 100)
             self._colormode = True
         elif self._colormode:
             rgb = color_util.color_hsv_to_RGB(
-                self._hs[0], self._hs[1], brightness / 255 * 100)
+                self._hs[0], self._hs[1], brightness / 255 * 100
+            )
         else:
             rgb = None
 
         try:
-            self._bulb.set_state(power=True, brightness=brightness,
-                                 temperature=temp, colors=rgb)
+            self._bulb.set_state(
+                power=True, brightness=brightness, temperature=temp, colors=rgb
+            )
         except BrokenPipeError:
             self._bulb.connect()
-            self._bulb.set_state(power=True, brightness=brightness,
-                                 temperature=temp, colors=rgb)
+            self._bulb.set_state(
+                power=True, brightness=brightness, temperature=temp, colors=rgb
+            )
 
     def turn_off(self, **kwargs):
         """Turn the specified light off."""

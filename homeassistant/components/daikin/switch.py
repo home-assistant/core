@@ -7,17 +7,15 @@ from . import DOMAIN as DAIKIN_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ZONE_ICON = 'mdi:home-circle'
+ZONE_ICON = "mdi:home-circle"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up the platform.
 
     Can only be called when a user accidentally mentions the platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -25,10 +23,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
     daikin_api = hass.data[DAIKIN_DOMAIN][entry.entry_id]
     zones = daikin_api.device.zones
     if zones:
-        async_add_entities([
-            DaikinZoneSwitch(daikin_api, zone_id)
-            for zone_id, zone in enumerate(zones) if zone != ('-', '0')
-        ])
+        async_add_entities(
+            [
+                DaikinZoneSwitch(daikin_api, zone_id)
+                for zone_id, zone in enumerate(zones)
+                if zone != ("-", "0")
+            ]
+        )
 
 
 class DaikinZoneSwitch(ToggleEntity):
@@ -42,7 +43,7 @@ class DaikinZoneSwitch(ToggleEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}-zone{}".format(self._api.mac, self._zone_id)
+        return f"{self._api.device.mac}-zone{self._zone_id}"
 
     @property
     def icon(self):
@@ -52,13 +53,12 @@ class DaikinZoneSwitch(ToggleEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._api.name,
-                              self._api.device.zones[self._zone_id][0])
+        return f"{self._api.name} {self._api.device.zones[self._zone_id][0]}"
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        return self._api.device.zones[self._zone_id][1] == '1'
+        return self._api.device.zones[self._zone_id][1] == "1"
 
     @property
     def device_info(self):
@@ -71,8 +71,8 @@ class DaikinZoneSwitch(ToggleEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the zone on."""
-        await self._api.device.set_zone(self._zone_id, '1')
+        await self._api.device.set_zone(self._zone_id, "1")
 
     async def async_turn_off(self, **kwargs):
         """Turn the zone off."""
-        await self._api.device.set_zone(self._zone_id, '0')
+        await self._api.device.set_zone(self._zone_id, "0")

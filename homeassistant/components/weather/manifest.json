@@ -1,10 +1,7 @@
 {
   "domain": "weather",
   "name": "Weather",
-  "documentation": "https://www.home-assistant.io/components/weather",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/weather",
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
 }

@@ -1,0 +1,1 @@
+"""Scaffold new integration."""

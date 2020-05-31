@@ -1,15 +1,21 @@
 """Test Z-Wave lights."""
-from unittest.mock import patch, MagicMock
-
 from homeassistant.components import zwave
-from homeassistant.components.zwave import const, light
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR, ATTR_WHITE_VALUE,
-    SUPPORT_COLOR_TEMP, SUPPORT_WHITE_VALUE)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    ATTR_WHITE_VALUE,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_TRANSITION,
+    SUPPORT_WHITE_VALUE,
+)
+from homeassistant.components.zwave import const, light
 
-from tests.mock.zwave import (
-    MockNode, MockValue, MockEntityValues, value_changed)
+from tests.async_mock import MagicMock, patch
+from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 
 class MockLightValues(MockEntityValues):
@@ -47,30 +53,34 @@ def test_get_device_detects_colorlight(mock_openzwave):
 
 def test_get_device_detects_zw098(mock_openzwave):
     """Test get_device returns a zw098 color light."""
-    node = MockNode(manufacturer_id='0086', product_id='0062',
-                    command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
+    node = MockNode(
+        manufacturer_id="0086",
+        product_id="0062",
+        command_classes=[const.COMMAND_CLASS_SWITCH_COLOR],
+    )
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
     device = light.get_device(node=node, values=values, node_config={})
     assert isinstance(device, light.ZwaveColorLight)
     assert device.supported_features == (
-        SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP)
+        SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+    )
 
 
 def test_get_device_detects_rgbw_light(mock_openzwave):
     """Test get_device returns a color light."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
-    color_channels = MockValue(data=0x1d, node=node)
-    values = MockLightValues(
-        primary=value, color=color, color_channels=color_channels)
+    color = MockValue(data="#0000000000", node=node)
+    color_channels = MockValue(data=0x1D, node=node)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
 
     device = light.get_device(node=node, values=values, node_config={})
     device.value_added()
     assert isinstance(device, light.ZwaveColorLight)
     assert device.supported_features == (
-        SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
+        SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_WHITE_VALUE
+    )
 
 
 def test_dimmer_turn_on(mock_openzwave):
@@ -89,15 +99,25 @@ def test_dimmer_turn_on(mock_openzwave):
 
     node.reset_mock()
 
+    device.turn_on(**{ATTR_BRIGHTNESS: 224})
+
+    assert node.set_dimmer.called
+    value_id, brightness = node.set_dimmer.mock_calls[0][1]
+
+    assert value_id == value.value_id
+    assert brightness == 87  # round(224 / 255 * 99)
+
+    node.reset_mock()
+
     device.turn_on(**{ATTR_BRIGHTNESS: 120})
 
     assert node.set_dimmer.called
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
 
     assert value_id == value.value_id
-    assert brightness == 46  # int(120 / 255 * 99)
+    assert brightness == 47  # round(120 / 255 * 99)
 
-    with patch.object(light, '_LOGGER', MagicMock()) as mock_logger:
+    with patch.object(light, "_LOGGER", MagicMock()) as mock_logger:
         device.turn_on(**{ATTR_TRANSITION: 35})
         assert mock_logger.debug.called
         assert node.set_dimmer.called
@@ -205,14 +225,15 @@ def test_dimmer_refresh_value(mock_openzwave):
     node = MockNode()
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)
-    device = light.get_device(node=node, values=values, node_config={
-        zwave.CONF_REFRESH_VALUE: True,
-        zwave.CONF_REFRESH_DELAY: 5,
-    })
+    device = light.get_device(
+        node=node,
+        values=values,
+        node_config={zwave.CONF_REFRESH_VALUE: True, zwave.CONF_REFRESH_DELAY: 5},
+    )
 
     assert not device.is_on
 
-    with patch.object(light, 'Timer', MagicMock()) as mock_timer:
+    with patch.object(light, "Timer") as mock_timer:
         value.data = 46
         value_changed(value)
 
@@ -224,7 +245,7 @@ def test_dimmer_refresh_value(mock_openzwave):
         assert mock_timer().start.called
         assert len(mock_timer().start.mock_calls) == 1
 
-        with patch.object(light, 'Timer', MagicMock()) as mock_timer_2:
+        with patch.object(light, "Timer") as mock_timer_2:
             value_changed(value)
             assert not device.is_on
             assert mock_timer().cancel.called
@@ -243,36 +264,34 @@ def test_set_hs_color(mock_openzwave):
     """Test setting zwave light color."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     # Supports RGB only
-    color_channels = MockValue(data=0x1c, node=node)
-    values = MockLightValues(primary=value, color=color,
-                             color_channels=color_channels)
+    color_channels = MockValue(data=0x1C, node=node)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
     device = light.get_device(node=node, values=values, node_config={})
 
-    assert color.data == '#0000000000'
+    assert color.data == "#0000000000"
 
     device.turn_on(**{ATTR_HS_COLOR: (30, 50)})
 
-    assert color.data == '#ffbf7f0000'
+    assert color.data == "#ffbf7f0000"
 
 
 def test_set_white_value(mock_openzwave):
     """Test setting zwave light color."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     # Supports RGBW
-    color_channels = MockValue(data=0x1d, node=node)
-    values = MockLightValues(primary=value, color=color,
-                             color_channels=color_channels)
+    color_channels = MockValue(data=0x1D, node=node)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
     device = light.get_device(node=node, values=values, node_config={})
 
-    assert color.data == '#0000000000'
+    assert color.data == "#0000000000"
 
     device.turn_on(**{ATTR_WHITE_VALUE: 200})
 
-    assert color.data == '#ffffffc800'
+    assert color.data == "#ffffffc800"
 
 
 def test_disable_white_if_set_color(mock_openzwave):
@@ -284,55 +303,55 @@ def test_disable_white_if_set_color(mock_openzwave):
     """
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     # Supports RGB only
-    color_channels = MockValue(data=0x1c, node=node)
-    values = MockLightValues(primary=value, color=color,
-                             color_channels=color_channels)
+    color_channels = MockValue(data=0x1C, node=node)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
     device = light.get_device(node=node, values=values, node_config={})
     device._white = 234
 
-    assert color.data == '#0000000000'
+    assert color.data == "#0000000000"
     assert device.white_value == 234
 
     device.turn_on(**{ATTR_HS_COLOR: (30, 50)})
 
     assert device.white_value == 0
-    assert color.data == '#ffbf7f0000'
+    assert color.data == "#ffbf7f0000"
 
 
 def test_zw098_set_color_temp(mock_openzwave):
     """Test setting zwave light color."""
-    node = MockNode(manufacturer_id='0086', product_id='0062',
-                    command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
+    node = MockNode(
+        manufacturer_id="0086",
+        product_id="0062",
+        command_classes=[const.COMMAND_CLASS_SWITCH_COLOR],
+    )
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     # Supports RGB, warm white, cold white
-    color_channels = MockValue(data=0x1f, node=node)
-    values = MockLightValues(primary=value, color=color,
-                             color_channels=color_channels)
+    color_channels = MockValue(data=0x1F, node=node)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
     device = light.get_device(node=node, values=values, node_config={})
 
-    assert color.data == '#0000000000'
+    assert color.data == "#0000000000"
 
     device.turn_on(**{ATTR_COLOR_TEMP: 200})
 
-    assert color.data == '#00000000ff'
+    assert color.data == "#00000000ff"
 
     device.turn_on(**{ATTR_COLOR_TEMP: 400})
 
-    assert color.data == '#000000ff00'
+    assert color.data == "#000000ff00"
 
 
 def test_rgb_not_supported(mock_openzwave):
     """Test value changed for rgb lights."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     # Supports color temperature only
     color_channels = MockValue(data=0x01, node=node)
-    values = MockLightValues(primary=value, color=color,
-                             color_channels=color_channels)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
     device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color is None
@@ -352,7 +371,7 @@ def test_no_color_channels_value(mock_openzwave):
     """Test value changed for rgb lights."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     values = MockLightValues(primary=value, color=color)
     device = light.get_device(node=node, values=values, node_config={})
 
@@ -363,16 +382,15 @@ def test_rgb_value_changed(mock_openzwave):
     """Test value changed for rgb lights."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     # Supports RGB only
-    color_channels = MockValue(data=0x1c, node=node)
-    values = MockLightValues(primary=value, color=color,
-                             color_channels=color_channels)
+    color_channels = MockValue(data=0x1C, node=node)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
     device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color == (0, 0)
 
-    color.data = '#ffbf800000'
+    color.data = "#ffbf800000"
     value_changed(color)
 
     assert device.hs_color == (29.764, 49.804)
@@ -382,17 +400,16 @@ def test_rgbww_value_changed(mock_openzwave):
     """Test value changed for rgb lights."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     # Supports RGB, Warm White
-    color_channels = MockValue(data=0x1d, node=node)
-    values = MockLightValues(primary=value, color=color,
-                             color_channels=color_channels)
+    color_channels = MockValue(data=0x1D, node=node)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
     device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color == (0, 0)
     assert device.white_value == 0
 
-    color.data = '#c86400c800'
+    color.data = "#c86400c800"
     value_changed(color)
 
     assert device.hs_color == (30, 100)
@@ -403,17 +420,16 @@ def test_rgbcw_value_changed(mock_openzwave):
     """Test value changed for rgb lights."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     # Supports RGB, Cold White
-    color_channels = MockValue(data=0x1e, node=node)
-    values = MockLightValues(primary=value, color=color,
-                             color_channels=color_channels)
+    color_channels = MockValue(data=0x1E, node=node)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
     device = light.get_device(node=node, values=values, node_config={})
 
     assert device.hs_color == (0, 0)
     assert device.white_value == 0
 
-    color.data = '#c86400c800'
+    color.data = "#c86400c800"
     value_changed(color)
 
     assert device.hs_color == (30, 100)
@@ -422,24 +438,26 @@ def test_rgbcw_value_changed(mock_openzwave):
 
 def test_ct_value_changed(mock_openzwave):
     """Test value changed for zw098 lights."""
-    node = MockNode(manufacturer_id='0086', product_id='0062',
-                    command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
+    node = MockNode(
+        manufacturer_id="0086",
+        product_id="0062",
+        command_classes=[const.COMMAND_CLASS_SWITCH_COLOR],
+    )
     value = MockValue(data=0, node=node)
-    color = MockValue(data='#0000000000', node=node)
+    color = MockValue(data="#0000000000", node=node)
     # Supports RGB, Cold White
-    color_channels = MockValue(data=0x1f, node=node)
-    values = MockLightValues(primary=value, color=color,
-                             color_channels=color_channels)
+    color_channels = MockValue(data=0x1F, node=node)
+    values = MockLightValues(primary=value, color=color, color_channels=color_channels)
     device = light.get_device(node=node, values=values, node_config={})
 
     assert device.color_temp == light.TEMP_MID_HASS
 
-    color.data = '#000000ff00'
+    color.data = "#000000ff00"
     value_changed(color)
 
     assert device.color_temp == light.TEMP_WARM_HASS
 
-    color.data = '#00000000ff'
+    color.data = "#00000000ff"
     value_changed(color)
 
     assert device.color_temp == light.TEMP_COLD_HASS

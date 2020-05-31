@@ -2,7 +2,12 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    LightEntity,
+)
 import homeassistant.util.color as color_util
 
 from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
@@ -22,16 +27,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def _to_skybell_level(level):
-    """Convert the given HASS light level (0-255) to Skybell (0-100)."""
+    """Convert the given Home Assistant light level (0-255) to Skybell (0-100)."""
     return int((level * 100) / 255)
 
 
 def _to_hass_level(level):
-    """Convert the given Skybell (0-100) light level to HASS (0-255)."""
+    """Convert the given Skybell (0-100) light level to Home Assistant (0-255)."""
     return int((level * 255) / 100)
 
 
-class SkybellLight(SkybellDevice, Light):
+class SkybellLight(SkybellDevice, LightEntity):
     """A binary sensor implementation for Skybell devices."""
 
     def __init__(self, device):
@@ -50,8 +55,7 @@ class SkybellLight(SkybellDevice, Light):
             rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             self._device.led_rgb = rgb
         elif ATTR_BRIGHTNESS in kwargs:
-            self._device.led_intensity = _to_skybell_level(
-                kwargs[ATTR_BRIGHTNESS])
+            self._device.led_intensity = _to_skybell_level(kwargs[ATTR_BRIGHTNESS])
         else:
             self._device.led_intensity = _to_skybell_level(255)
 

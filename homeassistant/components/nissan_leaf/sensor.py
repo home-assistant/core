@@ -1,18 +1,23 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from . import (
-    DATA_BATTERY, DATA_CHARGING, DATA_LEAF, DATA_RANGE_AC, DATA_RANGE_AC_OFF,
-    LeafEntity)
+    DATA_BATTERY,
+    DATA_CHARGING,
+    DATA_LEAF,
+    DATA_RANGE_AC,
+    DATA_RANGE_AC_OFF,
+    LeafEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON_RANGE = 'mdi:speedometer'
+ICON_RANGE = "mdi:speedometer"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -36,7 +41,7 @@ class LeafBatterySensor(LeafEntity):
     @property
     def name(self):
         """Sensor Name."""
-        return self.car.leaf.nickname + " Charge"
+        return f"{self.car.leaf.nickname} Charge"
 
     @property
     def device_class(self):
@@ -51,23 +56,20 @@ class LeafBatterySensor(LeafEntity):
     @property
     def unit_of_measurement(self):
         """Battery state measured in percentage."""
-        return '%'
+        return UNIT_PERCENTAGE
 
     @property
     def icon(self):
         """Battery state icon handling."""
         chargestate = self.car.data[DATA_CHARGING]
-        return icon_for_battery_level(
-            battery_level=self.state,
-            charging=chargestate
-        )
+        return icon_for_battery_level(battery_level=self.state, charging=chargestate)
 
 
 class LeafRangeSensor(LeafEntity):
     """Nissan Leaf Range Sensor."""
 
     def __init__(self, car, ac_on):
-        """Set-up range sensor. Store if AC on."""
+        """Set up range sensor. Store if AC on."""
         self._ac_on = ac_on
         super().__init__(car)
 
@@ -75,14 +77,15 @@ class LeafRangeSensor(LeafEntity):
     def name(self):
         """Update sensor name depending on AC."""
         if self._ac_on is True:
-            return self.car.leaf.nickname + " Range (AC)"
-        return self.car.leaf.nickname + " Range"
+            return f"{self.car.leaf.nickname} Range (AC)"
+        return f"{self.car.leaf.nickname} Range"
 
     def log_registration(self):
         """Log registration."""
         _LOGGER.debug(
-            "Registered LeafRangeSensor component with HASS for VIN %s",
-            self.car.leaf.vin)
+            "Registered LeafRangeSensor integration with Home Assistant for VIN %s",
+            self.car.leaf.vin,
+        )
 
     @property
     def state(self):
@@ -92,8 +95,7 @@ class LeafRangeSensor(LeafEntity):
         else:
             ret = self.car.data[DATA_RANGE_AC_OFF]
 
-        if (not self.car.hass.config.units.is_metric or
-                self.car.force_miles):
+        if not self.car.hass.config.units.is_metric or self.car.force_miles:
             ret = IMPERIAL_SYSTEM.length(ret, METRIC_SYSTEM.length_unit)
 
         return round(ret)
@@ -101,8 +103,7 @@ class LeafRangeSensor(LeafEntity):
     @property
     def unit_of_measurement(self):
         """Battery range unit."""
-        if (not self.car.hass.config.units.is_metric or
-                self.car.force_miles):
+        if not self.car.hass.config.units.is_metric or self.car.force_miles:
             return LENGTH_MILES
         return LENGTH_KILOMETERS
 

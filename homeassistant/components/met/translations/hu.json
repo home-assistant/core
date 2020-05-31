@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "A hely m\u00e1r l\u00e9tezik"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Magass\u00e1g",
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g",
+                    "name": "N\u00e9v"
+                },
+                "description": "Meteorol\u00f3giai int\u00e9zet",
+                "title": "Elhelyezked\u00e9s"
+            }
+        }
+    }
+}

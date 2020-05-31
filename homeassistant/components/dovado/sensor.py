@@ -6,7 +6,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_SENSORS
+from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES, UNIT_PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -16,26 +16,33 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-SENSOR_UPLOAD = 'upload'
-SENSOR_DOWNLOAD = 'download'
-SENSOR_SIGNAL = 'signal'
-SENSOR_NETWORK = 'network'
-SENSOR_SMS_UNREAD = 'sms'
+SENSOR_UPLOAD = "upload"
+SENSOR_DOWNLOAD = "download"
+SENSOR_SIGNAL = "signal"
+SENSOR_NETWORK = "network"
+SENSOR_SMS_UNREAD = "sms"
 
 SENSORS = {
-    SENSOR_NETWORK: ('signal strength', 'Network', None,
-                     'mdi:access-point-network'),
-    SENSOR_SIGNAL: ('signal strength', 'Signal Strength', '%', 'mdi:signal'),
-    SENSOR_SMS_UNREAD: ('sms unread', 'SMS unread', '',
-                        'mdi:message-text-outline'),
-    SENSOR_UPLOAD: ('traffic modem tx', 'Sent', 'GB', 'mdi:cloud-upload'),
-    SENSOR_DOWNLOAD: ('traffic modem rx', 'Received', 'GB',
-                      'mdi:cloud-download'),
+    SENSOR_NETWORK: ("signal strength", "Network", None, "mdi:access-point-network"),
+    SENSOR_SIGNAL: (
+        "signal strength",
+        "Signal Strength",
+        UNIT_PERCENTAGE,
+        "mdi:signal",
+    ),
+    SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", "", "mdi:message-text-outline"),
+    SENSOR_UPLOAD: ("traffic modem tx", "Sent", DATA_GIGABYTES, "mdi:cloud-upload"),
+    SENSOR_DOWNLOAD: (
+        "traffic modem rx",
+        "Received",
+        DATA_GIGABYTES,
+        "mdi:cloud-download",
+    ),
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_SENSORS): vol.All(cv.ensure_list, [vol.In(SENSORS)])}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -83,7 +90,7 @@ class DovadoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._data.name, SENSORS[self._sensor][1])
+        return f"{self._data.name} {SENSORS[self._sensor][1]}"
 
     @property
     def state(self):
@@ -103,5 +110,4 @@ class DovadoSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {k: v for k, v in self._data.state.items()
-                if k not in ['date', 'time']}
+        return {k: v for k, v in self._data.state.items() if k not in ["date", "time"]}

@@ -5,13 +5,18 @@ import logging
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
-from homeassistant.components.http import HomeAssistantView
 
 from .const import (
-    ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_NAME, ATTR_SERVICE,
-    ATTR_UUID)
+    ATTR_ADDON,
+    ATTR_CONFIG,
+    ATTR_DISCOVERY,
+    ATTR_NAME,
+    ATTR_SERVICE,
+    ATTR_UUID,
+)
 from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,13 +37,16 @@ def async_setup_discovery_view(hass: HomeAssistantView, hassio):
             _LOGGER.error("Can't read discover info: %s", err)
             return
 
-        jobs = [hassio_discovery.async_process_new(discovery)
-                for discovery in data[ATTR_DISCOVERY]]
+        jobs = [
+            hassio_discovery.async_process_new(discovery)
+            for discovery in data[ATTR_DISCOVERY]
+        ]
         if jobs:
             await asyncio.wait(jobs)
 
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START, _async_discovery_start_handler)
+        EVENT_HOMEASSISTANT_START, _async_discovery_start_handler
+    )
 
 
 class HassIODiscovery(HomeAssistantView):
@@ -86,7 +94,8 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         await self.hass.config_entries.flow.async_init(
-            service, context={'source': 'hassio'}, data=config_data)
+            service, context={"source": "hassio"}, data=config_data
+        )
 
     async def async_process_del(self, data):
         """Process remove discovery entry."""
@@ -104,6 +113,6 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         for entry in self.hass.config_entries.async_entries(service):
-            if entry.source != 'hassio':
+            if entry.source != "hassio":
                 continue
             await self.hass.config_entries.async_remove(entry)

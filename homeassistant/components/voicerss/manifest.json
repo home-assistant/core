@@ -1,8 +1,6 @@
 {
   "domain": "voicerss",
-  "name": "Voicerss",
-  "documentation": "https://www.home-assistant.io/components/voicerss",
-  "requirements": [],
-  "dependencies": [],
+  "name": "VoiceRSS",
+  "documentation": "https://www.home-assistant.io/integrations/voicerss",
   "codeowners": []
 }

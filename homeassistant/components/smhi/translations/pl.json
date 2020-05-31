@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Nazwa ju\u017c istnieje.",
+            "wrong_location": "Lokalizacja w Szwecji"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "name": "Nazwa"
+                },
+                "title": "Lokalizacja w Szwecji"
+            }
+        }
+    }
+}

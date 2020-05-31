@@ -1,197 +1,284 @@
 """Component to count within automations."""
 import logging
+from typing import Dict, Optional
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME,\
-    CONF_MAXIMUM, CONF_MINIMUM
-
+from homeassistant.const import (
+    ATTR_EDITABLE,
+    CONF_ICON,
+    CONF_ID,
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
+    CONF_NAME,
+)
+from homeassistant.core import callback
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_INITIAL = 'initial'
-ATTR_STEP = 'step'
-ATTR_MINIMUM = 'minimum'
-ATTR_MAXIMUM = 'maximum'
+ATTR_INITIAL = "initial"
+ATTR_STEP = "step"
+ATTR_MINIMUM = "minimum"
+ATTR_MAXIMUM = "maximum"
+VALUE = "value"
 
-CONF_INITIAL = 'initial'
-CONF_RESTORE = 'restore'
-CONF_STEP = 'step'
+CONF_INITIAL = "initial"
+CONF_RESTORE = "restore"
+CONF_STEP = "step"
 
 DEFAULT_INITIAL = 0
 DEFAULT_STEP = 1
-DOMAIN = 'counter'
+DOMAIN = "counter"
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-SERVICE_DECREMENT = 'decrement'
-SERVICE_INCREMENT = 'increment'
-SERVICE_RESET = 'reset'
-SERVICE_CONFIGURE = 'configure'
+SERVICE_DECREMENT = "decrement"
+SERVICE_INCREMENT = "increment"
+SERVICE_RESET = "reset"
+SERVICE_CONFIGURE = "configure"
 
-SERVICE_SCHEMA_SIMPLE = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
 
-SERVICE_SCHEMA_CONFIGURE = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
-    vol.Optional(ATTR_MINIMUM): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(ATTR_MAXIMUM): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(ATTR_STEP): cv.positive_int,
-})
+CREATE_FIELDS = {
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.positive_int,
+    vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
+    vol.Optional(CONF_MAXIMUM, default=None): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_MINIMUM, default=None): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_RESTORE, default=True): cv.boolean,
+    vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+}
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.schema_with_slug_keys(
-        vol.Any({
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
-                cv.positive_int,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_MAXIMUM, default=None):
-                vol.Any(None, vol.Coerce(int)),
-            vol.Optional(CONF_MINIMUM, default=None):
-                vol.Any(None, vol.Coerce(int)),
-            vol.Optional(CONF_RESTORE, default=True): cv.boolean,
-            vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
-        }, None)
-    )
-}, extra=vol.ALLOW_EXTRA)
+UPDATE_FIELDS = {
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_INITIAL): cv.positive_int,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_MAXIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_MINIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_RESTORE): cv.boolean,
+    vol.Optional(CONF_STEP): cv.positive_int,
+}
 
 
-async def async_setup(hass, config):
+def _none_to_empty_dict(value):
+    if value is None:
+        return {}
+    return value
+
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: cv.schema_with_slug_keys(
+            vol.All(
+                _none_to_empty_dict,
+                {
+                    vol.Optional(CONF_ICON): cv.icon,
+                    vol.Optional(
+                        CONF_INITIAL, default=DEFAULT_INITIAL
+                    ): cv.positive_int,
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_MAXIMUM, default=None): vol.Any(
+                        None, vol.Coerce(int)
+                    ),
+                    vol.Optional(CONF_MINIMUM, default=None): vol.Any(
+                        None, vol.Coerce(int)
+                    ),
+                    vol.Optional(CONF_RESTORE, default=True): cv.boolean,
+                    vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+                },
+            )
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the counters."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    id_manager = collection.IDManager()
 
-    entities = []
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+    )
+    collection.attach_entity_component_collection(
+        component, yaml_collection, Counter.from_yaml
+    )
 
-    for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
+    storage_collection = CounterStorageCollection(
+        Store(hass, STORAGE_VERSION, STORAGE_KEY),
+        logging.getLogger(f"{__name__}.storage_collection"),
+        id_manager,
+    )
+    collection.attach_entity_component_collection(
+        component, storage_collection, Counter
+    )
 
-        name = cfg.get(CONF_NAME)
-        initial = cfg.get(CONF_INITIAL)
-        restore = cfg.get(CONF_RESTORE)
-        step = cfg.get(CONF_STEP)
-        icon = cfg.get(CONF_ICON)
-        minimum = cfg.get(CONF_MINIMUM)
-        maximum = cfg.get(CONF_MAXIMUM)
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **(conf or {})} for id_, conf in config.get(DOMAIN, {}).items()]
+    )
+    await storage_collection.async_load()
 
-        entities.append(Counter(object_id, name, initial, minimum, maximum,
-                                restore, step, icon))
+    collection.StorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    ).async_setup(hass)
 
-    if not entities:
-        return False
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
+    component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
+    component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
+    component.async_register_entity_service(SERVICE_RESET, {}, "async_reset")
     component.async_register_entity_service(
-        SERVICE_INCREMENT, SERVICE_SCHEMA_SIMPLE,
-        'async_increment')
-    component.async_register_entity_service(
-        SERVICE_DECREMENT, SERVICE_SCHEMA_SIMPLE,
-        'async_decrement')
-    component.async_register_entity_service(
-        SERVICE_RESET, SERVICE_SCHEMA_SIMPLE,
-        'async_reset')
-    component.async_register_entity_service(
-        SERVICE_CONFIGURE, SERVICE_SCHEMA_CONFIGURE,
-        'async_configure')
+        SERVICE_CONFIGURE,
+        {
+            vol.Optional(ATTR_MINIMUM): vol.Any(None, vol.Coerce(int)),
+            vol.Optional(ATTR_MAXIMUM): vol.Any(None, vol.Coerce(int)),
+            vol.Optional(ATTR_STEP): cv.positive_int,
+            vol.Optional(ATTR_INITIAL): cv.positive_int,
+            vol.Optional(VALUE): cv.positive_int,
+        },
+        "async_configure",
+    )
 
-    await component.async_add_entities(entities)
     return True
+
+
+class CounterStorageCollection(collection.StorageCollection):
+    """Input storage based collection."""
+
+    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+
+    async def _process_create_data(self, data: Dict) -> Dict:
+        """Validate the config is valid."""
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: Dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_NAME]
+
+    async def _update_data(self, data: dict, update_data: Dict) -> Dict:
+        """Return a new updated data object."""
+        update_data = self.UPDATE_SCHEMA(update_data)
+        return {**data, **update_data}
 
 
 class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, object_id, name, initial, minimum, maximum,
-                 restore, step, icon):
+    def __init__(self, config: Dict):
         """Initialize a counter."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._name = name
-        self._restore = restore
-        self._step = step
-        self._state = self._initial = initial
-        self._min = minimum
-        self._max = maximum
-        self._icon = icon
+        self._config: Dict = config
+        self._state: Optional[int] = config[CONF_INITIAL]
+        self.editable: bool = True
+
+    @classmethod
+    def from_yaml(cls, config: Dict) -> "Counter":
+        """Create counter instance from yaml config."""
+        counter = cls(config)
+        counter.editable = False
+        counter.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        return counter
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """If entity should be polled."""
         return False
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """Return name of the counter."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
-    def icon(self):
+    def icon(self) -> Optional[str]:
         """Return the icon to be used for this entity."""
-        return self._icon
+        return self._config.get(CONF_ICON)
 
     @property
-    def state(self):
+    def state(self) -> Optional[int]:
         """Return the current value of the counter."""
         return self._state
 
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> Dict:
         """Return the state attributes."""
         ret = {
-            ATTR_INITIAL: self._initial,
-            ATTR_STEP: self._step,
+            ATTR_EDITABLE: self.editable,
+            ATTR_INITIAL: self._config[CONF_INITIAL],
+            ATTR_STEP: self._config[CONF_STEP],
         }
-        if self._min is not None:
-            ret[CONF_MINIMUM] = self._min
-        if self._max is not None:
-            ret[CONF_MAXIMUM] = self._max
+        if self._config[CONF_MINIMUM] is not None:
+            ret[CONF_MINIMUM] = self._config[CONF_MINIMUM]
+        if self._config[CONF_MAXIMUM] is not None:
+            ret[CONF_MAXIMUM] = self._config[CONF_MAXIMUM]
         return ret
 
-    def compute_next_state(self, state):
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id of the entity."""
+        return self._config[CONF_ID]
+
+    def compute_next_state(self, state) -> int:
         """Keep the state within the range of min/max values."""
-        if self._min is not None:
-            state = max(self._min, state)
-        if self._max is not None:
-            state = min(self._max, state)
+        if self._config[CONF_MINIMUM] is not None:
+            state = max(self._config[CONF_MINIMUM], state)
+        if self._config[CONF_MAXIMUM] is not None:
+            state = min(self._config[CONF_MAXIMUM], state)
 
         return state
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
         # __init__ will set self._state to self._initial, only override
         # if needed.
-        if self._restore:
+        if self._config[CONF_RESTORE]:
             state = await self.async_get_last_state()
             if state is not None:
                 self._state = self.compute_next_state(int(state.state))
+                self._config[CONF_INITIAL] = state.attributes.get(ATTR_INITIAL)
+                self._config[CONF_MAXIMUM] = state.attributes.get(ATTR_MAXIMUM)
+                self._config[CONF_MINIMUM] = state.attributes.get(ATTR_MINIMUM)
+                self._config[CONF_STEP] = state.attributes.get(ATTR_STEP)
 
-    async def async_decrement(self):
+    @callback
+    def async_decrement(self) -> None:
         """Decrement the counter."""
-        self._state = self.compute_next_state(self._state - self._step)
-        await self.async_update_ha_state()
+        self._state = self.compute_next_state(self._state - self._config[CONF_STEP])
+        self.async_write_ha_state()
 
-    async def async_increment(self):
+    @callback
+    def async_increment(self) -> None:
         """Increment a counter."""
-        self._state = self.compute_next_state(self._state + self._step)
-        await self.async_update_ha_state()
+        self._state = self.compute_next_state(self._state + self._config[CONF_STEP])
+        self.async_write_ha_state()
 
-    async def async_reset(self):
+    @callback
+    def async_reset(self) -> None:
         """Reset a counter."""
-        self._state = self.compute_next_state(self._initial)
-        await self.async_update_ha_state()
+        self._state = self.compute_next_state(self._config[CONF_INITIAL])
+        self.async_write_ha_state()
 
-    async def async_configure(self, **kwargs):
+    @callback
+    def async_configure(self, **kwargs) -> None:
         """Change the counter's settings with a service."""
-        if CONF_MINIMUM in kwargs:
-            self._min = kwargs[CONF_MINIMUM]
-        if CONF_MAXIMUM in kwargs:
-            self._max = kwargs[CONF_MAXIMUM]
-        if CONF_STEP in kwargs:
-            self._step = kwargs[CONF_STEP]
+        new_state = kwargs.pop(VALUE, self._state)
+        self._config = {**self._config, **kwargs}
+        self._state = self.compute_next_state(new_state)
+        self.async_write_ha_state()
 
+    async def async_update_config(self, config: Dict) -> None:
+        """Change the counter's settings WS CRUD."""
+        self._config = config
         self._state = self.compute_next_state(self._state)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()

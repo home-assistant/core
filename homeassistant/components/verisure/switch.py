@@ -1,8 +1,8 @@
 """Support for Verisure Smartplugs."""
 import logging
-from time import time
+from time import monotonic
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import CONF_SMARTPLUGS, HUB as hub
 
@@ -16,13 +16,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     hub.update_overview()
     switches = []
-    switches.extend([
-        VerisureSmartplug(device_label)
-        for device_label in hub.get('$.smartPlugs[*].deviceLabel')])
+    switches.extend(
+        [
+            VerisureSmartplug(device_label)
+            for device_label in hub.get("$.smartPlugs[*].deviceLabel")
+        ]
+    )
     add_entities(switches)
 
 
-class VerisureSmartplug(SwitchDevice):
+class VerisureSmartplug(SwitchEntity):
     """Representation of a Verisure smartplug."""
 
     def __init__(self, device_id):
@@ -35,37 +38,42 @@ class VerisureSmartplug(SwitchDevice):
     def name(self):
         """Return the name or location of the smartplug."""
         return hub.get_first(
-            "$.smartPlugs[?(@.deviceLabel == '%s')].area",
-            self._device_label)
+            "$.smartPlugs[?(@.deviceLabel == '%s')].area", self._device_label
+        )
 
     @property
     def is_on(self):
         """Return true if on."""
-        if time() - self._change_timestamp < 10:
+        if monotonic() - self._change_timestamp < 10:
             return self._state
-        self._state = hub.get_first(
-            "$.smartPlugs[?(@.deviceLabel == '%s')].currentState",
-            self._device_label) == "ON"
+        self._state = (
+            hub.get_first(
+                "$.smartPlugs[?(@.deviceLabel == '%s')].currentState",
+                self._device_label,
+            )
+            == "ON"
+        )
         return self._state
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return hub.get_first(
-            "$.smartPlugs[?(@.deviceLabel == '%s')]",
-            self._device_label) is not None
+        return (
+            hub.get_first("$.smartPlugs[?(@.deviceLabel == '%s')]", self._device_label)
+            is not None
+        )
 
     def turn_on(self, **kwargs):
         """Set smartplug status on."""
         hub.session.set_smartplug_state(self._device_label, True)
         self._state = True
-        self._change_timestamp = time()
+        self._change_timestamp = monotonic()
 
     def turn_off(self, **kwargs):
         """Set smartplug status off."""
         hub.session.set_smartplug_state(self._device_label, False)
         self._state = False
-        self._change_timestamp = time()
+        self._change_timestamp = monotonic()
 
     # pylint: disable=no-self-use
     def update(self):

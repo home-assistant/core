@@ -1,71 +1,86 @@
 """Support for Xiaomi Mi Temp BLE environmental sensor."""
 import logging
 
+import btlewrap
+from btlewrap.base import BluetoothBackendException
+from mitemp_bt import mitemp_bt_poller
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC,
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_BATTERY
+    CONF_FORCE_UPDATE,
+    CONF_MAC,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
+try:
+    import bluepy.btle  # noqa: F401 pylint: disable=unused-import
+
+    BACKEND = btlewrap.BluepyBackend
+except ImportError:
+    BACKEND = btlewrap.GatttoolBackend
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ADAPTER = 'adapter'
-CONF_CACHE = 'cache_value'
-CONF_MEDIAN = 'median'
-CONF_RETRIES = 'retries'
-CONF_TIMEOUT = 'timeout'
+CONF_ADAPTER = "adapter"
+CONF_CACHE = "cache_value"
+CONF_MEDIAN = "median"
+CONF_RETRIES = "retries"
+CONF_TIMEOUT = "timeout"
 
-DEFAULT_ADAPTER = 'hci0'
+DEFAULT_ADAPTER = "hci0"
 DEFAULT_UPDATE_INTERVAL = 300
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_MEDIAN = 3
-DEFAULT_NAME = 'MiTemp BT'
+DEFAULT_NAME = "MiTemp BT"
 DEFAULT_RETRIES = 2
 DEFAULT_TIMEOUT = 10
 
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
-    'temperature': [DEVICE_CLASS_TEMPERATURE, 'Temperature', '°C'],
-    'humidity': [DEVICE_CLASS_HUMIDITY, 'Humidity', '%'],
-    'battery': [DEVICE_CLASS_BATTERY, 'Battery', '%'],
+    "temperature": [DEVICE_CLASS_TEMPERATURE, "Temperature", TEMP_CELSIUS],
+    "humidity": [DEVICE_CLASS_HUMIDITY, "Humidity", UNIT_PERCENTAGE],
+    "battery": [DEVICE_CLASS_BATTERY, "Battery", UNIT_PERCENTAGE],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
-    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_RETRIES, default=DEFAULT_RETRIES): cv.positive_int,
-    vol.Optional(CONF_CACHE, default=DEFAULT_UPDATE_INTERVAL): cv.positive_int,
-    vol.Optional(CONF_ADAPTER, default=DEFAULT_ADAPTER): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
+        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_RETRIES, default=DEFAULT_RETRIES): cv.positive_int,
+        vol.Optional(CONF_CACHE, default=DEFAULT_UPDATE_INTERVAL): cv.positive_int,
+        vol.Optional(CONF_ADAPTER, default=DEFAULT_ADAPTER): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MiTempBt sensor."""
-    from mitemp_bt import mitemp_bt_poller
-    try:
-        import bluepy.btle  # noqa: F401 pylint: disable=unused-import
-        from btlewrap import BluepyBackend
-        backend = BluepyBackend
-    except ImportError:
-        from btlewrap import GatttoolBackend
-        backend = GatttoolBackend
-    _LOGGER.debug('MiTempBt is using %s backend.', backend.__name__)
+    backend = BACKEND
+    _LOGGER.debug("MiTempBt is using %s backend.", backend.__name__)
 
     cache = config.get(CONF_CACHE)
     poller = mitemp_bt_poller.MiTempBtPoller(
-        config.get(CONF_MAC), cache_timeout=cache,
-        adapter=config.get(CONF_ADAPTER), backend=backend)
+        config.get(CONF_MAC),
+        cache_timeout=cache,
+        adapter=config.get(CONF_ADAPTER),
+        backend=backend,
+    )
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
     poller.ble_timeout = config.get(CONF_TIMEOUT)
@@ -80,10 +95,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         prefix = config.get(CONF_NAME)
         if prefix:
-            name = "{} {}".format(prefix, name)
+            name = f"{prefix} {name}"
 
-        devs.append(MiTempBtSensor(
-            poller, parameter, device, name, unit, force_update, median))
+        devs.append(
+            MiTempBtSensor(poller, parameter, device, name, unit, force_update, median)
+        )
 
     add_entities(devs)
 
@@ -91,8 +107,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MiTempBtSensor(Entity):
     """Implementing the MiTempBt sensor."""
 
-    def __init__(self, poller, parameter, device, name, unit,
-                 force_update, median):
+    def __init__(self, poller, parameter, device, name, unit, force_update, median):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
@@ -138,11 +153,10 @@ class MiTempBtSensor(Entity):
 
         This uses a rolling median over 3 values to filter out outliers.
         """
-        from btlewrap.base import BluetoothBackendException
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
-        except IOError as ioerr:
+        except OSError as ioerr:
             _LOGGER.warning("Polling error %s", ioerr)
             return
         except BluetoothBackendException as bterror:
@@ -153,8 +167,9 @@ class MiTempBtSensor(Entity):
             _LOGGER.debug("%s = %s", self.name, data)
             self.data.append(data)
         else:
-            _LOGGER.warning("Did not receive any data from Mi Temp sensor %s",
-                            self.name)
+            _LOGGER.warning(
+                "Did not receive any data from Mi Temp sensor %s", self.name
+            )
             # Remove old data from median list or set sensor value to None
             # if no data is available anymore
             if self.data:

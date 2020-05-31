@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host ist bereits konfiguriert."
+        },
+        "error": {
+            "cannot_connect": "Verbindung zum Host nicht m\u00f6glich",
+            "name_exists": "Name existiert bereits",
+            "wrong_credentials": "Falscher Benutzername oder Kennwort"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "title": "Transmission-Client einrichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Aktualisierungsfrequenz"
+                },
+                "title": "Konfiguriere die Optionen f\u00fcr die \u00dcbertragung"
+            }
+        }
+    }
+}

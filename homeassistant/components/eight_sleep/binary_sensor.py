@@ -1,20 +1,19 @@
 """Support for Eight Sleep binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import CONF_BINARY_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the eight sleep binary sensor."""
     if discovery_info is None:
         return
 
-    name = 'Eight'
+    name = "Eight"
     sensors = discovery_info[CONF_BINARY_SENSORS]
     eight = hass.data[DATA_EIGHT]
 
@@ -26,7 +25,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities(all_sensors, True)
 
 
-class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
+class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
     """Representation of a Eight Sleep heat-based sensor."""
 
     def __init__(self, name, eight, sensor):
@@ -35,15 +34,19 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
 
         self._sensor = sensor
         self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
-        self._name = '{} {}'.format(name, self._mapped_name)
+        self._name = f"{name} {self._mapped_name}"
         self._state = None
 
-        self._side = self._sensor.split('_')[0]
+        self._side = self._sensor.split("_")[0]
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
 
-        _LOGGER.debug("Presence Sensor: %s, Side: %s, User: %s",
-                      self._sensor, self._side, self._userid)
+        _LOGGER.debug(
+            "Presence Sensor: %s, Side: %s, User: %s",
+            self._sensor,
+            self._side,
+            self._userid,
+        )
 
     @property
     def name(self):

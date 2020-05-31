@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan kun konfigurere \u00e9n Point-konto.",
+            "authorize_url_fail": "Ukjent feil ved oppretting av godkjenningsadresse.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
+            "external_setup": "Punktet er konfigurert fra en annen flyt.",
+            "no_flows": "Du m\u00e5 konfigurere Point f\u00f8r du kangodkjenne den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/point/)."
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning med Minut for din(e) Point enhet(er)"
+        },
+        "error": {
+            "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker p\u00e5 Send",
+            "no_token": "Ikke godkjent med Minut"
+        },
+        "step": {
+            "auth": {
+                "description": "Vennligst f\u00f8lg lenken nedenfor og **Godta** tilgang til Minut-kontoen din, kom tilbake og trykk **Send inn** nedenfor. \n\n [Link]({authorization_url})",
+                "title": "Godkjenn Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Tilbyder"
+                },
+                "description": "Velg fra hvilken godkjenningsleverand\u00f8r du vil godkjenne med Point.",
+                "title": "Godkjenningsleverand\u00f8r"
+            }
+        }
+    }
+}

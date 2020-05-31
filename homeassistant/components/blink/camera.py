@@ -3,24 +3,22 @@ import logging
 
 from homeassistant.components.camera import Camera
 
-from . import BLINK_DATA, DEFAULT_BRAND
+from .const import DEFAULT_BRAND, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_VIDEO_CLIP = 'video'
-ATTR_IMAGE = 'image'
+ATTR_VIDEO_CLIP = "video"
+ATTR_IMAGE = "image"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config, async_add_entities):
     """Set up a Blink Camera."""
-    if discovery_info is None:
-        return
-    data = hass.data[BLINK_DATA]
-    devs = []
+    data = hass.data[DOMAIN][config.entry_id]
+    entities = []
     for name, camera in data.cameras.items():
-        devs.append(BlinkCamera(data, name, camera))
+        entities.append(BlinkCamera(data, name, camera))
 
-    add_entities(devs)
+    async_add_entities(entities)
 
 
 class BlinkCamera(Camera):
@@ -30,9 +28,9 @@ class BlinkCamera(Camera):
         """Initialize a camera."""
         super().__init__()
         self.data = data
-        self._name = "{} {}".format(BLINK_DATA, name)
+        self._name = f"{DOMAIN} {name}"
         self._camera = camera
-        self._unique_id = "{}-camera".format(camera.serial)
+        self._unique_id = f"{camera.serial}-camera"
         self.response = None
         self.current_image = None
         self.last_image = None

@@ -2,31 +2,32 @@
 import logging
 import mimetypes
 
+from pushbullet import InvalidKeyError, PushBullet, PushError
 import voluptuous as vol
 
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
-    BaseNotificationService)
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_URL = 'url'
-ATTR_FILE = 'file'
-ATTR_FILE_URL = 'file_url'
-ATTR_LIST = 'list'
+ATTR_URL = "url"
+ATTR_FILE = "file"
+ATTR_FILE_URL = "file_url"
+ATTR_LIST = "list"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Pushbullet notification service."""
-    from pushbullet import PushBullet
-    from pushbullet import InvalidKeyError
 
     try:
         pushbullet = PushBullet(config[CONF_API_KEY])
@@ -58,11 +59,10 @@ class PushBulletNotificationService(BaseNotificationService):
         """
         self.pushbullet.refresh()
         self.pbtargets = {
-            'device': {
-                tgt.nickname.lower(): tgt for tgt in self.pushbullet.devices},
-            'channel': {
-                tgt.channel_tag.lower(): tgt for
-                tgt in self.pushbullet.channels},
+            "device": {tgt.nickname.lower(): tgt for tgt in self.pushbullet.devices},
+            "channel": {
+                tgt.channel_tag.lower(): tgt for tgt in self.pushbullet.channels
+            },
         }
 
     def send_message(self, message=None, **kwargs):
@@ -87,16 +87,24 @@ class PushBulletNotificationService(BaseNotificationService):
         # Main loop, process all targets specified.
         for target in targets:
             try:
-                ttype, tname = target.split('/', 1)
+                ttype, tname = target.split("/", 1)
             except ValueError:
                 _LOGGER.error("Invalid target syntax: %s", target)
                 continue
 
             # Target is email, send directly, don't use a target object.
             # This also seems to work to send to all devices in own account.
-            if ttype == 'email':
-                self._push_data(message, title, data, self.pushbullet, tname)
+            if ttype == "email":
+                self._push_data(message, title, data, self.pushbullet, email=tname)
                 _LOGGER.info("Sent notification to email %s", tname)
+                continue
+
+            # Target is sms, send directly, don't use a target object.
+            if ttype == "sms":
+                self._push_data(
+                    message, title, data, self.pushbullet, phonenumber=tname
+                )
+                _LOGGER.info("Sent sms notification to %s", tname)
                 continue
 
             # Refresh if name not found. While awaiting periodic refresh
@@ -114,16 +122,15 @@ class PushBulletNotificationService(BaseNotificationService):
             # Attempt push_note on a dict value. Keys are types & target
             # name. Dict pbtargets has all *actual* targets.
             try:
-                self._push_data(message, title, data,
-                                self.pbtargets[ttype][tname])
+                self._push_data(message, title, data, self.pbtargets[ttype][tname])
                 _LOGGER.info("Sent notification to %s/%s", ttype, tname)
             except KeyError:
                 _LOGGER.error("No such target: %s/%s", ttype, tname)
                 continue
 
-    def _push_data(self, message, title, data, pusher, email=None):
+    def _push_data(self, message, title, data, pusher, email=None, phonenumber=None):
         """Create the message content."""
-        from pushbullet import PushError
+
         if data is None:
             data = {}
         data_list = data.get(ATTR_LIST)
@@ -133,30 +140,35 @@ class PushBulletNotificationService(BaseNotificationService):
         try:
             email_kwargs = {}
             if email:
-                email_kwargs['email'] = email
-            if url:
+                email_kwargs["email"] = email
+            if phonenumber:
+                device = pusher.devices[0]
+                pusher.push_sms(device, phonenumber, message)
+            elif url:
                 pusher.push_link(title, url, body=message, **email_kwargs)
             elif filepath:
                 if not self.hass.config.is_allowed_path(filepath):
                     _LOGGER.error("Filepath is not valid or allowed")
                     return
-                with open(filepath, 'rb') as fileh:
+                with open(filepath, "rb") as fileh:
                     filedata = self.pushbullet.upload_file(fileh, filepath)
-                    if filedata.get('file_type') == 'application/x-empty':
+                    if filedata.get("file_type") == "application/x-empty":
                         _LOGGER.error("Can not send an empty file")
                         return
                     filedata.update(email_kwargs)
-                    pusher.push_file(title=title, body=message,
-                                     **filedata)
+                    pusher.push_file(title=title, body=message, **filedata)
             elif file_url:
-                if not file_url.startswith('http'):
+                if not file_url.startswith("http"):
                     _LOGGER.error("URL should start with http or https")
                     return
-                pusher.push_file(title=title, body=message,
-                                 file_name=file_url, file_url=file_url,
-                                 file_type=(mimetypes
-                                            .guess_type(file_url)[0]),
-                                 **email_kwargs)
+                pusher.push_file(
+                    title=title,
+                    body=message,
+                    file_name=file_url,
+                    file_url=file_url,
+                    file_type=(mimetypes.guess_type(file_url)[0]),
+                    **email_kwargs,
+                )
             elif data_list:
                 pusher.push_list(title, data_list, **email_kwargs)
             else:

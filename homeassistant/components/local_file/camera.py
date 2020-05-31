@@ -5,27 +5,34 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, ATTR_ENTITY_ID
 from homeassistant.components.camera import (
-    Camera, CAMERA_SERVICE_SCHEMA, PLATFORM_SCHEMA)
-from homeassistant.components.camera.const import DOMAIN
+    CAMERA_SERVICE_SCHEMA,
+    PLATFORM_SCHEMA,
+    Camera,
+)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.helpers import config_validation as cv
+
+from .const import (
+    CONF_FILE_PATH,
+    DATA_LOCAL_FILE,
+    DEFAULT_NAME,
+    DOMAIN,
+    SERVICE_UPDATE_FILE_PATH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FILE_PATH = 'file_path'
-DATA_LOCAL_FILE = 'local_file_cameras'
-DEFAULT_NAME = 'Local File'
-SERVICE_UPDATE_FILE_PATH = 'local_file_update_file_path'
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_FILE_PATH): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILE_PATH): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
-
-CAMERA_SERVICE_UPDATE_FILE_PATH = CAMERA_SERVICE_SCHEMA.extend({
-    vol.Required(CONF_FILE_PATH): cv.string
-})
+CAMERA_SERVICE_UPDATE_FILE_PATH = CAMERA_SERVICE_SCHEMA.extend(
+    {vol.Required(CONF_FILE_PATH): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -52,7 +59,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         DOMAIN,
         SERVICE_UPDATE_FILE_PATH,
         update_file_path_service,
-        schema=CAMERA_SERVICE_UPDATE_FILE_PATH)
+        schema=CAMERA_SERVICE_UPDATE_FILE_PATH,
+    )
 
     add_entities([camera])
 
@@ -75,17 +83,21 @@ class LocalFile(Camera):
     def camera_image(self):
         """Return image response."""
         try:
-            with open(self._file_path, 'rb') as file:
+            with open(self._file_path, "rb") as file:
                 return file.read()
         except FileNotFoundError:
-            _LOGGER.warning("Could not read camera %s image from file: %s",
-                            self._name, self._file_path)
+            _LOGGER.warning(
+                "Could not read camera %s image from file: %s",
+                self._name,
+                self._file_path,
+            )
 
     def check_file_path_access(self, file_path):
         """Check that filepath given is readable."""
         if not os.access(file_path, os.R_OK):
-            _LOGGER.warning("Could not read camera %s image from file: %s",
-                            self._name, file_path)
+            _LOGGER.warning(
+                "Could not read camera %s image from file: %s", self._name, file_path
+            )
 
     def update_file_path(self, file_path):
         """Update the file_path."""
@@ -101,6 +113,4 @@ class LocalFile(Camera):
     @property
     def device_state_attributes(self):
         """Return the camera state attributes."""
-        return {
-            'file_path': self._file_path,
-        }
+        return {"file_path": self._file_path}

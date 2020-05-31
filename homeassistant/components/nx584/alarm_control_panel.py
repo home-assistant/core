@@ -1,27 +1,40 @@
 """Support for NX584 alarm control panels."""
 import logging
 
+from nx584 import client
 import requests
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'NX584'
+DEFAULT_HOST = "localhost"
+DEFAULT_NAME = "NX584"
 DEFAULT_PORT = 5007
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -30,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    url = 'http://{}:{}'.format(host, port)
+    url = f"http://{host}:{port}"
 
     try:
         add_entities([NX584Alarm(hass, url, name)])
@@ -39,12 +52,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
 
-class NX584Alarm(alarm.AlarmControlPanel):
+class NX584Alarm(alarm.AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
     def __init__(self, hass, url, name):
         """Init the nx584 alarm panel."""
-        from nx584 import client
+
         self._hass = hass
         self._name = name
         self._url = url
@@ -70,14 +83,21 @@ class NX584Alarm(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._state
 
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
     def update(self):
         """Process new events from panel."""
         try:
             part = self._alarm.list_partitions()[0]
             zones = self._alarm.list_zones()
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to %(host)s: %(reason)s",
-                          dict(host=self._url, reason=ex))
+            _LOGGER.error(
+                "Unable to connect to %(host)s: %(reason)s",
+                dict(host=self._url, reason=ex),
+            )
             self._state = None
             zones = []
         except IndexError:
@@ -87,20 +107,22 @@ class NX584Alarm(alarm.AlarmControlPanel):
 
         bypassed = False
         for zone in zones:
-            if zone['bypassed']:
-                _LOGGER.debug("Zone %(zone)s is bypassed, assuming HOME",
-                              dict(zone=zone['number']))
+            if zone["bypassed"]:
+                _LOGGER.debug(
+                    "Zone %(zone)s is bypassed, assuming HOME",
+                    dict(zone=zone["number"]),
+                )
                 bypassed = True
                 break
 
-        if not part['armed']:
+        if not part["armed"]:
             self._state = STATE_ALARM_DISARMED
         elif bypassed:
             self._state = STATE_ALARM_ARMED_HOME
         else:
             self._state = STATE_ALARM_ARMED_AWAY
 
-        for flag in part['condition_flags']:
+        for flag in part["condition_flags"]:
             if flag == "Siren on":
                 self._state = STATE_ALARM_TRIGGERED
 
@@ -110,8 +132,8 @@ class NX584Alarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._alarm.arm('stay')
+        self._alarm.arm("stay")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._alarm.arm('exit')
+        self._alarm.arm("exit")

@@ -5,7 +5,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    CONF_MONITORED_CONDITIONS,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -15,38 +20,40 @@ from . import DOMAIN, UPDATE_TOPIC
 _LOGGER = logging.getLogger(__name__)
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
-PERCENT_UNITS = ['%', '%']
-SALT_UNITS = ['g/L', 'PPM']
-WATT_UNITS = ['W', 'W']
+PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
+SALT_UNITS = ["g/L", "PPM"]
+WATT_UNITS = [POWER_WATT, POWER_WATT]
 NO_UNITS = [None, None]
 
 # sensor_type [ description, unit, icon ]
 # sensor_type corresponds to property names in aqualogic.core.AquaLogic
 SENSOR_TYPES = {
-    'air_temp': ['Air Temperature', TEMP_UNITS, 'mdi:thermometer'],
-    'pool_temp': ['Pool Temperature', TEMP_UNITS, 'mdi:oil-temperature'],
-    'spa_temp': ['Spa Temperature', TEMP_UNITS, 'mdi:oil-temperature'],
-    'pool_chlorinator': ['Pool Chlorinator', PERCENT_UNITS, 'mdi:gauge'],
-    'spa_chlorinator': ['Spa Chlorinator', PERCENT_UNITS, 'mdi:gauge'],
-    'salt_level': ['Salt Level', SALT_UNITS, 'mdi:gauge'],
-    'pump_speed': ['Pump Speed', PERCENT_UNITS, 'mdi:speedometer'],
-    'pump_power': ['Pump Power', WATT_UNITS, 'mdi:gauge'],
-    'status': ['Status', NO_UNITS, 'mdi:alert']
+    "air_temp": ["Air Temperature", TEMP_UNITS, "mdi:thermometer"],
+    "pool_temp": ["Pool Temperature", TEMP_UNITS, "mdi:oil-temperature"],
+    "spa_temp": ["Spa Temperature", TEMP_UNITS, "mdi:oil-temperature"],
+    "pool_chlorinator": ["Pool Chlorinator", PERCENT_UNITS, "mdi:gauge"],
+    "spa_chlorinator": ["Spa Chlorinator", PERCENT_UNITS, "mdi:gauge"],
+    "salt_level": ["Salt Level", SALT_UNITS, "mdi:gauge"],
+    "pump_speed": ["Pump Speed", PERCENT_UNITS, "mdi:speedometer"],
+    "pump_power": ["Pump Power", WATT_UNITS, "mdi:gauge"],
+    "status": ["Status", NO_UNITS, "mdi:alert"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        )
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
     sensors = []
 
     processor = hass.data[DOMAIN]
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(AquaLogicSensor(processor, sensor_type))
 
     async_add_entities(sensors)
@@ -69,7 +76,7 @@ class AquaLogicSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "AquaLogic {}".format(SENSOR_TYPES[self._type][0])
+        return f"AquaLogic {SENSOR_TYPES[self._type][0]}"
 
     @property
     def unit_of_measurement(self):
@@ -93,8 +100,11 @@ class AquaLogicSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback)
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.async_update_callback
+            )
+        )
 
     @callback
     def async_update_callback(self):
@@ -102,4 +112,4 @@ class AquaLogicSensor(Entity):
         panel = self._processor.panel
         if panel is not None:
             self._state = getattr(panel, self._type)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

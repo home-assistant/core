@@ -1,32 +1,43 @@
 """Support for Orvibo S20 Wifi Smart Switches."""
 import logging
 
+from orvibo.s20 import S20, S20Exception, discover
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_SWITCHES, CONF_MAC, CONF_DISCOVERY)
+    CONF_DISCOVERY,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_SWITCHES,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Orvibo S20 Switch'
+DEFAULT_NAME = "Orvibo S20 Switch"
 DEFAULT_DISCOVERY = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES, default=[]):
-        vol.All(cv.ensure_list, [{
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_MAC): cv.string,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-        }]),
-    vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SWITCHES, default=[]): vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Optional(CONF_MAC): cv.string,
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                }
+            ],
+        ),
+        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up S20 switches."""
-    from orvibo.s20 import discover, S20, S20Exception
 
     switch_data = {}
     switches = []
@@ -41,8 +52,9 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
     for host, data in switch_data.items():
         try:
-            switches.append(S20Switch(data.get(CONF_NAME),
-                                      S20(host, mac=data.get(CONF_MAC))))
+            switches.append(
+                S20Switch(data.get(CONF_NAME), S20(host, mac=data.get(CONF_MAC)))
+            )
             _LOGGER.info("Initialized S20 at %s", host)
         except S20Exception:
             _LOGGER.error("S20 at %s couldn't be initialized", host)
@@ -50,12 +62,11 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     add_entities_callback(switches)
 
 
-class S20Switch(SwitchDevice):
+class S20Switch(SwitchEntity):
     """Representation of an S20 switch."""
 
     def __init__(self, name, s20):
         """Initialize the S20 device."""
-        from orvibo.s20 import S20Exception
 
         self._name = name
         self._s20 = s20

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD \u00e8 gi\u00e0 configurato",
+            "incomplete_discovery": "Individuazione incompleta",
+            "no_devices_discovered": "Nessun UPnP/IGD trovato",
+            "no_devices_found": "Nessun dispositivo UPnP/IGD trovato in rete."
+        },
+        "error": {
+            "one": "Vuoto",
+            "other": "Vuoto"
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "init": {
+                "one": "uno",
+                "other": "altro"
+            },
+            "ssdp_confirm": {
+                "description": "Vuoi configurare questo dispositivo UPnP/IGD?"
+            },
+            "user": {
+                "data": {
+                    "scan_interval": "Intervallo di aggiornamento (secondi, minimo 30)",
+                    "usn": "Dispositivo"
+                }
+            }
+        }
+    }
+}

@@ -1,10 +1,6 @@
 {
   "domain": "flock",
   "name": "Flock",
-  "documentation": "https://www.home-assistant.io/components/flock",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/flock",
+  "codeowners": ["@fabaff"]
 }

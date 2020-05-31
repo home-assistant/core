@@ -1,12 +1,13 @@
 """Tests for the Area Registry."""
 import asyncio
 
-import asynctest
 import pytest
 
 from homeassistant.core import callback
 from homeassistant.helpers import area_registry
-from tests.common import mock_area_registry, flush_store
+
+import tests.async_mock
+from tests.common import flush_store, mock_area_registry
 
 
 @pytest.fixture
@@ -24,15 +25,14 @@ def update_events(hass):
     def async_capture(event):
         events.append(event.data)
 
-    hass.bus.async_listen(area_registry.EVENT_AREA_REGISTRY_UPDATED,
-                          async_capture)
+    hass.bus.async_listen(area_registry.EVENT_AREA_REGISTRY_UPDATED, async_capture)
 
     return events
 
 
 async def test_list_areas(registry):
     """Make sure that we can read areas."""
-    registry.async_create('mock')
+    registry.async_create("mock")
 
     areas = registry.async_list_areas()
 
@@ -41,25 +41,24 @@ async def test_list_areas(registry):
 
 async def test_create_area(hass, registry, update_events):
     """Make sure that we can create an area."""
-    area = registry.async_create('mock')
+    area = registry.async_create("mock")
 
-    assert area.name == 'mock'
+    assert area.name == "mock"
     assert len(registry.areas) == 1
 
     await hass.async_block_till_done()
 
     assert len(update_events) == 1
-    assert update_events[0]['action'] == 'create'
-    assert update_events[0]['area_id'] == area.id
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["area_id"] == area.id
 
 
-async def test_create_area_with_name_already_in_use(hass, registry,
-                                                    update_events):
+async def test_create_area_with_name_already_in_use(hass, registry, update_events):
     """Make sure that we can't create an area with a name already in use."""
-    area1 = registry.async_create('mock')
+    area1 = registry.async_create("mock")
 
     with pytest.raises(ValueError) as e_info:
-        area2 = registry.async_create('mock')
+        area2 = registry.async_create("mock")
         assert area1 != area2
         assert e_info == "Name is already in use"
 
@@ -71,7 +70,7 @@ async def test_create_area_with_name_already_in_use(hass, registry,
 
 async def test_delete_area(hass, registry, update_events):
     """Make sure that we can delete an area."""
-    area = registry.async_create('mock')
+    area = registry.async_create("mock")
 
     await registry.async_delete(area.id)
 
@@ -80,46 +79,46 @@ async def test_delete_area(hass, registry, update_events):
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]['action'] == 'create'
-    assert update_events[0]['area_id'] == area.id
-    assert update_events[1]['action'] == 'remove'
-    assert update_events[1]['area_id'] == area.id
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["area_id"] == area.id
+    assert update_events[1]["action"] == "remove"
+    assert update_events[1]["area_id"] == area.id
 
 
 async def test_delete_non_existing_area(registry):
     """Make sure that we can't delete an area that doesn't exist."""
-    registry.async_create('mock')
+    registry.async_create("mock")
 
     with pytest.raises(KeyError):
-        await registry.async_delete('')
+        await registry.async_delete("")
 
     assert len(registry.areas) == 1
 
 
 async def test_update_area(hass, registry, update_events):
     """Make sure that we can read areas."""
-    area = registry.async_create('mock')
+    area = registry.async_create("mock")
 
-    updated_area = registry.async_update(area.id, name='mock1')
+    updated_area = registry.async_update(area.id, name="mock1")
 
     assert updated_area != area
-    assert updated_area.name == 'mock1'
+    assert updated_area.name == "mock1"
     assert len(registry.areas) == 1
 
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]['action'] == 'create'
-    assert update_events[0]['area_id'] == area.id
-    assert update_events[1]['action'] == 'update'
-    assert update_events[1]['area_id'] == area.id
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["area_id"] == area.id
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["area_id"] == area.id
 
 
 async def test_update_area_with_same_name(registry):
     """Make sure that we can reapply the same name to the area."""
-    area = registry.async_create('mock')
+    area = registry.async_create("mock")
 
-    updated_area = registry.async_update(area.id, name='mock')
+    updated_area = registry.async_update(area.id, name="mock")
 
     assert updated_area == area
     assert len(registry.areas) == 1
@@ -127,22 +126,22 @@ async def test_update_area_with_same_name(registry):
 
 async def test_update_area_with_name_already_in_use(registry):
     """Make sure that we can't update an area with a name already in use."""
-    area1 = registry.async_create('mock1')
-    area2 = registry.async_create('mock2')
+    area1 = registry.async_create("mock1")
+    area2 = registry.async_create("mock2")
 
     with pytest.raises(ValueError) as e_info:
-        registry.async_update(area1.id, name='mock2')
+        registry.async_update(area1.id, name="mock2")
         assert e_info == "Name is already in use"
 
-    assert area1.name == 'mock1'
-    assert area2.name == 'mock2'
+    assert area1.name == "mock1"
+    assert area2.name == "mock2"
     assert len(registry.areas) == 2
 
 
 async def test_load_area(hass, registry):
     """Make sure that we can load/save data correctly."""
-    registry.async_create('mock1')
-    registry.async_create('mock2')
+    registry.async_create("mock1")
+    registry.async_create("mock2")
 
     assert len(registry.areas) == 2
 
@@ -156,15 +155,8 @@ async def test_load_area(hass, registry):
 async def test_loading_area_from_storage(hass, hass_storage):
     """Test loading stored areas on start."""
     hass_storage[area_registry.STORAGE_KEY] = {
-        'version': area_registry.STORAGE_VERSION,
-        'data': {
-            'areas': [
-                {
-                    'id': '12345A',
-                    'name': 'mock'
-                }
-            ]
-        }
+        "version": area_registry.STORAGE_VERSION,
+        "data": {"areas": [{"id": "12345A", "name": "mock"}]},
     }
 
     registry = await area_registry.async_get_registry(hass)
@@ -174,8 +166,8 @@ async def test_loading_area_from_storage(hass, hass_storage):
 
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
-    with asynctest.patch(
-        'homeassistant.helpers.area_registry.AreaRegistry.async_load',
+    with tests.async_mock.patch(
+        "homeassistant.helpers.area_registry.AreaRegistry.async_load"
     ) as mock_load:
         results = await asyncio.gather(
             area_registry.async_get_registry(hass),

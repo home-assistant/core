@@ -1,1 +1,0 @@
-"""The hydroquebec component."""

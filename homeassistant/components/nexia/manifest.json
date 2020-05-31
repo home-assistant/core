@@ -1,0 +1,8 @@
+{
+  "domain": "nexia",
+  "name": "Nexia",
+  "requirements": ["nexia==0.9.3"],
+  "codeowners": ["@ryannazaretian", "@bdraco"],
+  "documentation": "https://www.home-assistant.io/integrations/nexia",
+  "config_flow": true
+}

@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -14,15 +14,17 @@ SCAN_INTERVAL = timedelta(seconds=120)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tahoma controller devices."""
+    if discovery_info is None:
+        return
     _LOGGER.debug("Setup Tahoma Binary sensor platform")
-    controller = hass.data[TAHOMA_DOMAIN]['controller']
+    controller = hass.data[TAHOMA_DOMAIN]["controller"]
     devices = []
-    for device in hass.data[TAHOMA_DOMAIN]['devices']['smoke']:
+    for device in hass.data[TAHOMA_DOMAIN]["devices"]["smoke"]:
         devices.append(TahomaBinarySensor(device, controller))
     add_entities(devices, True)
 
 
-class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
+class TahomaBinarySensor(TahomaDevice, BinarySensorEntity):
     """Representation of a Tahoma Binary Sensor."""
 
     def __init__(self, tahoma_device, controller):
@@ -42,8 +44,8 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of the device."""
-        if self.tahoma_device.type == 'rtds:RTDSSmokeSensor':
-            return 'smoke'
+        if self.tahoma_device.type == "rtds:RTDSSmokeSensor":
+            return "smoke"
         return None
 
     @property
@@ -71,25 +73,23 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
     def update(self):
         """Update the state."""
         self.controller.get_states([self.tahoma_device])
-        if self.tahoma_device.type == 'rtds:RTDSSmokeSensor':
-            if self.tahoma_device.active_states['core:SmokeState']\
-                    == 'notDetected':
+        if self.tahoma_device.type == "rtds:RTDSSmokeSensor":
+            if self.tahoma_device.active_states["core:SmokeState"] == "notDetected":
                 self._state = STATE_OFF
             else:
                 self._state = STATE_ON
 
-        if 'core:SensorDefectState' in self.tahoma_device.active_states:
+        if "core:SensorDefectState" in self.tahoma_device.active_states:
             # 'lowBattery' for low battery warning. 'dead' for not available.
-            self._battery = self.tahoma_device.active_states[
-                'core:SensorDefectState']
-            self._available = bool(self._battery != 'dead')
+            self._battery = self.tahoma_device.active_states["core:SensorDefectState"]
+            self._available = bool(self._battery != "dead")
         else:
             self._battery = None
             self._available = True
 
         if self._state == STATE_ON:
             self._icon = "mdi:fire"
-        elif self._battery == 'lowBattery':
+        elif self._battery == "lowBattery":
             self._icon = "mdi:battery-alert"
         else:
             self._icon = None

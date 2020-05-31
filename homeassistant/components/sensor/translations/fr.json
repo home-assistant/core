@@ -1,0 +1,33 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Niveau de la batterie de {entity_name}",
+            "is_humidity": "Humidit\u00e9 de {entity_name}",
+            "is_illuminance": "\u00c9clairement de {entity_name}",
+            "is_power": "Puissance de {entity_name}",
+            "is_pressure": "Pression de {entity_name}",
+            "is_signal_strength": "Force du signal de {entity_name}",
+            "is_temperature": "Temp\u00e9rature de {entity_name}",
+            "is_timestamp": "Horodatage de {entity_name}",
+            "is_value": "La valeur actuelle de {entity_name}"
+        },
+        "trigger_type": {
+            "battery_level": "{entity_name} modification du niveau de batterie",
+            "humidity": "{entity_name} modification de l'humidit\u00e9",
+            "illuminance": "{entity_name} modification de l'\u00e9clairement",
+            "power": "{entity_name} modification de la puissance",
+            "pressure": "{entity_name} modification de la pression",
+            "signal_strength": "{entity_name} modification de la force du signal",
+            "temperature": "{entity_name} modification de temp\u00e9rature",
+            "timestamp": "{entity_name} modification d'horodatage",
+            "value": "Changements de valeur de {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Inactif",
+            "on": "Actif"
+        }
+    },
+    "title": "Capteur"
+}

@@ -5,21 +5,26 @@ import voluptuous as vol
 
 from homeassistant.components import enocean
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'EnOcean binary sensor'
-DEPENDENCIES = ['enocean']
-EVENT_BUTTON_PRESSED = 'button_pressed'
+DEFAULT_NAME = "EnOcean binary sensor"
+DEPENDENCIES = ["enocean"]
+EVENT_BUTTON_PRESSED = "button_pressed"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -31,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
 
 
-class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
+class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorEntity):
     """Representation of EnOcean binary sensors such as wall switches.
 
     Supported EEPs (EnOcean Equipment Profiles):
@@ -97,8 +102,12 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         elif action == 0x15:
             self.which = 10
             self.onoff = 1
-        self.hass.bus.fire(EVENT_BUTTON_PRESSED,
-                           {'id': self.dev_id,
-                            'pushed': pushed,
-                            'which': self.which,
-                            'onoff': self.onoff})
+        self.hass.bus.fire(
+            EVENT_BUTTON_PRESSED,
+            {
+                "id": self.dev_id,
+                "pushed": pushed,
+                "which": self.which,
+                "onoff": self.onoff,
+            },
+        )

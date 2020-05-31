@@ -1,8 +1,6 @@
 {
   "domain": "teksavvy",
-  "name": "Teksavvy",
-  "documentation": "https://www.home-assistant.io/components/teksavvy",
-  "requirements": [],
-  "dependencies": [],
+  "name": "TekSavvy",
+  "documentation": "https://www.home-assistant.io/integrations/teksavvy",
   "codeowners": []
 }

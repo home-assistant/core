@@ -1,0 +1,26 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "one": "Een",
+                    "other": "M\u00e9i"
+                }
+            },
+            "options_1": {
+                "data": {
+                    "bool": "Optionelle Boolean",
+                    "int": "Numeresch Agab"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Multiple Auswiel",
+                    "select": "Eng Optioun auswielen",
+                    "string": "String W\u00e4ert"
+                }
+            }
+        }
+    },
+    "title": "Demo"
+}

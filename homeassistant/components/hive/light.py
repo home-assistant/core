@@ -1,36 +1,37 @@
 """Support for the Hive lights."""
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    LightEntity,
+)
 import homeassistant.util.color as color_util
 
-from . import DATA_HIVE, DOMAIN
+from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive light devices."""
     if discovery_info is None:
         return
+
     session = hass.data.get(DATA_HIVE)
+    devs = []
+    for dev in discovery_info:
+        devs.append(HiveDeviceLight(session, dev))
+    add_entities(devs)
 
-    add_entities([HiveDeviceLight(session, discovery_info)])
 
-
-class HiveDeviceLight(Light):
+class HiveDeviceLight(HiveEntity, LightEntity):
     """Hive Active Light Device."""
 
-    def __init__(self, hivesession, hivedevice):
+    def __init__(self, hive_session, hive_device):
         """Initialize the Light device."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.node_name = hivedevice["Hive_NodeName"]
-        self.device_type = hivedevice["HA_DeviceType"]
-        self.light_device_type = hivedevice["Hive_Light_DeviceType"]
-        self.session = hivesession
-        self.attributes = {}
-        self.data_updatesource = '{}.{}'.format(
-            self.device_type, self.node_id)
-        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
-        self.session.entities.append(self)
+        super().__init__(hive_session, hive_device)
+        self.light_device_type = hive_device["Hive_Light_DeviceType"]
 
     @property
     def unique_id(self):
@@ -40,17 +41,7 @@ class HiveDeviceLight(Light):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
-        }
-
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
-            self.schedule_update_ha_state()
+        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
 
     @property
     def name(self):
@@ -70,22 +61,28 @@ class HiveDeviceLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        if self.light_device_type == "tuneablelight" \
-                or self.light_device_type == "colourtuneablelight":
+        if (
+            self.light_device_type == "tuneablelight"
+            or self.light_device_type == "colourtuneablelight"
+        ):
             return self.session.light.get_min_color_temp(self.node_id)
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        if self.light_device_type == "tuneablelight" \
-                or self.light_device_type == "colourtuneablelight":
+        if (
+            self.light_device_type == "tuneablelight"
+            or self.light_device_type == "colourtuneablelight"
+        ):
             return self.session.light.get_max_color_temp(self.node_id)
 
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        if self.light_device_type == "tuneablelight" \
-                or self.light_device_type == "colourtuneablelight":
+        if (
+            self.light_device_type == "tuneablelight"
+            or self.light_device_type == "colourtuneablelight"
+        ):
             return self.session.light.get_color_temp(self.node_id)
 
     @property
@@ -100,6 +97,7 @@ class HiveDeviceLight(Light):
         """Return true if light is on."""
         return self.session.light.get_state(self.node_id)
 
+    @refresh_system
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         new_brightness = None
@@ -107,7 +105,7 @@ class HiveDeviceLight(Light):
         new_color = None
         if ATTR_BRIGHTNESS in kwargs:
             tmp_new_brightness = kwargs.get(ATTR_BRIGHTNESS)
-            percentage_brightness = ((tmp_new_brightness / 255) * 100)
+            percentage_brightness = (tmp_new_brightness / 255) * 100
             new_brightness = int(round(percentage_brightness / 5.0) * 5.0)
             if new_brightness == 0:
                 new_brightness = 5
@@ -120,18 +118,18 @@ class HiveDeviceLight(Light):
             saturation = int(get_new_color[1])
             new_color = (hue, saturation, 100)
 
-        self.session.light.turn_on(self.node_id, self.light_device_type,
-                                   new_brightness, new_color_temp,
-                                   new_color)
+        self.session.light.turn_on(
+            self.node_id,
+            self.light_device_type,
+            new_brightness,
+            new_color_temp,
+            new_color,
+        )
 
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
-
+    @refresh_system
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         self.session.light.turn_off(self.node_id)
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
 
     @property
     def supported_features(self):
@@ -140,15 +138,13 @@ class HiveDeviceLight(Light):
         if self.light_device_type == "warmwhitelight":
             supported_features = SUPPORT_BRIGHTNESS
         elif self.light_device_type == "tuneablelight":
-            supported_features = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
+            supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
         elif self.light_device_type == "colourtuneablelight":
-            supported_features = (
-                SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR)
+            supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
 
         return supported_features
 
     def update(self):
         """Update all Node data from Hive."""
         self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(
-            self.node_id)
+        self.attributes = self.session.attributes.state_attributes(self.node_id)

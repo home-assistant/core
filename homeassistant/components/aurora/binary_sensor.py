@@ -1,25 +1,24 @@
 """Support for aurora forecast data sensor."""
 from datetime import timedelta
 import logging
+from math import floor
 
 from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric " \
-              "Administration"
-CONF_THRESHOLD = 'forecast_threshold'
+ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric Administration"
+CONF_THRESHOLD = "forecast_threshold"
 
-DEFAULT_DEVICE_CLASS = 'visible'
-DEFAULT_NAME = 'Aurora Visibility'
+DEFAULT_DEVICE_CLASS = "visible"
+DEFAULT_NAME = "Aurora Visibility"
 DEFAULT_THRESHOLD = 75
 
 HA_USER_AGENT = "Home Assistant Aurora Tracker v.0.1.0"
@@ -28,10 +27,12 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 URL = "http://services.swpc.noaa.gov/text/aurora-nowcast-map.txt"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): cv.positive_int,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -40,22 +41,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Lat. or long. not set in Home Assistant config")
         return False
 
-    name = config.get(CONF_NAME)
-    threshold = config.get(CONF_THRESHOLD)
+    name = config[CONF_NAME]
+    threshold = config[CONF_THRESHOLD]
 
     try:
-        aurora_data = AuroraData(
-            hass.config.latitude, hass.config.longitude, threshold)
+        aurora_data = AuroraData(hass.config.latitude, hass.config.longitude, threshold)
         aurora_data.update()
     except requests.exceptions.HTTPError as error:
-        _LOGGER.error(
-            "Connection to aurora forecast service failed: %s", error)
+        _LOGGER.error("Connection to aurora forecast service failed: %s", error)
         return False
 
     add_entities([AuroraSensor(aurora_data, name)], True)
 
 
-class AuroraSensor(BinarySensorDevice):
+class AuroraSensor(BinarySensorEntity):
     """Implementation of an aurora sensor."""
 
     def __init__(self, aurora_data, name):
@@ -66,7 +65,7 @@ class AuroraSensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{}'.format(self._name)
+        return f"{self._name}"
 
     @property
     def is_on(self):
@@ -84,8 +83,8 @@ class AuroraSensor(BinarySensorDevice):
         attrs = {}
 
         if self.aurora_data:
-            attrs['visibility_level'] = self.aurora_data.visibility_level
-            attrs['message'] = self.aurora_data.is_visible_text
+            attrs["visibility_level"] = self.aurora_data.visibility_level
+            attrs["message"] = self.aurora_data.is_visible_text
             attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         return attrs
 
@@ -101,8 +100,6 @@ class AuroraData:
         """Initialize the data object."""
         self.latitude = latitude
         self.longitude = longitude
-        self.number_of_latitude_intervals = 513
-        self.number_of_longitude_intervals = 1024
         self.headers = {USER_AGENT: HA_USER_AGENT}
         self.threshold = int(threshold)
         self.is_visible = None
@@ -122,23 +119,28 @@ class AuroraData:
                 self.is_visible_text = "nothing's out"
 
         except requests.exceptions.HTTPError as error:
-            _LOGGER.error(
-                "Connection to aurora forecast service failed: %s", error)
+            _LOGGER.error("Connection to aurora forecast service failed: %s", error)
             return False
 
     def get_aurora_forecast(self):
         """Get forecast data and parse for given long/lat."""
         raw_data = requests.get(URL, headers=self.headers, timeout=5).text
+        # We discard comment rows (#)
+        # We split the raw text by line (\n)
+        # For each line we trim leading spaces and split by spaces
         forecast_table = [
-            row.strip(" ").split("   ")
+            row.strip().split()
             for row in raw_data.split("\n")
             if not row.startswith("#")
         ]
 
         # Convert lat and long for data points in table
-        converted_latitude = round((self.latitude / 180)
-                                   * self.number_of_latitude_intervals)
-        converted_longitude = round((self.longitude / 360)
-                                    * self.number_of_longitude_intervals)
+        # Assumes self.latitude belongs to [-90;90[ (South to North)
+        # Assumes self.longitude belongs to [-180;180[ (West to East)
+        # No assumptions made regarding the number of rows and columns
+        converted_latitude = floor((self.latitude + 90) * len(forecast_table) / 180)
+        converted_longitude = floor(
+            (self.longitude + 180) * len(forecast_table[converted_latitude]) / 360
+        )
 
         return forecast_table[converted_latitude][converted_longitude]

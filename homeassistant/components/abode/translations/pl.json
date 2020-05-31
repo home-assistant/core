@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja Abode."
+        },
+        "error": {
+            "connection_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z Abode.",
+            "identifier_exists": "Konto jest ju\u017c zarejestrowane.",
+            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                },
+                "title": "Wprowad\u017a informacje logowania Abode"
+            }
+        }
+    }
+}

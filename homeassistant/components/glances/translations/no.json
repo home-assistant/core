@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Verten er allerede konfigurert."
+        },
+        "error": {
+            "cannot_connect": "Kan ikke koble til vert",
+            "wrong_version": "Versjonen st\u00f8ttes ikke (bare 2 eller 3)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "Port",
+                    "ssl": "Bruk SSL / TLS for \u00e5 koble til Glances-systemet",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Bekreft sertifiseringen av systemet",
+                    "version": "Glances API-versjon (2 eller 3)"
+                },
+                "title": "Oppsett av Glances"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Oppdater frekvens"
+                },
+                "description": "Konfigurasjonsalternativer for Glances"
+            }
+        }
+    }
+}

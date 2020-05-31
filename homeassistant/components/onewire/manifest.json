@@ -1,8 +1,7 @@
 {
   "domain": "onewire",
-  "name": "Onewire",
-  "documentation": "https://www.home-assistant.io/components/onewire",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "name": "1-Wire",
+  "documentation": "https://www.home-assistant.io/integrations/onewire",
+  "requirements": ["pyownet==0.10.0.post1"],
+  "codeowners": ["@garbled1"]
 }

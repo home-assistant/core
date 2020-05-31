@@ -1,8 +1,6 @@
 {
   "domain": "zamg",
-  "name": "Zamg",
-  "documentation": "https://www.home-assistant.io/components/zamg",
-  "requirements": [],
-  "dependencies": [],
+  "name": "Zentralanstalt für Meteorologie und Geodynamik (ZAMG)",
+  "documentation": "https://www.home-assistant.io/integrations/zamg",
   "codeowners": []
 }

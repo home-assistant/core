@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "id": "ID de l'h\u00f4te"
+                },
+                "title": "Choisissez un hub \u00e0 ajouter"
+            }
+        }
+    }
+}

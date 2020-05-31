@@ -1,52 +1,54 @@
 """Support for EverLights lights."""
-import logging
 from datetime import timedelta
+import logging
 from typing import Tuple
 
+import pyeverlights
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOSTS
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_COLOR,
-    Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_EFFECT,
+    LightEntity,
+)
+from homeassistant.const import CONF_HOSTS
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_EVERLIGHTS = (SUPPORT_EFFECT | SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
+SUPPORT_EVERLIGHTS = SUPPORT_EFFECT | SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
-})
-
-NAME_FORMAT = "EverLights {} Zone {}"
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string])}
+)
 
 
 def color_rgb_to_int(red: int, green: int, blue: int) -> int:
     """Return a RGB color as an integer."""
-    return red*256*256+green*256+blue
+    return red * 256 * 256 + green * 256 + blue
 
 
 def color_int_to_rgb(value: int) -> Tuple[int, int, int]:
     """Return an RGB tuple from an integer."""
-    return (value >> 16, (value >> 8) & 0xff, value & 0xff)
+    return (value >> 16, (value >> 8) & 0xFF, value & 0xFF)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the EverLights lights from configuration.yaml."""
-    import pyeverlights
     lights = []
 
     for ipaddr in config[CONF_HOSTS]:
-        api = pyeverlights.EverLights(ipaddr,
-                                      async_get_clientsession(hass))
+        api = pyeverlights.EverLights(ipaddr, async_get_clientsession(hass))
 
         try:
             status = await api.get_status()
@@ -57,15 +59,13 @@ async def async_setup_platform(hass, config, async_add_entities,
             raise PlatformNotReady
 
         else:
-            lights.append(EverLightsLight(api, pyeverlights.ZONE_1,
-                                          status, effects))
-            lights.append(EverLightsLight(api, pyeverlights.ZONE_2,
-                                          status, effects))
+            lights.append(EverLightsLight(api, pyeverlights.ZONE_1, status, effects))
+            lights.append(EverLightsLight(api, pyeverlights.ZONE_2, status, effects))
 
     async_add_entities(lights)
 
 
-class EverLightsLight(Light):
+class EverLightsLight(LightEntity):
     """Representation of a Flux light."""
 
     def __init__(self, api, channel, status, effects):
@@ -74,7 +74,7 @@ class EverLightsLight(Light):
         self._channel = channel
         self._status = status
         self._effects = effects
-        self._mac = status['mac']
+        self._mac = status["mac"]
         self._error_reported = False
         self._hs_color = [255, 255]
         self._brightness = 255
@@ -84,7 +84,7 @@ class EverLightsLight(Light):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return '{}-{}'.format(self._mac, self._channel)
+        return f"{self._mac}-{self._channel}"
 
     @property
     def available(self) -> bool:
@@ -94,12 +94,12 @@ class EverLightsLight(Light):
     @property
     def name(self):
         """Return the name of the device."""
-        return NAME_FORMAT.format(self._mac, self._channel)
+        return f"EverLights {self._mac} Zone {self._channel}"
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._status['ch{}Active'.format(self._channel)] == 1
+        return self._status[f"ch{self._channel}Active"] == 1
 
     @property
     def brightness(self):
@@ -141,7 +141,7 @@ class EverLightsLight(Light):
             brightness = hsv[2] / 100 * 255
 
         else:
-            rgb = color_util.color_hsv_to_RGB(*hs_color, brightness/255*100)
+            rgb = color_util.color_hsv_to_RGB(*hs_color, brightness / 255 * 100)
             colors = [color_rgb_to_int(*rgb)]
 
             await self._api.set_pattern(self._channel, colors)
@@ -156,8 +156,6 @@ class EverLightsLight(Light):
 
     async def async_update(self):
         """Synchronize state with control box."""
-        import pyeverlights
-
         try:
             self._status = await self._api.get_status()
         except pyeverlights.ConnectionError:

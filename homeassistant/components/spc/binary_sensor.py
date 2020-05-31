@@ -1,7 +1,9 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from pyspcwebgw.const import ZoneInput, ZoneType
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -11,26 +13,29 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_device_class(zone_type):
-    from pyspcwebgw.const import ZoneType
     return {
-        ZoneType.ALARM: 'motion',
-        ZoneType.ENTRY_EXIT: 'opening',
-        ZoneType.FIRE: 'smoke',
+        ZoneType.ALARM: "motion",
+        ZoneType.ENTRY_EXIT: "opening",
+        ZoneType.FIRE: "smoke",
+        ZoneType.TECHNICAL: "power",
     }.get(zone_type)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the SPC binary sensor."""
     if discovery_info is None:
         return
     api = hass.data[DATA_API]
-    async_add_entities([SpcBinarySensor(zone)
-                        for zone in api.zones.values()
-                        if _get_device_class(zone.type)])
+    async_add_entities(
+        [
+            SpcBinarySensor(zone)
+            for zone in api.zones.values()
+            if _get_device_class(zone.type)
+        ]
+    )
 
 
-class SpcBinarySensor(BinarySensorDevice):
+class SpcBinarySensor(BinarySensorEntity):
     """Representation of a sensor based on a SPC zone."""
 
     def __init__(self, zone):
@@ -39,9 +44,13 @@ class SpcBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        async_dispatcher_connect(self.hass,
-                                 SIGNAL_UPDATE_SENSOR.format(self._zone.id),
-                                 self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_SENSOR.format(self._zone.id),
+                self._update_callback,
+            )
+        )
 
     @callback
     def _update_callback(self):
@@ -56,14 +65,7 @@ class SpcBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Whether the device is switched on."""
-        from pyspcwebgw.const import ZoneInput
         return self._zone.input == ZoneInput.OPEN
-
-    @property
-    def hidden(self) -> bool:
-        """Whether the device is hidden by default."""
-        # These type of sensors are probably mainly used for automations
-        return True
 
     @property
     def should_poll(self):

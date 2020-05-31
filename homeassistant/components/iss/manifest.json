@@ -1,10 +1,7 @@
 {
   "domain": "iss",
-  "name": "Iss",
-  "documentation": "https://www.home-assistant.io/components/iss",
-  "requirements": [
-    "pyiss==1.0.1"
-  ],
-  "dependencies": [],
+  "name": "International Space Station (ISS)",
+  "documentation": "https://www.home-assistant.io/integrations/iss",
+  "requirements": ["pyiss==1.0.1"],
   "codeowners": []
 }

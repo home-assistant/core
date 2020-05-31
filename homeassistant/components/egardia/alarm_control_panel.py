@@ -4,25 +4,37 @@ import logging
 import requests
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+)
 
 from . import (
-    CONF_REPORT_SERVER_CODES, CONF_REPORT_SERVER_ENABLED,
-    CONF_REPORT_SERVER_PORT, EGARDIA_DEVICE, EGARDIA_SERVER,
-    REPORT_SERVER_CODES_IGNORE)
+    CONF_REPORT_SERVER_CODES,
+    CONF_REPORT_SERVER_ENABLED,
+    CONF_REPORT_SERVER_PORT,
+    EGARDIA_DEVICE,
+    EGARDIA_SERVER,
+    REPORT_SERVER_CODES_IGNORE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 STATES = {
-    'ARM': STATE_ALARM_ARMED_AWAY,
-    'DAY HOME': STATE_ALARM_ARMED_HOME,
-    'DISARM': STATE_ALARM_DISARMED,
-    'ARMHOME': STATE_ALARM_ARMED_HOME,
-    'HOME': STATE_ALARM_ARMED_HOME,
-    'NIGHT HOME': STATE_ALARM_ARMED_NIGHT,
-    'TRIGGERED': STATE_ALARM_TRIGGERED
+    "ARM": STATE_ALARM_ARMED_AWAY,
+    "DAY HOME": STATE_ALARM_ARMED_HOME,
+    "DISARM": STATE_ALARM_DISARMED,
+    "ARMHOME": STATE_ALARM_ARMED_HOME,
+    "HOME": STATE_ALARM_ARMED_HOME,
+    "NIGHT HOME": STATE_ALARM_ARMED_NIGHT,
+    "TRIGGERED": STATE_ALARM_TRIGGERED,
 }
 
 
@@ -31,20 +43,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
     device = EgardiaAlarm(
-        discovery_info['name'],
+        discovery_info["name"],
         hass.data[EGARDIA_DEVICE],
         discovery_info[CONF_REPORT_SERVER_ENABLED],
         discovery_info.get(CONF_REPORT_SERVER_CODES),
-        discovery_info[CONF_REPORT_SERVER_PORT])
+        discovery_info[CONF_REPORT_SERVER_PORT],
+    )
 
     add_entities([device], True)
 
 
-class EgardiaAlarm(alarm.AlarmControlPanel):
+class EgardiaAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, name, egardiasystem,
-                 rs_enabled=False, rs_codes=None, rs_port=52010):
+    def __init__(
+        self, name, egardiasystem, rs_enabled=False, rs_codes=None, rs_port=52010
+    ):
         """Initialize the Egardia alarm."""
         self._name = name
         self._egardiasystem = egardiasystem
@@ -57,8 +71,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         """Add Egardiaserver callback if enabled."""
         if self._rs_enabled:
             _LOGGER.debug("Registering callback to Egardiaserver")
-            self.hass.data[EGARDIA_SERVER].register_callback(
-                self.handle_status_event)
+            self.hass.data[EGARDIA_SERVER].register_callback(self.handle_status_event)
 
     @property
     def name(self):
@@ -71,6 +84,11 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         return self._status
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
+    @property
     def should_poll(self):
         """Poll if no report server is enabled."""
         if not self._rs_enabled:
@@ -79,7 +97,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def handle_status_event(self, event):
         """Handle the Egardia system status event."""
-        statuscode = event.get('status')
+        statuscode = event.get("status")
         if statuscode is not None:
             status = self.lookupstatusfromcode(statuscode)
             self.parsestatus(status)
@@ -87,10 +105,15 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def lookupstatusfromcode(self, statuscode):
         """Look at the rs_codes and returns the status from the code."""
-        status = next((
-            status_group.upper() for status_group, codes
-            in self._rs_codes.items() for code in codes
-            if statuscode == code), 'UNKNOWN')
+        status = next(
+            (
+                status_group.upper()
+                for status_group, codes in self._rs_codes.items()
+                for code in codes
+                if statuscode == code
+            ),
+            "UNKNOWN",
+        )
         return status
 
     def parsestatus(self, status):
@@ -115,21 +138,29 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         try:
             self._egardiasystem.alarm_disarm()
         except requests.exceptions.RequestException as err:
-            _LOGGER.error("Egardia device exception occurred when "
-                          "sending disarm command: %s", err)
+            _LOGGER.error(
+                "Egardia device exception occurred when sending disarm command: %s",
+                err,
+            )
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         try:
             self._egardiasystem.alarm_arm_home()
         except requests.exceptions.RequestException as err:
-            _LOGGER.error("Egardia device exception occurred when "
-                          "sending arm home command: %s", err)
+            _LOGGER.error(
+                "Egardia device exception occurred when "
+                "sending arm home command: %s",
+                err,
+            )
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         try:
             self._egardiasystem.alarm_arm_away()
         except requests.exceptions.RequestException as err:
-            _LOGGER.error("Egardia device exception occurred when "
-                          "sending arm away command: %s", err)
+            _LOGGER.error(
+                "Egardia device exception occurred when "
+                "sending arm away command: %s",
+                err,
+            )

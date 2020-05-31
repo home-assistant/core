@@ -4,8 +4,12 @@ from datetime import datetime, timedelta
 import logging
 
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP,
-    TEMP_CELSIUS)
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -15,89 +19,89 @@ from . import DOMAIN, METRIC_KEY_MODE, SIGNAL_VALLOX_STATE_UPDATE
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensors."""
     if discovery_info is None:
         return
 
-    name = hass.data[DOMAIN]['name']
-    state_proxy = hass.data[DOMAIN]['state_proxy']
+    name = hass.data[DOMAIN]["name"]
+    state_proxy = hass.data[DOMAIN]["state_proxy"]
 
     sensors = [
         ValloxProfileSensor(
-            name="{} Current Profile".format(name),
+            name=f"{name} Current Profile",
             state_proxy=state_proxy,
             device_class=None,
             unit_of_measurement=None,
-            icon='mdi:gauge'
+            icon="mdi:gauge",
         ),
         ValloxFanSpeedSensor(
-            name="{} Fan Speed".format(name),
+            name=f"{name} Fan Speed",
             state_proxy=state_proxy,
-            metric_key='A_CYC_FAN_SPEED',
+            metric_key="A_CYC_FAN_SPEED",
             device_class=None,
-            unit_of_measurement='%',
-            icon='mdi:fan'
+            unit_of_measurement=UNIT_PERCENTAGE,
+            icon="mdi:fan",
         ),
         ValloxSensor(
-            name="{} Extract Air".format(name),
+            name=f"{name} Extract Air",
             state_proxy=state_proxy,
-            metric_key='A_CYC_TEMP_EXTRACT_AIR',
+            metric_key="A_CYC_TEMP_EXTRACT_AIR",
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
-            icon=None
+            icon=None,
         ),
         ValloxSensor(
-            name="{} Exhaust Air".format(name),
+            name=f"{name} Exhaust Air",
             state_proxy=state_proxy,
-            metric_key='A_CYC_TEMP_EXHAUST_AIR',
+            metric_key="A_CYC_TEMP_EXHAUST_AIR",
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
-            icon=None
+            icon=None,
         ),
         ValloxSensor(
-            name="{} Outdoor Air".format(name),
+            name=f"{name} Outdoor Air",
             state_proxy=state_proxy,
-            metric_key='A_CYC_TEMP_OUTDOOR_AIR',
+            metric_key="A_CYC_TEMP_OUTDOOR_AIR",
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
-            icon=None
+            icon=None,
         ),
         ValloxSensor(
-            name="{} Supply Air".format(name),
+            name=f"{name} Supply Air",
             state_proxy=state_proxy,
-            metric_key='A_CYC_TEMP_SUPPLY_AIR',
+            metric_key="A_CYC_TEMP_SUPPLY_AIR",
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
-            icon=None
+            icon=None,
         ),
         ValloxSensor(
-            name="{} Humidity".format(name),
+            name=f"{name} Humidity",
             state_proxy=state_proxy,
-            metric_key='A_CYC_RH_VALUE',
+            metric_key="A_CYC_RH_VALUE",
             device_class=DEVICE_CLASS_HUMIDITY,
-            unit_of_measurement='%',
-            icon=None
+            unit_of_measurement=UNIT_PERCENTAGE,
+            icon=None,
         ),
         ValloxFilterRemainingSensor(
-            name="{} Remaining Time For Filter".format(name),
+            name=f"{name} Remaining Time For Filter",
             state_proxy=state_proxy,
-            metric_key='A_CYC_REMAINING_TIME_FOR_FILTER',
+            metric_key="A_CYC_REMAINING_TIME_FOR_FILTER",
             device_class=DEVICE_CLASS_TIMESTAMP,
             unit_of_measurement=None,
-            icon='mdi:filter'
+            icon="mdi:filter",
         ),
     ]
 
-    async_add_entities(sensors, update_before_add=True)
+    async_add_entities(sensors, update_before_add=False)
 
 
 class ValloxSensor(Entity):
     """Representation of a Vallox sensor."""
 
-    def __init__(self, name, state_proxy, metric_key, device_class,
-                 unit_of_measurement, icon) -> None:
+    def __init__(
+        self, name, state_proxy, metric_key, device_class, unit_of_measurement, icon
+    ) -> None:
         """Initialize the Vallox sensor."""
         self._name = name
         self._state_proxy = state_proxy
@@ -145,8 +149,11 @@ class ValloxSensor(Entity):
 
     async def async_added_to_hass(self):
         """Call to update."""
-        async_dispatcher_connect(self.hass, SIGNAL_VALLOX_STATE_UPDATE,
-                                 self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_VALLOX_STATE_UPDATE, self._update_callback
+            )
+        )
 
     @callback
     def _update_callback(self):
@@ -193,11 +200,13 @@ class ValloxFanSpeedSensor(ValloxSensor):
 class ValloxProfileSensor(ValloxSensor):
     """Child class for profile reporting."""
 
-    def __init__(self, name, state_proxy, device_class, unit_of_measurement,
-                 icon) -> None:
+    def __init__(
+        self, name, state_proxy, device_class, unit_of_measurement, icon
+    ) -> None:
         """Initialize the Vallox sensor."""
-        super().__init__(name, state_proxy, None, device_class,
-                         unit_of_measurement, icon)
+        super().__init__(
+            name, state_proxy, None, device_class, unit_of_measurement, icon
+        )
 
     async def async_update(self):
         """Fetch state from the ventilation unit."""
@@ -216,14 +225,12 @@ class ValloxFilterRemainingSensor(ValloxSensor):
     async def async_update(self):
         """Fetch state from the ventilation unit."""
         try:
-            days_remaining = int(
-                self._state_proxy.fetch_metric(self._metric_key))
+            days_remaining = int(self._state_proxy.fetch_metric(self._metric_key))
             days_remaining_delta = timedelta(days=days_remaining)
 
             # Since only a delta of days is received from the device, fix the
             # time so the timestamp does not change with every update.
-            now = datetime.utcnow().replace(
-                hour=13, minute=0, second=0, microsecond=0)
+            now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
 
             self._state = (now + days_remaining_delta).isoformat()
             self._available = True

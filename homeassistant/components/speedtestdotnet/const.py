@@ -1,10 +1,12 @@
 """Consts used by Speedtest.net."""
 
-DOMAIN = 'speedtestdotnet'
-DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
+from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND, TIME_MILLISECONDS
+
+DOMAIN = "speedtestdotnet"
+DATA_UPDATED = f"{DOMAIN}_data_updated"
 
 SENSOR_TYPES = {
-    'ping': ['Ping', 'ms'],
-    'download': ['Download', 'Mbit/s'],
-    'upload': ['Upload', 'Mbit/s'],
+    "ping": ["Ping", TIME_MILLISECONDS],
+    "download": ["Download", DATA_RATE_MEGABITS_PER_SECOND],
+    "upload": ["Upload", DATA_RATE_MEGABITS_PER_SECOND],
 }

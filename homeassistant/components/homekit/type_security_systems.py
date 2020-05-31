@@ -5,16 +5,26 @@ from pyhap.const import CATEGORY_ALARM_SYSTEM
 
 from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.const import (
-    ATTR_CODE, ATTR_ENTITY_ID, SERVICE_ALARM_ARM_AWAY, SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_DISARM, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED)
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_DISARM,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+)
+from homeassistant.core import callback
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
-    CHAR_CURRENT_SECURITY_STATE, CHAR_TARGET_SECURITY_STATE,
-    SERV_SECURITY_SYSTEM)
+    CHAR_CURRENT_SECURITY_STATE,
+    CHAR_TARGET_SECURITY_STATE,
+    SERV_SECURITY_SYSTEM,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,28 +46,30 @@ STATE_TO_SERVICE = {
 }
 
 
-@TYPES.register('SecuritySystem')
+@TYPES.register("SecuritySystem")
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
     def __init__(self, *args):
         """Initialize a SecuritySystem accessory object."""
         super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
+        state = self.hass.states.get(self.entity_id)
         self._alarm_code = self.config.get(ATTR_CODE)
-        self._flag_state = False
 
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         self.char_current_state = serv_alarm.configure_char(
-            CHAR_CURRENT_SECURITY_STATE, value=3)
+            CHAR_CURRENT_SECURITY_STATE, value=3
+        )
         self.char_target_state = serv_alarm.configure_char(
-            CHAR_TARGET_SECURITY_STATE, value=3,
-            setter_callback=self.set_security_state)
+            CHAR_TARGET_SECURITY_STATE, value=3, setter_callback=self.set_security_state
+        )
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
 
     def set_security_state(self, value):
         """Move security state to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set security state to %d',
-                      self.entity_id, value)
-        self._flag_state = True
+        _LOGGER.debug("%s: Set security state to %d", self.entity_id, value)
         hass_value = HOMEKIT_TO_HASS[value]
         service = STATE_TO_SERVICE[hass_value]
 
@@ -66,17 +78,24 @@ class SecuritySystem(HomeAccessory):
             params[ATTR_CODE] = self._alarm_code
         self.call_service(DOMAIN, service, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update security state after state changed."""
         hass_state = new_state.state
         if hass_state in HASS_TO_HOMEKIT:
             current_security_state = HASS_TO_HOMEKIT[hass_state]
-            self.char_current_state.set_value(current_security_state)
-            _LOGGER.debug('%s: Updated current state to %s (%d)',
-                          self.entity_id, hass_state, current_security_state)
+            if self.char_current_state.value != current_security_state:
+                self.char_current_state.set_value(current_security_state)
+                _LOGGER.debug(
+                    "%s: Updated current state to %s (%d)",
+                    self.entity_id,
+                    hass_state,
+                    current_security_state,
+                )
 
             # SecuritySystemTargetState does not support triggered
-            if not self._flag_state and \
-                    hass_state != STATE_ALARM_TRIGGERED:
+            if (
+                hass_state != STATE_ALARM_TRIGGERED
+                and self.char_target_state.value != current_security_state
+            ):
                 self.char_target_state.set_value(current_security_state)
-            self._flag_state = False

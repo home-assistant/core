@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Solo se permite una instancia de Vesync"
+        },
+        "error": {
+            "invalid_login": "Nombre de usuario o contrase\u00f1a inv\u00e1lidos"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Direcci\u00f3n de correo electr\u00f3nico"
+                },
+                "title": "Ingrese nombre de usuario y contrase\u00f1a"
+            }
+        }
+    }
+}

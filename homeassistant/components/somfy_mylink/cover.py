@@ -1,7 +1,7 @@
 """Cover Platform for the Somfy MyLink component."""
 import logging
 
-from homeassistant.components.cover import ENTITY_ID_FORMAT, CoverDevice
+from homeassistant.components.cover import ENTITY_ID_FORMAT, CoverEntity
 from homeassistant.util import slugify
 
 from . import CONF_DEFAULT_REVERSE, DATA_SOMFY_MYLINK
@@ -9,10 +9,7 @@ from . import CONF_DEFAULT_REVERSE, DATA_SOMFY_MYLINK
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass,
-                               config,
-                               async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Discover and configure Somfy covers."""
     if discovery_info is None:
         return
@@ -21,34 +18,50 @@ async def async_setup_platform(hass,
     try:
         mylink_status = await somfy_mylink.status_info()
     except TimeoutError:
-        _LOGGER.error("Unable to connect to the Somfy MyLink device, "
-                      "please check your settings")
+        _LOGGER.error(
+            "Unable to connect to the Somfy MyLink device, "
+            "please check your settings"
+        )
         return
-    for cover in mylink_status['result']:
-        entity_id = ENTITY_ID_FORMAT.format(slugify(cover['name']))
+    for cover in mylink_status["result"]:
+        entity_id = ENTITY_ID_FORMAT.format(slugify(cover["name"]))
         entity_config = discovery_info.get(entity_id, {})
         default_reverse = discovery_info[CONF_DEFAULT_REVERSE]
         cover_config = {}
-        cover_config['target_id'] = cover['targetID']
-        cover_config['name'] = cover['name']
-        cover_config['reverse'] = entity_config.get('reverse', default_reverse)
+        cover_config["target_id"] = cover["targetID"]
+        cover_config["name"] = cover["name"]
+        cover_config["reverse"] = entity_config.get("reverse", default_reverse)
         cover_list.append(SomfyShade(somfy_mylink, **cover_config))
-        _LOGGER.info('Adding Somfy Cover: %s with targetID %s',
-                     cover_config['name'], cover_config['target_id'])
+        _LOGGER.info(
+            "Adding Somfy Cover: %s with targetID %s",
+            cover_config["name"],
+            cover_config["target_id"],
+        )
     async_add_entities(cover_list)
 
 
-class SomfyShade(CoverDevice):
+class SomfyShade(CoverEntity):
     """Object for controlling a Somfy cover."""
 
-    def __init__(self, somfy_mylink, target_id='AABBCC', name='SomfyShade',
-                 reverse=False, device_class='window'):
+    def __init__(
+        self,
+        somfy_mylink,
+        target_id,
+        name="SomfyShade",
+        reverse=False,
+        device_class="window",
+    ):
         """Initialize the cover."""
         self.somfy_mylink = somfy_mylink
         self._target_id = target_id
         self._name = name
         self._reverse = reverse
         self._device_class = device_class
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of this cover."""
+        return self._target_id
 
     @property
     def name(self):

@@ -7,42 +7,45 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    DOMAIN, METRIC_KEY_MODE, METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
-    METRIC_KEY_PROFILE_FAN_SPEED_BOOST, METRIC_KEY_PROFILE_FAN_SPEED_HOME,
-    SIGNAL_VALLOX_STATE_UPDATE)
+    DOMAIN,
+    METRIC_KEY_MODE,
+    METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
+    METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
+    METRIC_KEY_PROFILE_FAN_SPEED_HOME,
+    SIGNAL_VALLOX_STATE_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 # Device attributes
 ATTR_PROFILE_FAN_SPEED_HOME = {
-    'description': 'fan_speed_home',
-    'metric_key': METRIC_KEY_PROFILE_FAN_SPEED_HOME
+    "description": "fan_speed_home",
+    "metric_key": METRIC_KEY_PROFILE_FAN_SPEED_HOME,
 }
 ATTR_PROFILE_FAN_SPEED_AWAY = {
-    'description': 'fan_speed_away',
-    'metric_key': METRIC_KEY_PROFILE_FAN_SPEED_AWAY
+    "description": "fan_speed_away",
+    "metric_key": METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
 }
 ATTR_PROFILE_FAN_SPEED_BOOST = {
-    'description': 'fan_speed_boost',
-    'metric_key': METRIC_KEY_PROFILE_FAN_SPEED_BOOST
+    "description": "fan_speed_boost",
+    "metric_key": METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the fan device."""
     if discovery_info is None:
         return
 
-    client = hass.data[DOMAIN]['client']
+    client = hass.data[DOMAIN]["client"]
 
     client.set_settable_address(METRIC_KEY_MODE, int)
 
-    device = ValloxFan(hass.data[DOMAIN]['name'],
-                       client,
-                       hass.data[DOMAIN]['state_proxy'])
+    device = ValloxFan(
+        hass.data[DOMAIN]["name"], client, hass.data[DOMAIN]["state_proxy"]
+    )
 
-    async_add_entities([device], update_before_add=True)
+    async_add_entities([device], update_before_add=False)
 
 
 class ValloxFan(FanEntity):
@@ -83,15 +86,18 @@ class ValloxFan(FanEntity):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         return {
-            ATTR_PROFILE_FAN_SPEED_HOME['description']: self._fan_speed_home,
-            ATTR_PROFILE_FAN_SPEED_AWAY['description']: self._fan_speed_away,
-            ATTR_PROFILE_FAN_SPEED_BOOST['description']: self._fan_speed_boost,
+            ATTR_PROFILE_FAN_SPEED_HOME["description"]: self._fan_speed_home,
+            ATTR_PROFILE_FAN_SPEED_AWAY["description"]: self._fan_speed_away,
+            ATTR_PROFILE_FAN_SPEED_BOOST["description"]: self._fan_speed_boost,
         }
 
     async def async_added_to_hass(self):
         """Call to update."""
-        async_dispatcher_connect(self.hass, SIGNAL_VALLOX_STATE_UPDATE,
-                                 self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_VALLOX_STATE_UPDATE, self._update_callback
+            )
+        )
 
     @callback
     def _update_callback(self):
@@ -109,12 +115,21 @@ class ValloxFan(FanEntity):
                 self._state = False
 
             # Fetch the profile fan speeds.
-            self._fan_speed_home = int(self._state_proxy.fetch_metric(
-                ATTR_PROFILE_FAN_SPEED_HOME['metric_key']))
-            self._fan_speed_away = int(self._state_proxy.fetch_metric(
-                ATTR_PROFILE_FAN_SPEED_AWAY['metric_key']))
-            self._fan_speed_boost = int(self._state_proxy.fetch_metric(
-                ATTR_PROFILE_FAN_SPEED_BOOST['metric_key']))
+            self._fan_speed_home = int(
+                self._state_proxy.fetch_metric(
+                    ATTR_PROFILE_FAN_SPEED_HOME["metric_key"]
+                )
+            )
+            self._fan_speed_away = int(
+                self._state_proxy.fetch_metric(
+                    ATTR_PROFILE_FAN_SPEED_AWAY["metric_key"]
+                )
+            )
+            self._fan_speed_boost = int(
+                self._state_proxy.fetch_metric(
+                    ATTR_PROFILE_FAN_SPEED_BOOST["metric_key"]
+                )
+            )
 
             self._available = True
 

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebs Kombinatioun vun Host an Port sinn scho konfigur\u00e9iert",
+            "import_failed": "Import vun der Konfiguratioun feelgeschloen"
+        },
+        "error": {
+            "connection_refused": "Verbindung refus\u00e9iert beim verbannen mam Host",
+            "connection_timeout": "Z\u00e4it Iwwerschreidung beim verbannen.",
+            "resolve_failed": "D\u00ebsen Host kann net opgel\u00e9ist ginn"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Den Hostnumm vum Zertifikat",
+                    "name": "De Numm vum Zertifikat",
+                    "port": "De Port vum Zertifikat"
+                },
+                "title": "W\u00e9ieen Zertifikat soll getest ginn"
+            }
+        }
+    },
+    "title": "Zertifikat Verfallsdatum"
+}

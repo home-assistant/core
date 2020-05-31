@@ -1,38 +1,44 @@
 """Support turning on/off motion detection on Hikvision cameras."""
 import logging
 
+import hikvision.api
+from hikvision.error import HikvisionError, MissingParamError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, STATE_OFF,
-    STATE_ON)
-from homeassistant.helpers.entity import ToggleEntity
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 
 # This is the last working version, please test before updating
 
 _LOGGING = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Hikvision Camera Motion Detection'
-DEFAULT_PASSWORD = '12345'
+DEFAULT_NAME = "Hikvision Camera Motion Detection"
+DEFAULT_PASSWORD = "12345"
 DEFAULT_PORT = 80
-DEFAULT_USERNAME = 'admin'
+DEFAULT_USERNAME = "admin"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hikvision camera."""
-    import hikvision.api
-    from hikvision.error import HikvisionError, MissingParamError
-
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
@@ -41,8 +47,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         hikvision_cam = hikvision.api.CreateDevice(
-            host, port=port, username=username, password=password,
-            is_https=False)
+            host, port=port, username=username, password=password, is_https=False
+        )
     except MissingParamError as param_err:
         _LOGGING.error("Missing required param: %s", param_err)
         return False
@@ -53,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([HikvisionMotionSwitch(name, hikvision_cam)])
 
 
-class HikvisionMotionSwitch(ToggleEntity):
+class HikvisionMotionSwitch(SwitchEntity):
     """Representation of a switch to toggle on/off motion detection."""
 
     def __init__(self, name, hikvision_cam):

@@ -1,0 +1,9 @@
+send_message:
+  description: Send message to target room(s)
+  fields:
+    message:
+      description: The message to be sent.
+      example: This is a message I am sending to matrix
+    target:
+      description: A list of room(s) to send the message to.
+      example: "#hasstest:matrix.org"

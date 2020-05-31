@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "armed": "\u05d3\u05e8\u05d5\u05da",
+            "armed_away": "\u05d3\u05e8\u05d5\u05da \u05dc\u05d0 \u05d1\u05d1\u05d9\u05ea",
+            "armed_custom_bypass": "\u05de\u05e2\u05e7\u05e3 \u05de\u05d5\u05ea\u05d0\u05dd \u05d0\u05d9\u05e9\u05d9\u05ea \u05d3\u05e8\u05d5\u05da",
+            "armed_home": "\u05d4\u05d1\u05d9\u05ea \u05d3\u05e8\u05d5\u05da",
+            "armed_night": "\u05d3\u05e8\u05d5\u05da \u05dc\u05d9\u05dc\u05d4",
+            "arming": "\u05de\u05e4\u05e2\u05d9\u05dc",
+            "disarmed": "\u05de\u05e0\u05d5\u05d8\u05e8\u05dc",
+            "disarming": "\u05de\u05e0\u05d8\u05e8\u05dc",
+            "pending": "\u05de\u05de\u05ea\u05d9\u05df",
+            "triggered": "\u05d4\u05d5\u05e4\u05e2\u05dc"
+        }
+    },
+    "title": "\u05dc\u05d5\u05d7 \u05d1\u05e7\u05e8\u05d4 \u05e9\u05dc \u05d0\u05d6\u05e2\u05e7\u05d4"
+}

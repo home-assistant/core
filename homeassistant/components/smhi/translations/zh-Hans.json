@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "\u540d\u79f0\u5df2\u5b58\u5728",
+            "wrong_location": "\u4ec5\u9650\u745e\u5178\u7684\u4f4d\u7f6e"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "\u7eac\u5ea6",
+                    "longitude": "\u7ecf\u5ea6",
+                    "name": "\u540d\u79f0"
+                },
+                "title": "\u5728\u745e\u5178\u7684\u4f4d\u7f6e"
+            }
+        }
+    }
+}

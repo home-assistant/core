@@ -1,0 +1,9 @@
+{
+  "domain": "withings",
+  "name": "Withings",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/withings",
+  "requirements": ["withings-api==2.1.3"],
+  "dependencies": ["api", "http", "webhook"],
+  "codeowners": ["@vangorra"]
+}

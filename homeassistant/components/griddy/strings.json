@@ -1,0 +1,16 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "description": "Your Load Zone is in your Griddy account under \u201cAccount > Meter > Load Zone.\u201d",
+        "data": { "loadzone": "Load Zone (Settlement Point)" },
+        "title": "Setup your Griddy Load Zone"
+      }
+    },
+    "abort": { "already_configured": "This Load Zone is already configured" }
+  }
+}

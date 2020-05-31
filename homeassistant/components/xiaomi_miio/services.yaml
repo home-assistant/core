@@ -1,0 +1,332 @@
+fan_set_buzzer_on:
+  description: Turn the buzzer on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_buzzer_off:
+  description: Turn the buzzer off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_led_on:
+  description: Turn the led on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_led_off:
+  description: Turn the led off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_child_lock_on:
+  description: Turn the child lock on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_child_lock_off:
+  description: Turn the child lock off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_favorite_level:
+  description: Set the favorite level.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+    level:
+      description: Level, between 0 and 16.
+      example: 1
+
+fan_set_fan_level:
+  description: Set the fan level.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+    level:
+      description: Level, between 1 and 3.
+      example: 1
+
+fan_set_led_brightness:
+  description: Set the led brightness.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+    brightness:
+      description: Brightness (0 = Bright, 1 = Dim, 2 = Off)
+      example: 1
+
+fan_set_auto_detect_on:
+  description: Turn the auto detect on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_auto_detect_off:
+  description: Turn the auto detect off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_learn_mode_on:
+  description: Turn the learn mode on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_learn_mode_off:
+  description: Turn the learn mode off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_volume:
+  description: Set the sound volume.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+    volume:
+      description: Volume, between 0 and 100.
+      example: 50
+
+fan_reset_filter:
+  description: Reset the filter lifetime and usage.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_extra_features:
+  description: Manipulates a storage register which advertises extra features. The Mi Home app evaluates the value. A feature called "turbo mode" is unlocked in the app on value 1.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+    features:
+      description: Integer, known values are 0 (default) and 1 (turbo mode).
+      example: 1
+
+fan_set_target_humidity:
+  description: Set the target humidity.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+    humidity:
+      description: Target humidity. Allowed values are 30, 40, 50, 60, 70 and 80.
+      example: 50
+
+fan_set_dry_on:
+  description: Turn the dry mode on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+fan_set_dry_off:
+  description: Turn the dry mode off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "fan.xiaomi_miio_device"
+
+light_set_scene:
+  description: Set a fixed scene.
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      example: "light.xiaomi_miio"
+    scene:
+      description: Number of the fixed scene, between 1 and 4.
+      example: 1
+
+light_set_delayed_turn_off:
+  description: Delayed turn off.
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      example: "light.xiaomi_miio"
+    time_period:
+      description: Time period for the delayed turn off.
+      example: "5, '0:05', {'minutes': 5}"
+
+light_reminder_on:
+  description: Enable the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      example: "light.xiaomi_miio"
+
+light_reminder_off:
+  description: Disable the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      example: "light.xiaomi_miio"
+
+light_night_light_mode_on:
+  description: Turn the eyecare mode on (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      example: "light.xiaomi_miio"
+
+light_night_light_mode_off:
+  description: Turn the eyecare mode fan_set_dry_off (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      example: "light.xiaomi_miio"
+
+light_eyecare_mode_on:
+  description: Enable the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      example: "light.xiaomi_miio"
+
+light_eyecare_mode_off:
+  description: Disable the eye fatigue reminder/notification (EYECARE SMART LAMP 2 ONLY).
+  fields:
+    entity_id:
+      description: "Name of the entity to act on."
+      example: "light.xiaomi_miio"
+
+remote_learn_command:
+  description: 'Learn an IR command, press "Call Service", point the remote at the IR device, and the learned command will be shown as a notification in Overview.'
+  fields:
+    entity_id:
+      description: "Name of the entity to learn command from."
+      example: "remote.xiaomi_miio"
+    slot:
+      description: "Define the slot used to save the IR command (Value from 1 to 1000000)"
+      example: "1"
+    timeout:
+      description: "Define the timeout in seconds, before which the command must be learned."
+      example: "30"
+
+remote_set_led_on:
+  description: 'Turn on blue LED.'
+  fields:
+    entity_id:
+      description: "Name of the entity to turn LED on."
+      example: "remote.xiaomi_miio"
+
+remote_set_led_off:
+  description: 'Turn off blue LED.'
+  fields:
+    entity_id:
+      description: "Name of the entity to turn LED off."
+      example: "remote.xiaomi_miio"
+
+switch_set_wifi_led_on:
+  description: Turn the wifi led on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "switch.xiaomi_miio_device"
+
+switch_set_wifi_led_off:
+  description: Turn the wifi led off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "switch.xiaomi_miio_device"
+
+switch_set_power_price:
+  description: Set the power price.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "switch.xiaomi_miio_device"
+    mode:
+      description: Power price, between 0 and 999.
+      example: 31
+
+switch_set_power_mode:
+  description: Set the power mode.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: "switch.xiaomi_miio_device"
+    mode:
+      description: Power mode, valid values are 'normal' and 'green'.
+      example: "green"
+
+vacuum_remote_control_start:
+  description: Start remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+
+vacuum_remote_control_stop:
+  description: Stop remote control mode of the vacuum cleaner.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+
+vacuum_remote_control_move:
+  description: Remote control the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+    velocity:
+      description: Speed, between -0.29 and 0.29.
+      example: "0.2"
+    rotation:
+      description: Rotation, between -179 degrees and 179 degrees.
+      example: "90"
+    duration:
+      description: Duration of the movement.
+      example: "1500"
+
+vacuum_remote_control_move_step:
+  description: Remote control the vacuum cleaner, only makes one move and then stops.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+    velocity:
+      description: Speed, between -0.29 and 0.29.
+      example: "0.2"
+    rotation:
+      description: Rotation, between -179 degrees and 179 degrees.
+      example: "90"
+    duration:
+      description: Duration of the movement.
+      example: "1500"
+
+vacuum_clean_zone:
+  description: Start the cleaning operation in the selected areas for the number of repeats indicated.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+    zone:
+      description: Array of zones. Each zone is an array of 4 integer values.
+      example: "[[23510,25311,25110,26362]]"
+    repeats:
+      description: Number of cleaning repeats for each zone between 1 and 3.
+      example: "1"

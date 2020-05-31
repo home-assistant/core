@@ -1,12 +1,7 @@
 {
   "domain": "cloudflare",
   "name": "Cloudflare",
-  "documentation": "https://www.home-assistant.io/components/cloudflare",
-  "requirements": [
-    "pycfdns==0.0.1"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@ludeeus"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/cloudflare",
+  "requirements": ["pycfdns==0.0.1"],
+  "codeowners": ["@ludeeus"]
 }

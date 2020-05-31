@@ -1,8 +1,6 @@
 {
   "domain": "telnet",
   "name": "Telnet",
-  "documentation": "https://www.home-assistant.io/components/telnet",
-  "requirements": [],
-  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/telnet",
   "codeowners": []
 }

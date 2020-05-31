@@ -1,0 +1,25 @@
+{
+  "config": {
+    "flow_title": "Elgato Key Light: {serial_number}",
+    "step": {
+      "user": {
+        "description": "Set up your Elgato Key Light to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the Elgato Key Light with serial number `{serial_number}` to Home Assistant?",
+        "title": "Discovered Elgato Key Light device"
+      }
+    },
+    "error": {
+      "connection_error": "Failed to connect to Elgato Key Light device."
+    },
+    "abort": {
+      "already_configured": "This Elgato Key Light device is already configured.",
+      "connection_error": "Failed to connect to Elgato Key Light device."
+    }
+  }
+}

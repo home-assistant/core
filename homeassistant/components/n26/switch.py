@@ -1,7 +1,7 @@
 """Support for N26 switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .const import CARD_STATE_ACTIVE, CARD_STATE_BLOCKED, DATA
@@ -11,19 +11,22 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
 
-def setup_platform(
-        hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the N26 switch platform."""
-    api_data = hass.data[DOMAIN][DATA]
+    if discovery_info is None:
+        return
+
+    api_list = hass.data[DOMAIN][DATA]
 
     switch_entities = []
-    for card in api_data.cards:
-        switch_entities.append(N26CardSwitch(api_data, card))
+    for api_data in api_list:
+        for card in api_data.cards:
+            switch_entities.append(N26CardSwitch(api_data, card))
 
     add_entities(switch_entities)
 
 
-class N26CardSwitch(SwitchDevice):
+class N26CardSwitch(SwitchEntity):
     """Representation of a N26 card block/unblock switch."""
 
     def __init__(self, api_data, card: dict):
@@ -39,7 +42,7 @@ class N26CardSwitch(SwitchDevice):
     @property
     def name(self) -> str:
         """Friendly name of the sensor."""
-        return "card_{}".format(self._card["id"])
+        return f"card_{self._card['id']}"
 
     @property
     def is_on(self):

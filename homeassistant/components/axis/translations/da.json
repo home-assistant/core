@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheden er allerede konfigureret",
+            "bad_config_file": "Forkerte data fra konfigurationsfilen",
+            "link_local_address": "Link lokale adresser underst\u00f8ttes ikke",
+            "not_axis_device": "Fundet enhed ikke en Axis enhed"
+        },
+        "error": {
+            "already_configured": "Enheden er allerede konfigureret",
+            "already_in_progress": "Enhedskonfiguration er allerede i gang.",
+            "device_unavailable": "Enheden er ikke tilg\u00e6ngelig",
+            "faulty_credentials": "Ugyldige legitimationsoplysninger"
+        },
+        "flow_title": "Axis-enhed: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e6rt",
+                    "password": "Adgangskode",
+                    "port": "Port",
+                    "username": "Brugernavn"
+                },
+                "title": "Indstil Axis-enhed"
+            }
+        }
+    }
+}

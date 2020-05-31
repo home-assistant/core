@@ -1,0 +1,97 @@
+update_dsp:
+  description: Update all DSP settings.
+  fields:
+    entity_id:
+      description: The entity_id of the KEF speaker.
+      example: media_player.kef_lsx
+
+set_mode:
+  description: Set the mode of the speaker.
+  fields:
+    entity_id:
+      description: The entity_id of the KEF speaker.
+      example: media_player.kef_lsx
+    desk_mode:
+      description: >
+        "Desk mode" (true or false)
+      example: true
+    wall_mode:
+      description: >
+        "Wall mode" (true or false)
+      example: true
+    phase_correction:
+      description: >
+        "Phase correction" (true or false)
+      example: true
+    high_pass:
+      description: >
+        "High-pass mode" (true or false)
+      example: true
+    sub_polarity:
+      description: >
+        "Sub polarity" ("-" or "+")
+      example: "+"
+    bass_extension:
+      description: >
+        "Bass extension" selector ("Less", "Standard", or "Extra")
+      example: "Extra"
+
+set_desk_db:
+  description: Set the "Desk mode" slider of the speaker in dB.
+  fields:
+    entity_id:
+      description: The entity_id of the KEF speaker.
+      example: media_player.kef_lsx
+    db_value:
+      description: Value of the slider (-6 to 0 with steps of 0.5)
+      example: 0.0
+
+set_wall_db:
+  description: Set the "Wall mode" slider of the speaker in dB.
+  fields:
+    entity_id:
+      description: The entity_id of the KEF speaker.
+      example: media_player.kef_lsx
+    db_value:
+      description: Value of the slider (-6 to 0 with steps of 0.5)
+      example: 0.0
+
+set_treble_db:
+  description: Set desk the "Treble trim" slider of the speaker in dB.
+  fields:
+    entity_id:
+      description: The entity_id of the KEF speaker.
+      example: media_player.kef_lsx
+    db_value:
+      description: Value of the slider (-2 to 2 with steps of 0.5)
+      example: 0.0
+
+set_high_hz:
+  description: Set the "High-pass mode" slider of the speaker in Hz.
+  fields:
+    entity_id:
+      description: The entity_id of the KEF speaker.
+      example: media_player.kef_lsx
+    hz_value:
+      description: Value of the slider (50 to 120 with steps of 5)
+      example: 95
+
+set_low_hz:
+  description: Set the "Sub out low-pass frequency" slider of the speaker in Hz.
+  fields:
+    entity_id:
+      description: The entity_id of the KEF speaker.
+      example: media_player.kef_lsx
+    hz_value:
+      description: Value of the slider (40 to 250 with steps of 5)
+      example: 80
+
+set_sub_db:
+  description: Set the "Sub gain" slider of the speaker in dB.
+  fields:
+    entity_id:
+      description: The entity_id of the KEF speaker.
+      example: media_player.kef_lsx
+    db_value:
+      description: Value of the slider (-10 to 10 with steps of 1)
+      example: 0

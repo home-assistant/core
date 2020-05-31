@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "P\u0159\u00edstupov\u00fd bod je ji\u017e nakonfigurov\u00e1n",
+            "connection_aborted": "Nelze se p\u0159ipojit k HMIP serveru",
+            "unknown": "Do\u0161lo k nezn\u00e1m\u00e9 chyb\u011b"
+        },
+        "error": {
+            "invalid_pin": "Neplatn\u00fd k\u00f3d PIN, zkuste to znovu.",
+            "press_the_button": "Stiskn\u011bte modr\u00e9 tla\u010d\u00edtko.",
+            "register_failed": "Registrace se nezda\u0159ila, zkuste to znovu.",
+            "timeout_button": "\u010casov\u00fd limit stisknut\u00ed modr\u00e9ho tla\u010d\u00edtka vypr\u0161el. Zkuste to znovu."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "ID p\u0159\u00edstupov\u00e9ho bodu (SGTIN)",
+                    "name": "N\u00e1zev (nepovinn\u00e9, pou\u017e\u00edv\u00e1 se jako p\u0159edpona n\u00e1zvu pro v\u0161echna za\u0159\u00edzen\u00ed)",
+                    "pin": "Pin k\u00f3d (nepovinn\u00e9)"
+                },
+                "title": "Vyberte p\u0159\u00edstupov\u00fd bod HomematicIP"
+            },
+            "link": {
+                "description": "Stiskn\u011bte modr\u00e9 tla\u010d\u00edtko na p\u0159\u00edstupov\u00e9m bodu a tla\u010d\u00edtko pro registraci HomematicIP s dom\u00e1c\u00edm asistentem. \n\n ! [Um\u00edst\u011bn\u00ed tla\u010d\u00edtka na za\u0159\u00edzen\u00ed] (/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "P\u0159ipojit se k p\u0159\u00edstupov\u00e9mu bodu"
+            }
+        }
+    }
+}

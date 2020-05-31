@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "device_fail": "Error inesperat",
+            "device_timeout": "No s'ha pogut connectar",
+            "forbidden": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "key": "Clau API",
+                    "password": "Contrasenya"
+                },
+                "description": "Introdueix l'adre\u00e7a IP del teu AC Daikin.\n\nTingues en compte que la Clau API i la Contrasenya s'utilitzen als dispositius BRP072Cxx i SKYFi respectivament.",
+                "title": "Configuraci\u00f3 de Daikin AC"
+            }
+        }
+    }
+}

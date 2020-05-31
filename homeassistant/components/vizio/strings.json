@@ -1,0 +1,54 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "VIZIO SmartCast Device",
+        "description": "An [%key:common::config_flow::data::access_token%] is only needed for TVs. If you are configuring a TV and do not have an [%key:common::config_flow::data::access_token%] yet, leave it blank to go through a pairing process.",
+        "data": {
+          "name": "Name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "device_class": "Device Type",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      },
+      "pair_tv": {
+        "title": "Complete Pairing Process",
+        "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
+        "data": {
+          "pin": "PIN"
+        }
+      },
+      "pairing_complete": {
+        "title": "Pairing Complete",
+        "description": "Your [%key:component::vizio::config::step::user::title%] is now connected to Home Assistant."
+      },
+      "pairing_complete_import": {
+        "title": "Pairing Complete",
+        "description": "Your [%key:component::vizio::config::step::user::title%] is now connected to Home Assistant.\n\nYour [%key:common::config_flow::data::access_token%] is '**{access_token}**'."
+      }
+    },
+    "error": {
+      "host_exists": "[%key:component::vizio::config::step::user::title%] with specified host already configured.",
+      "name_exists": "[%key:component::vizio::config::step::user::title%] with specified name already configured.",
+      "complete_pairing_failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "updated_entry": "This entry has already been setup but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update [%key:component::vizio::config::step::user::title%] Options",
+        "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list.",
+        "data": {
+          "volume_step": "Volume Step Size",
+          "include_or_exclude": "Include or Exclude Apps?",
+          "apps_to_include_or_exclude": "Apps to Include or Exclude"
+        }
+      }
+    }
+  }
+}

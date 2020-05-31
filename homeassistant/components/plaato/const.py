@@ -1,3 +1,3 @@
 """Const for GPSLogger."""
 
-DOMAIN = 'plaato'
+DOMAIN = "plaato"

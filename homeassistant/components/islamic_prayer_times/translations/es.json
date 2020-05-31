@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "S\u00f3lo se necesita una instancia."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfQuieres configurar las Horas de Oraci\u00f3n Isl\u00e1mica?",
+                "title": "Configurar las Horas de Oraci\u00f3n Isl\u00e1mica"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "M\u00e9todo de c\u00e1lculo de la oraci\u00f3n"
+                }
+            }
+        }
+    },
+    "title": "Horas de Oraci\u00f3n Isl\u00e1mica"
+}

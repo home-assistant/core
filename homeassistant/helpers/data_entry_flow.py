@@ -1,40 +1,47 @@
 """Helpers for the data entry flow."""
 
+from typing import Any, Dict
+
+from aiohttp import web
 import voluptuous as vol
 
-from homeassistant import data_entry_flow, config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.const import HTTP_NOT_FOUND
+import homeassistant.helpers.config_validation as cv
 
 
 class _BaseFlowManagerView(HomeAssistantView):
     """Foundation for flow manager views."""
 
-    def __init__(self, flow_mgr):
+    def __init__(self, flow_mgr: data_entry_flow.FlowManager) -> None:
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
     # pylint: disable=no-self-use
-    def _prepare_result_json(self, result):
+    def _prepare_result_json(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert result to JSON."""
-        if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             data = result.copy()
-            data.pop('result')
-            data.pop('data')
+            data.pop("result")
+            data.pop("data")
             return data
 
-        if result['type'] != data_entry_flow.RESULT_TYPE_FORM:
+        if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
             return result
 
-        import voluptuous_serialize
+        import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
         data = result.copy()
 
-        schema = data['data_schema']
+        schema = data["data_schema"]
         if schema is None:
-            data['data_schema'] = []
+            data["data_schema"] = []
         else:
-            data['data_schema'] = voluptuous_serialize.convert(schema)
+            data["data_schema"] = voluptuous_serialize.convert(
+                schema, custom_serializer=cv.custom_serializer
+            )
 
         return data
 
@@ -42,23 +49,34 @@ class _BaseFlowManagerView(HomeAssistantView):
 class FlowManagerIndexView(_BaseFlowManagerView):
     """View to create config flows."""
 
-    @RequestDataValidator(vol.Schema({
-        vol.Required('handler'): vol.Any(str, list),
-    }, extra=vol.ALLOW_EXTRA))
-    async def post(self, request, data):
+    @RequestDataValidator(
+        vol.Schema(
+            {
+                vol.Required("handler"): vol.Any(str, list),
+                vol.Optional("show_advanced_options", default=False): cv.boolean,
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
+    )
+    async def post(self, request: web.Request, data: Dict[str, Any]) -> web.Response:
         """Handle a POST request."""
-        if isinstance(data['handler'], list):
-            handler = tuple(data['handler'])
+        if isinstance(data["handler"], list):
+            handler = tuple(data["handler"])
         else:
-            handler = data['handler']
+            handler = data["handler"]
 
         try:
             result = await self._flow_mgr.async_init(
-                handler, context={'source': config_entries.SOURCE_USER})
+                handler,  # type: ignore
+                context={
+                    "source": config_entries.SOURCE_USER,
+                    "show_advanced_options": data["show_advanced_options"],
+                },
+            )
         except data_entry_flow.UnknownHandler:
-            return self.json_message('Invalid handler specified', 404)
+            return self.json_message("Invalid handler specified", HTTP_NOT_FOUND)
         except data_entry_flow.UnknownStep:
-            return self.json_message('Handler does not support user', 400)
+            return self.json_message("Handler does not support user", 400)
 
         result = self._prepare_result_json(result)
 
@@ -68,36 +86,38 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 class FlowManagerResourceView(_BaseFlowManagerView):
     """View to interact with the flow manager."""
 
-    async def get(self, request, flow_id):
+    async def get(self, request: web.Request, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         try:
             result = await self._flow_mgr.async_configure(flow_id)
         except data_entry_flow.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
+            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
 
         result = self._prepare_result_json(result)
 
         return self.json(result)
 
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
-    async def post(self, request, flow_id, data):
+    async def post(
+        self, request: web.Request, flow_id: str, data: Dict[str, Any]
+    ) -> web.Response:
         """Handle a POST request."""
         try:
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
+            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
         except vol.Invalid:
-            return self.json_message('User input malformed', 400)
+            return self.json_message("User input malformed", 400)
 
         result = self._prepare_result_json(result)
 
         return self.json(result)
 
-    async def delete(self, request, flow_id):
+    async def delete(self, request: web.Request, flow_id: str) -> web.Response:
         """Cancel a flow in progress."""
         try:
             self._flow_mgr.async_abort(flow_id)
         except data_entry_flow.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
+            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
 
-        return self.json_message('Flow aborted')
+        return self.json_message("Flow aborted")

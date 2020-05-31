@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "manual_confirm": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

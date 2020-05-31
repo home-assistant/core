@@ -2,26 +2,29 @@
 import logging
 
 import voluptuous as vol
+import yeelightsunflower
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    Light, ATTR_HS_COLOR, SUPPORT_COLOR, ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    LightEntity,
+)
 from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
+SUPPORT_YEELIGHT_SUNFLOWER = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight Sunflower Light platform."""
-    import yeelightsunflower
 
     host = config.get(CONF_HOST)
     hub = yeelightsunflower.Hub(host)
@@ -33,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(SunflowerBulb(light) for light in hub.get_lights())
 
 
-class SunflowerBulb(Light):
+class SunflowerBulb(LightEntity):
     """Representation of a Yeelight Sunflower Light."""
 
     def __init__(self, light):
@@ -47,7 +50,7 @@ class SunflowerBulb(Light):
     @property
     def name(self):
         """Return the display name of this light."""
-        return 'sunflower_{}'.format(self._light.zid)
+        return f"sunflower_{self._light.zid}"
 
     @property
     def available(self):

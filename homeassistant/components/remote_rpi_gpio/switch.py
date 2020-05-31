@@ -3,9 +3,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import DEVICE_DEFAULT_NAME, CONF_HOST
-
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
@@ -13,18 +12,17 @@ from .. import remote_rpi_gpio
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PORTS = 'ports'
+CONF_PORTS = "ports"
 
-_SENSORS_SCHEMA = vol.Schema({
-    cv.positive_int: cv.string,
-})
+_SENSORS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
-    vol.Optional(CONF_INVERT_LOGIC,
-                 default=DEFAULT_INVERT_LOGIC): cv.boolean
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
+        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -36,9 +34,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for port, name in ports.items():
         try:
-            led = remote_rpi_gpio.setup_output(
-                address, port, invert_logic)
-        except (ValueError, IndexError, KeyError, IOError):
+            led = remote_rpi_gpio.setup_output(address, port, invert_logic)
+        except (ValueError, IndexError, KeyError, OSError):
             return
         new_switch = RemoteRPiGPIOSwitch(name, led, invert_logic)
         devices.append(new_switch)
@@ -78,14 +75,12 @@ class RemoteRPiGPIOSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        remote_rpi_gpio.write_output(self._switch,
-                                     0 if self._invert_logic else 1)
+        remote_rpi_gpio.write_output(self._switch, 0 if self._invert_logic else 1)
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        remote_rpi_gpio.write_output(self._switch,
-                                     1 if self._invert_logic else 0)
+        remote_rpi_gpio.write_output(self._switch, 1 if self._invert_logic else 0)
         self._state = False
         self.schedule_update_ha_state()

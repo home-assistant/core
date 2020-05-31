@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "TelldusLive ja est\u00e0 configurat",
+            "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
+            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
+            "unknown": "S'ha produ\u00eft un error desconegut"
+        },
+        "error": {
+            "auth_error": "Error d'autenticaci\u00f3, torna-ho a provar"
+        },
+        "step": {
+            "auth": {
+                "description": "Per enlla\u00e7ar el teu compte de TelldusLive:\n 1. Clica l'enlla\u00e7 de sota.\n 2. Inicia sessi\u00f3 a Telldus Live.\n 3. Autoritza **{app_name}** (clica **Yes**).\n 4. Torna aqu\u00ed i clica **SUBMIT**.\n \n [Enlla\u00e7 al compte de TelldusLive]({auth_url})",
+                "title": "Autenticaci\u00f3 amb TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Buit",
+                "title": "Selecci\u00f3 de l'endpoint"
+            }
+        }
+    }
+}

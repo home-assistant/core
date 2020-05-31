@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "device_fail": "Onerwaarte Feeler",
+            "device_timeout": "Feeler beim verbannen",
+            "forbidden": "Ong\u00eblteg Authentifikatioun"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "key": "Authentifikatiouns Schl\u00ebssel (n\u00ebmme vu BRP072C/Zena Apparater benotzt)",
+                    "password": "Passwuert vum Apparat (n\u00ebmme vun SKYFi Apparater benotzt)"
+                },
+                "description": "Gitt d'IP Adresse vum Daikin AC an:",
+                "title": "Daikin AC konfigur\u00e9ieren"
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "state": {
+        "_": {
+            "cleaning": "Garbitzen",
+            "docked": "Basean",
+            "error": "Errorea",
+            "off": "Itzalita",
+            "on": "Piztuta",
+            "returning": "Basera itzultzen"
+        }
+    },
+    "title": "Xurgagailua"
+}

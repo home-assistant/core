@@ -1,5 +1,6 @@
 """The test for the Facebook notify module."""
 import unittest
+
 import requests_mock
 
 # import homeassistant.components.facebook as facebook
@@ -17,11 +18,7 @@ class TestFacebook(unittest.TestCase):
     @requests_mock.Mocker()
     def test_send_simple_message(self, mock):
         """Test sending a simple message with success."""
-        mock.register_uri(
-            requests_mock.POST,
-            facebook.BASE_URL,
-            status_code=200
-        )
+        mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
 
         message = "This is just a test"
         target = ["+15555551234"]
@@ -32,7 +29,9 @@ class TestFacebook(unittest.TestCase):
 
         expected_body = {
             "recipient": {"phone_number": target[0]},
-            "message": {"text": message}
+            "message": {"text": message},
+            "messaging_type": "MESSAGE_TAG",
+            "tag": "ACCOUNT_UPDATE",
         }
         assert mock.last_request.json() == expected_body
 
@@ -42,11 +41,7 @@ class TestFacebook(unittest.TestCase):
     @requests_mock.Mocker()
     def test_sending_multiple_messages(self, mock):
         """Test sending a message to multiple targets."""
-        mock.register_uri(
-            requests_mock.POST,
-            facebook.BASE_URL,
-            status_code=200
-        )
+        mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
 
         message = "This is just a test"
         targets = ["+15555551234", "+15555551235"]
@@ -59,7 +54,9 @@ class TestFacebook(unittest.TestCase):
             request = mock.request_history[idx]
             expected_body = {
                 "recipient": {"phone_number": target},
-                "message": {"text": message}
+                "message": {"text": message},
+                "messaging_type": "MESSAGE_TAG",
+                "tag": "ACCOUNT_UPDATE",
             }
             assert request.json() == expected_body
 
@@ -69,17 +66,13 @@ class TestFacebook(unittest.TestCase):
     @requests_mock.Mocker()
     def test_send_message_attachment(self, mock):
         """Test sending a message with a remote attachment."""
-        mock.register_uri(
-            requests_mock.POST,
-            facebook.BASE_URL,
-            status_code=200
-        )
+        mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
 
         message = "This will be thrown away."
         data = {
             "attachment": {
                 "type": "image",
-                "payload": {"url": "http://www.example.com/image.jpg"}
+                "payload": {"url": "http://www.example.com/image.jpg"},
             }
         }
         target = ["+15555551234"]
@@ -90,7 +83,9 @@ class TestFacebook(unittest.TestCase):
 
         expected_body = {
             "recipient": {"phone_number": target[0]},
-            "message": data
+            "message": data,
+            "messaging_type": "MESSAGE_TAG",
+            "tag": "ACCOUNT_UPDATE",
         }
         assert mock.last_request.json() == expected_body
 
@@ -100,13 +95,9 @@ class TestFacebook(unittest.TestCase):
     @requests_mock.Mocker()
     def test_send_targetless_message(self, mock):
         """Test sending a message without a target."""
-        mock.register_uri(
-            requests_mock.POST,
-            facebook.BASE_URL,
-            status_code=200
-        )
+        mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
 
-        self.facebook.send_message(message="goin nowhere")
+        self.facebook.send_message(message="going nowhere")
         assert not mock.called
 
     @requests_mock.Mocker()
@@ -121,9 +112,9 @@ class TestFacebook(unittest.TestCase):
                     "message": "Invalid OAuth access token.",
                     "type": "OAuthException",
                     "code": 190,
-                    "fbtrace_id": "G4Da2pFp2Dp"
+                    "fbtrace_id": "G4Da2pFp2Dp",
                 }
-            }
+            },
         )
         self.facebook.send_message(message="nope!", target=["+15555551234"])
         assert mock.called

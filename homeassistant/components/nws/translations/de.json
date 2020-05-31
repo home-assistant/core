@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel (E-Mail)",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad",
+                    "station": "METAR Stationscode"
+                },
+                "description": "Wenn kein METAR-Stationscode angegeben ist, werden L\u00e4ngen- und Breitengrad verwendet, um die n\u00e4chstgelegene Station zu finden.",
+                "title": "Stellen Sie eine Verbindung zum Nationalen Wetterdienst her"
+            }
+        }
+    }
+}

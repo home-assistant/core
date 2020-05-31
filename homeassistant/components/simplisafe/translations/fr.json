@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce compte SimpliSafe est d\u00e9j\u00e0 utilis\u00e9."
+        },
+        "error": {
+            "identifier_exists": "Compte d\u00e9j\u00e0 enregistr\u00e9",
+            "invalid_credentials": "Informations d'identification invalides"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Code (utilis\u00e9 dans l'interface Home Assistant)",
+                    "password": "Mot de passe",
+                    "username": "Adresse e-mail"
+                },
+                "title": "Veuillez saisir vos informations"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (utilis\u00e9 dans l'interface Home Assistant)"
+                },
+                "title": "Configurer SimpliSafe"
+            }
+        }
+    }
+}

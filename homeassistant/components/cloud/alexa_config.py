@@ -7,21 +7,24 @@ import aiohttp
 import async_timeout
 from hass_nabucasa import cloud_api
 
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.components.alexa import (
+    config as alexa_config,
+    entities as alexa_entities,
+    errors as alexa_errors,
+    state_report as alexa_state_report,
+)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_BAD_REQUEST
+from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
-from homeassistant.components.alexa import (
-    config as alexa_config,
-    errors as alexa_errors,
-    entities as alexa_entities,
-    state_report as alexa_state_report,
-)
-
 
 from .const import (
-    CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE,
-    RequireRelink
+    CONF_ENTITY_CONFIG,
+    CONF_FILTER,
+    DEFAULT_SHOULD_EXPOSE,
+    PREF_SHOULD_EXPOSE,
+    RequireRelink,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +52,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         prefs.async_listen_updates(self._async_prefs_updated)
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated
+            self._handle_entity_registry_updated,
         )
 
     @property
@@ -76,6 +79,12 @@ class AlexaConfig(alexa_config.AbstractConfig):
         return self._endpoint
 
     @property
+    def locale(self):
+        """Return config locale."""
+        # Not clear how to determine locale atm.
+        return "en-US"
+
+    @property
     def entity_config(self):
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
@@ -90,25 +99,29 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
         entity_configs = self._prefs.alexa_entity_configs
         entity_config = entity_configs.get(entity_id, {})
-        return entity_config.get(
-            PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+        return entity_config.get(PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+
+    @callback
+    def async_invalidate_access_token(self):
+        """Invalidate access token."""
+        self._token_valid = None
 
     async def async_get_access_token(self):
         """Get an access token."""
-        if self._token_valid is not None and self._token_valid < utcnow():
+        if self._token_valid is not None and self._token_valid > utcnow():
             return self._token
 
         resp = await cloud_api.async_alexa_access_token(self._cloud)
         body = await resp.json()
 
-        if resp.status == 400:
-            if body['reason'] in ('RefreshTokenNotFound', 'UnknownRegion'):
+        if resp.status == HTTP_BAD_REQUEST:
+            if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
                     await self._prefs.async_update(alexa_report_state=False)
                     self.hass.components.persistent_notification.async_create(
-                        "There was an error reporting state to Alexa ({}). "
+                        f"There was an error reporting state to Alexa ({body['reason']}). "
                         "Please re-link your Alexa skill via the Alexa app to "
-                        "continue using it.".format(body['reason']),
+                        "continue using it.",
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )
@@ -116,9 +129,9 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
             raise alexa_errors.NoTokenAvailable
 
-        self._token = body['access_token']
-        self._endpoint = body['event_endpoint']
-        self._token_valid = utcnow() + timedelta(seconds=body['expires_in'])
+        self._token = body["access_token"]
+        self._endpoint = body["event_endpoint"]
+        self._token_valid = utcnow() + timedelta(seconds=body["expires_in"])
         return self._token
 
     async def _async_prefs_updated(self, prefs):
@@ -136,15 +149,18 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
-        if (self._cur_entity_prefs is prefs.alexa_entity_configs or
-                not self._config[CONF_FILTER].empty_filter):
+        if (
+            self._cur_entity_prefs is prefs.alexa_entity_configs
+            or not self._config[CONF_FILTER].empty_filter
+        ):
             return
 
         if self._alexa_sync_unsub:
             self._alexa_sync_unsub()
 
         self._alexa_sync_unsub = async_call_later(
-            self.hass, SYNC_DELAY, self._sync_prefs)
+            self.hass, SYNC_DELAY, self._sync_prefs
+        )
 
     async def _sync_prefs(self, _now):
         """Sync the updated preferences to Alexa."""
@@ -225,14 +241,16 @@ class AlexaConfig(alexa_config.AbstractConfig):
         tasks = []
 
         if to_update:
-            tasks.append(alexa_state_report.async_send_add_or_update_message(
-                self.hass, self, to_update
-            ))
+            tasks.append(
+                alexa_state_report.async_send_add_or_update_message(
+                    self.hass, self, to_update
+                )
+            )
 
         if to_remove:
-            tasks.append(alexa_state_report.async_send_delete_message(
-                self.hass, self, to_remove
-            ))
+            tasks.append(
+                alexa_state_report.async_send_delete_message(self.hass, self, to_remove)
+            )
 
         try:
             with async_timeout.timeout(10):
@@ -253,15 +271,25 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if not self.enabled or not self._cloud.is_logged_in:
             return
 
-        action = event.data['action']
-        entity_id = event.data['entity_id']
+        entity_id = event.data["entity_id"]
+
+        if not self.should_expose(entity_id):
+            return
+
+        action = event.data["action"]
         to_update = []
         to_remove = []
 
-        if action == 'create' and self.should_expose(entity_id):
+        if action == "create":
             to_update.append(entity_id)
-        elif action == 'remove' and self.should_expose(entity_id):
+        elif action == "remove":
             to_remove.append(entity_id)
+        elif action == "update" and bool(
+            set(event.data["changes"]) & entity_registry.ENTITY_DESCRIBING_ATTRIBUTES
+        ):
+            to_update.append(entity_id)
+            if "old_entity_id" in event.data:
+                to_remove.append(event.data["old_entity_id"])
 
         try:
             await self._sync_helper(to_update, to_remove)

@@ -1,210 +1,153 @@
 """Support for AirVisual air quality sensors."""
 from logging import getLogger
-from datetime import timedelta
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL, CONF_STATE, CONF_SHOW_ON_MAP)
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_STATE,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+    CONF_STATE,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
+from homeassistant.core import callback
+
+from . import AirVisualEntity
+from .const import (
+    CONF_CITY,
+    CONF_COUNTRY,
+    CONF_INTEGRATION_TYPE,
+    DATA_COORDINATOR,
+    DOMAIN,
+    INTEGRATION_TYPE_GEOGRAPHY,
+)
 
 _LOGGER = getLogger(__name__)
 
-ATTR_CITY = 'city'
-ATTR_COUNTRY = 'country'
-ATTR_POLLUTANT_SYMBOL = 'pollutant_symbol'
-ATTR_POLLUTANT_UNIT = 'pollutant_unit'
-ATTR_REGION = 'region'
+ATTR_CITY = "city"
+ATTR_COUNTRY = "country"
+ATTR_POLLUTANT_SYMBOL = "pollutant_symbol"
+ATTR_POLLUTANT_UNIT = "pollutant_unit"
+ATTR_REGION = "region"
 
-CONF_CITY = 'city'
-CONF_COUNTRY = 'country'
+MASS_PARTS_PER_MILLION = "ppm"
+MASS_PARTS_PER_BILLION = "ppb"
+VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m3"
 
-DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
+SENSOR_KIND_LEVEL = "air_pollution_level"
+SENSOR_KIND_AQI = "air_quality_index"
+SENSOR_KIND_POLLUTANT = "main_pollutant"
+SENSOR_KIND_BATTERY_LEVEL = "battery_level"
+SENSOR_KIND_HUMIDITY = "humidity"
+SENSOR_KIND_TEMPERATURE = "temperature"
 
-MASS_PARTS_PER_MILLION = 'ppm'
-MASS_PARTS_PER_BILLION = 'ppb'
-VOLUME_MICROGRAMS_PER_CUBIC_METER = 'µg/m3'
+GEOGRAPHY_SENSORS = [
+    (SENSOR_KIND_LEVEL, "Air Pollution Level", "mdi:gauge", None),
+    (SENSOR_KIND_AQI, "Air Quality Index", "mdi:chart-line", "AQI"),
+    (SENSOR_KIND_POLLUTANT, "Main Pollutant", "mdi:chemical-weapon", None),
+]
+GEOGRAPHY_SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
 
-SENSOR_TYPE_LEVEL = 'air_pollution_level'
-SENSOR_TYPE_AQI = 'air_quality_index'
-SENSOR_TYPE_POLLUTANT = 'main_pollutant'
-SENSORS = [
-    (SENSOR_TYPE_LEVEL, 'Air Pollution Level', 'mdi:gauge', None),
-    (SENSOR_TYPE_AQI, 'Air Quality Index', 'mdi:chart-line', 'AQI'),
-    (SENSOR_TYPE_POLLUTANT, 'Main Pollutant', 'mdi:chemical-weapon', None),
+NODE_PRO_SENSORS = [
+    (SENSOR_KIND_BATTERY_LEVEL, "Battery", DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE),
+    (SENSOR_KIND_HUMIDITY, "Humidity", DEVICE_CLASS_HUMIDITY, UNIT_PERCENTAGE),
+    (SENSOR_KIND_TEMPERATURE, "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS),
 ]
 
-POLLUTANT_LEVEL_MAPPING = [{
-    'label': 'Good',
-    'icon': 'mdi:emoticon-excited',
-    'minimum': 0,
-    'maximum': 50
-}, {
-    'label': 'Moderate',
-    'icon': 'mdi:emoticon-happy',
-    'minimum': 51,
-    'maximum': 100
-}, {
-    'label': 'Unhealthy for sensitive groups',
-    'icon': 'mdi:emoticon-neutral',
-    'minimum': 101,
-    'maximum': 150
-}, {
-    'label': 'Unhealthy',
-    'icon': 'mdi:emoticon-sad',
-    'minimum': 151,
-    'maximum': 200
-}, {
-    'label': 'Very Unhealthy',
-    'icon': 'mdi:emoticon-dead',
-    'minimum': 201,
-    'maximum': 300
-}, {
-    'label': 'Hazardous',
-    'icon': 'mdi:biohazard',
-    'minimum': 301,
-    'maximum': 10000
-}]
+POLLUTANT_LEVEL_MAPPING = [
+    {"label": "Good", "icon": "mdi:emoticon-excited", "minimum": 0, "maximum": 50},
+    {"label": "Moderate", "icon": "mdi:emoticon-happy", "minimum": 51, "maximum": 100},
+    {
+        "label": "Unhealthy for sensitive groups",
+        "icon": "mdi:emoticon-neutral",
+        "minimum": 101,
+        "maximum": 150,
+    },
+    {"label": "Unhealthy", "icon": "mdi:emoticon-sad", "minimum": 151, "maximum": 200},
+    {
+        "label": "Very Unhealthy",
+        "icon": "mdi:emoticon-dead",
+        "minimum": 201,
+        "maximum": 300,
+    },
+    {"label": "Hazardous", "icon": "mdi:biohazard", "minimum": 301, "maximum": 10000},
+]
 
 POLLUTANT_MAPPING = {
-    'co': {
-        'label': 'Carbon Monoxide',
-        'unit': MASS_PARTS_PER_MILLION
-    },
-    'n2': {
-        'label': 'Nitrogen Dioxide',
-        'unit': MASS_PARTS_PER_BILLION
-    },
-    'o3': {
-        'label': 'Ozone',
-        'unit': MASS_PARTS_PER_BILLION
-    },
-    'p1': {
-        'label': 'PM10',
-        'unit': VOLUME_MICROGRAMS_PER_CUBIC_METER
-    },
-    'p2': {
-        'label': 'PM2.5',
-        'unit': VOLUME_MICROGRAMS_PER_CUBIC_METER
-    },
-    's2': {
-        'label': 'Sulfur Dioxide',
-        'unit': MASS_PARTS_PER_BILLION
-    },
+    "co": {"label": "Carbon Monoxide", "unit": CONCENTRATION_PARTS_PER_MILLION},
+    "n2": {"label": "Nitrogen Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
+    "o3": {"label": "Ozone", "unit": CONCENTRATION_PARTS_PER_BILLION},
+    "p1": {"label": "PM10", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    "p2": {"label": "PM2.5", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    "s2": {"label": "Sulfur Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
 }
 
-SENSOR_LOCALES = {'cn': 'Chinese', 'us': 'U.S.'}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_LOCALES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_LOCALES)]),
-    vol.Inclusive(CONF_CITY, 'city'): cv.string,
-    vol.Inclusive(CONF_COUNTRY, 'city'): cv.string,
-    vol.Inclusive(CONF_LATITUDE, 'coords'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coords'): cv.longitude,
-    vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
-    vol.Inclusive(CONF_STATE, 'city'): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        cv.time_period
-})
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up AirVisual sensors based on a config entry."""
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
-
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Configure the platform and add the sensors."""
-    from pyairvisual import Client
-
-    city = config.get(CONF_CITY)
-    state = config.get(CONF_STATE)
-    country = config.get(CONF_COUNTRY)
-
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    websession = aiohttp_client.async_get_clientsession(hass)
-
-    if city and state and country:
-        _LOGGER.debug(
-            "Using city, state, and country: %s, %s, %s", city, state, country)
-        location_id = ','.join((city, state, country))
-        data = AirVisualData(
-            Client(websession, api_key=config[CONF_API_KEY]),
-            city=city,
-            state=state,
-            country=country,
-            show_on_map=config[CONF_SHOW_ON_MAP],
-            scan_interval=config[CONF_SCAN_INTERVAL])
+    if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+        sensors = [
+            AirVisualGeographySensor(
+                coordinator, config_entry, kind, name, icon, unit, locale,
+            )
+            for locale in GEOGRAPHY_SENSOR_LOCALES
+            for kind, name, icon, unit in GEOGRAPHY_SENSORS
+        ]
     else:
-        _LOGGER.debug(
-            "Using latitude and longitude: %s, %s", latitude, longitude)
-        location_id = ','.join((str(latitude), str(longitude)))
-        data = AirVisualData(
-            Client(websession, api_key=config[CONF_API_KEY]),
-            latitude=latitude,
-            longitude=longitude,
-            show_on_map=config[CONF_SHOW_ON_MAP],
-            scan_interval=config[CONF_SCAN_INTERVAL])
-
-    await data.async_update()
-
-    sensors = []
-    for locale in config[CONF_MONITORED_CONDITIONS]:
-        for kind, name, icon, unit in SENSORS:
-            sensors.append(
-                AirVisualSensor(
-                    data, kind, name, icon, unit, locale, location_id))
+        sensors = [
+            AirVisualNodeProSensor(coordinator, kind, name, device_class, unit)
+            for kind, name, device_class, unit in NODE_PRO_SENSORS
+        ]
 
     async_add_entities(sensors, True)
 
 
-class AirVisualSensor(Entity):
-    """Define an AirVisual sensor."""
+class AirVisualGeographySensor(AirVisualEntity):
+    """Define an AirVisual sensor related to geography data via the Cloud API."""
 
-    def __init__(self, airvisual, kind, name, icon, unit, locale, location_id):
+    def __init__(self, coordinator, config_entry, kind, name, icon, unit, locale):
         """Initialize."""
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        super().__init__(coordinator)
+
+        self._attrs.update(
+            {
+                ATTR_CITY: config_entry.data.get(CONF_CITY),
+                ATTR_STATE: config_entry.data.get(CONF_STATE),
+                ATTR_COUNTRY: config_entry.data.get(CONF_COUNTRY),
+            }
+        )
+        self._config_entry = config_entry
         self._icon = icon
+        self._kind = kind
         self._locale = locale
-        self._location_id = location_id
         self._name = name
         self._state = None
-        self._type = kind
         self._unit = unit
-        self.airvisual = airvisual
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        if self.airvisual.show_on_map:
-            self._attrs[ATTR_LATITUDE] = self.airvisual.latitude
-            self._attrs[ATTR_LONGITUDE] = self.airvisual.longitude
-        else:
-            self._attrs['lati'] = self.airvisual.latitude
-            self._attrs['long'] = self.airvisual.longitude
-
-        return self._attrs
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.airvisual.pollution_info)
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
+        try:
+            return self.coordinator.last_update_success and bool(
+                self.coordinator.data["current"]["pollution"]
+            )
+        except KeyError:
+            return False
 
     @property
     def name(self):
         """Return the name."""
-        return '{0} {1}'.format(SENSOR_LOCALES[self._locale], self._name)
+        return f"{GEOGRAPHY_SENSOR_LOCALES[self._locale]} {self._name}"
 
     @property
     def state(self):
@@ -213,82 +156,111 @@ class AirVisualSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}_{2}'.format(
-            self._location_id, self._locale, self._type)
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"{self._config_entry.unique_id}_{self._locale}_{self._kind}"
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
-
-    async def async_update(self):
-        """Update the sensor."""
-        await self.airvisual.async_update()
-        data = self.airvisual.pollution_info
-
-        if not data:
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity from the latest data."""
+        try:
+            data = self.coordinator.data["current"]["pollution"]
+        except KeyError:
             return
 
-        if self._type == SENSOR_TYPE_LEVEL:
-            aqi = data['aqi{0}'.format(self._locale)]
+        if self._kind == SENSOR_KIND_LEVEL:
+            aqi = data[f"aqi{self._locale}"]
             [level] = [
-                i for i in POLLUTANT_LEVEL_MAPPING
-                if i['minimum'] <= aqi <= i['maximum']
+                i
+                for i in POLLUTANT_LEVEL_MAPPING
+                if i["minimum"] <= aqi <= i["maximum"]
             ]
-            self._state = level['label']
-            self._icon = level['icon']
-        elif self._type == SENSOR_TYPE_AQI:
-            self._state = data['aqi{0}'.format(self._locale)]
-        elif self._type == SENSOR_TYPE_POLLUTANT:
-            symbol = data['main{0}'.format(self._locale)]
-            self._state = POLLUTANT_MAPPING[symbol]['label']
-            self._attrs.update({
-                ATTR_POLLUTANT_SYMBOL: symbol,
-                ATTR_POLLUTANT_UNIT: POLLUTANT_MAPPING[symbol]['unit']
-            })
+            self._state = level["label"]
+            self._icon = level["icon"]
+        elif self._kind == SENSOR_KIND_AQI:
+            self._state = data[f"aqi{self._locale}"]
+        elif self._kind == SENSOR_KIND_POLLUTANT:
+            symbol = data[f"main{self._locale}"]
+            self._state = POLLUTANT_MAPPING[symbol]["label"]
+            self._attrs.update(
+                {
+                    ATTR_POLLUTANT_SYMBOL: symbol,
+                    ATTR_POLLUTANT_UNIT: POLLUTANT_MAPPING[symbol]["unit"],
+                }
+            )
+
+        if CONF_LATITUDE in self._config_entry.data:
+            if self._config_entry.options[CONF_SHOW_ON_MAP]:
+                self._attrs[ATTR_LATITUDE] = self._config_entry.data[CONF_LATITUDE]
+                self._attrs[ATTR_LONGITUDE] = self._config_entry.data[CONF_LONGITUDE]
+                self._attrs.pop("lati", None)
+                self._attrs.pop("long", None)
+            else:
+                self._attrs["lati"] = self._config_entry.data[CONF_LATITUDE]
+                self._attrs["long"] = self._config_entry.data[CONF_LONGITUDE]
+                self._attrs.pop(ATTR_LATITUDE, None)
+                self._attrs.pop(ATTR_LONGITUDE, None)
 
 
-class AirVisualData:
-    """Define an object to hold sensor data."""
+class AirVisualNodeProSensor(AirVisualEntity):
+    """Define an AirVisual sensor related to a Node/Pro unit."""
 
-    def __init__(self, client, **kwargs):
+    def __init__(self, coordinator, kind, name, device_class, unit):
         """Initialize."""
-        self._client = client
-        self.city = kwargs.get(CONF_CITY)
-        self.country = kwargs.get(CONF_COUNTRY)
-        self.latitude = kwargs.get(CONF_LATITUDE)
-        self.longitude = kwargs.get(CONF_LONGITUDE)
-        self.pollution_info = {}
-        self.show_on_map = kwargs.get(CONF_SHOW_ON_MAP)
-        self.state = kwargs.get(CONF_STATE)
+        super().__init__(coordinator)
 
-        self.async_update = Throttle(
-            kwargs[CONF_SCAN_INTERVAL])(self._async_update)
+        self._device_class = device_class
+        self._kind = kind
+        self._name = name
+        self._state = None
+        self._unit = unit
 
-    async def _async_update(self):
-        """Update AirVisual data."""
-        from pyairvisual.errors import AirVisualError
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
 
-        try:
-            if self.city and self.state and self.country:
-                resp = await self._client.api.city(
-                    self.city, self.state, self.country)
-                self.longitude, self.latitude = resp['location']['coordinates']
-            else:
-                resp = await self._client.api.nearest_city(
-                    self.latitude, self.longitude)
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {
+                (DOMAIN, self.coordinator.data["current"]["serial_number"])
+            },
+            "name": self.coordinator.data["current"]["settings"]["node_name"],
+            "manufacturer": "AirVisual",
+            "model": f'{self.coordinator.data["current"]["status"]["model"]}',
+            "sw_version": (
+                f'Version {self.coordinator.data["current"]["status"]["system_version"]}'
+                f'{self.coordinator.data["current"]["status"]["app_version"]}'
+            ),
+        }
 
-            _LOGGER.debug("New data retrieved: %s", resp)
+    @property
+    def name(self):
+        """Return the name."""
+        node_name = self.coordinator.data["current"]["settings"]["node_name"]
+        return f"{node_name} Node/Pro: {self._name}"
 
-            self.pollution_info = resp['current']['pollution']
-        except (KeyError, AirVisualError) as err:
-            if self.city and self.state and self.country:
-                location = (self.city, self.state, self.country)
-            else:
-                location = (self.latitude, self.longitude)
+    @property
+    def state(self):
+        """Return the state."""
+        return self._state
 
-            _LOGGER.error(
-                "Can't retrieve data for location: %s (%s)", location,
-                err)
-            self.pollution_info = {}
+    @property
+    def unique_id(self):
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"{self.coordinator.data['current']['serial_number']}_{self._kind}"
+
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity from the latest data."""
+        if self._kind == SENSOR_KIND_BATTERY_LEVEL:
+            self._state = self.coordinator.data["current"]["status"]["battery"]
+        elif self._kind == SENSOR_KIND_HUMIDITY:
+            self._state = self.coordinator.data["current"]["measurements"].get(
+                "humidity"
+            )
+        elif self._kind == SENSOR_KIND_TEMPERATURE:
+            self._state = self.coordinator.data["current"]["measurements"].get(
+                "temperature_C"
+            )

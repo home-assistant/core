@@ -1,57 +1,56 @@
 """Support for monitoring an AVM Fritz!Box router."""
-import logging
 from datetime import timedelta
-from requests.exceptions import RequestException
+import logging
 
+from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.lib.fritzstatus import FritzStatus
+from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_UNAVAILABLE)
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_NAME = 'fritz_netmonitor'
-CONF_DEFAULT_IP = '169.254.1.1'  # This IP is valid for all FRITZ!Box routers.
+CONF_DEFAULT_NAME = "fritz_netmonitor"
+CONF_DEFAULT_IP = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
 
-ATTR_BYTES_RECEIVED = 'bytes_received'
-ATTR_BYTES_SENT = 'bytes_sent'
-ATTR_TRANSMISSION_RATE_UP = 'transmission_rate_up'
-ATTR_TRANSMISSION_RATE_DOWN = 'transmission_rate_down'
-ATTR_EXTERNAL_IP = 'external_ip'
-ATTR_IS_CONNECTED = 'is_connected'
-ATTR_IS_LINKED = 'is_linked'
-ATTR_MAX_BYTE_RATE_DOWN = 'max_byte_rate_down'
-ATTR_MAX_BYTE_RATE_UP = 'max_byte_rate_up'
-ATTR_UPTIME = 'uptime'
-ATTR_WAN_ACCESS_TYPE = 'wan_access_type'
+ATTR_BYTES_RECEIVED = "bytes_received"
+ATTR_BYTES_SENT = "bytes_sent"
+ATTR_TRANSMISSION_RATE_UP = "transmission_rate_up"
+ATTR_TRANSMISSION_RATE_DOWN = "transmission_rate_down"
+ATTR_EXTERNAL_IP = "external_ip"
+ATTR_IS_CONNECTED = "is_connected"
+ATTR_IS_LINKED = "is_linked"
+ATTR_MAX_BYTE_RATE_DOWN = "max_byte_rate_down"
+ATTR_MAX_BYTE_RATE_UP = "max_byte_rate_up"
+ATTR_UPTIME = "uptime"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-STATE_ONLINE = 'online'
-STATE_OFFLINE = 'offline'
+STATE_ONLINE = "online"
+STATE_OFFLINE = "offline"
 
-ICON = 'mdi:web'
+ICON = "mdi:web"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=CONF_DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=CONF_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FRITZ!Box monitor sensors."""
-    # pylint: disable=import-error
-    import fritzconnection as fc
-    from fritzconnection.fritzconnection import FritzConnectionException
-
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
 
     try:
-        fstatus = fc.FritzStatus(address=host)
+        fstatus = FritzStatus(address=host)
     except (ValueError, TypeError, FritzConnectionException):
         fstatus = None
 
@@ -71,7 +70,7 @@ class FritzboxMonitorSensor(Entity):
         self._name = name
         self._fstatus = fstatus
         self._state = STATE_UNAVAILABLE
-        self._is_linked = self._is_connected = self._wan_access_type = None
+        self._is_linked = self._is_connected = None
         self._external_ip = self._uptime = None
         self._bytes_sent = self._bytes_received = None
         self._transmission_rate_up = None
@@ -102,7 +101,6 @@ class FritzboxMonitorSensor(Entity):
         attr = {
             ATTR_IS_LINKED: self._is_linked,
             ATTR_IS_CONNECTED: self._is_connected,
-            ATTR_WAN_ACCESS_TYPE: self._wan_access_type,
             ATTR_EXTERNAL_IP: self._external_ip,
             ATTR_UPTIME: self._uptime,
             ATTR_BYTES_SENT: self._bytes_sent,
@@ -120,7 +118,6 @@ class FritzboxMonitorSensor(Entity):
         try:
             self._is_linked = self._fstatus.is_linked
             self._is_connected = self._fstatus.is_connected
-            self._wan_access_type = self._fstatus.wan_access_type
             self._external_ip = self._fstatus.external_ip
             self._uptime = self._fstatus.uptime
             self._bytes_sent = self._fstatus.bytes_sent
