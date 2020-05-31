@@ -3297,8 +3297,8 @@ async def test_media_player_eq_modes(hass):
         assert call.data["sound_mode"] == mode.lower()
 
 
-async def test_media_player_sound_mode_list_none(hass):
-    """Test EqualizerController bands directive not supported."""
+async def test_media_player_sound_mode_list_unsupported(hass):
+    """Test EqualizerController with unsupported sound modes."""
     device = (
         "media_player.test",
         "on",
@@ -3306,12 +3306,17 @@ async def test_media_player_sound_mode_list_none(hass):
             "friendly_name": "Test media player",
             "supported_features": SUPPORT_SELECT_SOUND_MODE,
             "sound_mode": "unknown",
-            "sound_mode_list": None,
+            "sound_mode_list": ["unsupported", "non-existing"],
         },
     )
     appliance = await discovery_test(device, hass)
     assert appliance["endpointId"] == "media_player#test"
     assert appliance["friendlyName"] == "Test media player"
+
+    # Test equalizer controller is not there
+    assert_endpoint_capabilities(
+        appliance, "Alexa", "Alexa.PowerController", "Alexa.EndpointHealth",
+    )
 
 
 async def test_media_player_eq_bands_not_supported(hass):
