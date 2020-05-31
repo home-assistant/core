@@ -48,18 +48,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ]
     all_devices = api.get_all_devices()
 
-    for dev_id, device in all_devices.items():
+    for dev_id, device_properties in all_devices.items():
 
-        if device["class"] not in thermostat_classes:
+        if device_properties["class"] not in thermostat_classes:
             continue
 
         thermostat = PwThermostat(
             api,
             coordinator,
-            device["name"],
+            device_properties["name"],
             dev_id,
-            device["location"],
-            device["class"],
+            device_properties["location"],
+            device_properties["class"],
             DEFAULT_MIN_TEMP,
             DEFAULT_MAX_TEMP,
         )
@@ -104,6 +104,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
         self._water_pressure = None
         self._schedule_temp = None
         self._hvac_mode = None
+        self._entity_name = self._name
         self._single_thermostat = self._api.single_master_thermostat()
         self._icon = THERMOSTAT_ICON
         self._unique_id = f"{dev_id}-climate"

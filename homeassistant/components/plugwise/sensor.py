@@ -190,7 +190,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     all_devices = api.get_all_devices()
     single_thermostat = api.single_master_thermostat()
-    for dev_id, entity in all_devices.items():
+    for dev_id, device_properties in all_devices.items():
         data = api.get_device_data(dev_id)
         for sensor, sensor_type in {
             **TEMP_SENSOR_MAP,
@@ -201,17 +201,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 if data[sensor] is None:
                     continue
 
-                if "power" in entity["types"]:
+                if "power" in device_properties["types"]:
                     model = None
 
-                    if "plug" in entity["types"]:
+                    if "plug" in device_properties["types"]:
                         model = "Metered Switch"
 
                     entities.append(
                         PwPowerSensor(
                             api,
                             coordinator,
-                            entity["name"],
+                            device_properties["name"],
                             dev_id,
                             sensor,
                             sensor_type,
@@ -223,24 +223,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         PwThermostatSensor(
                             api,
                             coordinator,
-                            entity["name"],
+                            device_properties["name"],
                             dev_id,
                             sensor,
                             sensor_type,
                         )
                     )
-                _LOGGER.info("Added sensor.%s", entity["name"])
+                _LOGGER.info("Added sensor %s", device_properties["name"])
 
         if single_thermostat is False:
             for state in INDICATE_ACTIVE_LOCAL_DEVICE:
                 if state in data:
                     entities.append(
                         PwAuxDeviceSensor(
-                            api, coordinator, entity["name"], dev_id, DEVICE_STATE,
+                            api,
+                            coordinator,
+                            device_properties["name"],
+                            dev_id,
+                            DEVICE_STATE,
                         )
                     )
                     _LOGGER.info(
-                        "Added auxiliary sensor.%s_state", "{}".format(entity["name"])
+                        "Added auxiliary sensor %s",
+                        "{}".format(device_properties["name"]),
                     )
                     break
 
@@ -352,6 +357,9 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
 
         sensorname = sensor.replace("_", " ").title()
         self._name = f"{self._entity_name} {sensorname}"
+
+        if self._dev_id == self._api.gateway_id:
+            self._entity_name = f"Smile {self._entity_name}"
 
         self._unique_id = f"{dev_id}-{sensor}"
 

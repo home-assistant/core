@@ -141,6 +141,7 @@ class SmileGateway(Entity):
         self._coordinator = coordinator
         self._unique_id = None
         self._name = None
+        self._entity_name = None
         self._icon = None
         self._dev_id = None
         self._model = None
@@ -181,7 +182,7 @@ class SmileGateway(Entity):
 
         device_information = {
             "identifiers": {(DOMAIN, self._dev_id)},
-            "name": self._name,
+            "name": self._entity_name,
             "manufacturer": "Plugwise",
         }
 
