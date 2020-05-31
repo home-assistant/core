@@ -1084,7 +1084,6 @@ def test_hass_start_starts_the_timer(loop):
             yield from hass.async_start()
 
         assert hass.state == ha.CoreState.running
-        assert hass.config.start_complete is True
         assert not hass._track_task
         assert len(mock_timer.mock_calls) == 1
         assert mock_timer.mock_calls[0][1][0] is hass
@@ -1107,7 +1106,6 @@ def test_start_taking_too_long(loop, caplog):
             yield from hass.async_start()
 
         assert hass.state == ha.CoreState.running
-        assert hass.config.start_complete is True
         assert len(mock_timer.mock_calls) == 1
         assert mock_timer.mock_calls[0][1][0] is hass
         assert "Something is blocking Home Assistant" in caplog.text
