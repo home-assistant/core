@@ -31,6 +31,26 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
+class FixedConnection(Connection):
+
+    lte_configuration_data_schema = {
+        'enabled': True
+    }
+
+    async def get_lte_config(self):
+        '''
+        Get lte connection configuration
+        '''
+        return await self._access.get('connection/lte/config/')
+
+    async def set_lte_config(self, lte_configuration_data=lte_configuration_data_schema):
+        '''
+        Update lte connection configuration
+        
+        /!\ Requires system config permission. Go to {FreeboxURL}#Fbx.os.app.settings.Accounts and allow the permission manually.
+        '''
+        await self._access.put('connection/lte/config/', lte_configuration_data)
+
 
 class FreeboxRouter:
     """Representation of a Freebox router."""
@@ -184,9 +204,11 @@ class FreeboxRouter:
         return self._api.wifi
 
     @property
-    def connection(self) -> Connection:
+    def connection(self) -> FixedConnection:
         """Return the connection."""
-        return self._api.connection
+        con = self._api.connection
+        con.__class__ = FixedConnection
+        return con
 
 
 async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
