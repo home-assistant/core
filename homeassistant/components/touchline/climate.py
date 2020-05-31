@@ -4,7 +4,7 @@ import logging
 from pytouchline import PyTouchline
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     SUPPORT_PRESET_MODE,
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class Touchline(ClimateDevice):
+class Touchline(ClimateEntity):
     """Representation of a Touchline device."""
 
     def __init__(self, touchline_thermostat):
