@@ -35,7 +35,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Temps (en segons) des de s'ha vist per \u00faltima vegada fins que es considera a fora",
-                    "ignore_wired_bug": "Desactiva la l\u00f2gica d\u2019errors amb UniFi",
+                    "ignore_wired_bug": "Desactiva la l\u00f2gica d'errors amb UniFi",
                     "ssid_filter": "Selecciona els SSID's on fer-hi el seguiment de clients",
                     "track_clients": "Segueix clients de la xarxa",
                     "track_devices": "Segueix dispositius de la xarxa (dispositius Ubiquiti)",
