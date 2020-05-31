@@ -126,7 +126,7 @@ class SynoApi:
         self.information: SynoDSMInformation = None
         self.utilisation: SynoCoreUtilization = None
         self.storage: SynoStorage = None
-        self.network: SynoDsmNetwork = None
+        self.network: SynoDSMNetwork = None
 
         self._unsub_dispatcher = None
 
