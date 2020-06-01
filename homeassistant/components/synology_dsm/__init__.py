@@ -224,9 +224,10 @@ class SynoApi:
         self.utilisation: SynoCoreUtilization = None
 
         # Should we fetch them
-        self._with_security = False
-        self._with_storage = False
-        self._with_utilisation = False
+        self.fetching_entities = set()
+        self._with_security = True
+        self._with_storage = True
+        self._with_utilisation = True
 
         self._unsub_dispatcher = None
 
@@ -263,36 +264,26 @@ class SynoApi:
 
     async def _async_should_fetch_api(self):
         """Determine if we should fetch each API, if one entity needs it."""
-        entity_reg = await self._hass.helpers.entity_registry.async_get_registry()
-        entity_entries = entity_registry.async_entries_for_config_entry(
-            entity_reg, self._entry.entry_id
-        )
-        # Entities not added yet
-        if not entity_entries:
-            self._with_security = True
-            self._with_storage = True
-            self._with_utilisation = True
+        # Entities not added yet, fetch all
+        if not self.fetching_entities:
             return
 
         # Determine which if at least one entity uses specific API
         self._with_security = False
         self._with_storage = False
         self._with_utilisation = False
-        for entity_entry in entity_entries:
-            # Pass disabled entries
-            if entity_entry.disabled_by:
-                continue
 
+        for entity_unique_id in self.fetching_entities:
             # Check if we should fetch specific APIs
-            if SynoCoreSecurity.API_KEY in entity_entry.unique_id:
+            if SynoCoreSecurity.API_KEY in entity_unique_id:
                 self._with_security = True
                 continue
 
-            if SynoStorage.API_KEY in entity_entry.unique_id:
+            if SynoStorage.API_KEY in entity_unique_id:
                 self._with_storage = True
                 continue
 
-            if SynoCoreUtilization.API_KEY in entity_entry.unique_id:
+            if SynoCoreUtilization.API_KEY in entity_unique_id:
                 self._with_utilisation = True
                 continue
 
@@ -416,6 +407,16 @@ class SynologyDSMEntity(Entity):
                 self.hass, self._api.signal_sensor_update, self.async_write_ha_state
             )
         )
+
+        # subscribe from API fetches
+        # HA reload the config when enable entities, it will subscribe disabled entities at this moment
+        self._api.fetching_entities.add(self._unique_id)
+        # unsubscribe with disable
+        self.async_on_remove(self._remove_fetch)
+
+    @callback
+    def _remove_fetch(self):
+        self._api.fetching_entities.remove(self._unique_id)
 
 
 class SynologyDSMDeviceEntity(SynologyDSMEntity):
