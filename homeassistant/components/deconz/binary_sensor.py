@@ -1,7 +1,23 @@
 """Support for deCONZ binary sensors."""
-from pydeconz.sensor import Presence, Vibration
+from pydeconz.sensor import (
+    CarbonMonoxide,
+    Fire,
+    GenericFlag,
+    OpenClose,
+    Presence,
+    Vibration,
+    Water,
+)
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_VIBRATION,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -13,6 +29,16 @@ from .gateway import get_gateway_from_config_entry
 ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
 ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
+
+DEVICE_CLASS = {
+    CarbonMonoxide: DEVICE_CLASS_GAS,
+    Fire: DEVICE_CLASS_SMOKE,
+    GenericFlag: "",
+    OpenClose: DEVICE_CLASS_OPENING,
+    Presence: DEVICE_CLASS_MOTION,
+    Vibration: DEVICE_CLASS_VIBRATION,
+    Water: DEVICE_CLASS_MOISTURE,
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -74,7 +100,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return self._device.SENSOR_CLASS
+        return DEVICE_CLASS[type(self._device)]
 
     @property
     def icon(self):

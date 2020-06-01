@@ -1,11 +1,16 @@
 """Support for deCONZ sensors."""
 from pydeconz.sensor import (
+    Alarm,
     Battery,
     Consumption,
     Daylight,
+    GenericStatus,
+    Humidity,
     LightLevel,
     Power,
+    Pressure,
     Switch,
+    Temperature,
     Thermostat,
 )
 
@@ -13,6 +18,11 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
@@ -30,6 +40,18 @@ ATTR_CURRENT = "current"
 ATTR_POWER = "power"
 ATTR_DAYLIGHT = "daylight"
 ATTR_EVENT_ID = "event_id"
+
+DEVICE_CLASS = {
+    Alarm: "motion",
+    Consumption: "consumption",
+    Daylight: "daylight",
+    GenericStatus: "",
+    Humidity: DEVICE_CLASS_HUMIDITY,
+    LightLevel: DEVICE_CLASS_ILLUMINANCE,
+    Power: DEVICE_CLASS_POWER,
+    Pressure: DEVICE_CLASS_PRESSURE,
+    Temperature: DEVICE_CLASS_TEMPERATURE,
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -119,7 +141,7 @@ class DeconzSensor(DeconzDevice):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return self._device.SENSOR_CLASS
+        return DEVICE_CLASS[type(self._device)]
 
     @property
     def icon(self):
