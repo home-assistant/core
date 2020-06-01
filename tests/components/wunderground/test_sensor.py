@@ -61,6 +61,7 @@ async def test_setup(hass, aioclient_mock):
 
     with assert_setup_component(1, "sensor"):
         await async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
+        await hass.async_block_till_done()
 
 
 async def test_setup_pws(hass, aioclient_mock):
@@ -84,6 +85,7 @@ async def test_sensor(hass, aioclient_mock):
     aioclient_mock.get(URL, text=load_fixture("wunderground-valid.json"))
 
     await async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.pws_weather")
     assert state.state == "Clear"
@@ -136,6 +138,7 @@ async def test_invalid_data(hass, aioclient_mock):
     aioclient_mock.get(URL, text=load_fixture("wunderground-invalid.json"))
 
     await async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
+    await hass.async_block_till_done()
 
     for condition in VALID_CONFIG["monitored_conditions"]:
         state = hass.states.get(f"sensor.pws_{condition}")

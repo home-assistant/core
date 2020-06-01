@@ -166,6 +166,7 @@ class TestRedditSetup(unittest.TestCase):
     def test_setup_with_valid_config(self):
         """Test the platform setup with Reddit configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.reddit_worldnews")
         assert int(state.state) == MOCK_RESULTS_LENGTH

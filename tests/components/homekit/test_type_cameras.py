@@ -123,6 +123,7 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -227,6 +228,7 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -271,6 +273,7 @@ async def test_camera_stream_source_found(hass, run_driver, events):
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -313,6 +316,7 @@ async def test_camera_stream_source_fails(hass, run_driver, events):
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -368,6 +372,7 @@ async def test_camera_stream_source_configured_and_copy_codec(hass, run_driver, 
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -436,6 +441,7 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(hass, run_driver, ev
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -505,6 +511,7 @@ async def test_camera_with_linked_motion_sensor(hass, run_driver, events):
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     motion_entity_id = "binary_sensor.motion"
 
     hass.states.async_set(
@@ -564,6 +571,7 @@ async def test_camera_with_a_missing_linked_motion_sensor(hass, run_driver, even
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
     motion_entity_id = "binary_sensor.motion"
     entity_id = "camera.demo_camera"
     hass.states.async_set(entity_id, None)

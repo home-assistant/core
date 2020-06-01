@@ -78,6 +78,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -117,6 +118,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -169,6 +171,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -208,6 +211,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -246,6 +250,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -265,6 +270,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -277,6 +283,7 @@ class TestTemplateLight:
                 self.hass, "light", {"light": {"platform": "template"}}
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -316,6 +323,7 @@ class TestTemplateLight:
         del light["light"]["lights"]["light_one"][missing_key]
         with assert_setup_component(count, "light"):
             assert setup.setup_component(self.hass, "light", light)
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -353,6 +361,7 @@ class TestTemplateLight:
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -395,6 +404,7 @@ class TestTemplateLight:
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -440,6 +450,7 @@ class TestTemplateLight:
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -482,6 +493,7 @@ class TestTemplateLight:
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -526,6 +538,7 @@ class TestTemplateLight:
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -587,6 +600,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -625,6 +639,7 @@ class TestTemplateLight:
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -685,6 +700,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -737,6 +753,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -775,6 +792,7 @@ class TestTemplateLight:
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -825,6 +843,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -870,6 +889,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -920,6 +940,7 @@ class TestTemplateLight:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -975,6 +996,7 @@ class TestTemplateLight:
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -1046,6 +1068,7 @@ class TestTemplateLight:
                     }
                 },
             )
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
         state = self.hass.states.get("light.test_template_light")
@@ -1084,6 +1107,7 @@ async def test_available_template_with_entities(hass):
             }
         },
     )
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -1134,6 +1158,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
