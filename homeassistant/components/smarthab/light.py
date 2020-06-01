@@ -18,11 +18,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up SmartHab lights from a config entry."""
     hub = hass.data[DOMAIN][config_entry.entry_id][DATA_HUB]
 
-    devices = await hass.async_add_executor_job(hub.get_device_list)
-    _LOGGER.debug("Found a total of %s devices", str(len(devices)))
-
     entities = (
-        SmartHabLight(light) for light in devices if isinstance(light, pysmarthab.Light)
+        SmartHabLight(light)
+        for light in await hub.async_get_device_list()
+        if isinstance(light, pysmarthab.Light)
     )
 
     async_add_entities(entities, True)
@@ -50,18 +49,18 @@ class SmartHabLight(LightEntity):
         """Return true if light is on."""
         return self._light.state
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        self._light.turn_on()
+        await self._light.async_turn_on()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._light.turn_off()
+        await self._light.async_turn_off()
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for this light."""
         try:
-            self._light.update()
+            await self._light.async_update()
         except Timeout:
             _LOGGER.error(
                 "Reached timeout while updating light %s from API", self.entity_id
