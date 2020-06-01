@@ -103,7 +103,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         return attr
 
     def set_speed(self, speed):
-        """Sets the speed of the device."""
+        """Set the speed of the device."""
         if speed is None or speed == "auto":
             self.smartfan.auto_mode()
         else:
