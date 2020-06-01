@@ -4,7 +4,7 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.automation import DOMAIN
+from homeassistant.components.automation import DOMAIN, EVENT_AUTOMATION_RELOADED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -483,6 +483,11 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
     assert len(calls) == 1
     assert calls[0].data.get("event") == "test_event"
 
+    test_reload_event = []
+    hass.bus.async_listen(
+        EVENT_AUTOMATION_RELOADED, lambda event: test_reload_event.append(event)
+    )
+
     with patch(
         "homeassistant.config.load_yaml_config_file",
         autospec=True,
@@ -504,6 +509,8 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
         await hass.async_block_till_done()
         # De-flake ?!
         await hass.async_block_till_done()
+
+    assert len(test_reload_event) == 1
 
     assert hass.states.get("automation.hello") is None
     assert hass.states.get("automation.bye") is not None
