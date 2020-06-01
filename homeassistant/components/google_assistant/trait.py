@@ -9,6 +9,7 @@ from homeassistant.components import (
     fan,
     group,
     input_boolean,
+    input_select,
     light,
     lock,
     media_player,
@@ -1131,11 +1132,15 @@ class ModesTrait(_Trait):
     SYNONYMS = {
         "input source": ["input source", "input", "source"],
         "sound mode": ["sound mode", "effects"],
+        "option": ["option", "setting", "mode", "value"],
     }
 
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
+        if domain == input_select.DOMAIN:
+            return True
+
         if domain != media_player.DOMAIN:
             return False
 
@@ -1174,15 +1179,20 @@ class ModesTrait(_Trait):
 
         attrs = self.state.attributes
         modes = []
-        if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
-            modes.append(
-                _generate("input source", attrs[media_player.ATTR_INPUT_SOURCE_LIST])
-            )
+        if self.state.domain == media_player.DOMAIN:
+            if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
+                modes.append(
+                    _generate(
+                        "input source", attrs[media_player.ATTR_INPUT_SOURCE_LIST]
+                    )
+                )
 
-        if media_player.ATTR_SOUND_MODE_LIST in attrs:
-            modes.append(
-                _generate("sound mode", attrs[media_player.ATTR_SOUND_MODE_LIST])
-            )
+            if media_player.ATTR_SOUND_MODE_LIST in attrs:
+                modes.append(
+                    _generate("sound mode", attrs[media_player.ATTR_SOUND_MODE_LIST])
+                )
+        elif self.state.domain == input_select.DOMAIN:
+            modes.append(_generate("option", attrs[input_select.ATTR_OPTIONS]))
 
         payload = {"availableModes": modes}
 
@@ -1194,11 +1204,16 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
-            mode_settings["input source"] = attrs.get(media_player.ATTR_INPUT_SOURCE)
+        if self.state.domain == media_player.DOMAIN:
+            if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
+                mode_settings["input source"] = attrs.get(
+                    media_player.ATTR_INPUT_SOURCE
+                )
 
-        if media_player.ATTR_SOUND_MODE_LIST in attrs:
-            mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
+            if media_player.ATTR_SOUND_MODE_LIST in attrs:
+                mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
+        elif self.state.domain == input_select.DOMAIN:
+            mode_settings["option"] = self.state.state
 
         if mode_settings:
             response["on"] = self.state.state != STATE_OFF
@@ -1210,6 +1225,28 @@ class ModesTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an SetModes command."""
         settings = params.get("updateModeSettings")
+
+        if self.state.domain == input_select.DOMAIN:
+            option = params["updateModeSettings"]["option"]
+            await self.hass.services.async_call(
+                input_select.DOMAIN,
+                input_select.SERVICE_SELECT_OPTION,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    input_select.ATTR_OPTION: option,
+                },
+                blocking=True,
+                context=data.context,
+            )
+
+            return
+        if self.state.domain != media_player.DOMAIN:
+            _LOGGER.info(
+                "Received an Options command for unrecognised domain %s",
+                self.state.domain,
+            )
+            return
+
         requested_source = settings.get("input source")
         sound_mode = settings.get("sound mode")
 
