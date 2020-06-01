@@ -31,7 +31,9 @@ from .const import (
     CONF_CAMERA,
     CONF_EVENTS,
     CONF_MODEL,
+    CONF_STREAM_PROFILE,
     DEFAULT_EVENTS,
+    DEFAULT_STREAM_PROFILE,
     DEFAULT_TRIGGER_TIME,
     DOMAIN as AXIS_DOMAIN,
     LOGGER,
@@ -85,6 +87,13 @@ class AxisNetworkDevice:
     def option_events(self):
         """Config entry option defining if platforms based on events should be created."""
         return self.config_entry.options.get(CONF_EVENTS, DEFAULT_EVENTS)
+
+    @property
+    def option_stream_profile(self):
+        """Config entry option defining what stream profile camera platform should use."""
+        return self.config_entry.options.get(
+            CONF_STREAM_PROFILE, DEFAULT_STREAM_PROFILE
+        )
 
     @property
     def option_trigger_time(self):
