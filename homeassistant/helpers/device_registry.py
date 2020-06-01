@@ -42,6 +42,16 @@ class DeletedDeviceEntry:
     identifiers: List[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
 
+    def to_device_entry(self):
+        """Create DeviceEntry from DeletedDeviceEntry."""
+        return DeviceEntry(
+            config_entries=self.config_entries,
+            connections=self.connections,
+            identifiers=self.identifiers,
+            id=self.id,
+            is_new=True,
+        )
+
 
 @attr.s(slots=True, frozen=True)
 class DeviceEntry:
@@ -116,7 +126,7 @@ class DeviceRegistry:
         return None
 
     @callback
-    def async_get_deleted_device(
+    def _async_get_deleted_device(
         self, identifiers: set, connections: set
     ) -> Optional[DeletedDeviceEntry]:
         """Check if device has previously been registered."""
@@ -159,12 +169,13 @@ class DeviceRegistry:
         device = self.async_get_device(identifiers, connections)
 
         if device is None:
-            device = self.async_get_deleted_device(identifiers, connections)
-            if device is None:
+            deleted_device = self._async_get_deleted_device(identifiers, connections)
+            if deleted_device is None:
                 device = DeviceEntry(is_new=True)
-                self.devices[device.id] = device
             else:
-                self.async_restore_device(device.id)
+                self.deleted_devices.pop(deleted_device.id)
+                device = deleted_device.to_device_entry()
+            self.devices[device.id] = device
 
         if via_device is not None:
             via = self.async_get_device({via_device}, set())
@@ -332,19 +343,6 @@ class DeviceRegistry:
     def async_purge_deleted_device(self, device_id: str) -> None:
         """Permanently remove a device from the device registry."""
         del self.deleted_devices[device_id]
-        self.async_schedule_save()
-
-    @callback
-    def async_restore_device(self, device_id: str) -> None:
-        """Restore a deleted device."""
-        deleted_device = self.deleted_devices.pop(device_id)
-        self.devices[device_id] = DeviceEntry(
-            config_entries=deleted_device.config_entries,  # type: ignore
-            connections=deleted_device.connections,  # type: ignore
-            identifiers=deleted_device.identifiers,  # type: ignore
-            id=deleted_device.id,
-            is_new=True,
-        )
         self.async_schedule_save()
 
     async def async_load(self):
