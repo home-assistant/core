@@ -62,7 +62,7 @@ class TestImageProcessing:
         self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        self.url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -117,7 +117,7 @@ class TestImageProcessingAlpr:
             self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        self.url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         self.alpr_events = []
 
@@ -223,7 +223,7 @@ class TestImageProcessingFace:
             self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        self.url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         self.face_events = []
 
