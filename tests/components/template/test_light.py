@@ -60,18 +60,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"brightness": "{{brightness}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
+                                "set_level": True,
                             }
                         },
                     }
@@ -100,18 +95,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"brightness": "{{brightness}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
+                                "set_level": True,
                             }
                         },
                     }
@@ -153,18 +143,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"brightness": "{{brightness}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
+                                "set_level": True,
                             }
                         },
                     }
@@ -193,18 +178,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"brightness": "{{brightness}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
+                                "set_level": True,
                             }
                         },
                     }
@@ -232,18 +212,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"brightness": "{{brightness}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
+                                "set_level": True,
                             }
                         },
                     }
@@ -303,18 +278,13 @@ class TestTemplateLight:
                         "turn_on": {
                             "service": "light.turn_on",
                             "entity_id": "light.test_state",
+                            "data": {"brightness": "{{brightness}}"},
                         },
                         "turn_off": {
                             "service": "light.turn_off",
                             "entity_id": "light.test_state",
                         },
-                        "set_level": {
-                            "service": "light.turn_on",
-                            "data_template": {
-                                "entity_id": "light.test_state",
-                                "brightness": "{{brightness}}",
-                            },
-                        },
+                        "set_level": True,
                     }
                 },
             }
@@ -348,13 +318,7 @@ class TestTemplateLight:
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
                             },
-                            "set_level": {
-                                "service": "light.turn_on",
-                                "data_template": {
-                                    "entity_id": "light.test_state",
-                                    "brightness": "{{brightness}}",
-                                },
-                            },
+                            "set_level": True,
                         }
                     },
                 }
@@ -391,13 +355,7 @@ class TestTemplateLight:
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
                             },
-                            "set_level": {
-                                "service": "light.turn_on",
-                                "data_template": {
-                                    "entity_id": "light.test_state",
-                                    "brightness": "{{brightness}}",
-                                },
-                            },
+                            "set_level": True,
                         }
                     },
                 }
@@ -435,15 +393,10 @@ class TestTemplateLight:
                             "turn_on": {
                                 "service": "light.turn_on",
                                 "entity_id": "light.test_state",
+                                "data": {"brightness": "{{brightness}}"},
                             },
                             "turn_off": {"service": "test.automation"},
-                            "set_level": {
-                                "service": "light.turn_on",
-                                "data_template": {
-                                    "entity_id": "light.test_state",
-                                    "brightness": "{{brightness}}",
-                                },
-                            },
+                            "set_level": True,
                         }
                     },
                 }
@@ -478,15 +431,10 @@ class TestTemplateLight:
                             "turn_on": {
                                 "service": "light.turn_on",
                                 "entity_id": "light.test_state",
+                                "data": {"brightness": "{{brightness}}"},
                             },
                             "turn_off": {"service": "test.automation"},
-                            "set_level": {
-                                "service": "light.turn_on",
-                                "data_template": {
-                                    "entity_id": "light.test_state",
-                                    "brightness": "{{brightness}}",
-                                },
-                            },
+                            "set_level": True,
                         }
                     },
                 }
@@ -521,18 +469,13 @@ class TestTemplateLight:
                             "turn_on": {
                                 "service": "light.turn_on",
                                 "entity_id": "light.test_state",
+                                "data": {"white_value": "{{white_value}}"},
                             },
                             "turn_off": {
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
                             },
-                            "set_white_value": {
-                                "service": "test.automation",
-                                "data_template": {
-                                    "entity_id": "test.test_state",
-                                    "white_value": "{{white_value}}",
-                                },
-                            },
+                            "set_white_value": True,
                         }
                     },
                 }
@@ -581,18 +524,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"white_value": "{{white_value}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_white_value": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "white_value": "{{white_value}}",
-                                    },
-                                },
+                                "set_white_value": True,
                                 "white_value_template": template,
                             }
                         },
@@ -622,18 +560,13 @@ class TestTemplateLight:
                             "turn_on": {
                                 "service": "light.turn_on",
                                 "entity_id": "light.test_state",
+                                "data": {"brightness": "{{brightness}}"},
                             },
                             "turn_off": {
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
                             },
-                            "set_level": {
-                                "service": "test.automation",
-                                "data_template": {
-                                    "entity_id": "test.test_state",
-                                    "brightness": "{{brightness}}",
-                                },
-                            },
+                            "set_level": True,
                         }
                     },
                 }
@@ -681,18 +614,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"brightness": "{{brightness}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
+                                "set_level": True,
                                 "level_template": template,
                             }
                         },
@@ -734,18 +662,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"color_temp": "{{color_temp}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_temperature": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "color_temp": "{{color_temp}}",
-                                    },
-                                },
+                                "set_temperature": True,
                                 "temperature_template": template,
                             }
                         },
@@ -775,18 +698,13 @@ class TestTemplateLight:
                             "turn_on": {
                                 "service": "light.turn_on",
                                 "entity_id": "light.test_state",
+                                "data": {"color_temp": "{{color_temp}}"},
                             },
                             "turn_off": {
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
                             },
-                            "set_temperature": {
-                                "service": "test.automation",
-                                "data_template": {
-                                    "entity_id": "test.test_state",
-                                    "color_temp": "{{color_temp}}",
-                                },
-                            },
+                            "set_temperature": True,
                         }
                     },
                 }
@@ -825,18 +743,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"brightness": "{{brightness}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
+                                "set_level": True,
                             }
                         },
                     }
@@ -868,18 +781,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"brightness": "{{brightness}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
+                                "set_level": True,
                                 "icon_template": "{% if states.light.test_state.state %}"
                                 "mdi:check"
                                 "{% endif %}",
@@ -919,18 +827,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"brightness": "{{brightness}}"},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
+                                "set_level": True,
                                 "entity_picture_template": "{% if states.light.test_state.state %}"
                                 "/local/light.png"
                                 "{% endif %}",
@@ -968,29 +871,13 @@ class TestTemplateLight:
                             "turn_on": {
                                 "service": "light.turn_on",
                                 "entity_id": "light.test_state",
+                                "data": {"hs_color": ["{{h}}", "{{s}}"]},
                             },
                             "turn_off": {
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
                             },
-                            "set_color": [
-                                {
-                                    "service": "test.automation",
-                                    "data_template": {
-                                        "entity_id": "test.test_state",
-                                        "h": "{{h}}",
-                                        "s": "{{s}}",
-                                    },
-                                },
-                                {
-                                    "service": "test.automation",
-                                    "data_template": {
-                                        "entity_id": "test.test_state",
-                                        "s": "{{s}}",
-                                        "h": "{{h}}",
-                                    },
-                                },
-                            ],
+                            "set_color": True,
                         }
                     },
                 }
@@ -1048,20 +935,13 @@ class TestTemplateLight:
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
+                                    "data": {"hs_color": ["{{h}}", "{{s}}"]},
                                 },
                                 "turn_off": {
                                     "service": "light.turn_off",
                                     "entity_id": "light.test_state",
                                 },
-                                "set_color": [
-                                    {
-                                        "service": "input_number.set_value",
-                                        "data_template": {
-                                            "entity_id": "input_number.h",
-                                            "color_temp": "{{h}}",
-                                        },
-                                    }
-                                ],
+                                "set_color": True,
                                 "color_template": template,
                             }
                         },
@@ -1090,18 +970,13 @@ async def test_available_template_with_entities(hass):
                         "turn_on": {
                             "service": "light.turn_on",
                             "entity_id": "light.test_state",
+                            "data": {"brightness": "{{brightness}}"},
                         },
                         "turn_off": {
                             "service": "light.turn_off",
                             "entity_id": "light.test_state",
                         },
-                        "set_level": {
-                            "service": "light.turn_on",
-                            "data_template": {
-                                "entity_id": "light.test_state",
-                                "brightness": "{{brightness}}",
-                            },
-                        },
+                        "set_level": True,
                     }
                 },
             }
@@ -1140,18 +1015,13 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
                         "turn_on": {
                             "service": "light.turn_on",
                             "entity_id": "light.test_state",
+                            "data": {"brightness": "{{brightness}}"},
                         },
                         "turn_off": {
                             "service": "light.turn_off",
                             "entity_id": "light.test_state",
                         },
-                        "set_level": {
-                            "service": "light.turn_on",
-                            "data_template": {
-                                "entity_id": "light.test_state",
-                                "brightness": "{{brightness}}",
-                            },
-                        },
+                        "set_level": True,
                     }
                 },
             }

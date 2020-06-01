@@ -59,16 +59,16 @@ LIGHT_SCHEMA = vol.Schema(
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_LEVEL_ACTION, default=False): cv.boolean,
         vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
         vol.Optional(CONF_TEMPERATURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TEMPERATURE_ACTION, default=False): cv.boolean,
         vol.Optional(CONF_COLOR_TEMPLATE): cv.template,
-        vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_COLOR_ACTION, default=False): cv.boolean,
         vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_WHITE_VALUE_ACTION, default=False): cv.boolean,
     }
 )
 
@@ -182,21 +182,13 @@ class LightTemplate(LightEntity):
         self._availability_template = availability_template
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
-        self._level_script = None
-        if level_action is not None:
-            self._level_script = Script(hass, level_action)
+        self._level_action = level_action
         self._level_template = level_template
-        self._temperature_script = None
-        if temperature_action is not None:
-            self._temperature_script = Script(hass, temperature_action)
+        self._temperature_action = temperature_action
         self._temperature_template = temperature_template
-        self._color_script = None
-        if color_action is not None:
-            self._color_script = Script(hass, color_action)
+        self._color_action = color_action
         self._color_template = color_template
-        self._white_value_script = None
-        if white_value_action is not None:
-            self._white_value_script = Script(hass, white_value_action)
+        self._white_value_action = white_value_action
         self._white_value_template = white_value_template
 
         self._state = False
@@ -238,13 +230,13 @@ class LightTemplate(LightEntity):
     def supported_features(self):
         """Flag supported features."""
         supported_features = 0
-        if self._level_script is not None:
+        if self._level_action:
             supported_features |= SUPPORT_BRIGHTNESS
-        if self._temperature_script is not None:
+        if self._temperature_action:
             supported_features |= SUPPORT_COLOR_TEMP
-        if self._color_script is not None:
+        if self._color_action:
             supported_features |= SUPPORT_COLOR
-        if self._white_value_script is not None:
+        if self._white_value_action:
             supported_features |= SUPPORT_WHITE_VALUE
         return supported_features
 
@@ -332,26 +324,39 @@ class LightTemplate(LightEntity):
             self._temperature = kwargs[ATTR_COLOR_TEMP]
             optimistic_set = True
 
-        if ATTR_BRIGHTNESS in kwargs and self._level_script:
-            await self._level_script.async_run(
-                {"brightness": kwargs[ATTR_BRIGHTNESS]}, context=self._context
-            )
-        elif ATTR_COLOR_TEMP in kwargs and self._temperature_script:
-            await self._temperature_script.async_run(
-                {"color_temp": kwargs[ATTR_COLOR_TEMP]}, context=self._context
-            )
-        elif ATTR_WHITE_VALUE in kwargs and self._white_value_script:
-            await self._white_value_script.async_run(
-                {"white_value": kwargs[ATTR_WHITE_VALUE]}, context=self._context
-            )
-        elif ATTR_HS_COLOR in kwargs and self._color_script:
+        on_attrs = {}
+        if self._level_action:
+            on_attrs["brightness_new"] = False
+            on_attrs["brightness"] = self._brightness
+        if self._temperature_action:
+            on_attrs["color_temp_new"] = False
+            on_attrs["color_temp"] = self._color
+        if self._white_value_action:
+            on_attrs["white_value_new"] = False
+            on_attrs["white_value"] = self._white_value
+        if self._color_action:
+            on_attrs["hs_new"] = False
+            on_attrs["hs"] = self._color
+            on_attrs["h"] = int(self._color[0])
+            on_attrs["s"] = int(self._color[1])
+
+        if ATTR_BRIGHTNESS in kwargs and self._level_action:
+            on_attrs["brightness_new"] = True
+            on_attrs["brightness"] = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_COLOR_TEMP in kwargs and self._temperature_action:
+            on_attrs["color_temp_new"] = True
+            on_attrs["color_temp"] = kwargs[ATTR_COLOR_TEMP]
+        elif ATTR_WHITE_VALUE in kwargs and self._white_value_action:
+            on_attrs["white_value_new"] = True
+            on_attrs["white_value"] = kwargs[ATTR_WHITE_VALUE]
+        elif ATTR_HS_COLOR in kwargs and self._color_action:
             hs_value = kwargs[ATTR_HS_COLOR]
-            await self._color_script.async_run(
-                {"hs": hs_value, "h": int(hs_value[0]), "s": int(hs_value[1])},
-                context=self._context,
-            )
-        else:
-            await self._on_script.async_run()
+            on_attrs["hs_new"] = True
+            on_attrs["hs"] = hs_value
+            on_attrs["h"] = int(hs_value[0])
+            on_attrs["s"] = int(hs_value[1])
+
+        await self._on_script.async_run(on_attrs, context=self._context)
 
         if optimistic_set:
             self.async_write_ha_state()
