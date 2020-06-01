@@ -86,7 +86,7 @@
    - service: ais_usb.ls_flash_drives
    - service: ais_drives_service.rclone_mount_drives
    - service: ais_ai_service.welcome_home
-   - delay: '1800'
+   - delay: '600'
    - service: ais_shell_command.set_scaling_governor
      data:
        scaling: interactive
