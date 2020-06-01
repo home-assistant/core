@@ -33,3 +33,7 @@ DEVICE_STATE = "device_state"
 
 SCHEDULE_ON = "true"
 SCHEDULE_OFF = "false"
+
+COOL_ICON = "mdi:snowflake"
+FLAME_ICON = "mdi:fire"
+IDLE_ICON = "mdi:circle-off-outline"

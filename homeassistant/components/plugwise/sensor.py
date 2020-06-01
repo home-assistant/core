@@ -21,8 +21,11 @@ from homeassistant.helpers.entity import Entity
 
 from . import SmileGateway
 from .const import (
+    COOL_ICON,
     DEVICE_STATE,
     DOMAIN,
+    FLAME_ICON,
+    IDLE_ICON,
     SENSOR_MAP_DEVICE_CLASS,
     SENSOR_MAP_MODEL,
     SENSOR_MAP_UOM,
@@ -279,8 +282,14 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
-        self._heating_state = False
         self._cooling_state = False
+        self._heating_state = False
+        self._icon = None
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return self._icon
 
     @callback
     def _async_process_data(self):
@@ -298,10 +307,13 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
             self._cooling_state = data["cooling_state"]
 
         self._state = "idle"
+        self._icon = IDLE_ICON
         if self._heating_state:
             self._state = "heating"
+            self._icon = FLAME_ICON
         if self._cooling_state:
             self._state = "cooling"
+            self._icon = COOL_ICON
 
         self.async_write_ha_state()
 
