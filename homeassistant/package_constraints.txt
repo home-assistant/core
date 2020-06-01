@@ -32,6 +32,9 @@ pycryptodome>=3.6.6
 # Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
 urllib3>=1.24.3
 
+# Constrain httplib2 to protect against CVE-2020-11078
+httplib2>=0.18.0
+
 # Not needed for our supported Python versions
 enum34==1000000000.0.0
 

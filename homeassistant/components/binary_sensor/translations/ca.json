@@ -140,14 +140,14 @@
         },
         "opening": {
             "off": "Tancat/da",
-            "on": "Obert"
+            "on": "Obert/a"
         },
         "presence": {
             "off": "Lliure",
             "on": "Detectat"
         },
         "problem": {
-            "off": "Correcte",
+            "off": "OK",
             "on": "Problema"
         },
         "safety": {
