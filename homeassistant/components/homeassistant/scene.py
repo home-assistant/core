@@ -75,6 +75,7 @@ def _ensure_no_intersection(value):
 CONF_SCENE_ID = "scene_id"
 CONF_SNAPSHOT = "snapshot_entities"
 DATA_PLATFORM = "homeassistant_scene"
+EVENT_SCENE_RELOADED = "scene_reloaded"
 STATES_SCHEMA = vol.All(dict, _convert_states)
 
 
@@ -181,6 +182,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 continue
 
             _process_scenes_config(hass, async_add_entities, p_config)
+
+        hass.bus.async_fire(EVENT_SCENE_RELOADED, context=call.context)
 
     hass.helpers.service.async_register_admin_service(
         SCENE_DOMAIN, SERVICE_RELOAD, reload_config
