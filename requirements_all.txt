@@ -612,9 +612,6 @@ gTTS-token==1.1.3
 # homeassistant.components.garmin_connect
 garminconnect==0.1.13
 
-# homeassistant.components.gearbest
-gearbest_parser==1.0.7
-
 # homeassistant.components.geizhals
 geizhals==0.0.9
 
