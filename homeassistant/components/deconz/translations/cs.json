@@ -14,18 +14,9 @@
                 "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed hass.io {addon}?",
                 "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
             },
-            "init": {
-                "title": "Definujte br\u00e1nu deCONZ"
-            },
             "link": {
                 "description": "Odemkn\u011bte br\u00e1nu deCONZ, pro registraci v Home Assistant. \n\n 1. P\u0159ejd\u011bte do nastaven\u00ed syst\u00e9mu deCONZ \n 2. Stiskn\u011bte tla\u010d\u00edtko \"Unlock Gateway\"",
                 "title": "Propojit s deCONZ"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "Hostitel",
-                    "port": "Port"
-                }
             }
         }
     }

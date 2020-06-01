@@ -1,5 +1,7 @@
 """The nexia integration base entity."""
 
+from aiopvapi.resources.shade import ATTR_TYPE
+
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import Entity
 
@@ -11,6 +13,7 @@ from .const import (
     DEVICE_SERIAL_NUMBER,
     DOMAIN,
     FIRMWARE_BUILD,
+    FIRMWARE_IN_SHADE,
     FIRMWARE_REVISION,
     FIRMWARE_SUB_REVISION,
     MANUFACTURER,
@@ -57,3 +60,39 @@ class HDEntity(Entity):
             "sw_version": sw_version,
             "manufacturer": MANUFACTURER,
         }
+
+
+class ShadeEntity(HDEntity):
+    """Base class for hunter douglas shade entities."""
+
+    def __init__(self, coordinator, device_info, shade, shade_name):
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, shade.id)
+        self._shade_name = shade_name
+        self._shade = shade
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+
+        device_info = {
+            "identifiers": {(DOMAIN, self._shade.id)},
+            "name": self._shade_name,
+            "manufacturer": MANUFACTURER,
+            "via_device": (DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
+        }
+
+        if FIRMWARE_IN_SHADE not in self._shade.raw_data:
+            return device_info
+
+        firmware = self._shade.raw_data[FIRMWARE_IN_SHADE]
+        sw_version = f"{firmware[FIRMWARE_REVISION]}.{firmware[FIRMWARE_SUB_REVISION]}.{firmware[FIRMWARE_BUILD]}"
+        model = self._shade.raw_data[ATTR_TYPE]
+        for shade in self._shade.shade_types:
+            if shade.shade_type == model:
+                model = shade.description
+                break
+
+        device_info["sw_version"] = sw_version
+        device_info["model"] = model
+        return device_info

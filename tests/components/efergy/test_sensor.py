@@ -85,6 +85,7 @@ class TestEfergySensor(unittest.TestCase):
         """Test for successfully setting up the Efergy platform."""
         mock_responses(mock)
         assert setup_component(self.hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
+        self.hass.block_till_done()
 
         assert "38.21" == self.hass.states.get("sensor.energy_consumed").state
         assert "1580" == self.hass.states.get("sensor.energy_usage").state
@@ -97,6 +98,7 @@ class TestEfergySensor(unittest.TestCase):
         """Test for multiple sensors in one household."""
         mock_responses(mock)
         assert setup_component(self.hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
+        self.hass.block_till_done()
 
         assert "218" == self.hass.states.get("sensor.efergy_728386").state
         assert "1808" == self.hass.states.get("sensor.efergy_0").state

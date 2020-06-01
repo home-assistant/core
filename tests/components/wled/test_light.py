@@ -1,6 +1,5 @@
 """Tests for the WLED light platform."""
 import aiohttp
-from asynctest.mock import patch
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -32,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from tests.async_mock import patch
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 

@@ -3,7 +3,6 @@
 from typing import Optional
 from uuid import UUID
 
-from asynctest import MagicMock, Mock, patch
 import attr
 import pytest
 
@@ -14,6 +13,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 

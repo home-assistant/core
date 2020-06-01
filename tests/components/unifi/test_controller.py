@@ -4,7 +4,6 @@ from copy import deepcopy
 from datetime import timedelta
 
 import aiounifi
-from asynctest import patch
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -35,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONTROLLER_HOST = {
@@ -66,6 +66,7 @@ ENTRY_OPTIONS = {}
 CONFIGURATION = []
 
 SITES = {"Site name": {"desc": "Site name", "name": "site_id", "role": "admin"}}
+DESCRIPTION = [{"name": "username", "site_name": "site_id", "site_role": "admin"}]
 
 
 async def setup_unifi_integration(
@@ -73,6 +74,7 @@ async def setup_unifi_integration(
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
     sites=SITES,
+    site_description=DESCRIPTION,
     clients_response=None,
     devices_response=None,
     clients_all_response=None,
@@ -130,6 +132,8 @@ async def setup_unifi_integration(
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", return_value=True,
     ), patch("aiounifi.Controller.sites", return_value=sites), patch(
+        "aiounifi.Controller.site_description", return_value=site_description
+    ), patch(
         "aiounifi.Controller.request", new=mock_request
     ), patch.object(
         aiounifi.websocket.WSClient, "start", return_value=True

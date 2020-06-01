@@ -85,9 +85,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
             cancel_pressed_more_than()
             cancel_pressed_more_than = None
         held_time = dt_util.utcnow() - pressed_time
-        if held_less_than is not None and held_time < held_less_than:
-            if held_more_than is None or held_time > held_more_than:
-                hass.add_job(call_action)
+
+        if (
+            held_less_than is not None
+            and held_time < held_less_than
+            and (held_more_than is None or held_time > held_more_than)
+        ):
+            hass.add_job(call_action)
 
     hass.data["litejet_system"].on_switch_pressed(number, pressed)
     hass.data["litejet_system"].on_switch_released(number, released)

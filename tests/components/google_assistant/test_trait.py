@@ -1,8 +1,6 @@
 """Tests for the Google Assistant traits."""
 import logging
-from unittest.mock import Mock
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components import (
@@ -13,6 +11,7 @@ from homeassistant.components import (
     fan,
     group,
     input_boolean,
+    input_select,
     light,
     lock,
     media_player,
@@ -24,6 +23,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import const, error, helpers, trait
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
@@ -46,6 +46,7 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
+from tests.async_mock import patch
 from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,7 +101,9 @@ async def test_brightness_light(hass):
 
 async def test_camera_stream(hass):
     """Test camera stream trait support for camera domain."""
-    hass.config.api = Mock(base_url="http://1.1.1.1:8123")
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     assert helpers.get_google_type(camera.DOMAIN, None) is not None
     assert trait.CameraStreamTrait.supported(camera.DOMAIN, camera.SUPPORT_STREAM, None)
 
@@ -123,7 +126,7 @@ async def test_camera_stream(hass):
         await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {}, {})
 
     assert trt.query_attributes() == {
-        "cameraStreamAccessUrl": "http://1.1.1.1:8123/api/streams/bla"
+        "cameraStreamAccessUrl": "https://example.com/api/streams/bla"
     }
 
 
@@ -1265,8 +1268,8 @@ async def test_fan_speed(hass):
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "speed": "medium"}
 
 
-async def test_modes(hass):
-    """Test Mode trait."""
+async def test_modes_media_player(hass):
+    """Test Media Player Mode trait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(
         media_player.DOMAIN, media_player.SUPPORT_SELECT_SOURCE, None
@@ -1347,6 +1350,72 @@ async def test_modes(hass):
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+
+
+async def test_modes_input_select(hass):
+    """Test Input Select Mode trait."""
+    assert helpers.get_google_type(input_select.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(input_select.DOMAIN, None, None)
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "input_select.bla",
+            "abc",
+            attributes={input_select.ATTR_OPTIONS: ["abc", "123", "xyz"]},
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "option",
+                "name_values": [
+                    {
+                        "name_synonym": ["option", "setting", "mode", "value"],
+                        "lang": "en",
+                    }
+                ],
+                "settings": [
+                    {
+                        "setting_name": "abc",
+                        "setting_values": [{"setting_synonym": ["abc"], "lang": "en"}],
+                    },
+                    {
+                        "setting_name": "123",
+                        "setting_values": [{"setting_synonym": ["123"], "lang": "en"}],
+                    },
+                    {
+                        "setting_name": "xyz",
+                        "setting_values": [{"setting_synonym": ["xyz"], "lang": "en"}],
+                    },
+                ],
+                "ordered": False,
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"option": "abc"},
+        "on": True,
+        "online": True,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES, params={"updateModeSettings": {"option": "xyz"}},
+    )
+
+    calls = async_mock_service(
+        hass, input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION
+    )
+    await trt.execute(
+        trait.COMMAND_MODES, BASIC_DATA, {"updateModeSettings": {"option": "xyz"}}, {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "input_select.bla", "option": "xyz"}
 
 
 async def test_sound_modes(hass):

@@ -89,7 +89,7 @@ HUE_API_STATE_SAT_MAX = 254
 HUE_API_STATE_CT_MIN = 153  # Color temp
 HUE_API_STATE_CT_MAX = 500
 
-HUE_API_USERNAME = "12345678901234567890"
+HUE_API_USERNAME = "nouser"
 UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
 ]
@@ -226,9 +226,42 @@ class HueFullStateView(HomeAssistantView):
             "config": {
                 "mac": "00:00:00:00:00:00",
                 "swversion": "01003542",
+                "apiversion": "1.17.0",
                 "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
                 "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
+                "linkbutton": True,
             },
+        }
+
+        return self.json(json_response)
+
+
+class HueConfigView(HomeAssistantView):
+    """Return config view of emulated hue."""
+
+    url = "/api/{username}/config"
+    name = "emulated_hue:username:config"
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username):
+        """Process a request to get the configuration."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
+        if username != HUE_API_USERNAME:
+            return self.json(UNAUTHORIZED_USER)
+
+        json_response = {
+            "mac": "00:00:00:00:00:00",
+            "swversion": "01003542",
+            "apiversion": "1.17.0",
+            "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
+            "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
+            "linkbutton": True,
         }
 
         return self.json(json_response)
@@ -506,7 +539,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Create success responses for all received keys
         json_response = [
-            create_hue_success_response(entity_id, HUE_API_STATE_ON, parsed[STATE_ON])
+            create_hue_success_response(
+                entity_number, HUE_API_STATE_ON, parsed[STATE_ON]
+            )
         ]
 
         for (key, val) in (
@@ -517,7 +552,7 @@ class HueOneLightChangeView(HomeAssistantView):
         ):
             if parsed[key] is not None:
                 json_response.append(
-                    create_hue_success_response(entity_id, val, parsed[key])
+                    create_hue_success_response(entity_number, val, parsed[key])
                 )
 
         return self.json(json_response)
@@ -710,9 +745,9 @@ def entity_to_json(config, entity):
     return retval
 
 
-def create_hue_success_response(entity_id, attr, value):
+def create_hue_success_response(entity_number, attr, value):
     """Create a success response for an attribute set on a light."""
-    success_key = f"/lights/{entity_id}/state/{attr}"
+    success_key = f"/lights/{entity_number}/state/{attr}"
     return {"success": {success_key: value}}
 
 

@@ -2,9 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import MagicMock, Mock, patch
 
-import asynctest
 import pytest
 
 from homeassistant.const import UNIT_PERCENTAGE
@@ -18,6 +16,7 @@ from homeassistant.helpers.entity_component import (
 )
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -136,7 +135,7 @@ async def test_update_state_adds_entities_with_update_before_add_false(hass):
     assert not ent.update.called
 
 
-@asynctest.patch("homeassistant.helpers.entity_platform.async_track_time_interval")
+@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_platform(mock_track, hass):
     """Test the setting of the scan interval via platform."""
 
@@ -183,13 +182,14 @@ async def test_platform_warn_slow_setup(hass):
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
+    with patch.object(hass.loop, "call_later") as mock_call:
         await component.async_setup({DOMAIN: {"platform": "platform"}})
+        await hass.async_block_till_done()
         assert mock_call.called
 
         # mock_calls[0] is the warning message for component setup
-        # mock_calls[3] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[3][1][:2]
+        # mock_calls[5] is the warning message for platform setup
+        timeout, logger_method = mock_call.mock_calls[5][1][:2]
 
         assert timeout == entity_platform.SLOW_SETUP_WARNING
         assert logger_method == _LOGGER.warning
@@ -210,6 +210,7 @@ async def test_platform_error_slow_setup(hass, caplog):
         component = EntityComponent(_LOGGER, DOMAIN, hass)
         mock_entity_platform(hass, "test_domain.test_platform", platform)
         await component.async_setup({DOMAIN: {"platform": "test_platform"}})
+        await hass.async_block_till_done()
         assert len(called) == 1
         assert "test_domain.test_platform" not in hass.config.components
         assert "test_platform is taking longer than 0 seconds" in caplog.text
@@ -243,6 +244,7 @@ async def test_parallel_updates_async_platform(hass):
     component._platforms = {}
 
     await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
     assert handle.parallel_updates is None
@@ -269,6 +271,7 @@ async def test_parallel_updates_async_platform_with_constant(hass):
     component._platforms = {}
 
     await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
 
@@ -294,6 +297,7 @@ async def test_parallel_updates_sync_platform(hass):
     component._platforms = {}
 
     await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
 
@@ -320,6 +324,7 @@ async def test_parallel_updates_sync_platform_with_constant(hass):
     component._platforms = {}
 
     await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
 
@@ -705,6 +710,7 @@ async def test_device_info_called(hass):
                         "model": "test-model",
                         "name": "test-name",
                         "sw_version": "test-sw",
+                        "entry_type": "service",
                         "via_device": ("hue", "via-id"),
                     },
                 ),
@@ -731,6 +737,7 @@ async def test_device_info_called(hass):
     assert device.model == "test-model"
     assert device.name == "test-name"
     assert device.sw_version == "test-sw"
+    assert device.entry_type == "service"
     assert device.via_device_id == via.id
 
 

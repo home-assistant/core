@@ -3,6 +3,7 @@
         "abort": {
             "already_setup": "TelldusLive ya est\u00e1 configurado",
             "authorize_url_fail": "Error desconocido al generar una URL de autorizaci\u00f3n.",
+            "authorize_url_timeout": "Tiempo de espera agotado para generar la URL de autorizaci\u00f3n.",
             "unknown": "Se produjo un error desconocido"
         },
         "error": {
@@ -16,7 +17,8 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "title": "Elegir punto final."
             }
         }
     }

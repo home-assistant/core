@@ -5,8 +5,8 @@
         "title": "Connect to MELCloud",
         "description": "Connect using your MELCloud account.",
         "data": {
-          "username": "Email used to login to MELCloud.",
-          "password": "MELCloud password."
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

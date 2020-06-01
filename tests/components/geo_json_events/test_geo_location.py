@@ -1,6 +1,4 @@
 """The tests for the geojson platform."""
-from asynctest.mock import MagicMock, call, patch
-
 from homeassistant.components import geo_location
 from homeassistant.components.geo_json_events.geo_location import (
     ATTR_EXTERNAL_ID,
@@ -23,6 +21,7 @@ from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import MagicMock, call, patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 URL = "http://geo.json.local/geo_json_events.json"
@@ -74,6 +73,7 @@ async def test_setup(hass):
         )
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
+            await hass.async_block_till_done()
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             # Collect events.
@@ -163,6 +163,7 @@ async def test_setup_with_custom_location(hass):
             assert await async_setup_component(
                 hass, geo_location.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION
             )
+            await hass.async_block_till_done()
 
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -189,8 +190,8 @@ async def test_setup_race_condition(hass):
 
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
-    delete_signal = f"geo_json_events_delete_1234"
-    update_signal = f"geo_json_events_update_1234"
+    delete_signal = "geo_json_events_delete_1234"
+    update_signal = "geo_json_events_update_1234"
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
@@ -199,6 +200,7 @@ async def test_setup_race_condition(hass):
     ) as mock_feed:
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
+            await hass.async_block_till_done()
 
             mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
 

@@ -16,17 +16,15 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "Vuoi impostare {name}?",
-                "title": "AVM FRITZ!Box"
+                "description": "Vuoi impostare {name}?"
             },
             "user": {
                 "data": {
-                    "host": "Host o indirizzo IP",
+                    "host": "Host",
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "Inserisci le informazioni del tuo AVM FRITZ!Box .",
-                "title": "AVM FRITZ!Box"
+                "description": "Inserisci le informazioni del tuo AVM FRITZ!Box ."
             }
         }
     }

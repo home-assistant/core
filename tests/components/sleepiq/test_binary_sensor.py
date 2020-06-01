@@ -1,12 +1,12 @@
 """The tests for SleepIQ binary sensor platform."""
 import unittest
-from unittest.mock import MagicMock
 
 import requests_mock
 
 from homeassistant.components.sleepiq import binary_sensor as sleepiq
 from homeassistant.setup import setup_component
 
+from tests.async_mock import MagicMock
 from tests.common import get_test_home_assistant
 from tests.components.sleepiq.test_init import mock_responses
 

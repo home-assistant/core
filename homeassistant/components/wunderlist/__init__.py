@@ -4,13 +4,13 @@ import logging
 import voluptuous as vol
 from wunderpy2 import WunderApi
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "wunderlist"
-CONF_CLIENT_ID = "client_id"
+
 CONF_LIST_NAME = "list_name"
 CONF_STARRED = "starred"
 
@@ -85,7 +85,7 @@ class Wunderlist:
     def _list_by_name(self, name):
         """Return a list ID by name."""
         lists = self._client.get_lists()
-        tmp = [l for l in lists if l["title"] == name]
+        tmp = [lst for lst in lists if lst["title"] == name]
         if tmp:
             return tmp[0]["id"]
         return None

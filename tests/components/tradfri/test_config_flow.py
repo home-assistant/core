@@ -1,10 +1,10 @@
 """Test the Tradfri config flow."""
-from asynctest import patch
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tradfri import config_flow
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

@@ -75,7 +75,6 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        await self.get_attribute_value("active_power", from_cache=from_cache)
         await self.fetch_config(from_cache)
         await super().async_initialize(from_cache)
 
@@ -90,9 +89,11 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
             ],
             from_cache=from_cache,
         )
-        self._divisor = results.get("ac_power_divisor", results.get("power_divisor", 1))
+        self._divisor = results.get(
+            "ac_power_divisor", results.get("power_divisor", self._divisor)
+        )
         self._multiplier = results.get(
-            "ac_power_multiplier", results.get("power_multiplier", 1)
+            "ac_power_multiplier", results.get("power_multiplier", self._multiplier)
         )
 
     @property

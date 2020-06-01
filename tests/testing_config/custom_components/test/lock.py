@@ -19,13 +19,13 @@ def init(empty=False):
         if empty
         else {
             "support_open": MockLock(
-                name=f"Support open Lock",
+                name="Support open Lock",
                 is_locked=True,
                 supported_features=SUPPORT_OPEN,
                 unique_id="unique_support_open",
             ),
             "no_support_open": MockLock(
-                name=f"No support open Lock",
+                name="No support open Lock",
                 is_locked=True,
                 supported_features=0,
                 unique_id="unique_no_support_open",

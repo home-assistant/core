@@ -1,12 +1,11 @@
 """The tests for the MQTT statestream component."""
-from unittest.mock import ANY, call, patch
-
 import pytest
 
 import homeassistant.components.mqtt_statestream as statestream
 from homeassistant.core import State
 from homeassistant.setup import setup_component
 
+from tests.async_mock import ANY, call, patch
 from tests.common import (
     get_test_home_assistant,
     mock_mqtt_component,

@@ -1,10 +1,10 @@
 """The tests for the Canary component."""
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
 
 from homeassistant import setup
 import homeassistant.components.canary as canary
 
+from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import get_test_home_assistant
 
 

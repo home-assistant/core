@@ -1,13 +1,14 @@
 """Philips Hue sensors platform tests."""
 import asyncio
 import logging
-from unittest.mock import Mock
 
 import aiohue
 
 from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
 
 from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
+
+from tests.async_mock import Mock
 
 _LOGGER = logging.getLogger(__name__)
 

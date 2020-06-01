@@ -6,9 +6,18 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 ZEROCONF = {
+    "_api._udp.local.": [
+        "guardian"
+    ],
     "_axis-video._tcp.local.": [
         "axis",
         "doorbird"
+    ],
+    "_daap._tcp.local.": [
+        "forked_daapd"
+    ],
+    "_dkapi._tcp.local.": [
+        "daikin"
     ],
     "_elg._tcp.local.": [
         "elgato"
@@ -27,6 +36,9 @@ ZEROCONF = {
     ],
     "_ipps._tcp.local.": [
         "ipp"
+    ],
+    "_miio._udp.local.": [
+        "xiaomi_miio"
     ],
     "_printer._tcp.local.": [
         "brother"

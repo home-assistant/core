@@ -1,6 +1,4 @@
 """Test the cloud.iot module."""
-from unittest.mock import MagicMock, patch
-
 from aiohttp import web
 import pytest
 
@@ -12,7 +10,7 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.common import mock_coro
+from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.components.alexa import test_smart_home as test_alexa
 
 
@@ -130,7 +128,7 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     """Test handler Google Actions when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
-    with patch("hass_nabucasa.Cloud.start", return_value=mock_coro()):
+    with patch("hass_nabucasa.Cloud.start"):
         assert await async_setup_component(hass, "cloud", {})
 
     reqid = "5711642932632160983"
@@ -145,7 +143,7 @@ async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
 
 async def test_webhook_msg(hass):
     """Test webhook msg."""
-    with patch("hass_nabucasa.Cloud.start", return_value=mock_coro()):
+    with patch("hass_nabucasa.Cloud.start"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
         assert setup
     cloud = hass.data["cloud"]
@@ -221,7 +219,7 @@ async def test_set_username(hass):
     prefs = MagicMock(
         alexa_enabled=False,
         google_enabled=False,
-        async_set_username=MagicMock(return_value=mock_coro()),
+        async_set_username=AsyncMock(return_value=None),
     )
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")

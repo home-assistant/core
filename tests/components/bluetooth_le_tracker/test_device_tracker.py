@@ -1,7 +1,6 @@
 """Test Bluetooth LE device tracker."""
 
 from datetime import timedelta
-from unittest.mock import patch
 
 from homeassistant.components.bluetooth_le_tracker import device_tracker
 from homeassistant.components.device_tracker.const import (
@@ -13,6 +12,7 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 

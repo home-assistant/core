@@ -1,7 +1,7 @@
 """Tests for debounce."""
-from asynctest import CoroutineMock
-
 from homeassistant.helpers import debounce
+
+from tests.async_mock import AsyncMock
 
 
 async def test_immediate_works(hass):
@@ -12,7 +12,7 @@ async def test_immediate_works(hass):
         None,
         cooldown=0.01,
         immediate=True,
-        function=CoroutineMock(side_effect=lambda: calls.append(None)),
+        function=AsyncMock(side_effect=lambda: calls.append(None)),
     )
 
     # Call when nothing happening
@@ -57,7 +57,7 @@ async def test_not_immediate_works(hass):
         None,
         cooldown=0.01,
         immediate=False,
-        function=CoroutineMock(side_effect=lambda: calls.append(None)),
+        function=AsyncMock(side_effect=lambda: calls.append(None)),
     )
 
     # Call when nothing happening

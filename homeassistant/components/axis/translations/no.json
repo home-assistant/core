@@ -18,12 +18,11 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "username": "Brukernavn"
                 },
                 "title": "Sett opp Axis enhet"
             }
         }
-    },
-    "title": "Axis enhet"
+    }
 }

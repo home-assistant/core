@@ -15,8 +15,7 @@
                     "port": "port",
                     "username": "Uporabni\u0161ko ime"
                 },
-                "description": "Prosimo vnesite informacije o povezavi va\u0161ega MQTT posrednika.",
-                "title": "MQTT"
+                "description": "Prosimo vnesite informacije o povezavi va\u0161ega MQTT posrednika."
             },
             "hassio_confirm": {
                 "data": {

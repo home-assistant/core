@@ -31,7 +31,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util.temperature import convert as convert_temperature
 
 from . import MelCloudDevice
 from .const import (
@@ -44,7 +43,6 @@ from .const import (
     DOMAIN,
     SERVICE_SET_VANE_HORIZONTAL,
     SERVICE_SET_VANE_VERTICAL,
-    TEMP_UNIT_LOOKUP,
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -169,7 +167,7 @@ class AtaDeviceClimate(MelCloudClimate):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        return TEMP_UNIT_LOOKUP.get(self._device.temp_unit, TEMP_CELSIUS)
+        return TEMP_CELSIUS
 
     @property
     def hvac_mode(self) -> str:
@@ -281,9 +279,7 @@ class AtaDeviceClimate(MelCloudClimate):
         if min_value is not None:
             return min_value
 
-        return convert_temperature(
-            DEFAULT_MIN_TEMP, TEMP_CELSIUS, self.temperature_unit
-        )
+        return DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> float:
@@ -292,9 +288,7 @@ class AtaDeviceClimate(MelCloudClimate):
         if max_value is not None:
             return max_value
 
-        return convert_temperature(
-            DEFAULT_MAX_TEMP, TEMP_CELSIUS, self.temperature_unit
-        )
+        return DEFAULT_MAX_TEMP
 
 
 class AtwDeviceZoneClimate(MelCloudClimate):
@@ -331,7 +325,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        return TEMP_UNIT_LOOKUP.get(self._device.temp_unit, TEMP_CELSIUS)
+        return TEMP_CELSIUS
 
     @property
     def hvac_mode(self) -> str:
@@ -391,7 +385,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
         MELCloud API does not expose radiator zone temperature limits.
         """
-        return convert_temperature(10, TEMP_CELSIUS, self.temperature_unit)
+        return 10
 
     @property
     def max_temp(self) -> float:
@@ -399,4 +393,4 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
         MELCloud API does not expose radiator zone temperature limits.
         """
-        return convert_temperature(30, TEMP_CELSIUS, self.temperature_unit)
+        return 30

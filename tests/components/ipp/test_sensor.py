@@ -1,15 +1,14 @@
 """Tests for the IPP sensor platform."""
 from datetime import datetime
 
-from asynctest import patch
-
 from homeassistant.components.ipp.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, UNIT_PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.components.ipp import init_integration
+from tests.async_mock import patch
+from tests.components.ipp import init_integration, mock_connection
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -17,6 +16,8 @@ async def test_sensors(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the IPP sensors."""
+    mock_connection(aioclient_mock)
+
     entry = await init_integration(hass, aioclient_mock, skip_setup=True)
     registry = await hass.helpers.entity_registry.async_get_registry()
 

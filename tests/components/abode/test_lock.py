@@ -1,6 +1,4 @@
 """Tests for the Abode lock device."""
-from unittest.mock import patch
-
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
@@ -12,6 +10,8 @@ from homeassistant.const import (
 )
 
 from .common import setup_platform
+
+from tests.async_mock import patch
 
 DEVICE_ID = "lock.test_lock"
 

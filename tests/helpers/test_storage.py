@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 import json
 
-from asynctest import Mock, patch
 import pytest
 
 from homeassistant.const import (
@@ -14,6 +13,7 @@ from homeassistant.core import CoreState
 from homeassistant.helpers import storage
 from homeassistant.util import dt
 
+from tests.async_mock import Mock, patch
 from tests.common import async_fire_time_changed
 
 MOCK_VERSION = 1

@@ -1,13 +1,13 @@
 """deCONZ light platform tests."""
 from copy import deepcopy
 
-from asynctest import patch
-
 from homeassistant.components import deconz
 import homeassistant.components.light as light
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+
+from tests.async_mock import patch
 
 GROUPS = {
     "1": {

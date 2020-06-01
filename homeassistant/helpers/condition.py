@@ -536,7 +536,7 @@ async def async_validate_condition_config(
 ) -> ConfigType:
     """Validate config."""
     condition = config[CONF_CONDITION]
-    if condition in ("and", "or"):
+    if condition in ("and", "not", "or"):
         conditions = []
         for sub_cond in config["conditions"]:
             sub_cond = await async_validate_condition_config(hass, sub_cond)
@@ -563,7 +563,7 @@ def async_extract_entities(config: ConfigType) -> Set[str]:
         config = to_process.popleft()
         condition = config[CONF_CONDITION]
 
-        if condition in ("and", "or"):
+        if condition in ("and", "not", "or"):
             to_process.extend(config["conditions"])
             continue
 
@@ -585,7 +585,7 @@ def async_extract_devices(config: ConfigType) -> Set[str]:
         config = to_process.popleft()
         condition = config[CONF_CONDITION]
 
-        if condition in ("and", "or"):
+        if condition in ("and", "not", "or"):
             to_process.extend(config["conditions"])
             continue
 

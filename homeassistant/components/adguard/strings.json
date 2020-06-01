@@ -4,10 +4,10 @@
       "user": {
         "description": "Set up your AdGuard Home instance to allow monitoring and control.",
         "data": {
-          "host": "Host",
-          "password": "Password",
-          "port": "Port",
-          "username": "Username",
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
           "ssl": "AdGuard Home uses a SSL certificate",
           "verify_ssl": "AdGuard Home uses a proper certificate"
         }

@@ -1,11 +1,12 @@
 """Tests for async util methods from Python source."""
 import asyncio
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from homeassistant.util import async_ as hasync
+
+from tests.async_mock import MagicMock, Mock, patch
 
 
 @patch("asyncio.coroutines.iscoroutine")

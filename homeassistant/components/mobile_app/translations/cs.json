@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Chcete nastavit komponentu Mobiln\u00ed aplikace?",
-                "title": "Mobiln\u00ed aplikace"
+                "description": "Chcete nastavit komponentu Mobiln\u00ed aplikace?"
             }
         }
     }
