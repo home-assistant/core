@@ -186,6 +186,9 @@ class DeconzLight(DeconzDevice, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn off light."""
+        if not self._device.state:
+            return
+
         data = {"on": False}
 
         if ATTR_TRANSITION in kwargs:

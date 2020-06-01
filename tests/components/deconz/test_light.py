@@ -197,6 +197,26 @@ async def test_lights_and_groups(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
+        assert not set_callback.called
+
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "1",
+        "state": {"on": True},
+    }
+    gateway.api.event_handler(state_changed_event)
+    await hass.async_block_till_done()
+
+    with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
+        await hass.services.async_call(
+            light.DOMAIN,
+            light.SERVICE_TURN_OFF,
+            {"entity_id": "light.rgb_light", "transition": 5, "flash": "short"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
         set_callback.assert_called_with(
             "put",
             "/lights/1/state",
