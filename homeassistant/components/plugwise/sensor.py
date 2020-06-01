@@ -127,7 +127,7 @@ ENERGY_SENSOR_MAP = {
 MISC_SENSOR_MAP = {
     "battery": ATTR_BATTERY_LEVEL,
     "illuminance": ATTR_ILLUMINANCE,
-    "modulation_level": ["Heater Modulation Level", UNIT_PERCENTAGE, "modulation"],
+    "modulation_level": ["Heater Modulation Level", UNIT_PERCENTAGE, None],
     "valve_position": ["Valve Position", UNIT_PERCENTAGE, None],
     "water_pressure": ATTR_PRESSURE,
 }
