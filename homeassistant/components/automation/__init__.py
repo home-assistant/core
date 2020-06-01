@@ -61,6 +61,8 @@ CONDITION_TYPE_OR = "or"
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 DEFAULT_INITIAL_STATE = True
 
+EVENT_AUTOMATION_RELOADED = "automation_reloaded"
+
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
@@ -214,6 +216,7 @@ async def async_setup(hass, config):
         if conf is None:
             return
         await _async_process_config(hass, conf, component)
+        hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
     async_register_admin_service(
         hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
