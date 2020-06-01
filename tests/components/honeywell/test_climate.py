@@ -8,9 +8,9 @@ import somecomfort
 import voluptuous as vol
 
 from homeassistant.components.climate.const import (
-    ATTR_FAN_MODE,
-    ATTR_FAN_MODES,
-    ATTR_HVAC_MODES,
+    HVAC_MODE_HEAT,
+    PRESET_AWAY,
+    PRESET_NONE,
 )
 import homeassistant.components.honeywell.climate as honeywell
 from homeassistant.const import (
@@ -315,7 +315,7 @@ class TestHoneywellRound(unittest.TestCase):
 class TestHoneywellUS(unittest.TestCase):
     """A test class for Honeywell US thermostats."""
 
-    def setup_method(self, method):
+    def setUp(self):
         """Test the setup method."""
         self.client = mock.MagicMock()
         self.device = mock.MagicMock()
@@ -341,7 +341,7 @@ class TestHoneywellUS(unittest.TestCase):
 
     def test_properties(self):
         """Test the properties."""
-        assert self.honeywell.is_fan_on
+        assert self.honeywell.hvac_mode == HVAC_MODE_HEAT
         assert "test" == self.honeywell.name
         assert 72 == self.honeywell.current_temperature
 
@@ -387,39 +387,41 @@ class TestHoneywellUS(unittest.TestCase):
     def test_attributes(self):
         """Test the attributes."""
         expected = {
-            honeywell.ATTR_FAN: "running",
-            ATTR_FAN_MODE: "auto",
-            ATTR_FAN_MODES: somecomfort.FAN_MODES,
-            ATTR_HVAC_MODES: somecomfort.SYSTEM_MODES,
+            honeywell.ATTR_FAN_ACTION: "running",
+            "hvac_mode": HVAC_MODE_HEAT,
         }
-        assert expected == self.honeywell.device_state_attributes
-        expected["fan"] = "idle"
+        for k, v in expected.items():
+            assert k in self.honeywell.device_state_attributes.keys(), k
+            assert self.honeywell.device_state_attributes[k] == v, k
+        expected[honeywell.ATTR_FAN_ACTION] = "idle"
         self.device.fan_running = False
-        assert expected == self.honeywell.device_state_attributes
+        for k, v in expected.items():
+            assert k in self.honeywell.device_state_attributes.keys(), k
+            assert self.honeywell.device_state_attributes[k] == v, k + " value"
 
     def test_with_no_fan(self):
         """Test if there is on fan."""
         self.device.fan_running = False
         self.device.fan_mode = None
         expected = {
-            honeywell.ATTR_FAN: "idle",
-            ATTR_FAN_MODE: None,
-            ATTR_FAN_MODES: somecomfort.FAN_MODES,
-            ATTR_HVAC_MODES: somecomfort.SYSTEM_MODES,
+            honeywell.ATTR_FAN_ACTION: "idle",
+            "hvac_mode": HVAC_MODE_HEAT,
         }
-        assert expected == self.honeywell.device_state_attributes
+        for k, v in expected.items():
+            assert k in self.honeywell.device_state_attributes.keys(), k
+            assert self.honeywell.device_state_attributes[k] == v, k
 
     def test_heat_away_mode(self):
         """Test setting the heat away mode."""
         self.honeywell.set_hvac_mode("heat")
-        assert not self.honeywell.is_away_mode_on
-        self.honeywell.turn_away_mode_on()
-        assert self.honeywell.is_away_mode_on
+        assert not self.honeywell.away
+        self.honeywell.set_preset_mode(PRESET_AWAY)
+        assert self.honeywell.away
         assert self.device.setpoint_heat == self.heat_away_temp
         assert self.device.hold_heat is True
 
-        self.honeywell.turn_away_mode_off()
-        assert not self.honeywell.is_away_mode_on
+        self.honeywell.set_preset_mode(PRESET_NONE)
+        assert not self.honeywell.away
         assert self.device.hold_heat is False
 
     @mock.patch("somecomfort.SomeComfort")
