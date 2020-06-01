@@ -47,28 +47,23 @@ def mock_all(aioclient_mock):
     )
 
 
-@pytest.fixture(name="supervisor_info", scope="session")
-def supervisor_info_fixture():
-    """Return the /supervisor/info api result."""
-    return json.loads(load_fixture("hassio/supervisor_info.json"))
+@pytest.fixture(name="addons_addon_info", scope="session")
+def addons_addon_info_fixture():
+    """Return the /addons/{addon}/info api result."""
+    return json.loads(load_fixture("hassio/addons_addon_info.json"))
 
 
-async def test_addon_is_installed(hass, aioclient_mock, supervisor_info, hassio_env):
-    """Test addon is installed."""
-    aioclient_mock.get("http://127.0.0.1/supervisor/info", json=supervisor_info)
+async def test_get_addon_info(hass, aioclient_mock, addons_addon_info, hassio_env):
+    """Test get addon info."""
+    slug = "mosquitto"
+    repository = "core"
+    addon = f"{repository}_{slug}"
+    aioclient_mock.get(f"http://127.0.0.1/addons/{addon}/info", json=addons_addon_info)
     assert await async_setup_component(hass, "hassio", {})
 
-    installed = await hass.components.hassio.async_addon_is_installed(
-        hass, "mosquitto", "core"
-    )
+    info = await hass.components.hassio.async_get_addon_info(slug, repository)
 
-    assert installed
-
-    installed = await hass.components.hassio.async_addon_is_installed(
-        hass, "ssh", "core"
-    )
-
-    assert not installed
+    assert info == addons_addon_info["data"]
 
 
 async def test_setup_api_ping(hass, aioclient_mock):
