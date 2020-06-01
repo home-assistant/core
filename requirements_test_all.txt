@@ -542,7 +542,7 @@ pychromecast==5.3.0
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.1.0
+pydaikin==2.1.1
 
 # homeassistant.components.deconz
 pydeconz==70
