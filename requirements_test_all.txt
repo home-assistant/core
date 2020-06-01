@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.8.4
+HAP-python==2.9.1
 
 # homeassistant.components.plugwise
 Plugwise_Smile==0.2.10
