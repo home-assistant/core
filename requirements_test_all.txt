@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.8.4
+HAP-python==2.9.1
 
 # homeassistant.components.plugwise
 Plugwise_Smile==0.2.10
@@ -147,7 +147,7 @@ async-upnp-client==0.14.13
 av==8.0.1
 
 # homeassistant.components.axis
-axis==27
+axis==28
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -340,7 +340,7 @@ httplib2==0.10.3
 huawei-lte-api==1.4.12
 
 # homeassistant.components.iaqualink
-iaqualink==0.3.3
+iaqualink==0.3.4
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
@@ -542,7 +542,7 @@ pychromecast==5.3.0
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.1.0
+pydaikin==2.1.1
 
 # homeassistant.components.deconz
 pydeconz==70
@@ -844,7 +844,7 @@ tellduslive==0.10.11
 tesla-powerwall==0.2.8
 
 # homeassistant.components.tesla
-teslajsonpy==0.8.0
+teslajsonpy==0.8.1
 
 # homeassistant.components.toon
 toonapilib==3.2.4

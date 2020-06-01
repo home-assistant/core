@@ -46,6 +46,7 @@ class TestOpenAlprLocalSetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.openalpr_demo_camera")
 
@@ -62,6 +63,7 @@ class TestOpenAlprLocalSetup:
 
         with assert_setup_component(1, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         assert self.hass.states.get("image_processing.test_local")
 
@@ -77,6 +79,7 @@ class TestOpenAlprLocalSetup:
 
         with assert_setup_component(0, ip.DOMAIN):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
 
 class TestOpenAlprLocal:
@@ -101,6 +104,7 @@ class TestOpenAlprLocal:
             new_callable=PropertyMock(return_value=False),
         ):
             setup_component(self.hass, ip.DOMAIN, config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
         self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"

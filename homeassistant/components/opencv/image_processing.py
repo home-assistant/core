@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             CONF_NEIGHBORS, DEFAULT_NEIGHBORS
                         ): cv.positive_int,
                         vol.Optional(CONF_MIN_SIZE, DEFAULT_MIN_SIZE): vol.Schema(
-                            (int, int)
+                            vol.All(vol.ExactSequence([int, int]), vol.Coerce(tuple))
                         ),
                     }
                 ),

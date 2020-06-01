@@ -35,7 +35,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==2.8.4
+HAP-python==2.9.1
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -306,7 +306,7 @@ avea==1.4
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==27
+axis==28
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==1.3.1
@@ -612,9 +612,6 @@ gTTS-token==1.1.3
 # homeassistant.components.garmin_connect
 garminconnect==0.1.13
 
-# homeassistant.components.gearbest
-gearbest_parser==1.0.7
-
 # homeassistant.components.geizhals
 geizhals==0.0.9
 
@@ -770,7 +767,7 @@ hydrawiser==0.1.1
 iammeter==0.1.7
 
 # homeassistant.components.iaqualink
-iaqualink==0.3.3
+iaqualink==0.3.4
 
 # homeassistant.components.watson_tts
 ibm-watson==4.0.1
@@ -1269,7 +1266,7 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.1.0
+pydaikin==2.1.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2087,7 +2084,7 @@ temperusb==1.5.3
 tesla-powerwall==0.2.8
 
 # homeassistant.components.tesla
-teslajsonpy==0.8.0
+teslajsonpy==0.8.1
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8

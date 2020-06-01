@@ -135,7 +135,7 @@ async def test_setup_configuration(hass):
             weather.DOMAIN,
             {"weather": {"name": "HomeTown", "platform": "ipma", "mode": "hourly"}},
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
     assert state.state == "rainy"
@@ -182,7 +182,7 @@ async def test_daily_forecast(hass):
             weather.DOMAIN,
             {"weather": {"name": "HomeTown", "platform": "ipma", "mode": "daily"}},
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
     assert state.state == "rainy"
@@ -208,7 +208,7 @@ async def test_hourly_forecast(hass):
             weather.DOMAIN,
             {"weather": {"name": "HomeTown", "platform": "ipma", "mode": "hourly"}},
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
     assert state.state == "rainy"

@@ -275,7 +275,6 @@ omit =
     homeassistant/components/garmin_connect/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
-    homeassistant/components/gearbest/sensor.py
     homeassistant/components/geizhals/sensor.py
     homeassistant/components/gios/__init__.py
     homeassistant/components/gios/air_quality.py
@@ -607,6 +606,7 @@ omit =
     homeassistant/components/plex/sensor.py
     homeassistant/components/plugwise/__init__.py
     homeassistant/components/plugwise/climate.py
+    homeassistant/components/plugwise/sensor.py
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/*

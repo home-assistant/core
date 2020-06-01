@@ -55,6 +55,7 @@ async def test_init(hass):
         "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
+        await hass.async_block_till_done()
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.state == "offline"
@@ -77,6 +78,7 @@ async def test_offline(hass):
         "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
+        await hass.async_block_till_done()
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.state == "offline"
@@ -95,6 +97,7 @@ async def test_streaming(hass):
         "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
+        await hass.async_block_till_done()
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.state == "streaming"
@@ -117,9 +120,8 @@ async def test_oauth_without_sub_and_follow(hass):
     with patch(
         "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
-        assert (
-            await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH) is True
-        )
+        assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
+        await hass.async_block_till_done()
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is False
@@ -140,9 +142,8 @@ async def test_oauth_with_sub(hass):
     with patch(
         "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
-        assert (
-            await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH) is True
-        )
+        assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
+        await hass.async_block_till_done()
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is True
@@ -165,9 +166,8 @@ async def test_oauth_with_follow(hass):
     with patch(
         "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
-        assert (
-            await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH) is True
-        )
+        assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
+        await hass.async_block_till_done()
 
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is False

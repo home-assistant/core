@@ -3,13 +3,14 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Dict
 
 from Plugwise_Smile.Smile import Smile
 import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -22,7 +23,8 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
-ALL_PLATFORMS = ["climate"]
+SENSOR_PLATFORMS = ["sensor"]
+ALL_PLATFORMS = ["climate", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -100,7 +102,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=api.smile_version[0],
     )
 
-    for component in ALL_PLATFORMS:
+    platforms = ALL_PLATFORMS
+
+    single_master_thermostat = api.single_master_thermostat()
+    if single_master_thermostat is None:
+        platforms = SENSOR_PLATFORMS
+
+    for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -127,11 +135,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SmileGateway(Entity):
     """Represent Smile Gateway."""
 
-    def __init__(self, api, coordinator):
-        """Initialise the sensor."""
+    def __init__(self, api, coordinator, name, dev_id):
+        """Initialise the gateway."""
         self._api = api
         self._coordinator = coordinator
+        self._name = name
+        self._dev_id = dev_id
+
         self._unique_id = None
+        self._model = None
+
+        self._entity_name = self._name
 
     @property
     def unique_id(self):
@@ -148,11 +162,40 @@ class SmileGateway(Entity):
         """Return True if entity is available."""
         return self._coordinator.last_update_success
 
+    @property
+    def name(self):
+        """Return the name of the entity, if any."""
+        if not self._name:
+            return None
+        return self._name
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+
+        device_information = {
+            "identifiers": {(DOMAIN, self._dev_id)},
+            "name": self._entity_name,
+            "manufacturer": "Plugwise",
+        }
+
+        if self._model is not None:
+            device_information["model"] = self._model.replace("_", " ").title()
+
+        if self._dev_id != self._api.gateway_id:
+            device_information["via_device"] = (DOMAIN, self._api.gateway_id)
+
+        return device_information
+
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self.async_on_remove(self._coordinator.async_add_listener(self._process_data))
+        self._async_process_data()
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self._async_process_data)
+        )
 
-    def _process_data(self):
+    @callback
+    def _async_process_data(self):
         """Interpret and process API data."""
         raise NotImplementedError
 
