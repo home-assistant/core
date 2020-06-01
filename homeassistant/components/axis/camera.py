@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .axis_base import AxisEntityBase
-from .const import DOMAIN as AXIS_DOMAIN
+from .const import DEFAULT_STREAM_PROFILE, DOMAIN as AXIS_DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -84,7 +84,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
     def mjpeg_source(self):
         """Return mjpeg URL for device."""
         options = ""
-        if self.device.option_stream_profile:
+        if self.device.option_stream_profile != DEFAULT_STREAM_PROFILE:
             options = f"?&streamprofile={self.device.option_stream_profile}"
 
         return f"http://{self.device.host}:{self.device.config_entry.data[CONF_PORT]}/axis-cgi/mjpg/video.cgi{options}"
@@ -92,7 +92,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
     async def stream_source(self):
         """Return the stream source."""
         options = ""
-        if self.device.option_stream_profile:
+        if self.device.option_stream_profile != DEFAULT_STREAM_PROFILE:
             options = f"&streamprofile={self.device.option_stream_profile}"
 
         return f"rtsp://{self.device.config_entry.data[CONF_USERNAME]}:{self.device.config_entry.data[CONF_PASSWORD]}@{self.device.host}/axis-media/media.amp?videocodec=h264{options}"

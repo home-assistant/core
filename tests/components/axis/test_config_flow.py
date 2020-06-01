@@ -6,6 +6,7 @@ from homeassistant.components.axis.const import (
     CONF_EVENTS,
     CONF_MODEL,
     CONF_STREAM_PROFILE,
+    DEFAULT_STREAM_PROFILE,
     DOMAIN as AXIS_DOMAIN,
 )
 from homeassistant.const import (
@@ -275,8 +276,8 @@ async def test_zeroconf_flow_updated_configuration(hass):
     assert device.config_entry.data == {
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 80,
-        CONF_USERNAME: "username",
-        CONF_PASSWORD: "password",
+        CONF_USERNAME: "root",
+        CONF_PASSWORD: "pass",
         CONF_MAC: MAC,
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
@@ -298,8 +299,8 @@ async def test_zeroconf_flow_updated_configuration(hass):
     assert device.config_entry.data == {
         CONF_HOST: "2.3.4.5",
         CONF_PORT: 8080,
-        CONF_USERNAME: "username",
-        CONF_PASSWORD: "password",
+        CONF_USERNAME: "root",
+        CONF_PASSWORD: "pass",
         CONF_MAC: MAC,
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
@@ -333,14 +334,17 @@ async def test_zeroconf_flow_ignore_link_local_address(hass):
 async def test_option_flow(hass):
     """Test config flow options."""
     device = await setup_axis_integration(hass)
+    assert device.option_stream_profile == DEFAULT_STREAM_PROFILE
 
     result = await hass.config_entries.options.async_init(device.config_entry.entry_id)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "configure_stream"
-    assert set(
-        result["data_schema"].schema[CONF_STREAM_PROFILE].container
-    ).intersection(("profile_1", "profile_2"))
+    assert set(result["data_schema"].schema[CONF_STREAM_PROFILE].container) == {
+        DEFAULT_STREAM_PROFILE,
+        "profile_1",
+        "profile_2",
+    }
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_STREAM_PROFILE: "profile_1"},
@@ -352,3 +356,4 @@ async def test_option_flow(hass):
         CONF_EVENTS: True,
         CONF_STREAM_PROFILE: "profile_1",
     }
+    assert device.option_stream_profile == "profile_1"

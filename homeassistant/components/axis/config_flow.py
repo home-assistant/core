@@ -16,7 +16,12 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.util.network import is_link_local
 
-from .const import CONF_MODEL, CONF_STREAM_PROFILE, DOMAIN as AXIS_DOMAIN
+from .const import (
+    CONF_MODEL,
+    CONF_STREAM_PROFILE,
+    DEFAULT_STREAM_PROFILE,
+    DOMAIN as AXIS_DOMAIN,
+)
 from .device import get_device
 from .errors import AuthenticationRequired, CannotConnect
 
@@ -186,14 +191,17 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return self.async_create_entry(title="", data=self.options)
 
-        profiles = []
-
+        profiles = [DEFAULT_STREAM_PROFILE]
         for profile in self.device.api.vapix.streaming_profiles:
             profiles.append(profile.name)
 
         return self.async_show_form(
             step_id="configure_stream",
             data_schema=vol.Schema(
-                {vol.Optional(CONF_STREAM_PROFILE): vol.In(profiles)}
+                {
+                    vol.Optional(
+                        CONF_STREAM_PROFILE, default=self.device.option_stream_profile
+                    ): vol.In(profiles)
+                }
             ),
         )

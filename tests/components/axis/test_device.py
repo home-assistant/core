@@ -52,8 +52,8 @@ ENTRY_OPTIONS = {CONF_CAMERA: True, CONF_EVENTS: True}
 
 ENTRY_CONFIG = {
     CONF_HOST: "1.2.3.4",
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
+    CONF_USERNAME: "root",
+    CONF_PASSWORD: "pass",
     CONF_PORT: 80,
     CONF_MAC: MAC,
     CONF_MODEL: MODEL,
