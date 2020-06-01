@@ -141,6 +141,17 @@ async def async_get_addon_info(hass: HomeAssistantType, addon_id: str) -> dict:
     return result["data"]
 
 
+@bind_hass
+async def async_install_addon(hass: HomeAssistantType, addon_id: str) -> None:
+    """Install add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{addon_id}/install"
+    await hassio.send_command(command)
+
+
 @callback
 @bind_hass
 def get_info(hass):
