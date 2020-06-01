@@ -176,6 +176,8 @@ omit =
     homeassistant/components/dsmr_reader/*
     homeassistant/components/dte_energy_bridge/sensor.py
     homeassistant/components/dublin_bus_transport/sensor.py
+    homeassistant/components/dunehd/__init__.py
+    homeassistant/components/dunehd/const.py
     homeassistant/components/dunehd/media_player.py
     homeassistant/components/dwd_weather_warnings/sensor.py
     homeassistant/components/dweet/*
