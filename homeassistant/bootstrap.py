@@ -367,7 +367,6 @@ async def _async_set_up_integrations(
                 domain,
                 exc_info=(type(exception), exception, exception.__traceback__),
             )
-        log_task.cancel()
 
     domains = _get_domains(hass, config)
 
