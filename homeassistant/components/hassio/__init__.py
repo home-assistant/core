@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 import os
-from typing import Optional
 
 import voluptuous as vol
 
@@ -126,31 +125,19 @@ MAP_SERVICE_API = {
 }
 
 
-async def async_addon_is_installed(
+@bind_hass
+async def async_get_addon_info(
     hass: HomeAssistantType, slug: str, repository: str
-) -> bool:
-    """Return True if add-on is installed.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    command = "/supervisor/info"  # only installed addons are returned
-    result = await async_send_supervisor_command(hass, command, method="get")
-    addons = result["data"]["addons"]
-    found_addon = next(
-        (_addon for _addon in addons if _addon["slug"] == f"{repository}_{slug}"), None,
-    )
-    return bool(found_addon)
-
-
-async def async_send_supervisor_command(
-    hass, command: str, method: str = "post", payload: Optional[dict] = None
-):
-    """Send a command to the Supervisor API.
+) -> dict:
+    """Return add-on info.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
-    return await hassio.send_command(command, method=method, payload=payload)
+    addon = f"{repository}_{slug}"
+    command = f"/addons/{addon}/info"
+    result = await hassio.send_command(command, method="get")
+    return result["data"]
 
 
 @callback
