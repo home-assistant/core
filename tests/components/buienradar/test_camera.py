@@ -23,6 +23,7 @@ async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
