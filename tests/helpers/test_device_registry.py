@@ -738,3 +738,48 @@ async def test_restore_device(hass, registry, update_events):
     assert update_events[2]["device_id"] == entry2.id
     assert update_events[3]["action"] == "create"
     assert update_events[3]["device_id"] == entry3.id
+
+
+async def test_restore_simple_device(hass, registry, update_events):
+    """Make sure device id is stable."""
+    entry = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    registry.async_remove_device(entry.id)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 1
+
+    entry2 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
+        identifiers={("bridgeid", "4567")},
+    )
+    entry3 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+
+    assert entry.id == entry3.id
+    assert entry.id != entry2.id
+    assert len(registry.devices) == 2
+    assert len(registry.deleted_devices) == 0
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 4
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert update_events[1]["action"] == "remove"
+    assert update_events[1]["device_id"] == entry.id
+    assert update_events[2]["action"] == "create"
+    assert update_events[2]["device_id"] == entry2.id
+    assert update_events[3]["action"] == "create"
+    assert update_events[3]["device_id"] == entry3.id

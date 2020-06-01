@@ -34,6 +34,16 @@ CONNECTION_ZIGBEE = "zigbee"
 
 
 @attr.s(slots=True, frozen=True)
+class DeletedDeviceEntry:
+    """Deleted Device Registry Entry."""
+
+    config_entries: Set[str] = attr.ib()
+    connections: List[Tuple[str, str]] = attr.ib()
+    identifiers: List[Tuple[str, str]] = attr.ib()
+    id: str = attr.ib()
+
+
+@attr.s(slots=True, frozen=True)
 class DeviceEntry:
     """Device Registry Entry."""
 
@@ -55,46 +65,6 @@ class DeviceEntry:
     id: str = attr.ib(default=attr.Factory(lambda: uuid.uuid4().hex))
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
-
-
-def serialize_device_entry(entry: DeviceEntry) -> dict:
-    """Serialize a DeviceEntry for storing."""
-    return {
-        "config_entries": list(entry.config_entries),
-        "connections": list(entry.connections),
-        "identifiers": list(entry.identifiers),
-        "manufacturer": entry.manufacturer,
-        "model": entry.model,
-        "name": entry.name,
-        "sw_version": entry.sw_version,
-        "entry_type": entry.entry_type,
-        "id": entry.id,
-        "via_device_id": entry.via_device_id,
-        "area_id": entry.area_id,
-        "name_by_user": entry.name_by_user,
-    }
-
-
-def deserialize_device_entry(device: Any) -> DeviceEntry:
-    """Deserialize a stored DeviceEntry."""
-    return DeviceEntry(
-        config_entries=set(device["config_entries"]),
-        connections={tuple(conn) for conn in device["connections"]},  # type: ignore
-        identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore
-        manufacturer=device["manufacturer"],
-        model=device["model"],
-        name=device["name"],
-        sw_version=device["sw_version"],
-        # Introduced in 0.110
-        entry_type=device.get("entry_type"),
-        id=device["id"],
-        # Introduced in 0.79
-        # renamed in 0.95
-        via_device_id=(device.get("via_device_id") or device.get("hub_device_id")),
-        # Introduced in 0.87
-        area_id=device.get("area_id"),
-        name_by_user=device.get("name_by_user"),
-    )
 
 
 def format_mac(mac: str) -> str:
@@ -121,7 +91,7 @@ class DeviceRegistry:
     """Class to hold a registry of devices."""
 
     devices: Dict[str, DeviceEntry]
-    deleted_devices: Dict[str, DeviceEntry]
+    deleted_devices: Dict[str, DeletedDeviceEntry]
 
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the device registry."""
@@ -148,7 +118,7 @@ class DeviceRegistry:
     @callback
     def async_get_deleted_device(
         self, identifiers: set, connections: set
-    ) -> Optional[DeviceEntry]:
+    ) -> Optional[DeletedDeviceEntry]:
         """Check if device has previously been registered."""
         for device in self.deleted_devices.values():
             if any(iden in device.identifiers for iden in identifiers) or any(
@@ -347,7 +317,12 @@ class DeviceRegistry:
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
         device = self.devices.pop(device_id)
-        self.deleted_devices[device_id] = device
+        self.deleted_devices[device_id] = DeletedDeviceEntry(
+            config_entries=set(device.config_entries),
+            connections=list(device.connections),
+            identifiers=list(device.identifiers),
+            id=device.id,
+        )
         self.hass.bus.async_fire(
             EVENT_DEVICE_REGISTRY_UPDATED, {"action": "remove", "device_id": device_id}
         )
@@ -362,10 +337,13 @@ class DeviceRegistry:
     @callback
     def async_restore_device(self, device_id: str) -> None:
         """Restore a deleted device."""
-        device = self.deleted_devices.pop(device_id)
-        self.devices[device_id] = device
-        self.hass.bus.async_fire(
-            EVENT_DEVICE_REGISTRY_UPDATED, {"action": "create", "device_id": device_id}
+        deleted_device = self.deleted_devices.pop(device_id)
+        self.devices[device_id] = DeviceEntry(
+            config_entries=deleted_device.config_entries,  # type: ignore
+            connections=deleted_device.connections,  # type: ignore
+            identifiers=deleted_device.identifiers,  # type: ignore
+            id=deleted_device.id,
+            is_new=True,
         )
         self.async_schedule_save()
 
@@ -380,11 +358,35 @@ class DeviceRegistry:
 
         if data is not None:
             for device in data["devices"]:
-                devices[device["id"]] = deserialize_device_entry(device)
+                devices[device["id"]] = DeviceEntry(
+                    config_entries=set(device["config_entries"]),
+                    connections={tuple(conn) for conn in device["connections"]},
+                    identifiers={tuple(iden) for iden in device["identifiers"]},
+                    manufacturer=device["manufacturer"],
+                    model=device["model"],
+                    name=device["name"],
+                    sw_version=device["sw_version"],
+                    # Introduced in 0.110
+                    entry_type=device.get("entry_type"),
+                    id=device["id"],
+                    # Introduced in 0.79
+                    # renamed in 0.95
+                    via_device_id=(
+                        device.get("via_device_id") or device.get("hub_device_id")
+                    ),
+                    # Introduced in 0.87
+                    area_id=device.get("area_id"),
+                    name_by_user=device.get("name_by_user"),
+                )
             # Introduced in 0.111
             if "deleted_devices" in data:
                 for device in data["deleted_devices"]:
-                    deleted_devices[device["id"]] = deserialize_device_entry(device)
+                    deleted_devices[device["id"]] = DeletedDeviceEntry(
+                        config_entries=set(device["config_entries"]),
+                        connections=list(tuple(conn) for conn in device["connections"]),
+                        identifiers=list(tuple(iden) for iden in device["identifiers"]),
+                        id=device["id"],
+                    )
 
         self.devices = devices
         self.deleted_devices = deleted_devices
@@ -400,10 +402,30 @@ class DeviceRegistry:
         data = {}
 
         data["devices"] = [
-            serialize_device_entry(entry) for entry in self.devices.values()
+            {
+                "config_entries": list(entry.config_entries),
+                "connections": list(entry.connections),
+                "identifiers": list(entry.identifiers),
+                "manufacturer": entry.manufacturer,
+                "model": entry.model,
+                "name": entry.name,
+                "sw_version": entry.sw_version,
+                "entry_type": entry.entry_type,
+                "id": entry.id,
+                "via_device_id": entry.via_device_id,
+                "area_id": entry.area_id,
+                "name_by_user": entry.name_by_user,
+            }
+            for entry in self.devices.values()
         ]
         data["deleted_devices"] = [
-            serialize_device_entry(entry) for entry in self.deleted_devices.values()
+            {
+                "config_entries": list(entry.config_entries),
+                "connections": list(entry.connections),
+                "identifiers": list(entry.identifiers),
+                "id": entry.id,
+            }
+            for entry in self.deleted_devices.values()
         ]
 
         return data
@@ -415,9 +437,11 @@ class DeviceRegistry:
             self._async_update_device(
                 self.devices, device.id, remove_config_entry_id=config_entry_id
             )
-        for device in list(self.deleted_devices.values()):
+        for deleted_device in list(self.deleted_devices.values()):
             self._async_update_device(
-                self.deleted_devices, device.id, remove_config_entry_id=config_entry_id
+                self.deleted_devices,
+                deleted_device.id,
+                remove_config_entry_id=config_entry_id,
             )
 
     @callback
@@ -426,9 +450,6 @@ class DeviceRegistry:
         for dev_id, device in self.devices.items():
             if area_id == device.area_id:
                 self._async_update_device(self.devices, dev_id, area_id=None)
-        for dev_id, device in self.deleted_devices.items():
-            if area_id == device.area_id:
-                self._async_update_device(self.deleted_devices, dev_id, area_id=None)
 
 
 @singleton(DATA_REGISTRY)
