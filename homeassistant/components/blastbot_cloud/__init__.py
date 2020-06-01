@@ -25,7 +25,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 # List the platforms that you want to support.
-PLATFORMS = ["switch", "climate", "remote"]
+# Available: "switch", "climate", "remote"
+PLATFORMS = ["climate"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

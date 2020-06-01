@@ -79,7 +79,11 @@ omit =
     homeassistant/components/bh1750/sensor.py
     homeassistant/components/bitcoin/sensor.py
     homeassistant/components/bizkaibus/sensor.py
-    homeassistant/components/blastbot_cloud/*
+    homeassistant/components/blastbot_cloud/__init__.py
+    homeassistant/components/blastbot_cloud/climate.py
+    homeassistant/components/blastbot_cloud/const.py
+    homeassistant/components/blastbot_cloud/remote.py
+    homeassistant/components/blastbot_cloud/switch.py
     homeassistant/components/blink/*
     homeassistant/components/blinksticklight/light.py
     homeassistant/components/blinkt/light.py
