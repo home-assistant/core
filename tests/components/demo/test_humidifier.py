@@ -34,6 +34,7 @@ async def setup_demo_humidifier(hass):
     assert await async_setup_component(
         hass, DOMAIN, {"humidifier": {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
 
 def test_setup_params(hass):
