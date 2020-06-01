@@ -45,7 +45,6 @@ DUNEHD_PLAYER_SUPPORT = (
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dune HD media player platform."""
-
     host = config.get(CONF_HOST)
 
     hass.async_create_task(
@@ -53,8 +52,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
         )
     )
-
-    return
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
