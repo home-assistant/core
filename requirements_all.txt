@@ -770,7 +770,7 @@ hydrawiser==0.1.1
 iammeter==0.1.7
 
 # homeassistant.components.iaqualink
-iaqualink==0.3.3
+iaqualink==0.3.4
 
 # homeassistant.components.watson_tts
 ibm-watson==4.0.1
