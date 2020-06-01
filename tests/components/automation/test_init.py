@@ -4,11 +4,10 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.automation import DOMAIN
+from homeassistant.components.automation import DOMAIN, EVENT_AUTOMATION_RELOADED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_OFF,
