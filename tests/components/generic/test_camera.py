@@ -23,6 +23,7 @@ async def test_fetching_url(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -55,6 +56,7 @@ async def test_fetching_without_verify_ssl(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -81,6 +83,7 @@ async def test_fetching_url_with_verify_ssl(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -108,6 +111,7 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -171,6 +175,7 @@ async def test_camera_content_type(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": [cam_config_svg, cam_config_normal]}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
