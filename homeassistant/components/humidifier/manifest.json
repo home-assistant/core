@@ -2,6 +2,6 @@
   "domain": "humidifier",
   "name": "Humidifier",
   "documentation": "https://www.home-assistant.io/integrations/humidifier",
-  "codeowners": ["@home-assistant/core", "@Shulyaka"]
+  "codeowners": ["@home-assistant/core", "@Shulyaka"],
   "quality_scale": "internal"
 }
