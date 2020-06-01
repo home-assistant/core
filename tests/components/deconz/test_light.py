@@ -46,6 +46,8 @@ LIGHTS = {
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     },
     "2": {
+        "ctmax": 454,
+        "ctmin": 155,
         "id": "Tunable white light id",
         "name": "Tunable white light",
         "state": {"on": True, "colormode": "ct", "ct": 2500, "reachable": True},
@@ -111,6 +113,8 @@ async def test_lights_and_groups(hass):
     tunable_white_light = hass.states.get("light.tunable_white_light")
     assert tunable_white_light.state == "on"
     assert tunable_white_light.attributes["color_temp"] == 2500
+    assert tunable_white_light.attributes["max_mireds"] == 454
+    assert tunable_white_light.attributes["min_mireds"] == 155
     assert tunable_white_light.attributes["supported_features"] == 2
 
     on_off_light = hass.states.get("light.on_off_light")
