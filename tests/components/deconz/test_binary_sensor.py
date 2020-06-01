@@ -88,6 +88,7 @@ async def test_binary_sensors(hass):
 
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == "on"
+    assert vibration_sensor.attributes["device_class"] == "vibration"
 
     state_changed_event = {
         "t": "event",
