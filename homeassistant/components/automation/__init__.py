@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_ID,
     CONF_PLATFORM,
     CONF_ZONE,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -62,6 +61,7 @@ DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 DEFAULT_INITIAL_STATE = True
 
 EVENT_AUTOMATION_RELOADED = "automation_reloaded"
+EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
@@ -220,6 +220,19 @@ async def async_setup(hass, config):
 
     async_register_admin_service(
         hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+    )
+
+    @callback
+    def async_describe_logbook_event(event):
+        """Describe a logbook event."""
+        return {
+            "name": event.data.get(ATTR_NAME),
+            "message": "has been triggered",
+            "entity_id": event.data.get(ATTR_ENTITY_ID),
+        }
+
+    hass.components.logbook.async_describe_event(
+        DOMAIN, EVENT_AUTOMATION_TRIGGERED, async_describe_logbook_event
     )
 
     return True
