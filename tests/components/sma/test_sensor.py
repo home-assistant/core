@@ -24,6 +24,7 @@ async def test_sma_config(hass):
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: dict(BASE_CFG, sensors=sensors)}
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.current_consumption")
     assert state

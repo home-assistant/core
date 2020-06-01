@@ -58,6 +58,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -92,6 +93,7 @@ async def test_controlling_non_default_state_via_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -127,6 +129,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -163,6 +166,7 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -195,6 +199,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -240,6 +245,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
