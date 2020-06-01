@@ -224,7 +224,7 @@ class SynoApi:
         self.utilisation: SynoCoreUtilization = None
 
         # Should we fetch them
-        self.fetching_entities = set()
+        self.fetching_entities = {}
         self._with_security = True
         self._with_storage = True
         self._with_utilisation = True
@@ -268,24 +268,12 @@ class SynoApi:
         if not self.fetching_entities:
             return
 
-        # Determine which if at least one entity uses specific API
-        self._with_security = False
-        self._with_storage = False
-        self._with_utilisation = False
-
-        for entity_unique_id in self.fetching_entities:
-            # Check if we should fetch specific APIs
-            if SynoCoreSecurity.API_KEY in entity_unique_id:
-                self._with_security = True
-                continue
-
-            if SynoStorage.API_KEY in entity_unique_id:
-                self._with_storage = True
-                continue
-
-            if SynoCoreUtilization.API_KEY in entity_unique_id:
-                self._with_utilisation = True
-                continue
+        # Determine if we should fetch an API
+        self._with_security = bool(self.fetching_entities.get(SynoCoreSecurity.API_KEY))
+        self._with_storage = bool(self.fetching_entities.get(SynoStorage.API_KEY))
+        self._with_utilisation = bool(
+            self.fetching_entities.get(SynoCoreUtilization.API_KEY)
+        )
 
         # Reset not used API
         if not self._with_security:
@@ -332,6 +320,7 @@ class SynologyDSMEntity(Entity):
     ):
         """Initialize the Synology DSM entity."""
         self._api = api
+        self._api_key = entity_type.split(":")[0]
         self.entity_type = entity_type.split(":")[-1]
         self._name = f"{BASE_NAME} {entity_info[ENTITY_NAME]}"
         self._class = entity_info[ENTITY_CLASS]
@@ -410,13 +399,15 @@ class SynologyDSMEntity(Entity):
 
         # subscribe from API fetches
         # HA reload the config when enable entities, it will subscribe disabled entities at this moment
-        self._api.fetching_entities.add(self._unique_id)
+        if self._api_key not in self._api.fetching_entities:
+            self._api.fetching_entities[self._api_key] = set()
+        self._api.fetching_entities[self._api_key].add(self.unique_id)
         # unsubscribe with disable
         self.async_on_remove(self._remove_fetch)
 
     @callback
     def _remove_fetch(self):
-        self._api.fetching_entities.remove(self._unique_id)
+        self._api.fetching_entities[self._api_key].remove(self.unique_id)
 
 
 class SynologyDSMDeviceEntity(SynologyDSMEntity):

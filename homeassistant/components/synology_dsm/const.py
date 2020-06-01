@@ -36,6 +36,8 @@ ENTITY_ICON = "icon"
 ENTITY_CLASS = "device_class"
 ENTITY_ENABLE = "enable"
 
+# Entity keys should start with the API_KEY to fetch
+
 # Binary sensors
 STORAGE_DISK_BINARY_SENSORS = {
     f"{SynoStorage.API_KEY}:disk_exceed_bad_sector_thr": {
