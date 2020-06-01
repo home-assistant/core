@@ -247,12 +247,9 @@ class PwThermostatSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
-        self._api = api
-        self._sensor_type = sensor_type
-
-        self._model = self._sensor_type[SENSOR_MAP_MODEL]
-        self._unit_of_measurement = self._sensor_type[SENSOR_MAP_UOM]
-        self._dev_class = self._sensor_type[SENSOR_MAP_DEVICE_CLASS]
+        self._model = sensor_type[SENSOR_MAP_MODEL]
+        self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
+        self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
 
     @callback
     def _async_process_data(self):
@@ -282,9 +279,6 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
-        self._api = api
-
-        self._model = None
         self._heating_state = False
         self._cooling_state = False
 
@@ -319,12 +313,15 @@ class PwPowerSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
-        self._api = api
         self._model = model
+        if model is None:
+            self._model = sensor_type[SENSOR_MAP_MODEL]
 
-        self._model = sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
         self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
+
+        if dev_id == self._api.gateway_id:
+            self._model = "P1 DSMR"
 
     @callback
     def _async_process_data(self):
