@@ -500,6 +500,8 @@ class TodoistProjectData:
 
         events = []
         for task in project_task_data:
+            if task["due"] is None:
+                continue
             due_date = _parse_due_date(task["due"])
             if start_date < due_date < end_date:
                 event = {

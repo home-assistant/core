@@ -4,7 +4,7 @@ from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, cast
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import CALLBACK_TYPE, callback, split_entity_id, valid_entity_id
@@ -240,12 +240,9 @@ class EntityPlatform:
     ) -> None:
         """Schedule adding entities for a single platform async."""
         self._tasks.append(
-            cast(
-                asyncio.Future,
-                self.hass.async_add_job(
-                    self.async_add_entities(  # type: ignore
-                        new_entities, update_before_add=update_before_add
-                    ),
+            self.hass.async_create_task(
+                self.async_add_entities(
+                    new_entities, update_before_add=update_before_add
                 ),
             )
         )

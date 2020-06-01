@@ -530,7 +530,7 @@ class TextToSpeechUrlView(HomeAssistantView):
         """Initialize a tts view."""
         self.tts = tts
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Generate speech and provide url."""
         try:
             data = await request.json()
@@ -570,7 +570,7 @@ class TextToSpeechView(HomeAssistantView):
         """Initialize a tts view."""
         self.tts = tts
 
-    async def get(self, request, filename):
+    async def get(self, request: web.Request, filename: str) -> web.Response:
         """Start a get request."""
         try:
             content, data = await self.tts.async_read_tts(filename)

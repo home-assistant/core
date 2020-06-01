@@ -593,5 +593,5 @@ async def test_turn_on_failure(feature, hass, config, caplog):
     )
 
     assert (
-        f"turning on '{feature_mock.full_name}' failed: Bad value 123 ()" in caplog.text
+        f"Turning on '{feature_mock.full_name}' failed: Bad value 123 ()" in caplog.text
     )

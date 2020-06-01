@@ -8,9 +8,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "radio_type": "Tipo de radio"
-                },
                 "title": "ZHA"
             }
         }

@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 import re
 
-from broadlink.exceptions import BroadlinkException, ReadError
+from broadlink.exceptions import BroadlinkException, ReadError, StorageError
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
@@ -31,12 +31,12 @@ def data_packet(value):
 
 def hostname(value):
     """Validate a hostname."""
-    host = str(value).lower()
+    host = str(value)
     if len(host) > 253:
         raise ValueError
     if host[-1] == ".":
         host = host[:-1]
-    allowed = re.compile(r"(?!-)[a-z\d-]{1,63}(?<!-)$")
+    allowed = re.compile(r"(?![_-])[a-z\d_-]{1,63}(?<![_-])$", flags=re.IGNORECASE)
     if not all(allowed.match(elem) for elem in host.split(".")):
         raise ValueError
     return host
@@ -85,10 +85,11 @@ async def async_setup_service(hass, host, device):
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
+            await asyncio.sleep(1)
             try:
                 packet = await device.async_request(device.api.check_data)
-            except ReadError:
-                await asyncio.sleep(1)
+            except (ReadError, StorageError):
+                continue
             except BroadlinkException as err_msg:
                 _LOGGER.error("Failed to learn: %s", err_msg)
                 return

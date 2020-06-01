@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc11c\ube44\uc2a4\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "Sonarr: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \ud0a4",
+                    "base_path": "API \uacbd\ub85c",
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "port": "\ud3ec\ud2b8",
+                    "ssl": "Sonarr \ub294 SSL \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4",
+                    "verify_ssl": "Sonarr \ub294 \uc62c\ubc14\ub978 \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4"
+                },
+                "title": "Sonarr \uc5d0 \uc5f0\uacb0\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "\ud45c\uc2dc\ud560 \uc608\uc815\uc77c \uc218",
+                    "wanted_max_items": "\ud45c\uc2dc\ud560 Wanted \ud56d\ubaa9 \uc218"
+                }
+            }
+        }
+    },
+    "title": "Sonarr"
+}

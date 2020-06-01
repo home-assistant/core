@@ -239,7 +239,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_poe_clients:
-            await self.async_remove()
+            await self.remove_item({self.client.mac})
 
 
 class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
@@ -287,4 +287,4 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if self.client.mac not in self.controller.option_block_clients:
-            await self.async_remove()
+            await self.remove_item({self.client.mac})

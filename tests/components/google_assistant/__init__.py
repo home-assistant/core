@@ -170,7 +170,7 @@ DEMO_DEVICES = [
             "action.devices.traits.TransportControl",
             "action.devices.traits.MediaState",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
@@ -183,7 +183,7 @@ DEMO_DEVICES = [
             "action.devices.traits.TransportControl",
             "action.devices.traits.MediaState",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
@@ -195,7 +195,7 @@ DEMO_DEVICES = [
             "action.devices.traits.TransportControl",
             "action.devices.traits.MediaState",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
@@ -208,7 +208,7 @@ DEMO_DEVICES = [
             "action.devices.traits.TransportControl",
             "action.devices.traits.MediaState",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {

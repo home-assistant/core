@@ -62,6 +62,7 @@ async def test_template_state_text(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -104,6 +105,7 @@ async def test_template_state_boolean(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -137,6 +139,7 @@ async def test_template_position(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -192,6 +195,7 @@ async def test_template_tilt(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -226,6 +230,7 @@ async def test_template_out_of_bounds(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -264,6 +269,7 @@ async def test_template_mutex(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -310,6 +316,7 @@ async def test_template_open_and_close(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -347,6 +354,7 @@ async def test_template_non_numeric(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -378,6 +386,7 @@ async def test_open_action(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -416,6 +425,7 @@ async def test_close_stop_action(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -463,6 +473,7 @@ async def test_set_position(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -537,6 +548,7 @@ async def test_set_tilt_position(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -578,6 +590,7 @@ async def test_open_tilt_action(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -616,6 +629,7 @@ async def test_close_tilt_action(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -644,6 +658,7 @@ async def test_set_position_optimistic(hass, calls):
                 }
             },
         )
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -708,6 +723,7 @@ async def test_set_tilt_position_optimistic(hass, calls):
                 }
             },
         )
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -782,6 +798,7 @@ async def test_icon_template(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -825,6 +842,7 @@ async def test_entity_picture_template(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -866,6 +884,7 @@ async def test_availability_template(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -905,6 +924,7 @@ async def test_availability_without_availability_template(hass, calls):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -938,6 +958,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -972,6 +993,7 @@ async def test_device_class(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -1006,6 +1028,7 @@ async def test_invalid_device_class(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 

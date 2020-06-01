@@ -13,8 +13,7 @@
                 "data": {
                     "host": "Numm oder IP Adresse"
                 },
-                "description": "D\u00e4in WLED als Integratioun mam Home Assistant ariichten.",
-                "title": "D\u00e4in WLED verbannen"
+                "description": "D\u00e4in WLED als Integratioun mam Home Assistant ariichten."
             },
             "zeroconf_confirm": {
                 "description": "Soll de WLED mam Numm `{name}` am Home Assistant dob\u00e4i gesaat ginn?",

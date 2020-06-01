@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "device_fail": "S'ha produ\u00eft un error inesperat al crear el dispositiu.",
-            "device_timeout": "S'ha acabat el temps d'espera en la connexi\u00f3 amb el dispositiu."
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
             "device_fail": "Error inesperat",
@@ -17,7 +15,7 @@
                     "key": "Clau API",
                     "password": "Contrasenya"
                 },
-                "description": "Introdueix l'adre\u00e7a IP del teu Daikin AC.",
+                "description": "Introdueix l'adre\u00e7a IP del teu AC Daikin.\n\nTingues en compte que la Clau API i la Contrasenya s'utilitzen als dispositius BRP072Cxx i SKYFi respectivament.",
                 "title": "Configuraci\u00f3 de Daikin AC"
             }
         }

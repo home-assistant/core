@@ -1,14 +1,12 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
-            "unknown": "Unexpected error"
+            "cannot_connect": "Failed to connect, please try again"
         },
         "step": {
             "user": {
                 "data": {
                     "blid": "BLID",
-                    "certificate": "Certificate",
                     "continuous": "Continuous",
                     "delay": "Delay",
                     "host": "Host",

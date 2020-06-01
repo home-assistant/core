@@ -130,6 +130,7 @@ async def _setup_seventeentrack(hass, config=None, summary_data=None):
 
     ProfileMock.summary_data = summary_data
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
 
 async def _goto_future(hass, future=None):
@@ -144,13 +145,14 @@ async def _goto_future(hass, future=None):
 async def test_full_valid_config(hass):
     """Ensure everything starts correctly."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
+    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == len(ProfileMock.summary_data.keys())
 
 
 async def test_valid_config(hass):
     """Ensure everything starts correctly."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL)
-
+    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == len(ProfileMock.summary_data.keys())
 
 

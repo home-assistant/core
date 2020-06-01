@@ -5,10 +5,10 @@ from . import BleBoxEntity, create_blebox_entities
 from .const import BLEBOX_TO_HASS_DEVICE_CLASSES
 
 
-async def async_setup_entry(hass, config_entry, async_add):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a BleBox switch entity."""
     create_blebox_entities(
-        hass, config_entry, async_add, BleBoxSwitchEntity, "switches"
+        hass, config_entry, async_add_entities, BleBoxSwitchEntity, "switches"
     )
 
 
