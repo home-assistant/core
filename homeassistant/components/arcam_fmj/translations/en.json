@@ -9,16 +9,14 @@
         "flow_title": "Arcam FMJ on {host}",
         "step": {
             "confirm": {
-                "description": "Do you want to add Arcam FMJ on `{host}` to Home Assistant?",
-                "title": "Discovered Arcam FMJ"
+                "description": "Do you want to add Arcam FMJ on `{host}` to Home Assistant?"
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Please enter the host name or IP address of device.",
-                "title": "Connect to Arcam FMJ"
+                "description": "Please enter the host name or IP address of device."
             }
         }
     },
