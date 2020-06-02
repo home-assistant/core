@@ -3,7 +3,7 @@
   "name": "Dexcom",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dexcom",
-  "requirements": ["pydexcom==0.1.1"],
+  "requirements": ["pydexcom==0.1.5"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
