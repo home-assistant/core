@@ -1,13 +1,5 @@
 """Support for deCONZ binary sensors."""
-from pydeconz.sensor import (
-    CarbonMonoxide,
-    Fire,
-    GenericFlag,
-    OpenClose,
-    Presence,
-    Vibration,
-    Water,
-)
+from pydeconz.sensor import CarbonMonoxide, Fire, OpenClose, Presence, Vibration, Water
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
@@ -33,7 +25,6 @@ ATTR_VIBRATIONSTRENGTH = "vibrationstrength"
 DEVICE_CLASS = {
     CarbonMonoxide: DEVICE_CLASS_GAS,
     Fire: DEVICE_CLASS_SMOKE,
-    GenericFlag: "",
     OpenClose: DEVICE_CLASS_OPENING,
     Presence: DEVICE_CLASS_MOTION,
     Vibration: DEVICE_CLASS_VIBRATION,
@@ -100,7 +91,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return DEVICE_CLASS[type(self._device)]
+        return DEVICE_CLASS.get(type(self._device))
 
     @property
     def icon(self):

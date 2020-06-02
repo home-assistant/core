@@ -1,10 +1,8 @@
 """Support for deCONZ sensors."""
 from pydeconz.sensor import (
-    Alarm,
     Battery,
     Consumption,
     Daylight,
-    GenericStatus,
     Humidity,
     LightLevel,
     Power,
@@ -42,10 +40,6 @@ ATTR_DAYLIGHT = "daylight"
 ATTR_EVENT_ID = "event_id"
 
 DEVICE_CLASS = {
-    Alarm: "motion",
-    Consumption: "consumption",
-    Daylight: "daylight",
-    GenericStatus: "",
     Humidity: DEVICE_CLASS_HUMIDITY,
     LightLevel: DEVICE_CLASS_ILLUMINANCE,
     Power: DEVICE_CLASS_POWER,
@@ -141,7 +135,7 @@ class DeconzSensor(DeconzDevice):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return DEVICE_CLASS[type(self._device)]
+        return DEVICE_CLASS.get(type(self._device))
 
     @property
     def icon(self):

@@ -144,7 +144,7 @@ async def test_sensors(hass):
 
     consumption_sensor = hass.states.get("sensor.consumption_sensor")
     assert consumption_sensor.state == "0.002"
-    assert consumption_sensor.attributes["device_class"] == "consumption"
+    assert "device_class" not in consumption_sensor.attributes
 
     state_changed_event = {
         "t": "event",
