@@ -115,6 +115,7 @@ FLOWS = [
     "plaato",
     "plex",
     "plugwise",
+    "plum_lightpad",
     "point",
     "powerwall",
     "ps4",

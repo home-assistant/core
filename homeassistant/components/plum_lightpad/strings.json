@@ -1,0 +1,21 @@
+{
+  "title": "plum_lightpad",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the Plum Lightpad",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Plum Lightpad is already configured"
+    }
+  }
+}
