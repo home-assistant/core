@@ -289,6 +289,7 @@ async def test_query_message(hass):
 async def test_execute(hass):
     """Test an execute command."""
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True

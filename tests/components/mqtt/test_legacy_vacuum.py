@@ -76,6 +76,7 @@ async def test_default_supported_features(hass, mqtt_mock):
     assert await async_setup_component(
         hass, vacuum.DOMAIN, {vacuum.DOMAIN: DEFAULT_CONFIG}
     )
+    await hass.async_block_till_done()
     entity = hass.states.get("vacuum.mqtttest")
     entity_features = entity.attributes.get(mqttvacuum.CONF_SUPPORTED_FEATURES, 0)
     assert sorted(services_to_strings(entity_features, SERVICE_TO_STRING)) == sorted(
@@ -99,6 +100,7 @@ async def test_all_commands(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     await common.async_turn_on(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -178,6 +180,7 @@ async def test_commands_without_supported_features(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     await common.async_turn_on(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
@@ -225,6 +228,7 @@ async def test_attributes_without_supported_features(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "battery_level": 54,
@@ -250,6 +254,7 @@ async def test_status(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "battery_level": 54,
@@ -289,6 +294,7 @@ async def test_status_battery(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "battery_level": 54
@@ -306,6 +312,7 @@ async def test_status_cleaning(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "cleaning": true
@@ -323,6 +330,7 @@ async def test_status_docked(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "docked": true
@@ -340,6 +348,7 @@ async def test_status_charging(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "charging": true
@@ -357,6 +366,7 @@ async def test_status_fan_speed(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "fan_speed": "max"
@@ -374,6 +384,7 @@ async def test_status_fan_speed_list(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     state = hass.states.get("vacuum.mqtttest")
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == ["min", "medium", "high", "max"]
@@ -391,6 +402,7 @@ async def test_status_no_fan_speed_list(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     state = hass.states.get("vacuum.mqtttest")
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
@@ -404,6 +416,7 @@ async def test_status_error(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     message = """{
         "error": "Error1"
@@ -434,6 +447,7 @@ async def test_battery_template(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "retroroomba/battery_level", "54")
     state = hass.states.get("vacuum.mqtttest")
@@ -449,6 +463,7 @@ async def test_status_invalid_json(hass, mqtt_mock):
     )
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "vacuum/state", '{"asdfasas false}')
     state = hass.states.get("vacuum.mqtttest")
@@ -462,6 +477,7 @@ async def test_missing_battery_template(hass, mqtt_mock):
     config.pop(mqttvacuum.CONF_BATTERY_LEVEL_TEMPLATE)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     state = hass.states.get("vacuum.mqtttest")
     assert state is None
@@ -473,6 +489,7 @@ async def test_missing_charging_template(hass, mqtt_mock):
     config.pop(mqttvacuum.CONF_CHARGING_TEMPLATE)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     state = hass.states.get("vacuum.mqtttest")
     assert state is None
@@ -484,6 +501,7 @@ async def test_missing_cleaning_template(hass, mqtt_mock):
     config.pop(mqttvacuum.CONF_CLEANING_TEMPLATE)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     state = hass.states.get("vacuum.mqtttest")
     assert state is None
@@ -495,6 +513,7 @@ async def test_missing_docked_template(hass, mqtt_mock):
     config.pop(mqttvacuum.CONF_DOCKED_TEMPLATE)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     state = hass.states.get("vacuum.mqtttest")
     assert state is None
@@ -506,6 +525,7 @@ async def test_missing_error_template(hass, mqtt_mock):
     config.pop(mqttvacuum.CONF_ERROR_TEMPLATE)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     state = hass.states.get("vacuum.mqtttest")
     assert state is None
@@ -517,6 +537,7 @@ async def test_missing_fan_speed_template(hass, mqtt_mock):
     config.pop(mqttvacuum.CONF_FAN_SPEED_TEMPLATE)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+    await hass.async_block_till_done()
 
     state = hass.states.get("vacuum.mqtttest")
     assert state is None

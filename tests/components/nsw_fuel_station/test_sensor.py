@@ -92,6 +92,7 @@ class TestNSWFuelStation(unittest.TestCase):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
             assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+            self.hass.block_till_done()
 
         fake_entities = ["my_fake_station_p95", "my_fake_station_e10"]
 
@@ -106,6 +107,7 @@ class TestNSWFuelStation(unittest.TestCase):
     def test_sensor_values(self):
         """Test retrieval of sensor values."""
         assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+        self.hass.block_till_done()
 
         assert "140.0" == self.hass.states.get("sensor.my_fake_station_e10").state
         assert "150.0" == self.hass.states.get("sensor.my_fake_station_p95").state

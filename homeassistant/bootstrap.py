@@ -44,6 +44,13 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
+    # Ensure supervisor is available
+    "hassio",
+    # Get the frontend up and running as soon
+    # as possible so problem integrations can
+    # be removed
+    "frontend",
+    "config",
 }
 
 
@@ -399,6 +406,8 @@ async def _async_set_up_integrations(
     )
 
     if stage_1_domains:
+        _LOGGER.info("Setting up %s", stage_1_domains)
+
         await async_setup_multi_components(stage_1_domains)
 
     # Load all integrations

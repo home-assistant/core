@@ -81,8 +81,6 @@ class DeLijnPublicTransportSensor(Entity):
             return
 
         self._attributes["stopname"] = self._name
-        for passage in self.line.passages:
-            passage["stopname"] = self._name
 
         try:
             first = self.line.passages[0]

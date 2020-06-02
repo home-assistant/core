@@ -291,7 +291,7 @@ class MiroboVacuum(StateVacuumEntity):
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(self._fan_speeds)
+        return list(self._fan_speeds) if self._fan_speeds else []
 
     @property
     def device_state_attributes(self):

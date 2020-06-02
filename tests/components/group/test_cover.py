@@ -57,6 +57,7 @@ async def setup_comp(hass):
     """Set up group cover component."""
     with assert_setup_component(2, DOMAIN):
         await async_setup_component(hass, DOMAIN, CONFIG)
+    await hass.async_block_till_done()
 
 
 async def test_attributes(hass):
@@ -70,6 +71,7 @@ async def test_attributes(hass):
 
     with assert_setup_component(1, DOMAIN):
         await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_CLOSED
