@@ -3,7 +3,12 @@ from asynctest import patch
 from pydexcom import GlucoseReading
 
 from homeassistant.components.dexcom.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.setup import async_setup_component
 
 
@@ -21,18 +26,28 @@ async def test_sensors(hass):
     with patch(
         "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
         return_value=_mock_glucose_reading,
+    ), patch(
+        "homeassistant.components.dexcom.Dexcom.create_session",
+        return_value="test_session_id",
     ):
         assert await async_setup_component(
             hass,
             DOMAIN,
-            {DOMAIN: {"username": "test_username", "password": "test_password"}},
+            {
+                DOMAIN: {
+                    CONF_USERNAME: "test_username",
+                    CONF_PASSWORD: "test_password",
+                    "server": "US",
+                    CONF_UNIT_OF_MEASUREMENT: "mg/dL",
+                }
+            },
         )
         await hass.async_block_till_done()
     sensor_dexcom_test_username_glucose_value = hass.states.get(
         "sensor.dexcom_test_username_glucose_value"
     )
     assert sensor_dexcom_test_username_glucose_value.state == str(
-        _mock_glucose_reading.value
+        _mock_glucose_reading.mg_dl
     )
     sensor_dexcom_test_username_glucose_trend = hass.states.get(
         "sensor.dexcom_test_username_glucose_trend"
@@ -49,11 +64,21 @@ async def test_sensors_unavailable(hass):
     with patch(
         "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
         return_value=_mock_glucose_reading,
+    ), patch(
+        "homeassistant.components.dexcom.Dexcom.create_session",
+        return_value="test_session_id",
     ):
         assert await async_setup_component(
             hass,
             DOMAIN,
-            {DOMAIN: {CONF_USERNAME: "test_username", CONF_PASSWORD: "test_password"}},
+            {
+                DOMAIN: {
+                    CONF_USERNAME: "test_username",
+                    CONF_PASSWORD: "test_password",
+                    "server": "US",
+                    CONF_UNIT_OF_MEASUREMENT: "mg/dL",
+                }
+            },
         )
         await hass.async_block_till_done()
     sensor_dexcom_test_username_glucose_value = hass.states.get(

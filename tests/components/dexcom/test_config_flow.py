@@ -4,7 +4,7 @@ from pydexcom import AccountError, SessionError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.dexcom.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 
 
 async def test_form(hass):
@@ -25,7 +25,12 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "test_username", CONF_PASSWORD: "test_password"},
+            {
+                CONF_USERNAME: "test_username",
+                CONF_PASSWORD: "test_password",
+                "server": "US",
+                CONF_UNIT_OF_MEASUREMENT: "mg/dL",
+            },
         )
 
     assert result2["type"] == "create_entry"
@@ -33,6 +38,8 @@ async def test_form(hass):
     assert result2["data"] == {
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
+        "server": "US",
+        CONF_UNIT_OF_MEASUREMENT: "mg/dL",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -50,7 +57,12 @@ async def test_form_account_error(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "test_username", CONF_PASSWORD: "test_password"},
+            {
+                CONF_USERNAME: "test_username",
+                CONF_PASSWORD: "test_password",
+                "server": "US",
+                CONF_UNIT_OF_MEASUREMENT: "mg/dL",
+            },
         )
 
     assert result2["type"] == "form"
@@ -68,7 +80,12 @@ async def test_form_session_error(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "test_username", CONF_PASSWORD: "test_password"},
+            {
+                CONF_USERNAME: "test_username",
+                CONF_PASSWORD: "test_password",
+                "server": "US",
+                CONF_UNIT_OF_MEASUREMENT: "mg/dL",
+            },
         )
 
     assert result2["type"] == "form"
@@ -86,7 +103,12 @@ async def test_form_error(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "test_username", CONF_PASSWORD: "test_password"},
+            {
+                CONF_USERNAME: "test_username",
+                CONF_PASSWORD: "test_password",
+                "server": "US",
+                CONF_UNIT_OF_MEASUREMENT: "mg/dL",
+            },
         )
 
     assert result2["type"] == "form"
