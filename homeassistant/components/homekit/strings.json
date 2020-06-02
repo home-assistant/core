@@ -30,8 +30,7 @@
             "advanced": {
                 "data": {
                     "auto_start": "[%key:component::homekit::config::step::user::data::auto_start%]",
-                    "safe_mode": "Safe Mode (enable only if pairing fails)",
-                    "zeroconf_default_interface": "Use default zeroconf interface (enable if the bridge cannot be found in the Home app)"
+                    "safe_mode": "Safe Mode (enable only if pairing fails)"
                 },
                 "description": "These settings only need to be adjusted if the HomeKit bridge is not functional.",
                 "title": "Advanced Configuration"
