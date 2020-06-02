@@ -3,6 +3,6 @@
 DOMAIN = "devolo_home_control"
 DEFAULT_MYDEVOLO = "https://www.mydevolo.com"
 DEFAULT_MPRM = "https://homecontrol.mydevolo.com"
-PLATFORMS = ["switch"]
+PLATFORMS = ["switch", "sensor"]
 CONF_MYDEVOLO = "mydevolo_url"
 CONF_HOMECONTROL = "home_control_url"
