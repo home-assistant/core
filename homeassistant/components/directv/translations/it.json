@@ -14,14 +14,12 @@
                     "one": "uno",
                     "other": "altri"
                 },
-                "description": "Vuoi impostare {name} ?",
-                "title": "Connettersi al ricevitore DirecTV"
+                "description": "Vuoi impostare {name} ?"
             },
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "title": "Collegamento al ricevitore DirecTV"
+                }
             }
         }
     }

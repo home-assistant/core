@@ -289,6 +289,7 @@ async def test_query_message(hass):
 async def test_execute(hass):
     """Test an execute command."""
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True
@@ -743,7 +744,7 @@ async def test_device_class_cover(hass, device_class, google_type):
 @pytest.mark.parametrize(
     "device_class,google_type",
     [
-        ("non_existing_class", "action.devices.types.SWITCH"),
+        ("non_existing_class", "action.devices.types.SETTOP"),
         ("tv", "action.devices.types.TV"),
     ],
 )

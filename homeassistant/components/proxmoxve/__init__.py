@@ -1,7 +1,6 @@
 """Support for Proxmox VE."""
 from enum import Enum
 import logging
-import time
 
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
@@ -137,25 +136,21 @@ class ProxmoxClient:
         self._connection_start_time = None
 
     def build_client(self):
-        """Construct the ProxmoxAPI client."""
+        """Construct the ProxmoxAPI client. Allows inserting the realm within the `user` value."""
+
+        if "@" in self._user:
+            user_id = self._user
+        else:
+            user_id = f"{self._user}@{self._realm}"
 
         self._proxmox = ProxmoxAPI(
             self._host,
             port=self._port,
-            user=f"{self._user}@{self._realm}",
+            user=user_id,
             password=self._password,
             verify_ssl=self._verify_ssl,
         )
 
-        self._connection_start_time = time.monotonic()
-
     def get_api_client(self):
-        """Return the ProxmoxAPI client and rebuild it if necessary."""
-
-        connection_age = time.monotonic() - self._connection_start_time
-
-        # Workaround for the Proxmoxer bug where the connection stops working after some time
-        if connection_age > 30 * 60:
-            self.build_client()
-
+        """Return the ProxmoxAPI client."""
         return self._proxmox

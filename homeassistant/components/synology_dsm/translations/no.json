@@ -20,7 +20,6 @@
             },
             "link": {
                 "data": {
-                    "api_version": "DSM-versjon",
                     "password": "Passord",
                     "port": "Port (valgfritt)",
                     "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
@@ -31,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM-versjon",
                     "host": "Vert",
                     "password": "Passord",
                     "port": "Port (valgfritt)",

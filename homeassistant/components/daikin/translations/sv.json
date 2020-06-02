@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten \u00e4r redan konfigurerad",
-            "device_fail": "Ov\u00e4ntat fel vid skapande av enhet.",
-            "device_timeout": "Timeout f\u00f6r anslutning till enheten."
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
         },
         "step": {
             "user": {

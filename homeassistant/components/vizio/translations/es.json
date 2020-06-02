@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Esta entrada ya ha sido configurada.",
+            "already_configured_device": "El dispositivo ya est\u00e1 configurado",
             "updated_entry": "Esta entrada ya ha sido configurada pero el nombre y/o las opciones definidas en la configuraci\u00f3n no coinciden con la configuraci\u00f3n previamente importada, por lo que la entrada de la configuraci\u00f3n ha sido actualizada en consecuencia."
         },
         "error": {
-            "cant_connect": "Error al conectar",
-            "complete_pairing failed": "No se pudo completar el emparejamiento. Aseg\u00farate de que el PIN que has proporcionado es correcto y que el televisor sigue encendido y conectado a la red antes de volver a enviarlo.",
+            "cannot_connect": "No se pudo conectar",
             "complete_pairing_failed": "No se pudo completar el emparejamiento. Aseg\u00farate de que el PIN que has proporcionado es correcto y que el televisor sigue encendido y conectado a la red antes de volver a enviarlo.",
             "host_exists": "El host ya est\u00e1 configurado.",
             "name_exists": "Nombre ya configurado."

@@ -16,8 +16,7 @@
                     "password": "Passwuert",
                     "username": "Benotzernumm"
                 },
-                "description": "Soll {name} konfigur\u00e9iert ginn?",
-                "title": "AVM FRITZ!Box"
+                "description": "Soll {name} konfigur\u00e9iert ginn?"
             },
             "user": {
                 "data": {
@@ -25,8 +24,7 @@
                     "password": "Passwuert",
                     "username": "Benotzernumm"
                 },
-                "description": "F\u00ebll d\u00e9ng AVM FRITZ!Box Informatiounen aus.",
-                "title": "AVM FRITZ!Box"
+                "description": "F\u00ebll d\u00e9ng AVM FRITZ!Box Informatiounen aus."
             }
         }
     }

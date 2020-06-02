@@ -14,7 +14,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_HIDDEN,
     ATTR_NAME,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SCRIPT_STARTED,
@@ -304,45 +303,6 @@ class TestComponentLogbook(unittest.TestCase):
         self.assert_entry(
             entries[1], pointB, "blu", domain="sensor", entity_id=entity_id2
         )
-
-    def test_exclude_automation_events(self):
-        """Test if automation entries can be excluded by entity_id."""
-        name = "My Automation Rule"
-        domain = "automation"
-        entity_id = "automation.my_automation_rule"
-        entity_id2 = "automation.my_automation_rule_2"
-        entity_id2 = "sensor.blu"
-
-        eventA = ha.Event(
-            logbook.EVENT_AUTOMATION_TRIGGERED,
-            {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id},
-        )
-        eventB = ha.Event(
-            logbook.EVENT_AUTOMATION_TRIGGERED,
-            {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id2},
-        )
-
-        config = logbook.CONFIG_SCHEMA(
-            {
-                ha.DOMAIN: {},
-                logbook.DOMAIN: {
-                    logbook.CONF_EXCLUDE: {logbook.CONF_ENTITIES: [entity_id]}
-                },
-            }
-        )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
-        events = [
-            e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
-            if logbook._keep_event(self.hass, e, entities_filter)
-        ]
-        entries = list(logbook.humanify(self.hass, events))
-
-        assert len(entries) == 2
-        self.assert_entry(
-            entries[0], name="Home Assistant", message="stopped", domain=ha.DOMAIN
-        )
-        self.assert_entry(entries[1], name=name, domain=domain, entity_id=entity_id2)
 
     def test_exclude_script_events(self):
         """Test if script start can be excluded by entity_id."""
@@ -1333,35 +1293,6 @@ async def test_logbook_view_period_entity(hass, hass_client):
     json = await response.json()
     assert len(json) == 1
     assert json[0]["entity_id"] == entity_id_test
-
-
-async def test_humanify_automation_triggered_event(hass):
-    """Test humanifying Automation Trigger event."""
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                ha.Event(
-                    EVENT_AUTOMATION_TRIGGERED,
-                    {ATTR_ENTITY_ID: "automation.hello", ATTR_NAME: "Hello Automation"},
-                ),
-                ha.Event(
-                    EVENT_AUTOMATION_TRIGGERED,
-                    {ATTR_ENTITY_ID: "automation.bye", ATTR_NAME: "Bye Automation"},
-                ),
-            ],
-        )
-    )
-
-    assert event1["name"] == "Hello Automation"
-    assert event1["domain"] == "automation"
-    assert event1["message"] == "has been triggered"
-    assert event1["entity_id"] == "automation.hello"
-
-    assert event2["name"] == "Bye Automation"
-    assert event2["domain"] == "automation"
-    assert event2["message"] == "has been triggered"
-    assert event2["entity_id"] == "automation.bye"
 
 
 async def test_humanify_script_started_event(hass):

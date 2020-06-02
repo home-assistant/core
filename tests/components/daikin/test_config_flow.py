@@ -6,8 +6,13 @@ from aiohttp import ClientError
 from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
-from homeassistant.components.daikin.const import KEY_IP, KEY_MAC
-from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
+from homeassistant.components.daikin.const import KEY_HOSTNAME, KEY_IP, KEY_MAC
+from homeassistant.config_entries import (
+    SOURCE_DISCOVERY,
+    SOURCE_IMPORT,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -104,9 +109,17 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
 
 
 @pytest.mark.parametrize(
-    "source, data, unique_id", [(SOURCE_DISCOVERY, {KEY_IP: HOST, KEY_MAC: MAC}, MAC)],
+    "source, data, unique_id",
+    [
+        (SOURCE_DISCOVERY, {KEY_IP: HOST, KEY_MAC: MAC}, MAC),
+        (
+            SOURCE_ZEROCONF,
+            {CONF_HOST: HOST, KEY_HOSTNAME: "DaikinUNIQE.local"},
+            "DaikinUNIQE.local",
+        ),
+    ],
 )
-async def test_discovery(hass, mock_daikin, source, data, unique_id):
+async def test_discovery_zeroconf(hass, mock_daikin, source, data, unique_id):
     """Test discovery/zeroconf step."""
     result = await hass.config_entries.flow.async_init(
         "daikin", context={"source": source}, data=data,

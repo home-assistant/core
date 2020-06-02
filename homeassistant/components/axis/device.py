@@ -4,9 +4,14 @@ import asyncio
 
 import async_timeout
 import axis
+from axis.configuration import Configuration
 from axis.event_stream import OPERATION_INITIALIZED
-from axis.streammanager import SIGNAL_PLAYING
+from axis.mqtt import mqtt_json_to_event
+from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 
+from homeassistant.components import mqtt
+from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
+from homeassistant.components.mqtt.models import Message
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -15,17 +20,20 @@ from homeassistant.const import (
     CONF_TRIGGER_TIME,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.setup import async_when_setup
 
 from .const import (
     ATTR_MANUFACTURER,
     CONF_CAMERA,
     CONF_EVENTS,
     CONF_MODEL,
+    CONF_STREAM_PROFILE,
     DEFAULT_EVENTS,
+    DEFAULT_STREAM_PROFILE,
     DEFAULT_TRIGGER_TIME,
     DOMAIN as AXIS_DOMAIN,
     LOGGER,
@@ -81,6 +89,13 @@ class AxisNetworkDevice:
         return self.config_entry.options.get(CONF_EVENTS, DEFAULT_EVENTS)
 
     @property
+    def option_stream_profile(self):
+        """Config entry option defining what stream profile camera platform should use."""
+        return self.config_entry.options.get(
+            CONF_STREAM_PROFILE, DEFAULT_STREAM_PROFILE
+        )
+
+    @property
     def option_trigger_time(self):
         """Config entry option defining minimum number of seconds to keep trigger high."""
         return self.config_entry.options.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME)
@@ -122,6 +137,7 @@ class AxisNetworkDevice:
     async def async_new_address_callback(hass, entry):
         """Handle signals of device getting new address.
 
+        Called when config entry is updated.
         This is a static method because a class method (bound method),
         can not be used with weak references.
         """
@@ -142,6 +158,25 @@ class AxisNetworkDevice:
             sw_version=self.fw_version,
         )
 
+    async def use_mqtt(self, hass: HomeAssistant, component: str) -> None:
+        """Set up to use MQTT."""
+        status = await hass.async_add_executor_job(
+            self.api.vapix.mqtt.get_client_status
+        )
+
+        if status.get("data", {}).get("status", {}).get("state") == "active":
+            self.listeners.append(
+                await mqtt.async_subscribe(hass, f"{self.serial}/#", self.mqtt_message)
+            )
+
+    @callback
+    def mqtt_message(self, message: Message) -> None:
+        """Receive Axis MQTT message."""
+        self.disconnect_from_stream()
+
+        event = mqtt_json_to_event(message.payload)
+        self.api.event.process_event(event)
+
     async def async_setup(self):
         """Set up the device."""
         try:
@@ -160,8 +195,8 @@ class AxisNetworkDevice:
             LOGGER.error("Unknown error connecting with Axis device on %s", self.host)
             return False
 
-        self.fw_version = self.api.vapix.params.firmware_version
-        self.product_type = self.api.vapix.params.prodtype
+        self.fw_version = self.api.vapix.firmware_version
+        self.product_type = self.api.vapix.product_type
 
         async def start_platforms():
             await asyncio.gather(
@@ -173,11 +208,14 @@ class AxisNetworkDevice:
                 ]
             )
             if self.option_events:
-                self.api.stream.connection_status_callback = (
+                self.api.stream.connection_status_callback.append(
                     self.async_connection_status_callback
                 )
                 self.api.enable_events(event_callback=self.async_event_callback)
-                self.api.start()
+                self.api.stream.start()
+
+                if self.api.vapix.mqtt:
+                    async_when_setup(self.hass, MQTT_DOMAIN, self.use_mqtt)
 
         self.hass.async_create_task(start_platforms())
 
@@ -186,13 +224,22 @@ class AxisNetworkDevice:
         return True
 
     @callback
+    def disconnect_from_stream(self):
+        """Stop stream."""
+        if self.api.stream.state != STATE_STOPPED:
+            self.api.stream.connection_status_callback.remove(
+                self.async_connection_status_callback
+            )
+            self.api.stream.stop()
+
+    @callback
     def shutdown(self, event):
         """Stop the event stream."""
-        self.api.stop()
+        self.disconnect_from_stream()
 
     async def async_reset(self):
         """Reset this device to default state."""
-        self.api.stop()
+        self.disconnect_from_stream()
 
         unload_ok = all(
             await asyncio.gather(
@@ -217,20 +264,12 @@ async def get_device(hass, host, port, username, password):
     """Create a Axis device."""
 
     device = axis.AxisDevice(
-        host=host, port=port, username=username, password=password, web_proto="http",
+        Configuration(host, port=port, username=username, password=password)
     )
-
-    device.vapix.initialize_params(preload_data=False)
-    device.vapix.initialize_ports()
 
     try:
         with async_timeout.timeout(15):
-
-            await asyncio.gather(
-                hass.async_add_executor_job(device.vapix.params.update_brand),
-                hass.async_add_executor_job(device.vapix.params.update_properties),
-                hass.async_add_executor_job(device.vapix.ports.update),
-            )
+            await hass.async_add_executor_job(device.vapix.initialize)
 
         return device
 

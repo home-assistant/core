@@ -50,6 +50,7 @@ async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
     assert await async_setup_component(
         hass, fan.DOMAIN, {fan.DOMAIN: {"platform": "mqtt", "name": "test"}}
     )
+    await hass.async_block_till_done()
     assert hass.states.get("fan.test") is None
 
 
@@ -79,6 +80,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
     assert state.state is STATE_OFF
@@ -141,6 +143,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
     assert state.state is STATE_OFF
@@ -207,6 +210,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
     assert state.state is STATE_OFF
@@ -300,6 +304,7 @@ async def test_on_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
     assert state.state is STATE_OFF
@@ -352,6 +357,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
     assert state.state is STATE_OFF
@@ -450,6 +456,7 @@ async def test_attributes(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
     assert state.state is STATE_OFF
@@ -537,6 +544,7 @@ async def test_custom_speed_list(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
     assert state.state is STATE_OFF
@@ -577,6 +585,7 @@ async def test_supported_features(hass, mqtt_mock):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("fan.test1")
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0

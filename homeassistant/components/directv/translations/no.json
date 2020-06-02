@@ -10,14 +10,12 @@
         "flow_title": "",
         "step": {
             "ssdp_confirm": {
-                "description": "Vil du sette opp {name} ?",
-                "title": "Koble til DirecTV-mottakeren"
+                "description": "Vil du sette opp {name} ?"
             },
             "user": {
                 "data": {
                     "host": "Vert eller IP-adresse"
-                },
-                "title": "Koble til DirecTV-mottakeren"
+                }
             }
         }
     }

@@ -1,14 +1,12 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
-            "unknown": "Nieoczekiwany b\u0142\u0105d."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie."
         },
         "step": {
             "user": {
                 "data": {
                     "blid": "BLID",
-                    "certificate": "Certyfikat",
                     "continuous": "Ci\u0105g\u0142y",
                     "delay": "Op\u00f3\u017anienie",
                     "host": "Nazwa hosta lub adres IP",

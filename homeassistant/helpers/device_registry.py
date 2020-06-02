@@ -399,17 +399,25 @@ def async_cleanup(
     ent_reg: "entity_registry.EntityRegistry",
 ) -> None:
     """Clean up device registry."""
-    # Find all devices that are no longer referenced in the entity registry.
-    referenced = {entry.device_id for entry in ent_reg.entities.values()}
-    orphan = set(dev_reg.devices) - referenced
+    # Find all devices that are referenced by a config_entry.
+    config_entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries()}
+    references_config_entries = {
+        device.id
+        for device in dev_reg.devices.values()
+        for config_entry_id in device.config_entries
+        if config_entry_id in config_entry_ids
+    }
+
+    # Find all devices that are referenced in the entity registry.
+    references_entities = {entry.device_id for entry in ent_reg.entities.values()}
+
+    orphan = set(dev_reg.devices) - references_entities - references_config_entries
 
     for dev_id in orphan:
         dev_reg.async_remove_device(dev_id)
 
     # Find all referenced config entries that no longer exist
     # This shouldn't happen but have not been able to track down the bug :(
-    config_entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries()}
-
     for device in list(dev_reg.devices.values()):
         for config_entry_id in device.config_entries:
             if config_entry_id not in config_entry_ids:

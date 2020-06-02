@@ -23,8 +23,7 @@
                     "host": "Adre\u00e7a IP",
                     "port": "Port"
                 },
-                "description": "Introdueix la informaci\u00f3 d'amfitri\u00f3 del panell Konnected.",
-                "title": "Descoberta de dispositiu Konnected"
+                "description": "Introdueix la informaci\u00f3 d'amfitri\u00f3 del panell Konnected."
             }
         }
     },

@@ -1,12 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Dieser Eintrag wurde bereits eingerichtet.",
             "updated_entry": "Dieser Eintrag wurde bereits eingerichtet, aber der Name, die Apps und / oder die in der Konfiguration definierten Optionen stimmen nicht mit der zuvor importierten Konfiguration \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
         },
         "error": {
-            "cant_connect": "Es konnte keine Verbindung zum Ger\u00e4t hergestellt werden. [\u00dcberpr\u00fcfen Sie die Dokumentation] (https://www.home-assistant.io/integrations/vizio/) und \u00fcberpr\u00fcfen Sie Folgendes erneut:\n- Das Ger\u00e4t ist eingeschaltet\n- Das Ger\u00e4t ist mit dem Netzwerk verbunden\n- Die von Ihnen eingegebenen Werte sind korrekt\nbevor sie versuchen, erneut zu \u00fcbermitteln.",
-            "complete_pairing failed": "Das Pairing kann nicht abgeschlossen werden. Stellen Sie sicher, dass die von Ihnen angegebene PIN korrekt ist und das Fernsehger\u00e4t weiterhin mit Strom versorgt und mit dem Netzwerk verbunden ist, bevor Sie es erneut versuchen.",
             "host_exists": "VIZIO-Ger\u00e4t mit angegebenem Host bereits konfiguriert.",
             "name_exists": "VIZIO-Ger\u00e4t mit angegebenem Namen bereits konfiguriert."
         },

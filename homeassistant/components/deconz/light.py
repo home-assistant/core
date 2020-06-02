@@ -131,6 +131,16 @@ class DeconzLight(DeconzDevice, LightEntity):
         return None
 
     @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._device.ctmax or super().max_mireds
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._device.ctmin or super().min_mireds
+
+    @property
     def is_on(self):
         """Return true if light is on."""
         return self._device.state
@@ -176,6 +186,9 @@ class DeconzLight(DeconzDevice, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn off light."""
+        if not self._device.state:
+            return
+
         data = {"on": False}
 
         if ATTR_TRANSITION in kwargs:

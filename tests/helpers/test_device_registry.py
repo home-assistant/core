@@ -539,7 +539,7 @@ async def test_cleanup_device_registry(hass, registry):
     device_registry.async_cleanup(hass, registry, ent_reg)
 
     assert registry.async_get_device({("hue", "d1")}, set()) is not None
-    assert registry.async_get_device({("hue", "d2")}, set()) is None
+    assert registry.async_get_device({("hue", "d2")}, set()) is not None
     assert registry.async_get_device({("hue", "d3")}, set()) is not None
     assert registry.async_get_device({("something", "d4")}, set()) is None
 
