@@ -68,11 +68,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     url = config[CONF_URL]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-<<<<<<< HEAD
-    period = config[CONF_PERIOD]
-=======
     days = config[CONF_DAYS]
->>>>>>> 43641c6627cc815aba4e679781da5ff99721adc9
 
     client = caldav.DAVClient(
         url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
