@@ -2,12 +2,14 @@
 import logging
 from urllib.parse import urlparse
 
+from arcam.fmj.client import Client, ConnectionFailed
 from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_UDN
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
@@ -31,7 +33,15 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured({CONF_HOST: host, CONF_PORT: port})
 
-    def _async_create_standard_entry(self, host, port):
+    async def _async_check_and_create(self, host, port):
+        client = Client(host, port)
+        try:
+            await client.start()
+        except ConnectionFailed:
+            raise AbortFlow("unable_to_connect")
+        finally:
+            await client.stop()
+
         return self.async_create_entry(
             title=f"{DEFAULT_NAME} ({host})", data={CONF_HOST: host, CONF_PORT: port},
         )
@@ -49,7 +59,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
                     user_info[CONF_HOST], user_info[CONF_PORT], uuid
                 )
 
-            return self._async_create_standard_entry(
+            return await self._async_check_and_create(
                 user_info[CONF_HOST], user_info[CONF_PORT]
             )
 
@@ -71,7 +81,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         context["title_placeholders"] = placeholders
 
         if user_input is not None:
-            return self._async_create_standard_entry(
+            return await self._async_check_and_create(
                 context[CONF_HOST], context[CONF_PORT]
             )
 
