@@ -466,11 +466,19 @@ class TestTemplateLight:
                     "lights": {
                         "test_template_light": {
                             "value_template": "{{1 == 1}}",
-                            "turn_on": {
-                                "service": "light.turn_on",
-                                "entity_id": "light.test_state",
-                                "data": {"white_value": "{{white_value}}"},
-                            },
+                            "turn_on": [
+                                {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                {
+                                    "service": "test.automation",
+                                    "data_template": {
+                                        "entity_id": "test.test_state",
+                                        "white_value": "{{white_value}}",
+                                    },
+                                },
+                            ],
                             "turn_off": {
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
@@ -557,11 +565,19 @@ class TestTemplateLight:
                     "lights": {
                         "test_template_light": {
                             "value_template": "{{1 == 1}}",
-                            "turn_on": {
-                                "service": "light.turn_on",
-                                "entity_id": "light.test_state",
-                                "data": {"brightness": "{{brightness}}"},
-                            },
+                            "turn_on": [
+                                {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                {
+                                    "service": "test.automation",
+                                    "data_template": {
+                                        "entity_id": "test.test_state",
+                                        "brightness": "{{brightness}}",
+                                    },
+                                },
+                            ],
                             "turn_off": {
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
@@ -695,11 +711,19 @@ class TestTemplateLight:
                     "lights": {
                         "test_template_light": {
                             "value_template": "{{1 == 1}}",
-                            "turn_on": {
-                                "service": "light.turn_on",
-                                "entity_id": "light.test_state",
-                                "data": {"color_temp": "{{color_temp}}"},
-                            },
+                            "turn_on": [
+                                {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                {
+                                    "service": "test.automation",
+                                    "data_template": {
+                                        "entity_id": "test.test_state",
+                                        "color_temp": "{{color_temp}}",
+                                    },
+                                },
+                            ],
                             "turn_off": {
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
@@ -868,11 +892,28 @@ class TestTemplateLight:
                     "lights": {
                         "test_template_light": {
                             "value_template": "{{1 == 1}}",
-                            "turn_on": {
-                                "service": "light.turn_on",
-                                "entity_id": "light.test_state",
-                                "data": {"hs_color": ["{{h}}", "{{s}}"]},
-                            },
+                            "turn_on": [
+                                {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                {
+                                    "service": "test.automation",
+                                    "data_template": {
+                                        "entity_id": "test.test_state",
+                                        "h": "{{h}}",
+                                        "s": "{{s}}",
+                                    },
+                                },
+                                {
+                                    "service": "test.automation",
+                                    "data_template": {
+                                        "entity_id": "test.test_state",
+                                        "s": "{{s}}",
+                                        "h": "{{h}}",
+                                    },
+                                },
+                            ],
                             "turn_off": {
                                 "service": "light.turn_off",
                                 "entity_id": "light.test_state",
