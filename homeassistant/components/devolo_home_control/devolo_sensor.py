@@ -31,13 +31,15 @@ class DevoloDeviceEntity(Entity):
             self._state_attrs = {ATTR_BATTERY_LEVEL: self._device_instance.batteryLevel}
 
         self.subscriber = None
-        self.sync = sync
+        self.sync_callback = sync
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        self.subscriber = Subscriber(self._device_instance.itemName, callback=self.sync)
+        self.subscriber = Subscriber(
+            self._device_instance.itemName, callback=self.sync_callback
+        )
         self._homecontrol.publisher.register(
-            self._device_instance.uid, self.subscriber, self.sync
+            self._device_instance.uid, self.subscriber, self.sync_callback
         )
 
     @property
