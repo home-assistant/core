@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -124,7 +125,7 @@ class SystemMonitorSensor(Entity):
     def __init__(self, sensor_type, argument=""):
         """Initialize the sensor."""
         self._name = "{} {}".format(SENSOR_TYPES[sensor_type][0], argument)
-        self.entity_id = ENTITY_ID_FORMAT.format(sensor_type)
+        self.entity_id = ENTITY_ID_FORMAT.format(slugify(sensor_type + "_" + argument))
         self.argument = argument
         self.type = sensor_type
         self._state = None
