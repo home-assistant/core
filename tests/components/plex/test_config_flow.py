@@ -576,6 +576,8 @@ async def test_manual_config(hass):
         config_flow.DOMAIN, context={"source": "user"}
     )
 
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
     assert result["data_schema"] is None
     hass.config_entries.flow.async_abort(result["flow_id"])
 
@@ -588,9 +590,10 @@ async def test_manual_config(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user_advanced"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"setup_method": AUTOMATIC_SETUP_STRING}
-    )
+    with patch("plexauth.PlexAuth.initiate_auth"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"setup_method": AUTOMATIC_SETUP_STRING}
+        )
 
     assert result["type"] == "external"
     hass.config_entries.flow.async_abort(result["flow_id"])
