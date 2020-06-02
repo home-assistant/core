@@ -250,27 +250,57 @@ async def test_deleted_device_removing_config_entries(hass, registry, update_eve
         manufacturer="manufacturer",
         model="model",
     )
+    entry2 = registry.async_get_or_create(
+        config_entry_id="456",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry3 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
+        identifiers={("bridgeid", "4567")},
+        manufacturer="manufacturer",
+        model="model",
+    )
 
-    assert len(registry.devices) == 1
+    assert len(registry.devices) == 2
     assert len(registry.deleted_devices) == 0
+    assert entry.id == entry2.id
+    assert entry.id != entry3.id
+    assert entry2.config_entries == {"123", "456"}
 
     registry.async_remove_device(entry.id)
+    registry.async_remove_device(entry3.id)
 
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 2
+
+    await hass.async_block_till_done()
+    assert len(update_events) == 5
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry2.id
+    assert update_events[2]["action"] == "create"
+    assert update_events[2]["device_id"] == entry3.id
+    assert update_events[3]["action"] == "remove"
+    assert update_events[3]["device_id"] == entry.id
+    assert update_events[4]["action"] == "remove"
+    assert update_events[4]["device_id"] == entry3.id
+
+    registry.async_clear_config_entry("123")
     assert len(registry.devices) == 0
     assert len(registry.deleted_devices) == 1
 
-    await hass.async_block_till_done()
-    assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[1]["action"] == "remove"
-
-    registry.async_clear_config_entry("123")
+    registry.async_clear_config_entry("456")
     assert len(registry.devices) == 0
     assert len(registry.deleted_devices) == 0
 
     # No event when a deleted device is purged
     await hass.async_block_till_done()
-    assert len(update_events) == 2
+    assert len(update_events) == 5
 
     # Re-add, expect new device id
     entry2 = registry.async_get_or_create(

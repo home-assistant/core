@@ -38,8 +38,8 @@ class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
     config_entries: Set[str] = attr.ib()
-    connections: List[Tuple[str, str]] = attr.ib()
-    identifiers: List[Tuple[str, str]] = attr.ib()
+    connections: Set[Tuple[str, str]] = attr.ib()
+    identifiers: Set[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
 
     def to_device_entry(self):
@@ -184,7 +184,6 @@ class DeviceRegistry:
             via_device_id = _UNDEF
 
         return self._async_update_device(
-            self.devices,
             device.id,
             add_config_entry_id=config_entry_id,
             via_device_id=via_device_id,
@@ -214,7 +213,6 @@ class DeviceRegistry:
     ):
         """Update properties of a device."""
         return self._async_update_device(
-            self.devices,
             device_id,
             area_id=area_id,
             manufacturer=manufacturer,
@@ -230,7 +228,6 @@ class DeviceRegistry:
     @callback
     def _async_update_device(
         self,
-        device_dict,
         device_id,
         *,
         add_config_entry_id=_UNDEF,
@@ -248,7 +245,7 @@ class DeviceRegistry:
         name_by_user=_UNDEF,
     ):
         """Update device attributes."""
-        old = device_dict[device_id]
+        old = self.devices[device_id]
 
         changes = {}
 
@@ -265,10 +262,7 @@ class DeviceRegistry:
             and remove_config_entry_id in config_entries
         ):
             if config_entries == {remove_config_entry_id}:
-                if device_dict == self.devices:
-                    self.async_remove_device(device_id)
-                else:
-                    self.async_purge_deleted_device(device_id)
+                self.async_remove_device(device_id)
                 return
 
             config_entries = config_entries - {remove_config_entry_id}
@@ -311,7 +305,7 @@ class DeviceRegistry:
         if not changes:
             return old
 
-        new = device_dict[device_id] = attr.evolve(old, **changes)
+        new = self.devices[device_id] = attr.evolve(old, **changes)
         self.async_schedule_save()
 
         self.hass.bus.async_fire(
@@ -329,20 +323,14 @@ class DeviceRegistry:
         """Remove a device from the device registry."""
         device = self.devices.pop(device_id)
         self.deleted_devices[device_id] = DeletedDeviceEntry(
-            config_entries=set(device.config_entries),
-            connections=list(device.connections),
-            identifiers=list(device.identifiers),
+            config_entries=device.config_entries,
+            connections=device.connections,
+            identifiers=device.identifiers,
             id=device.id,
         )
         self.hass.bus.async_fire(
             EVENT_DEVICE_REGISTRY_UPDATED, {"action": "remove", "device_id": device_id}
         )
-        self.async_schedule_save()
-
-    @callback
-    def async_purge_deleted_device(self, device_id: str) -> None:
-        """Permanently remove a device from the device registry."""
-        del self.deleted_devices[device_id]
         self.async_schedule_save()
 
     async def async_load(self):
@@ -377,14 +365,13 @@ class DeviceRegistry:
                     name_by_user=device.get("name_by_user"),
                 )
             # Introduced in 0.111
-            if "deleted_devices" in data:
-                for device in data["deleted_devices"]:
-                    deleted_devices[device["id"]] = DeletedDeviceEntry(
-                        config_entries=set(device["config_entries"]),
-                        connections=list(tuple(conn) for conn in device["connections"]),
-                        identifiers=list(tuple(iden) for iden in device["identifiers"]),
-                        id=device["id"],
-                    )
+            for device in data.get("deleted_devices", []):
+                deleted_devices[device["id"]] = DeletedDeviceEntry(
+                    config_entries=set(device["config_entries"]),
+                    connections=list(tuple(conn) for conn in device["connections"]),
+                    identifiers=list(tuple(iden) for iden in device["identifiers"]),
+                    id=device["id"],
+                )
 
         self.devices = devices
         self.deleted_devices = deleted_devices
@@ -432,22 +419,26 @@ class DeviceRegistry:
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
         for device in list(self.devices.values()):
-            self._async_update_device(
-                self.devices, device.id, remove_config_entry_id=config_entry_id
-            )
+            self._async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
-            self._async_update_device(
-                self.deleted_devices,
-                deleted_device.id,
-                remove_config_entry_id=config_entry_id,
-            )
+            config_entries = deleted_device.config_entries
+            if config_entry_id in config_entries:
+                if config_entries == {config_entry_id}:
+                    # Permanently remove the device from the device registry.
+                    del self.deleted_devices[deleted_device.id]
+                    self.async_schedule_save()
+                else:
+                    config_entries = config_entries - {config_entry_id}
+                    self.deleted_devices[deleted_device.id] = attr.evolve(
+                        deleted_device, config_entries=config_entries
+                    )
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
         """Clear area id from registry entries."""
         for dev_id, device in self.devices.items():
             if area_id == device.area_id:
-                self._async_update_device(self.devices, dev_id, area_id=None)
+                self._async_update_device(dev_id, area_id=None)
 
 
 @singleton(DATA_REGISTRY)
