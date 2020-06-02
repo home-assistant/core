@@ -160,13 +160,6 @@ async def test_loading_from_storage(hass, hass_storage):
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "id": "bcdefghijklmn",
                     "identifiers": [["serial", "34:56:AB:CD:EF:12"]],
-                    "manufacturer": "manufacturer",
-                    "model": "model",
-                    "name": "name",
-                    "sw_version": "version",
-                    "entry_type": "service",
-                    "area_id": "12345A",
-                    "name_by_user": "Test Friendly Name",
                 }
             ],
         },
@@ -188,6 +181,20 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.name_by_user == "Test Friendly Name"
     assert entry.entry_type == "service"
     assert isinstance(entry.config_entries, set)
+    assert isinstance(entry.connections, set)
+    assert isinstance(entry.identifiers, set)
+
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={("Zigbee", "23.45.67.89.01")},
+        identifiers={("serial", "34:56:AB:CD:EF:12")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry.id == "bcdefghijklmn"
+    assert isinstance(entry.config_entries, set)
+    assert isinstance(entry.connections, set)
+    assert isinstance(entry.identifiers, set)
 
 
 async def test_removing_config_entries(hass, registry, update_events):

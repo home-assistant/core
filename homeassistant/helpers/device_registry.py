@@ -368,8 +368,8 @@ class DeviceRegistry:
             for device in data.get("deleted_devices", []):
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    connections=list(tuple(conn) for conn in device["connections"]),
-                    identifiers=list(tuple(iden) for iden in device["identifiers"]),
+                    connections={tuple(conn) for conn in device["connections"]},
+                    identifiers={tuple(iden) for iden in device["identifiers"]},
                     id=device["id"],
                 )
 
@@ -422,16 +422,17 @@ class DeviceRegistry:
             self._async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
             config_entries = deleted_device.config_entries
-            if config_entry_id in config_entries:
-                if config_entries == {config_entry_id}:
-                    # Permanently remove the device from the device registry.
-                    del self.deleted_devices[deleted_device.id]
-                    self.async_schedule_save()
-                else:
-                    config_entries = config_entries - {config_entry_id}
-                    self.deleted_devices[deleted_device.id] = attr.evolve(
-                        deleted_device, config_entries=config_entries
-                    )
+            if config_entry_id not in config_entries:
+                continue
+            if config_entries == {config_entry_id}:
+                # Permanently remove the device from the device registry.
+                del self.deleted_devices[deleted_device.id]
+                self.async_schedule_save()
+            else:
+                config_entries = config_entries - {config_entry_id}
+                self.deleted_devices[deleted_device.id] = attr.evolve(
+                    deleted_device, config_entries=config_entries
+                )
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
