@@ -123,10 +123,8 @@ class Touchline(ClimateEntity):
 
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
-        mode = self.map_mode_hass_touchline(preset_mode)
-        program = self.map_program_hass_touchline(preset_mode)
-        self.unit.set_operation_mode(mode)
-        self.unit.set_week_program(program)
+        self.unit.set_operation_mode(PRESET_MODES[preset_mode]["mode"])
+        self.unit.set_week_program(PRESET_MODES[preset_mode]["program"])
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
@@ -137,16 +135,6 @@ class Touchline(ClimateEntity):
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         self.unit.set_target_temperature(self._target_temperature)
-
-    @staticmethod
-    def map_mode_hass_touchline(preset_mode):
-        """Map Home Assistant Preset Modes to Touchline Operation Modes."""
-        return PRESET_MODES[preset_mode]["mode"]
-
-    @staticmethod
-    def map_program_hass_touchline(preset_mode):
-        """Map Home Assistant Preset Modes to Touchline Program Modes."""
-        return PRESET_MODES[preset_mode]["program"]
 
     @staticmethod
     def map_mode_touchline_hass(operation_mode, week_program):
