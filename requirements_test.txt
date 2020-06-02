@@ -16,6 +16,6 @@ pytest-aiohttp==0.3.0
 pytest-cov==2.8.1
 pytest-sugar==0.9.3
 pytest-timeout==1.3.4
-pytest==5.4.2
+pytest==5.4.3
 requests_mock==1.8.0
 responses==0.10.6
