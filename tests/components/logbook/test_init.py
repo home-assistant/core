@@ -42,7 +42,8 @@ class TestComponentLogbook(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)  # Force an in memory DB
-        assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
+        with patch("homeassistant.components.http.start_http_server_and_save_config"):
+            assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
 
     def tearDown(self):
         """Stop everything that was started."""
