@@ -51,8 +51,7 @@ class PwSwitch(SmileGateway, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         try:
-            state_on = await self._api.set_relay_state(self._dev_id, "on")
-            if state_on:
+            if await self._api.set_relay_state(self._dev_id, "on"):
                 self._is_on = True
                 self.async_write_ha_state()
         except Smile.PlugwiseError:
