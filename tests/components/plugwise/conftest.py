@@ -1,4 +1,4 @@
-"""Tests for the tado integration."""
+"""Setup mocks for the Plugwise integration tests."""
 
 import os
 import pickle

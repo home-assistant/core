@@ -1,4 +1,4 @@
-"""Tests for the tado integration."""
+"""Common initialisation for the Plugwise integration."""
 
 from homeassistant.components.plugwise import DOMAIN
 from homeassistant.core import HomeAssistant
