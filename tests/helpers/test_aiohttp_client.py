@@ -27,6 +27,7 @@ def camera_client_fixture(hass, hass_client):
             },
         )
     )
+    hass.loop.run_until_complete(hass.async_block_till_done())
 
     yield hass.loop.run_until_complete(hass_client())
 
