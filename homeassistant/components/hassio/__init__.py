@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
@@ -122,6 +123,21 @@ MAP_SERVICE_API = {
         True,
     ),
 }
+
+
+@bind_hass
+async def async_get_addon_info(hass: HomeAssistantType, addon_id: str) -> dict:
+    """Return add-on info.
+
+    The addon_id is a snakecased concatenation of the 'repository' value
+    found in the add-on info and the 'slug' value found in the add-on config.json.
+    In the add-on info the addon_id is called 'slug'.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    result = await hassio.get_addon_info(addon_id)
+    return result["data"]
 
 
 @callback
