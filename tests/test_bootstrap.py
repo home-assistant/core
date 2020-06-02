@@ -316,6 +316,8 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch(
         "homeassistant.components.frontend.async_setup",
         side_effect=_async_setup_that_blocks_startup,
+    ), patch(
+        "homeassistant.components.http.start_http_server_and_save_config"
     ):
         await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
