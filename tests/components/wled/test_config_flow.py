@@ -1,5 +1,6 @@
 """Tests for the WLED config flow."""
 import aiohttp
+from wled import WLEDConnectionError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.wled import config_flow
@@ -9,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import MagicMock, patch
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -60,9 +61,9 @@ async def test_show_zerconf_form(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-@patch("asyncio.sleep", new=AsyncMock())
+@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
 async def test_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we show user form on WLED connection error."""
     aioclient_mock.get("http://example.com/json/", exc=aiohttp.ClientError)
@@ -78,9 +79,9 @@ async def test_connection_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-@patch("asyncio.sleep", new=AsyncMock())
+@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
 async def test_zeroconf_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow on WLED connection error."""
     aioclient_mock.get("http://192.168.1.123/json/", exc=aiohttp.ClientError)
@@ -95,9 +96,9 @@ async def test_zeroconf_connection_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-@patch("asyncio.sleep", new=AsyncMock())
+@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
 async def test_zeroconf_confirm_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow on WLED connection error."""
     aioclient_mock.get("http://192.168.1.123:80/json/", exc=aiohttp.ClientError)
@@ -116,9 +117,9 @@ async def test_zeroconf_confirm_connection_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-@patch("asyncio.sleep", new=AsyncMock())
+@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
 async def test_zeroconf_no_data(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort if zeroconf provides no data."""
     flow = config_flow.WLEDFlowHandler()
