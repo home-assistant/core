@@ -80,19 +80,16 @@ async def async_setup_cast_internal_discovery(hass, config=None, discovery_info=
     browser = MagicMock(zc={})
 
     with patch(
-        "homeassistant.components.cast.discovery.pychromecast.discovery.CastListener",
-        return_value=listener,
-    ) as cast_listener, patch(
-        "homeassistant.components.cast.discovery.zeroconf.ServiceBrowser",
-        return_value=browser,
-    ):
+        "homeassistant.components.cast.discovery.pychromecast.start_discovery",
+        return_value=(listener, browser),
+    ) as start_discovery:
         add_entities = await async_setup_cast(hass, config, discovery_info)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-        assert cast_listener.call_count == 1
+        assert start_discovery.call_count == 1
 
-        discovery_callback = cast_listener.call_args[0][0]
+        discovery_callback = start_discovery.call_args[0][0]
 
     def discover_chromecast(service_name: str, info: ChromecastInfo) -> None:
         """Discover a chromecast device."""
@@ -120,12 +117,9 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
         "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_service",
         return_value=chromecast,
     ) as get_chromecast, patch(
-        "homeassistant.components.cast.discovery.pychromecast.discovery.CastListener",
-        return_value=listener,
-    ) as cast_listener, patch(
-        "homeassistant.components.cast.discovery.zeroconf.ServiceBrowser",
-        return_value=browser,
-    ):
+        "homeassistant.components.cast.discovery.pychromecast.start_discovery",
+        return_value=(listener, browser),
+    ) as start_discovery:
         await async_setup_component(
             hass,
             "media_player",
@@ -134,7 +128,7 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
 
         await hass.async_block_till_done()
 
-        discovery_callback = cast_listener.call_args[0][0]
+        discovery_callback = start_discovery.call_args[0][0]
 
         def discover_chromecast(service_name: str, info: ChromecastInfo) -> None:
             """Discover a chromecast device."""
@@ -159,17 +153,15 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
 async def test_start_discovery_called_once(hass):
     """Test pychromecast.start_discovery called exactly once."""
     with patch(
-        "homeassistant.components.cast.discovery.pychromecast.discovery.CastListener",
-    ) as cast_listener, patch(
-        "homeassistant.components.cast.discovery.zeroconf.ServiceBrowser",
-        return_value=Mock(),
-    ):
+        "homeassistant.components.cast.discovery.pychromecast.start_discovery",
+        return_value=(None, Mock()),
+    ) as start_discovery:
         await async_setup_cast(hass)
 
-        assert cast_listener.call_count == 1
+        assert start_discovery.call_count == 1
 
         await async_setup_cast(hass)
-        assert cast_listener.call_count == 1
+        assert start_discovery.call_count == 1
 
 
 async def test_stop_discovery_called_on_stop(hass):
@@ -177,15 +169,13 @@ async def test_stop_discovery_called_on_stop(hass):
     browser = MagicMock(zc={})
 
     with patch(
-        "homeassistant.components.cast.discovery.pychromecast.discovery.CastListener",
-    ) as cast_listener, patch(
-        "homeassistant.components.cast.discovery.zeroconf.ServiceBrowser",
-        return_value=browser,
-    ):
+        "homeassistant.components.cast.discovery.pychromecast.start_discovery",
+        return_value=(None, browser),
+    ) as start_discovery:
         # start_discovery should be called with empty config
         await async_setup_cast(hass, {})
 
-        assert cast_listener.call_count == 1
+        assert start_discovery.call_count == 1
 
     with patch(
         "homeassistant.components.cast.discovery.pychromecast.stop_discovery"
@@ -197,15 +187,13 @@ async def test_stop_discovery_called_on_stop(hass):
         stop_discovery.assert_called_once_with(browser)
 
     with patch(
-        "homeassistant.components.cast.discovery.pychromecast.discovery.CastListener",
-    ) as cast_listener, patch(
-        "homeassistant.components.cast.discovery.zeroconf.ServiceBrowser",
-        return_value=browser,
-    ):
+        "homeassistant.components.cast.discovery.pychromecast.start_discovery",
+        return_value=(None, browser),
+    ) as start_discovery:
         # start_discovery should be called again on re-startup
         await async_setup_cast(hass)
 
-        assert cast_listener.call_count == 1
+        assert start_discovery.call_count == 1
 
 
 async def test_create_cast_device_without_uuid(hass):
