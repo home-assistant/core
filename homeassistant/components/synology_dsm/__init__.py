@@ -469,7 +469,7 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},
-            "name": f"Synology NAS ({self._device_name} {self._device_type})",
+            "name": f"Synology NAS ({self._device_name} - {self._device_type})",
             "manufacturer": self._device_manufacturer,
             "model": self._device_model,
             "sw_version": self._device_firmware,
