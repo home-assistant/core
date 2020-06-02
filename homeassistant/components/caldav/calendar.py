@@ -32,7 +32,7 @@ CONF_CALENDARS = "calendars"
 CONF_CUSTOM_CALENDARS = "custom_calendars"
 CONF_CALENDAR = "calendar"
 CONF_SEARCH = "search"
-CONF_PERIOD = "1"
+CONF_DAYS = "days"
 
 OFFSET = "!!"
 
@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             ],
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_PERIOD, default="1"): cv.string,
+        vol.Optional(CONF_DAYS, default=1): cv.positive_int,
     }
 )
 
@@ -68,7 +68,11 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     url = config[CONF_URL]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+<<<<<<< HEAD
     period = config[CONF_PERIOD]
+=======
+    days = config[CONF_DAYS]
+>>>>>>> 43641c6627cc815aba4e679781da5ff99721adc9
 
     client = caldav.DAVClient(
         url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
@@ -95,7 +99,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEventDevice(
-                    name, calendar, entity_id, period, True, cust_calendar[CONF_SEARCH]
+                    name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH]
                 )
             )
 
@@ -105,7 +109,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
             device_id = calendar.name
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
-                WebDavCalendarEventDevice(name, calendar, entity_id, period)
+                WebDavCalendarEventDevice(name, calendar, entity_id, days)
             )
 
     add_entities(calendar_devices, True)
@@ -114,9 +118,9 @@ def setup_platform(hass, config, add_entities, disc_info=None):
 class WebDavCalendarEventDevice(CalendarEventDevice):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    def __init__(self, name, calendar, entity_id, period, all_day=False, search=None):
+    def __init__(self, name, calendar, entity_id, days, all_day=False, search=None):
         """Create the WebDav Calendar Event Device."""
-        self.data = WebDavCalendarData(calendar, period, all_day, search)
+        self.data = WebDavCalendarData(calendar, days, all_day, search)
         self.entity_id = entity_id
         self._event = None
         self._name = name
@@ -141,9 +145,9 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         """Get all events in a specific time frame."""
         return await self.data.async_get_events(hass, start_date, end_date)
 
-    def update(self, period):
+    def update(self):
         """Update event data."""
-        self.data.update(period)
+        self.data.update()
         event = copy.deepcopy(self.data.event)
         if event is None:
             self._event = event
@@ -156,10 +160,10 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
 class WebDavCalendarData:
     """Class to utilize the calendar dav client object to get next event."""
 
-    def __init__(self, calendar, period, include_all_day, search):
+    def __init__(self, calendar, days, include_all_day, search):
         """Set up how we are going to search the WebDav calendar."""
         self.calendar = calendar
-        self.period = period
+        self.days = days
         self.include_all_day = include_all_day
         self.search = search
         self.event = None
@@ -193,10 +197,10 @@ class WebDavCalendarData:
         return event_list
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, period):
+    def update(self):
         """Get the latest data."""
         start_of_today = dt.start_of_local_day()
-        start_of_tomorrow = dt.start_of_local_day() + timedelta(days=period)
+        start_of_tomorrow = dt.start_of_local_day() + timedelta(days=self.days)
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
