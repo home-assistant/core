@@ -131,7 +131,7 @@ async def async_get_addon_info(hass: HomeAssistantType, addon_id: str) -> dict:
 
     The addon_id is a snakecased concatenation of the 'repository' value
     found in the add-on info and the 'slug' value found in the add-on config.json.
-    In the addon info the addon_id is called 'slug'.
+    In the add-on info the addon_id is called 'slug'.
 
     The caller of the function should handle HassioAPIError.
     """
