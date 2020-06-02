@@ -247,7 +247,7 @@ class SynoApi:
             device_token=self._entry.data.get("device_token"),
         )
 
-        await self._async_should_fetch_api()
+        self._async_setup_api_requests()
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.async_update()
@@ -276,7 +276,8 @@ class SynoApi:
 
         return unsubscribe
 
-    async def _async_should_fetch_api(self):
+    @callback
+    def _async_setup_api_requests(self):
         """Determine if we should fetch each API, if one entity needs it."""
         # Entities not added yet, fetch all
         if not self._fetching_entities:
@@ -323,7 +324,7 @@ class SynoApi:
 
     async def async_update(self, now=None):
         """Update function for updating API information."""
-        await self._async_should_fetch_api()
+        self._async_setup_api_requests()
         await self._hass.async_add_executor_job(self.dsm.update)
         async_dispatcher_send(self._hass, self.signal_sensor_update)
 
