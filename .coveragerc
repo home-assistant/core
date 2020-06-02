@@ -607,6 +607,7 @@ omit =
     homeassistant/components/plugwise/binary_sensor.py
     homeassistant/components/plugwise/climate.py
     homeassistant/components/plugwise/sensor.py
+    homeassistant/components/plugwise/switch.py
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/*
