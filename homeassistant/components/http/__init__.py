@@ -133,7 +133,7 @@ class ApiConfig:
     def base_url(self) -> str:
         """Proxy property to find caller of this deprecated property."""
         found_frame = None
-        for frame in reversed(extract_stack()):
+        for frame in reversed(extract_stack()[:-1]):
             for path in ("custom_components/", "homeassistant/components/"):
                 try:
                     index = frame.filename.index(path)

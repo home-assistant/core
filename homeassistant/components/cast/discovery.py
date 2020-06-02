@@ -3,6 +3,7 @@ import logging
 import threading
 
 import pychromecast
+import zeroconf
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -84,10 +85,13 @@ def setup_internal_discovery(hass: HomeAssistant) -> None:
         )
 
     _LOGGER.debug("Starting internal pychromecast discovery.")
-    listener, browser = pychromecast.start_discovery(
-        internal_add_callback,
-        internal_remove_callback,
-        ChromeCastZeroconf.get_zeroconf(),
+    listener = pychromecast.discovery.CastListener(
+        internal_add_callback, internal_remove_callback
+    )
+    browser = zeroconf.ServiceBrowser(
+        ChromeCastZeroconf.get_zeroconf() or zeroconf.Zeroconf(),
+        "_googlecast._tcp.local.",
+        listener,
     )
 
     def stop_discovery(event):

@@ -52,8 +52,8 @@ ENTRY_OPTIONS = {CONF_CAMERA: True, CONF_EVENTS: True}
 
 ENTRY_CONFIG = {
     CONF_HOST: "1.2.3.4",
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
+    CONF_USERNAME: "root",
+    CONF_PASSWORD: "pass",
     CONF_PORT: 80,
     CONF_MAC: MAC,
     CONF_MODEL: MODEL,
@@ -152,6 +152,15 @@ root.Properties.Image.Rotation=0,180
 root.Properties.System.SerialNumber=00408C12345
 """
 
+STREAM_PROFILES_RESPONSE = """root.StreamProfile.MaxGroups=26
+root.StreamProfile.S0.Description=profile_1_description
+root.StreamProfile.S0.Name=profile_1
+root.StreamProfile.S0.Parameters=videocodec=h264
+root.StreamProfile.S1.Description=profile_2_description
+root.StreamProfile.S1.Name=profile_2
+root.StreamProfile.S1.Parameters=videocodec=h265
+"""
+
 
 def vapix_session_request(session, url, **kwargs):
     """Return data based on url."""
@@ -170,7 +179,7 @@ def vapix_session_request(session, url, **kwargs):
     if PROPERTIES_URL in url:
         return PROPERTIES_RESPONSE
     if STREAM_PROFILES_URL in url:
-        return ""
+        return STREAM_PROFILES_RESPONSE
 
 
 async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS):

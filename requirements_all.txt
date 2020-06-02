@@ -612,9 +612,6 @@ gTTS-token==1.1.3
 # homeassistant.components.garmin_connect
 garminconnect==0.1.13
 
-# homeassistant.components.gearbest
-gearbest_parser==1.0.7
-
 # homeassistant.components.geizhals
 geizhals==0.0.9
 
@@ -1272,7 +1269,7 @@ pydaikin==2.1.1
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==70
+pydeconz==71
 
 # homeassistant.components.delijn
 pydelijn==0.6.0
@@ -1335,7 +1332,7 @@ pyflunearyou==1.0.7
 pyfnip==0.2
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.9
+pyforked-daapd==0.1.10
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2

@@ -119,7 +119,7 @@ class TestMicrosoftFaceIdentify:
         self.hass.block_till_done()
 
         state = self.hass.states.get("camera.demo_camera")
-        url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
+        url = f"{self.hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         face_events = []
 
