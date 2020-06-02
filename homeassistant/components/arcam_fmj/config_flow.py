@@ -46,7 +46,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
             title=f"{DEFAULT_NAME} ({host})", data={CONF_HOST: host, CONF_PORT: port},
         )
 
-    async def async_step_user(self, user_info):
+    async def async_step_user(self, user_info=None):
         """Handle a discovered device."""
         errors = {}
 
@@ -100,4 +100,4 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         context = self.context  # pylint: disable=no-member
         context[CONF_HOST] = host
         context[CONF_PORT] = DEFAULT_PORT
-        return await self.async_step_confirm(None)
+        return await self.async_step_confirm()
