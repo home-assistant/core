@@ -100,16 +100,6 @@ class ONVIFDevice:
             if self.capabilities.ptz:
                 self.device.create_ptz_service()
 
-            if self._dt_diff_seconds > 300 and self.capabilities.events:
-                self.capabilities.events = False
-                LOGGER.warning(
-                    "The system clock on '%s' is more than 5 minutes off. "
-                    "Although this device supports events, they will be "
-                    "disabled until the device clock is fixed as we will "
-                    "not be able to renew the subscription.",
-                    self.name,
-                )
-
             if self.capabilities.events:
                 self.events = EventManager(
                     self.hass, self.device, self.config_entry.unique_id
