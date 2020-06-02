@@ -152,8 +152,7 @@ class BinarySensorStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
-        self.UPDATE_SCHEMA(update_data)
-        return {**data, **update_data}
+        return {**data, **self.UPDATE_SCHEMA(update_data)}
 
 
 def init_config(hass, device: str, config: typing.Dict):
