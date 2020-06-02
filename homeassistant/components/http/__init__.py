@@ -434,6 +434,8 @@ async def start_http_server_and_save_config(
     """Startup the http server and save the config."""
     await server.start()  # type: ignore
 
+    assert 0
+
     # If we are set up successful, we store the HTTP settings for safe mode.
     store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
