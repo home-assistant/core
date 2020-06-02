@@ -112,7 +112,7 @@ def _has_all_unique_names_and_ports(bridges):
 
 
 BRIDGE_SCHEMA = vol.All(
-    cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE, invalidation_version="0.115"),
+    cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE),
     vol.Schema(
         {
             vol.Optional(CONF_NAME, default=BRIDGE_NAME): vol.All(
