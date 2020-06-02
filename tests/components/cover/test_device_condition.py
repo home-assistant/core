@@ -454,6 +454,7 @@ async def test_if_position(hass, calls):
     platform.init()
     ent = platform.ENTITIES[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,
@@ -557,6 +558,7 @@ async def test_if_tilt_position(hass, calls):
     platform.init()
     ent = platform.ENTITIES[2]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,

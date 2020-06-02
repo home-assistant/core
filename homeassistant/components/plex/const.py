@@ -24,7 +24,6 @@ PLEX_UPDATE_MEDIA_PLAYER_SIGNAL = "plex_update_mp_signal.{}"
 PLEX_UPDATE_PLATFORMS_SIGNAL = "plex_update_platforms_signal.{}"
 PLEX_UPDATE_SENSOR_SIGNAL = "plex_update_sensor_signal.{}"
 
-CONF_CLIENT_IDENTIFIER = "client_id"
 CONF_SERVER = "server"
 CONF_SERVER_IDENTIFIER = "server_id"
 CONF_USE_EPISODE_ART = "use_episode_art"

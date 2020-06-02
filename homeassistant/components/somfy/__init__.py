@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -19,6 +20,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import api
+from .const import DOMAIN
 
 API = "api"
 
@@ -28,10 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-DOMAIN = "somfy"
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_OPTIMISTIC = "optimistic"
 
 SOMFY_AUTH_CALLBACK_PATH = "/auth/somfy/callback"

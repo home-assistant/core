@@ -4,14 +4,14 @@ import logging
 from lmnotify import LaMetricManager
 import voluptuous as vol
 
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 DOMAIN = "lametric"
+
 LAMETRIC_DEVICES = "LAMETRIC_DEVICES"
 
 CONFIG_SCHEMA = vol.Schema(

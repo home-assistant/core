@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Nom\u00e9s es pot afegir un sol dispositiu Atag a Home Assistant"
+            "already_configured": "Aquest dispositiu ja ha estat afegit a Home Assistant"
         },
         "error": {
             "connection_error": "No s'ha pogut connectar, torna-ho a provar",

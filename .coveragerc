@@ -275,7 +275,6 @@ omit =
     homeassistant/components/garmin_connect/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
-    homeassistant/components/gearbest/sensor.py
     homeassistant/components/geizhals/sensor.py
     homeassistant/components/gios/__init__.py
     homeassistant/components/gios/air_quality.py
@@ -564,7 +563,9 @@ omit =
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
     homeassistant/components/opengarage/cover.py
+    homeassistant/components/openhome/__init__.py
     homeassistant/components/openhome/media_player.py
+    homeassistant/components/openhome/const.py
     homeassistant/components/opensensemap/air_quality.py
     homeassistant/components/opensky/sensor.py
     homeassistant/components/opentherm_gw/__init__.py
@@ -604,6 +605,7 @@ omit =
     homeassistant/components/plex/sensor.py
     homeassistant/components/plugwise/__init__.py
     homeassistant/components/plugwise/climate.py
+    homeassistant/components/plugwise/sensor.py
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/*
@@ -726,7 +728,6 @@ omit =
     homeassistant/components/soma/__init__.py
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
-    homeassistant/components/sonarr/sensor.py
     homeassistant/components/sonos/*
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*

@@ -1,9 +1,11 @@
 {
     "config": {
         "abort": {
+            "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
             "updated_entry": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale nazwa i/lub opcje zdefiniowane w konfiguracji nie pasuj\u0105 do wcze\u015bniej zaimportowanych warto\u015bci, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany."
         },
         "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
             "complete_pairing_failed": "Nie mo\u017cna uko\u0144czy\u0107 parowania. Upewnij si\u0119, \u017ce podany kod PIN jest prawid\u0142owy, a telewizor jest zasilany i pod\u0142\u0105czony do sieci przed ponownym przes\u0142aniem.",
             "host_exists": "Urz\u0105dzenie Vizio z okre\u015blonym hostem jest ju\u017c skonfigurowane.",
             "name_exists": "Urz\u0105dzenie Vizio o okre\u015blonej nazwie jest ju\u017c skonfigurowane."
