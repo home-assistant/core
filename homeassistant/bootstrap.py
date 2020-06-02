@@ -36,7 +36,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 # This should be long enough for recorder to migrate schema
 # and mqtt_eventstream to setup fully.
 #
-TIMEOUT_EVENT_BOOTSTRAP = 1800
+TIMEOUT_EVENT_BOOTSTRAP = 14400
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
