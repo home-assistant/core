@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
-from .devolo_sensor import DevoloDeviceEntity
+from .devolo_device import DevoloDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
