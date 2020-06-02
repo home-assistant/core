@@ -117,7 +117,7 @@ async def test_user(hass, flow, aioclient_mock):
 
 
 async def test_invalid_ssdp(hass, flow, aioclient_mock):
-    """Test a manual user configuration flow."""
+    """Test a a config flow where ssdp fails."""
     user_input = {
         CONF_HOST: MOCK_HOST,
         CONF_PORT: MOCK_PORT,
