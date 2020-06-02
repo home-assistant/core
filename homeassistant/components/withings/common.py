@@ -346,5 +346,7 @@ class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        url = get_url(self.hass, prefer_cloud=True)
+        url = get_url(
+            self.hass, allow_internal=False, prefer_cloud=True, prefer_external=True
+        )
         return f"{url}{AUTH_CALLBACK_PATH}"
