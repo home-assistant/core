@@ -12,6 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_PASSWORD
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
@@ -156,7 +157,8 @@ class DaikinApi:
         """Return a device description for device registry."""
         info = self.device.values
         return {
-            "identifieres": self.device.mac,
+            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
+            "identifiers": self.device.mac,
             "manufacturer": "Daikin",
             "model": info.get("model"),
             "name": info.get("name"),
