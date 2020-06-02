@@ -563,7 +563,7 @@ pyflume==0.4.0
 pyflunearyou==1.0.7
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.9
+pyforked-daapd==0.1.10
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
