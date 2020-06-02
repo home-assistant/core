@@ -1637,9 +1637,7 @@ class TransportControlTrait(_Trait):
         elif command == COMMAND_MEDIA_STOP:
             service = media_player.SERVICE_MEDIA_STOP
         else:
-            raise SmartHomeError(
-                ERR_NOT_SUPPORTED, "Command not supported"
-            )
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
 
         await self.hass.services.async_call(
             media_player.DOMAIN,
