@@ -548,7 +548,7 @@ def test_deprecated_with_no_optionals(caplog, schema):
         "homeassistant.helpers.config_validation",
     ]
     assert (
-        "The 'mars' option is deprecated, " "please remove it from your configuration"
+        "The 'mars' option is deprecated, please remove it from your configuration"
     ) in caplog.text
     assert test_data == output
 
@@ -581,7 +581,7 @@ def test_deprecated_with_replacement_key(caplog, schema):
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert (
-        "The 'mars' option is deprecated, " "please replace it with 'jupiter'"
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
     ) in caplog.text
     assert {"jupiter": True} == output
 
@@ -723,7 +723,7 @@ def test_deprecated_with_default(caplog, schema):
     assert len(caplog.records) == 1
     assert caplog.records[0].name == __name__
     assert (
-        "The 'mars' option is deprecated, " "please remove it from your configuration"
+        "The 'mars' option is deprecated, please remove it from your configuration"
     ) in caplog.text
     assert test_data == output
 
@@ -756,7 +756,7 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
     assert (
-        "The 'mars' option is deprecated, " "please replace it with 'jupiter'"
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
     ) in caplog.text
     assert {"jupiter": True} == output
 
@@ -788,7 +788,7 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
     output = deprecated_schema_with_default(test_data.copy())
     assert len(caplog.records) == 1
     assert (
-        "The 'mars' option is deprecated, " "please replace it with 'jupiter'"
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
     ) in caplog.text
     assert {"jupiter": True} == output
 
