@@ -1,4 +1,9 @@
 """Constants for Synology DSM."""
+
+from synology_dsm.api.core.security import SynoCoreSecurity
+from synology_dsm.api.core.utilization import SynoCoreUtilization
+from synology_dsm.api.storage.storage import SynoStorage
+
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
@@ -7,6 +12,8 @@ from homeassistant.const import (
 )
 
 DOMAIN = "synology_dsm"
+PLATFORMS = ["binary_sensor", "sensor"]
+
 BASE_NAME = "Synology"
 
 # Entry keys
@@ -15,47 +22,231 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Configuration
 CONF_VOLUMES = "volumes"
+
 DEFAULT_SSL = True
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
 
+
+ENTITY_NAME = "name"
+ENTITY_UNIT = "unit"
+ENTITY_ICON = "icon"
+ENTITY_CLASS = "device_class"
+ENTITY_ENABLE = "enable"
+
+# Entity keys should start with the API_KEY to fetch
+
+# Binary sensors
+STORAGE_DISK_BINARY_SENSORS = {
+    f"{SynoStorage.API_KEY}:disk_exceed_bad_sector_thr": {
+        ENTITY_NAME: "Exceeded Max Bad Sectors",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:test-tube",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoStorage.API_KEY}:disk_below_remain_life_thr": {
+        ENTITY_NAME: "Below Min Remaining Life",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:test-tube",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+}
+
+SECURITY_BINARY_SENSORS = {
+    f"{SynoCoreSecurity.API_KEY}:status": {
+        ENTITY_NAME: "Security status",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_CLASS: "safety",
+        ENTITY_ENABLE: True,
+    },
+}
+
+# Sensors
 UTILISATION_SENSORS = {
-    "cpu_other_load": ["CPU Load (Other)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_user_load": ["CPU Load (User)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_system_load": ["CPU Load (System)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_total_load": ["CPU Load (Total)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_1min_load": ["CPU Load (1 min)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_5min_load": ["CPU Load (5 min)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_15min_load": ["CPU Load (15 min)", UNIT_PERCENTAGE, "mdi:chip"],
-    "memory_real_usage": ["Memory Usage (Real)", UNIT_PERCENTAGE, "mdi:memory"],
-    "memory_size": ["Memory Size", DATA_MEGABYTES, "mdi:memory"],
-    "memory_cached": ["Memory Cached", DATA_MEGABYTES, "mdi:memory"],
-    "memory_available_swap": ["Memory Available (Swap)", DATA_MEGABYTES, "mdi:memory"],
-    "memory_available_real": ["Memory Available (Real)", DATA_MEGABYTES, "mdi:memory"],
-    "memory_total_swap": ["Memory Total (Swap)", DATA_MEGABYTES, "mdi:memory"],
-    "memory_total_real": ["Memory Total (Real)", DATA_MEGABYTES, "mdi:memory"],
-    "network_up": ["Network Up", DATA_RATE_KILOBYTES_PER_SECOND, "mdi:upload"],
-    "network_down": ["Network Down", DATA_RATE_KILOBYTES_PER_SECOND, "mdi:download"],
+    f"{SynoCoreUtilization.API_KEY}:cpu_other_load": {
+        ENTITY_NAME: "CPU Load (Other)",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:chip",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+    },
+    f"{SynoCoreUtilization.API_KEY}:cpu_user_load": {
+        ENTITY_NAME: "CPU Load (User)",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:chip",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:cpu_system_load": {
+        ENTITY_NAME: "CPU Load (System)",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:chip",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+    },
+    f"{SynoCoreUtilization.API_KEY}:cpu_total_load": {
+        ENTITY_NAME: "CPU Load (Total)",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:chip",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:cpu_1min_load": {
+        ENTITY_NAME: "CPU Load (1 min)",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:chip",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+    },
+    f"{SynoCoreUtilization.API_KEY}:cpu_5min_load": {
+        ENTITY_NAME: "CPU Load (5 min)",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:chip",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:cpu_15min_load": {
+        ENTITY_NAME: "CPU Load (15 min)",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:chip",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:memory_real_usage": {
+        ENTITY_NAME: "Memory Usage (Real)",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:memory",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:memory_size": {
+        ENTITY_NAME: "Memory Size",
+        ENTITY_UNIT: DATA_MEGABYTES,
+        ENTITY_ICON: "mdi:memory",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+    },
+    f"{SynoCoreUtilization.API_KEY}:memory_cached": {
+        ENTITY_NAME: "Memory Cached",
+        ENTITY_UNIT: DATA_MEGABYTES,
+        ENTITY_ICON: "mdi:memory",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+    },
+    f"{SynoCoreUtilization.API_KEY}:memory_available_swap": {
+        ENTITY_NAME: "Memory Available (Swap)",
+        ENTITY_UNIT: DATA_MEGABYTES,
+        ENTITY_ICON: "mdi:memory",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:memory_available_real": {
+        ENTITY_NAME: "Memory Available (Real)",
+        ENTITY_UNIT: DATA_MEGABYTES,
+        ENTITY_ICON: "mdi:memory",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:memory_total_swap": {
+        ENTITY_NAME: "Memory Total (Swap)",
+        ENTITY_UNIT: DATA_MEGABYTES,
+        ENTITY_ICON: "mdi:memory",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:memory_total_real": {
+        ENTITY_NAME: "Memory Total (Real)",
+        ENTITY_UNIT: DATA_MEGABYTES,
+        ENTITY_ICON: "mdi:memory",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:network_up": {
+        ENTITY_NAME: "Network Up",
+        ENTITY_UNIT: DATA_RATE_KILOBYTES_PER_SECOND,
+        ENTITY_ICON: "mdi:upload",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoCoreUtilization.API_KEY}:network_down": {
+        ENTITY_NAME: "Network Down",
+        ENTITY_UNIT: DATA_RATE_KILOBYTES_PER_SECOND,
+        ENTITY_ICON: "mdi:download",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
 }
 STORAGE_VOL_SENSORS = {
-    "volume_status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
-    "volume_device_type": ["Type", None, "mdi:harddisk"],
-    "volume_size_total": ["Total Size", DATA_TERABYTES, "mdi:chart-pie"],
-    "volume_size_used": ["Used Space", DATA_TERABYTES, "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", UNIT_PERCENTAGE, "mdi:chart-pie"],
-    "volume_disk_temp_avg": ["Average Disk Temp", None, "mdi:thermometer"],
-    "volume_disk_temp_max": ["Maximum Disk Temp", None, "mdi:thermometer"],
+    f"{SynoStorage.API_KEY}:volume_status": {
+        ENTITY_NAME: "Status",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoStorage.API_KEY}:volume_size_total": {
+        ENTITY_NAME: "Total Size",
+        ENTITY_UNIT: DATA_TERABYTES,
+        ENTITY_ICON: "mdi:chart-pie",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+    },
+    f"{SynoStorage.API_KEY}:volume_size_used": {
+        ENTITY_NAME: "Used Space",
+        ENTITY_UNIT: DATA_TERABYTES,
+        ENTITY_ICON: "mdi:chart-pie",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoStorage.API_KEY}:volume_percentage_used": {
+        ENTITY_NAME: "Volume Used",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:chart-pie",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoStorage.API_KEY}:volume_disk_temp_avg": {
+        ENTITY_NAME: "Average Disk Temp",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:thermometer",
+        ENTITY_CLASS: "temperature",
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoStorage.API_KEY}:volume_disk_temp_max": {
+        ENTITY_NAME: "Maximum Disk Temp",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:thermometer",
+        ENTITY_CLASS: "temperature",
+        ENTITY_ENABLE: False,
+    },
 }
 STORAGE_DISK_SENSORS = {
-    "disk_name": ["Name", None, "mdi:harddisk"],
-    "disk_device": ["Device", None, "mdi:dots-horizontal"],
-    "disk_smart_status": ["Status (Smart)", None, "mdi:checkbox-marked-circle-outline"],
-    "disk_status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
-    "disk_exceed_bad_sector_thr": ["Exceeded Max Bad Sectors", None, "mdi:test-tube"],
-    "disk_below_remain_life_thr": ["Below Min Remaining Life", None, "mdi:test-tube"],
-    "disk_temp": ["Temperature", None, "mdi:thermometer"],
+    f"{SynoStorage.API_KEY}:disk_smart_status": {
+        ENTITY_NAME: "Status (Smart)",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+    },
+    f"{SynoStorage.API_KEY}:disk_status": {
+        ENTITY_NAME: "Status",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:checkbox-marked-circle-outline",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+    f"{SynoStorage.API_KEY}:disk_temp": {
+        ENTITY_NAME: "Temperature",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:thermometer",
+        ENTITY_CLASS: "temperature",
+        ENTITY_ENABLE: True,
+    },
 }
 
 
