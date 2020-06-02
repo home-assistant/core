@@ -1,6 +1,5 @@
 """Test the Plugwise config flow."""
 from Plugwise_Smile.Smile import Smile
-import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.plugwise.const import DEFAULT_SCAN_INTERVAL, DOMAIN
