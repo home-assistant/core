@@ -346,10 +346,10 @@ class LightTemplate(LightEntity):
         if ATTR_COLOR_TEMP in kwargs and self._temperature_action:
             on_attrs["color_temp_new"] = True
             on_attrs["color_temp"] = kwargs[ATTR_COLOR_TEMP]
-        elif ATTR_WHITE_VALUE in kwargs and self._white_value_action:
+        if ATTR_WHITE_VALUE in kwargs and self._white_value_action:
             on_attrs["white_value_new"] = True
             on_attrs["white_value"] = kwargs[ATTR_WHITE_VALUE]
-        elif ATTR_HS_COLOR in kwargs and self._color_action:
+        if ATTR_HS_COLOR in kwargs and self._color_action:
             hs_value = kwargs[ATTR_HS_COLOR]
             on_attrs["hs_new"] = True
             on_attrs["hs"] = hs_value
