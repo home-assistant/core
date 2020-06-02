@@ -62,6 +62,7 @@ TAHOMA_TYPES = {
     "rts:DualCurtainRTSComponent": "cover",
     "rts:ExteriorVenetianBlindRTSComponent": "cover",
     "rts:GarageDoor4TRTSComponent": "switch",
+    "rts:LightRTSComponent": "switch",
     "rts:RollerShutterRTSComponent": "cover",
     "rts:OnOffRTSComponent": "switch",
     "rts:VenetianBlindRTSComponent": "cover",
