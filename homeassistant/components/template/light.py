@@ -196,7 +196,7 @@ class LightTemplate(LightEntity):
         self._entity_picture = None
         self._brightness = None
         self._temperature = None
-        self._color = None
+        self._color = [None, None]
         self._white_value = None
         self._entities = entity_ids
         self._available = True
@@ -330,7 +330,7 @@ class LightTemplate(LightEntity):
             on_attrs["brightness"] = self._brightness
         if self._temperature_action:
             on_attrs["color_temp_new"] = False
-            on_attrs["color_temp"] = self._color
+            on_attrs["color_temp"] = self._temperature
         if self._white_value_action:
             on_attrs["white_value_new"] = False
             on_attrs["white_value"] = self._white_value
