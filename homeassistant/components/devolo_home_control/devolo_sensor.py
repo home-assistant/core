@@ -1,4 +1,4 @@
-"""Base class for a sensor integrated in devolo Home Control."""
+"""Base class for a device entity integrated in devolo Home Control."""
 import logging
 
 from homeassistant.helpers.entity import Entity

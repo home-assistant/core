@@ -77,14 +77,13 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
         return self._state
 
     def sync(self, message=None):
-        """Update the binary switch state and consumption."""
+        """Update the binary sensor state."""
         if message[0].startswith("devolo.BinarySensor"):
             self._state = self._device_instance.binary_sensor_property[message[0]].state
         elif message[0].startswith("hdm"):
             self._available = self._device_instance.is_online()
         else:
-            _LOGGER.debug("No valid message received")
-            _LOGGER.debug(message)
+            _LOGGER.debug("No valid message received: %s", message)
         self.async_schedule_update_ha_state()
 
 
@@ -142,7 +141,7 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
         return self._unit
 
     def sync(self, message=None):
-        """Update the binary switch state and consumption."""
+        """Update the multi level sensor state."""
         if message[0].startswith("devolo.MultiLevelSensor"):
             self._state = self._device_instance.multi_level_sensor_property[
                 message[0]
@@ -150,6 +149,5 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
         elif message[0].startswith("hdm"):
             self._available = self._device_instance.is_online()
         else:
-            _LOGGER.debug("No valid message received")
-            _LOGGER.debug(message)
+            _LOGGER.debug("No valid message received: %s", message)
         self.async_schedule_update_ha_state()
