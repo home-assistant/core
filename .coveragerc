@@ -604,6 +604,7 @@ omit =
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
     homeassistant/components/plugwise/__init__.py
+    homeassistant/components/plugwise/binary_sensor.py
     homeassistant/components/plugwise/climate.py
     homeassistant/components/plugwise/sensor.py
     homeassistant/components/plum_lightpad/*
@@ -757,6 +758,7 @@ omit =
     homeassistant/components/synology/camera.py
     homeassistant/components/synology_chat/notify.py
     homeassistant/components/synology_dsm/__init__.py
+    homeassistant/components/synology_dsm/binary_sensor.py
     homeassistant/components/synology_dsm/sensor.py
     homeassistant/components/synology_srm/device_tracker.py
     homeassistant/components/syslog/notify.py

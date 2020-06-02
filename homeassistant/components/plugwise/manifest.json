@@ -2,7 +2,7 @@
   "domain": "plugwise",
   "name": "Plugwise",
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
-  "requirements": ["Plugwise_Smile==0.2.10"],
+  "requirements": ["Plugwise_Smile==0.2.13"],
   "codeowners": ["@CoMPaTech", "@bouwew"],
   "config_flow": true
 }
