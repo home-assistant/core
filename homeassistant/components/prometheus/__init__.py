@@ -152,6 +152,20 @@ class PrometheusMetrics:
         )
         metric.labels(**self._labels(state)).inc()
 
+    def _handle_attributes(self, state):
+        for key, value in state.attributes.items():
+            metric = self._metric(
+                f"{state.domain}_attr_{key.lower()}",
+                self.prometheus_cli.Gauge,
+                f"{key} attribute of {state.domain} entity",
+            )
+
+            try:
+                value = float(value)
+                metric.labels(**self._labels(state)).set(value)
+            except ValueError:
+                pass
+
     def _metric(self, metric, factory, documentation, labels=None):
         if labels is None:
             labels = ["entity", "friendly_name", "domain"]
@@ -367,6 +381,8 @@ class PrometheusMetrics:
             metric.labels(**self._labels(state)).set(value)
         except ValueError:
             pass
+
+        self._handle_attributes(state)
 
     def _handle_zwave(self, state):
         self._battery(state)
