@@ -16,7 +16,7 @@
             },
             "ups": {
                 "data": {
-                    "alias": "Alias",
+                    "alias": "",
                     "resources": "Ressurser"
                 },
                 "title": "Velg UPS som skal overv\u00e5kes"

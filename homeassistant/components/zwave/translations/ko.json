@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "network_key": "\ub124\ud2b8\uc6cc\ud06c \ud0a4 (\uacf5\ub780\uc73c\ub85c \ube44\uc6cc\ub450\uba74 \uc790\ub3d9 \uc0dd\uc131\ud569\ub2c8\ub2e4)",
-                    "usb_path": "USB \uacbd\ub85c"
+                    "usb_path": "USB \uc7a5\uce58 \uacbd\ub85c"
                 },
                 "description": "\uad6c\uc131 \ubcc0\uc218\uc5d0 \ub300\ud55c \uc815\ubcf4\ub294 [\uc548\ub0b4](https://www.home-assistant.io/docs/z-wave/installation/) \ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694",
                 "title": "Z-Wave \uc124\uc815"
@@ -26,8 +26,8 @@
             "sleeping": "\uc808\uc804\ubaa8\ub4dc"
         },
         "query_stage": {
-            "dead": "\uc751\ub2f5\uc5c6\uc74c ({query_stage})",
-            "initializing": "\ucd08\uae30\ud654\uc911 ({query_stage})"
+            "dead": "\uc751\ub2f5\uc5c6\uc74c",
+            "initializing": "\ucd08\uae30\ud654\uc911"
         }
     }
 }

@@ -1,7 +1,7 @@
 """Support for Lutron switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs, True)
 
 
-class LutronSwitch(LutronDevice, SwitchDevice):
+class LutronSwitch(LutronDevice, SwitchEntity):
     """Representation of a Lutron Switch."""
 
     def __init__(self, area_name, lutron_device, controller):
@@ -63,7 +63,7 @@ class LutronSwitch(LutronDevice, SwitchDevice):
             self._prev_state = self._lutron_device.level > 0
 
 
-class LutronLed(LutronDevice, SwitchDevice):
+class LutronLed(LutronDevice, SwitchEntity):
     """Representation of a Lutron Keypad LED."""
 
     def __init__(self, area_name, keypad_name, scene_device, led_device, controller):

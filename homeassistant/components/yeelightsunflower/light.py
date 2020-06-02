@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +25,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight Sunflower Light platform."""
-
     host = config.get(CONF_HOST)
     hub = yeelightsunflower.Hub(host)
 
@@ -36,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(SunflowerBulb(light) for light in hub.get_lights())
 
 
-class SunflowerBulb(Light):
+class SunflowerBulb(LightEntity):
     """Representation of a Yeelight Sunflower Light."""
 
     def __init__(self, light):
@@ -46,11 +45,17 @@ class SunflowerBulb(Light):
         self._brightness = light.brightness
         self._is_on = light.is_on
         self._hs_color = light.rgb_color
+        self._unique_id = light.zid
 
     @property
     def name(self):
         """Return the display name of this light."""
         return f"sunflower_{self._light.zid}"
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of this light."""
+        return self._unique_id
 
     @property
     def available(self):

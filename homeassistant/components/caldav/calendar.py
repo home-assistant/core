@@ -174,7 +174,7 @@ class WebDavCalendarData:
                 uid = vevent.uid.value
             data = {
                 "uid": uid,
-                "title": vevent.summary.value,
+                "summary": vevent.summary.value,
                 "start": self.get_hass_date(vevent.dtstart.value),
                 "end": self.get_hass_date(self.get_end_date(vevent)),
                 "location": self.get_attr_value(vevent, "location"),

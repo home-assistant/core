@@ -1,6 +1,5 @@
 """Vera tests."""
 from typing import Any, Callable, Tuple
-from unittest.mock import MagicMock
 
 import pyvera as pv
 
@@ -8,6 +7,8 @@ from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
+
+from tests.async_mock import MagicMock
 
 
 async def run_sensor_test(

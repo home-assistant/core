@@ -1,7 +1,6 @@
 """The tests for the Dark Sky weather component."""
 import re
 import unittest
-from unittest.mock import patch
 
 import forecastio
 from requests.exceptions import ConnectionError
@@ -11,6 +10,7 @@ from homeassistant.components import weather
 from homeassistant.setup import setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 
 
@@ -43,6 +43,7 @@ class TestDarkSky(unittest.TestCase):
             weather.DOMAIN,
             {"weather": {"name": "test", "platform": "darksky", "api_key": "foo"}},
         )
+        self.hass.block_till_done()
 
         assert mock_get_forecast.called
         assert mock_get_forecast.call_count == 1
@@ -59,6 +60,7 @@ class TestDarkSky(unittest.TestCase):
             weather.DOMAIN,
             {"weather": {"name": "test", "platform": "darksky", "api_key": "foo"}},
         )
+        self.hass.block_till_done()
 
         state = self.hass.states.get("weather.test")
         assert state.state == "unavailable"

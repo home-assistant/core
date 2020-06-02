@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
+from aiohttp.typedefs import LooseHeaders
 import async_timeout
 import voluptuous as vol
 
@@ -48,6 +49,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
 
 from .const import (
@@ -337,8 +339,8 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class MediaPlayerDevice(Entity):
-    """ABC for media player devices."""
+class MediaPlayerEntity(Entity):
+    """ABC for media player entities."""
 
     _access_token: Optional[str] = None
 
@@ -820,7 +822,7 @@ async def _async_fetch_image(hass, url):
     cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
     if urlparse(url).hostname is None:
-        url = hass.config.api.base_url + url
+        url = f"{get_url(hass)}{url}"
 
     if url not in cache_images:
         cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
@@ -862,7 +864,7 @@ class MediaPlayerImageView(HomeAssistantView):
         """Initialize a media player view."""
         self.component = component
 
-    async def get(self, request, entity_id):
+    async def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Start a get request."""
         player = self.component.get_entity(entity_id)
         if player is None:
@@ -882,7 +884,7 @@ class MediaPlayerImageView(HomeAssistantView):
         if data is None:
             return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
 
-        headers = {CACHE_CONTROL: "max-age=3600"}
+        headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)
 
 
@@ -924,3 +926,15 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             "content": base64.b64encode(data).decode("utf-8"),
         },
     )
+
+
+class MediaPlayerDevice(MediaPlayerEntity):
+    """ABC for media player devices (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "MediaPlayerDevice is deprecated, modify %s to extend MediaPlayerEntity",
+            cls.__name__,
+        )

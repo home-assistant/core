@@ -1,4 +1,6 @@
 """The tests for the MQTT lock platform."""
+import pytest
+
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
@@ -56,6 +58,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -90,6 +93,7 @@ async def test_controlling_non_default_state_via_topic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -125,6 +129,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -161,6 +166,7 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -193,6 +199,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -238,6 +245,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -366,6 +374,7 @@ async def test_discovery_update_lock(hass, mqtt_mock, caplog):
     await help_test_discovery_update(hass, mqtt_mock, caplog, LOCK_DOMAIN, data1, data2)
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'

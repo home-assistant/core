@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Soll d'Mobil App konfigur\u00e9iert ginn?",
-                "title": "Mobil App"
+                "description": "Soll d'Mobil App konfigur\u00e9iert ginn?"
             }
         }
     }

@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.switch import (
     DEVICE_CLASS_OUTLET,
     PLATFORM_SCHEMA,
-    SwitchDevice,
+    SwitchEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.exceptions import PlatformNotReady
@@ -64,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(switches)
 
 
-class AtenSwitch(SwitchDevice):
+class AtenSwitch(SwitchEntity):
     """Represents an ATEN PE switch."""
 
     def __init__(self, device, mac, outlet, name):

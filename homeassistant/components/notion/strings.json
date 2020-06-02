@@ -3,13 +3,18 @@
     "step": {
       "user": {
         "title": "Fill in your information",
-        "data": { "username": "Username/Email Address", "password": "Password" }
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
       "invalid_credentials": "Invalid username or password",
       "no_devices": "No devices found in account"
     },
-    "abort": { "already_configured": "This username is already in use." }
+    "abort": {
+      "already_configured": "This username is already in use."
+    }
   }
 }

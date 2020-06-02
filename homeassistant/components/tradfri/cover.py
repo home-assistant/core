@@ -1,6 +1,6 @@
 """Support for IKEA Tradfri covers."""
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 
 from .base_class import TradfriBaseDevice
 from .const import ATTR_MODEL, CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(TradfriCover(cover, api, gateway_id) for cover in covers)
 
 
-class TradfriCover(TradfriBaseDevice, CoverDevice):
+class TradfriCover(TradfriBaseDevice, CoverEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, device, api, gateway_id):

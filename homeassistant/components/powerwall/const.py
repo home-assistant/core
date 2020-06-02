@@ -4,6 +4,7 @@ DOMAIN = "powerwall"
 
 POWERWALL_OBJECT = "powerwall"
 POWERWALL_COORDINATOR = "coordinator"
+POWERWALL_API_CHANGED = "api_changed"
 
 UPDATE_INTERVAL = 30
 
@@ -15,14 +16,6 @@ ATTR_ENERGY_IMPORTED = "energy_imported_(in_kW)"
 ATTR_INSTANT_AVERAGE_VOLTAGE = "instant_average_voltage"
 ATTR_NOMINAL_SYSTEM_POWER = "nominal_system_power_kW"
 ATTR_IS_ACTIVE = "is_active"
-
-SITE_INFO_UTILITY = "utility"
-SITE_INFO_GRID_CODE = "grid_code"
-SITE_INFO_NOMINAL_SYSTEM_POWER_KW = "nominal_system_power_kW"
-SITE_INFO_NOMINAL_SYSTEM_ENERGY_KWH = "nominal_system_energy_kWh"
-SITE_INFO_REGION = "region"
-
-DEVICE_TYPE_DEVICE_TYPE = "device_type"
 
 STATUS_VERSION = "version"
 
@@ -38,10 +31,6 @@ POWERWALL_API_SITE_INFO = "site_info"
 POWERWALL_API_SERIAL_NUMBERS = "serial_numbers"
 
 POWERWALL_HTTP_SESSION = "http_session"
-
-POWERWALL_GRID_ONLINE = "SystemGridConnected"
-POWERWALL_CONNECTED_KEY = "connected_to_tesla"
-POWERWALL_RUNNING_KEY = "running"
 
 POWERWALL_BATTERY_METER = "battery"
 

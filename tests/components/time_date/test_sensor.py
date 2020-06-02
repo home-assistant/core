@@ -1,10 +1,10 @@
 """The tests for time_date sensor platform."""
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.time_date.sensor as time_date
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 

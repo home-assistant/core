@@ -19,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.loader import bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 
 from .storage import async_setup_frontend_storage
 
@@ -248,6 +248,7 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(websocket_get_panels)
     hass.components.websocket_api.async_register_command(websocket_get_themes)
     hass.components.websocket_api.async_register_command(websocket_get_translations)
+    hass.components.websocket_api.async_register_command(websocket_get_version)
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
@@ -486,10 +487,7 @@ class ManifestJSONView(HomeAssistantView):
 @callback
 @websocket_api.websocket_command({"type": "get_panels"})
 def websocket_get_panels(hass, connection, msg):
-    """Handle get panels command.
-
-    Async friendly.
-    """
+    """Handle get panels command."""
     user_is_admin = connection.user.is_admin
     panels = {
         panel_key: panel.to_response()
@@ -503,10 +501,7 @@ def websocket_get_panels(hass, connection, msg):
 @callback
 @websocket_api.websocket_command({"type": "frontend/get_themes"})
 def websocket_get_themes(hass, connection, msg):
-    """Handle get themes command.
-
-    Async friendly.
-    """
+    """Handle get themes command."""
     if hass.config.safe_mode:
         connection.send_message(
             websocket_api.result_message(
@@ -546,10 +541,7 @@ def websocket_get_themes(hass, connection, msg):
 )
 @websocket_api.async_response
 async def websocket_get_translations(hass, connection, msg):
-    """Handle get translations command.
-
-    Async friendly.
-    """
+    """Handle get translations command."""
     resources = await async_get_translations(
         hass,
         msg["language"],
@@ -560,3 +552,21 @@ async def websocket_get_translations(hass, connection, msg):
     connection.send_message(
         websocket_api.result_message(msg["id"], {"resources": resources})
     )
+
+
+@websocket_api.websocket_command({"type": "frontend/get_version"})
+@websocket_api.async_response
+async def websocket_get_version(hass, connection, msg):
+    """Handle get version command."""
+    integration = await async_get_integration(hass, "frontend")
+
+    frontend = None
+
+    for req in integration.requirements:
+        if req.startswith("home-assistant-frontend=="):
+            frontend = req.split("==", 1)[1]
+
+    if frontend is None:
+        connection.send_error(msg["id"], "unknown_version", "Version not found")
+    else:
+        connection.send_result(msg["id"], {"version": frontend})

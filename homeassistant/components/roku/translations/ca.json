@@ -1,24 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu Roku ja est\u00e0 configurat",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
             "unknown": "Error inesperat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar"
+            "cannot_connect": "No s'ha pogut connectar"
         },
         "flow_title": "Roku: {name}",
         "step": {
             "ssdp_confirm": {
-                "description": "Vols configurar {name}? Es substituiran les configuracions manuals d'aquest dispositiu en els arxius yaml.",
+                "description": "Vols configurar {name}?",
                 "title": "Roku"
             },
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3 o adre\u00e7a IP"
+                    "host": "Amfitri\u00f3"
                 },
-                "description": "Introdueix la teva informaci\u00f3 de Roku.",
-                "title": "Roku"
+                "description": "Introdueix la teva informaci\u00f3 de Roku."
             }
         }
     }

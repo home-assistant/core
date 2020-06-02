@@ -1,11 +1,11 @@
 """The tests for the Yamaha Media player platform."""
 import unittest
-from unittest.mock import MagicMock, patch
 
 import homeassistant.components.media_player as mp
 from homeassistant.components.yamaha import media_player as yamaha
 from homeassistant.setup import setup_component
 
+from tests.async_mock import MagicMock, patch
 from tests.common import get_test_home_assistant
 
 
@@ -62,6 +62,7 @@ class TestYamahaMediaPlayer(unittest.TestCase):
         config = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
 
         assert setup_component(self.hass, mp.DOMAIN, config)
+        self.hass.block_till_done()
 
     @patch("rxv.RXV")
     def test_enable_output(self, mock_rxv):

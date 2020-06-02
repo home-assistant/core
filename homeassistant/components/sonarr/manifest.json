@@ -2,5 +2,8 @@
   "domain": "sonarr",
   "name": "Sonarr",
   "documentation": "https://www.home-assistant.io/integrations/sonarr",
-  "codeowners": ["@ctalkington"]
+  "codeowners": ["@ctalkington"],
+  "requirements": ["sonarr==0.2.1"],
+  "config_flow": true,
+  "quality_scale": "silver"
 }

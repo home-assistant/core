@@ -13,7 +13,7 @@ from homematicip.base.enums import DoorCommand, DoorState
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -51,7 +51,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
+class HomematicipCoverShutter(HomematicipGenericDevice, CoverEntity):
     """Representation of a HomematicIP Cloud cover shutter device."""
 
     @property
@@ -88,7 +88,7 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
         await self._device.set_shutter_stop()
 
 
-class HomematicipCoverSlats(HomematicipCoverShutter, CoverDevice):
+class HomematicipCoverSlats(HomematicipCoverShutter, CoverEntity):
     """Representation of a HomematicIP Cloud cover slats device."""
 
     @property
@@ -118,7 +118,7 @@ class HomematicipCoverSlats(HomematicipCoverShutter, CoverDevice):
         await self._device.set_shutter_stop()
 
 
-class HomematicipGarageDoorModuleTormatic(HomematicipGenericDevice, CoverDevice):
+class HomematicipGarageDoorModuleTormatic(HomematicipGenericDevice, CoverEntity):
     """Representation of a HomematicIP Garage Door Module for Tormatic."""
 
     @property
@@ -150,7 +150,7 @@ class HomematicipGarageDoorModuleTormatic(HomematicipGenericDevice, CoverDevice)
         await self._device.send_door_command(DoorCommand.STOP)
 
 
-class HomematicipCoverShutterGroup(HomematicipCoverSlats, CoverDevice):
+class HomematicipCoverShutterGroup(HomematicipCoverSlats, CoverEntity):
     """Representation of a HomematicIP Cloud cover shutter group."""
 
     def __init__(self, hap: HomematicipHAP, device, post: str = "ShutterGroup") -> None:

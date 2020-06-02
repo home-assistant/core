@@ -33,6 +33,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -114,7 +115,7 @@ async def async_setup(hass, config):
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
-        base_url = conf.get(CONF_BASE_URL) or hass.config.api.base_url
+        base_url = conf.get(CONF_BASE_URL) or get_url(hass)
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
     except (HomeAssistantError, KeyError) as err:
@@ -437,9 +438,8 @@ class SpeechManager:
         album = provider.name
         artist = language
 
-        if options is not None:
-            if options.get("voice") is not None:
-                artist = options.get("voice")
+        if options is not None and options.get("voice") is not None:
+            artist = options.get("voice")
 
         try:
             tts_file = mutagen.File(data_bytes, easy=True)
@@ -530,7 +530,7 @@ class TextToSpeechUrlView(HomeAssistantView):
         """Initialize a tts view."""
         self.tts = tts
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Generate speech and provide url."""
         try:
             data = await request.json()
@@ -570,7 +570,7 @@ class TextToSpeechView(HomeAssistantView):
         """Initialize a tts view."""
         self.tts = tts
 
-    async def get(self, request, filename):
+    async def get(self, request: web.Request, filename: str) -> web.Response:
         """Start a get request."""
         try:
             content, data = await self.tts.async_read_tts(filename)

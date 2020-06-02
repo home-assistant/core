@@ -1,0 +1,15 @@
+{
+    "config": {
+        "flow_title": "Tuya konfigurasjon",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Din landskode for kontoen din (f.eks. 1 for USA eller 86 for Kina)",
+                    "platform": "Appen der kontoen din registreres"
+                },
+                "description": "Skriv inn din Tuya-legitimasjon.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

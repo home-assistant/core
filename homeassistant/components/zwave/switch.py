@@ -2,7 +2,7 @@
 import logging
 import time
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -27,7 +27,7 @@ def get_device(values, **kwargs):
     return ZwaveSwitch(values)
 
 
-class ZwaveSwitch(ZWaveDeviceEntity, SwitchDevice):
+class ZwaveSwitch(ZWaveDeviceEntity, SwitchEntity):
     """Representation of a Z-Wave switch."""
 
     def __init__(self, values):

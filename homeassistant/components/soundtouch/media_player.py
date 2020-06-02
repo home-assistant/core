@@ -3,15 +3,17 @@ import logging
 import re
 
 from libsoundtouch import soundtouch_device
+from libsoundtouch.utils import Source
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -80,6 +82,7 @@ SUPPORT_SOUNDTOUCH = (
     | SUPPORT_TURN_ON
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
+    | SUPPORT_SELECT_SOURCE
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -184,7 +187,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class SoundTouchDevice(MediaPlayerDevice):
+class SoundTouchDevice(MediaPlayerEntity):
     """Representation of a SoundTouch Bose device."""
 
     def __init__(self, name, config):
@@ -233,6 +236,19 @@ class SoundTouchDevice(MediaPlayerDevice):
             return STATE_OFF
 
         return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
+
+    @property
+    def source(self):
+        """Name of the current input source."""
+        return self._status.source
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return [
+            Source.AUX.value,
+            Source.BLUETOOTH.value,
+        ]
 
     @property
     def is_volume_muted(self):
@@ -356,6 +372,17 @@ class SoundTouchDevice(MediaPlayerDevice):
                 self._device.select_preset(preset)
             else:
                 _LOGGER.warning("Unable to find preset with id %s", media_id)
+
+    def select_source(self, source):
+        """Select input source."""
+        if source == Source.AUX.value:
+            _LOGGER.debug("Selecting source AUX")
+            self._device.select_source_aux()
+        elif source == Source.BLUETOOTH.value:
+            _LOGGER.debug("Selecting source Bluetooth")
+            self._device.select_source_bluetooth()
+        else:
+            _LOGGER.warning("Source %s is not supported", source)
 
     def create_zone(self, slaves):
         """

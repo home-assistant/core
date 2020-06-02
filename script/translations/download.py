@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
-import glob
 import json
 import os
 import pathlib
@@ -8,7 +7,7 @@ import re
 import subprocess
 from typing import Dict, List, Union
 
-from .const import CORE_PROJECT_ID, DOCKER_IMAGE
+from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID
 from .error import ExitApp
 from .util import get_lokalise_token
 
@@ -26,18 +25,23 @@ def run_download_docker():
             "-v",
             f"{DOWNLOAD_DIR}:/opt/dest/locale",
             "--rm",
-            f"lokalise/lokalise-cli@sha256:{DOCKER_IMAGE}",
+            f"lokalise/lokalise-cli-2:{CLI_2_DOCKER_IMAGE}",
             # Lokalise command
-            "lokalise",
+            "lokalise2",
             "--token",
             get_lokalise_token(),
-            "export",
+            "--project-id",
             CORE_PROJECT_ID,
-            "--export_empty",
+            "file",
+            "download",
+            CORE_PROJECT_ID,
+            "--original-filenames=false",
+            "--replace-breaks=false",
+            "--export-empty-as",
             "skip",
-            "--type",
+            "--format",
             "json",
-            "--unzip_to",
+            "--unzip-to",
             "/opt/dest",
         ]
     )
@@ -45,16 +49,6 @@ def run_download_docker():
 
     if run.returncode != 0:
         raise ExitApp("Failed to download translations")
-
-
-def load_json(filename: str) -> Union[List, Dict]:
-    """Load JSON data from a file and return as dict or list.
-
-    Defaults to returning empty dict if file is not found.
-    """
-    with open(filename, encoding="utf-8") as fdesc:
-        return json.loads(fdesc.read())
-    return {}
 
 
 def save_json(filename: str, data: Union[List, Dict]):
@@ -67,11 +61,6 @@ def save_json(filename: str, data: Union[List, Dict]):
         fdesc.write(data)
         return True
     return False
-
-
-def get_language(path):
-    """Get the language code for the given file path."""
-    return os.path.splitext(os.path.basename(path))[0]
 
 
 def get_component_path(lang, component):
@@ -132,10 +121,9 @@ def save_language_translations(lang, translations):
 
 def write_integration_translations():
     """Write integration translations."""
-    paths = glob.iglob("build/translations-download/*.json")
-    for path in paths:
-        lang = get_language(path)
-        translations = load_json(path)
+    for lang_file in DOWNLOAD_DIR.glob("*.json"):
+        lang = lang_file.stem
+        translations = json.loads(lang_file.read_text())
         save_language_translations(lang, translations)
 
 

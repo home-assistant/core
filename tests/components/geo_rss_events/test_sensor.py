@@ -1,7 +1,6 @@
 """The test for the geo rss events sensor platform."""
 import unittest
 from unittest import mock
-from unittest.mock import MagicMock, patch
 
 from homeassistant.components import sensor
 import homeassistant.components.geo_rss_events.sensor as geo_rss_events
@@ -14,6 +13,7 @@ from homeassistant.const import (
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import MagicMock, patch
 from tests.common import (
     assert_setup_component,
     fire_time_changed,

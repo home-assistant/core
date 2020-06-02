@@ -1,10 +1,10 @@
 """Define tests for the AirVisual config flow."""
-from asynctest import patch
 from pyairvisual.errors import InvalidKeyError, NodeProError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.airvisual import (
     CONF_GEOGRAPHIES,
+    CONF_INTEGRATION_TYPE,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -93,8 +94,8 @@ async def test_node_pro_error(hass):
         assert result["errors"] == {CONF_IP_ADDRESS: "unable_to_connect"}
 
 
-async def test_migration_1_2(hass):
-    """Test migrating from version 1 to version 2."""
+async def test_migration(hass):
+    """Test migrating from version 1 to the current version."""
     conf = {
         CONF_API_KEY: "abcde12345",
         CONF_GEOGRAPHIES: [
@@ -110,8 +111,11 @@ async def test_migration_1_2(hass):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    with patch("pyairvisual.api.API.nearest_city"):
+    with patch("pyairvisual.api.API.nearest_city"), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: conf})
+        await hass.async_block_till_done()
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
 
@@ -123,6 +127,7 @@ async def test_migration_1_2(hass):
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
     }
 
     assert config_entries[1].unique_id == "35.48847, 137.5263065"
@@ -131,6 +136,7 @@ async def test_migration_1_2(hass):
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 35.48847,
         CONF_LONGITUDE: 137.5263065,
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
     }
 
 
@@ -186,6 +192,7 @@ async def test_step_geography(hass):
             CONF_API_KEY: "abcde12345",
             CONF_LATITUDE: 51.528308,
             CONF_LONGITUDE: -0.3817765,
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
         }
 
 
@@ -207,6 +214,7 @@ async def test_step_node_pro(hass):
         assert result["data"] == {
             CONF_IP_ADDRESS: "192.168.1.100",
             CONF_PASSWORD: "my_password",
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
         }
 
 
@@ -231,6 +239,7 @@ async def test_step_import(hass):
             CONF_API_KEY: "abcde12345",
             CONF_LATITUDE: 51.528308,
             CONF_LONGITUDE: -0.3817765,
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
         }
 
 

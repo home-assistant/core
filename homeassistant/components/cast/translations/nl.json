@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Wilt u Google Cast instellen?",
-                "title": "Google Cast"
+                "description": "Wilt u Google Cast instellen?"
             }
         }
     }

@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo ONVIF \u00e8 gi\u00e0 configurato.",
+            "already_in_progress": "Il flusso di configurazione per il dispositivo ONVIF \u00e8 gi\u00e0 in corso.",
+            "no_h264": "Non c'erano flussi H264 disponibili.  Controllare la configurazione del profilo sul dispositivo.",
+            "no_mac": "Impossibile configurare l'ID univoco per il dispositivo ONVIF.",
+            "onvif_error": "Errore durante la configurazione del dispositivo ONVIF.  Controllare i registri per ulteriori informazioni."
+        },
+        "error": {
+            "connection_failed": "Impossibile connettersi al servizio ONVIF con le credenziali fornite."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "title": "Configurare l'autenticazione"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Crea entit\u00e0 telecamera"
+                },
+                "description": "Creare un'entit\u00e0 telecamera per {profile} alla risoluzione {resolution}?",
+                "title": "Configurare i Profili"
+            },
+            "device": {
+                "data": {
+                    "host": "Seleziona il dispositivo ONVIF rilevato"
+                },
+                "title": "Selezionare il dispositivo ONVIF"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome",
+                    "port": "Porta"
+                },
+                "title": "Configurare il dispositivo ONVIF"
+            },
+            "user": {
+                "description": "Facendo clic su Invia, cercheremo nella tua rete i dispositivi ONVIF che supportano il profilo S. \n\nAlcuni produttori hanno iniziato a disabilitare ONVIF per impostazione predefinita. Assicurati che ONVIF sia abilitato nella configurazione della tua telecamera.",
+                "title": "Configurazione del dispositivo ONVIF"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "Argomenti FFMPEG aggiuntivi",
+                    "rtsp_transport": "Meccanismo di trasporto RTSP"
+                },
+                "title": "Opzioni dispositivo ONVIF"
+            }
+        }
+    }
+}

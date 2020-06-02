@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_group(gateway.api.groups.values())
 
 
-class DeconzLight(DeconzDevice, Light):
+class DeconzLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
 
     def __init__(self, device, gateway):
@@ -131,6 +131,16 @@ class DeconzLight(DeconzDevice, Light):
         return None
 
     @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._device.ctmax or super().max_mireds
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._device.ctmin or super().min_mireds
+
+    @property
     def is_on(self):
         """Return true if light is on."""
         return self._device.state
@@ -176,6 +186,9 @@ class DeconzLight(DeconzDevice, Light):
 
     async def async_turn_off(self, **kwargs):
         """Turn off light."""
+        if not self._device.state:
+            return
+
         data = {"on": False}
 
         if ATTR_TRANSITION in kwargs:

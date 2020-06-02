@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "No s'ha pogut connectar"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP",
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Proporciona, a continuaci\u00f3, la informaci\u00f3 necess\u00e0ria.",
+                "title": "Configuraci\u00f3 de GogoGate2"
+            }
+        }
+    }
+}

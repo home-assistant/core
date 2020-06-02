@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.components.soma import API, DEVICES, DOMAIN, SomaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class SomaCover(SomaEntity, CoverDevice):
+class SomaCover(SomaEntity, CoverEntity):
     """Representation of a Soma cover device."""
 
     def close_cover(self, **kwargs):

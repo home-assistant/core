@@ -4,7 +4,7 @@
             "already_configured": "Host already configured"
         },
         "error": {
-            "connection": "Connection error: please check your host, password & ssl",
+            "connection": "Connection error: please check your host, port & ssl",
             "login": "Login error: please check your username & password",
             "missing_data": "Missing data: please retry later or an other configuration",
             "otp_failed": "Two-step authentication failed, retry with a new pass code",
@@ -20,9 +20,8 @@
             },
             "link": {
                 "data": {
-                    "api_version": "DSM version",
                     "password": "Password",
-                    "port": "Port (Optional)",
+                    "port": "Port",
                     "ssl": "Use SSL/TLS to connect to your NAS",
                     "username": "Username"
                 },
@@ -31,14 +30,22 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM version",
                     "host": "Host",
                     "password": "Password",
-                    "port": "Port (Optional)",
+                    "port": "Port",
                     "ssl": "Use SSL/TLS to connect to your NAS",
                     "username": "Username"
                 },
                 "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minutes between scans"
+                }
             }
         }
     }

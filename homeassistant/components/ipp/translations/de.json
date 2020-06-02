@@ -6,7 +6,8 @@
             "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen, da ein Verbindungsupgrade erforderlich ist.",
             "ipp_error": "IPP-Fehler festgestellt.",
             "ipp_version_error": "IPP-Version wird vom Drucker nicht unterst\u00fctzt.",
-            "parse_error": "Antwort vom Drucker konnte nicht analysiert werden."
+            "parse_error": "Antwort vom Drucker konnte nicht analysiert werden.",
+            "unique_id_required": "Ger\u00e4t fehlt die f\u00fcr die Entdeckung erforderliche eindeutige Identifizierung."
         },
         "error": {
             "connection_error": "Verbindung zum Drucker fehlgeschlagen.",

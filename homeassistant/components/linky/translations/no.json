@@ -15,8 +15,8 @@
                     "password": "Passord",
                     "username": "E-post"
                 },
-                "description": "Skriv inn legitimasjonen din",
-                "title": "Linky"
+                "description": "Fyll inn legitimasjonen din",
+                "title": ""
             }
         }
     }

@@ -6,7 +6,7 @@ import eiscp
 from eiscp import eISCP
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     DOMAIN,
     SUPPORT_PLAY,
@@ -211,7 +211,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(hosts, True)
 
 
-class OnkyoDevice(MediaPlayerDevice):
+class OnkyoDevice(MediaPlayerEntity):
     """Representation of an Onkyo device."""
 
     def __init__(

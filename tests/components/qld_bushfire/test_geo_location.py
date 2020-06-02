@@ -1,6 +1,5 @@
 """The tests for the Queensland Bushfire Alert Feed platform."""
 import datetime
-from unittest.mock import MagicMock, call, patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -28,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import MagicMock, call, patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "qld_bushfire", CONF_RADIUS: 200}]}
@@ -98,6 +98,7 @@ async def test_setup(hass):
         )
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
+            await hass.async_block_till_done()
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             # Collect events.
@@ -201,6 +202,7 @@ async def test_setup_with_custom_location(hass):
             assert await async_setup_component(
                 hass, geo_location.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION
             )
+            await hass.async_block_till_done()
 
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)

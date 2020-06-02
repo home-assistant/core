@@ -1,6 +1,4 @@
 """Tests for the PS4 Integration."""
-from unittest.mock import MagicMock, patch
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
 from homeassistant.components.media_player.const import (
@@ -29,7 +27,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.common import MockConfigEntry, mock_coro, mock_registry
+from tests.async_mock import MagicMock, patch
+from tests.common import MockConfigEntry, mock_registry
 
 MOCK_HOST = "192.168.0.1"
 MOCK_NAME = "test_ps4"
@@ -119,8 +118,8 @@ async def test_creating_entry_sets_up_media_player(hass):
     mock_flow = "homeassistant.components.ps4.PlayStation4FlowHandler.async_step_user"
     with patch(
         "homeassistant.components.ps4.media_player.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup, patch(mock_flow, return_value=mock_coro(MOCK_FLOW_RESULT)):
+        return_value=True,
+    ) as mock_setup, patch(mock_flow, return_value=MOCK_FLOW_RESULT):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -152,10 +151,10 @@ async def test_config_flow_entry_migrate(hass):
 
     with patch(
         "homeassistant.util.location.async_detect_location_info",
-        return_value=mock_coro(MOCK_LOCATION),
+        return_value=MOCK_LOCATION,
     ), patch(
         "homeassistant.helpers.entity_registry.async_get_registry",
-        return_value=mock_coro(mock_e_registry),
+        return_value=mock_e_registry,
     ):
         await ps4.async_migrate_entry(hass, mock_entry)
 
@@ -281,7 +280,7 @@ async def test_send_command(hass):
     assert mock_entity.entity_id == f"media_player.{MOCK_NAME}"
 
     # Test that all commands call service function.
-    with patch(mock_func, return_value=mock_coro(True)) as mock_service:
+    with patch(mock_func, return_value=True) as mock_service:
         for mock_command in COMMANDS:
             await hass.services.async_call(
                 DOMAIN,

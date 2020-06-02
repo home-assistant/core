@@ -1,6 +1,5 @@
 """The tests for the mochad light platform."""
 import unittest
-import unittest.mock as mock
 
 import pytest
 
@@ -8,6 +7,7 @@ from homeassistant.components import light
 from homeassistant.components.mochad import light as mochad
 from homeassistant.setup import setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant
 
 

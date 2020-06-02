@@ -20,6 +20,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from . import async_get_geography_id
 from .const import (  # pylint: disable=unused-import
     CONF_GEOGRAPHIES,
+    CONF_INTEGRATION_TYPE,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
@@ -100,7 +101,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(websession, api_key=user_input[CONF_API_KEY])
+        client = Client(session=websession, api_key=user_input[CONF_API_KEY])
 
         # If this is the first (and only the first) time we've seen this API key, check
         # that it's valid:
@@ -123,7 +124,8 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 checked_keys.add(user_input[CONF_API_KEY])
 
             return self.async_create_entry(
-                title=f"Cloud API ({geo_id})", data=user_input
+                title=f"Cloud API ({geo_id})",
+                data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY},
             )
 
     async def async_step_import(self, import_config):
@@ -140,11 +142,14 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_set_unique_id(user_input[CONF_IP_ADDRESS])
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(websession)
+        client = Client(session=websession)
 
         try:
             await client.node.from_samba(
-                user_input[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]
+                user_input[CONF_IP_ADDRESS],
+                user_input[CONF_PASSWORD],
+                include_history=False,
+                include_trends=False,
             )
         except NodeProError as err:
             LOGGER.error("Error connecting to Node/Pro unit: %s", err)
@@ -155,7 +160,8 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=f"Node/Pro ({user_input[CONF_IP_ADDRESS]})", data=user_input
+            title=f"Node/Pro ({user_input[CONF_IP_ADDRESS]})",
+            data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO},
         )
 
     async def async_step_user(self, user_input=None):

@@ -4,7 +4,7 @@
       "user": {
         "title": "Define your Solar-Log connection",
         "data": {
-          "host": "The hostname or ip-address of your Solar-Log device",
+          "host": "[%key:common::config_flow::data::host%]",
           "name": "The prefix to be used for your Solar-Log sensors"
         }
       }
@@ -13,6 +13,8 @@
       "already_configured": "Device is already configured",
       "cannot_connect": "Failed to connect, please verify host address"
     },
-    "abort": { "already_configured": "Device is already configured" }
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
   }
 }

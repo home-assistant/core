@@ -1,5 +1,4 @@
 """The tests for the MQTT switch platform."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components import switch
@@ -29,7 +28,8 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message, async_mock_mqtt_component, mock_coro
+from tests.async_mock import patch
+from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
 from tests.components.switch import common
 
 DEFAULT_CONFIG = {
@@ -59,6 +59,7 @@ async def test_controlling_state_via_topic(hass, mock_publish):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
@@ -81,7 +82,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
 
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=mock_coro(fake_state),
+        return_value=fake_state,
     ):
         assert await async_setup_component(
             hass,
@@ -97,6 +98,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_ON
@@ -137,6 +139,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mock_publish):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
@@ -213,6 +216,7 @@ async def test_custom_state_payload(hass, mock_publish):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
@@ -314,6 +318,7 @@ async def test_discovery_update_switch(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'

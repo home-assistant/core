@@ -1,9 +1,9 @@
 """The tests for Kira sensor platform."""
 import unittest
-from unittest.mock import MagicMock
 
 from homeassistant.components.kira import remote as kira
 
+from tests.async_mock import MagicMock
 from tests.common import get_test_home_assistant
 
 SERVICE_SEND_COMMAND = "send_command"

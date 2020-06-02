@@ -18,6 +18,7 @@ class TestWorldClockSensor(unittest.TestCase):
         config = {"sensor": {"platform": "worldclock", "time_zone": "America/New_York"}}
 
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
     def tearDown(self):
         """Stop everything that was started."""

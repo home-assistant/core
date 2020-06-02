@@ -1,7 +1,7 @@
 """Support for Abode Security System switches."""
 import abodepy.helpers.constants as CONST
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import AbodeAutomation, AbodeDevice
@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AbodeSwitch(AbodeDevice, SwitchDevice):
+class AbodeSwitch(AbodeDevice, SwitchEntity):
     """Representation of an Abode switch."""
 
     def turn_on(self, **kwargs):
@@ -45,7 +45,7 @@ class AbodeSwitch(AbodeDevice, SwitchDevice):
         return self._device.is_on
 
 
-class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
+class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     """A switch implementation for Abode automations."""
 
     async def async_added_to_hass(self):

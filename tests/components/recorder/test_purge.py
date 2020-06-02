@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 import json
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
@@ -10,6 +9,7 @@ from homeassistant.components.recorder.models import Events, States
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
 

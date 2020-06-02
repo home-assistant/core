@@ -4,7 +4,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 import homeassistant.util.color as color_util
 
@@ -32,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_add_entities(entities)
 
 
-class PlumLight(Light):
+class PlumLight(LightEntity):
     """Representation of a Plum Lightpad dimmer."""
 
     def __init__(self, load):
@@ -88,7 +88,7 @@ class PlumLight(Light):
         await self._load.turn_off()
 
 
-class GlowRing(Light):
+class GlowRing(LightEntity):
     """Representation of a Plum Lightpad dimmer glow ring."""
 
     def __init__(self, lightpad):

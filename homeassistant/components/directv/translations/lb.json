@@ -14,14 +14,12 @@
                     "one": "Een",
                     "other": "Aner"
                 },
-                "description": "Soll {name} konfigur\u00e9iert ginn?",
-                "title": "Mam DirecTV Receiver verbannen"
+                "description": "Soll {name} konfigur\u00e9iert ginn?"
             },
             "user": {
                 "data": {
                     "host": "Numm oder IP Adresse"
-                },
-                "title": "Mam DirecTV Receiver verbannen"
+                }
             }
         }
     }
