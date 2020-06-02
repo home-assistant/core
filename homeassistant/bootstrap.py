@@ -29,8 +29,14 @@ _LOGGER = logging.getLogger(__name__)
 
 ERROR_LOG_FILENAME = "home-assistant.log"
 
-# How long to wait until things that run on bootstrap have to finish.
-TIMEOUT_EVENT_BOOTSTRAP = 15
+#
+# This timeout is a failsafe in case some integration starts a long
+# running task and blocks bootstrap from wrapping up.
+#
+# This should be long enough for recorder to migrate schema
+# and mqtt_eventstream to setup fully.
+#
+TIMEOUT_EVENT_BOOTSTRAP = 1800
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
