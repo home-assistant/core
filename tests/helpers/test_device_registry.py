@@ -764,6 +764,10 @@ async def test_restore_device(hass, registry, update_events):
     assert len(registry.devices) == 2
     assert len(registry.deleted_devices) == 0
 
+    assert isinstance(entry3.config_entries, set)
+    assert isinstance(entry3.connections, set)
+    assert isinstance(entry3.identifiers, set)
+
     await hass.async_block_till_done()
 
     assert len(update_events) == 4
