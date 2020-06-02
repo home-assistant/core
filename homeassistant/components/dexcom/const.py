@@ -17,3 +17,11 @@ GLUCOSE_TREND_ICON = [
     "mdi:help",
     "mdi:alert-circle-outline",
 ]
+
+MMOL_L = "mmol/L"
+MG_DL = "mg/dL"
+
+CONF_SERVER = "server"
+
+SERVER_OUS = "EU"
+SERVER_US = "US"
