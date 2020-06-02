@@ -100,17 +100,12 @@ async def prepare_usb_device(hass, device_info):
         # TODO check the /dev/ttyACM.. number
         await _run("su -c 'chmod 777 /dev/ttyACM0'")
 
-        # take the full path to zigbee.ecosystem.config.js
-        # ecosystem_config = str(os.path.dirname(__file__))
-        # ecosystem_config += "/pm2/zigbee.ecosystem.config.js"
-        # cmd_to_run = "pm2 startOrReload " + ecosystem_config
         # restart-delay 150000 milisecond == 2.5 minutes
         cmd_to_run = (
-            "cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt "
-            "&& pm2 start npm --name zigbee --output /dev/null --error /dev/null --restart-delay=150000 -- run start "
+            "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
+            "--name zigbee --output /dev/null --error /dev/null --restart-delay=150000"
         )
         await _run(cmd_to_run)
-        await _run("pm2 save")
 
         #
         # if ais_global.G_AIS_START_IS_DONE:
@@ -127,7 +122,7 @@ async def remove_usb_device(hass, device_info):
         # Unregister the built-in zigbee panel
         hass.components.frontend.async_remove_panel("lovelace/ais_zigbee")
         # stop pm2 zigbee service
-        await _run("pm2 delete zigbee && pm2 save")
+        await _run("pm2 delete zigbee")
         await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zigbee"}
         )
@@ -307,7 +302,7 @@ async def async_setup(hass, config):
 
     async def stop_devices(call):
         # remove zigbee service on start - to prevent pm2 for restarting when usb is not connected
-        await _run("pm2 delete zigbee && pm2 save")
+        await _run("pm2 delete zigbee")
         #
 
     async def lsusb(call):

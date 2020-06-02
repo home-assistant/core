@@ -7,6 +7,7 @@ https://home-assistant.io/components/shell_command/
 import asyncio
 import logging
 import os
+import platform
 
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
@@ -14,6 +15,9 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 DOMAIN = "ais_shell_command"
 GLOBAL_X = 0
 _LOGGER = logging.getLogger(__name__)
+G_LT_PATH = "/data/data/pl.sviete.dom/files/usr/bin/lt"
+if platform.machine() == "x86_64":
+    G_LT_PATH = "/usr/local/bin/lt"
 
 
 async def async_setup(hass, config):
@@ -161,14 +165,15 @@ async def _change_remote_access(hass, call):
     await hass.services.async_call("ais_ai_service", "say_it", {"text": text})
 
     if access == "on":
-        await _run("pm2 stop tunnel && pm2 delete tunnel")
         await _run(
-            "pm2 start lt --name tunnel --output /dev/null --error /dev/null "
-            "--restart-delay=150000 -- "
-            "-h http://paczka.pro -p 8180 -s {}".format(gate_id)
+            "pm2 restart tunnel || pm2 start {}"
+            " --name tunnel --output /dev/null --error /dev/null"
+            " --restart-delay=150000 -- -h http://paczka.pro -p 8180 -s {}".format(
+                G_LT_PATH, gate_id
+            )
         )
     else:
-        await _run("pm2 stop tunnel && pm2 delete tunnel && pm2 save")
+        await _run("pm2 delete tunnel && pm2 save")
 
 
 async def _hdmi_control_disable(hass, call):
@@ -313,12 +318,13 @@ async def _ssh_remote_access(hass, call):
     if "access" in call.data:
         access = call.data["access"]
     gate_id = "ssh-" + hass.states.get("sensor.ais_secure_android_id_dom").state
-
     if access == "on":
-        await _run("pm2 delete ssh-tunnel")
         await _run(
-            "pm2 start lt --name ssh-tunnel --restart-delay=150000 --output /dev/null --error /dev/null -- -h "
-            "http://paczka.pro -p 8888 -s " + gate_id
+            "pm2 restart ssh-tunnel || pm2 start {}"
+            " --name ssh-tunnel --output /dev/null --error /dev/null"
+            " --restart-delay=150000 -- -h http://paczka.pro -p 8888 -s {}".format(
+                G_LT_PATH, gate_id
+            )
         )
         _LOGGER.warning(
             "You have SSH access to gate on http://" + gate_id + ".paczka.pro"
