@@ -3,6 +3,8 @@ from datetime import timedelta
 import unittest
 from unittest import mock
 
+import pytest
+
 from homeassistant import setup
 from homeassistant.components.template import binary_sensor as template
 from homeassistant.const import (
@@ -27,6 +29,11 @@ from tests.common import (
     async_fire_time_changed,
     get_test_home_assistant,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_storage(hass_storage):
+    """Autouse hass_storage for the TestCase tests."""
 
 
 class TestBinarySensorTemplate(unittest.TestCase):
