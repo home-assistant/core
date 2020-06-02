@@ -1,15 +1,14 @@
 """Tests for the Arcam FMJ config flow module."""
 
+from arcam.fmj.client import ConnectionFailed
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.arcam_fmj.config_flow import (
-    ArcamFmjFlowHandler,
-    get_entry_client,
-)
+from homeassistant.components.arcam_fmj.config_flow import get_entry_client
 from homeassistant.components.arcam_fmj.const import DOMAIN, DOMAIN_DATA_ENTRIES
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 
 from .conftest import (
     MOCK_CONFIG_ENTRY,
@@ -20,6 +19,7 @@ from .conftest import (
     MOCK_UUID,
 )
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 MOCK_UPNP_DEVICE = f"""
@@ -44,43 +44,59 @@ MOCK_DISCOVER = {
 }
 
 
-@pytest.fixture(name="flow")
-def flow_fixture(hass):
-    """Create a mock flow for use in tests."""
-    flow = ArcamFmjFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-    return flow
+@pytest.fixture(name="dummy_client", autouse=True)
+def dummy_client_fixture(hass):
+    """Mock out the real client."""
+    with patch("homeassistant.components.arcam_fmj.config_flow.Client") as client:
+        client.return_value.start.side_effect = AsyncMock(return_value=None)
+        client.return_value.stop.side_effect = AsyncMock(return_value=None)
+        yield client.return_value
 
 
-async def test_ssdp(hass, flow):
+async def test_ssdp(hass, dummy_client):
     """Test a ssdp import flow."""
-    result = await flow.async_step_ssdp(MOCK_DISCOVER)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
-    assert flow.context["host"] == MOCK_HOST
-    assert flow.unique_id == MOCK_UUID
 
-    result = await flow.async_step_confirm({})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG_ENTRY
 
 
-async def test_ssdp_abort(hass, flow):
+async def test_ssdp_abort(hass):
     """Test a ssdp import flow."""
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG_ENTRY, title=MOCK_NAME, unique_id=MOCK_UUID
     )
     entry.add_to_hass(hass)
 
-    with pytest.raises(
-        data_entry_flow.AbortFlow, match="Flow aborted: already_configured"
-    ):
-        await flow.async_step_ssdp(MOCK_DISCOVER)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_update(hass, flow):
+async def test_ssdp_unable_to_connect(hass, dummy_client):
+    """Test a ssdp import flow."""
+    dummy_client.start.side_effect = AsyncMock(side_effect=ConnectionFailed)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "unable_to_connect"
+
+
+async def test_ssdp_update(hass):
     """Test a ssdp import flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -90,16 +106,22 @@ async def test_ssdp_update(hass, flow):
     )
     entry.add_to_hass(hass)
 
-    with pytest.raises(
-        data_entry_flow.AbortFlow, match="Flow aborted: already_configured"
-    ):
-        await flow.async_step_ssdp(MOCK_DISCOVER)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVER,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
     assert entry.data[CONF_HOST] == MOCK_HOST
 
 
-async def test_user(hass, flow, aioclient_mock):
+async def test_user(hass, aioclient_mock):
     """Test a manual user configuration flow."""
-    result = await flow.async_step_user(None)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=None,
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
@@ -109,14 +131,16 @@ async def test_user(hass, flow, aioclient_mock):
     }
 
     aioclient_mock.get(MOCK_UPNP_LOCATION, text=MOCK_UPNP_DEVICE)
-    result = await flow.async_step_user(user_input)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG_ENTRY
-    assert flow.unique_id == MOCK_UUID
+    assert result["result"].unique_id == MOCK_UUID
 
 
-async def test_invalid_ssdp(hass, flow, aioclient_mock):
+async def test_invalid_ssdp(hass, aioclient_mock):
     """Test a a config flow where ssdp fails."""
     user_input = {
         CONF_HOST: MOCK_HOST,
@@ -124,14 +148,16 @@ async def test_invalid_ssdp(hass, flow, aioclient_mock):
     }
 
     aioclient_mock.get(MOCK_UPNP_LOCATION, text="")
-    result = await flow.async_step_user(user_input)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG_ENTRY
-    assert flow.unique_id is None
+    assert result["result"].unique_id is None
 
 
-async def test_user_wrong(hass, flow, aioclient_mock):
+async def test_user_wrong(hass, aioclient_mock):
     """Test a manual user configuration flow with no ssdp response."""
     user_input = {
         CONF_HOST: MOCK_HOST,
@@ -139,10 +165,12 @@ async def test_user_wrong(hass, flow, aioclient_mock):
     }
 
     aioclient_mock.get(MOCK_UPNP_LOCATION, status=404)
-    result = await flow.async_step_user(user_input)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input,
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
-    assert flow.unique_id is None
+    assert result["result"].unique_id is None
 
 
 async def test_get_entry_client(hass):
