@@ -21,6 +21,10 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
@@ -45,6 +49,21 @@ DEVICE_CLASS = {
     Power: DEVICE_CLASS_POWER,
     Pressure: DEVICE_CLASS_PRESSURE,
     Temperature: DEVICE_CLASS_TEMPERATURE,
+}
+
+ICON = {
+    Daylight: "mdi:white-balance-sunny",
+    Pressure: "mdi:gauge",
+    Temperature: "mdi:thermometer",
+}
+
+UNIT_OF_MEASUREMENT = {
+    Consumption: ENERGY_KILO_WATT_HOUR,
+    Humidity: UNIT_PERCENTAGE,
+    LightLevel: "lx",
+    Power: POWER_WATT,
+    Pressure: PRESSURE_HPA,
+    Temperature: TEMP_CELSIUS,
 }
 
 
@@ -140,12 +159,12 @@ class DeconzSensor(DeconzDevice):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return self._device.SENSOR_ICON
+        return ICON.get(type(self._device))
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
-        return self._device.SENSOR_UNIT
+        return UNIT_OF_MEASUREMENT.get(type(self._device))
 
     @property
     def device_state_attributes(self):

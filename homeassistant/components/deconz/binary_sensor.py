@@ -94,11 +94,6 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         return DEVICE_CLASS.get(type(self._device))
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return self._device.SENSOR_ICON
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
