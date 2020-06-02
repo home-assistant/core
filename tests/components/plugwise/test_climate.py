@@ -3,16 +3,6 @@
 from tests.components.plugwise.common import async_init_integration
 
 
-async def test_smile_unauthorized(hass, mock_smile_unauth):
-    """Test failing unauthorization by Smile."""
-    assert await async_init_integration(hass, mock_smile_unauth) is False
-
-
-async def test_smile_error(hass, mock_smile_error):
-    """Test server error handling by Smile."""
-    assert await async_init_integration(hass, mock_smile_error) is False
-
-
 async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
     """Test creation of adam climate device environment."""
     assert await async_init_integration(hass, mock_smile_adam) is True
