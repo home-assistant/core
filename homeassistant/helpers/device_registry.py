@@ -427,12 +427,12 @@ class DeviceRegistry:
             if config_entries == {config_entry_id}:
                 # Permanently remove the device from the device registry.
                 del self.deleted_devices[deleted_device.id]
-                self.async_schedule_save()
             else:
                 config_entries = config_entries - {config_entry_id}
                 self.deleted_devices[deleted_device.id] = attr.evolve(
                     deleted_device, config_entries=config_entries
                 )
+            self.async_schedule_save()
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
