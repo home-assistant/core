@@ -126,17 +126,17 @@ MAP_SERVICE_API = {
 
 
 @bind_hass
-async def async_get_addon_info(
-    hass: HomeAssistantType, slug: str, repository: str
-) -> dict:
+async def async_get_addon_info(hass: HomeAssistantType, addon_id: str) -> dict:
     """Return add-on info.
+
+    The addon_id is a snakecased concatenation of the 'repository' value
+    found in the add-on info and the 'slug' value found in the add-on config.json.
+    In the addon info the addon_id is called 'slug'.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
-    addon = f"{repository}_{slug}"
-    command = f"/addons/{addon}/info"
-    result = await hassio.send_command(command, method="get")
+    result = await hassio.get_addon_info(addon_id)
     return result["data"]
 
 
