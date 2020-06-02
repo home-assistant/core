@@ -16,9 +16,9 @@ from .const import (
     SERVICE_UPDATE_DEVS,
     VS_DISCOVERY,
     VS_DISPATCHERS,
+    VS_FANS,
     VS_MANAGER,
     VS_SWITCHES,
-    VS_FANS,
 )
 
 _LOGGER = logging.getLogger(__name__)

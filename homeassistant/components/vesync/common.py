@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.helpers.entity import ToggleEntity
 
-from .const import VS_SWITCHES, VS_FANS
+from .const import VS_FANS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
