@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if "plug" in device_properties["types"]:
             model = "Metered Switch"
             entities.append(
-                PwSwitch(api, coordinator, device_properties["name"], dev_id, model,)
+                PwSwitch(api, coordinator, device_properties["name"], dev_id, model)
             )
 
     async_add_entities(entities, True)
