@@ -61,7 +61,7 @@ class PwBinarySensor(SmileSensor, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.is_on
+        return self._is_on
 
     @property
     def icon(self):
