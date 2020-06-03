@@ -74,8 +74,8 @@ class AgentCamera(MjpegCamera):
 
         device_info = {
             CONF_NAME: device.name,
-            CONF_MJPEG_URL: f"{self.server_url}{device.mjpeg_image_url}&size={device.raw_result['data']['width']}x{device.raw_result['data']['height']}",
-            CONF_STILL_IMAGE_URL: f"{self.server_url}{device.still_image_url}&size={device.raw_result['data']['width']}x{device.raw_result['data']['height']}",
+            CONF_MJPEG_URL: f"{self.server_url}{device.mjpeg_image_url}&size={device.width}x{device.height}",
+            CONF_STILL_IMAGE_URL: f"{self.server_url}{device.still_image_url}&size={device.width}x{device.height}",
         }
         self.device = device
         self._removed = False
