@@ -1353,3 +1353,61 @@ async def test_logbook_describe_event(hass, hass_client):
     assert event["name"] == "Test Name"
     assert event["message"] == "tested a message"
     assert event["domain"] == "test_domain"
+
+
+async def test_logbook_view_end_time_entity(hass, hass_client):
+    """Test the logbook view with end_time and entity."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    entity_id_test = "switch.test"
+    hass.states.async_set(entity_id_test, STATE_OFF)
+    hass.states.async_set(entity_id_test, STATE_ON)
+    entity_id_second = "switch.second"
+    hass.states.async_set(entity_id_second, STATE_OFF)
+    hass.states.async_set(entity_id_second, STATE_ON)
+    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_block_till_done()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 2
+    assert json[0]["entity_id"] == entity_id_test
+    assert json[1]["entity_id"] == entity_id_second
+
+    # Test entries for 3 days with filter by entity_id
+    end_time = start + timedelta(hours=72)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
+    )
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 1
+    assert json[0]["entity_id"] == entity_id_test
+
+    # Tomorrow time 00:00:00
+    start = dt_util.utcnow()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test entries from today to 3 days with filter by entity_id
+    end_time = start_date + timedelta(hours=72)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
+    )
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 1
+    assert json[0]["entity_id"] == entity_id_test
