@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_TOKEN,
-    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
@@ -52,7 +51,8 @@ CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_RETRY_COUNT = "max_retries"
 
 DEFAULT_DATABASE = "home_assistant"
-DEFAULT_URL = "https://us-west-2-1.aws.cloud2.influxdata.com"
+DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
+DEFAULT_SSL_V2 = True
 DEFAULT_BUCKET = "Home Assistant"
 DEFAULT_VERIFY_SSL = True
 DOMAIN = "influxdb"
@@ -68,18 +68,18 @@ BATCH_BUFFER_SIZE = 100
 DB_CONNECTION_FAILURE_MSG = ()
 
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
-    # Connection config for V1 API.
+    # Connection config for V1 and V2 APIs.
     vol.Optional(CONF_HOST): cv.string,
-    vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-    vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
     vol.Optional(CONF_PATH): cv.string,
     vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_SSL): cv.boolean,
+    # Connection config for V1 API only.
+    vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+    vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    # Connection config for V2 API.
+    # Connection config for V2 API only.
     vol.Inclusive(CONF_API_V2, "v2_api_config"): True,
-    vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
     vol.Inclusive(CONF_TOKEN, "v2_api_config"): cv.string,
     vol.Inclusive(CONF_ORG, "v2_api_config"): cv.string,
     vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
@@ -156,6 +156,28 @@ def get_influx_connection(client_kwargs, bucket):
     return influx
 
 
+def create_influx_url(conf):
+    """Build URL used from config inputs and default when necessary."""
+    if CONF_SSL not in conf:
+        conf[CONF_SSL] = DEFAULT_SSL_V2
+    if CONF_HOST not in conf:
+        conf[CONF_HOST] = DEFAULT_HOST_V2
+
+    url = conf[CONF_HOST]
+    if conf[CONF_SSL]:
+        url = f"https://{url}"
+    else:
+        url = f"http://{url}"
+
+    if CONF_PORT in conf:
+        url = f"{url}:{conf[CONF_PORT]}"
+
+    if CONF_PATH in conf:
+        url = f"{url}{conf[CONF_PATH]}"
+
+    return url
+
+
 def setup(hass, config):
     """Set up the InfluxDB component."""
     conf = config[DOMAIN]
@@ -166,7 +188,7 @@ def setup(hass, config):
     }
 
     if use_v2_api:
-        kwargs["url"] = conf[CONF_URL]
+        kwargs["url"] = create_influx_url(conf)
         kwargs["token"] = conf[CONF_TOKEN]
         kwargs["org"] = conf[CONF_ORG]
         bucket = conf[CONF_BUCKET]

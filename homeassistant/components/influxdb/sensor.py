@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TOKEN,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_URL,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
@@ -34,6 +33,7 @@ from . import (
     CONF_BUCKET,
     CONF_DB_NAME,
     CONF_ORG,
+    create_influx_url,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if use_v2_api:
         influx_conf = {
-            "url": config[CONF_URL],
+            "url": create_influx_url(config),
             "token": config[CONF_TOKEN],
             "org": config[CONF_ORG],
         }

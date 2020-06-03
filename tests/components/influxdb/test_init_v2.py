@@ -39,7 +39,10 @@ class TestInfluxDB(unittest.TestCase):
         config = {
             "influxdb": {
                 "api_v2": True,
-                "url": "http://localhost:9999",
+                "ssl": False,
+                "host": "localhost",
+                "port": "9999",
+                "path": "/influx",
                 "token": "token",
                 "organization": "organization",
                 "bucket": "bucket",
@@ -698,6 +701,7 @@ class TestInfluxDB(unittest.TestCase):
             self.handler_method(event)
             self.hass.data[influxdb.DOMAIN].block_till_done()
             assert mock_sleep.called
+        # pylint: disable=unused-variable
         args, kwargs = mock_client.return_value.write_api.return_value.write.call_args
         json_data = kwargs["record"]
         assert mock_client.return_value.write_api.return_value.write.call_count == 2
