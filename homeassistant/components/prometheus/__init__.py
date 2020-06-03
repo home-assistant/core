@@ -7,7 +7,11 @@ import prometheus_client
 import voluptuous as vol
 
 from homeassistant import core as hacore
-from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE
+from homeassistant.components.climate.const import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
+    CURRENT_HVAC_ACTIONS,
+)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -166,9 +170,10 @@ class PrometheusMetrics:
             except ValueError:
                 pass
 
-    def _metric(self, metric, factory, documentation, labels=None):
-        if labels is None:
-            labels = ["entity", "friendly_name", "domain"]
+    def _metric(self, metric, factory, documentation, extra_labels=None):
+        labels = ["entity", "friendly_name", "domain"]
+        if extra_labels is not None:
+            labels.extend(extra_labels)
 
         try:
             return self._metrics[metric]
@@ -302,6 +307,16 @@ class PrometheusMetrics:
                 "Current Temperature in degrees Celsius",
             )
             metric.labels(**self._labels(state)).set(current_temp)
+
+        current_action = state.attributes.get(ATTR_HVAC_ACTION)
+        if current_action:
+            metric = self._metric(
+                "climate_action", self.prometheus_cli.Gauge, "HVAC action", ["action"],
+            )
+            for action in CURRENT_HVAC_ACTIONS:
+                metric.labels(**dict(self._labels(state), action=action)).set(
+                    float(action == current_action)
+                )
 
     def _handle_sensor(self, state):
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
