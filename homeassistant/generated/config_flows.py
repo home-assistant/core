@@ -33,6 +33,7 @@ FLOWS = [
     "dialogflow",
     "directv",
     "doorbird",
+    "dunehd",
     "dynalite",
     "ecobee",
     "elgato",
