@@ -31,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         data = api.get_device_data(dev_id)
         for binary_sensor, dummy in BINARY_SENSOR_MAP.items():
-            if not binary_sensor not in data:
+            if binary_sensor not in data:
                 continue
 
             entities.append(
