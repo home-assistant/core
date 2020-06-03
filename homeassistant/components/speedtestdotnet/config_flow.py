@@ -1,7 +1,6 @@
 """Config flow for Transmission Bittorent Client."""
 import logging
 
-import speedtest
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -21,17 +20,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_server_list():
-    """Get list of speedtest servers."""
-    servers = {}
-    servers[DEFAULT_SERVER] = ""
-    api = speedtest.Speedtest()
-    server_list = api.get_servers()
-    for server in sorted(server_list.values(), key=lambda server: server[0]["country"]):
-        servers[f"{server[0]['country']} - {server[0]['name']}"] = server
-    return servers
-
-
+# pylint: disable=unused-import
 class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle SpeedTest config flow."""
 
@@ -54,16 +43,6 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
-    # async def async_step_import(self, import_config):
-    #     """Import from SpeedTest config."""
-    #     import_config[CONF_SCAN_INTERVAL] = (
-    #         import_config[CONF_SCAN_INTERVAL].seconds / 60
-    #     )
-    #     if import_config[CONF_SCAN_INTERVAL] < 1:
-    #         import_config[CONF_SCAN_INTERVAL] = 1
-
-    #     return await self.async_step_user(user_input=import_config)
-
 
 class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle SpeedTest options."""
@@ -78,12 +57,6 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
         errors = {}
 
         if user_input is not None:
-
-            # if user_input[CONF_SERVER_ID]:
-            #     try:
-            #         self._api.get_servers([user_input[CONF_SERVER_ID]])
-            #     except speedtest.NoMatchedServers:
-            #         errors[CONF_SERVER_ID] = "wrong_serverid"
             server_name = user_input[CONF_SERVER_NAME]
             if server_name != "*Auto Detect":
                 server_id = self._server_list[server_name][0]["id"]
@@ -92,12 +65,8 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
                 user_input[CONF_SERVER_ID] = None
 
             return self.async_create_entry(title="", data=user_input)
-        try:
-            self._server_list = await self.hass.async_add_executor_job(get_server_list)
-        except speedtest.ConfigRetrievalError:
-            errors[CONF_SERVER_NAME] = "retrive_error"
-            self._server_list[DEFAULT_SERVER] = ""
 
+        self._server_list = self.hass.data[DOMAIN].server_list
         options = {
             vol.Optional(
                 CONF_SERVER_NAME,

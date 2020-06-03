@@ -16,7 +16,7 @@
       "init": {
         "data": {
           "scan_interval": "Update frequency (minutes)",
-          "manual": "Scan Manually",
+          "manual": "Disable auto update",
           "server_name": "Select test server"
         }
       }
