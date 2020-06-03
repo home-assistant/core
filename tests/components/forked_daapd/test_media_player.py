@@ -364,9 +364,9 @@ def test_master_state(hass, mock_api_object):
     assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert state.attributes[ATTR_MEDIA_DURATION] == 0.05
     assert state.attributes[ATTR_MEDIA_POSITION] == 0.005
-    assert state.attributes[ATTR_MEDIA_TITLE] == "Short TTS file"
+    assert state.attributes[ATTR_MEDIA_TITLE] == "No album"  # reversed for url
     assert state.attributes[ATTR_MEDIA_ARTIST] == "Google"
-    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "No album"
+    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Short TTS file"  # reversed
     assert state.attributes[ATTR_MEDIA_ALBUM_ARTIST] == "The xx"
     assert state.attributes[ATTR_MEDIA_TRACK] == 1
     assert not state.attributes[ATTR_MEDIA_SHUFFLE]
@@ -466,7 +466,7 @@ async def test_last_outputs_master(hass, mock_api_object):
     assert mock_api_object.set_enabled_outputs.call_count == 2
 
 
-async def test_bunch_of_stuff_master(hass, mock_api_object, get_request_return_values):
+async def test_bunch_of_stuff_master(hass, get_request_return_values, mock_api_object):
     """Run bunch of stuff."""
     await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_TURN_ON)
     await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_TURN_OFF)
@@ -710,6 +710,9 @@ async def test_librespot_java_stuff(
     await hass.async_block_till_done()
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert state.attributes[ATTR_INPUT_SOURCE] == "librespot-java (pipe)"
+    # test title and album not reversed when data_kind not url
+    assert state.attributes[ATTR_MEDIA_TITLE] == "librespot-java"
+    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "some album"
 
 
 async def test_librespot_java_play_media(hass, pipe_control_api_object):
