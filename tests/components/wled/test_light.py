@@ -1,5 +1,7 @@
 """Tests for the WLED light platform."""
-from wled import WLEDConnectionError
+import json
+
+from wled import Device as WLEDDevice, WLEDConnectionError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -32,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from tests.async_mock import patch
+from tests.common import load_fixture
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -135,6 +138,40 @@ async def test_switch_change_state(
         light_mock.assert_called_once_with(
             color_primary=(255, 159, 70), on=True, segment_id=0,
         )
+
+
+async def test_dynamically_handle_segments(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test if a new/deleted segment is dynamically added/removed."""
+    await init_integration(hass, aioclient_mock)
+
+    assert hass.states.get("light.wled_rgb_light")
+    assert hass.states.get("light.wled_rgb_light_1")
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = entity_registry.async_get("light.wled_rgb_light")
+    coordinator = hass.data[DOMAIN][entry.config_entry_id]
+
+    data = json.loads(load_fixture("wled/rgb_single_segment.json"))
+    device = WLEDDevice(data)
+
+    # Test removal if segment went missing
+    with patch(
+        "homeassistant.components.wled.WLEDDataUpdateCoordinator._async_update_data",
+        return_value=device,
+    ):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+        assert hass.states.get("light.wled_rgb_light")
+        assert not hass.states.get("light.wled_rgb_light_1")
+
+    # Test adding if segment shows up again
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.wled_rgb_light")
+    assert hass.states.get("light.wled_rgb_light_1")
 
 
 async def test_light_error(
