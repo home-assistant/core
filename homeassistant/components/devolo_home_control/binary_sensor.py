@@ -36,25 +36,25 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
     def __init__(self, homecontrol, device_instance, element_uid):
         """Initialize a devolo binary sensor."""
         if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
-            super().__init__(
-                homecontrol=homecontrol,
-                device_instance=device_instance,
-                element_uid=element_uid,
-                name=device_instance.itemName
+            name = (
+                device_instance.itemName
                 + " "
-                + device_instance.binary_sensor_property.get(element_uid).sub_type,
-                sync=self._sync,
+                + device_instance.binary_sensor_property.get(element_uid).sub_type
             )
         else:
-            super().__init__(
-                homecontrol=homecontrol,
-                device_instance=device_instance,
-                element_uid=element_uid,
-                name=device_instance.itemName
+            name = (
+                device_instance.itemName
                 + " "
                 + device_instance.binary_sensor_property.get(element_uid).sensor_type,
-                sync=self._sync,
             )
+
+        super().__init__(
+            homecontrol=homecontrol,
+            device_instance=device_instance,
+            element_uid=element_uid,
+            name=name,
+            sync=self._sync,
+        )
 
         self._binary_sensor_property = self._device_instance.binary_sensor_property.get(
             self._unique_id
