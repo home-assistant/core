@@ -24,5 +24,15 @@
                 "title": "Configurar dispositivo Axis"
             }
         }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Selecciona el perfil de transmisi\u00f3n a usar"
+                },
+                "title": "Opciones de transmisi\u00f3n de v\u00eddeo del dispositivo Axis"
+            }
+        }
     }
 }
