@@ -56,7 +56,7 @@ class SynoDSMSecurityBinarySensor(SynologyDSMEntity, BinarySensorEntity):
         return bool(self._api.security)
 
     @property
-    def state_attributes(self) -> Dict[str, str]:
+    def device_state_attributes(self) -> Dict[str, str]:
         """Return security checks details."""
         return self._api.security.status_by_check
 
