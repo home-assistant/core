@@ -110,7 +110,6 @@ async def test_bad_hostname(hass):
 
         assert result["type"] == "form"
         assert result["step_id"] == "user"
-        print(result)
         assert result["errors"][CONF_HOST] == "not_found"
 
 
