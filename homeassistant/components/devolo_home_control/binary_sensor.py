@@ -35,19 +35,26 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
 
     def __init__(self, homecontrol, device_instance, element_uid):
         """Initialize a devolo binary sensor."""
-        super().__init__(
-            homecontrol=homecontrol,
-            device_instance=device_instance,
-            element_uid=element_uid,
-            name=device_instance.itemName
-            + " "
-            + device_instance.binary_sensor_property.get(element_uid).sub_type
-            if device_instance.binary_sensor_property.get(element_uid).sub_type != ""
-            else device_instance.itemName
-            + " "
-            + device_instance.binary_sensor_property.get(element_uid).sensor_type,
-            sync=self.sync,
-        )
+        if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
+            super().__init__(
+                homecontrol=homecontrol,
+                device_instance=device_instance,
+                element_uid=element_uid,
+                name=device_instance.itemName
+                + " "
+                + device_instance.binary_sensor_property.get(element_uid).sub_type,
+                sync=self._sync,
+            )
+        else:
+            super().__init__(
+                homecontrol=homecontrol,
+                device_instance=device_instance,
+                element_uid=element_uid,
+                name=device_instance.itemName
+                + " "
+                + device_instance.binary_sensor_property.get(element_uid).sensor_type,
+                sync=self._sync,
+            )
 
         self._binary_sensor_property = self._device_instance.binary_sensor_property.get(
             self._unique_id
@@ -62,7 +69,7 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
         """Return the state."""
         return self._state
 
-    def sync(self, message=None):
+    def _sync(self, message=None):
         """Update the binary sensor state."""
         if message[0].startswith("devolo.BinarySensor"):
             self._state = self._device_instance.binary_sensor_property[message[0]].state
@@ -70,4 +77,4 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             self._available = self._device_instance.is_online()
         else:
             _LOGGER.debug("No valid message received: %s", message)
-        self.async_schedule_update_ha_state()
+        self.schedule_update_ha_state()
