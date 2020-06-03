@@ -75,15 +75,6 @@ class AvriWasteUpcoming(Entity):
         """Icon to use in the frontend."""
         return ICON
 
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._integration_id)},
-            "name": "Avri",
-            "manufacturer": "Avri",
-        }
-
     async def async_update(self):
         """Update the data."""
         if not self.enabled:
