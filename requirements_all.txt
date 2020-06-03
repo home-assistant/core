@@ -2102,7 +2102,7 @@ todoist-python==8.0.0
 toonapilib==3.2.4
 
 # homeassistant.components.totalconnect
-total_connect_client==0.54.1
+total_connect_client==0.55
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
