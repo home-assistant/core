@@ -37,7 +37,7 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
-from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer
+from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer, MockResource
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -75,45 +75,42 @@ async def test_bad_credentials(hass):
         assert result["errors"][CONF_TOKEN] == "faulty_credentials"
 
 
-async def test_import_success(hass):
-    """Test a successful configuration import."""
-
-    mock_plex_server = MockPlexServer()
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "import"},
-            data={
-                CONF_TOKEN: MOCK_TOKEN,
-                CONF_URL: f"https://{MOCK_SERVERS[0][CONF_HOST]}:{MOCK_SERVERS[0][CONF_PORT]}",
-            },
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == mock_plex_server.friendlyName
-    assert result["data"][CONF_SERVER] == mock_plex_server.friendlyName
-    assert result["data"][CONF_SERVER_IDENTIFIER] == mock_plex_server.machineIdentifier
-    assert result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_plex_server._baseurl
-    assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
-
-
-async def test_import_bad_hostname(hass):
+async def test_bad_hostname(hass):
     """Test when an invalid address is provided."""
+    mock_plex_account = MockPlexAccount()
+
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
 
     with patch(
-        "plexapi.server.PlexServer", side_effect=requests.exceptions.ConnectionError
+        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
+    ), patch.object(
+        MockResource, "connect", side_effect=requests.exceptions.ConnectionError
+    ), patch(
+        "plexauth.PlexAuth.initiate_auth"
+    ), patch(
+        "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "import"},
-            data={
-                CONF_TOKEN: MOCK_TOKEN,
-                CONF_URL: f"http://{MOCK_SERVERS[0][CONF_HOST]}:{MOCK_SERVERS[0][CONF_PORT]}",
-            },
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
-        assert result["type"] == "abort"
-        assert result["reason"] == "non-interactive"
+        assert result["type"] == "external"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] == "external_done"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert result["errors"][CONF_HOST] == "not_found"
 
 
 async def test_unknown_exception(hass):
@@ -309,35 +306,6 @@ async def test_adding_last_unconfigured_server(hass):
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_plex_server._baseurl
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
-
-
-async def test_already_configured(hass):
-    """Test a duplicated successful flow."""
-
-    mock_plex_server = MockPlexServer()
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_SERVER: MOCK_SERVERS[0][CONF_SERVER],
-            CONF_SERVER_IDENTIFIER: MOCK_SERVERS[0][CONF_SERVER_IDENTIFIER],
-        },
-        unique_id=MOCK_SERVERS[0][CONF_SERVER_IDENTIFIER],
-    ).add_to_hass(hass)
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexauth.PlexAuth.initiate_auth"
-    ), patch("plexauth.PlexAuth.token", return_value=MOCK_TOKEN):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "import"},
-            data={
-                CONF_TOKEN: MOCK_TOKEN,
-                CONF_URL: f"http://{MOCK_SERVERS[0][CONF_HOST]}:{MOCK_SERVERS[0][CONF_PORT]}",
-            },
-        )
-        assert result["type"] == "abort"
-        assert result["reason"] == "already_configured"
 
 
 async def test_all_available_servers_configured(hass):
@@ -540,21 +508,6 @@ async def test_callback_view(hass, aiohttp_client):
 
         resp = await client.get(forward_url)
         assert resp.status == 200
-
-
-async def test_multiple_servers_with_import(hass):
-    """Test importing a config with multiple servers available."""
-
-    with patch(
-        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount(servers=2)
-    ), patch("plexauth.PlexAuth.initiate_auth"), patch(
-        "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "import"}, data={CONF_TOKEN: MOCK_TOKEN},
-        )
-        assert result["type"] == "abort"
-        assert result["reason"] == "non-interactive"
 
 
 async def test_manual_config(hass):
