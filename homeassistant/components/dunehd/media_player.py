@@ -43,7 +43,7 @@ DUNEHD_PLAYER_SUPPORT = (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Dune HD media player platform."""
     host = config.get(CONF_HOST)
 
