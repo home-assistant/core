@@ -188,17 +188,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if single_thermostat is False:
             for state in INDICATE_ACTIVE_LOCAL_DEVICE:
-                if state in data:
-                    entities.append(
-                        PwAuxDeviceSensor(
-                            api,
-                            coordinator,
-                            device_properties["name"],
-                            dev_id,
-                            DEVICE_STATE,
-                        )
+                if state not in data:
+                    continue
+
+                entities.append(
+                    PwAuxDeviceSensor(
+                        api,
+                        coordinator,
+                        device_properties["name"],
+                        dev_id,
+                        DEVICE_STATE,
                     )
-                    break
+                )
+                break
 
     async_add_entities(entities, True)
 

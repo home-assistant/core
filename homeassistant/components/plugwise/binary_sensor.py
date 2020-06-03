@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     all_devices = api.get_all_devices()
     for dev_id, device_properties in all_devices.items():
-        if "heater_central" not in device_properties["class"]:
+        if device_properties["class"] != "heater_central":
             continue
 
         data = api.get_device_data(dev_id)
