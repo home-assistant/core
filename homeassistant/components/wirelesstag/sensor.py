@@ -108,9 +108,9 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         return self._tag.sensor[self._sensor_type]
 
     @callback
-    def _update_tag_info_callback(self, event):
+    def _update_tag_info_callback(self, data):
         """Handle push notification sent by tag manager."""
-        _LOGGER.debug("Entity to update state: %s event data: %s", self, event.data)
-        new_value = self._sensor.value_from_update_event(event.data)
+        _LOGGER.debug("Entity to update state: %s data: %s", self, data)
+        new_value = self._sensor.value_from_update_event(data)
         self._state = self.decorate_value(new_value)
         self.async_write_ha_state()
