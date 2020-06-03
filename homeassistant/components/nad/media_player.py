@@ -185,6 +185,11 @@ class NAD(MediaPlayerEntity):
         """List of available input sources."""
         return sorted(list(self._reverse_mapping.keys()))
 
+    @property
+    def available(self):
+        """Return if device is available."""
+        return self._state is not None
+
     def update(self) -> None:
         """Retrieve latest state."""
         power_state = self._nad_receiver.main_power("?")
