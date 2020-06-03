@@ -102,6 +102,10 @@ IO_COUNTER = {
 
 IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
 
+# There might be additional keys to be added for different
+# platforms / hardware combinations.
+CPU_SENSOR_PREFIXES = ["coretemp", "cpu-thermal"]  # [Linux generic, Raspberry 4]
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the system monitor sensors."""
@@ -134,6 +138,13 @@ class SystemMonitorSensor(Entity):
         if sensor_type in ["throughput_network_out", "throughput_network_in"]:
             self._last_value = None
             self._last_update_time = None
+
+        # Verify if we can retrieve CPU / processor temperatures.
+        # If not, set sensor to unavailable and log warning.
+        if sensor_type == "processor_temperature":
+            if self.read_cpu_temperature() is None:
+                self._available = False
+                _LOGGER.warning("Cannot read CPU / processor temperature information.")
 
     @property
     def name(self):
@@ -191,19 +202,7 @@ class SystemMonitorSensor(Entity):
         elif self.type == "processor_use":
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == "processor_temperature":
-            temps = psutil.sensors_temperatures()
-            # There might be additional keys to be added for different
-            # platforms / hardware combinations.
-            # Raspberry 4
-            if "cpu-thermal" in temps:
-                self._state = round(temps["cpu-thermal"][0].current, 1)
-            # Linux default
-            elif "coretemp" in temps:
-                self._state = round(temps["coretemp"][0].current, 1)
-            # Fallback if no CPU sensor data available
-            else:
-                self._state = None
-                self._available = False
+            self._state = self.read_cpu_temperature()
         elif self.type == "process":
             for proc in psutil.process_iter():
                 try:
@@ -269,3 +268,11 @@ class SystemMonitorSensor(Entity):
             self._state = round(os.getloadavg()[1], 2)
         elif self.type == "load_15m":
             self._state = round(os.getloadavg()[2], 2)
+
+    def read_cpu_temperature(self):
+        """Attempt to read CPU / processor temperature."""
+        temps = psutil.sensors_temperatures()
+
+        for sensor in temps:
+            if sensor.startswith(CPU_SENSOR_PREFIXES):
+                return round(temps[sensor][0].current, 1)
