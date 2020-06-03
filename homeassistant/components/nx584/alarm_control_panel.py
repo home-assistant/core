@@ -12,6 +12,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -22,11 +23,23 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from . import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "NX584"
 DEFAULT_PORT = 5007
+SERVICE_BYPASS_ZONE = "bypass_zone"
+SERVICE_UNBYPASS_ZONE = "unbypass_zone"
+ATTR_ZONE = "zone"
+
+BYPASS_ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_ZONE): cv.positive_int,
+    }
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -45,11 +58,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     url = f"http://{host}:{port}"
 
+    entity = NX584Alarm(hass, url, name)
+
     try:
-        add_entities([NX584Alarm(hass, url, name)])
+        add_entities([entity])
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NX584: %s", str(ex))
         return
+
+    def alarm_bypass_handler(service):
+        """Register zone bypass handler."""
+        zone = service.data.get(ATTR_ZONE)
+        entity.alarm_bypass(zone)
+
+    def alarm_unbypass_handler(service):
+        """Register zone unbypass handler."""
+        zone = service.data.get(ATTR_ZONE)
+        entity.alarm_unbypass(zone)
+
+    hass.services.register(
+        DOMAIN, SERVICE_BYPASS_ZONE, alarm_bypass_handler, schema=BYPASS_ZONE_SCHEMA,
+    )
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_UNBYPASS_ZONE,
+        alarm_unbypass_handler,
+        schema=BYPASS_ZONE_SCHEMA,
+    )
 
 
 class NX584Alarm(alarm.AlarmControlPanelEntity):
@@ -137,3 +173,11 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._alarm.arm("exit")
+
+    def alarm_bypass(self, zone):
+        """Send bypass command."""
+        self._alarm.set_bypass(zone, True)
+
+    def alarm_unbypass(self, zone):
+        """Send bypass command."""
+        self._alarm.set_bypass(zone, False)
