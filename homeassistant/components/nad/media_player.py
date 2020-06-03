@@ -13,7 +13,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -189,7 +189,7 @@ class NAD(MediaPlayerEntity):
         """Retrieve latest state."""
         power_state = self._nad_receiver.main_power("?")
         if not power_state:
-            self._state = STATE_UNKNOWN
+            self._state = None
             return
         self._state = (
             STATE_ON if self._nad_receiver.main_power("?") == "On" else STATE_OFF
