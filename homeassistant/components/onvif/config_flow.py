@@ -211,13 +211,10 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         if interface.Enabled:
                             self.device_id = interface.Info.HwAddress
                 except Fault as fault:
-                    if (
-                        "'ns0:GetNetworkInterfaces' not implemented"
-                        not in fault.message
-                    ):
+                    if "not implemented" not in fault.message:
                         raise fault
 
-                    LOGGER.info(
+                    LOGGER.debug(
                         "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
                         self.onvif_config[CONF_NAME],
                         fault,

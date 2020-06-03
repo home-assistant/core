@@ -223,10 +223,10 @@ class ONVIFDevice:
                 if interface.Enabled:
                     mac = interface.Info.HwAddress
         except Fault as fault:
-            if "'ns0:GetNetworkInterfaces' not implemented" not in fault.message:
+            if "not implemented" not in fault.message:
                 raise fault
 
-            LOGGER.info(
+            LOGGER.debug(
                 "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
                 self.name,
                 fault,
