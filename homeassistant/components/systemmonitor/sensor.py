@@ -104,7 +104,7 @@ IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INE
 
 # There might be additional keys to be added for different
 # platforms / hardware combinations.
-CPU_SENSOR_PREFIXES = ["coretemp", "cpu-thermal"]  # [Linux generic, Raspberry 4]
+CPU_SENSOR_PREFIXES = ("coretemp", "cpu-thermal")  # (Linux generic, Raspberry 4)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
