@@ -26,8 +26,8 @@ class KebaNotificationService(BaseNotificationService):
         """Send the message."""
         text = message.replace(" ", "$")  # Will be translated back by the display
 
-        data = kwargs.get(ATTR_DATA)
-        min_time = float(data.get("min_time", 2) if data else 2)
-        max_time = float(data.get("max_time", 10) if data else 10)
+        data = kwargs[ATTR_DATA] or {}
+        min_time = float(data.get("min_time", 2))
+        max_time = float(data.get("max_time", 10))
 
         await self._client.set_text(text, min_time, max_time)
