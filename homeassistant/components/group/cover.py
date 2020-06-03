@@ -35,7 +35,9 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
-    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
@@ -73,6 +75,8 @@ class CoverGroup(CoverEntity):
         """Initialize a CoverGroup entity."""
         self._name = name
         self._is_closed = False
+        self._is_closing = False
+        self._is_opening = False
         self._cover_position: Optional[int] = 100
         self._tilt_position = None
         self._supported_features = 0
@@ -177,6 +181,16 @@ class CoverGroup(CoverEntity):
         return self._is_closed
 
     @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self._is_opening
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self._is_closing
+
+    @property
     def current_cover_position(self) -> Optional[int]:
         """Return current position for all covers."""
         return self._cover_position
@@ -253,12 +267,20 @@ class CoverGroup(CoverEntity):
         self._assumed_state = False
 
         self._is_closed = True
+        self._is_closing = False
+        self._is_opening = False
         for entity_id in self._entities:
             state = self.hass.states.get(entity_id)
             if not state:
                 continue
-            if state.state != STATE_CLOSED:
+            if state.state == STATE_OPEN:
                 self._is_closed = False
+                break
+            if state.state == STATE_CLOSING:
+                self._is_closing = True
+                break
+            if state.state == STATE_OPENING:
+                self._is_opening = True
                 break
 
         self._cover_position = None

@@ -8,6 +8,7 @@ from synology_dsm import SynologyDSM
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
+from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
 import voluptuous as vol
 
@@ -35,7 +36,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
-    BASE_NAME,
     CONF_VOLUMES,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
@@ -219,6 +219,7 @@ class SynoApi:
         # DSM APIs
         self.dsm: SynologyDSM = None
         self.information: SynoDSMInformation = None
+        self.network: SynoDSMNetwork = None
         self.security: SynoCoreSecurity = None
         self.storage: SynoStorage = None
         self.utilisation: SynoCoreUtilization = None
@@ -308,6 +309,7 @@ class SynoApi:
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
         self.information = self.dsm.information
+        self.network = self.dsm.network
 
         if self._with_security:
             self.security = self.dsm.security
@@ -339,7 +341,7 @@ class SynologyDSMEntity(Entity):
         self._api = api
         self._api_key = entity_type.split(":")[0]
         self.entity_type = entity_type.split(":")[-1]
-        self._name = f"{BASE_NAME} {entity_info[ENTITY_NAME]}"
+        self._name = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
         self._class = entity_info[ENTITY_CLASS]
         self._enable_default = entity_info[ENTITY_ENABLE]
         self._icon = entity_info[ENTITY_ICON]
@@ -456,7 +458,7 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
             self._device_model = disk["model"].strip()
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
-        self._name = f"{BASE_NAME} {self._device_name} {entity_info[ENTITY_NAME]}"
+        self._name = f"{self._api.network.hostname} {self._device_name} {entity_info[ENTITY_NAME]}"
         self._unique_id += f"_{self._device_id}"
 
     @property

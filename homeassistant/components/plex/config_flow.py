@@ -170,10 +170,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate a provided configuration."""
         errors = {}
         self.current_login = server_config
-        is_importing = (
-            self.context["source"]  # pylint: disable=no-member
-            == config_entries.SOURCE_IMPORT
-        )
 
         plex_server = PlexServer(self.hass, server_config)
         try:
@@ -196,11 +192,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_HOST] = "not_found"
 
         except ServerNotSpecified as available_servers:
-            if is_importing:
-                _LOGGER.warning(
-                    "Imported configuration has multiple available Plex servers. Specify server in configuration or add a new Integration."
-                )
-                return self.async_abort(reason="non-interactive")
             self.available_servers = available_servers.args[0]
             return await self.async_step_select_server()
 
@@ -209,8 +200,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         if errors:
-            if is_importing:
-                return self.async_abort(reason="non-interactive")
             if self._manual:
                 return await self.async_step_manual_setup(
                     user_input=server_config, errors=errors
@@ -273,11 +262,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors={},
         )
-
-    async def async_step_import(self, import_config):
-        """Import from Plex configuration."""
-        _LOGGER.debug("Imported Plex configuration")
-        return await self.async_step_server_validate(import_config)
 
     async def async_step_integration_discovery(self, discovery_info):
         """Handle GDM discovery."""

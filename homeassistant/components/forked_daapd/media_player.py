@@ -504,6 +504,10 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
+        # Use album field when data_kind is url
+        # https://github.com/ejurgensen/forked-daapd/issues/351
+        if self._track_info["data_kind"] == "url":
+            return self._track_info["album"]
         return self._track_info["title"]
 
     @property
@@ -514,6 +518,10 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
+        # Use title field when data_kind is url
+        # https://github.com/ejurgensen/forked-daapd/issues/351
+        if self._track_info["data_kind"] == "url":
+            return self._track_info["title"]
         return self._track_info["album"]
 
     @property
