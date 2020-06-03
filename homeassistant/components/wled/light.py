@@ -286,7 +286,7 @@ def async_update_segments(
 ) -> None:
     """Update segments."""
     segment_ids = {light.segment_id for light in coordinator.data.state.segments}
-    current_ids = set(current.keys())
+    current_ids = set(current)
 
     # Process new segments, add them to Home Assistant
     new_segments = []
