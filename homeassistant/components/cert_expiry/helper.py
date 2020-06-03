@@ -23,8 +23,8 @@ def get_cert(host, port):
             return cert
 
 
-async def get_cert_time_to_expiry(hass, hostname, port):
-    """Return the certificate's time to expiry in days."""
+async def get_cert_expiry_timestamp(hass, hostname, port):
+    """Return the certificate's expiration timestamp."""
     try:
         cert = await hass.async_add_executor_job(get_cert, hostname, port)
     except socket.gaierror:
@@ -39,6 +39,4 @@ async def get_cert_time_to_expiry(hass, hostname, port):
         raise ValidationFailure(err.args[0])
 
     ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
-    timestamp = datetime.fromtimestamp(ts_seconds)
-    expiry = timestamp - datetime.today()
-    return expiry.days
+    return datetime.fromtimestamp(ts_seconds)

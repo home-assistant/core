@@ -21,7 +21,7 @@ async def test_user(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_time_to_expiry"
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
@@ -65,8 +65,7 @@ async def test_user_with_bad_cert(hass):
 async def test_import_host_only(hass):
     """Test import with host only."""
     with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_time_to_expiry",
-        return_value=1,
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data={CONF_HOST: HOST}
@@ -85,8 +84,7 @@ async def test_import_host_only(hass):
 async def test_import_host_and_port(hass):
     """Test import with host and port."""
     with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_time_to_expiry",
-        return_value=1,
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -107,7 +105,7 @@ async def test_import_host_and_port(hass):
 async def test_import_non_default_port(hass):
     """Test import with host and non-default port."""
     with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_time_to_expiry"
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data={CONF_HOST: HOST, CONF_PORT: 888}
@@ -126,8 +124,7 @@ async def test_import_non_default_port(hass):
 async def test_import_with_name(hass):
     """Test import with name (deprecated)."""
     with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_time_to_expiry",
-        return_value=1,
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

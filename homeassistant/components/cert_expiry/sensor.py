@@ -1,5 +1,5 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import voluptuous as vol
@@ -20,7 +20,7 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import DEFAULT_PORT, DOMAIN
 from .errors import TemporaryFailure, ValidationFailure
-from .helper import get_cert_time_to_expiry
+from .helper import get_cert_expiry_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Add cert-expiry entry."""
-    days = 0
+    timestamp = None
     error = None
     hostname = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -65,7 +65,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         hass.config_entries.async_update_entry(entry, unique_id=f"{hostname}:{port}")
 
     try:
-        days = await get_cert_time_to_expiry(hass, hostname, port)
+        timestamp = await get_cert_expiry_timestamp(hass, hostname, port)
     except TemporaryFailure as err:
         _LOGGER.error(err)
         raise PlatformNotReady
@@ -73,7 +73,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         error = err
 
     async_add_entities(
-        [SSLCertificate(hostname, port, days, error)], False,
+        [SSLCertificate(hostname, port, timestamp, error)], False,
     )
     return True
 
@@ -81,7 +81,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SSLCertificate(Entity):
     """Implementation of the certificate expiry sensor."""
 
-    def __init__(self, server_name, server_port, days, error):
+    def __init__(self, server_name, server_port, timestamp, error):
         """Initialize the sensor."""
         self.server_name = server_name
         self.server_port = server_port
@@ -89,7 +89,11 @@ class SSLCertificate(Entity):
         self._name = f"Cert Expiry ({self.server_name}{display_port})"
         self._available = True
         self._error = error
-        self._state = days
+        self._timestamp = timestamp
+        self._state = 0
+        if timestamp:
+            expiry = timestamp - datetime.today()
+            self._state = expiry.days
         self._valid = False
         if error is None:
             self._valid = True
@@ -127,7 +131,7 @@ class SSLCertificate(Entity):
     async def async_update(self):
         """Fetch the certificate information."""
         try:
-            days_to_expiry = await get_cert_time_to_expiry(
+            self._timestamp = await get_cert_expiry_timestamp(
                 self.hass, self.server_name, self.server_port
             )
         except TemporaryFailure as err:
@@ -152,10 +156,14 @@ class SSLCertificate(Entity):
 
         self._available = True
         self._error = None
-        self._state = days_to_expiry
+        expiry = self._timestamp - datetime.today()
+        self._state = expiry.days
         self._valid = True
 
     @property
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
-        return {"is_valid": self._valid, "error": str(self._error)}
+        attributes = {"is_valid": self._valid, "error": str(self._error)}
+        if self._timestamp:
+            attributes["expires_at"] = self._timestamp
+        return attributes

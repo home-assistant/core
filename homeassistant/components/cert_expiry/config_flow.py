@@ -13,7 +13,7 @@ from .errors import (
     ResolveFailed,
     ValidationFailure,
 )
-from .helper import get_cert_time_to_expiry
+from .helper import get_cert_expiry_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_connection(self, user_input=None):
         """Test connection to the server and try to get the certificate."""
         try:
-            await get_cert_time_to_expiry(
+            await get_cert_expiry_timestamp(
                 self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),

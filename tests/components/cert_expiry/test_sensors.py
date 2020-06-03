@@ -7,6 +7,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 import homeassistant.util.dt as dt_util
 
 from .const import HOST, PORT
+from .helpers import make_timestamp
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -20,9 +21,11 @@ async def test_async_setup_entry(hass):
         unique_id=f"{HOST}:{PORT}",
     )
 
+    timestamp = make_timestamp(100)
+
     with patch(
-        "homeassistant.components.cert_expiry.sensor.get_cert_time_to_expiry",
-        return_value=100,
+        "homeassistant.components.cert_expiry.sensor.get_cert_expiry_timestamp",
+        return_value=timestamp,
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -34,6 +37,7 @@ async def test_async_setup_entry(hass):
     assert state.state == "100"
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
+    assert state.attributes["expires_at"] == timestamp
 
 
 async def test_async_setup_entry_bad_cert(hass):
@@ -99,9 +103,11 @@ async def test_update_sensor(hass):
         unique_id=f"{HOST}:{PORT}",
     )
 
+    timestamp = make_timestamp(100)
+
     with patch(
-        "homeassistant.components.cert_expiry.sensor.get_cert_time_to_expiry",
-        return_value=100,
+        "homeassistant.components.cert_expiry.sensor.get_cert_expiry_timestamp",
+        return_value=timestamp,
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -113,13 +119,16 @@ async def test_update_sensor(hass):
     assert state.state == "100"
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
+    assert state.attributes["expires_at"] == timestamp
+
+    timestamp2 = make_timestamp(99)
 
     next_update = dt_util.utcnow() + timedelta(hours=12)
     async_fire_time_changed(hass, next_update)
 
     with patch(
-        "homeassistant.components.cert_expiry.sensor.get_cert_time_to_expiry",
-        return_value=99,
+        "homeassistant.components.cert_expiry.sensor.get_cert_expiry_timestamp",
+        return_value=timestamp2,
     ):
         await hass.async_block_till_done()
 
@@ -129,6 +138,7 @@ async def test_update_sensor(hass):
     assert state.state == "99"
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
+    assert state.attributes["expires_at"] == timestamp2
 
 
 async def test_update_sensor_network_errors(hass):
@@ -140,8 +150,8 @@ async def test_update_sensor_network_errors(hass):
     )
 
     with patch(
-        "homeassistant.components.cert_expiry.sensor.get_cert_time_to_expiry",
-        return_value=100,
+        "homeassistant.components.cert_expiry.sensor.get_cert_expiry_timestamp",
+        return_value=make_timestamp(100),
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -170,8 +180,8 @@ async def test_update_sensor_network_errors(hass):
     async_fire_time_changed(hass, next_update)
 
     with patch(
-        "homeassistant.components.cert_expiry.sensor.get_cert_time_to_expiry",
-        return_value=99,
+        "homeassistant.components.cert_expiry.sensor.get_cert_expiry_timestamp",
+        return_value=make_timestamp(99),
     ):
         await hass.async_block_till_done()
 
