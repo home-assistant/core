@@ -24,5 +24,15 @@
                 "title": "\u8a2d\u5b9a Axis \u8a2d\u5099"
             }
         }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "\u9078\u64c7\u6240\u8981\u4f7f\u7528\u7684\u4e32\u6d41\u8a2d\u5b9a"
+                },
+                "title": "Axis \u8a2d\u5099\u5f71\u50cf\u4e32\u6d41\u9078\u9805"
+            }
+        }
     }
 }
