@@ -153,38 +153,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             **ENERGY_SENSOR_MAP,
             **MISC_SENSOR_MAP,
         }.items():
-            if sensor in data:
-                if data[sensor] is None:
-                    continue
+            if data.get(sensor) is None:
+                continue
 
-                if "power" in device_properties["types"]:
-                    model = None
+            if "power" in device_properties["types"]:
+                model = None
 
-                    if "plug" in device_properties["types"]:
-                        model = "Metered Switch"
+                if "plug" in device_properties["types"]:
+                    model = "Metered Switch"
 
-                    entities.append(
-                        PwPowerSensor(
-                            api,
-                            coordinator,
-                            device_properties["name"],
-                            dev_id,
-                            sensor,
-                            sensor_type,
-                            model,
-                        )
+                entities.append(
+                    PwPowerSensor(
+                        api,
+                        coordinator,
+                        device_properties["name"],
+                        dev_id,
+                        sensor,
+                        sensor_type,
+                        model,
                     )
-                else:
-                    entities.append(
-                        PwThermostatSensor(
-                            api,
-                            coordinator,
-                            device_properties["name"],
-                            dev_id,
-                            sensor,
-                            sensor_type,
-                        )
+                )
+            else:
+                entities.append(
+                    PwThermostatSensor(
+                        api,
+                        coordinator,
+                        device_properties["name"],
+                        dev_id,
+                        sensor,
+                        sensor_type,
                     )
+                )
 
         if single_thermostat is False:
             for state in INDICATE_ACTIVE_LOCAL_DEVICE:
