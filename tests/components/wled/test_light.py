@@ -1,5 +1,5 @@
 """Tests for the WLED light platform."""
-import aiohttp
+from wled import WLEDConnectionError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -144,7 +144,7 @@ async def test_light_error(
     aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
+    with patch("homeassistant.components.wled.WLED.update"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -162,10 +162,11 @@ async def test_light_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test error handling of the WLED switches."""
-    aioclient_mock.post("http://192.168.1.123:80/json/state", exc=aiohttp.ClientError)
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
+    with patch("homeassistant.components.wled.WLED.update"), patch(
+        "homeassistant.components.wled.WLED.light", side_effect=WLEDConnectionError
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -342,7 +343,7 @@ async def test_effect_service_error(
     aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
+    with patch("homeassistant.components.wled.WLED.update"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EFFECT,
