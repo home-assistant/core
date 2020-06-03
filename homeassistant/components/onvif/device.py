@@ -217,10 +217,20 @@ class ONVIFDevice:
 
         # Grab the last MAC address for backwards compatibility
         mac = None
-        network_interfaces = await device_mgmt.GetNetworkInterfaces()
-        for interface in network_interfaces:
-            if interface.Enabled:
-                mac = interface.Info.HwAddress
+        try:
+            network_interfaces = await device_mgmt.GetNetworkInterfaces()
+            for interface in network_interfaces:
+                if interface.Enabled:
+                    mac = interface.Info.HwAddress
+        except Fault as fault:
+            if "not implemented" not in fault.message:
+                raise fault
+
+            LOGGER.debug(
+                "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                self.name,
+                fault,
+            )
 
         return DeviceInfo(
             device_info.Manufacturer,
