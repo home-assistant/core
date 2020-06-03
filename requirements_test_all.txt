@@ -405,6 +405,9 @@ mbddns==0.1.2
 mcstatus==2.3.0
 
 # homeassistant.components.meteo_france
+meteofrance-api==0.0.2
+
+# homeassistant.components.meteo_france
 meteofrance==0.3.7
 
 # homeassistant.components.mfi
