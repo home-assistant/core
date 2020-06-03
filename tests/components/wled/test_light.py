@@ -1,5 +1,7 @@
 """Tests for the WLED light platform."""
-from wled import WLEDConnectionError
+import json
+
+from wled import Device as WLEDDevice, WLEDConnectionError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -11,6 +13,7 @@ from homeassistant.components.light import (
     ATTR_WHITE_VALUE,
     DOMAIN as LIGHT_DOMAIN,
 )
+from homeassistant.components.wled import SCAN_INTERVAL
 from homeassistant.components.wled.const import (
     ATTR_INTENSITY,
     ATTR_PALETTE,
@@ -30,8 +33,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
+from tests.common import async_fire_time_changed, load_fixture
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -135,6 +140,35 @@ async def test_switch_change_state(
         light_mock.assert_called_once_with(
             color_primary=(255, 159, 70), on=True, segment_id=0,
         )
+
+
+async def test_dynamically_handle_segments(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test if a new/deleted segment is dynamically added/removed."""
+    await init_integration(hass, aioclient_mock)
+
+    assert hass.states.get("light.wled_rgb_light")
+    assert hass.states.get("light.wled_rgb_light_1")
+
+    data = json.loads(load_fixture("wled/rgb_single_segment.json"))
+    device = WLEDDevice(data)
+
+    # Test removal if segment went missing
+    with patch(
+        "homeassistant.components.wled.WLED.update", return_value=device,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
+        assert hass.states.get("light.wled_rgb_light")
+        assert not hass.states.get("light.wled_rgb_light_1")
+
+    # Test adding if segment shows up again
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.wled_rgb_light")
+    assert hass.states.get("light.wled_rgb_light_1")
 
 
 async def test_light_error(
