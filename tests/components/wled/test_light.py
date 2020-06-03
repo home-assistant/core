@@ -13,6 +13,7 @@ from homeassistant.components.light import (
     ATTR_WHITE_VALUE,
     DOMAIN as LIGHT_DOMAIN,
 )
+from homeassistant.components.wled import SCAN_INTERVAL
 from homeassistant.components.wled.const import (
     ATTR_INTENSITY,
     ATTR_PALETTE,
@@ -32,9 +33,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
-from tests.common import load_fixture
+from tests.common import async_fire_time_changed, load_fixture
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -149,25 +151,20 @@ async def test_dynamically_handle_segments(
     assert hass.states.get("light.wled_rgb_light")
     assert hass.states.get("light.wled_rgb_light_1")
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    entry = entity_registry.async_get("light.wled_rgb_light")
-    coordinator = hass.data[DOMAIN][entry.config_entry_id]
-
     data = json.loads(load_fixture("wled/rgb_single_segment.json"))
     device = WLEDDevice(data)
 
     # Test removal if segment went missing
     with patch(
-        "homeassistant.components.wled.WLEDDataUpdateCoordinator._async_update_data",
-        return_value=device,
+        "homeassistant.components.wled.WLED.update", return_value=device,
     ):
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         assert hass.states.get("light.wled_rgb_light")
         assert not hass.states.get("light.wled_rgb_light_1")
 
     # Test adding if segment shows up again
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert hass.states.get("light.wled_rgb_light")
