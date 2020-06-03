@@ -284,13 +284,12 @@ def async_update_segments(
     async_add_entities,
 ) -> None:
     """Update segments."""
-    segment_ids = [light.segment_id for light in coordinator.data.state.segments]
+    segment_ids = {light.segment_id for light in coordinator.data.state.segments}
+    current_ids = set(current.keys())
 
     # Process new segments, add them to Home Assistant
     new_segments = []
-    for segment_id in segment_ids:
-        if segment_id in current:
-            continue
+    for segment_id in segment_ids - current_ids:
         current[segment_id] = WLEDLight(entry.entry_id, coordinator, segment_id)
         new_segments.append(current[segment_id])
 
@@ -298,9 +297,7 @@ def async_update_segments(
         async_add_entities(new_segments)
 
     # Process deleted segments, remove them from Home Assistant
-    for segment_id in current:
-        if segment_id in segment_ids:
-            continue
+    for segment_id in current_ids - segment_ids:
         coordinator.hass.async_create_task(
             async_remove_segment(segment_id, coordinator, current)
         )
