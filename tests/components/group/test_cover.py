@@ -481,24 +481,37 @@ async def test_set_tilt_positions(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_POS, 2)])
-async def test_is_opening(hass, setup_comp):
+async def test_is_opening_closing(hass, setup_comp):
     """Test is_opening property."""
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
 
-    assert hass.states.get(COVER_GROUP).state == STATE_OPENING
     assert hass.states.get(DEMO_COVER_POS).state == STATE_OPENING
     assert hass.states.get(DEMO_COVER_TILT).state == STATE_OPENING
+    assert hass.states.get(COVER_GROUP).state == STATE_OPENING
 
+    for _ in range(10):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
-@pytest.mark.parametrize("config_count", [(CONFIG_POS, 2)])
-async def test_is_closing(hass, setup_comp):
-    """Test is_closing property."""
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
 
-    assert hass.states.get(COVER_GROUP).state == STATE_CLOSING
     assert hass.states.get(DEMO_COVER_POS).state == STATE_CLOSING
     assert hass.states.get(DEMO_COVER_TILT).state == STATE_CLOSING
+    assert hass.states.get(COVER_GROUP).state == STATE_CLOSING
+
+    hass.states.async_set(DEMO_COVER_POS, STATE_OPENING, {ATTR_SUPPORTED_FEATURES: 11})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(DEMO_COVER_POS).state == STATE_OPENING
+    assert hass.states.get(COVER_GROUP).state == STATE_OPENING
+
+    hass.states.async_set(DEMO_COVER_POS, STATE_CLOSING, {ATTR_SUPPORTED_FEATURES: 11})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(DEMO_COVER_POS).state == STATE_CLOSING
+    assert hass.states.get(COVER_GROUP).state == STATE_CLOSING
