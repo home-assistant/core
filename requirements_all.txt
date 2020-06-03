@@ -1726,7 +1726,7 @@ python-sochain-api==0.0.2
 python-songpal==0.12
 
 # homeassistant.components.synology_dsm
-python-synology==0.8.1
+python-synology==0.8.2
 
 # homeassistant.components.tado
 python-tado==0.8.1
