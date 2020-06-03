@@ -44,7 +44,7 @@ class DevoloDeviceEntity(Entity):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the sensor."""
+        """Return the unique ID of the entity."""
         return self._unique_id
 
     @property
@@ -58,11 +58,6 @@ class DevoloDeviceEntity(Entity):
         }
 
     @property
-    def device_id(self):
-        """Return the ID of this switch."""
-        return self._device_instance.uid
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
@@ -74,7 +69,7 @@ class DevoloDeviceEntity(Entity):
 
     @property
     def name(self):
-        """Return the display name of this switch."""
+        """Return the display name of this entity."""
         return self._name
 
     @property
