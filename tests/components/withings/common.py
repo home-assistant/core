@@ -22,6 +22,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    CONF_EXTERNAL_URL,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_METRIC,
 )
@@ -56,8 +57,11 @@ async def setup_hass(hass: HomeAssistant) -> dict:
     profiles = ["Person0", "Person1", "Person2", "Person3", "Person4"]
 
     hass_config = {
-        "homeassistant": {CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC},
-        api.DOMAIN: {"base_url": "http://localhost/"},
+        "homeassistant": {
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            CONF_EXTERNAL_URL: "http://example.local/",
+        },
+        api.DOMAIN: {},
         http.DOMAIN: {"server_port": 8080},
         const.DOMAIN: {
             CONF_CLIENT_ID: "my_client_id",
