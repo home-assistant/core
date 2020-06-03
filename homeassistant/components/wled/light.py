@@ -1,5 +1,4 @@
 """Support for LED lights."""
-import asyncio
 from functools import partial
 import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -298,12 +297,10 @@ def async_update_segments(
         async_add_entities(new_segments)
 
     # Process deleted segments, remove them from Home Assistant
-    asyncio.gather(
-        *[
+    for segment_id in current_ids - segment_ids:
+        coordinator.hass.async_create_task(
             async_remove_segment(segment_id, coordinator, current)
-            for segment_id in current_ids - segment_ids
-        ]
-    )
+        )
 
 
 async def async_remove_segment(
