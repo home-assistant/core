@@ -57,30 +57,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add Dune HD entities from a config_entry."""
     unique_id = config_entry.entry_id
-    device_info = {
-        "identifiers": {(DOMAIN, unique_id)},
-        "name": DEFAULT_NAME,
-        "manufacturer": ATTR_MANUFACTURER,
-    }
 
     player = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
-        [DuneHDPlayerEntity(player, DEFAULT_NAME, unique_id, device_info)], True
-    )
+    async_add_entities([DuneHDPlayerEntity(player, DEFAULT_NAME, unique_id)], True)
 
 
 class DuneHDPlayerEntity(MediaPlayerEntity):
     """Implementation of the Dune HD player."""
 
-    def __init__(self, player, name, unique_id, device_info):
+    def __init__(self, player, name, unique_id):
         """Initialize entity to control Dune HD."""
         self._player = player
         self._name = name
         self._media_title = None
         self._state = None
         self._unique_id = unique_id
-        self._device_info = device_info
 
     def update(self):
         """Update internal status of the entity."""
@@ -120,7 +112,11 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return self._device_info
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "name": DEFAULT_NAME,
+            "manufacturer": ATTR_MANUFACTURER,
+        }
 
     @property
     def volume_level(self):
