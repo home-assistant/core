@@ -1,7 +1,14 @@
 """Sensor platform for the PoolSense sensor."""
 import logging
 
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_OK, STATE_PROBLEM
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    STATE_OK,
+    STATE_PROBLEM,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import get_coordinator
@@ -10,21 +17,67 @@ from .const import ATTRIBUTION
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
-    "Chlorine": {"unit": "mV", "icon": "mdi:pool", "name": "Chlorine"},
-    "pH": {"unit": "", "icon": "mdi:pool", "name": "pH"},
-    "Battery": {"unit": "%", "icon": "mdi:battery", "name": "Battery"},
+    "Chlorine": {
+        "unit": "mV",
+        "icon": "mdi:pool",
+        "name": "Chlorine",
+        "device_class": None,
+    },
+    "pH": {"unit": "", "icon": "mdi:pool", "name": "pH", "device_class": None},
+    "Battery": {
+        "unit": "%",
+        "icon": "mdi:battery",
+        "name": "Battery",
+        "device_class": DEVICE_CLASS_BATTERY,
+    },
     "Water Temp": {
         "unit": "°C",
         "icon": "mdi:coolant-temperature",
         "name": "Temperature",
+        "device_class": DEVICE_CLASS_TEMPERATURE,
     },
-    "Last Seen": {"unit": "", "icon": "mdi:clock", "name": "Last Seen"},
-    "Chlorine High": {"unit": "mV", "icon": "mdi:pool", "name": "Chlorine High"},
-    "Chlorine Low": {"unit": "mV", "icon": "mdi:pool", "name": "Chlorine Low"},
-    "pH High": {"unit": "", "icon": "mdi:pool", "name": "pH High"},
-    "pH Low": {"unit": "", "icon": "mdi:pool", "name": "pH Low"},
-    "pH Status": {"unit": "", "icon": "mdi:pool", "name": "pH Status"},
-    "Chlorine Status": {"unit": "", "icon": "mdi:pool", "name": "Chlorine Status"},
+    "Last Seen": {
+        "unit": "",
+        "icon": "mdi:clock",
+        "name": "Last Seen",
+        "device_class": DEVICE_CLASS_TIMESTAMP,
+    },
+    "Chlorine High": {
+        "unit": "mV",
+        "icon": "mdi:pool",
+        "name": "Chlorine High",
+        "device_class": None,
+    },
+    "Chlorine Low": {
+        "unit": "mV",
+        "icon": "mdi:pool",
+        "name": "Chlorine Low",
+        "device_class": None,
+    },
+    "pH High": {
+        "unit": None,
+        "icon": "mdi:pool",
+        "name": "pH High",
+        "device_class": None,
+    },
+    "pH Low": {
+        "unit": None,
+        "icon": "mdi:pool",
+        "name": "pH Low",
+        "device_class": None,
+    },
+    "pH Status": {
+        "unit": None,
+        "icon": "mdi:pool",
+        "name": "pH Status",
+        "device_class": None,
+    },
+    "Chlorine Status": {
+        "unit": "",
+        "icon": "mdi:pool",
+        "name": "Chlorine Status",
+        "device_class": None,
+    },
 }
 
 
@@ -50,7 +103,6 @@ class PoolSenseSensor(Entity):
 
     def __init__(self, coordinator, email, password, info_type):
         """Initialize poolsense sensor."""
-
         self._email = email
         self._password = password
         self.unique_id = f"{email}-{info_type}"
@@ -81,16 +133,21 @@ class PoolSenseSensor(Entity):
         return self.coordinator.data[self.info_type]
 
     @property
+    def device_class(self):
+        """Return the device class."""
+        return SENSORS[self.info_type]["device_class"]
+
+    @property
     def icon(self):
         """Return the icon."""
         if self.info_type == "pH Status":
             if self.coordinator.data[self.info_type] == "red":
-                return "mda: thumb-down"
-            return "mda: thumb-up"
+                return "mdi: thumb-down"
+            return "mdi: thumb-up"
         if self.info_type == "Chlorine Status":
             if self.coordinator.data[self.info_type] == "red":
-                return "mda: thumb-down"
-            return "mda: thumb-up"
+                return "mdi: thumb-down"
+            return "mdi: thumb-up"
         return SENSORS[self.info_type]["icon"]
 
     @property

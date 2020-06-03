@@ -4,7 +4,9 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/poolsense",
   "requirements": [
-    "poolsense==0.0.3"
+    "poolsense==0.0.4"
   ],
-  "codeowners": ["@haemishkyd"]
+  "codeowners": [
+    "@haemishkyd"
+  ]
 }

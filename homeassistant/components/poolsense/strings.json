@@ -2,14 +2,20 @@
   "config": {
     "step": {
       "user": {
+        "title": "Connect to the device",
         "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "host": "Host"
         }
       }
     },
-    "abort": { 
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
     }
-  }
+  },
+  "title": "PoolSense"
 }

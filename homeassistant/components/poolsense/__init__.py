@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-import poolsense
+from poolsense import PoolSense
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,11 +25,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up PoolSense from a config entry."""
-
     await get_coordinator(hass, entry)
-
-    if not entry.unique_id:
-        hass.config_entries.async_update_entry(entry, unique_id=entry.data["email"])
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -58,18 +54,21 @@ async def get_coordinator(hass, entry):
     if DOMAIN in hass.data:
         return hass.data[DOMAIN]
 
-    async def async_get_cases():
+    async def async_get_data():
         _LOGGER.info("Run query to server")
+        poolsense = PoolSense()
         with async_timeout.timeout(10):
             return await poolsense.get_poolsense_data(
-                aiohttp_client.async_get_clientsession(hass), entry
+                aiohttp_client.async_get_clientsession(hass),
+                entry.data["email"],
+                entry.data["password"],
             )
 
     hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,
-        update_method=async_get_cases,
+        update_method=async_get_data,
         update_interval=timedelta(hours=1),
     )
     await hass.data[DOMAIN].async_refresh()
