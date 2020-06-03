@@ -353,7 +353,7 @@ class PlexServer:
     @property
     def option_use_episode_art(self):
         """Return use_episode_art option."""
-        return self.options[MP_DOMAIN][CONF_USE_EPISODE_ART]
+        return self.options[MP_DOMAIN].get(CONF_USE_EPISODE_ART, False)
 
     @property
     def option_monitored_users(self):

@@ -359,6 +359,7 @@ async def _async_set_up_integrations(
         errors = [domain for domain in domains if futures[domain].exception()]
         for domain in errors:
             exception = futures[domain].exception()
+            assert exception is not None
             _LOGGER.error(
                 "Error setting up integration %s - received exception",
                 domain,
