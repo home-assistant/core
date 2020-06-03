@@ -1,5 +1,4 @@
 """Support for the Xiaomi vacuum cleaner robot."""
-import asyncio
 from functools import partial
 import logging
 
@@ -211,11 +210,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         }
 
         await getattr(entity, method["method"])(**params)
-        _LOGGER.debug("Service awaited")
-
-        update_coro = entity.async_update_ha_state(True)
-        await asyncio.wait({update_coro})
-        _LOGGER.debug("State update awaited")
 
     platform = entity_platform.current_platform.get()
 
