@@ -147,7 +147,7 @@ async-upnp-client==0.14.13
 av==8.0.2
 
 # homeassistant.components.axis
-axis==28
+axis==29
 
 # homeassistant.components.homekit
 base36==0.1.1
