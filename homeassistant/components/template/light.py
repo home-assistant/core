@@ -326,33 +326,25 @@ class LightTemplate(LightEntity):
 
         on_attrs = {}
         if self._level_action:
-            on_attrs["brightness_new"] = False
             on_attrs["brightness"] = self._brightness
         if self._temperature_action:
-            on_attrs["color_temp_new"] = False
             on_attrs["color_temp"] = self._temperature
         if self._white_value_action:
-            on_attrs["white_value_new"] = False
             on_attrs["white_value"] = self._white_value
         if self._color_action:
-            on_attrs["hs_new"] = False
             on_attrs["hs"] = self._color
             # Default values are None, so don't try to convert if None
             on_attrs["h"] = int(self._color[0]) if self._color[0] is not None else None
             on_attrs["s"] = int(self._color[1]) if self._color[1] is not None else None
 
         if ATTR_BRIGHTNESS in kwargs and self._level_action:
-            on_attrs["brightness_new"] = True
             on_attrs["brightness"] = kwargs[ATTR_BRIGHTNESS]
         if ATTR_COLOR_TEMP in kwargs and self._temperature_action:
-            on_attrs["color_temp_new"] = True
             on_attrs["color_temp"] = kwargs[ATTR_COLOR_TEMP]
         if ATTR_WHITE_VALUE in kwargs and self._white_value_action:
-            on_attrs["white_value_new"] = True
             on_attrs["white_value"] = kwargs[ATTR_WHITE_VALUE]
         if ATTR_HS_COLOR in kwargs and self._color_action:
             hs_value = kwargs[ATTR_HS_COLOR]
-            on_attrs["hs_new"] = True
             on_attrs["hs"] = hs_value
             # Default values are none, so don't try to convert if None
             on_attrs["h"] = int(hs_value[0]) if hs_value[0] is not None else None
