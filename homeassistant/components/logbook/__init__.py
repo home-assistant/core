@@ -1,5 +1,5 @@
 """Event parser and human readable log generator."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 from itertools import groupby
 import logging
 import time
@@ -134,7 +134,6 @@ async def async_setup(hass, config):
         async_log_entry(hass, name, message, domain, entity_id)
 
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
-    hass.http.register_view(LogbookTimeSliceView(config.get(DOMAIN, {})))
 
     hass.components.frontend.async_register_built_in_panel(
         "logbook", "logbook", "hass:format-list-bulleted-type"
@@ -172,47 +171,23 @@ class LogbookView(HomeAssistantView):
             period = int(period)
 
         entity_id = request.query.get("entity")
-        start_day = dt_util.as_utc(datetime) - timedelta(days=period - 1)
-        end_day = start_day + timedelta(days=period)
+
+        end_datetime = request.query.get("end_datetime")
+        if end_datetime is None:
+            start_day = dt_util.as_utc(datetime) - timedelta(days=period - 1)
+            end_day = start_day + timedelta(days=period)
+        else:
+            start_day = datetime
+            end_day = dt_util.parse_datetime(end_datetime)
+            if end_day is None:
+                return self.json_message("Invalid end_datetime", HTTP_BAD_REQUEST)
+
         hass = request.app["hass"]
 
         def json_events():
             """Fetch events and generate JSON."""
             return self.json(
                 _get_events(hass, self.config, start_day, end_day, entity_id)
-            )
-
-        return await hass.async_add_job(json_events)
-
-
-class LogbookTimeSliceView(HomeAssistantView):
-    """Handle logbook view requests."""
-
-    url = "/api/logbook_timeslice"
-    name = "api:logbook_timeslice"
-
-    def __init__(self, config):
-        """Initialize the logbook view."""
-        self.config = config
-
-    async def get(self, request):
-        """Retrieve logbook entries."""
-        start_timestamp = request.query.get("start_timestamp")
-        if start_timestamp is None:
-            return self.json_message("Invalid start_timestamp", HTTP_BAD_REQUEST)
-        end_timestamp = request.query.get("end_timestamp")
-        if end_timestamp is None:
-            return self.json_message("Invalid end_timestamp", HTTP_BAD_REQUEST)
-        entity_id = request.query.get("entity")
-        hass = request.app["hass"]
-
-        start_time = datetime.fromtimestamp(float(start_timestamp))
-        end_time = datetime.fromtimestamp(float(end_timestamp))
-
-        def json_events():
-            """Fetch events and generate JSON."""
-            return self.json(
-                _get_events(hass, self.config, start_time, end_time, entity_id)
             )
 
         return await hass.async_add_job(json_events)
