@@ -309,7 +309,7 @@ avri-api==0.1.7
 axis==29
 
 # homeassistant.components.azure_event_hub
-azure-eventhub==1.3.1
+azure-eventhub==5.1.0
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==0.50.1
