@@ -1,4 +1,5 @@
 """Support for LED lights."""
+from functools import partial
 import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -20,8 +21,12 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import (
+    async_get_registry as async_get_entity_registry,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
@@ -70,12 +75,12 @@ async def async_setup_entry(
         "async_effect",
     )
 
-    lights = [
-        WLEDLight(entry.entry_id, coordinator, light.segment_id)
-        for light in coordinator.data.state.segments
-    ]
+    update_segments = partial(
+        async_update_segments, entry, coordinator, {}, async_add_entities
+    )
 
-    async_add_entities(lights, True)
+    coordinator.async_add_listener(update_segments)
+    update_segments()
 
 
 class WLEDLight(LightEntity, WLEDDeviceEntity):
@@ -104,6 +109,16 @@ class WLEDLight(LightEntity, WLEDDeviceEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
         return f"{self.coordinator.data.info.mac_address}_{self._segment}"
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        try:
+            self.coordinator.data.state.segments[self._segment]
+        except IndexError:
+            return False
+
+        return super().available
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
@@ -259,3 +274,44 @@ class WLEDLight(LightEntity, WLEDDeviceEntity):
             data[ATTR_SPEED] = speed
 
         await self.coordinator.wled.light(**data)
+
+
+@callback
+def async_update_segments(
+    entry: ConfigEntry,
+    coordinator: WLEDDataUpdateCoordinator,
+    current: Dict[int, WLEDLight],
+    async_add_entities,
+) -> None:
+    """Update segments."""
+    segment_ids = {light.segment_id for light in coordinator.data.state.segments}
+    current_ids = set(current)
+
+    # Process new segments, add them to Home Assistant
+    new_segments = []
+    for segment_id in segment_ids - current_ids:
+        current[segment_id] = WLEDLight(entry.entry_id, coordinator, segment_id)
+        new_segments.append(current[segment_id])
+
+    if new_segments:
+        async_add_entities(new_segments)
+
+    # Process deleted segments, remove them from Home Assistant
+    for segment_id in current_ids - segment_ids:
+        coordinator.hass.async_create_task(
+            async_remove_segment(segment_id, coordinator, current)
+        )
+
+
+async def async_remove_segment(
+    segment_id: int,
+    coordinator: WLEDDataUpdateCoordinator,
+    current: Dict[int, WLEDLight],
+) -> None:
+    """Remove WLED segment light from Home Assistant."""
+    entity = current[segment_id]
+    await entity.async_remove()
+    registry = await async_get_entity_registry(coordinator.hass)
+    if entity.entity_id in registry.entities:
+        registry.async_remove(entity.entity_id)
+    del current[segment_id]
