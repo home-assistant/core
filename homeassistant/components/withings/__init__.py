@@ -12,7 +12,12 @@ from homeassistant.helpers import config_entry_oauth2_flow, config_validation as
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import config_flow
-from .common import _LOGGER, NotAuthenticatedError, get_data_manager
+from .common import (
+    _LOGGER,
+    NotAuthenticatedError,
+    WithingsLocalOAuth2Implementation,
+    get_data_manager,
+)
 from .const import CONF_PROFILES, CONFIG, CREDENTIALS, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
@@ -44,7 +49,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     config_flow.WithingsFlowHandler.async_register_implementation(
         hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
+        WithingsLocalOAuth2Implementation(
             hass,
             DOMAIN,
             conf[CONF_CLIENT_ID],
