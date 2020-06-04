@@ -86,7 +86,7 @@ WANTED_SCOPES = {"openid", "email", "profile"}
 class OpenIdAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
-    DEFAULT_TITLE = "OpenId Connect"
+    DEFAULT_TITLE = "OpenID Connect"
 
     _configuration: Dict[str, Any]
     _jwks: Dict[str, Any]
