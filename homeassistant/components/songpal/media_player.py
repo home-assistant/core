@@ -316,11 +316,11 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_volume_up(self):
         """Set volume up."""
-        return await self._volume_control.set_volume("+1")
+        return await self._volume_control.set_volume(self._volume + 1)
 
     async def async_volume_down(self):
         """Set volume down."""
-        return await self._volume_control.set_volume("-1")
+        return await self._volume_control.set_volume(self._volume - 1)
 
     async def async_turn_on(self):
         """Turn the device on."""

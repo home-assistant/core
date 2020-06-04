@@ -87,7 +87,7 @@ homeassistant/components/cups/* @fabaff
 homeassistant/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
 homeassistant/components/deconz/* @Kane610
-homeassistant/components/delijn/* @bollewolle
+homeassistant/components/delijn/* @bollewolle @Emilv2
 homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/denonavr/* @scarface-4711 @starkillerOG
 homeassistant/components/derivative/* @afaucogney
@@ -98,6 +98,7 @@ homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7 @bdraco
 homeassistant/components/dsmr_reader/* @depl0y
+homeassistant/components/dunehd/* @bieniu
 homeassistant/components/dweet/* @fabaff
 homeassistant/components/dynalite/* @ziv1234
 homeassistant/components/dyson/* @etheralm
@@ -141,7 +142,6 @@ homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garmin_connect/* @cyberjunky
 homeassistant/components/gdacs/* @exxamalte
-homeassistant/components/gearbest/* @HerrHofrat
 homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
@@ -161,6 +161,7 @@ homeassistant/components/griddy/* @bdraco
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/growatt_server/* @indykoning
 homeassistant/components/gtfs/* @robbiet480
+homeassistant/components/guardian/* @bachya
 homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco
 homeassistant/components/hassio/* @home-assistant/hass-io
 homeassistant/components/heatmiser/* @andylockran
@@ -180,7 +181,7 @@ homeassistant/components/homematicip_cloud/* @SukramJ
 homeassistant/components/honeywell/* @zxdavb
 homeassistant/components/html5/* @robbiet480
 homeassistant/components/http/* @home-assistant/core
-homeassistant/components/huawei_lte/* @scop
+homeassistant/components/huawei_lte/* @scop @fphammerle
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
 homeassistant/components/hunterdouglas_powerview/* @bdraco
@@ -309,7 +310,7 @@ homeassistant/components/pilight/* @trekky12
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/plex/* @jjlawren
-homeassistant/components/plugwise/* @laetificat @CoMPaTech @bouwew
+homeassistant/components/plugwise/* @CoMPaTech @bouwew
 homeassistant/components/plum_lightpad/* @ColinHarrington
 homeassistant/components/point/* @fredrike
 homeassistant/components/powerwall/* @bdraco @jrester

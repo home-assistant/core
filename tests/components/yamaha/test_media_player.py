@@ -62,6 +62,7 @@ class TestYamahaMediaPlayer(unittest.TestCase):
         config = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
 
         assert setup_component(self.hass, mp.DOMAIN, config)
+        self.hass.block_till_done()
 
     @patch("rxv.RXV")
     def test_enable_output(self, mock_rxv):

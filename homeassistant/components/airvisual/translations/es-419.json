@@ -28,10 +28,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Clave API",
                     "cloud_api": "Localizaci\u00f3n geogr\u00e1fica",
-                    "latitude": "Latitud",
-                    "longitude": "Longitud",
                     "node_pro": "AirVisual Node Pro",
                     "type": "Tipo de integraci\u00f3n"
                 },
@@ -46,7 +43,6 @@
                 "data": {
                     "show_on_map": "Mostrar geograf\u00eda monitoreada en el mapa"
                 },
-                "description": "Establezca varias opciones para la integraci\u00f3n de AirVisual.",
                 "title": "Configurar AirVisual"
             }
         }

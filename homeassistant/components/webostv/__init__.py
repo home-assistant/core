@@ -9,6 +9,7 @@ from websockets.exceptions import ConnectionClosed
 from homeassistant.components.webostv.const import (
     ATTR_BUTTON,
     ATTR_COMMAND,
+    ATTR_PAYLOAD,
     CONF_ON_ACTION,
     CONF_SOURCES,
     DEFAULT_NAME,
@@ -59,7 +60,9 @@ CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
 BUTTON_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_BUTTON): cv.string})
 
-COMMAND_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_COMMAND): cv.string})
+COMMAND_SCHEMA = CALL_SCHEMA.extend(
+    {vol.Required(ATTR_COMMAND): cv.string, vol.Optional(ATTR_PAYLOAD): dict}
+)
 
 SOUND_OUTPUT_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_SOUND_OUTPUT): cv.string})
 

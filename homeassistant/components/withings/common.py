@@ -20,9 +20,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    AUTH_CALLBACK_PATH,
     AbstractOAuth2Implementation,
+    LocalOAuth2Implementation,
     OAuth2Session,
 )
+from homeassistant.helpers.network import get_url
 from homeassistant.util import dt, slugify
 
 from . import const
@@ -335,3 +338,13 @@ def get_data_manager(
     )
 
     return dm_dict[entry_id]
+
+
+class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
+    """Oauth2 implementation that only uses the external url."""
+
+    @property
+    def redirect_uri(self) -> str:
+        """Return the redirect uri."""
+        url = get_url(self.hass, allow_internal=False, prefer_cloud=True)
+        return f"{url}{AUTH_CALLBACK_PATH}"

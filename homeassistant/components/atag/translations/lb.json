@@ -4,7 +4,8 @@
             "already_configured": "N\u00ebmmen 1 Atag Apparat kann am Home Assistant dob\u00e4igesat ginn"
         },
         "error": {
-            "connection_error": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol."
+            "connection_error": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "unauthorized": "Kopplung verweigert, iwwerpr\u00e9if den Apparat fir auth request"
         },
         "step": {
             "user": {

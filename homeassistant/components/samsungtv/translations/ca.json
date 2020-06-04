@@ -18,8 +18,7 @@
                     "host": "Amfitri\u00f3",
                     "name": "Nom"
                 },
-                "description": "Introdeix les dades del televisor Samsung. Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent demanant autenticaci\u00f3.",
-                "title": "Televisor Samsung"
+                "description": "Introdeix les dades del televisor Samsung. Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent demanant autenticaci\u00f3."
             }
         }
     }
