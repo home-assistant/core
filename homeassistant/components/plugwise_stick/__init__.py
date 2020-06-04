@@ -27,22 +27,43 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Establish connection with plugwise USB-stick."""
     hass.data.setdefault(DOMAIN, {})
 
+    def add_discovered_nodes(mac):
+        """Add plugwise node discovered after initialization."""
+        _LOGGER.debug("Add new discovered Plugwise node: %s", mac)
+        for platform in PLUGWISE_STICK_PLATFORMS:
+            if platform in stick.node(mac).get_categories():
+                hass.async_create_task(
+                    hass.config_entries.async_forward_entry_unload(
+                        config_entry, platform
+                    )
+                )
+                hass.data[DOMAIN][config_entry.entry_id][platform].append(mac)
+                hass.async_create_task(
+                    hass.config_entries.async_forward_entry_setup(
+                        config_entry, platform
+                    )
+                )
+
     def discover_finished():
+        """Create entities for all discovered nodes."""
         nodes = stick.nodes()
-        _LOGGER.debug("Discovery finished %s nodes found", str(len(nodes)))
+        _LOGGER.debug("Successfully discovered %s plugwise nodes", str(len(nodes)))
         discovery_info = {"stick": stick}
         for platform in PLUGWISE_STICK_PLATFORMS:
             discovery_info[platform] = []
+        hass.data[DOMAIN][config_entry.entry_id] = discovery_info
         for mac in nodes:
             for platform in PLUGWISE_STICK_PLATFORMS:
                 if platform in stick.node(mac).get_categories():
-                    discovery_info[platform].append(mac)
-        hass.data[DOMAIN][config_entry.entry_id] = discovery_info
+                    hass.data[DOMAIN][config_entry.entry_id][platform].append(mac)
         for platform in PLUGWISE_STICK_PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(config_entry, platform)
             )
         stick.auto_update()
+
+        # Subscribe callback for nodes discovered after initial scan
+        stick.subscribe_stick_callback(add_discovered_nodes, "NEW_NODE")
 
     stick = plugwise.stick(config_entry.data[CONF_USB_PATH])
     try:
