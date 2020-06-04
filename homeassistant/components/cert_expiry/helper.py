@@ -1,7 +1,8 @@
 """Helper functions for the Cert Expiry platform."""
-from datetime import datetime
 import socket
 import ssl
+
+from homeassistant.util import dt
 
 from .const import TIMEOUT
 from .errors import (
@@ -39,4 +40,4 @@ async def get_cert_expiry_timestamp(hass, hostname, port):
         raise ValidationFailure(err.args[0])
 
     ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
-    return datetime.fromtimestamp(ts_seconds)
+    return dt.as_local(dt.utc_from_timestamp(ts_seconds))

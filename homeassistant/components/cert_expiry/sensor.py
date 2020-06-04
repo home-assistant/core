@@ -1,5 +1,5 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -17,6 +17,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt
 
 from .const import DEFAULT_PORT, DOMAIN
 from .errors import TemporaryFailure, ValidationFailure
@@ -92,7 +93,7 @@ class SSLCertificate(Entity):
         self._timestamp = timestamp
         self._state = 0
         if timestamp:
-            expiry = timestamp - datetime.today()
+            expiry = timestamp - dt.now()
             self._state = expiry.days
         self._valid = False
         if error is None:
@@ -157,7 +158,7 @@ class SSLCertificate(Entity):
 
         self._available = True
         self._error = None
-        expiry = self._timestamp - datetime.today()
+        expiry = self._timestamp - dt.now()
         self._state = expiry.days
         self._valid = True
 
