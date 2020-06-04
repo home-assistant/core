@@ -42,6 +42,12 @@ class DevoloDeviceEntity(Entity):
             self._device_instance.uid, self.subscriber, self.sync_callback
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity is removed or disabled."""
+        self._homecontrol.publisher.unregister(
+            self._device_instance.uid, self.subscriber
+        )
+
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
