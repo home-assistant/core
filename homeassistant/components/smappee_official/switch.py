@@ -129,7 +129,10 @@ class SmappeeActuator(SwitchEntity):
     @property
     def available(self):
         """Return True if entity is available. Unavailable for COMFORT_PLUGS."""
-        return self._connection_state in ["CONNECTED", None]
+        return (
+            self._connection_state == "CONNECTED"
+            or self._actuator_type == "COMFORT_PLUG"
+        )
 
     @property
     def today_energy_kwh(self):
