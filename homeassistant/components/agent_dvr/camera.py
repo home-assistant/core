@@ -119,6 +119,7 @@ class AgentCamera(MjpegCamera):
             "alerted": self.is_alerted,
             "has_ptz": self.device.has_ptz,
             "alerts_enabled": self.device.alerts_active,
+            "location": self.device.location,
         }
 
     @property
