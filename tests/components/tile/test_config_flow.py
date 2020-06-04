@@ -3,7 +3,7 @@ from pytile.errors import TileError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tile import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import patch
@@ -44,6 +44,28 @@ async def test_invalid_credentials(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "invalid_credentials"}
+
+
+async def test_step_import(hass):
+    """Test that the import step works."""
+    conf = {
+        CONF_USERNAME: "user@host.com",
+        CONF_PASSWORD: "123abc",
+    }
+
+    with patch(
+        "homeassistant.components.tile.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.tile.config_flow.async_login"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
+        print(result)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "user@host.com"
+        assert result["data"] == {
+            CONF_USERNAME: "user@host.com",
+            CONF_PASSWORD: "123abc",
+        }
 
 
 async def test_step_user(hass):
