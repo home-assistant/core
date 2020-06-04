@@ -1,7 +1,8 @@
 """Config flow to configure the Meteo-France integration."""
 import logging
 
-from meteofrance.client import meteofranceClient, meteofranceError
+from meteofrance.auth import AuthMeteofrance
+from meteofrance.client import MeteofranceClient, meteofranceError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -42,9 +43,12 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         city = user_input[CONF_CITY]  # Might be a city name or a postal code
         city_name = None
 
+        auth = AuthMeteofrance()
+        client = MeteofranceClient(auth)
+
         try:
-            client = await self.hass.async_add_executor_job(meteofranceClient, city)
-            city_name = client.get_data()["name"]
+            place = await self.hass.async_add_executor_job(client.search_places, city)
+            city_name = place.name
         except meteofranceError as exp:
             _LOGGER.error(
                 "Unexpected error when creating the meteofrance proxy: %s", exp
