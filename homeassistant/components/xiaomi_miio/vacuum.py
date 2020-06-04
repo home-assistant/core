@@ -202,22 +202,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities([mirobo], update_before_add=True)
 
-    async def async_service_handler(entity, service):
-        """Map services to methods on MiroboVacuum."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = {
-            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
-        }
-
-        await getattr(entity, method["method"])(**params)
-
     platform = entity_platform.current_platform.get()
 
     for vacuum_service, method in SERVICE_TO_METHOD.items():
         schema = method.get("schema", VACUUM_SERVICE_SCHEMA)
-        platform.async_register_entity_service(
-            vacuum_service, schema, async_service_handler
-        )
+        method_name = method["method"]
+        platform.async_register_entity_service(vacuum_service, schema, method_name)
 
 
 class MiroboVacuum(StateVacuumEntity):
