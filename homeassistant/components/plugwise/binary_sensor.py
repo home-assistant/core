@@ -26,20 +26,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     all_devices = api.get_all_devices()
     for dev_id, device_properties in all_devices.items():
-        if device_properties["class"] == "heater_central":
-            data = api.get_device_data(dev_id)
-            for binary_sensor, dummy in BINARY_SENSOR_MAP.items():
-                if binary_sensor in data:
-                    entities.append(
-                        PwBinarySensor(
-                            api,
-                            coordinator,
-                            device_properties["name"],
-                            binary_sensor,
-                            dev_id,
-                            device_properties["class"],
-                        )
-                    )
+        if device_properties["class"] != "heater_central":
+            continue
+
+        data = api.get_device_data(dev_id)
+        for binary_sensor, dummy in BINARY_SENSOR_MAP.items():
+            if binary_sensor not in data:
+                continue
+
+            entities.append(
+                PwBinarySensor(
+                    api,
+                    coordinator,
+                    device_properties["name"],
+                    binary_sensor,
+                    dev_id,
+                    device_properties["class"],
+                )
+            )
 
     async_add_entities(entities, True)
 
@@ -74,23 +78,26 @@ class PwBinarySensor(SmileSensor, BinarySensorEntity):
         data = self._api.get_device_data(self._dev_id)
 
         if not data:
-            _LOGGER.error("Received no data for device %s.", self._binary_sensor)
+            _LOGGER.error("Received no data for device %s", self._binary_sensor)
             self.async_write_ha_state()
             return
 
-        if self._binary_sensor in data:
-            self._is_on = data[self._binary_sensor]
+        if self._binary_sensor not in data:
+            self.async_write_ha_state()
+            return
 
-            self._state = STATE_OFF
+        self._is_on = data[self._binary_sensor]
+
+        self._state = STATE_OFF
+        if self._binary_sensor == "dhw_state":
+            self._icon = FLOW_OFF_ICON
+        if self._binary_sensor == "slave_boiler_state":
+            self._icon = IDLE_ICON
+        if self._is_on:
+            self._state = STATE_ON
             if self._binary_sensor == "dhw_state":
-                self._icon = FLOW_OFF_ICON
+                self._icon = FLOW_ON_ICON
             if self._binary_sensor == "slave_boiler_state":
-                self._icon = IDLE_ICON
-            if self._is_on:
-                self._state = STATE_ON
-                if self._binary_sensor == "dhw_state":
-                    self._icon = FLOW_ON_ICON
-                if self._binary_sensor == "slave_boiler_state":
-                    self._icon = FLAME_ICON
+                self._icon = FLAME_ICON
 
         self.async_write_ha_state()
