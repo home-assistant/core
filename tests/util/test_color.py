@@ -292,14 +292,16 @@ def test_color_temperature_mired_to_kelvin():
     """Test color_temperature_mired_to_kelvin."""
     assert color_util.color_temperature_mired_to_kelvin(40) == 25000
     assert color_util.color_temperature_mired_to_kelvin(200) == 5000
-    assert color_util.color_temperature_mired_to_kelvin(0) == 0
+    with pytest.raises(ZeroDivisionError):
+        assert color_util.color_temperature_mired_to_kelvin(0)
 
 
 def test_color_temperature_kelvin_to_mired():
     """Test color_temperature_kelvin_to_mired."""
     assert color_util.color_temperature_kelvin_to_mired(25000) == 40
     assert color_util.color_temperature_kelvin_to_mired(5000) == 200
-    assert color_util.color_temperature_kelvin_to_mired(0) == 0
+    with pytest.raises(ZeroDivisionError):
+        assert color_util.color_temperature_kelvin_to_mired(0)
 
 
 def test_returns_same_value_for_any_two_temperatures_below_1000():
