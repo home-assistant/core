@@ -69,8 +69,28 @@ ENERGY_SENSOR_MAP = {
         ENERGY_WATT_HOUR,
         DEVICE_CLASS_POWER,
     ],
+    "electricity_consumed_peak_interval": [
+        "Consumed Power Interval",
+        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_POWER,
+    ],
+    "electricity_consumed_off_peak_interval": [
+        "Consumed Power Interval (off peak)",
+        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_POWER,
+    ],
     "electricity_produced_interval": [
         "Produced Power Interval",
+        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_POWER,
+    ],
+    "electricity_produced_peak_interval": [
+        "Produced Power Interval",
+        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_POWER,
+    ],
+    "electricity_produced_off_peak_interval": [
+        "Produced Power Interval (off peak)",
         ENERGY_WATT_HOUR,
         DEVICE_CLASS_POWER,
     ],
@@ -153,52 +173,53 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             **ENERGY_SENSOR_MAP,
             **MISC_SENSOR_MAP,
         }.items():
-            if sensor in data:
-                if data[sensor] is None:
-                    continue
+            if data.get(sensor) is None:
+                continue
 
-                if "power" in device_properties["types"]:
-                    model = None
+            if "power" in device_properties["types"]:
+                model = None
 
-                    if "plug" in device_properties["types"]:
-                        model = "Metered Switch"
+                if "plug" in device_properties["types"]:
+                    model = "Metered Switch"
 
-                    entities.append(
-                        PwPowerSensor(
-                            api,
-                            coordinator,
-                            device_properties["name"],
-                            dev_id,
-                            sensor,
-                            sensor_type,
-                            model,
-                        )
+                entities.append(
+                    PwPowerSensor(
+                        api,
+                        coordinator,
+                        device_properties["name"],
+                        dev_id,
+                        sensor,
+                        sensor_type,
+                        model,
                     )
-                else:
-                    entities.append(
-                        PwThermostatSensor(
-                            api,
-                            coordinator,
-                            device_properties["name"],
-                            dev_id,
-                            sensor,
-                            sensor_type,
-                        )
+                )
+            else:
+                entities.append(
+                    PwThermostatSensor(
+                        api,
+                        coordinator,
+                        device_properties["name"],
+                        dev_id,
+                        sensor,
+                        sensor_type,
                     )
+                )
 
         if single_thermostat is False:
             for state in INDICATE_ACTIVE_LOCAL_DEVICE:
-                if state in data:
-                    entities.append(
-                        PwAuxDeviceSensor(
-                            api,
-                            coordinator,
-                            device_properties["name"],
-                            dev_id,
-                            DEVICE_STATE,
-                        )
+                if state not in data:
+                    continue
+
+                entities.append(
+                    PwAuxDeviceSensor(
+                        api,
+                        coordinator,
+                        device_properties["name"],
+                        dev_id,
+                        DEVICE_STATE,
                     )
-                    break
+                )
+                break
 
     async_add_entities(entities, True)
 
@@ -260,7 +281,7 @@ class PwThermostatSensor(SmileSensor, Entity):
         data = self._api.get_device_data(self._dev_id)
 
         if not data:
-            _LOGGER.error("Received no data for device %s.", self._entity_name)
+            _LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
 
@@ -297,7 +318,7 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
         data = self._api.get_device_data(self._dev_id)
 
         if not data:
-            _LOGGER.error("Received no data for device %s.", self._entity_name)
+            _LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
 
@@ -341,7 +362,7 @@ class PwPowerSensor(SmileSensor, Entity):
         data = self._api.get_device_data(self._dev_id)
 
         if not data:
-            _LOGGER.error("Received no data for device %s.", self._entity_name)
+            _LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
 

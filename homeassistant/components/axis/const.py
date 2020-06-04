@@ -11,7 +11,6 @@ DOMAIN = "axis"
 
 ATTR_MANUFACTURER = "Axis Communications AB"
 
-CONF_CAMERA = "camera"
 CONF_EVENTS = "events"
 CONF_MODEL = "model"
 CONF_STREAM_PROFILE = "stream_profile"

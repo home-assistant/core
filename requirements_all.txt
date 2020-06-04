@@ -979,7 +979,7 @@ numato-gpio==0.7.1
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.4
+numpy==1.18.5
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1726,7 +1726,7 @@ python-sochain-api==0.0.2
 python-songpal==0.12
 
 # homeassistant.components.synology_dsm
-python-synology==0.8.1
+python-synology==0.8.2
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -1990,7 +1990,7 @@ somecomfort==0.5.2
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonarr
-sonarr==0.2.1
+sonarr==0.2.2
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
