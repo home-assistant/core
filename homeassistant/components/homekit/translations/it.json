@@ -29,6 +29,13 @@
                 "description": "Queste impostazioni devono essere modificate solo se il bridge HomeKit non funziona.",
                 "title": "Configurazione Avanzata"
             },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Telecamere che supportano flussi H.264 nativi"
+                },
+                "description": "Controllare tutte le telecamere che supportano i flussi H.264 nativi. Se la videocamera non emette uno stream H.264, il sistema provveder\u00e0 a transcodificare il video in H.264 per HomeKit. La transcodifica richiede una CPU performante ed \u00e8 improbabile che funzioni su computer a scheda singola.",
+                "title": "Seleziona il codec video della videocamera."
+            },
             "exclude": {
                 "data": {
                     "exclude_entities": "Entit\u00e0 da escludere"

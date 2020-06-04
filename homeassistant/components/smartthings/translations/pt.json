@@ -15,9 +15,6 @@
                 "title": "Autorizar o Home Assistant"
             },
             "pat": {
-                "data": {
-                    "access_token": "Token de Acesso"
-                },
                 "title": "Insira o Token de acesso pessoal"
             },
             "select_location": {

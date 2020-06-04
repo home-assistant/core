@@ -244,20 +244,25 @@ async def test_list_groupable_devices(zha_client, device_groupable):
     assert msg["id"] == 10
     assert msg["type"] == const.TYPE_RESULT
 
-    devices = msg["result"]
-    assert len(devices) == 1
+    device_endpoints = msg["result"]
+    assert len(device_endpoints) == 1
 
-    for device in devices:
-        assert device[ATTR_IEEE] == "01:2d:6f:00:0a:90:69:e8"
-        assert device[ATTR_MANUFACTURER] is not None
-        assert device[ATTR_MODEL] is not None
-        assert device[ATTR_NAME] is not None
-        assert device[ATTR_QUIRK_APPLIED] is not None
-        assert device["entities"] is not None
+    for endpoint in device_endpoints:
+        assert endpoint["device"][ATTR_IEEE] == "01:2d:6f:00:0a:90:69:e8"
+        assert endpoint["device"][ATTR_MANUFACTURER] is not None
+        assert endpoint["device"][ATTR_MODEL] is not None
+        assert endpoint["device"][ATTR_NAME] is not None
+        assert endpoint["device"][ATTR_QUIRK_APPLIED] is not None
+        assert endpoint["device"]["entities"] is not None
+        assert endpoint["endpoint_id"] is not None
+        assert endpoint["entities"] is not None
 
-        for entity_reference in device["entities"]:
+        for entity_reference in endpoint["device"]["entities"]:
             assert entity_reference[ATTR_NAME] is not None
             assert entity_reference["entity_id"] is not None
+
+        for entity_reference in endpoint["entities"]:
+            assert entity_reference["original_name"] is not None
 
     # Make sure there are no groupable devices when the device is unavailable
     # Make device unavailable
@@ -269,8 +274,8 @@ async def test_list_groupable_devices(zha_client, device_groupable):
     assert msg["id"] == 11
     assert msg["type"] == const.TYPE_RESULT
 
-    devices = msg["result"]
-    assert len(devices) == 0
+    device_endpoints = msg["result"]
+    assert len(device_endpoints) == 0
 
 
 async def test_add_group(zha_client):

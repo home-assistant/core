@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta
 import json
 
+import pytest
+
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.components.sensor as sensor
@@ -62,6 +64,7 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", "100")
     state = hass.states.get("sensor.test")
@@ -86,6 +89,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test")
     assert state.state == "unknown"
@@ -153,6 +157,7 @@ async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", '{ "val": "100" }')
     state = hass.states.get("sensor.test")
@@ -174,6 +179,7 @@ async def test_force_update_disabled(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 
@@ -207,6 +213,7 @@ async def test_force_update_enabled(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 
@@ -260,6 +267,7 @@ async def test_invalid_device_class(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test")
     assert state is None
@@ -361,6 +369,7 @@ async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",' '  "state_topic": "test_topic#" }'

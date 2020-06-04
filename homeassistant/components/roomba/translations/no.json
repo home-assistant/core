@@ -1,14 +1,12 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
-            "unknown": "Uventet feil"
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen"
         },
         "step": {
             "user": {
                 "data": {
                     "blid": "Blid",
-                    "certificate": "Sertifikat",
                     "continuous": "Kontinuerlige",
                     "delay": "Forsinkelse",
                     "host": "Vertsnavn eller IP-adresse",

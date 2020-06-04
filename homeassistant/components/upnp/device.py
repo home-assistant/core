@@ -3,8 +3,7 @@ import asyncio
 from ipaddress import IPv4Address
 from typing import List, Mapping
 
-import aiohttp
-from async_upnp_client import UpnpError, UpnpFactory
+from async_upnp_client import UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.profiles.igd import IgdDevice
 
@@ -110,70 +109,6 @@ class Device:
     def __str__(self) -> str:
         """Get string representation."""
         return f"IGD Device: {self.name}/{self.udn}"
-
-    async def async_add_port_mappings(
-        self, ports: Mapping[int, int], local_ip: str
-    ) -> None:
-        """Add port mappings."""
-        if local_ip == "127.0.0.1":
-            _LOGGER.error("Could not create port mapping, our IP is 127.0.0.1")
-
-        # determine local ip, ensure sane IP
-        local_ip = IPv4Address(local_ip)
-
-        # create port mappings
-        for external_port, internal_port in ports.items():
-            await self._async_add_port_mapping(external_port, local_ip, internal_port)
-            self._mapped_ports.append(external_port)
-
-    async def _async_add_port_mapping(
-        self, external_port: int, local_ip: str, internal_port: int
-    ) -> None:
-        """Add a port mapping."""
-        # create port mapping
-        _LOGGER.info(
-            "Creating port mapping %s:%s:%s (TCP)",
-            external_port,
-            local_ip,
-            internal_port,
-        )
-        try:
-            await self._igd_device.async_add_port_mapping(
-                remote_host=None,
-                external_port=external_port,
-                protocol="TCP",
-                internal_port=internal_port,
-                internal_client=local_ip,
-                enabled=True,
-                description="Home Assistant",
-                lease_duration=None,
-            )
-
-            self._mapped_ports.append(external_port)
-        except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
-            _LOGGER.error(
-                "Could not add port mapping: %s:%s:%s",
-                external_port,
-                local_ip,
-                internal_port,
-            )
-
-    async def async_delete_port_mappings(self) -> None:
-        """Remove port mappings."""
-        for port in self._mapped_ports:
-            await self._async_delete_port_mapping(port)
-
-    async def _async_delete_port_mapping(self, external_port: int) -> None:
-        """Remove a port mapping."""
-        _LOGGER.info("Deleting port mapping %s (TCP)", external_port)
-        try:
-            await self._igd_device.async_delete_port_mapping(
-                remote_host=None, external_port=external_port, protocol="TCP"
-            )
-
-            self._mapped_ports.remove(external_port)
-        except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
-            _LOGGER.error("Could not delete port mapping")
 
     async def async_get_traffic_data(self) -> Mapping[str, any]:
         """

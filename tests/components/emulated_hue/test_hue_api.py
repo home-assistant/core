@@ -26,6 +26,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_USERNAME,
     HueAllGroupsStateView,
     HueAllLightsStateView,
+    HueConfigView,
     HueFullStateView,
     HueOneLightChangeView,
     HueOneLightStateView,
@@ -191,6 +192,7 @@ def hue_client(loop, hass_hue, aiohttp_client):
     HueOneLightChangeView(config).register(web_app, web_app.router)
     HueAllGroupsStateView(config).register(web_app, web_app.router)
     HueFullStateView(config).register(web_app, web_app.router)
+    HueConfigView(config).register(web_app, web_app.router)
 
     return loop.run_until_complete(aiohttp_client(web_app))
 
@@ -330,7 +332,7 @@ async def test_discover_full_state(hue_client):
 
     # Make sure array is correct size
     assert len(result_json) == 2
-    assert len(config_json) == 4
+    assert len(config_json) == 6
     assert len(lights_json) >= 1
 
     # Make sure the config wrapper added to the config is there
@@ -341,6 +343,10 @@ async def test_discover_full_state(hue_client):
     assert "swversion" in config_json
     assert "01003542" in config_json["swversion"]
 
+    # Make sure the api version is correct
+    assert "apiversion" in config_json
+    assert "1.17.0" in config_json["apiversion"]
+
     # Make sure the correct username in config
     assert "whitelist" in config_json
     assert HUE_API_USERNAME in config_json["whitelist"]
@@ -350,6 +356,49 @@ async def test_discover_full_state(hue_client):
     # Make sure the correct ip in config
     assert "ipaddress" in config_json
     assert "127.0.0.1:8300" in config_json["ipaddress"]
+
+    # Make sure the device announces a link button
+    assert "linkbutton" in config_json
+    assert config_json["linkbutton"] is True
+
+
+async def test_discover_config(hue_client):
+    """Test the discovery of configuration."""
+    result = await hue_client.get(f"/api/{HUE_API_USERNAME}/config")
+
+    assert result.status == 200
+    assert "application/json" in result.headers["content-type"]
+
+    config_json = await result.json()
+
+    # Make sure array is correct size
+    assert len(config_json) == 6
+
+    # Make sure the config wrapper added to the config is there
+    assert "mac" in config_json
+    assert "00:00:00:00:00:00" in config_json["mac"]
+
+    # Make sure the correct version in config
+    assert "swversion" in config_json
+    assert "01003542" in config_json["swversion"]
+
+    # Make sure the api version is correct
+    assert "apiversion" in config_json
+    assert "1.17.0" in config_json["apiversion"]
+
+    # Make sure the correct username in config
+    assert "whitelist" in config_json
+    assert HUE_API_USERNAME in config_json["whitelist"]
+    assert "name" in config_json["whitelist"][HUE_API_USERNAME]
+    assert "HASS BRIDGE" in config_json["whitelist"][HUE_API_USERNAME]["name"]
+
+    # Make sure the correct ip in config
+    assert "ipaddress" in config_json
+    assert "127.0.0.1:8300" in config_json["ipaddress"]
+
+    # Make sure the device announces a link button
+    assert "linkbutton" in config_json
+    assert config_json["linkbutton"] is True
 
 
 async def test_get_light_state(hass_hue, hue_client):
@@ -905,6 +954,7 @@ async def test_external_ip_blocked(hue_client):
     getUrls = [
         "/api/username/groups",
         "/api/username",
+        "/api/username/config",
         "/api/username/lights",
         "/api/username/lights/light.ceiling_lights",
     ]
@@ -925,3 +975,17 @@ async def test_external_ip_blocked(hue_client):
         for putUrl in putUrls:
             result = await hue_client.put(putUrl)
             assert result.status == HTTP_UNAUTHORIZED
+
+
+async def test_unauthorized_user_blocked(hue_client):
+    """Test unauthorized_user blocked."""
+    getUrls = [
+        "/api/wronguser",
+        "/api/wronguser/config",
+    ]
+    for getUrl in getUrls:
+        result = await hue_client.get(getUrl)
+        assert result.status == HTTP_OK
+
+        result_json = await result.json()
+        assert result_json[0]["error"]["description"] == "unauthorized user"

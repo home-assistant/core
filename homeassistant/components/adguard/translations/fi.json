@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Yhdist\u00e4minen ep\u00e4onnistui."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Palvelin",
+                    "port": "Portti"
+                }
+            }
+        }
+    }
+}

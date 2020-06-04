@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontroller Site ass scho konfigur\u00e9iert",
-            "user_privilege": "Benotzer muss een Administrator sinn"
+            "already_configured": "Kontroller Site ass scho konfigur\u00e9iert"
         },
         "error": {
             "faulty_credentials": "Ong\u00eblteg Login Informatioune",
@@ -28,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Netzwierk Zougang kontroll\u00e9iert Clienten",
-                    "new_client": "Neie Client fir Netzwierk Zougang Kontroll b\u00e4isetzen",
                     "poe_clients": "POE Kontroll vun Clienten erlaben"
                 },
                 "description": "Client Kontroll konfigur\u00e9ieren\n\nErstell Schalter fir Serienummer d\u00e9i sollen fir Netzwierk Zougangs Kontroll kontroll\u00e9iert ginn.",
@@ -51,6 +49,13 @@
                     "one": "Een",
                     "other": "M\u00e9i"
                 }
+            },
+            "simple_options": {
+                "data": {
+                    "track_clients": "Reseau Cliente verfollegen",
+                    "track_devices": "Reseau Apparater verfollege (Ubiquiti Apparater)"
+                },
+                "description": "UniFi Integratioun ariichten"
             },
             "statistics_sensors": {
                 "data": {

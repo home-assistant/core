@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=60)
 CONF_PROVINCE = "province"
+DEFAULT_DEVICE_CLASS = "safety"
 DEFAULT_NAME = "Stookalert"
 ATTRIBUTION = "Data provided by rivm.nl"
 PROVINCES = [
@@ -73,6 +74,11 @@ class StookalertBinarySensor(BinarySensorEntity):
     def is_on(self):
         """Return True if the Alert is active."""
         return self._api_handler.state == 1
+
+    @property
+    def device_class(self):
+        """Return the device class of this binary sensor."""
+        return DEFAULT_DEVICE_CLASS
 
     def update(self):
         """Update the data from the Stookalert handler."""
