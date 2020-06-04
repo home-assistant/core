@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smappee_official",
   "requirements": [
-    "pysmappee==0.0.8"
+    "pysmappee==0.0.9"
   ],
   "dependencies": [],
   "codeowners": []
