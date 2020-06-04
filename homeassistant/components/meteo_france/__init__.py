@@ -1,22 +1,25 @@
 """Support for Meteo-France weather data."""
 import asyncio
-import datetime
+from datetime import timedelta
 import logging
 
-from meteofrance.client import meteofranceClient, meteofranceError
-from vigilancemeteo import VigilanceMeteoError, VigilanceMeteoFranceProxy
+import async_timeout
+from meteofrance.auth import AuthMeteofrance
+from meteofrance.client import MeteofranceClient
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CITY, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 CITY_SCHEMA = vol.Schema({vol.Required(CONF_CITY): cv.string})
@@ -28,15 +31,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up Meteo-France from legacy config file."""
-
     conf = config.get(DOMAIN)
-    if conf is None:
+    if not conf:
         return True
 
     for city_conf in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=city_conf.copy()
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=city_conf
             )
         )
 
@@ -47,33 +49,21 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up an Meteo-France account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Weather alert
-    weather_alert_client = VigilanceMeteoFranceProxy()
-    try:
-        await hass.async_add_executor_job(weather_alert_client.update_data)
-    except VigilanceMeteoError as exp:
-        _LOGGER.error(
-            "Unexpected error when creating the vigilance_meteoFrance proxy: %s ", exp
-        )
-        return False
-    hass.data[DOMAIN]["weather_alert_client"] = weather_alert_client
+    latitude = entry.data[CONF_LATITUDE]
+    longitude = entry.data[CONF_LONGITUDE]
 
-    # Weather
-    city = entry.data[CONF_CITY]
-    try:
-        client = await hass.async_add_executor_job(meteofranceClient, city)
-    except meteofranceError as exp:
-        _LOGGER.error("Unexpected error when creating the meteofrance proxy: %s", exp)
-        return False
+    coordinator = MeteoFranceDataUpdateCoordinator(hass, latitude, longitude)
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][city] = MeteoFranceUpdater(client)
-    await hass.async_add_executor_job(hass.data[DOMAIN][city].update)
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-    _LOGGER.debug("meteo_france sensor platform loaded for %s", city)
+
     return True
 
 
@@ -88,29 +78,30 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.data[CONF_CITY])
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
 
-class MeteoFranceUpdater:
-    """Update data from Meteo-France."""
+class MeteoFranceDataUpdateCoordinator(DataUpdateCoordinator):
+    """Define an object to hold Meteo-France data."""
 
-    def __init__(self, client: meteofranceClient):
-        """Initialize the data object."""
-        self._client = client
+    def __init__(self, hass, latitude, longitude):
+        """Initialize."""
+        self.latitude = latitude
+        self.longitude = longitude
 
-    def get_data(self):
-        """Get the latest data from Meteo-France."""
-        return self._client.get_data()
+        auth = AuthMeteofrance()
+        self.client = MeteofranceClient(auth)
 
-    @Throttle(SCAN_INTERVAL)
-    def update(self):
-        """Get the latest data from Meteo-France."""
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
-        try:
-            self._client.update()
-        except meteofranceError as exp:
-            _LOGGER.error(
-                "Unexpected error when updating the meteofrance proxy: %s", exp
-            )
+    async def _async_update_data(self):
+        """Update data via library."""
+        with async_timeout.timeout(20):
+            try:
+                return await self.hass.async_add_executor_job(
+                    self.client.get_forecast, self.latitude, self.longitude
+                )
+            except Exception as exp:  # pylint: disable=broad-except
+                raise UpdateFailed(exp)

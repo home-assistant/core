@@ -5,6 +5,11 @@
         "title": "M\u00e9t\u00e9o-France",
         "description": "Enter the postal code (only for France, recommended) or city name",
         "data": { "city": "City" }
+      },
+      "cities": {
+        "title": "M\u00e9t\u00e9o-France",
+        "description": "Choose your city from the list",
+        "data": { "city": "City" }
       }
     },
     "abort": {

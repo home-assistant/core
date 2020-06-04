@@ -8,7 +8,7 @@ from homeassistant.const import (
 )
 
 DOMAIN = "meteo_france"
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = ["weather"]
 ATTRIBUTION = "Data provided by Météo-France"
 
 CONF_CITY = "city"
@@ -94,7 +94,7 @@ CONDITION_CLASSES = {
     "hail": ["Risque de grêle"],
     "lightning": ["Risque d'orages", "Orages"],
     "lightning-rainy": ["Pluie orageuses", "Pluies orageuses", "Averses orageuses"],
-    "partlycloudy": ["Ciel voilé", "Ciel voilé nuit", "Éclaircies"],
+    "partlycloudy": ["Ciel voilé", "Ciel voilé nuit", "Éclaircies", "Eclaircies"],
     "pouring": ["Pluie forte"],
     "rainy": [
         "Bruine / Pluie faible",
