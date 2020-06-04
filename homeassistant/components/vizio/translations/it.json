@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured_device": "Dispositivo gi\u00e0 configurato",
+            "already_configured_device": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "updated_entry": "Questa voce \u00e8 gi\u00e0 stata configurata, ma il nome, le app e/o le opzioni definite nella configurazione non corrispondono alla configurazione importata in precedenza, pertanto la voce di configurazione \u00e8 stata aggiornata di conseguenza."
         },
         "error": {
