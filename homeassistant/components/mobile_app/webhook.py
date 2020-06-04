@@ -76,6 +76,7 @@ from .const import (
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_NOT_AVAILABLE,
     ERR_ENCRYPTION_REQUIRED,
+    ERR_INVALID_FORMAT,
     ERR_SENSOR_DUPLICATE_UNIQUE_ID,
     ERR_SENSOR_NOT_REGISTERED,
     SIGNAL_LOCATION_UPDATE,
@@ -394,20 +395,31 @@ async def webhook_register_sensor(hass, config_entry, data):
     vol.All(
         cv.ensure_list,
         [
+            # Partial schema, enough to identify schema.
+            # We don't validate everything because otherwise 1 invalid sensor
+            # will invalidate all sensors.
             vol.Schema(
                 {
-                    vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-                    vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-                    vol.Required(ATTR_SENSOR_STATE): vol.Any(bool, str, int, float),
                     vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
                     vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-                }
+                },
+                extra=vol.ALLOW_EXTRA,
             )
         ],
     )
 )
 async def webhook_update_sensor_states(hass, config_entry, data):
     """Handle an update sensor states webhook."""
+    sensor_schema_full = vol.Schema(
+        {
+            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
+            vol.Required(ATTR_SENSOR_STATE): vol.Any(bool, str, int, float),
+            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+        }
+    )
+
     resp = {}
     for sensor in data:
         entity_type = sensor[ATTR_SENSOR_TYPE]
@@ -428,6 +440,19 @@ async def webhook_update_sensor_states(hass, config_entry, data):
             continue
 
         entry = hass.data[DOMAIN][entity_type][unique_store_key]
+
+        try:
+            sensor = sensor_schema_full(sensor)
+        except vol.Invalid as err:
+            err_msg = vol.humanize.humanize_error(sensor, err)
+            _LOGGER.error(
+                "Received invalid sensor payload for %s: %s", unique_id, err_msg
+            )
+            resp[unique_id] = {
+                "success": False,
+                "error": {"code": ERR_INVALID_FORMAT, "message": err_msg},
+            }
+            continue
 
         new_state = {**entry, **sensor}
 
