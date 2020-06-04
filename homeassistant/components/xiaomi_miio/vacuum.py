@@ -134,24 +134,6 @@ SERVICE_SCHEMA_GOTO = VACUUM_SERVICE_SCHEMA.extend(
     }
 )
 
-SERVICE_TO_METHOD = {
-    SERVICE_START_REMOTE_CONTROL: {"method": "async_remote_control_start"},
-    SERVICE_STOP_REMOTE_CONTROL: {"method": "async_remote_control_stop"},
-    SERVICE_MOVE_REMOTE_CONTROL: {
-        "method": "async_remote_control_move",
-        "schema": SERVICE_SCHEMA_REMOTE_CONTROL,
-    },
-    SERVICE_MOVE_REMOTE_CONTROL_STEP: {
-        "method": "async_remote_control_move_step",
-        "schema": SERVICE_SCHEMA_REMOTE_CONTROL,
-    },
-    SERVICE_CLEAN_ZONE: {
-        "method": "async_clean_zone",
-        "schema": SERVICE_SCHEMA_CLEAN_ZONE,
-    },
-    SERVICE_GOTO: {"method": "async_goto", "schema": SERVICE_SCHEMA_GOTO},
-}
-
 SUPPORT_XIAOMI = (
     SUPPORT_STATE
     | SUPPORT_PAUSE
@@ -204,10 +186,34 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     platform = entity_platform.current_platform.get()
 
-    for vacuum_service, method in SERVICE_TO_METHOD.items():
-        schema = method.get("schema", VACUUM_SERVICE_SCHEMA)
-        method_name = method["method"]
-        platform.async_register_entity_service(vacuum_service, schema, method_name)
+    platform.async_register_entity_service(
+        SERVICE_START_REMOTE_CONTROL,
+        VACUUM_SERVICE_SCHEMA,
+        MiroboVacuum.async_remote_control_start.__name__,
+    )
+    platform.async_register_entity_service(
+        SERVICE_STOP_REMOTE_CONTROL,
+        VACUUM_SERVICE_SCHEMA,
+        MiroboVacuum.async_remote_control_stop.__name__,
+    )
+    platform.async_register_entity_service(
+        SERVICE_MOVE_REMOTE_CONTROL,
+        SERVICE_SCHEMA_REMOTE_CONTROL,
+        MiroboVacuum.async_remote_control_move.__name__,
+    )
+    platform.async_register_entity_service(
+        SERVICE_MOVE_REMOTE_CONTROL_STEP,
+        SERVICE_SCHEMA_REMOTE_CONTROL,
+        MiroboVacuum.async_remote_control_move_step.__name__,
+    )
+    platform.async_register_entity_service(
+        SERVICE_CLEAN_ZONE,
+        SERVICE_SCHEMA_CLEAN_ZONE,
+        MiroboVacuum.async_clean_zone.__name__,
+    )
+    platform.async_register_entity_service(
+        SERVICE_GOTO, SERVICE_SCHEMA_GOTO, MiroboVacuum.async_goto.__name__
+    )
 
 
 class MiroboVacuum(StateVacuumEntity):
