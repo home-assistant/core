@@ -1,5 +1,4 @@
 """Test the PoolSense config flow."""
-
 from homeassistant import data_entry_flow
 from homeassistant.components.poolsense.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
