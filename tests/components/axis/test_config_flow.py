@@ -2,7 +2,6 @@
 from homeassistant import data_entry_flow
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
-    CONF_CAMERA,
     CONF_EVENTS,
     CONF_MODEL,
     CONF_STREAM_PROFILE,
@@ -352,7 +351,6 @@ async def test_option_flow(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        CONF_CAMERA: True,
         CONF_EVENTS: True,
         CONF_STREAM_PROFILE: "profile_1",
     }
