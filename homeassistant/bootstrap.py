@@ -288,7 +288,7 @@ def async_enable_logging(
 
         logger = logging.getLogger("")
         logger.addHandler(err_handler)
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
