@@ -24,5 +24,15 @@
                 "title": "Konfiguracja urz\u0105dzenia Axis"
             }
         }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Wybierz profil strumienia do u\u017cycia"
+                },
+                "title": "Opcje strumienia wideo urz\u0105dzenia Axis"
+            }
+        }
     }
 }
