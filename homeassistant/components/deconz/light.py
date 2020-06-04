@@ -228,6 +228,16 @@ class DeconzGroup(DeconzLight):
         self._unique_id = f"{group_id_base}-{self._device.deconz_id}"
 
     @property
+    def max_mireds(self):
+        """Group don't report ctmax."""
+        return super(DeconzLight, self).max_mireds
+
+    @property
+    def min_mireds(self):
+        """Group don't report ctmin."""
+        return super(DeconzLight, self).min_mireds
+
+    @property
     def unique_id(self):
         """Return a unique identifier for this device."""
         return self._unique_id
