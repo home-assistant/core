@@ -35,7 +35,7 @@ async def async_setup_entry(
     weather_alert_client = hass.data[DOMAIN]["weather_alert_client"]
 
     alert_watcher = None
-    datas = client.get_data()
+    datas = client.update()
     # Check if a department code is available for this city.
     if "dept" in datas:
         try:
@@ -144,7 +144,7 @@ class MeteoFranceSensor(Entity):
         """Fetch new state data for the sensor."""
         try:
             self._client.update()
-            self._data = self._client.get_data()
+            self._data = self._client.update()
 
             if self._type == "weather_alert":
                 if self._alert_watcher is not None:
