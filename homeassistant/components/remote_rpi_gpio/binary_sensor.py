@@ -1,6 +1,8 @@
 """Support for binary sensor using RPi GPIO."""
 import logging
 
+from gpiozero import Button
+from gpiozero.pins.pigpio import PiGPIOFactory
 import requests
 import voluptuous as vol
 
@@ -16,10 +18,8 @@ from . import (
     DEFAULT_INVERT_LOGIC,
     DEFAULT_PULL_MODE,
 )
-from .. import remote_rpi_gpio
 
 _LOGGER = logging.getLogger(__name__)
-
 CONF_PORTS = "ports"
 
 _SENSORS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
@@ -46,15 +46,32 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for port_num, port_name in ports.items():
         try:
-            button = remote_rpi_gpio.setup_input(
-                address, port_num, pull_mode, bouncetime
-            )
+            button = setup_input(address, port_num, pull_mode, bouncetime)
         except (ValueError, IndexError, KeyError, OSError):
             return
         new_sensor = RemoteRPiGPIOBinarySensor(port_name, button, invert_logic)
         devices.append(new_sensor)
 
     add_entities(devices, True)
+
+
+def setup_input(address, port, pull_mode, bouncetime):
+    """Set up a GPIO as input."""
+
+    if pull_mode == "UP":
+        pull_gpio_up = True
+    elif pull_mode == "DOWN":
+        pull_gpio_up = False
+
+    try:
+        return Button(
+            port,
+            pull_up=pull_gpio_up,
+            bounce_time=bouncetime,
+            pin_factory=PiGPIOFactory(address),
+        )
+    except (ValueError, IndexError, KeyError, OSError):
+        return None
 
 
 class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
@@ -72,7 +89,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
 
         def read_gpio():
             """Read state from GPIO."""
-            self._state = remote_rpi_gpio.read_input(self._button)
+            self._state = self._button.is_pressed
             self.schedule_update_ha_state()
 
         self._button.when_released = read_gpio
@@ -101,6 +118,6 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
     def update(self):
         """Update the GPIO state."""
         try:
-            self._state = remote_rpi_gpio.read_input(self._button)
+            self._state = self._button.is_pressed
         except requests.exceptions.ConnectionError:
             return
