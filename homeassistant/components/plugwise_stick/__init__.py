@@ -79,7 +79,7 @@ async def async_unload_entry(hass, config_entry):
     )
     if unload_ok:
         stick = hass.data[DOMAIN][config_entry.entry_id]["stick"]
-        await hass.async_add_executor_job(stick.disconnect)
+        await hass.async_add_executor_job(stick.stop)
         hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload_ok
 
