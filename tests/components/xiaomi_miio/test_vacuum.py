@@ -358,7 +358,7 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     await hass.services.async_call(
         XIAOMI_DOMAIN,
         SERVICE_MOVE_REMOTE_CONTROL,
-        dict(**control, **{ATTR_ENTITY_ID: entity_id}),
+        {**control, ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_mirobo_is_on.manual_control.assert_has_calls(
@@ -381,7 +381,7 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     await hass.services.async_call(
         XIAOMI_DOMAIN,
         SERVICE_MOVE_REMOTE_CONTROL_STEP,
-        dict(**control_once, **{ATTR_ENTITY_ID: entity_id}),
+        {**control_once, ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_mirobo_is_on.manual_control_once.assert_has_calls(
@@ -394,7 +394,7 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     await hass.services.async_call(
         XIAOMI_DOMAIN,
         SERVICE_CLEAN_ZONE,
-        dict(**control, **{ATTR_ENTITY_ID: entity_id}),
+        {**control, ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_mirobo_is_on.zoned_clean.assert_has_calls(
