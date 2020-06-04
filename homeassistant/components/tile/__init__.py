@@ -4,17 +4,10 @@ from datetime import timedelta
 
 from pytile import async_login
 from pytile.errors import TileError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_MONITORED_VARIABLES,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,41 +22,10 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=2)
 
 CONF_SHOW_INACTIVE = "show_inactive"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_SHOW_INACTIVE, invalidation_version="0.114.0"),
-            cv.deprecated(CONF_MONITORED_VARIABLES, invalidation_version="0.114.0"),
-            vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_SHOW_INACTIVE, default=False): cv.boolean,
-                    vol.Optional(
-                        CONF_MONITORED_VARIABLES, default=DEVICE_TYPES
-                    ): vol.All(cv.ensure_list, [vol.In(DEVICE_TYPES)]),
-                }
-            ),
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 async def async_setup(hass, config):
     """Set up the Tile component."""
     hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
-
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-        )
-    )
 
     return True
 
