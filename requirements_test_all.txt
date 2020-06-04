@@ -293,6 +293,9 @@ google-api-python-client==1.6.4
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==0.39.1
 
+# homeassistant.components.remote_rpi_gpio
+gpiozero==1.5.1
+
 # homeassistant.components.griddy
 griddypower==0.1.0
 
@@ -443,6 +446,9 @@ pdunehd==1.3.1
 # homeassistant.components.pandora
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
+
+# homeassistant.components.remote_rpi_gpio
+pigpio==1.46
 
 # homeassistant.components.pilight
 pilight==0.1.1

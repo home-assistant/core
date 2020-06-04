@@ -1063,6 +1063,9 @@ pifacedigitalio==3.0.5
 # homeassistant.components.piglow
 piglow==1.2.4
 
+# homeassistant.components.remote_rpi_gpio
+pigpio==1.46
+
 # homeassistant.components.pilight
 pilight==0.1.1
 
