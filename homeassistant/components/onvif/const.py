@@ -12,7 +12,10 @@ DEFAULT_PASSWORD = "888888"
 DEFAULT_ARGUMENTS = "-pred 1"
 
 CONF_DEVICE_ID = "deviceid"
+CONF_ONVIF_EVENT = "onvif_event"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
+CONF_SUBTYPE = "subtype"
+CONF_UNIQUE_ID = "unique_id"
 
 RTSP_TRANS_PROTOCOLS = ["tcp", "udp", "udp_multicast", "http"]
 

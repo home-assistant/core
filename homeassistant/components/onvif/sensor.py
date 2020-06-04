@@ -70,7 +70,7 @@ class ONVIFSensor(ONVIFBaseEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self.device.events.get_uid(self.uid).entity_enabled
+        return self.device.events.get_uid(self.uid).enabled
 
     @property
     def should_poll(self) -> bool:

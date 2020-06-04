@@ -13,8 +13,8 @@
         "step": {
             "auth": {
                 "data": {
-                    "password": "Password",
-                    "username": "Username"
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "username": "[%key:common::config_flow::data::username%]"
                 },
                 "title": "Configure authentication"
             },
@@ -33,9 +33,9 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Host",
+                    "host": "[%key:common::config_flow::data::host%]",
                     "name": "Name",
-                    "port": "Port"
+                    "port": "[%key:common::config_flow::data::port%]"
                 },
                 "title": "Configure ONVIF device"
             },
@@ -43,6 +43,11 @@
                 "description": "By clicking submit, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration.",
                 "title": "ONVIF device setup"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "event": "{subtype} was fired"
         }
     },
     "options": {

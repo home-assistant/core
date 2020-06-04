@@ -70,4 +70,4 @@ class Event:
     device_class: str = None
     unit_of_measurement: str = None
     value: Any = None
-    entity_enabled: bool = True
+    enabled: bool = True

@@ -10,7 +10,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from .const import LOGGER
+from .const import CONF_ONVIF_EVENT, CONF_UNIQUE_ID, LOGGER
 from .models import Event
 from .parsers import PARSERS
 
@@ -167,13 +167,24 @@ class EventManager:
                     UNHANDLED_TOPICS.add(topic)
                 continue
 
-            event = await parser(self.unique_id, msg)
+            event: Event = await parser(self.unique_id, msg)
 
             if not event:
                 LOGGER.warning("Unable to parse event from %s: %s", self.unique_id, msg)
                 return
 
+            if self._events.get(event.uid) is None:
+                LOGGER.info(
+                    "Registered %s as a(n) %s with unique id: %s",
+                    event.name,
+                    event.platform,
+                    event.uid,
+                )
+
             self._events[event.uid] = event
+
+            if event.platform == "event" and event.enabled:
+                self.hass.bus.fire(CONF_ONVIF_EVENT, {CONF_UNIQUE_ID: event.uid})
 
     def get_uid(self, uid) -> Event:
         """Retrieve event for given id."""
