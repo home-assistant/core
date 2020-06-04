@@ -57,7 +57,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 for camera in home.values():
                     all_cameras.append(camera)
 
-            for camera in all_cameras:  # camera_data.get_all_cameras():
+            for camera in all_cameras:
                 _LOGGER.debug("Adding camera %s %s", camera["id"], camera["name"])
                 entities.append(
                     NetatmoCamera(
@@ -101,7 +101,7 @@ class NetatmoCamera(Camera, NetatmoBase):
         self._data_class = data_class
 
         self._camera_id = camera_id
-        self._camera_name = self._data.get_camera(cid=camera_id).get("name")
+        self._camera_name = self._data.get_camera(camera_id=camera_id).get("name")
         self._name = f"{MANUFACTURER} {self._camera_name}"
         self._camera_type = camera_type
         self._unique_id = f"{self._camera_id}-{self._camera_type}"
@@ -130,12 +130,15 @@ class NetatmoCamera(Camera, NetatmoBase):
             else:
                 _LOGGER.error("Welcome/Presence VPN URL is None")
                 (self._vpnurl, self._localurl) = self._data.camera_urls(
-                    cid=self._camera_id
+                    camera_id=self._camera_id
                 )
                 return None
         except requests.exceptions.RequestException as error:
             _LOGGER.info("Welcome/Presence URL changed: %s", error)
-            (self._vpnurl, self._localurl) = self._data.camera_urls(cid=self._camera_id)
+            self._data.update_camera_urls(camera_id=self._camera_id)
+            (self._vpnurl, self._localurl) = self._data.camera_urls(
+                camera_id=self._camera_id
+            )
             return None
         return response.content
 

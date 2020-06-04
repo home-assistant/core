@@ -130,13 +130,26 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async def find_entities(data_class):
         """Find all entities."""
         await data_handler.register_data_class(data_class)
-        all_module_infos = data_handler.data.get(data_class).getModules()
+
+        all_module_infos = {}
+
+        for station_id in data_handler.data.get(data_class).stations:
+            for module_id in data_handler.data.get(data_class).get_modules(station_id):
+                all_module_infos[module_id] = data_handler.data.get(
+                    data_class
+                ).get_module(module_id)
+
+            all_module_infos[station_id] = data_handler.data.get(
+                data_class
+            ).get_station(station_id)
 
         entities = []
         for module in all_module_infos.values():
-            _LOGGER.debug("Adding module %s %s", module["module_name"], module["id"])
-            for condition in data_handler.data[data_class].monitoredConditions(
-                moduleId=module["id"]
+            _LOGGER.debug(
+                "Adding module %s %s", module.get("module_name"), module.get("_id"),
+            )
+            for condition in data_handler.data[data_class].get_monitored_conditions(
+                module_id=module["_id"]
             ):
                 entities.append(
                     NetatmoSensor(data_handler, data_class, module, condition.lower())
@@ -206,17 +219,20 @@ class NetatmoSensor(NetatmoBase):
 
         self._data_class = data_class
 
-        device = self._data.moduleById(mid=module_info["id"])
+        self._module_id = module_info["_id"]
+        self._station_id = module_info.get("main_device", self._module_id)
+
+        station = self._data.get_station(self._station_id)
+        device = self._data.get_module(self._module_id)
+
         if not device:
             # Assume it's a station if module can't be found
-            device = self._data.stationById(sid=module_info["id"])
+            device = station
 
-        if device["type"] == "NHC":
+        if device["type"] in ("NHC", "NAMain"):
             self.module_name = module_info["station_name"]
         else:
-            self.module_name = (
-                f"{module_info['station_name']} {module_info['module_name']}"
-            )
+            self.module_name = f"{station['station_name']} {module_info.get('module_name', device['type'])}"
 
         self._name = f"{MANUFACTURER} {self.module_name} {SENSOR_TYPES[sensor_type][0]}"
         self.type = sensor_type
@@ -225,7 +241,6 @@ class NetatmoSensor(NetatmoBase):
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._module_type = device["type"]
-        self._module_id = module_info["id"]
         self._unique_id = f"{self._module_id}-{self.type}"
 
     @property
@@ -283,7 +298,9 @@ class NetatmoSensor(NetatmoBase):
             self._state = None
             return
 
-        data = self._data.lastData(exclude=3600, byId=True).get(self._module_id)
+        data = self._data.get_last_data(station_id=self._station_id, exclude=3600).get(
+            self._module_id
+        )
 
         if data is None:
             if self._state:
@@ -324,7 +341,7 @@ class NetatmoSensor(NetatmoBase):
                     self._state = "Medium"
                 elif data["battery_vp"] >= 4360:
                     self._state = "Low"
-                elif data["battery_vp"] < 4360:
+                else:
                     self._state = "Very Low"
             elif self.type == "battery_vp" and self._module_type == MODULE_TYPE_RAIN:
                 if data["battery_vp"] >= 5500:
@@ -335,7 +352,7 @@ class NetatmoSensor(NetatmoBase):
                     self._state = "Medium"
                 elif data["battery_vp"] >= 4000:
                     self._state = "Low"
-                elif data["battery_vp"] < 4000:
+                else:
                     self._state = "Very Low"
             elif self.type == "battery_vp" and self._module_type == MODULE_TYPE_INDOOR:
                 if data["battery_vp"] >= 5640:
@@ -346,7 +363,7 @@ class NetatmoSensor(NetatmoBase):
                     self._state = "Medium"
                 elif data["battery_vp"] >= 4560:
                     self._state = "Low"
-                elif data["battery_vp"] < 4560:
+                else:
                     self._state = "Very Low"
             elif self.type == "battery_vp" and self._module_type == MODULE_TYPE_OUTDOOR:
                 if data["battery_vp"] >= 5500:
@@ -357,7 +374,7 @@ class NetatmoSensor(NetatmoBase):
                     self._state = "Medium"
                 elif data["battery_vp"] >= 4000:
                     self._state = "Low"
-                elif data["battery_vp"] < 4000:
+                else:
                     self._state = "Very Low"
             elif self.type == "min_temp":
                 self._state = data["min_temp"]
@@ -566,21 +583,21 @@ class NetatmoPublicSensor(Entity):
         data = None
 
         if self.type == "temperature":
-            data = self.netatmo_data.data.getLatestTemperatures()
+            data = self.netatmo_data.data.get_latest_temperatures()
         elif self.type == "pressure":
-            data = self.netatmo_data.data.getLatestPressures()
+            data = self.netatmo_data.data.get_latest_pressures()
         elif self.type == "humidity":
-            data = self.netatmo_data.data.getLatestHumidities()
+            data = self.netatmo_data.data.get_latest_humidities()
         elif self.type == "rain":
-            data = self.netatmo_data.data.getLatestRain()
+            data = self.netatmo_data.data.get_latest_rain()
         elif self.type == "sum_rain_1":
-            data = self.netatmo_data.data.get60minRain()
+            data = self.netatmo_data.data.get_60_min_rain()
         elif self.type == "sum_rain_24":
-            data = self.netatmo_data.data.get24hRain()
+            data = self.netatmo_data.data.get_24_h_rain()
         elif self.type == "windstrength":
-            data = self.netatmo_data.data.getLatestWindStrengths()
+            data = self.netatmo_data.data.get_latest_wind_strengths()
         elif self.type == "guststrength":
-            data = self.netatmo_data.data.getLatestGustStrengths()
+            data = self.netatmo_data.data.get_latest_gust_strengths()
 
         if not data:
             _LOGGER.warning(
@@ -627,8 +644,8 @@ class NetatmoPublicData:
             _LOGGER.debug("No data received when updating public station data")
             return
 
-        if data.CountStationInArea() == 0:
-            _LOGGER.warning("No Stations available in this area")
+        if data.stations_in_area() == 0:
+            _LOGGER.warning("No Stations available in this area.")
             return
 
         self.data = data

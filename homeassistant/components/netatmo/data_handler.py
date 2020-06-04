@@ -2,6 +2,7 @@
 from datetime import timedelta
 from functools import partial
 import logging
+from time import time
 from typing import Dict, List
 
 import pyatmo
@@ -24,8 +25,17 @@ DATA_CLASSES = {
     "HomeStatus": pyatmo.HomeStatus,
 }
 
-MAX_CALLS_10S = 2
 MAX_CALLS_1H = 20
+PARALLEL_CALLS = 3
+DEFAULT_INTERVALS = {
+    "HomeData": 600,
+    "HomeStatus": 300,
+    "CameraData": 900,
+    "WeatherStationData": 300,
+    "HomeCoachData": 300,
+    "PublicData": 300,
+}
+SCAN_INTERVAL = 60
 
 
 class NetatmoDataHandler:
@@ -51,21 +61,23 @@ class NetatmoDataHandler:
         self.listeners: List[CALLBACK_TYPE] = []
         self._data_classes: Dict = {}
         self.data = {}
-        self._intervals = {}
         self._queue: List = []
-        self._parallel = 6
-        self._wait = 150
 
     async def async_setup(self):
         """Set up a UniFi controller."""
 
         async def async_update(event_time):
             """Update device."""
-            queue = [entry for entry in self._queue[0 : self._parallel]]
+            queue = [entry for entry in self._queue[0:PARALLEL_CALLS]]
             for _ in queue:
                 self._queue.append(self._queue.pop(0))
 
             for data_class in queue:
+                if data_class["next_scan"] > time():
+                    continue
+                self._data_classes[data_class["name"]]["next_scan"] = (
+                    time() + data_class["interval"]
+                )
                 try:
                     self.data[
                         data_class["name"]
@@ -80,7 +92,7 @@ class NetatmoDataHandler:
                     _LOGGER.debug(err)
 
         async_track_time_interval(
-            self.hass, async_update, timedelta(seconds=self._wait)
+            self.hass, async_update, timedelta(seconds=SCAN_INTERVAL)
         )
 
     async def register_data_class(self, data_class_name, **kwargs):
@@ -94,6 +106,8 @@ class NetatmoDataHandler:
             self._data_classes[data_class_entry] = {
                 "class": DATA_CLASSES[data_class_name],
                 "name": data_class_entry,
+                "interval": DEFAULT_INTERVALS[data_class_name],
+                "next_scan": time() + DEFAULT_INTERVALS[data_class_name],
                 "kwargs": kwargs,
                 "registered": 1,
             }
@@ -110,14 +124,13 @@ class NetatmoDataHandler:
     async def unregister_data_class(self, data_class_entry):
         """Unregister data class."""
         registered = self._data_classes[data_class_entry]["registered"]
+        self._queue.remove(self._data_classes[data_class_entry])
+
         if registered > 1:
             self._data_classes[data_class_entry].update(registered=registered - 1)
         else:
             self._data_classes.pop(data_class_entry)
             _LOGGER.debug("Data class %s removed", data_class_entry)
-
-    # def update_interval(self):
-    #     self._wait =
 
 
 @callback

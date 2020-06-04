@@ -31,9 +31,6 @@ class NetatmoBase(Entity):
                 self.hass, self.signal_update, self.async_update_callback
             )
         )
-        for signal, method in ((self.signal_update, self.async_update_callback),):
-            self.async_on_remove(async_dispatcher_connect(self.hass, signal, method))
-
         self.async_update_callback()
 
     async def async_remove(self):
