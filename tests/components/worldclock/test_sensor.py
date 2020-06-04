@@ -23,6 +23,7 @@ class TestWorldClockSensor(unittest.TestCase):
         """Test the time at a different location."""
         config = {"sensor": {"platform": "worldclock", "time_zone": "America/New_York"}}
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.worldclock_sensor")
         assert state is not None
@@ -39,6 +40,7 @@ class TestWorldClockSensor(unittest.TestCase):
             }
         }
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.worldclock_sensor")
         assert state is not None
@@ -58,6 +60,7 @@ class TestWorldClockSensor(unittest.TestCase):
             }
         }
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.worldclock_sensor")
         assert state is not None
