@@ -23,6 +23,16 @@ SWITCH_TYPES = {
     "aux_5": "Aux 5",
     "aux_6": "Aux 6",
     "aux_7": "Aux 7",
+    "aux_8": "Aux 8",
+    "aux_9": "Aux 9",
+    "aux_10": "Aux 10",
+    "aux_11": "Aux 11",
+    "aux_12": "Aux 12",
+    "aux_13": "Aux 13",
+    "aux_14": "Aux 14",
+    "valve_3": "Valve 3",
+    "valve_4": "Valve 4",
+    "heater_1": "Heater 1",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -63,6 +73,17 @@ class AquaLogicSwitch(SwitchEntity):
             "aux_5": States.AUX_5,
             "aux_6": States.AUX_6,
             "aux_7": States.AUX_7,
+            "aux_8": States.AUX_8,
+            "aux_9": States.AUX_9,
+            "aux_10": States.AUX_10,
+            "aux_11": States.AUX_11,
+            "aux_12": States.AUX_12,
+            "aux_13": States.AUX_13,
+            "aux_14": States.AUX_14,
+            "valve_3": States.VALVE_3,
+            "valve_4": States.VALVE_4,
+            "heater_1": States.HEATER_1,
+            "service": States.SERVICE,
         }[switch_type]
 
     @property
