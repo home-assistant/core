@@ -134,13 +134,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 entry.data[CONF_WEBHOOK_ID]
             )
 
-        if entry.data["auth_implementation"] == "cloud":
-            if not webhook_url.startswith("https://"):
-                _LOGGER.warning(
-                    "Webhook not registered - "
-                    "https and port 443 is required to register the webhook"
-                )
-                return
+        if entry.data["auth_implementation"] == "cloud" and not webhook_url.startswith(
+            "https://"
+        ):
+            _LOGGER.warning(
+                "Webhook not registered - "
+                "https and port 443 is required to register the webhook"
+            )
+            return
 
         try:
             webhook_register(

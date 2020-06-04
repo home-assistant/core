@@ -122,23 +122,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
             """Get all the home ids returned by NetAtmo API."""
             if home_data is None:
                 return []
-            home_ids = []
-            for home_id in home_data.homes:
+            return [
+                home_data.homes[home_id]["id"]
+                for home_id in home_data.homes
                 if (
                     "therm_schedules" in home_data.homes[home_id]
                     and "modules" in home_data.homes[home_id]
-                ):
-                    home_ids.append(home_data.homes[home_id]["id"])
-            return home_ids
+                )
+            ]
 
         home_ids = get_all_home_ids()
 
         def get_room_ids(home_id):
             """Return all module available on the API as a list."""
-            room_ids = []
-            for room in home_data.rooms[home_id]:
-                room_ids.append(room)
-            return room_ids
+            return [room for room in home_data.rooms[home_id]]
 
         for home_id in home_ids:
             _LOGGER.debug("Setting up home %s ...", home_id)
@@ -286,9 +283,8 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
         if self._module_type == NA_THERM:
             return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
         # Maybe it is a valve
-        if self._room_status:
-            if self._room_status.get("heating_power_request", 0) > 0:
-                return CURRENT_HVAC_HEAT
+        if self._room_status and self._room_status.get("heating_power_request", 0) > 0:
+            return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
@@ -460,14 +456,14 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
             self._battery_level = roomstatus.get("battery_level")
             self._connected = True
         except KeyError as err:
-            if self._connected is not False:
+            if self._connected:
                 _LOGGER.debug(
                     "The thermostat in room %s seems to be out of reach. (%s)",
                     self._room_name,
                     err,
                 )
-            self._connected = False
 
+            self._connected = False
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
 

@@ -160,16 +160,15 @@ class NetatmoCamera(Camera, NetatmoBase):
     @property
     def device_state_attributes(self):
         """Return the Netatmo-specific camera state attributes."""
-        attr = {}
-        attr["id"] = self._camera_id
-        attr["status"] = self._status
-        attr["sd_status"] = self._sd_status
-        attr["alim_status"] = self._alim_status
-        attr["is_local"] = self._is_local
-        attr["vpn_url"] = self._vpnurl
-        attr["local_url"] = self._localurl
-
-        return attr
+        return {
+            "id": self._camera_id,
+            "status": self._status,
+            "sd_status": self._sd_status,
+            "alim_status": self._alim_status,
+            "is_local": self._is_local,
+            "vpn_url": self._vpnurl,
+            "local_url": self._localurl,
+        }
 
     @property
     def available(self):
