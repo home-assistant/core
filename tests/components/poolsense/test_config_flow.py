@@ -46,7 +46,6 @@ async def test_valid_credentials(hass):
     ) as mock_setup, patch(
         "homeassistant.components.poolsense.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
