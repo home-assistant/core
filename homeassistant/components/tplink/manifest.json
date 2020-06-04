@@ -3,6 +3,6 @@
   "name": "TP-Link Kasa Smart",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tplink",
-  "requirements": [],
+  "requirements": ["python-kasa==0.4.0.dev0"],
   "codeowners": ["@rytilahti"]
 }
