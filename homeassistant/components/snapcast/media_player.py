@@ -1,10 +1,7 @@
 """Support for interacting with Snapcast clients."""
 import logging
-import socket
-
-import snapcast.control
-from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
+
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -36,6 +33,10 @@ from .const import (
     SERVICE_SET_LATENCY,
     SERVICE_SNAPSHOT,
     SERVICE_UNJOIN,
+    SERVER,
+    HPID,
+    DEVICES,
+    GROUP_DISABLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,16 +48,13 @@ SUPPORT_SNAPCAST_GROUP = (
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT): cv.port}
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Snapcast platform."""
+    """Set up the Snapcast Media player platform."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT, CONTROL_PORT)
+    server = hass.data[DATA_KEY][SERVER]
+    hpid = hass.data[DATA_KEY][HPID]
+    disable_groups = hass.data[DATA_KEY][GROUP_DISABLE]
 
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(SERVICE_SNAPSHOT, {}, "snapshot")
@@ -71,21 +69,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         handle_set_latency,
     )
 
-    try:
-        server = await snapcast.control.create_server(
-            hass.loop, host, port, reconnect=True
-        )
-    except socket.gaierror:
-        _LOGGER.error("Could not connect to Snapcast server at %s:%d", host, port)
-        return
-
-    # Note: Host part is needed, when using multiple snapservers
-    hpid = f"{host}:{port}"
-
     groups = [SnapcastGroupDevice(group, hpid) for group in server.groups]
     clients = [SnapcastClientDevice(client, hpid) for client in server.clients]
-    devices = groups + clients
-    hass.data[DATA_KEY] = devices
+
+    devices = clients
+    if not disable_groups:
+        devices += groups
+    hass.data[DATA_KEY][DEVICES] = devices
     async_add_entities(devices)
 
 
