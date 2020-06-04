@@ -145,6 +145,7 @@ class SSLCertificate(Entity):
             self._available = True
             self._error = err
             self._state = 0
+            self._timestamp = None
             self._valid = False
             return
         except Exception:  # pylint: disable=broad-except
