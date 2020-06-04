@@ -59,6 +59,10 @@ async def test_valid_credentials(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test-email"
 
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 def invalid_credentials(*args):
     """Test we handle invalid credentials."""
