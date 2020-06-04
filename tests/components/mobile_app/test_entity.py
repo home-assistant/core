@@ -57,12 +57,17 @@ async def test_sensor(hass, create_registrations, webhook_client):
                     "state": 123,
                     "type": "sensor",
                     "unique_id": "battery_state",
-                }
+                },
+                # This invalid data should not invalidate whole request
+                {"type": "sensor", "unique_id": "invalid_state", "invalid": "data"},
             ],
         },
     )
 
     assert update_resp.status == 200
+
+    json = await update_resp.json()
+    assert json["invalid_state"]["success"] is False
 
     updated_entity = hass.states.get("sensor.test_1_battery_state")
     assert updated_entity.state == "123"
