@@ -5,7 +5,6 @@ import logging
 from miio import DeviceException, Vacuum  # pylint: disable=import-error
 import voluptuous as vol
 
-# import homeassistant.helpers.config_validation as cv
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
     PLATFORM_SCHEMA,
@@ -27,14 +26,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TOKEN,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
@@ -80,59 +72,6 @@ ATTR_RC_VELOCITY = "velocity"
 ATTR_STATUS = "status"
 ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
-
-VACUUM_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
-SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend(
-    {
-        vol.Optional(ATTR_RC_VELOCITY): vol.All(
-            vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
-        ),
-        vol.Optional(ATTR_RC_ROTATION): vol.All(
-            vol.Coerce(int), vol.Clamp(min=-179, max=179)
-        ),
-        vol.Optional(ATTR_RC_DURATION): cv.positive_int,
-    }
-)
-
-SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_ZONE_ARRAY): vol.All(
-            list,
-            [
-                vol.ExactSequence(
-                    [vol.Coerce(int), vol.Coerce(int), vol.Coerce(int), vol.Coerce(int)]
-                )
-            ],
-        ),
-        vol.Required(ATTR_ZONE_REPEATER): vol.All(
-            vol.Coerce(int), vol.Clamp(min=1, max=3)
-        ),
-    }
-)
-
-SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_ZONE_ARRAY): vol.All(
-            list,
-            [
-                vol.ExactSequence(
-                    [vol.Coerce(int), vol.Coerce(int), vol.Coerce(int), vol.Coerce(int)]
-                )
-            ],
-        ),
-        vol.Required(ATTR_ZONE_REPEATER): vol.All(
-            vol.Coerce(int), vol.Clamp(min=1, max=3)
-        ),
-    }
-)
-
-SERVICE_SCHEMA_GOTO = VACUUM_SERVICE_SCHEMA.extend(
-    {
-        vol.Required("x_coord"): vol.Coerce(int),
-        vol.Required("y_coord"): vol.Coerce(int),
-    }
-)
 
 SUPPORT_XIAOMI = (
     SUPPORT_STATE
@@ -188,31 +127,74 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     platform.async_register_entity_service(
         SERVICE_START_REMOTE_CONTROL,
-        VACUUM_SERVICE_SCHEMA,
+        {},
         MiroboVacuum.async_remote_control_start.__name__,
     )
+
     platform.async_register_entity_service(
         SERVICE_STOP_REMOTE_CONTROL,
-        VACUUM_SERVICE_SCHEMA,
+        {},
         MiroboVacuum.async_remote_control_stop.__name__,
     )
+
     platform.async_register_entity_service(
         SERVICE_MOVE_REMOTE_CONTROL,
-        SERVICE_SCHEMA_REMOTE_CONTROL,
+        {
+            vol.Optional(ATTR_RC_VELOCITY): vol.All(
+                vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
+            ),
+            vol.Optional(ATTR_RC_ROTATION): vol.All(
+                vol.Coerce(int), vol.Clamp(min=-179, max=179)
+            ),
+            vol.Optional(ATTR_RC_DURATION): cv.positive_int,
+        },
         MiroboVacuum.async_remote_control_move.__name__,
     )
+
     platform.async_register_entity_service(
         SERVICE_MOVE_REMOTE_CONTROL_STEP,
-        SERVICE_SCHEMA_REMOTE_CONTROL,
+        {
+            vol.Optional(ATTR_RC_VELOCITY): vol.All(
+                vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
+            ),
+            vol.Optional(ATTR_RC_ROTATION): vol.All(
+                vol.Coerce(int), vol.Clamp(min=-179, max=179)
+            ),
+            vol.Optional(ATTR_RC_DURATION): cv.positive_int,
+        },
         MiroboVacuum.async_remote_control_move_step.__name__,
     )
+
     platform.async_register_entity_service(
         SERVICE_CLEAN_ZONE,
-        SERVICE_SCHEMA_CLEAN_ZONE,
+        {
+            vol.Required(ATTR_ZONE_ARRAY): vol.All(
+                list,
+                [
+                    vol.ExactSequence(
+                        [
+                            vol.Coerce(int),
+                            vol.Coerce(int),
+                            vol.Coerce(int),
+                            vol.Coerce(int),
+                        ]
+                    )
+                ],
+            ),
+            vol.Required(ATTR_ZONE_REPEATER): vol.All(
+                vol.Coerce(int), vol.Clamp(min=1, max=3)
+            ),
+        },
         MiroboVacuum.async_clean_zone.__name__,
     )
+
     platform.async_register_entity_service(
-        SERVICE_GOTO, SERVICE_SCHEMA_GOTO, MiroboVacuum.async_goto.__name__
+        SERVICE_GOTO,
+        {
+            vol.Required("x_coord"): vol.Coerce(int),
+            vol.Required("y_coord"): vol.Coerce(int),
+        },
+        MiroboVacuum.async_goto.__name__,
     )
 
 
