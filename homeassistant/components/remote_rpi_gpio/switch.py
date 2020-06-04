@@ -1,14 +1,15 @@
 """Allows to configure a switch using RPi GPIO."""
 import logging
 
+from gpiozero import LED
+from gpiozero.pins.pigpio import PiGPIOFactory
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
-from .. import remote_rpi_gpio
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def setup_switch(address, port, name, invert_logic=False):
+    """Set up a switch."""
+    _LOGGER.debug(
+        "setting up output %s on %s port %s %s",
+        name,
+        address,
+        port,
+        "inverted" if invert_logic else "",
+    )
+    led = LED(port, active_high=not invert_logic, pin_factory=PiGPIOFactory(address))
+    new_switch = RemoteRPiGPIOSwitch(name, led)
+    return new_switch
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Remote Raspberry PI GPIO devices."""
     address = config[CONF_HOST]
@@ -34,23 +49,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for port, name in ports.items():
         try:
-            led = remote_rpi_gpio.setup_output(address, port, invert_logic)
+
+            new_switch = setup_switch(address, port, name, invert_logic)
+            devices.append(new_switch)
         except (ValueError, IndexError, KeyError, OSError):
             return
-        new_switch = RemoteRPiGPIOSwitch(name, led, invert_logic)
-        devices.append(new_switch)
 
     add_entities(devices)
 
 
-class RemoteRPiGPIOSwitch(SwitchDevice):
+class RemoteRPiGPIOSwitch(SwitchEntity):
     """Representation of a Remtoe Raspberry Pi GPIO."""
 
-    def __init__(self, name, led, invert_logic):
+    def __init__(self, name, led):
         """Initialize the pin."""
         self._name = name or DEVICE_DEFAULT_NAME
-        self._state = False
-        self._invert_logic = invert_logic
         self._switch = led
 
     @property
@@ -66,21 +79,21 @@ class RemoteRPiGPIOSwitch(SwitchDevice):
     @property
     def assumed_state(self):
         """If unable to access real state of the entity."""
-        return True
+        return False
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state
+        return self._switch.is_lit
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        remote_rpi_gpio.write_output(self._switch, 0 if self._invert_logic else 1)
-        self._state = True
+        _LOGGER.debug("turn on switch %s %s", self._name, self._switch.pin)
+        self._switch.on()
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        remote_rpi_gpio.write_output(self._switch, 1 if self._invert_logic else 0)
-        self._state = False
+        _LOGGER.debug("turn off switch %s %s", self._name, self._switch.pin)
+        self._switch.off()
         self.schedule_update_ha_state()
