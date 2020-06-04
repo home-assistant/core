@@ -539,7 +539,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==5.3.0
+pychromecast==6.0.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -736,6 +736,9 @@ python-velbus==2.0.43
 
 # homeassistant.components.awair
 python_awair==0.0.4
+
+# homeassistant.components.tile
+pytile==3.0.6
 
 # homeassistant.components.traccar
 pytraccar==0.9.0
