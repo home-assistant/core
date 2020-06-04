@@ -36,3 +36,4 @@ RM4_TYPES = [
 ]
 SP1_TYPES = ["sp1"]
 SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
+BG1_TYPES = ["bg1"]

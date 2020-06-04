@@ -26,6 +26,7 @@ from homeassistant.util import Throttle, slugify
 
 from . import async_setup_service, data_packet, hostname, mac_address
 from .const import (
+    BG1_TYPES,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
@@ -44,7 +45,7 @@ TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 CONF_SLOTS = "slots"
 CONF_RETRY = "retry"
 
-DEVICE_TYPES = RM_TYPES + RM4_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
+DEVICE_TYPES = RM_TYPES + RM4_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES + BG1_TYPES
 
 SWITCH_SCHEMA = vol.Schema(
     {
@@ -134,6 +135,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
             for i in range(1, 5)
         ]
+    elif model in BG1_TYPES:
+        api = blk.bg1((host, DEFAULT_PORT), mac_addr, None)
+        broadlink_device = BroadlinkDevice(hass, api)
+        switches = []
+        parent_device = BroadlinkBG1Switch(broadlink_device)
+        switches.append(
+            BroadlinkBG1Slot(
+                friendly_name + " left", broadlink_device, 1, parent_device
+            )
+        )
+        switches.append(
+            BroadlinkBG1Slot(
+                friendly_name + " right", broadlink_device, 2, parent_device
+            )
+        )
 
     api.timeout = timeout
     connected = await broadlink_device.async_connect()
@@ -338,4 +354,103 @@ class BroadlinkMP1Switch:
             states = await self.device.async_request(self.device.api.check_power)
         except BroadlinkException as err_msg:
             _LOGGER.error("Failed to update state: %s", err_msg)
+        self._states = states
+
+
+class BroadlinkBG1Slot(BroadlinkRMSwitch):
+    """Representation of a slot of Broadlink switch."""
+
+    def __init__(self, friendly_name, device, slot, parent_device):
+        """Initialize the slot of switch."""
+        super().__init__(friendly_name, friendly_name, device, None, None)
+        self._command_on = 1
+        self._command_off = 0
+        self._slot = slot
+        self._parent_device = parent_device
+        self._is_available = True
+
+    @property
+    def assumed_state(self):
+        """Return true if unable to access real state of entity."""
+        return False
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the device on."""
+        await self.async_turn_on_off(True)
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the device off."""
+        await self.async_turn_on_off(False)
+
+    async def async_turn_on_off(self, state):
+        """Turn the device on or off."""
+        if self._slot == 1:
+            res = await self.device.async_request(
+                self.device.api.set_state, pwr1=int(state)
+            )
+        else:
+            res = await self.device.async_request(
+                self.device.api.set_state, pwr2=int(state)
+            )
+        if res:
+            _LOGGER.debug("Setting device state: %s", res)
+            self._state = int(state)
+            self._parent_device.set_outlet_status(self._slot, int(state))
+            self.async_write_ha_state()
+        else:
+            _LOGGER.warning("No response from switch")
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return True
+
+    @property
+    def slot(self):
+        """Return the slot."""
+        return self._slot
+
+    async def async_update(self):
+        """Update the state of the device."""
+        await self._parent_device.async_update()
+        self._state = self._parent_device.get_outlet_status(self._slot)
+        if self._state is None:
+            self._is_available = False
+        else:
+            self._is_available = True
+
+
+class BroadlinkBG1Switch:
+    """Representation of a Broadlink BG1 switch - To fetch states of all slots."""
+
+    def __init__(self, device):
+        """Initialize the switch."""
+        self.device = device
+        self._states = None
+
+    def get_outlet_status(self, slot):
+        """Get status of outlet from cached status list."""
+        if self._states is None:
+            return None
+        return self._states[f"s{slot}"]
+
+    def set_outlet_status(self, slot, status):
+        """Get status of outlet from cached status list."""
+        if self._states is not None:
+            self._states[f"s{slot}"] = status
+
+    @Throttle(TIME_BETWEEN_UPDATES)
+    async def async_update(self):
+        """Fetch new state data for this device."""
+        states = None
+        try:
+            resp = await self.device.async_request(self.device.api.get_state)
+            if resp is not None:
+                states = {"s1": resp["pwr1"], "s2": resp["pwr2"]}  # Left  # Right
+                _LOGGER.debug(f"Current state: {states}")
+        except BroadlinkException as error:
+            _LOGGER.error("Error during updating the state: %s", error)
+            self._states = None
+            return
+
         self._states = states
