@@ -538,6 +538,7 @@ omit =
     homeassistant/components/notion/sensor.py
     homeassistant/components/noaa_tides/sensor.py
     homeassistant/components/norway_air/air_quality.py
+    homeassistant/components/notify_events/notify.py
     homeassistant/components/nsw_fuel_station/sensor.py
     homeassistant/components/nuimo_controller/*
     homeassistant/components/nuki/lock.py
