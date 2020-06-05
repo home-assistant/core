@@ -613,6 +613,7 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
         player.play_url.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to play media: Failure (1)" in caplog.text
 
+
 async def test_play_media_music(hass, config_entry, config, controller, caplog):
     """Test the play media service with type music."""
     await setup_platform(hass, config_entry, config)
@@ -634,6 +635,7 @@ async def test_play_media_music(hass, config_entry, config, controller, caplog):
         player.play_url.reset_mock()
         player.play_url.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to play media: Failure (1)" in caplog.text
+
 
 async def test_play_media_quick_select(
     hass, config_entry, config, controller, caplog, quick_selects
