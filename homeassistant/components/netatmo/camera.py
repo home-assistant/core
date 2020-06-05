@@ -98,7 +98,7 @@ class NetatmoCamera(Camera, NetatmoBase):
         Camera.__init__(self)
         NetatmoBase.__init__(self, data_handler)
 
-        self._data_class = data_class
+        self._data_classes.append({"name": data_class})
 
         self._camera_id = camera_id
         self._camera_name = self._data.get_camera(camera_id=camera_id).get("name")

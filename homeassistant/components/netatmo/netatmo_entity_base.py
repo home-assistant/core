@@ -1,5 +1,6 @@
 """Base class for Netatmo entities."""
 import logging
+from typing import Dict, List
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,17 +21,28 @@ class NetatmoBase(Entity):
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
-        self._data_class = None
+        self._data_classes: List[Dict] = []
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         _LOGGER.debug("New client %s", self.entity_id)
-        await self.data_handler.register_data_class(self._data_class)
-        self.data_handler.listeners.append(
-            async_dispatcher_connect(
-                self.hass, self.signal_update, self.async_update_callback
+        for data_class in self._data_classes:
+            if "home_id" in data_class:
+                await self.data_handler.register_data_class(
+                    data_class["name"], home_id=data_class["home_id"]
+                )
+                signal_name = f"{data_class['name']}-{data_class['home_id']}"
+            else:
+                await self.data_handler.register_data_class(data_class["name"])
+                signal_name = f"{data_class['name']}"
+
+            self.data_handler.listeners.append(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"netatmo-update-{signal_name}",
+                    self.async_update_callback,
+                )
             )
-        )
         self.async_update_callback()
 
     async def async_remove(self):
@@ -74,10 +86,5 @@ class NetatmoBase(Entity):
         raise NotImplementedError
 
     @property
-    def signal_update(self):
-        """Event specific per Netatmo entry to signal new data."""
-        return f"netatmo-update-{self._data_class}"
-
-    @property
     def _data(self):
-        return self.data_handler.data[self._data_class]
+        return self.data_handler.data[self._data_classes[0]["name"]]

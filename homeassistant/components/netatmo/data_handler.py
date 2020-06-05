@@ -12,7 +12,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import AUTH, DOMAIN
+from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ DATA_CLASSES = {
 MAX_CALLS_1H = 20
 PARALLEL_CALLS = 3
 DEFAULT_INTERVALS = {
-    "HomeData": 600,
+    "HomeData": 900,
     "HomeStatus": 300,
     "CameraData": 900,
     "WeatherStationData": 300,
@@ -55,7 +55,7 @@ class NetatmoDataHandler:
     # dispatch signals for the registered entities to fetch the new data
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
-        """Initialize the system."""
+        """Initialize self."""
         self.hass = hass
         self._auth = hass.data[DOMAIN][entry.entry_id][AUTH]
         self.listeners: List[CALLBACK_TYPE] = []
@@ -64,7 +64,7 @@ class NetatmoDataHandler:
         self._queue: List = []
 
     async def async_setup(self):
-        """Set up a UniFi controller."""
+        """Set up the Netatmo data handler."""
 
         async def async_update(event_time):
             """Update device."""
@@ -88,12 +88,20 @@ class NetatmoDataHandler:
                     async_dispatcher_send(
                         self.hass, f"netatmo-update-{data_class['name']}"
                     )
+                    print(f"Dispatching netatmo-update-{data_class['name']}")
                 except (pyatmo.NoDevice, pyatmo.ApiError) as err:
                     _LOGGER.debug(err)
 
         async_track_time_interval(
             self.hass, async_update, timedelta(seconds=SCAN_INTERVAL)
         )
+
+        async def handle_event(event):
+            """Handle webhook events."""
+            if event.data["data"]["push_type"] == "webhook_activation":
+                _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
+
+        self.hass.bus.async_listen("netatmo_event", handle_event)
 
     async def register_data_class(self, data_class_name, **kwargs):
         """Register data class."""

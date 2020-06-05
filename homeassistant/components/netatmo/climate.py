@@ -147,8 +147,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     entities.append(
                         NetatmoThermostat(data_handler, data_class, home_id, room_id)
                     )
-                else:
-                    await data_handler.unregister_data_class(f"HomeStatus-{home_id}")
+                await data_handler.unregister_data_class(f"HomeStatus-{home_id}")
 
         return entities
 
@@ -186,9 +185,16 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
         ClimateDevice.__init__(self)
         NetatmoBase.__init__(self, data_handler)
 
-        self._data_class = data_class
+        self._room_id = room_id
+        self._home_id = home_id
 
-        self._home_status = self.data_handler.data[f"HomeStatus-{home_id}"]
+        self._home_status_class = f"HomeStatus-{self._home_id}"
+
+        self._data_classes.extend(
+            [{"name": data_class}, {"name": "HomeStatus", "home_id": self._home_id}]
+        )
+
+        self._home_status = self.data_handler.data[self._home_status_class]
         self._room_status = self._home_status.rooms[room_id]
         self._room_data = self._data.rooms[home_id][room_id]
 
@@ -198,8 +204,6 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
                 self._module_type = NA_THERM
 
         self._state = None
-        self._room_id = room_id
-        self._home_id = home_id
         self._room_name = self._data.rooms[home_id][room_id]["name"]
         self._name = f"{MANUFACTURER} {self._room_name}"
         self._current_temperature = None
@@ -221,6 +225,35 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
             self._operation_list.append(HVAC_MODE_OFF)
 
         self._unique_id = f"{self._room_id}-{self._module_type}"
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await NetatmoBase.async_added_to_hass(self)
+
+        async def handle_event(event):
+            """Handle webhook events."""
+            data = event.data["data"]
+
+            if not data.get("event_type"):
+                return
+
+            if not data.get("home", {}).get("rooms"):
+                return
+
+            for room in data["home"]["rooms"]:
+                if data["event_type"] == "set_point":
+                    if self._room_id == room["id"]:
+                        self._target_temperature = room["therm_setpoint_temperature"]
+                        self.schedule_update_ha_state()
+                        break
+
+                elif data["event_type"] == "cancel_set_point":
+                    if self._room_id == room["id"]:
+                        self.async_update_callback()
+                        self.schedule_update_ha_state()
+                        break
+
+        self.hass.bus.async_listen("netatmo_event", handle_event)
 
     @property
     def device_info(self):
@@ -383,7 +416,7 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
         try:
             roomstatus = {}
 
-            self._home_status = self.data_handler.data[f"HomeStatus-{self._home_id}"]
+            self._home_status = self.data_handler.data[self._home_status_class]
             self._room_status = self._home_status.rooms[self._room_id]
             self._room_data = self._data.rooms[self._home_id][self._room_id]
 

@@ -217,7 +217,7 @@ class NetatmoSensor(NetatmoBase):
         """Initialize the sensor."""
         super().__init__(data_handler)
 
-        self._data_class = data_class
+        self._data_classes.append({"name": data_class})
 
         self._module_id = module_info["_id"]
         self._station_id = module_info.get("main_device", self._module_id)
