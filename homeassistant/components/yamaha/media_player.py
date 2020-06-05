@@ -405,7 +405,7 @@ class YamahaDevice(MediaPlayerEntity):
         self.receiver.enable_output(port, enabled)
 
     def select_scene(self, scene):
-        """Select a scene"""
+        """Select a scene.."""
         _LOGGER.info("Select Scene: %s", scene)
         self.receiver.scene = scene
 
