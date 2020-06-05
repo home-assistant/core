@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     smappee_base = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
     dev = []
-    for _, service_location in smappee_base._smappee.service_locations.items():
+    for _, service_location in smappee_base.smappee.service_locations.items():
         for appliance_id, appliance in service_location.appliances.items():
             if appliance.type != "Find me" and appliance.source_type == "NILM":
                 dev.append(

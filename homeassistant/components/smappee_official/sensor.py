@@ -143,13 +143,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
 
         # Add all CT measurements
-        for id, measurement in service_location.measurements.items():
+        for measurement_id, measurement in service_location.measurements.items():
             dev.append(
                 SmappeeSensor(
                     smappee_base=smappee_base,
                     service_location=service_location,
                     sensor="load",
-                    attributes=[measurement.name, "mdi:power-plug", POWER_WATT, id],
+                    attributes=[
+                        measurement.name,
+                        "mdi:power-plug",
+                        POWER_WATT,
+                        measurement_id,
+                    ],
                 )
             )
 
@@ -166,7 +171,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
 
         # Add Gas and Water sensors
-        for id, sensor in service_location.sensors.items():
+        for sensor_id, sensor in service_location.sensors.items():
             for channel in sensor.channels:
                 dev.append(
                     SmappeeSensor(
@@ -179,7 +184,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             if channel.get("type") == "water"
                             else "mdi:gas-cylinder",
                             channel.get("uom"),
-                            f"{id}-{channel.get('channel')}",
+                            f"{sensor_id}-{channel.get('channel')}",
                         ],
                     )
                 )
@@ -208,8 +213,8 @@ class SmappeeSensor(Entity):
         """Return the name for this sensor."""
         if self._sensor in ["sensor", "load"]:
             return f"{self._service_location.service_location_name} - {self._sensor.title()} - {self._name}"
-        else:
-            return f"{self._service_location.service_location_name} - {self._name}"
+
+        return f"{self._service_location.service_location_name} - {self._name}"
 
     @property
     def icon(self):
@@ -231,8 +236,8 @@ class SmappeeSensor(Entity):
         """Return the unique ID for this sensor."""
         if self._sensor in ["load", "sensor"]:
             return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-{self._sensor}-{self._sensor_id}"
-        else:
-            return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-{self._sensor}"
+
+        return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-{self._sensor}"
 
     @property
     def device_state_attributes(self):
@@ -248,7 +253,7 @@ class SmappeeSensor(Entity):
             }
         )
         if self._sensor == "sensor":
-            sensor_id, channel_id = self._sensor_id.split("-")
+            sensor_id, _ = self._sensor_id.split("-")
             sensor = self._service_location.sensors.get(int(sensor_id))
             attributes["Temperature"] = sensor.temperature
             attributes["Humidity"] = sensor.humidity

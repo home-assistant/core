@@ -1,4 +1,6 @@
 """Config flow to configure the Smappee components."""
+from pysmappee import Smappee
+from requests import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -35,8 +37,6 @@ class SmappeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from pysmappee import Smappee
-
         if not user_input:
             return await self._show_config_form()
 
@@ -55,7 +55,7 @@ class SmappeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(
                 Smappee, username, password, client_id, client_secret, platform
             )
-        except Exception:
+        except RequestException:
             return await self._show_config_form(errors={"base": "invalid_credentials"})
 
         return self.async_create_entry(

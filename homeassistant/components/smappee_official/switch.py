@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     smappee_base = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
     dev = []
-    for _, service_location in smappee_base._smappee.service_locations.items():
+    for _, service_location in smappee_base.smappee.service_locations.items():
         for actuator_id, actuator in service_location.actuators.items():
             if actuator.type in ["SWITCH", "COMFORT_PLUG"]:
                 dev.append(
@@ -83,21 +83,23 @@ class SmappeeActuator(SwitchEntity):
     @property
     def name(self):
         """Return the name of the switch."""
-        if self._actuator_type in ["SWITCH", "COMFORT_PLUG"]:
-            return f"{self._service_location.service_location_name} - {self._actuator_type.title()} - {self._actuator_name}"
-        elif self._actuator_type == "INFINITY_OUTPUT_MODULE":
+        if self._actuator_type == "INFINITY_OUTPUT_MODULE":
             return f"{self._service_location.service_location_name} - Output module - {self._actuator_name} - {self._actuator_state_option}"
+
+        # Switch or comfort plug
+        return f"{self._service_location.service_location_name} - {self._actuator_type.title()} - {self._actuator_name}"
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        if self._actuator_type in ["SWITCH", "COMFORT_PLUG"]:
-            return self._state == "ON_ON"
-        elif self._actuator_type == "INFINITY_OUTPUT_MODULE":
+        if self._actuator_type == "INFINITY_OUTPUT_MODULE":
             return (
                 self._service_location.actuators.get(self._actuator_id).state
                 == self._actuator_state_option
             )
+
+        # Switch or comfort plug
+        return self._state == "ON_ON"
 
     @property
     def icon(self):
@@ -138,20 +140,21 @@ class SmappeeActuator(SwitchEntity):
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
         if self._actuator_type == "SWITCH":
-            c = self._service_location.actuators.get(
+            cons = self._service_location.actuators.get(
                 self._actuator_id
             ).consumption_today
-            if c is not None:
-                return round(c / 1000.0, 2)
+            if cons is not None:
+                return round(cons / 1000.0, 2)
         return None
 
     @property
     def unique_id(self,):
         """Return the unique ID for this switch."""
-        if self._actuator_type in ["SWITCH", "COMFORT_PLUG"]:
-            return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-actuator-{self._actuator_id}"
-        elif self._actuator_type == "INFINITY_OUTPUT_MODULE":
+        if self._actuator_type == "INFINITY_OUTPUT_MODULE":
             return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-actuator-{self._actuator_id}-{self._actuator_state_option}"
+
+        # Switch or comfort plug
+        return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-actuator-{self._actuator_id}"
 
     @property
     def device_state_attributes(self):
