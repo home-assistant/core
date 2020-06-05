@@ -186,7 +186,7 @@ class LightGroup(light.LightEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes for the light group."""
-        return {ATTR_ENTITY_ID: self._entities}
+        return {ATTR_ENTITY_ID: self._entity_ids}
 
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the light group."""
