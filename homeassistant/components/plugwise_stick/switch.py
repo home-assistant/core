@@ -49,6 +49,11 @@ class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
         self.node_callbacks = (AVAILABLE_SENSOR_ID, self.switch_id)
 
     @property
+    def device_class(self):
+        """Return the device class of this switch."""
+        return self.switch_type["class"]
+
+    @property
     def entity_registry_enabled_default(self):
         """Return the switch registration state."""
         return self.switch_type["enabled_default"]
@@ -56,7 +61,7 @@ class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
     @property
     def icon(self):
         """Return the icon."""
-        return self.switch_type["icon"]
+        return None if self.switch_type["class"] else self.switch_type["icon"]
 
     @property
     def is_on(self):

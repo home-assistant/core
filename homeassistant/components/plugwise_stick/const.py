@@ -1,5 +1,6 @@
 """Const for Plugwise USB-stick."""
 
+from homeassistant.components.switch import DEVICE_CLASS_OUTLET
 from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, POWER_WATT
 
 DOMAIN = "plugwise_stick"
@@ -23,7 +24,7 @@ SENSORS = {
     CURRENT_POWER_SENSOR_ID: {
         "class": DEVICE_CLASS_POWER,
         "enabled_default": True,
-        "icon": "mdi:flash",
+        "icon": None,
         "name": "Power usage",
         "state": "get_power_usage",
         "unit": POWER_WATT,
@@ -31,7 +32,7 @@ SENSORS = {
     TODAY_ENERGY_SENSOR_ID: {
         "class": DEVICE_CLASS_POWER,
         "enabled_default": True,
-        "icon": "mdi:flash",
+        "icon": None,
         "name": "Power consumption today",
         "state": "get_power_consumption_today",
         "unit": ENERGY_KILO_WATT_HOUR,
@@ -41,9 +42,9 @@ SENSORS = {
 # Switch types
 SWITCHES = {
     "relay": {
-        "class": DEVICE_CLASS_POWER,
+        "class": DEVICE_CLASS_OUTLET,
         "enabled_default": True,
-        "icon": "mdi:power-socket-eu",
+        "icon": None,
         "name": "Relay state",
         "state": "get_relay_state",
         "switch": "set_relay_state",
