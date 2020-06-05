@@ -915,7 +915,7 @@ xmltodict==0.12.0
 ya_ma==0.3.8
 
 # homeassistant.components.zeroconf
-zeroconf==0.26.3
+zeroconf==0.27.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.39
