@@ -2,7 +2,6 @@
 import logging
 
 from pysmappee import Smappee
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -11,27 +10,11 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_USERNAME,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import DATA_CLIENT, DOMAIN, MIN_TIME_BETWEEN_UPDATES, SMAPPEE_COMPONENTS
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Inclusive(CONF_CLIENT_ID, "Server credentials"): cv.string,
-                vol.Inclusive(CONF_CLIENT_SECRET, "Server credentials"): cv.string,
-                vol.Inclusive(CONF_USERNAME, "Server credentials"): cv.string,
-                vol.Inclusive(CONF_PASSWORD, "Server credentials"): cv.string,
-                vol.Inclusive(CONF_PLATFORM, "Server platform"): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def async_setup(hass, config):
