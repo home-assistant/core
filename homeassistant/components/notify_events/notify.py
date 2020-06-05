@@ -49,9 +49,7 @@ class NotifyEventsNotificationService(BaseNotificationService):
             return False
         return os.path.isfile(filename)
 
-    def attach_file(
-        self, msg: Message, item: dict, kind: str = ATTR_FILE_KIND_FILE
-    ):
+    def attach_file(self, msg: Message, item: dict, kind: str = ATTR_FILE_KIND_FILE):
         """Append a file or image to message."""
         file_name = None
         mime_type = None
