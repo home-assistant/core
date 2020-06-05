@@ -10,7 +10,7 @@ CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_PULL_MODE = "pull_mode"
 
-DEFAULT_BOUNCETIME = 50
+DEFAULT_BOUNCETIME = 0
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_PULL_MODE = "UP"
 
@@ -40,7 +40,7 @@ def setup_input(address, port, pull_mode, bouncetime):
         pull_gpio_up = False
 
     try:
-        return Button(port, pull_up=pull_gpio_up, pin_factory=PiGPIOFactory(address))
+        return Button(port, pull_up=pull_gpio_up, bounce_time=bouncetime, pin_factory=PiGPIOFactory(address))
     except (ValueError, IndexError, KeyError, OSError):
         return None
 
