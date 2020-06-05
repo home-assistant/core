@@ -49,7 +49,7 @@ class NotifyEventsNotificationService(BaseNotificationService):
             return False
         return os.path.isfile(filename)
 
-    async def attach_file(
+    def attach_file(
         self, msg: Message, item: dict, kind: str = ATTR_FILE_KIND_FILE
     ):
         """Append a file or image to message."""
@@ -75,9 +75,7 @@ class NotifyEventsNotificationService(BaseNotificationService):
             else:
                 msg.add_file_from_content(item[ATTR_FILE_CONTENT], file_name, mime_type)
         elif ATTR_FILE_PATH in item:
-            file_exists = await self.hass.async_add_executor_job(
-                self.file_exists, item[ATTR_FILE_PATH]
-            )
+            file_exists = self.file_exists(item[ATTR_FILE_PATH])
 
             if file_exists:
                 if kind == ATTR_FILE_KIND_IMAGE:
@@ -87,7 +85,7 @@ class NotifyEventsNotificationService(BaseNotificationService):
             else:
                 _LOGGER.error("File does not exist: %s", item[ATTR_FILE_PATH])
 
-    async def prepare_message(self, message, data) -> Message:
+    def prepare_message(self, message, data) -> Message:
         """Prepare a message to send."""
         msg = Message(message)
 
@@ -108,17 +106,17 @@ class NotifyEventsNotificationService(BaseNotificationService):
 
         if ATTR_IMAGES in data:
             for image in data[ATTR_IMAGES]:
-                await self.attach_file(msg, image, ATTR_FILE_KIND_IMAGE)
+                self.attach_file(msg, image, ATTR_FILE_KIND_IMAGE)
 
         if ATTR_FILES in data:
             for file in data[ATTR_FILES]:
-                await self.attach_file(msg, file)
+                self.attach_file(msg, file)
 
         return msg
 
-    async def async_send_message(self, message, **kwargs):
+    def send_message(self, message, **kwargs):
         """Send a message."""
         data = kwargs.get(ATTR_DATA) or {}
 
-        msg = await self.prepare_message(message, data)
+        msg = self.prepare_message(message, data)
         msg.send(self.token)
