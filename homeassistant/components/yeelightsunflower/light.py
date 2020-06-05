@@ -44,7 +44,7 @@ class SunflowerBulb(LightEntity):
         self._available = light.available
         self._brightness = light.brightness
         self._is_on = light.is_on
-        self._hs_color = light.rgb_color
+        self._rgb_color = light.rgb_color
         self._unique_id = light.zid
 
     @property
@@ -75,7 +75,7 @@ class SunflowerBulb(LightEntity):
     @property
     def hs_color(self):
         """Return the color property."""
-        return self._hs_color
+        return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
     def supported_features(self):
@@ -109,4 +109,4 @@ class SunflowerBulb(LightEntity):
         self._available = self._light.available
         self._brightness = self._light.brightness
         self._is_on = self._light.is_on
-        self._hs_color = color_util.color_RGB_to_hs(*self._light.rgb_color)
+        self._rgb_color = self._light.rgb_color
