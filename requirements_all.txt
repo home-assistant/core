@@ -963,6 +963,9 @@ niko-home-control==0.2.1
 # homeassistant.components.nilu
 niluclient==0.1.2
 
+# homeassistant.components.notify_events
+notify-events==1.0.4
+
 # homeassistant.components.nederlandse_spoorwegen
 nsapi==3.0.4
 
