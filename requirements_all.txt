@@ -963,6 +963,9 @@ niko-home-control==0.2.1
 # homeassistant.components.nilu
 niluclient==0.1.2
 
+# homeassistant.components.notify_events
+notify-events==1.0.4
+
 # homeassistant.components.nederlandse_spoorwegen
 nsapi==3.0.4
 
@@ -1468,7 +1471,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.2
+pymyq==2.0.3
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -2078,7 +2081,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.8
+tesla-powerwall==0.2.10
 
 # homeassistant.components.tesla
 teslajsonpy==0.8.1

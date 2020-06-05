@@ -107,23 +107,11 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
 
-    @property
-    def state_attributes(self):
-        """Return the device state attributes."""
-        attr = {}
-        attr.update(
-            super().state_attributes,
-            **{
-                ATTR_ALTITUDE: self._tile["last_tile_state"]["altitude"],
-                ATTR_IS_LOST: self._tile["last_tile_state"]["is_lost"],
-                ATTR_RING_STATE: self._tile["last_tile_state"]["ring_state"],
-                ATTR_VOIP_STATE: self._tile["last_tile_state"]["voip_state"],
-            },
-        )
-
-        return attr
-
     @callback
     def _update_from_latest_data(self):
         """Update the entity from the latest data."""
         self._tile = self.coordinator.data[self._tile_uuid]
+        self._attrs[ATTR_ALTITUDE] = self._tile["last_tile_state"]["altitude"]
+        self._attrs[ATTR_IS_LOST] = self._tile["last_tile_state"]["is_lost"]
+        self._attrs[ATTR_RING_STATE] = self._tile["last_tile_state"]["ring_state"]
+        self._attrs[ATTR_VOIP_STATE] = self._tile["last_tile_state"]["voip_state"]
