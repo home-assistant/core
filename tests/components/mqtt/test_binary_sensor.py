@@ -402,7 +402,7 @@ async def test_off_delay(hass, mqtt_mock):
                 "state_topic": "test-topic",
                 "payload_on": "ON",
                 "payload_off": "OFF",
-                "off_delay": 30,
+                "off_delay": 3,
                 "force_update": True,
             }
         },
@@ -430,7 +430,7 @@ async def test_off_delay(hass, mqtt_mock):
     assert state.state == STATE_ON
     assert len(events) == 2
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_OFF
