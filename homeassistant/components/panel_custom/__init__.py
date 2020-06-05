@@ -191,7 +191,7 @@ async def async_setup(hass, config):
             if panel_path is None:
                 panel_path = hass.config.path(PANEL_DIR, f"{name}.html")
 
-            if not await hass.async_add_job(os.path.isfile, panel_path):
+            if not await hass.async_add_executor_job(os.path.isfile, panel_path):
                 _LOGGER.error(
                     "Unable to find webcomponent for %s: %s", name, panel_path
                 )

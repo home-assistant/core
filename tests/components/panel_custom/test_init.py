@@ -164,7 +164,7 @@ async def test_latest_and_es5_build(hass):
 
     assert await setup.async_setup_component(hass, "panel_custom", config)
 
-    panels = hass.data.get(frontend.DATA_PANELS, [])
+    panels = hass.data.get(frontend.DATA_PANELS, {})
 
     assert panels
     assert "nice_url" in panels
@@ -181,8 +181,6 @@ async def test_latest_and_es5_build(hass):
         },
     }
     assert panel.frontend_url_path == "nice_url"
-    # assert panel.sidebar_icon == "mdi:iconicon"
-    # assert panel.sidebar_title == "Sidebar Title"
 
 
 async def test_url_option_conflict(hass):
