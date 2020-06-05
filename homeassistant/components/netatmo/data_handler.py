@@ -88,7 +88,6 @@ class NetatmoDataHandler:
                     async_dispatcher_send(
                         self.hass, f"netatmo-update-{data_class['name']}"
                     )
-                    print(f"Dispatching netatmo-update-{data_class['name']}")
                 except (pyatmo.NoDevice, pyatmo.ApiError) as err:
                     _LOGGER.debug(err)
 

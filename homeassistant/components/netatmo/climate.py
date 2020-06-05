@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -177,12 +177,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return
 
 
-class NetatmoThermostat(ClimateDevice, NetatmoBase):
+class NetatmoThermostat(ClimateEntity, NetatmoBase):
     """Representation a Netatmo thermostat."""
 
     def __init__(self, data_handler, data_class, home_id, room_id):
         """Initialize the sensor."""
-        ClimateDevice.__init__(self)
+        ClimateEntity.__init__(self)
         NetatmoBase.__init__(self, data_handler)
 
         self._room_id = room_id
@@ -237,10 +237,26 @@ class NetatmoThermostat(ClimateDevice, NetatmoBase):
             if not data.get("event_type"):
                 return
 
-            if not data.get("home", {}).get("rooms"):
+            if not data.get("home"):
                 return
 
-            for room in data["home"]["rooms"]:
+            home = data["home"]
+            if self._home_id == home["id"] and data["event_type"] == "therm_mode":
+                self._preset = NETATMO_MAP_PRESET[home["therm_mode"]]
+                self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
+                if self._preset == PRESET_FROST_GUARD:
+                    self._target_temperature = self._hg_temperature
+                elif self._preset == PRESET_AWAY:
+                    self._target_temperature = self._away_temperature
+                elif self._preset == PRESET_SCHEDULE:
+                    self.async_update_callback()
+                self.schedule_update_ha_state()
+                return
+
+            if not home.get("rooms"):
+                return
+
+            for room in home["rooms"]:
                 if data["event_type"] == "set_point":
                     if self._room_id == room["id"]:
                         self._target_temperature = room["therm_setpoint_temperature"]
