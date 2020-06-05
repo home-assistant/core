@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, SERVICE_ENABLE_OUTPUT
+from .const import DOMAIN, SERVICE_ENABLE_OUTPUT, SERVICE_SELECT_SCENE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,7 +147,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device.schedule_update_ha_state(True)
 
     hass.services.register(
-        DOMAIN, SERVICE_ENABLE_OUTPUT, service_handler, schema=ENABLE_OUTPUT_SCHEMA
+        DOMAIN,
+        SERVICE_ENABLE_OUTPUT,
+        SERVICE_SELECT_SCENE,
+        service_handler,
+        schema=ENABLE_OUTPUT_SCHEMA,
     )
 
     add_entities(devices)
@@ -371,6 +375,10 @@ class YamahaDevice(MediaPlayerEntity):
     def enable_output(self, port, enabled):
         """Enable or disable an output port.."""
         self.receiver.enable_output(port, enabled)
+
+    def select_scene(self, scene):
+        """Select a scene""":
+        self.receiver.scene = scene
 
     def select_sound_mode(self, sound_mode):
         """Set Sound Mode for Receiver.."""
