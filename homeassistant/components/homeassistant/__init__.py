@@ -2,7 +2,6 @@
 import asyncio
 import itertools as it
 import logging
-from typing import Awaitable
 
 import voluptuous as vol
 
@@ -33,7 +32,7 @@ SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 
-async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
+async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
     """Set up general services related to Home Assistant."""
 
     async def async_handle_turn_service(service):

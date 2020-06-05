@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 add_entities([WinkCameraDevice(camera, hass)])
 
 
-class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
+class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanelEntity):
     """Representation a Wink camera alarm."""
 
     async def async_added_to_hass(self):

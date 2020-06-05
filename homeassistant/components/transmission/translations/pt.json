@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "wrong_credentials": "Nome de utilizador ou palavra passe incorretos"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "name": "Nome",
+                    "password": "Palavra-passe",
+                    "port": "Porta",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

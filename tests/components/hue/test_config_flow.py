@@ -1,11 +1,9 @@
 """Tests for Philips Hue config flow."""
 import asyncio
-from unittest.mock import Mock
 
 from aiohttp import client_exceptions
 import aiohue
 from aiohue.discovery import URL_NUPNP
-from asynctest import CoroutineMock, patch
 import pytest
 import voluptuous as vol
 
@@ -13,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.hue import config_flow, const
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -41,7 +40,7 @@ def get_mock_bridge(
         mock_create_user = create_user
 
     mock_bridge.create_user = mock_create_user
-    mock_bridge.initialize = CoroutineMock()
+    mock_bridge.initialize = AsyncMock()
 
     return mock_bridge
 
@@ -190,7 +189,7 @@ async def test_flow_timeout_discovery(hass):
 async def test_flow_link_timeout(hass):
     """Test config flow."""
     mock_bridge = get_mock_bridge(
-        mock_create_user=CoroutineMock(side_effect=asyncio.TimeoutError),
+        mock_create_user=AsyncMock(side_effect=asyncio.TimeoutError),
     )
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
@@ -211,7 +210,7 @@ async def test_flow_link_timeout(hass):
 
 async def test_flow_link_unknown_error(hass):
     """Test if a unknown error happened during the linking processes."""
-    mock_bridge = get_mock_bridge(mock_create_user=CoroutineMock(side_effect=OSError),)
+    mock_bridge = get_mock_bridge(mock_create_user=AsyncMock(side_effect=OSError),)
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
         return_value=[mock_bridge],
@@ -232,7 +231,7 @@ async def test_flow_link_unknown_error(hass):
 async def test_flow_link_button_not_pressed(hass):
     """Test config flow ."""
     mock_bridge = get_mock_bridge(
-        mock_create_user=CoroutineMock(side_effect=aiohue.LinkButtonNotPressed),
+        mock_create_user=AsyncMock(side_effect=aiohue.LinkButtonNotPressed),
     )
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
@@ -254,7 +253,7 @@ async def test_flow_link_button_not_pressed(hass):
 async def test_flow_link_unknown_host(hass):
     """Test config flow ."""
     mock_bridge = get_mock_bridge(
-        mock_create_user=CoroutineMock(side_effect=client_exceptions.ClientOSError),
+        mock_create_user=AsyncMock(side_effect=client_exceptions.ClientOSError),
     )
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",

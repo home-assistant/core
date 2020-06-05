@@ -3,7 +3,6 @@ import json
 import logging
 import os
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components.device_tracker.legacy import (
@@ -13,6 +12,7 @@ from homeassistant.components.device_tracker.legacy import (
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
 
 _LOGGER = logging.getLogger(__name__)

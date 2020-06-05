@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Inactiu",
+            "recording": "Enregistrant",
+            "streaming": "Transmetent v\u00eddeo"
+        }
+    },
+    "title": "C\u00e0mera"
+}

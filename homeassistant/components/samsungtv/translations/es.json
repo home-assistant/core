@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este televisor Samsung ya est\u00e1 configurado.",
+            "already_in_progress": "La configuraci\u00f3n del televisor Samsung ya est\u00e1 en progreso.",
+            "auth_missing": "Home Assistant no est\u00e1 autenticado para conectarse a este televisor Samsung.",
+            "not_successful": "No se puede conectar a este dispositivo Samsung TV.",
+            "not_supported": "Esta televisi\u00f3n Samsung actualmente no es compatible."
+        },
+        "flow_title": "Televisor Samsung: {model}",
+        "step": {
+            "confirm": {
+                "description": "\u00bfDesea configurar el televisor Samsung {model} ? Si nunca conect\u00f3 Home Assistant antes, deber\u00eda ver una ventana emergente en su televisor pidiendo autenticaci\u00f3n. Las configuraciones manuales para este televisor se sobrescribir\u00e1n.",
+                "title": "Samsung TV"
+            },
+            "user": {
+                "data": {
+                    "host": "Host o direcci\u00f3n IP",
+                    "name": "Nombre"
+                },
+                "description": "Introduce la informaci\u00f3n de tu televisi\u00f3n Samsung. Si nunca antes te conectaste con Home Assistant, deber\u00edas ver un mensaje en tu televisi\u00f3n pidiendo autorizaci\u00f3n."
+            }
+        }
+    }
+}

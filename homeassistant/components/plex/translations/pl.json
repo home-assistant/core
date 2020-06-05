@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Wszystkie znalezione serwery s\u0105 ju\u017c skonfigurowane.",
+            "already_configured": "Ten serwer Plex jest ju\u017c skonfigurowany.",
+            "already_in_progress": "Plex jest konfigurowany",
+            "invalid_import": "Zaimportowana konfiguracja jest nieprawid\u0142owa",
+            "non-interactive": "Nieinteraktywny import",
+            "token_request_timeout": "Przekroczono limit czasu na uzyskanie tokena.",
+            "unknown": "Nieznany b\u0142\u0105d"
+        },
+        "error": {
+            "faulty_credentials": "Autoryzacja nie powiod\u0142a si\u0119",
+            "host_or_token": "Nalezy wprowadzi\u0107 przynajmniej jeden host lub token.",
+            "no_servers": "Brak serwer\u00f3w po\u0142\u0105czonych z kontem",
+            "not_found": "Nie znaleziono serwera Plex",
+            "ssl_error": "Problem z certyfikatem SSL."
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port",
+                    "ssl": "U\u017cyj SSL",
+                    "token": "Token dost\u0119pu (opcjonalnie)",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                },
+                "title": "Manualna konfiguracja Plex"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Serwer"
+                },
+                "description": "Dost\u0119pnych jest wiele serwer\u00f3w, wybierz jeden:",
+                "title": "Wybierz serwer Plex"
+            },
+            "user": {
+                "description": "Przejd\u017a do [plex.tv](https://plex.tv), aby po\u0142\u0105czy\u0107 serwer Plex.",
+                "title": "Serwer medi\u00f3w Plex"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Metoda konfiguracji"
+                },
+                "title": "Serwer medi\u00f3w Plex"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Ignoruj nowych zarz\u0105dzanych/wsp\u00f3\u0142dzielonych u\u017cytkownik\u00f3w",
+                    "ignore_plex_web_clients": "Zignoruj klient\u00f3w Plex Web",
+                    "monitored_users": "Monitorowani u\u017cytkownicy",
+                    "use_episode_art": "U\u017cyj grafiki odcinka"
+                },
+                "description": "Opcje dla odtwarzaczy multimedialnych Plex"
+            }
+        }
+    }
+}

@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.const import (
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -11,9 +12,8 @@ from homeassistant.const import (
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_DEGREE,
     UNIT_PERCENTAGE,
-    UNIT_VOLT,
+    VOLT,
     VOLUME_CUBIC_METERS,
 )
 
@@ -23,6 +23,7 @@ from .entity import HMDevice
 _LOGGER = logging.getLogger(__name__)
 
 HM_STATE_HA_CAST = {
+    "IPGarage": {0: "closed", 1: "open", 2: "ventilation", 3: None},
     "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"},
     "RotaryHandleSensorIP": {0: "closed", 1: "tilted", 2: "open"},
     "WaterSensor": {0: "dry", 1: "wet", 2: "water"},
@@ -43,7 +44,7 @@ HM_UNIT_HA_CAST = {
     "BRIGHTNESS": "#",
     "POWER": POWER_WATT,
     "CURRENT": "mA",
-    "VOLTAGE": UNIT_VOLT,
+    "VOLTAGE": VOLT,
     "ENERGY_COUNTER": ENERGY_WATT_HOUR,
     "GAS_POWER": VOLUME_CUBIC_METERS,
     "GAS_ENERGY_COUNTER": VOLUME_CUBIC_METERS,
@@ -55,12 +56,13 @@ HM_UNIT_HA_CAST = {
     "HIGHEST_ILLUMINATION": "lx",
     "RAIN_COUNTER": "mm",
     "WIND_SPEED": SPEED_KILOMETERS_PER_HOUR,
-    "WIND_DIRECTION": UNIT_DEGREE,
-    "WIND_DIRECTION_RANGE": UNIT_DEGREE,
+    "WIND_DIRECTION": DEGREE,
+    "WIND_DIRECTION_RANGE": DEGREE,
     "SUNSHINEDURATION": "#",
     "AIR_PRESSURE": "hPa",
     "FREQUENCY": FREQUENCY_HERTZ,
     "VALUE": "#",
+    "VALVE_STATE": UNIT_PERCENTAGE,
 }
 
 HM_DEVICE_CLASS_HA_CAST = {

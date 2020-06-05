@@ -1,6 +1,11 @@
 """Definitions for DSMR Reader sensors added to MQTT."""
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, UNIT_VOLT, VOLUME_CUBIC_METERS
+from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
+    VOLT,
+    VOLUME_CUBIC_METERS,
+)
 
 
 def dsmr_transform(value):
@@ -86,17 +91,32 @@ DEFINITIONS = {
     "dsmr/reading/phase_voltage_l1": {
         "name": "Current voltage L1",
         "icon": "mdi:flash",
-        "unit": UNIT_VOLT,
+        "unit": VOLT,
     },
     "dsmr/reading/phase_voltage_l2": {
         "name": "Current voltage L2",
         "icon": "mdi:flash",
-        "unit": UNIT_VOLT,
+        "unit": VOLT,
     },
     "dsmr/reading/phase_voltage_l3": {
         "name": "Current voltage L3",
         "icon": "mdi:flash",
-        "unit": UNIT_VOLT,
+        "unit": VOLT,
+    },
+    "dsmr/reading/phase_power_current_l1": {
+        "name": "Phase power current L1",
+        "icon": "mdi:flash",
+        "unit": ELECTRICAL_CURRENT_AMPERE,
+    },
+    "dsmr/reading/phase_power_current_l2": {
+        "name": "Phase power current L2",
+        "icon": "mdi:flash",
+        "unit": ELECTRICAL_CURRENT_AMPERE,
+    },
+    "dsmr/reading/phase_power_current_l3": {
+        "name": "Phase power current L3",
+        "icon": "mdi:flash",
+        "unit": ELECTRICAL_CURRENT_AMPERE,
     },
     "dsmr/consumption/gas/delivered": {
         "name": "Gas usage",

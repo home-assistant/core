@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le Powerwall est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "unknown": "Erreur inattendue",
+            "wrong_version": "Votre Powerwall utilise une version logicielle qui n'est pas prise en charge. Veuillez envisager de mettre \u00e0 niveau ou de signaler ce probl\u00e8me afin qu'il puisse \u00eatre r\u00e9solu."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adresse IP"
+                },
+                "title": "Connectez-vous au Powerwall"
+            }
+        }
+    }
+}

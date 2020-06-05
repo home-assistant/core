@@ -1,5 +1,4 @@
 """Define tests for the flunearyou config flow."""
-from asynctest import patch
 from pyflunearyou.errors import FluNearYouError
 
 from homeassistant import data_entry_flow
@@ -7,6 +6,7 @@ from homeassistant.components.flunearyou import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

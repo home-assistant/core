@@ -4,7 +4,7 @@ import logging
 from orvibo.s20 import S20, S20Exception, discover
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_HOST,
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     add_entities_callback(switches)
 
 
-class S20Switch(SwitchDevice):
+class S20Switch(SwitchEntity):
     """Representation of an S20 switch."""
 
     def __init__(self, name, s20):

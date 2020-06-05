@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Il a \u00e9t\u00e9 demand\u00e9 \u00e0 {nom_de_l'entit\u00e9} de s'allumer"
+        }
+    }
+}

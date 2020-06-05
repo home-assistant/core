@@ -1,6 +1,7 @@
 """Support for LIFX Cloud scenes."""
 import asyncio
 import logging
+from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
@@ -46,9 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     status = scenes_resp.status
     if status == HTTP_OK:
         data = await scenes_resp.json()
-        devices = []
-        for scene in data:
-            devices.append(LifxCloudScene(hass, headers, timeout, scene))
+        devices = [LifxCloudScene(hass, headers, timeout, scene) for scene in data]
         async_add_entities(devices)
         return True
     if status == 401:
@@ -75,7 +74,7 @@ class LifxCloudScene(Scene):
         """Return the name of the scene."""
         return self._name
 
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         url = f"https://api.lifx.com/v1/scenes/scene_id:{self._uuid}/activate"
 

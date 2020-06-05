@@ -1,14 +1,14 @@
 """Tests for the Entity Registry."""
 import asyncio
-from unittest.mock import patch
 
-import asynctest
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.helpers import entity_registry
 
+import tests.async_mock
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, flush_store, mock_registry
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
@@ -241,11 +241,19 @@ async def test_loading_extra_values(hass, hass_storage):
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",
                 },
+                {
+                    "entity_id": "test.invalid__entity",
+                    "platform": "super_platform",
+                    "unique_id": "invalid-hass",
+                    "disabled_by": "hass",
+                },
             ]
         },
     }
 
     registry = await entity_registry.async_get_registry(hass)
+
+    assert len(registry.entities) == 4
 
     entry_with_name = registry.async_get_or_create(
         "test", "super_platform", "with-name"
@@ -401,7 +409,7 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
 
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
-    with asynctest.patch(
+    with tests.async_mock.patch(
         "homeassistant.helpers.entity_registry.EntityRegistry.async_load"
     ) as mock_load:
         results = await asyncio.gather(
@@ -561,3 +569,82 @@ async def test_restore_states(hass):
     assert hass.states.get("light.simple") is None
     assert hass.states.get("light.disabled") is None
     assert hass.states.get("light.all_info_set") is None
+
+
+async def test_async_get_device_class_lookup(hass):
+    """Test registry device class lookup."""
+    hass.state = CoreState.not_running
+
+    ent_reg = await entity_registry.async_get_registry(hass)
+
+    ent_reg.async_get_or_create(
+        "binary_sensor",
+        "light",
+        "battery_charging",
+        device_id="light_device_entry_id",
+        device_class="battery_charging",
+    )
+    ent_reg.async_get_or_create(
+        "sensor",
+        "light",
+        "battery",
+        device_id="light_device_entry_id",
+        device_class="battery",
+    )
+    ent_reg.async_get_or_create(
+        "light", "light", "demo", device_id="light_device_entry_id"
+    )
+    ent_reg.async_get_or_create(
+        "binary_sensor",
+        "vacuum",
+        "battery_charging",
+        device_id="vacuum_device_entry_id",
+        device_class="battery_charging",
+    )
+    ent_reg.async_get_or_create(
+        "sensor",
+        "vacuum",
+        "battery",
+        device_id="vacuum_device_entry_id",
+        device_class="battery",
+    )
+    ent_reg.async_get_or_create(
+        "vacuum", "vacuum", "demo", device_id="vacuum_device_entry_id"
+    )
+    ent_reg.async_get_or_create(
+        "binary_sensor",
+        "remote",
+        "battery_charging",
+        device_id="remote_device_entry_id",
+        device_class="battery_charging",
+    )
+    ent_reg.async_get_or_create(
+        "remote", "remote", "demo", device_id="remote_device_entry_id"
+    )
+
+    device_lookup = ent_reg.async_get_device_class_lookup(
+        {("binary_sensor", "battery_charging"), ("sensor", "battery")}
+    )
+
+    assert device_lookup == {
+        "remote_device_entry_id": {
+            (
+                "binary_sensor",
+                "battery_charging",
+            ): "binary_sensor.remote_battery_charging"
+        },
+        "light_device_entry_id": {
+            (
+                "binary_sensor",
+                "battery_charging",
+            ): "binary_sensor.light_battery_charging",
+            ("sensor", "battery"): "sensor.light_battery",
+        },
+        "vacuum_device_entry_id": {
+            (
+                "binary_sensor",
+                "battery_charging",
+            ): "binary_sensor.vacuum_battery_charging",
+            ("sensor", "battery"): "sensor.vacuum_battery",
+        },
+    }

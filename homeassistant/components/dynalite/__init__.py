@@ -117,7 +117,7 @@ AREA_DATA_SCHEMA = vol.Schema(
     vol.All(
         {
             vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_TEMPLATE): cv.string,
+            vol.Optional(CONF_TEMPLATE): vol.In(DEFAULT_TEMPLATES),
             vol.Optional(CONF_FADE): vol.Coerce(float),
             vol.Optional(CONF_NO_DEFAULT): cv.boolean,
             vol.Optional(CONF_CHANNEL): CHANNEL_SCHEMA,

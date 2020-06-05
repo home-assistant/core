@@ -4,8 +4,9 @@ from datetime import datetime, timedelta
 import logging
 
 import async_timeout
+from pywemo.ouimeaux_device.api.service import ActionException
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import convert
@@ -47,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WemoSwitch(SwitchDevice):
+class WemoSwitch(SwitchEntity):
     """Representation of a WeMo switch."""
 
     def __init__(self, device):
@@ -93,9 +94,9 @@ class WemoSwitch(SwitchDevice):
     def device_info(self):
         """Return the device info."""
         return {
-            "name": self.wemo.name,
-            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
-            "model": self.wemo.model_name,
+            "name": self._name,
+            "identifiers": {(WEMO_DOMAIN, self._serialnumber)},
+            "model": self._model_name,
             "manufacturer": "Belkin",
         }
 
@@ -189,11 +190,19 @@ class WemoSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.wemo.on()
+        try:
+            self.wemo.on()
+        except ActionException as err:
+            _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
+            self._available = False
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.wemo.off()
+        try:
+            self.wemo.off()
+        except ActionException as err:
+            _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
+            self._available = False
 
     async def async_added_to_hass(self):
         """Wemo switch added to Home Assistant."""
@@ -245,6 +254,7 @@ class WemoSwitch(SwitchDevice):
             if not self._available:
                 _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
-        except AttributeError as err:
+        except (AttributeError, ActionException) as err:
             _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
+            self.wemo.reconnect_with_device()

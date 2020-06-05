@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "closed": "Zou",
+            "home": "Doheem",
+            "locked": "Gespaart",
+            "not_home": "\u00cbnnerwee",
+            "off": "Aus",
+            "ok": "OK",
+            "on": "Un",
+            "open": "Op",
+            "problem": "Problem",
+            "unlocked": "Net gespaart"
+        }
+    },
+    "title": "Grupp"
+}

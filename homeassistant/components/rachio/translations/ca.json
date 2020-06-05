@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API"
+                },
+                "description": "Necessitar\u00e0s la clau API de https://app.rach.io/. Selecciona 'Configuraci\u00f3 del compte' (Account Settings) i, a continuaci\u00f3, clica 'Obtenir clau API' (GET API KEY).",
+                "title": "Connexi\u00f3 amb dispositiu Rachio"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Durant quant de temps (en minuts) mantenir engegada una estaci\u00f3 quan l'interruptor s'activa."
+                }
+            }
+        }
+    }
+}

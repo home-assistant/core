@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
     FORMAT_NUMBER,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -109,7 +109,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class ElkArea(ElkAttachedEntity, AlarmControlPanel, RestoreEntity):
+class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     """Representation of an Area / Partition within the ElkM1 alarm panel."""
 
     def __init__(self, element, elk, elk_data):
@@ -125,8 +125,10 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel, RestoreEntity):
     async def async_added_to_hass(self):
         """Register callback for ElkM1 changes."""
         await super().async_added_to_hass()
-        for keypad in self._elk.keypads:
-            keypad.add_callback(self._watch_keypad)
+        if len(self._elk.areas.elements) == 1:
+            for keypad in self._elk.keypads:
+                keypad.add_callback(self._watch_keypad)
+        self._element.add_callback(self._watch_area)
 
         # We do not get changed_by back from resync.
         last_state = await self.async_get_last_state()
@@ -151,6 +153,21 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel, RestoreEntity):
             self._changed_by_id = keypad.last_user + 1
             self._changed_by = username(self._elk, keypad.last_user)
             self.async_write_ha_state()
+
+    def _watch_area(self, area, changeset):
+        if not changeset.get("log_event"):
+            return
+        self._changed_by_keypad = None
+        self._changed_by_id = area.log_number
+        self._changed_by = username(self._elk, area.log_number - 1)
+        self._changed_by_time = "%04d-%02d-%02dT%02d:%02d" % (
+            area.log_year,
+            area.log_month,
+            area.log_day,
+            area.log_hour,
+            area.log_minute,
+        )
+        self.async_write_ha_state()
 
     @property
     def code_format(self):

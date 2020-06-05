@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.device_registry as dr
@@ -47,7 +47,7 @@ def discovery(hass):
         raise PlatformNotReady from err
     return lights
 
-class AveaLight(Light):
+class AveaLight(LightEntity):
     """Representation of an Avea."""
 
     def __init__(self, light):

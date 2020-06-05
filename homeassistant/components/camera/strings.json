@@ -1,1 +1,10 @@
-{ "title": "Camera" }
+{
+  "title": "Camera",
+  "state": {
+    "_": {
+      "recording": "Recording",
+      "streaming": "Streaming",
+      "idle": "[%key:common::state::idle%]"
+    }
+  }
+}

@@ -11,7 +11,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
-    Light,
+    LightEntity,
 )
 
 from .const import ATTR_DISCOVER_DEVICES
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMLight(HMDevice, Light):
+class HMLight(HMDevice, LightEntity):
     """Representation of a Homematic light."""
 
     @property
@@ -111,7 +111,7 @@ class HMLight(HMDevice, Light):
         ):
             self._hmdevice.on(self._channel)
 
-        if ATTR_HS_COLOR in kwargs:
+        if ATTR_HS_COLOR in kwargs and self.supported_features & SUPPORT_COLOR:
             self._hmdevice.set_hs_color(
                 hue=kwargs[ATTR_HS_COLOR][0] / 360.0,
                 saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,

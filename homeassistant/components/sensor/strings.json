@@ -23,5 +23,11 @@
       "timestamp": "{entity_name} timestamp changes",
       "value": "{entity_name} value changes"
     }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
+    }
   }
 }

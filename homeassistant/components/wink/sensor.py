@@ -3,7 +3,7 @@ import logging
 
 import pywink
 
-from homeassistant.const import TEMP_CELSIUS, UNIT_DEGREE
+from homeassistant.const import DEGREE, TEMP_CELSIUS
 
 from . import DOMAIN, WinkDevice
 
@@ -48,7 +48,7 @@ class WinkSensorDevice(WinkDevice):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
         self.capability = self.wink.capability()
-        if self.wink.unit() == UNIT_DEGREE:
+        if self.wink.unit() == DEGREE:
             self._unit_of_measurement = TEMP_CELSIUS
         else:
             self._unit_of_measurement = self.wink.unit()

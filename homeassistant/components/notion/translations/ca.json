@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquest nom d'usuari ja est\u00e0 en \u00fas."
+        },
+        "error": {
+            "invalid_credentials": "Nom d'usuari o contrasenya incorrectes",
+            "no_devices": "No s'han trobat dispositius al compte"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Introdueix la teva informaci\u00f3"
+            }
+        }
+    }
+}

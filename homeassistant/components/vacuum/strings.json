@@ -13,5 +13,17 @@
       "clean": "Let {entity_name} clean",
       "dock": "Let {entity_name} return to the dock"
     }
+  },
+  "state": {
+    "_": {
+      "cleaning": "Cleaning",
+      "docked": "Docked",
+      "error": "Error",
+      "idle": "[%key:common::state::idle%]",
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]",
+      "paused": "[%key:common::state::paused%]",
+      "returning": "Returning to dock"
+    }
   }
 }

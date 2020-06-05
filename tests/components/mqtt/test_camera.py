@@ -1,6 +1,8 @@
 """The tests for mqtt camera component."""
 import json
 
+import pytest
+
 from homeassistant.components import camera, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
@@ -47,6 +49,7 @@ async def test_run_camera_setup(hass, aiohttp_client):
         "camera",
         {"camera": {"platform": "mqtt", "topic": topic, "name": "Test Camera"}},
     )
+    await hass.async_block_till_done()
 
     url = hass.states.get("camera.test_camera").attributes["entity_picture"]
 
@@ -155,6 +158,7 @@ async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)

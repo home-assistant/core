@@ -45,8 +45,7 @@ async def test_reproducing_states(hass, caplog):
                 STATE_ECO,
                 {ATTR_AWAY_MODE: True, ATTR_TEMPERATURE: 45},
             ),
-        ],
-        blocking=True,
+        ]
     )
 
     assert len(turn_on_calls) == 0
@@ -57,7 +56,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("water_heater.entity_off", "not_supported")], blocking=True
+        [State("water_heater.entity_off", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -82,7 +81,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("water_heater.non_existing", "on"),
         ],
-        blocking=True,
     )
 
     assert len(turn_on_calls) == 1

@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.kodi import SERVICE_CALL_METHOD
 from homeassistant.components.kodi.const import DOMAIN
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -248,7 +248,7 @@ def cmd(func):
     return wrapper
 
 
-class KodiDevice(MediaPlayerDevice):
+class KodiDevice(MediaPlayerEntity):
     """Representation of a XBMC/Kodi device."""
 
     def __init__(
@@ -530,9 +530,10 @@ class KodiDevice(MediaPlayerDevice):
 
         If the media type cannot be detected, the player type is used.
         """
-        if MEDIA_TYPES.get(self._item.get("type")) is None and self._players:
+        item_type = MEDIA_TYPES.get(self._item.get("type"))
+        if (item_type is None or item_type == "channel") and self._players:
             return MEDIA_TYPES.get(self._players[0]["type"])
-        return MEDIA_TYPES.get(self._item.get("type"))
+        return item_type
 
     @property
     def media_duration(self):

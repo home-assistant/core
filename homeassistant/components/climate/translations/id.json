@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Sejuk",
+            "dry": "Kering",
+            "fan_only": "Hanya kipas",
+            "heat": "Panas",
+            "heat_cool": "Panas/Dingin",
+            "off": "Off"
+        }
+    },
+    "title": "Cuaca"
+}

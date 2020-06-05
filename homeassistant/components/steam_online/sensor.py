@@ -11,7 +11,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entities[entity_next].async_schedule_update_ha_state(True)
         entity_next = (entity_next + 1) % len(entities)
 
-    async_track_time_interval(hass, do_update, BASE_INTERVAL)
+    track_time_interval(hass, do_update, BASE_INTERVAL)
 
 
 class SteamSensor(Entity):

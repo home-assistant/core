@@ -1,12 +1,12 @@
 """The tests for the nexbus sensor component."""
 from copy import deepcopy
-from unittest.mock import patch
 
 import pytest
 
 import homeassistant.components.nextbus.sensor as nextbus
 import homeassistant.components.sensor as sensor
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, async_setup_component
 
 VALID_AGENCY = "sf-muni"
@@ -49,6 +49,7 @@ async def assert_setup_sensor(hass, config, count=1):
     """Set up the sensor and assert it's been created."""
     with assert_setup_component(count):
         assert await async_setup_component(hass, sensor.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 @pytest.fixture

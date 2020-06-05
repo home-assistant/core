@@ -17,7 +17,7 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
-    UNIT_UV_INDEX,
+    UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -73,7 +73,7 @@ SENSOR_TYPES = {
     "wind_gust": ["Wind Gust", SPEED_MILES_PER_HOUR],
     "visibility": ["Visibility", None],
     "visibility_distance": ["Visibility Distance", LENGTH_KILOMETERS],
-    "uv": ["UV", UNIT_UV_INDEX],
+    "uv": ["UV", UV_INDEX],
     "precipitation": ["Probability of Precipitation", UNIT_PERCENTAGE],
     "humidity": ["Humidity", UNIT_PERCENTAGE],
 }

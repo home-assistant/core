@@ -1,12 +1,11 @@
 """Tests for the Abode config flow."""
-from unittest.mock import patch
-
 from abodepy.exceptions import AbodeAuthenticationException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONF_POLLING = "polling"

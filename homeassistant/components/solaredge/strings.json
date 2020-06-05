@@ -6,11 +6,15 @@
         "data": {
           "name": "The name of this installation",
           "site_id": "The SolarEdge site-id",
-          "api_key": "The API key for this site"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },
-    "error": { "site_exists": "This site_id is already configured" },
-    "abort": { "site_exists": "This site_id is already configured" }
+    "error": {
+      "site_exists": "This site_id is already configured"
+    },
+    "abort": {
+      "site_exists": "This site_id is already configured"
+    }
   }
 }

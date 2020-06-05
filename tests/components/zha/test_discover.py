@@ -3,7 +3,6 @@
 import re
 from unittest import mock
 
-import asynctest
 import pytest
 import zigpy.quirks
 import zigpy.types
@@ -30,6 +29,8 @@ import homeassistant.helpers.entity_registry
 from .common import get_zha_gateway
 from .zha_devices_list import DEVICES
 
+from tests.async_mock import AsyncMock, patch
+
 NO_TAIL_ID = re.compile("_\\d$")
 
 
@@ -51,11 +52,9 @@ def channels_mock(zha_device_mock):
     return _mock
 
 
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.general.Identify.request",
-    new=asynctest.CoroutineMock(
-        return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]
-    ),
+    new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @pytest.mark.parametrize("device", DEVICES)
 async def test_devices(

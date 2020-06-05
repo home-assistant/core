@@ -5,7 +5,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([UERadioDevice(session, player_id, player_name)])
 
 
-class UERadioDevice(MediaPlayerDevice):
+class UERadioDevice(MediaPlayerEntity):
     """Representation of a Logitech UE Smart Radio device."""
 
     def __init__(self, session, player_id, player_name):

@@ -1,1 +1,9 @@
-{ "title": "Automation" }
+{
+  "title": "Automation",
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
+    }
+  }
+}

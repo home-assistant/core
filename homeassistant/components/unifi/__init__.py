@@ -7,7 +7,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .config_flow import get_controller_id_from_config_entry
-from .const import ATTR_MANUFACTURER, DOMAIN, LOGGER, UNIFI_WIRELESS_CLIENTS
+from .const import (
+    ATTR_MANUFACTURER,
+    DOMAIN as UNIFI_DOMAIN,
+    LOGGER,
+    UNIFI_WIRELESS_CLIENTS,
+)
 from .controller import UniFiController
 
 SAVE_DELAY = 10
@@ -15,7 +20,8 @@ STORAGE_KEY = "unifi_data"
 STORAGE_VERSION = 1
 
 CONFIG_SCHEMA = vol.Schema(
-    cv.deprecated(DOMAIN, invalidation_version="0.109"), {DOMAIN: cv.match_all}
+    cv.deprecated(UNIFI_DOMAIN, invalidation_version="0.109"),
+    {UNIFI_DOMAIN: cv.match_all},
 )
 
 
@@ -29,16 +35,13 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the UniFi component."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(UNIFI_DOMAIN, {})
 
     controller = UniFiController(hass, config_entry)
-
     if not await controller.async_setup():
         return False
 
-    controller_id = get_controller_id_from_config_entry(config_entry)
-    hass.data[DOMAIN][controller_id] = controller
+    hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
 
@@ -62,8 +65,7 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    controller_id = get_controller_id_from_config_entry(config_entry)
-    controller = hass.data[DOMAIN].pop(controller_id)
+    controller = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
     return await controller.async_reset()
 
 
@@ -90,15 +92,21 @@ class UnifiWirelessClients:
     def get_data(self, config_entry):
         """Get data related to a specific controller."""
         controller_id = get_controller_id_from_config_entry(config_entry)
-        data = self.data.get(controller_id, {"wireless_devices": []})
+        key = config_entry.entry_id
+        if controller_id in self.data:
+            key = controller_id
+
+        data = self.data.get(key, {"wireless_devices": []})
         return set(data["wireless_devices"])
 
     @callback
     def update_data(self, data, config_entry):
         """Update data and schedule to save to file."""
         controller_id = get_controller_id_from_config_entry(config_entry)
-        self.data[controller_id] = {"wireless_devices": list(data)}
+        if controller_id in self.data:
+            self.data.pop(controller_id)
 
+        self.data[config_entry.entry_id] = {"wireless_devices": list(data)}
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback

@@ -1,16 +1,17 @@
 """Tests for Almond set up."""
 from time import time
-from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries, core
 from homeassistant.components.almond import const
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -34,18 +35,16 @@ async def test_set_up_oauth_remote_url(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        return_value=mock_coro(),
     ):
         assert await async_setup_component(hass, "almond", {})
 
     assert entry.state == config_entries.ENTRY_STATE_LOADED
 
+    hass.config.components.add("cloud")
     with patch("homeassistant.components.almond.ALMOND_SETUP_DELAY", 0), patch(
-        "homeassistant.helpers.network.async_get_external_url",
+        "homeassistant.helpers.network.get_url",
         return_value="https://example.nabu.casa",
-    ), patch(
-        "pyalmond.WebAlmondAPI.async_create_device", return_value=mock_coro()
-    ) as mock_create_device:
+    ), patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, utcnow())
@@ -69,7 +68,6 @@ async def test_set_up_oauth_no_external_url(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        return_value=mock_coro(),
     ), patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         assert await async_setup_component(hass, "almond", {})
 
@@ -97,16 +95,20 @@ async def test_set_up_hassio(hass, aioclient_mock):
 
 
 async def test_set_up_local(hass, aioclient_mock):
-    """Test we do not set up Almond to connect to HA if we use Hass.io."""
+    """Test we do not set up Almond to connect to HA if we use local."""
+
+    # Set up an internal URL, as Almond won't be set up if there is no URL available
+    await async_process_ha_core_config(
+        hass, {"internal_url": "https://192.168.0.1"},
+    )
+
     entry = MockConfigEntry(
         domain="almond",
         data={"type": const.TYPE_LOCAL, "host": "http://localhost:9999"},
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "pyalmond.WebAlmondAPI.async_create_device", return_value=mock_coro()
-    ) as mock_create_device:
+    with patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         assert await async_setup_component(hass, "almond", {})
 
     assert entry.state == config_entries.ENTRY_STATE_LOADED

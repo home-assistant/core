@@ -1,7 +1,7 @@
 """Support for N26 switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .const import CARD_STATE_ACTIVE, CARD_STATE_BLOCKED, DATA
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switch_entities)
 
 
-class N26CardSwitch(SwitchDevice):
+class N26CardSwitch(SwitchEntity):
     """Representation of a N26 card block/unblock switch."""
 
     def __init__(self, api_data, card: dict):

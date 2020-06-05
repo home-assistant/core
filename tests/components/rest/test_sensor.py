@@ -1,6 +1,5 @@
 """The tests for the REST sensor platform."""
 import unittest
-from unittest.mock import Mock, patch
 
 import pytest
 from pytest import raises
@@ -16,6 +15,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.config_validation import template
 from homeassistant.setup import setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -76,6 +76,7 @@ class TestRestSensorSetup(unittest.TestCase):
                 "sensor",
                 {"sensor": {"platform": "rest", "resource": "http://localhost"}},
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -93,6 +94,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert mock_req.call_count == 2
 
     @requests_mock.Mocker()
@@ -111,6 +113,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
@@ -137,6 +140,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -165,6 +169,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -192,6 +197,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 2 == mock_req.call_count
 
 

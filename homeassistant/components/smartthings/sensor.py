@@ -17,7 +17,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
-    UNIT_VOLT,
+    VOLT,
 )
 
 from . import SmartThingsEntity
@@ -234,7 +234,7 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.ultraviolet_index, "Ultraviolet Index", None, None)
     ],
     Capability.voltage_measurement: [
-        Map(Attribute.voltage, "Voltage Measurement", UNIT_VOLT, None)
+        Map(Attribute.voltage, "Voltage Measurement", VOLT, None)
     ],
     Capability.washer_mode: [Map(Attribute.washer_mode, "Washer Mode", None, None)],
     Capability.washer_operating_state: [

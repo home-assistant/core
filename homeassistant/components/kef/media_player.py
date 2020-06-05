@@ -23,7 +23,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice,
+    MediaPlayerEntity,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -160,9 +160,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform.async_register_entity_service(SERVICE_UPDATE_DSP, {}, "update_dsp")
 
     def add_service(name, which, option):
+        options = DSP_OPTION_MAPPING[which]
+        dtype = type(options[0])  # int or float
         platform.async_register_entity_service(
             name,
-            {vol.Required(option): vol.In(DSP_OPTION_MAPPING[which])},
+            {vol.Required(option): vol.All(vol.Coerce(dtype), vol.In(options))},
             f"set_{which}",
         )
 
@@ -174,7 +176,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     add_service(SERVICE_SUB_DB, "sub_db", "db_value")
 
 
-class KefMediaPlayer(MediaPlayerDevice):
+class KefMediaPlayer(MediaPlayerEntity):
     """Kef Player Object."""
 
     def __init__(

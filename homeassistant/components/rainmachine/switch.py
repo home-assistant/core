@@ -4,7 +4,7 @@ import logging
 
 from regenmaschine.errors import RequestError
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,7 +22,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_NEXT_RUN = "next_run"
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
 ATTR_CURRENT_CYCLE = "current_cycle"
@@ -30,6 +29,7 @@ ATTR_CYCLES = "cycles"
 ATTR_DELAY = "delay"
 ATTR_DELAY_ON = "delay_on"
 ATTR_FIELD_CAPACITY = "field_capacity"
+ATTR_NEXT_RUN = "next_run"
 ATTR_NO_CYCLES = "number_of_cycles"
 ATTR_PRECIP_RATE = "sprinkler_head_precipitation_rate"
 ATTR_RESTRICTIONS = "restrictions"
@@ -39,6 +39,7 @@ ATTR_SOIL_TYPE = "soil_type"
 ATTR_SPRINKLER_TYPE = "sprinkler_head_type"
 ATTR_STATUS = "status"
 ATTR_SUN_EXPOSURE = "sun_exposure"
+ATTR_TIME_REMAINING = "time_remaining"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
 
@@ -111,7 +112,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class RainMachineSwitch(RainMachineEntity, SwitchDevice):
+class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     """A class to represent a generic RainMachine switch."""
 
     def __init__(self, rainmachine, switch_data):
@@ -289,10 +290,10 @@ class RainMachineZone(RainMachineSwitch):
 
         self._attrs.update(
             {
-                ATTR_ID: self._switch_data["uid"],
                 ATTR_AREA: details.get("waterSense").get("area"),
                 ATTR_CURRENT_CYCLE: self._switch_data.get("cycle"),
                 ATTR_FIELD_CAPACITY: details.get("waterSense").get("fieldCapacity"),
+                ATTR_ID: self._switch_data["uid"],
                 ATTR_NO_CYCLES: self._switch_data.get("noOfCycles"),
                 ATTR_PRECIP_RATE: details.get("waterSense").get("precipitationRate"),
                 ATTR_RESTRICTIONS: self._switch_data.get("restriction"),
@@ -300,6 +301,7 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(details.get("sun")),
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(details.get("group_id")),
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(details.get("sun")),
+                ATTR_TIME_REMAINING: self._switch_data.get("remaining"),
                 ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(self._switch_data.get("type")),
             }
         )

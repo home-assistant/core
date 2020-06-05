@@ -1,0 +1,85 @@
+{
+    "state": {
+        "_": {
+            "off": "V\u00e4ljas",
+            "on": "Sees"
+        },
+        "battery": {
+            "off": "Tavaline",
+            "on": "Madal"
+        },
+        "cold": {
+            "off": "Normaalne",
+            "on": "Jahe"
+        },
+        "connectivity": {
+            "off": "Lahti \u00fchendatud",
+            "on": "\u00dchendatud"
+        },
+        "door": {
+            "off": "Suletud",
+            "on": "Avatud"
+        },
+        "garage_door": {
+            "off": "Suletud",
+            "on": "Avatud"
+        },
+        "gas": {
+            "off": "Puudub",
+            "on": "Tuvastatud"
+        },
+        "heat": {
+            "off": "Normaalne",
+            "on": "Palav"
+        },
+        "lock": {
+            "off": "Lukus",
+            "on": "Lukustamata"
+        },
+        "moisture": {
+            "off": "Kuiv",
+            "on": "M\u00e4rg"
+        },
+        "motion": {
+            "off": "Puudub",
+            "on": "Tuvastatud"
+        },
+        "occupancy": {
+            "off": "Puudub",
+            "on": "Tuvastatud"
+        },
+        "opening": {
+            "off": "Suletud",
+            "on": "Avatud"
+        },
+        "presence": {
+            "off": "Eemal",
+            "on": "Kodus"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Probleem"
+        },
+        "safety": {
+            "off": "Ohutu",
+            "on": "Ohtlik"
+        },
+        "smoke": {
+            "off": "Puudub",
+            "on": "Tuvastatud"
+        },
+        "sound": {
+            "off": "Puudub",
+            "on": "Tuvastatud"
+        },
+        "vibration": {
+            "off": "Puudub",
+            "on": "Tuvastatud"
+        },
+        "window": {
+            "off": "Suletud",
+            "on": "Avatud"
+        }
+    },
+    "title": "Binaarne andur"
+}

@@ -88,6 +88,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
+        for entry in self._async_current_entries():
+            if entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]:
+                return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)
 
 

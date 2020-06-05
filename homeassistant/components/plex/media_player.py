@@ -5,7 +5,7 @@ import logging
 import plexapi.exceptions
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -85,7 +85,7 @@ def _async_add_entities(
     async_add_entities(entities, True)
 
 
-class PlexMediaPlayer(MediaPlayerDevice):
+class PlexMediaPlayer(MediaPlayerEntity):
     """Representation of a Plex device."""
 
     def __init__(self, plex_server, device, session=None):
@@ -484,7 +484,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 | SUPPORT_VOLUME_MUTE
             )
 
-        return 0
+        return SUPPORT_PLAY_MEDIA
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -553,105 +553,29 @@ class PlexMediaPlayer(MediaPlayerDevice):
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         if not (self.device and "playback" in self._device_protocol_capabilities):
+            _LOGGER.debug(
+                "Client is not currently accepting playback controls: %s", self.name
+            )
             return
 
         src = json.loads(media_id)
-        library = src.get("library_name")
-        shuffle = src.get("shuffle", 0)
+        if isinstance(src, int):
+            src = {"plex_key": src}
 
-        media = None
-
-        if media_type == "MUSIC":
-            media = self._get_music_media(library, src)
-        elif media_type == "EPISODE":
-            media = self._get_tv_media(library, src)
-        elif media_type == "PLAYLIST":
-            media = self.plex_server.playlist(src["playlist_name"])
-        elif media_type == "VIDEO":
-            media = self.plex_server.library.section(library).get(src["video_name"])
+        shuffle = src.pop("shuffle", 0)
+        media = self.plex_server.lookup_media(media_type, **src)
 
         if media is None:
             _LOGGER.error("Media could not be found: %s", media_id)
             return
+
+        _LOGGER.debug("Attempting to play %s on %s", media, self.name)
 
         playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
         try:
             self.device.playMedia(playqueue)
         except requests.exceptions.ConnectTimeout:
             _LOGGER.error("Timed out playing on %s", self.name)
-
-    def _get_music_media(self, library_name, src):
-        """Find music media and return a Plex media object."""
-        artist_name = src["artist_name"]
-        album_name = src.get("album_name")
-        track_name = src.get("track_name")
-        track_number = src.get("track_number")
-
-        artist = self.plex_server.library.section(library_name).get(artist_name)
-
-        if album_name:
-            album = artist.album(album_name)
-
-            if track_name:
-                return album.track(track_name)
-
-            if track_number:
-                for track in album.tracks():
-                    if int(track.index) == int(track_number):
-                        return track
-                return None
-
-            return album
-
-        if track_name:
-            return artist.searchTracks(track_name, maxresults=1)
-        return artist
-
-    def _get_tv_media(self, library_name, src):
-        """Find TV media and return a Plex media object."""
-        show_name = src["show_name"]
-        season_number = src.get("season_number")
-        episode_number = src.get("episode_number")
-        target_season = None
-        target_episode = None
-
-        show = self.plex_server.library.section(library_name).get(show_name)
-
-        if not season_number:
-            return show
-
-        for season in show.seasons():
-            if int(season.seasonNumber) == int(season_number):
-                target_season = season
-                break
-
-        if target_season is None:
-            _LOGGER.error(
-                "Season not found: %s\\%s - S%sE%s",
-                library_name,
-                show_name,
-                str(season_number).zfill(2),
-                str(episode_number).zfill(2),
-            )
-        else:
-            if not episode_number:
-                return target_season
-
-            for episode in target_season.episodes():
-                if int(episode.index) == int(episode_number):
-                    target_episode = episode
-                    break
-
-            if target_episode is None:
-                _LOGGER.error(
-                    "Episode not found: %s\\%s - S%sE%s",
-                    library_name,
-                    show_name,
-                    str(season_number).zfill(2),
-                    str(episode_number).zfill(2),
-                )
-
-        return target_episode
 
     @property
     def device_state_attributes(self):

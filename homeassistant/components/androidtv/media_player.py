@@ -16,7 +16,7 @@ from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -373,7 +373,7 @@ def adb_decorator(override_available=False):
     return _adb_decorator
 
 
-class ADBDevice(MediaPlayerDevice):
+class ADBDevice(MediaPlayerEntity):
     """Representation of an Android TV or Fire TV device."""
 
     def __init__(
@@ -453,6 +453,11 @@ class ADBDevice(MediaPlayerDevice):
         return {"adb_response": self._adb_response}
 
     @property
+    def media_image_hash(self):
+        """Hash value for media image."""
+        return f"{datetime.now().timestamp()}" if self._screencap else None
+
+    @property
     def name(self):
         """Return the device name."""
         return self._name
@@ -496,11 +501,6 @@ class ADBDevice(MediaPlayerDevice):
     def get_raw_media_data(self):
         """Raw image data."""
         return self.aftv.adb_screencap()
-
-    @property
-    def media_image_hash(self):
-        """Hash value for media image."""
-        return f"{datetime.now().timestamp()}"
 
     @adb_decorator()
     def media_play(self):

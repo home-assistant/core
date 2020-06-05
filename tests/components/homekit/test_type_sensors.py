@@ -41,6 +41,7 @@ async def test_temperature(hass, hk_driver):
     await hass.async_block_till_done()
     acc = TemperatureSensor(hass, hk_driver, "Temperature", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 10  # Sensor
@@ -74,6 +75,7 @@ async def test_humidity(hass, hk_driver):
     await hass.async_block_till_done()
     acc = HumiditySensor(hass, hk_driver, "Humidity", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 10  # Sensor
@@ -97,6 +99,7 @@ async def test_air_quality(hass, hk_driver):
     await hass.async_block_till_done()
     acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 10  # Sensor
@@ -128,6 +131,7 @@ async def test_co(hass, hk_driver):
     await hass.async_block_till_done()
     acc = CarbonMonoxideSensor(hass, hk_driver, "CO", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 10  # Sensor
@@ -167,6 +171,7 @@ async def test_co2(hass, hk_driver):
     await hass.async_block_till_done()
     acc = CarbonDioxideSensor(hass, hk_driver, "CO2", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 10  # Sensor
@@ -206,6 +211,7 @@ async def test_light(hass, hk_driver):
     await hass.async_block_till_done()
     acc = LightSensor(hass, hk_driver, "Light", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 10  # Sensor
@@ -230,6 +236,7 @@ async def test_binary(hass, hk_driver):
 
     acc = BinarySensor(hass, hk_driver, "Window Opening", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 10  # Sensor
@@ -268,6 +275,7 @@ async def test_motion_uses_bool(hass, hk_driver):
 
     acc = BinarySensor(hass, hk_driver, "Motion Sensor", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 10  # Sensor

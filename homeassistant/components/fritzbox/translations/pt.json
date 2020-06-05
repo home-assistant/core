@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "auth_failed": "Nome de utilizador ou palavra passe incorretos"
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

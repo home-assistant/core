@@ -4,7 +4,9 @@
       "user": {
         "title": "ecobee API key",
         "description": "Please enter the API key obtained from ecobee.com.",
-        "data": { "api_key": "API Key" }
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
       },
       "authorize": {
         "title": "Authorize app on ecobee.com",

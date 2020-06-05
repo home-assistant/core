@@ -7,7 +7,7 @@ from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
     FORMAT_NUMBER,
     PLATFORM_SCHEMA,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -117,7 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(alarm_control_panels)
 
 
-class AlarmControlPanelTemplate(AlarmControlPanel):
+class AlarmControlPanelTemplate(AlarmControlPanelEntity):
     """Representation of a templated Alarm Control Panel."""
 
     def __init__(

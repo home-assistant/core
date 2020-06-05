@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_EMAIL, CONF_NAME, UNIT_DEGREE
+from homeassistant.const import CONF_EMAIL, CONF_NAME, DEGREE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -91,7 +91,7 @@ class TorqueReceiveDataView(HomeAssistantView):
 
                 temp_unit = data[key]
                 if "\\xC2\\xB0" in temp_unit:
-                    temp_unit = temp_unit.replace("\\xC2\\xB0", UNIT_DEGREE)
+                    temp_unit = temp_unit.replace("\\xC2\\xB0", DEGREE)
 
                 units[pid] = temp_unit
             elif is_value:

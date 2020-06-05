@@ -1,1 +1,9 @@
-{ "title": "Remote" }
+{
+  "title": "Remote",
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
+    }
+  }
+}
