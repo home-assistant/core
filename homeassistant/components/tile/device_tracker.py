@@ -111,11 +111,7 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
     def _update_from_latest_data(self):
         """Update the entity from the latest data."""
         self._tile = self.coordinator.data[self._tile_uuid]
-        self._attrs.update(
-            {
-                ATTR_ALTITUDE: self._tile["last_tile_state"]["altitude"],
-                ATTR_IS_LOST: self._tile["last_tile_state"]["is_lost"],
-                ATTR_RING_STATE: self._tile["last_tile_state"]["ring_state"],
-                ATTR_VOIP_STATE: self._tile["last_tile_state"]["voip_state"],
-            },
-        )
+        self._attrs[ATTR_ALTITUDE] = self._tile["last_tile_state"]["altitude"]
+        self._attrs[ATTR_IS_LOST] = self._tile["last_tile_state"]["is_lost"]
+        self._attrs[ATTR_RING_STATE] = self._tile["last_tile_state"]["ring_state"]
+        self._attrs[ATTR_VOIP_STATE] = self._tile["last_tile_state"]["voip_state"]
