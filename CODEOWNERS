@@ -315,6 +315,7 @@ homeassistant/components/plugwise/* @CoMPaTech @bouwew
 homeassistant/components/plum_lightpad/* @ColinHarrington
 homeassistant/components/point/* @fredrike
 homeassistant/components/powerwall/* @bdraco @jrester
+homeassistant/components/prometheus/* @knyar
 homeassistant/components/proxmoxve/* @k4ds3 @jhollowe
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
