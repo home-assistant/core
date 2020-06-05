@@ -39,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ENABLED = "enabled"
 ATTR_PORT = "port"
 
+ATTR_SCENE = "scene"
+
 CONF_SOURCE_IGNORE = "source_ignore"
 CONF_SOURCE_NAMES = "source_names"
 CONF_ZONE_IGNORE = "zone_ignore"
@@ -52,6 +54,8 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 ENABLE_OUTPUT_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
     {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string}
 )
+
+SELECT_SCENE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({vol.Required(ATTR_SCENE): cv.string})
 
 SUPPORT_YAMAHA = (
     SUPPORT_VOLUME_SET
@@ -129,7 +133,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             _LOGGER.debug("Ignoring duplicate receiver: %s", name)
 
-    def service_handler(service):
+    def service_handler_enable_output(service):
         """Handle for services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
@@ -149,9 +153,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.services.register(
         DOMAIN,
         SERVICE_ENABLE_OUTPUT,
-        SERVICE_SELECT_SCENE,
-        service_handler,
+        service_handler_enable_output,
         schema=ENABLE_OUTPUT_SCHEMA,
+    )
+
+    def service_handler_select_service(service):
+        """Handle for services."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+
+        _LOGGER.info("Select Scene: %s %s", entity_ids, service.data[ATTR_SCENE])
+
+        devices = [
+            device
+            for device in hass.data[DATA_YAMAHA].values()
+            if not entity_ids or device.entity_id in entity_ids
+        ]
+
+        for device in devices:
+            scene = service.data[ATTR_SCENE]
+
+            device.select_scene(scene)
+            device.schedule_update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SELECT_SCENE,
+        service_handler_select_service,
+        schema=SELECT_SCENE_SCHEMA,
     )
 
     add_entities(devices)
@@ -377,7 +405,8 @@ class YamahaDevice(MediaPlayerEntity):
         self.receiver.enable_output(port, enabled)
 
     def select_scene(self, scene):
-        """Select a scene""":
+        """Select a scene"""
+        _LOGGER.info("Select Scene: %s", scene)
         self.receiver.scene = scene
 
     def select_sound_mode(self, sound_mode):

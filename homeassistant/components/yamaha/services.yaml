@@ -12,10 +12,10 @@ enable_output:
       example: true
 select_scene:
   description: "Select a scene on the receiver"
+  fields:
     entity_id:
       description: Name(s) of entities to enable/disable port on.
       example: "media_player.yamaha"
     scene:
       description: Name of the scene
-      example: "'BD/DVD Movie Viewing', 'TV Viewing', 'NET Audio Listening' or 'Radio Listening'"
-
+      example: "TV Viewing"
