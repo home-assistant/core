@@ -200,6 +200,13 @@ class CoverGroup(CoverEntity):
         """Return current tilt position for all covers."""
         return self._tilt_position
 
+    @property
+    def state_attributes(self):
+        """Return the state attributes for the cover group."""
+        data = getattr(super(), "state_attributes", {})
+        data[ATTR_ENTITY_ID] = self._entities
+        return data
+
     async def async_open_cover(self, **kwargs):
         """Move the covers up."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}

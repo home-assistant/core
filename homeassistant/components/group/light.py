@@ -183,6 +183,13 @@ class LightGroup(light.LightEntity):
         """No polling needed for a light group."""
         return False
 
+    @property
+    def state_attributes(self):
+        """Return the state attributes for the light group."""
+        data = getattr(super(), "state_attributes", {})
+        data[ATTR_ENTITY_ID] = self._entity_ids
+        return data
+
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
