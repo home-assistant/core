@@ -1,6 +1,6 @@
 """Tests for SpeedTest."""
 
-MOCK_SERVER_LIST = {
+MOCK_SERVERS = {
     "*Auto Detect": "",
     "Server1": [{"id": "1"}],
     "Server2": [{"id": "2"}],

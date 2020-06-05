@@ -9,6 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_MANUAL,
     CONF_SERVER_ID,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SERVER,
@@ -27,10 +28,12 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up the Speedtest.net component."""
     coordinator = SpeedTestDataCoordinator(hass, config_entry)
-    if not await coordinator.async_setup():
-        return False
+    await coordinator.async_setup()
 
     await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
     hass.data[DOMAIN] = coordinator
 
     hass.async_create_task(
@@ -59,40 +62,48 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         self.hass = hass
         self.config_entry = config_entry
         self.api = None
-        self.server_list = {}
-
-    async def async_update_server_list(self):
-        """Get list of speedtest servers."""
-        self.server_list[DEFAULT_SERVER] = ""
-        server_list = await self.hass.async_add_executor_job(self.api.get_servers)
-        for server in sorted(
-            server_list.values(), key=lambda server: server[0]["country"]
-        ):
-            self.server_list.update(
-                {f"{server[0]['country']} - {server[0]['name']}": server}
-            )
+        self.servers = {}
+        super().__init__(
+            self.hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=self.async_update,
+            update_interval=timedelta(
+                seconds=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                )
+            ),
+        )
 
     def update_data(self):
         """Get the latest data from speedtest.net."""
+        server_list = self.api.get_servers()
 
-        server_id = self.get_server_id()
+        self.servers[DEFAULT_SERVER] = None
+        for server in sorted(
+            server_list.values(), key=lambda server: server[0]["country"]
+        ):
+            self.servers[f"{server[0]['country']} - {server[0]['name']}"] = server
 
-        self.api.get_servers(servers=[server_id])
+        if self.config_entry.options.get(CONF_SERVER_ID):
+            server_id = self.config_entry.options.get(CONF_SERVER_ID)
+            self.api.closest.clear()
+            self.api.get_servers(servers=[server_id])
+            self.api.get_best_server()
         _LOGGER.debug(
-            "Executing speedtest.net speed test with server_id: %s", server_id
+            "Executing speedtest.net speed test with server_id: %s", self.api.best["id"]
         )
 
         self.api.download()
         self.api.upload()
+        return self.api.results.dict()
 
-    async def _async_update_data(self, *_):
+    async def async_update(self, *_):
         """Update Speedtest data."""
         try:
-            await self.async_update_server_list()
-            await self.hass.async_add_executor_job(self.update_data)
-        except speedtest.ConfigRetrievalError:
+            return await self.hass.async_add_executor_job(self.update_data)
+        except (speedtest.ConfigRetrievalError, speedtest.NoMatchedServers):
             raise UpdateFailed
-        return self.api.results.dict()
 
     async def async_setup(self):
         """Set up SpeedTest."""
@@ -101,29 +112,23 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         except speedtest.ConfigRetrievalError:
             raise ConfigEntryNotReady
 
-        super().__init__(
-            self.hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(
-                minutes=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                )
-            ),
+        async def request_update(event):
+            """Request update."""
+            await self.async_request_refresh()
+
+        self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)
+
+        self.config_entry.add_update_listener(options_updated_listener)
+
+
+async def options_updated_listener(hass, entry):
+    """Handle options update."""
+    if not entry.options[CONF_MANUAL]:
+        hass.data[DOMAIN].update_interval = timedelta(
+            minutes=entry.options[CONF_SCAN_INTERVAL]
         )
-
-        self.hass.services.async_register(
-            DOMAIN, SPEED_TEST_SERVICE, self._async_update_data
-        )
-
-        return True
-
-    def get_server_id(self):
-        """Get server id."""
-        server_id = self.config_entry.options.get(CONF_SERVER_ID)
-        if not server_id:
-            best_server = self.api.get_best_server()
-            server_id = best_server.get("id")
-            _LOGGER.debug("Best server id detected: %s", server_id)
-
-        return server_id
+        await hass.data[DOMAIN].async_request_refresh()
+        return
+    # set the update interval to a very long time
+    # if the user wants to disable auto update
+    hass.data[DOMAIN].update_interval = timedelta(days=7)

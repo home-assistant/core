@@ -25,11 +25,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     speedtestcoordinator = hass.data[DOMAIN]
 
-    dev = []
+    entities = []
     for sensor_type in SENSOR_TYPES:
-        dev.append(SpeedtestSensor(speedtestcoordinator, sensor_type))
+        entities.append(SpeedtestSensor(speedtestcoordinator, sensor_type))
 
-    async_add_entities(dev, True)
+    async_add_entities(entities)
 
 
 class SpeedtestSensor(Entity):
@@ -51,17 +51,18 @@ class SpeedtestSensor(Entity):
     @property
     def unique_id(self):
         """Return sensor unique_id."""
-        return self.name
+        return self.type
 
     @property
     def state(self):
         """Return the state of the device."""
         if self.type == "ping":
-            return self.coordinator.data["ping"]
-        if self.type == "download":
-            return round(self.coordinator.data["download"] / 10 ** 6, 2)
-        if self.type == "upload":
-            return round(self.coordinator.data["upload"] / 10 ** 6, 2)
+            self._state = self.coordinator.data["ping"]
+        elif self.type == "download":
+            self._state = round(self.coordinator.data["download"] / 10 ** 6, 2)
+        elif self.type == "upload":
+            self._state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
+        return self._state
 
     @property
     def unit_of_measurement(self):
@@ -81,20 +82,18 @@ class SpeedtestSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_SERVER_NAME: self.coordinator.data["server"]["name"],
+            ATTR_SERVER_COUNTRY: self.coordinator.data["server"]["country"],
+            ATTR_SERVER_ID: self.coordinator.data["server"]["id"],
+        }
         if self.type == "download":
-            attributes.update(
-                {ATTR_BYTES_RECEIVED: self.coordinator.data["bytes_received"]}
-            )
+            attributes[ATTR_BYTES_RECEIVED] = self.coordinator.data["bytes_received"]
+
         if self.type == "upload":
-            attributes.update({ATTR_BYTES_SENT: self.coordinator.data["bytes_sent"]})
-        attributes.update(
-            {
-                ATTR_SERVER_NAME: self.coordinator.data["server"]["name"],
-                ATTR_SERVER_COUNTRY: self.coordinator.data["server"]["country"],
-                ATTR_SERVER_ID: self.coordinator.data["server"]["id"],
-            }
-        )
+            attributes[ATTR_BYTES_SENT] = self.coordinator.data["bytes_sent"]
+
         return attributes
 
     async def async_added_to_hass(self):
@@ -103,3 +102,7 @@ class SpeedtestSensor(Entity):
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
+
+    async def async_update(self):
+        """Request coordinator to update data."""
+        await self.coordinator.async_request_update()

@@ -14,13 +14,12 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SERVER,
-    DOMAIN,
 )
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-import
 class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle SpeedTest config flow."""
 
@@ -50,7 +49,7 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize options flow."""
         self.config_entry = config_entry
-        self._server_list = {}
+        self._servers = {}
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -59,19 +58,19 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             server_name = user_input[CONF_SERVER_NAME]
             if server_name != "*Auto Detect":
-                server_id = self._server_list[server_name][0]["id"]
+                server_id = self._servers[server_name][0]["id"]
                 user_input[CONF_SERVER_ID] = server_id
             else:
                 user_input[CONF_SERVER_ID] = None
 
             return self.async_create_entry(title="", data=user_input)
 
-        self._server_list = self.hass.data[DOMAIN].server_list
+        self._servers = self.hass.data[DOMAIN].servers
         options = {
             vol.Optional(
                 CONF_SERVER_NAME,
                 default=self.config_entry.options.get(CONF_SERVER_NAME, DEFAULT_SERVER),
-            ): vol.In(self._server_list.keys()),
+            ): vol.In(self._servers.keys()),
             vol.Optional(
                 CONF_SCAN_INTERVAL,
                 default=self.config_entry.options.get(
