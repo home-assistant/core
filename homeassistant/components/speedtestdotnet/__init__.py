@@ -112,7 +112,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         except speedtest.ConfigRetrievalError:
             raise ConfigEntryNotReady
 
-        async def request_update(event):
+        async def request_update(call):
             """Request update."""
             await self.async_request_refresh()
 

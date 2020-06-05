@@ -23,11 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Speedtestdotnet sensors."""
 
-    speedtestcoordinator = hass.data[DOMAIN]
+    speedtest_coordinator = hass.data[DOMAIN]
 
     entities = []
     for sensor_type in SENSOR_TYPES:
-        entities.append(SpeedtestSensor(speedtestcoordinator, sensor_type))
+        entities.append(SpeedtestSensor(speedtest_coordinator, sensor_type))
 
     async_add_entities(entities)
 
@@ -40,7 +40,6 @@ class SpeedtestSensor(Entity):
         self._name = SENSOR_TYPES[sensor_type][0]
         self.coordinator = coordinator
         self.type = sensor_type
-        self._state = None
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
 
     @property
@@ -56,13 +55,14 @@ class SpeedtestSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
+        state = None
         if self.type == "ping":
-            self._state = self.coordinator.data["ping"]
+            state = self.coordinator.data["ping"]
         elif self.type == "download":
-            self._state = round(self.coordinator.data["download"] / 10 ** 6, 2)
+            state = round(self.coordinator.data["download"] / 10 ** 6, 2)
         elif self.type == "upload":
-            self._state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
-        return self._state
+            state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
+        return state
 
     @property
     def unit_of_measurement(self):

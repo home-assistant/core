@@ -1,14 +1,39 @@
 """Tests for SpeedTest."""
 
 MOCK_SERVERS = {
-    "*Auto Detect": "",
-    "Server1": [{"id": "1"}],
-    "Server2": [{"id": "2"}],
+    1: [
+        {
+            "url": "http://server_1:8080/speedtest/upload.php",
+            "lat": "1",
+            "lon": "1",
+            "name": "Server1",
+            "country": "Country1",
+            "cc": "LL1",
+            "sponsor": "Server1",
+            "id": "1",
+            "host": "server1:8080",
+            "d": 1,
+        }
+    ],
+    2: [
+        {
+            "url": "http://server_2:8080/speedtest/upload.php",
+            "lat": "2",
+            "lon": "2",
+            "name": "Server2",
+            "country": "Country2",
+            "cc": "LL2",
+            "sponsor": "server2",
+            "id": "2",
+            "host": "server2:8080",
+            "d": 2,
+        }
+    ],
 }
 
 MOCK_RESULTS = {
-    "download": 15698075.905353006,
-    "upload": 2520647.0195683613,
+    "download": 1024000,
+    "upload": 1024000,
     "ping": 18.465,
     "server": {
         "url": "http://test_server:8080/speedtest/upload.php",
@@ -26,3 +51,5 @@ MOCK_RESULTS = {
     "bytes_received": 19712300,
     "share": None,
 }
+
+MOCK_STATES = {"ping": "18.465", "download": "1.02", "upload": "1.02"}
