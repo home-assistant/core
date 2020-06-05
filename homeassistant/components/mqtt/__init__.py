@@ -1141,6 +1141,8 @@ class MqttAvailability(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         availability_topic = self._avail_config.get(CONF_AVAILABILITY_TOPIC)
+        if not self.hass.data[DATA_MQTT].connected:
+            return False
         return availability_topic is None or self._available
 
 

@@ -246,11 +246,6 @@ class MqttBinarySensor(
         self.async_write_ha_state()
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the binary sensor."""
         return self._config[CONF_NAME]

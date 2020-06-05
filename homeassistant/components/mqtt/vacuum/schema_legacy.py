@@ -378,11 +378,6 @@ class MqttVacuum(
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed for an MQTT vacuum."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if vacuum is on."""
         return self._cleaning

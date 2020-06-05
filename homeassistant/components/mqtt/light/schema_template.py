@@ -362,14 +362,6 @@ class MqttTemplate(
         return self._white_value
 
     @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
-
-    @property
     def name(self):
         """Return the name of the entity."""
         return self._config[CONF_NAME]
