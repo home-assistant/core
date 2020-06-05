@@ -71,21 +71,6 @@ class BasicChannel(ZigbeeChannel):
         6: "Emergency mains and transfer switch",
     }
 
-    async def async_configure(self):
-        """Configure this channel."""
-        await super().async_configure()
-        await self.async_initialize(False)
-
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        if not self._ch_pool.skip_configuration or from_cache:
-            await self.get_attribute_value("power_source", from_cache=from_cache)
-        await super().async_initialize(from_cache)
-
-    def get_power_source(self):
-        """Get the power source."""
-        return self.cluster.get("power_source")
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
 class BinaryInput(ZigbeeChannel):
