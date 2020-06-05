@@ -919,8 +919,13 @@ ya_ma==0.3.8
 
 # homeassistant.components.cast
 # homeassistant.components.discovery
+# homeassistant.components.dyson
 # homeassistant.components.homekit
+# homeassistant.components.homekit_controller
+# homeassistant.components.soundtouch
 # homeassistant.components.ssdp
+# homeassistant.components.vizio
+# homeassistant.components.xiaomi_miio
 # homeassistant.components.zeroconf
 zeroconf==0.27.1
 
