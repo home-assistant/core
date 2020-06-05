@@ -2,9 +2,21 @@
 
 from datetime import timedelta
 
-from axis.event_stream import CLASS_INPUT, CLASS_OUTPUT
+from axis.event_stream import (
+    CLASS_INPUT,
+    CLASS_LIGHT,
+    CLASS_MOTION,
+    CLASS_OUTPUT,
+    CLASS_SOUND,
+)
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SOUND,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -12,6 +24,13 @@ from homeassistant.util.dt import utcnow
 
 from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
+
+DEVICE_CLASS = {
+    CLASS_INPUT: DEVICE_CLASS_CONNECTIVITY,
+    CLASS_LIGHT: DEVICE_CLASS_LIGHT,
+    CLASS_MOTION: DEVICE_CLASS_MOTION,
+    CLASS_SOUND: DEVICE_CLASS_SOUND,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -84,3 +103,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             )
 
         return super().name
+
+    @property
+    def device_class(self):
+        """Return the class of the sensor."""
+        return DEVICE_CLASS.get(self.event.CLASS)

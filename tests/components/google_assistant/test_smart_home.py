@@ -769,10 +769,16 @@ async def test_device_media_player(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {},
+                    "attributes": {
+                        "supportActivityState": True,
+                        "supportPlaybackState": True,
+                    },
                     "id": sensor.entity_id,
                     "name": {"name": sensor.name},
-                    "traits": ["action.devices.traits.OnOff"],
+                    "traits": [
+                        "action.devices.traits.OnOff",
+                        "action.devices.traits.MediaState",
+                    ],
                     "type": google_type,
                     "willReportState": False,
                 }

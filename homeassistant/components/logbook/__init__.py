@@ -171,8 +171,17 @@ class LogbookView(HomeAssistantView):
             period = int(period)
 
         entity_id = request.query.get("entity")
-        start_day = dt_util.as_utc(datetime) - timedelta(days=period - 1)
-        end_day = start_day + timedelta(days=period)
+
+        end_time = request.query.get("end_time")
+        if end_time is None:
+            start_day = dt_util.as_utc(datetime) - timedelta(days=period - 1)
+            end_day = start_day + timedelta(days=period)
+        else:
+            start_day = datetime
+            end_day = dt_util.parse_datetime(end_time)
+            if end_day is None:
+                return self.json_message("Invalid end_time", HTTP_BAD_REQUEST)
+
         hass = request.app["hass"]
 
         def json_events():
