@@ -2243,7 +2243,7 @@ zengge==0.2
 # homeassistant.components.homekit
 # homeassistant.components.ssdp
 # homeassistant.components.zeroconf
-zeroconf==0.27.1
+zeroconf==0.27.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.39
