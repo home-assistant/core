@@ -1,0 +1,12 @@
+{
+  "domain": "climacell",
+  "name": "ClimaCell",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/climacell",
+  "requirements": ["pyclimacell==0.7.0"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@raman325"]
+}

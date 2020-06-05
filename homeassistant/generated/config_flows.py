@@ -40,6 +40,7 @@ FLOWS = [
     "canary",
     "cast",
     "cert_expiry",
+    "climacell",
     "cloudflare",
     "control4",
     "coolmaster",

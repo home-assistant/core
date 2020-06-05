@@ -1,0 +1,29 @@
+{
+  "title": "ClimaCell",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Forecasts can be disabled by choosing `(Disable Forecasts)` for [%key:component::climacell::config::step::user::data::forecast_frequency%].",
+        "data": {
+          "name": "Name",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "unit_system": "Unit System",
+          "forecast_frequency": "Forecast Frequency",
+          "aqi_country": "Air Quality Index Country Standard"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "rate_limited": "[%key:common::config_flow::data::api_key%] is currently rate limited, please try again later."
+    },
+    "abort": {
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+      "updated_entry": "An entry has been updated via configuration import."
+    }
+  }
+}
