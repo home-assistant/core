@@ -4,5 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/speedtestdotnet",
   "requirements": ["speedtest-cli==2.1.2"],
-  "codeowners": ["@engrbm87"]
+  "codeowners": ["@rohankapoorcom", "@engrbm87"]
 }
