@@ -21,20 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         node = stick.node(mac)
         for switch_type in node.get_switches():
             if switch_type in SWITCHES:
-                if (CURRENT_POWER_SENSOR_ID in node.get_sensors()) and (
-                    TODAY_ENERGY_SENSOR_ID in node.get_sensors()
-                ):
-                    entities.append(
-                        PlugwiseSwitchWithPower(
-                            node,
-                            mac,
-                            switch_type,
-                            CURRENT_POWER_SENSOR_ID,
-                            TODAY_ENERGY_SENSOR_ID,
-                        )
-                    )
-                else:
-                    entities.append(PlugwiseSwitch(node, mac, switch_type))
+                entities.append(PlugwiseSwitch(node, mac, switch_type))
     async_add_entities(entities)
 
 
@@ -46,7 +33,28 @@ class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
         super().__init__(node, mac)
         self.switch_id = switch_id
         self.switch_type = SWITCHES[self.switch_id]
-        self.node_callbacks = (AVAILABLE_SENSOR_ID, self.switch_id)
+        if (CURRENT_POWER_SENSOR_ID in node.get_sensors()) and (
+            TODAY_ENERGY_SENSOR_ID in node.get_sensors()
+        ):
+            self.node_callbacks = (
+                AVAILABLE_SENSOR_ID,
+                switch_id,
+                CURRENT_POWER_SENSOR_ID,
+                TODAY_ENERGY_SENSOR_ID,
+            )
+        else:
+            self.node_callbacks = (AVAILABLE_SENSOR_ID, self.switch_id)
+
+    @property
+    def current_power_w(self):
+        """Return the current power usage in W."""
+        if getattr(self._node, SENSORS[CURRENT_POWER_SENSOR_ID]["state"])():
+            return float(
+                round(
+                    getattr(self._node, SENSORS[CURRENT_POWER_SENSOR_ID]["state"])(), 2
+                )
+            )
+        return None
 
     @property
     def device_class(self):
@@ -68,6 +76,19 @@ class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
         """Return true if the switch is on."""
         return getattr(self._node, self.switch_type["state"])()
 
+    @property
+    def today_energy_kwh(self):
+        """Return the today total energy usage in kWh."""
+        if getattr(self._node, SENSORS[TODAY_ENERGY_SENSOR_ID]["state"])():
+            return float(
+                round(
+                    getattr(self._node, SENSORS[TODAY_ENERGY_SENSOR_ID]["state"])()
+                    / 1000,
+                    3,
+                )
+            )
+        return None
+
     def turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
         getattr(self._node, self.switch_type["switch"])(False)
@@ -75,43 +96,6 @@ class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
     def turn_on(self, **kwargs):
         """Instruct the switch to turn on."""
         getattr(self._node, self.switch_type["switch"])(True)
-
-    @property
-    def unique_id(self):
-        """Get unique ID."""
-        return f"{self._mac}-{self.switch_id}"
-
-
-class PlugwiseSwitchWithPower(PlugwiseSwitch, SwitchEntity):
-    """Representation of a switch with power measurement."""
-
-    def __init__(self, node, mac, switch_id, power_sensor_id, energy_sensor_id):
-        """Initialize a Node entity."""
-        super().__init__(node, mac, switch_id)
-        self.power_sensor = SENSORS[power_sensor_id]
-        self.energy_sensor = SENSORS[energy_sensor_id]
-        self.sensor_callbacks = (
-            AVAILABLE_SENSOR_ID,
-            switch_id,
-            power_sensor_id,
-            energy_sensor_id,
-        )
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        if getattr(self._node, self.power_sensor["state"])():
-            return float(round(getattr(self._node, self.power_sensor["state"])(), 2))
-        return None
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        if getattr(self._node, self.energy_sensor["state"])():
-            return float(
-                round(getattr(self._node, self.energy_sensor["state"])() / 1000, 3)
-            )
-        return None
 
     @property
     def unique_id(self):
