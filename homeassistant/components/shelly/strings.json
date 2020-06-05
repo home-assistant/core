@@ -1,0 +1,33 @@
+{
+  "title": "Shelly",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Shelly device setup",
+        "description": "By clicking submit, we will search your network for Shelly devices.\n\nPlease make sure your devices are connected to the network and to the MQTT broker."
+      },
+      "device": {
+        "data": {
+          "device_id": "Select Shelly device"
+        },
+        "title": "Select Shelly device"
+      },
+      "topic": {
+        "data": {
+          "topic": "MQTT topic prefix for device"
+        },
+        "title": "Configure the MQTT topic prefix"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices": "Could not find any new devices",
+      "mqtt_required": "The MQTT integration is not set up"
+    }
+  }
+}
