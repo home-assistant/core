@@ -21,9 +21,9 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
-from . import DOMAIN
+# import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the NX584 platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -58,50 +58,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     url = f"http://{host}:{port}"
 
-    entity = NX584Alarm(hass, url, name)
+    device = NX584Alarm(url, name)
 
-    try:
-        add_entities([entity])
-    except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error("Unable to connect to NX584: %s", str(ex))
-        return
+    async_add_entities([device])
 
-    def alarm_bypass_handler(service):
-        """Register zone bypass handler."""
-        zone = service.data.get(ATTR_ZONE)
-        entity.alarm_bypass(zone)
+    platform = entity_platform.current_platform.get()
 
-    def alarm_unbypass_handler(service):
-        """Register zone unbypass handler."""
-        zone = service.data.get(ATTR_ZONE)
-        entity.alarm_unbypass(zone)
-
-    hass.services.register(
-        DOMAIN, SERVICE_BYPASS_ZONE, alarm_bypass_handler, schema=BYPASS_ZONE_SCHEMA,
+    platform.async_register_entity_service(
+        SERVICE_BYPASS_ZONE, BYPASS_ZONE_SCHEMA, "alarm_bypass",
     )
 
-    hass.services.register(
-        DOMAIN,
-        SERVICE_UNBYPASS_ZONE,
-        alarm_unbypass_handler,
-        schema=BYPASS_ZONE_SCHEMA,
+    platform.async_register_entity_service(
+        SERVICE_UNBYPASS_ZONE, BYPASS_ZONE_SCHEMA, "alarm_unbypass",
     )
 
 
 class NX584Alarm(alarm.AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
-    def __init__(self, hass, url, name):
+    def __init__(self, url, name):
         """Init the nx584 alarm panel."""
-
-        self._hass = hass
         self._name = name
         self._url = url
         self._alarm = client.Client(self._url)
-        # Do an initial list operation so that we will try to actually
-        # talk to the API and trigger a requests exception for setup_platform()
-        # to catch
-        self._alarm.list_zones()
         self._state = None
 
     @property
