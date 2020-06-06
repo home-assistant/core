@@ -122,6 +122,11 @@ class MeteoFranceSensor(Entity):
         return SENSOR_TYPES[self._type][ENTITY_ENABLE]
 
     @property
+    def available(self):
+        """Return if state is available."""
+        return self.coordinator.last_update_success
+
+    @property
     def should_poll(self) -> bool:
         """No polling needed."""
         return False

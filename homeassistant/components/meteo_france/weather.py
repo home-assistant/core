@@ -47,11 +47,6 @@ class MeteoFranceWeather(WeatherEntity):
         self._city_name = self.coordinator.data.position["name"]
 
     @property
-    def available(self):
-        """Return if state is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def unique_id(self):
         """Return the unique id of the sensor."""
         return self._city_name
@@ -75,6 +70,11 @@ class MeteoFranceWeather(WeatherEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
+
+    @property
+    def pressure(self):
+        """Return the pressure."""
+        return self.coordinator.data.forecast[2]["sea_level"]
 
     @property
     def humidity(self):
@@ -121,6 +121,11 @@ class MeteoFranceWeather(WeatherEntity):
                 }
             )
         return forecast_data
+
+    @property
+    def available(self):
+        """Return if state is available."""
+        return self.coordinator.last_update_success
 
     @property
     def should_poll(self) -> bool:
