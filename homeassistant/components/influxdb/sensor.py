@@ -1,6 +1,7 @@
 """InfluxDB component which allows you to get data from an Influx database."""
 from datetime import timedelta
 import logging
+from typing import Dict
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -9,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -17,6 +19,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TOKEN,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_URL,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
@@ -28,12 +31,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from . import (
+    API_VERSION_2,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
-    CONF_API_V2,
     CONF_BUCKET,
     CONF_DB_NAME,
     CONF_ORG,
+    DEFAULT_API_VERSION,
     create_influx_url,
+    validate_version_specific_config,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,38 +96,54 @@ _QUERY_SCHEMA = {
     ),
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION).extend(
-    {
-        vol.Exclusive(CONF_QUERIES, "queries"): [_QUERY_SCHEMA["InfluxQL"]],
-        vol.Exclusive(CONF_QUERIES_FLUX, "queries"): [_QUERY_SCHEMA["Flux"]],
-    }
+
+def validate_query_format_for_version(conf: Dict) -> Dict:
+    """Ensure queries are provided in correct format based on API version."""
+    if conf[CONF_API_VERSION] == API_VERSION_2:
+        if CONF_QUERIES_FLUX not in conf:
+            raise vol.Invalid(
+                f"{CONF_QUERIES_FLUX} is required when {CONF_API_VERSION} is {API_VERSION_2}"
+            )
+
+    else:
+        if CONF_QUERIES not in conf:
+            raise vol.Invalid(
+                f"{CONF_QUERIES} is required when {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
+            )
+
+    return conf
+
+
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION).extend(
+        {
+            vol.Exclusive(CONF_QUERIES, "queries"): [_QUERY_SCHEMA["InfluxQL"]],
+            vol.Exclusive(CONF_QUERIES_FLUX, "queries"): [_QUERY_SCHEMA["Flux"]],
+        }
+    ),
+    validate_version_specific_config,
+    validate_query_format_for_version,
+    create_influx_url,
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the InfluxDB component."""
-    use_v2_api = config.get(CONF_API_V2) is not None
+    use_v2_api = config[CONF_API_VERSION] == API_VERSION_2
     queries = None
 
     if use_v2_api:
         influx_conf = {
-            "url": create_influx_url(config),
+            "url": config[CONF_URL],
             "token": config[CONF_TOKEN],
             "org": config[CONF_ORG],
         }
         bucket = config[CONF_BUCKET]
-        queries = config.get(CONF_QUERIES_FLUX)
+        queries = config[CONF_QUERIES_FLUX]
 
-        if queries is None:
-            _LOGGER.error(
-                "'queries_flux' is required when using InfluxDB's V2 API. "
-                "See integration documentation for examples of using flux "
-                "syntax for queries."
-            )
-        else:
-            for v2_query in queries:
-                if CONF_BUCKET not in v2_query:
-                    v2_query[CONF_BUCKET] = bucket
+        for v2_query in queries:
+            if CONF_BUCKET not in v2_query:
+                v2_query[CONF_BUCKET] = bucket
 
     else:
         influx_conf = {
@@ -148,23 +169,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if CONF_SSL in config:
             influx_conf["ssl"] = config[CONF_SSL]
 
-        queries = config.get(CONF_QUERIES)
+        queries = config[CONF_QUERIES]
 
-        if queries is None:
-            _LOGGER.error(
-                "'queries' is required when using InfluxDB's V1 API. "
-                "See integration documentation for examples of using InfluxQL "
-                "syntax for queries."
-            )
+    dev = []
+    for query in queries:
+        sensor = InfluxSensor(hass, influx_conf, query, use_v2_api)
+        if sensor.connected:
+            dev.append(sensor)
 
-    if queries is not None:
-        dev = []
-        for query in queries:
-            sensor = InfluxSensor(hass, influx_conf, query, use_v2_api)
-            if sensor.connected:
-                dev.append(sensor)
-
-        add_entities(dev, True)
+    add_entities(dev, True)
 
 
 class InfluxSensor(Entity):
@@ -310,7 +323,7 @@ class InfluxSensorDataV2:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data by querying influx."""
-        _LOGGER.info("Rendering query: %s", self.query)
+        _LOGGER.debug("Rendering query: %s", self.query)
         try:
             rendered_query = self.query.render()
         except TemplateError as ex:

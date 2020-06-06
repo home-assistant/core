@@ -5,6 +5,7 @@ import queue
 import re
 import threading
 import time
+from typing import Dict
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -14,6 +15,7 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -24,6 +26,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_TOKEN,
+    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
@@ -37,7 +40,6 @@ from homeassistant.helpers.entity_values import EntityValues
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_API_V2 = "api_v2"
 CONF_DB_NAME = "database"
 CONF_BUCKET = "bucket"
 CONF_ORG = "organization"
@@ -55,8 +57,10 @@ DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
 DEFAULT_SSL_V2 = True
 DEFAULT_BUCKET = "Home Assistant"
 DEFAULT_VERIFY_SSL = True
-DOMAIN = "influxdb"
+DEFAULT_API_VERSION = "1"
 
+DOMAIN = "influxdb"
+API_VERSION_2 = "2"
 TIMEOUT = 5
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
@@ -67,8 +71,59 @@ BATCH_BUFFER_SIZE = 100
 
 DB_CONNECTION_FAILURE_MSG = ()
 
+
+def create_influx_url(conf: Dict) -> Dict:
+    """Build URL used from config inputs and default when necessary."""
+    if conf[CONF_API_VERSION] == API_VERSION_2:
+        if CONF_SSL not in conf:
+            conf[CONF_SSL] = DEFAULT_SSL_V2
+        if CONF_HOST not in conf:
+            conf[CONF_HOST] = DEFAULT_HOST_V2
+
+        url = conf[CONF_HOST]
+        if conf[CONF_SSL]:
+            url = f"https://{url}"
+        else:
+            url = f"http://{url}"
+
+        if CONF_PORT in conf:
+            url = f"{url}:{conf[CONF_PORT]}"
+
+        if CONF_PATH in conf:
+            url = f"{url}{conf[CONF_PATH]}"
+
+        conf[CONF_URL] = url
+
+    return conf
+
+
+def validate_version_specific_config(conf: Dict) -> Dict:
+    """Ensure correct config fields are provided based on API version used."""
+    if conf[CONF_API_VERSION] == API_VERSION_2:
+        if CONF_TOKEN not in conf:
+            raise vol.Invalid(
+                f"{CONF_TOKEN} and {CONF_BUCKET} are required when {CONF_API_VERSION} is {API_VERSION_2}"
+            )
+
+        if CONF_USERNAME in conf:
+            raise vol.Invalid(
+                f"{CONF_USERNAME} and {CONF_PASSWORD} are only allowed when {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
+            )
+
+    else:
+        if CONF_TOKEN in conf:
+            raise vol.Invalid(
+                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when {CONF_API_VERSION} is {API_VERSION_2}"
+            )
+
+    return conf
+
+
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     # Connection config for V1 and V2 APIs.
+    vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
+        vol.Coerce(str), vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
+    ),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PATH): cv.string,
     vol.Optional(CONF_PORT): cv.port,
@@ -79,15 +134,14 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     # Connection config for V2 API only.
-    vol.Inclusive(CONF_API_V2, "v2_api_config"): True,
-    vol.Inclusive(CONF_TOKEN, "v2_api_config"): cv.string,
-    vol.Inclusive(CONF_ORG, "v2_api_config"): cv.string,
+    vol.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
+    vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
 }
 
 _CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string})
 
-_CONFIG_SCHEMA_PLATFORM = vol.Schema(
+_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
             {
@@ -125,7 +179,13 @@ _CONFIG_SCHEMA_PLATFORM = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: _CONFIG_SCHEMA_PLATFORM.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION)},
+    {
+        DOMAIN: vol.All(
+            _CONFIG_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION),
+            validate_version_specific_config,
+            create_influx_url,
+        ),
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -156,39 +216,17 @@ def get_influx_connection(client_kwargs, bucket):
     return influx
 
 
-def create_influx_url(conf):
-    """Build URL used from config inputs and default when necessary."""
-    if CONF_SSL not in conf:
-        conf[CONF_SSL] = DEFAULT_SSL_V2
-    if CONF_HOST not in conf:
-        conf[CONF_HOST] = DEFAULT_HOST_V2
-
-    url = conf[CONF_HOST]
-    if conf[CONF_SSL]:
-        url = f"https://{url}"
-    else:
-        url = f"http://{url}"
-
-    if CONF_PORT in conf:
-        url = f"{url}:{conf[CONF_PORT]}"
-
-    if CONF_PATH in conf:
-        url = f"{url}{conf[CONF_PATH]}"
-
-    return url
-
-
 def setup(hass, config):
     """Set up the InfluxDB component."""
     conf = config[DOMAIN]
-    use_v2_api = conf.get(CONF_API_V2) is not None
+    use_v2_api = conf[CONF_API_VERSION] == API_VERSION_2
     bucket = None
     kwargs = {
         "timeout": TIMEOUT,
     }
 
     if use_v2_api:
-        kwargs["url"] = create_influx_url(conf)
+        kwargs["url"] = conf[CONF_URL]
         kwargs["token"] = conf[CONF_TOKEN]
         kwargs["org"] = conf[CONF_ORG]
         bucket = conf[CONF_BUCKET]
