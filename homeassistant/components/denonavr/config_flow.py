@@ -208,13 +208,18 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_get_mac(self, host):
         """Get the mac address of the DenonAVR receiver."""
-        mac_address = await self.hass.async_add_executor_job(
-            partial(get_mac_address, **{"ip": host})
-        )
-        if not mac_address:
+        try:
             mac_address = await self.hass.async_add_executor_job(
-                partial(get_mac_address, **{"hostname": host})
+                partial(get_mac_address, **{"ip": host})
             )
+            if not mac_address:
+                mac_address = await self.hass.async_add_executor_job(
+                    partial(get_mac_address, **{"hostname": host})
+                )
+        except Exception as err:
+            _LOGGER.error("Unable to get mac address: %s", err)
+            mac_address = None
+
         if mac_address is not None:
             mac_address = format_mac(mac_address)
         return mac_address
