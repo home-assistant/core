@@ -44,8 +44,8 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        organization = user_input.get(CONF_ORG)
-        project = user_input.get(CONF_PROJECT)
+        organization = user_input[CONF_ORG]
+        project = user_input[CONF_PROJECT]
         pat = user_input.get(CONF_PAT)
 
         client = DevOpsClient()
