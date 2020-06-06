@@ -13,7 +13,6 @@
                     "api_key": "API-n\u00f8kkel (valgfritt)",
                     "host": "Vert",
                     "name": "Navn",
-                    "port": "",
                     "ssl": "Bruk SSL",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 }

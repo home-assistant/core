@@ -321,7 +321,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200603.1
+home-assistant-frontend==20200603.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -399,7 +399,7 @@ nessclient==0.9.15
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.6.0
+netdisco==2.7.0
 
 # homeassistant.components.nexia
 nexia==0.9.3

@@ -9,8 +9,7 @@
                 "data": {
                     "city": "By"
                 },
-                "description": "Fyll inn postnummeret (bare for Frankrike, anbefalt) eller bynavn",
-                "title": ""
+                "description": "Fyll inn postnummeret (bare for Frankrike, anbefalt) eller bynavn"
             }
         }
     }
