@@ -124,24 +124,24 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
             build: DevOpsBuild = await self.client.get_build(
                 self.organization, self.project, self.build.id
             )
-            self._state = build.build_number
-            self._attributes = {
-                "definition_id": build.definition.id,
-                "definition_name": build.definition.name,
-                "id": build.id,
-                "reason": build.reason,
-                "result": build.result,
-                "source_branch": build.source_branch,
-                "source_version": build.source_version,
-                "status": build.status,
-                "url": build.links.web,
-                "queue_time": build.queue_time,
-                "start_time": build.start_time,
-                "finish_time": build.finish_time,
-            }
-            self._available = True
         except aiohttp.ClientError as exception:
             _LOGGER.warning(exception)
             self._available = False
             return False
+        self._state = build.build_number
+        self._attributes = {
+            "definition_id": build.definition.id,
+            "definition_name": build.definition.name,
+            "id": build.id,
+            "reason": build.reason,
+            "result": build.result,
+            "source_branch": build.source_branch,
+            "source_version": build.source_version,
+            "status": build.status,
+            "url": build.links.web,
+            "queue_time": build.queue_time,
+            "start_time": build.start_time,
+            "finish_time": build.finish_time,
+        }
+        self._available = True
         return True
