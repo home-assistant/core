@@ -34,8 +34,8 @@ async def async_setup_entry(
     """Set up Azure DevOps sensor based on a config entry."""
     instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
     client = hass.data[instance_key][DATA_AZURE_DEVOPS_CLIENT]
-    organization = entry.data[instance_key][DATA_ORG]
-    project = entry.data[instance_key][DATA_PROJECT]
+    organization = entry.data[DATA_ORG]
+    project = entry.data[DATA_PROJECT]
     sensors = []
 
     try:
