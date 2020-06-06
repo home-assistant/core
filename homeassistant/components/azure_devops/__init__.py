@@ -55,12 +55,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     """Unload Azure DevOps config entry."""
-    # Unload sensors
-    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-
     del hass.data[f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"]
 
-    return True
+    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
 
 class AzureDevOpsEntity(Entity):
