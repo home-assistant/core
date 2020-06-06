@@ -244,7 +244,8 @@ class WizBulb(Light):
 
     def update_temperature(self):
         """Update the temperature."""
-        if self._light.state.get_colortemp() is None:
+        colortemp = self._light.state.get_colortemp()
+        if colortemp is None or colortemp == 0:
             return
         try:
             temperature = color_utils.color_temperature_kelvin_to_mired(
