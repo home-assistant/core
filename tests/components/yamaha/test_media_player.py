@@ -3,6 +3,7 @@ import unittest
 
 import homeassistant.components.media_player as mp
 from homeassistant.components.yamaha import media_player as yamaha
+from homeassistant.components.yamaha.const import DOMAIN
 from homeassistant.setup import setup_component
 
 from tests.async_mock import MagicMock, patch
@@ -53,7 +54,16 @@ class TestYamahaMediaPlayer(unittest.TestCase):
             "enabled": enabled,
         }
 
-        self.hass.services.call(yamaha.DOMAIN, yamaha.SERVICE_ENABLE_OUTPUT, data, True)
+        self.hass.services.call(DOMAIN, yamaha.SERVICE_ENABLE_OUTPUT, data, True)
+
+    def select_scene(self, scene):
+        """Select Scene."""
+        data = {
+            "entity_id": "media_player.yamaha_receiver_main_zone",
+            "scene": scene,
+        }
+
+        self.hass.services.call(DOMAIN, yamaha.SERVICE_SELECT_SCENE, data, True)
 
     def create_receiver(self, mock_rxv):
         """Create a mocked receiver."""
@@ -74,3 +84,11 @@ class TestYamahaMediaPlayer(unittest.TestCase):
 
         self.enable_output("hdmi2", False)
         self.main_zone.enable_output.assert_called_with("hdmi2", False)
+
+    @patch("rxv.RXV")
+    def test_select_scene(self, mock_rxv):
+        """Test selecting scenes."""
+        self.create_receiver(mock_rxv)
+
+        self.select_scene("TV Viewing")
+        self.main_zone.select_scene.assert_called_with("TV Viewing")
