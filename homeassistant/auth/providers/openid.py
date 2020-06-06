@@ -203,10 +203,10 @@ class OpenIdAuthProvider(AuthProvider):
 
         for credential in await self.async_credentials():
             if credential.data["sub"] == subject:
-                _LOGGER.info("Accepting credential for %s", flow_result["email"])
+                _LOGGER.info("Accepting credential for %s", subject)
                 return credential
 
-        _LOGGER.info("Creating credential for %s", flow_result["email"])
+        _LOGGER.info("Creating credential for %s", subject)
         return self.async_create_credentials(flow_result)
 
     async def async_user_meta_for_credentials(
