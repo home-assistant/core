@@ -134,17 +134,19 @@ class NetatmoCamera(Camera, NetatmoBase):
             if not data.get("event_type"):
                 return
 
-            if not data.get("home"):
+            if not data.get("camera_id"):
                 return
 
             if (
                 data["home_id"] == self._home_id
                 and data["camera_id"] == self._camera_id
             ):
-                if data["event_type"] == "NACamera-off":
-                    self._alim_status = self.is_streaming = "off"
-                elif data["event_type"] == "NACamera-on":
-                    self._alim_status = self.is_streaming = "on"
+                if data["push_type"] == "NACamera-off":
+                    self.is_streaming = False
+                    self._status = "off"
+                elif data["push_type"] == "NACamera-on":
+                    self.is_streaming = True
+                    self._status = "on"
 
                 self.schedule_update_ha_state()
                 return
@@ -218,11 +220,6 @@ class NetatmoCamera(Camera, NetatmoBase):
         return SUPPORT_STREAM
 
     @property
-    def is_recording(self):
-        """Return true if the device is recording."""
-        return bool(self._status == "on")
-
-    @property
     def brand(self):
         """Return the camera brand."""
         return MANUFACTURER
@@ -275,4 +272,4 @@ class NetatmoCamera(Camera, NetatmoBase):
         self._sd_status = camera.get("sd_status")
         self._alim_status = camera.get("alim_status")
         self._is_local = camera.get("is_local")
-        self.is_streaming = self._alim_status == "on"
+        self.is_streaming = bool(self._status == "on")
