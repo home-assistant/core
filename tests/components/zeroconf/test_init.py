@@ -40,7 +40,7 @@ def get_service_info_mock(service_type, name):
     return ServiceInfo(
         service_type,
         name,
-        address=b"\n\x00\x00\x14",
+        addresses=[b"\n\x00\x00\x14"],
         port=80,
         weight=0,
         priority=0,
@@ -56,7 +56,7 @@ def get_homekit_info_mock(model, pairing_status):
         return ServiceInfo(
             service_type,
             name,
-            address=b"\n\x00\x00\x14",
+            addresses=[b"\n\x00\x00\x14"],
             port=80,
             weight=0,
             priority=0,

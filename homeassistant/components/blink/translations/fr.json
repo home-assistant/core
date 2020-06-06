@@ -6,13 +6,18 @@
         },
         "step": {
             "2fa": {
+                "data": {
+                    "2fa": "Code \u00e0 deux facteurs"
+                },
+                "description": "Saisissez le code envoy\u00e9 \u00e0 votre adresse \u00e9lectronique. Si l'e-mail ne contient pas de code PIN, laissez vide",
                 "title": "Authentification \u00e0 deux facteurs"
             },
             "user": {
                 "data": {
                     "password": "Mot de passe",
                     "username": "Identifiant"
-                }
+                },
+                "title": "Connectez-vous avec un compte Blink"
             }
         }
     }

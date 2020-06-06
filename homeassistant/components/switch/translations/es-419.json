@@ -14,11 +14,5 @@
             "turned_on": "{entity_name} encendido"
         }
     },
-    "state": {
-        "_": {
-            "off": "",
-            "on": ""
-        }
-    },
     "title": "Interruptor"
 }

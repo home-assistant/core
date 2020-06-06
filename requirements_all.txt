@@ -704,7 +704,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.4
+hass-nabucasa==0.34.5
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -734,7 +734,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200603.1
+home-assistant-frontend==20200603.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -807,7 +807,7 @@ jsonrpc-websocket==0.6
 kaiterra-async-client==0.0.2
 
 # homeassistant.components.keba
-keba-kecontact==1.0.0
+keba-kecontact==1.1.0
 
 # homeassistant.scripts.keyring
 keyring==21.2.0
@@ -963,6 +963,9 @@ niko-home-control==0.2.1
 # homeassistant.components.nilu
 niluclient==0.1.2
 
+# homeassistant.components.notify_events
+notify-events==1.0.4
+
 # homeassistant.components.nederlandse_spoorwegen
 nsapi==3.0.4
 
@@ -979,7 +982,7 @@ numato-gpio==0.7.1
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.4
+numpy==1.18.5
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1245,7 +1248,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==5.3.0
+pychromecast==6.0.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1468,7 +1471,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.2
+pymyq==2.0.3
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1615,7 +1618,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.30
+pysonos==0.0.31
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1726,7 +1729,7 @@ python-sochain-api==0.0.2
 python-songpal==0.12
 
 # homeassistant.components.synology_dsm
-python-synology==0.8.1
+python-synology==0.8.2
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -1762,7 +1765,7 @@ python_opendata_transport==0.2.1
 pythonegardia==1.0.40
 
 # homeassistant.components.tile
-pytile==3.0.1
+pytile==3.0.6
 
 # homeassistant.components.touchline
 pytouchline==0.7
@@ -1990,7 +1993,7 @@ somecomfort==0.5.2
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonarr
-sonarr==0.2.1
+sonarr==0.2.2
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
@@ -2078,7 +2081,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.8
+tesla-powerwall==0.2.10
 
 # homeassistant.components.tesla
 teslajsonpy==0.8.1
@@ -2239,7 +2242,7 @@ youtube_dl==2020.05.29
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.26.3
+zeroconf==0.27.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.39

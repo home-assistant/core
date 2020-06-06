@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Numm oder IP Adresse",
+                    "host": "Host",
                     "name": "Numm"
                 },
                 "description": "Gitt \u00e4r Samsung TV Informatiounen un. Falls dir Home Assistant nach ni domat verbonnen hutt misst den TV eng Meldung mat enger Authentifiz\u00e9ierung uweisen."

@@ -538,6 +538,7 @@ omit =
     homeassistant/components/notion/sensor.py
     homeassistant/components/noaa_tides/sensor.py
     homeassistant/components/norway_air/air_quality.py
+    homeassistant/components/notify_events/notify.py
     homeassistant/components/nsw_fuel_station/sensor.py
     homeassistant/components/nuimo_controller/*
     homeassistant/components/nuki/lock.py
@@ -797,6 +798,7 @@ omit =
     homeassistant/components/thomson/device_tracker.py
     homeassistant/components/tibber/*
     homeassistant/components/tikteck/light.py
+    homeassistant/components/tile/__init__.py
     homeassistant/components/tile/device_tracker.py
     homeassistant/components/time_date/sensor.py
     homeassistant/components/tmb/sensor.py
