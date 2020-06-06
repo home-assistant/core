@@ -83,7 +83,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return "_".join([DOMAIN, self.organization, self.key])
+        return "_".join([self.organization, self.key])
 
     @property
     def state(self) -> str:
