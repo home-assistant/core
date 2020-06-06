@@ -17,8 +17,7 @@ from homeassistant.config_entries import ConfigFlow
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AzureDevOpsFlowHandler(ConfigFlow):
+class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Azure DevOps config flow."""
 
     VERSION = 1
