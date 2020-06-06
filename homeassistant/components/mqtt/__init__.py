@@ -1138,7 +1138,7 @@ class MqttAvailability(Entity):
         )
 
     @callback
-    async def async_mqtt_connect(self):
+    def async_mqtt_connect(self):
         """Update state on connection/disconnection to MQTT broker."""
         self.async_write_ha_state()
 

@@ -45,7 +45,7 @@ async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, c
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE
 
-    hass.data["mqtt"].connected = False
+    mqtt_mock.connected = False
     async_dispatcher_send(hass, MQTT_DISCONNECTED)
     await hass.async_block_till_done()
 
