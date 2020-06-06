@@ -59,10 +59,8 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         if self._sensor_type == "status":
             self._state = mydata.status == "All good!"
         elif self._sensor_type == "is_watering":
-            if mydata.relays[self.data["relay"] - 1]["timestr"] == "Now":
-                self._state = True
-            else:
-                self._state = False
+            relay_data = mydata.relays[self.data["relay"] - 1]
+            self._state = relay_data["timestr"] == "Now"
 
     @property
     def device_class(self):
