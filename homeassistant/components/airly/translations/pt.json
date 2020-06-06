@@ -5,8 +5,7 @@
                 "data": {
                     "latitude": "Latitude",
                     "longitude": "Longitude"
-                },
-                "title": ""
+                }
             }
         }
     }
