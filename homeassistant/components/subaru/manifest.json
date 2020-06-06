@@ -3,12 +3,10 @@
   "name": "Subaru",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/subaru",
-  "requirements": ["subarulink==0.2.1"],
+  "requirements": ["subarulink==0.2.2"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": [
-    "@G-Two"
-  ]
+  "codeowners": ["@G-Two"]
 }
