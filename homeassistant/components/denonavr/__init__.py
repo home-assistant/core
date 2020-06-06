@@ -3,6 +3,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC, CONF_TIMEOUT
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -49,8 +50,7 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the denonavr components from a config entry."""
-    if hass.data.get(DOMAIN) is None:
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
@@ -61,7 +61,8 @@ async def async_setup_entry(
         entry.data[CONF_ZONE2],
         entry.data[CONF_ZONE3],
     )
-    await connect_denonavr.async_connect_receiver()
+    if not await connect_denonavr.async_connect_receiver():
+        raise ConfigEntryNotReady
     receiver = connect_denonavr.receiver
 
     hass.data[DOMAIN][entry.entry_id] = receiver
@@ -70,7 +71,6 @@ async def async_setup_entry(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])},
-        identifiers={(DOMAIN, entry.unique_id)},
         manufacturer=entry.data[CONF_MANUFACTURER],
         name=entry.title,
         model=f"{entry.data[CONF_MODEL]}-{entry.data[CONF_TYPE]}",
