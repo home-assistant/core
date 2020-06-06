@@ -15,7 +15,7 @@ hass-nabucasa==0.34.5
 home-assistant-frontend==20200603.2
 importlib-metadata==1.6.0
 jinja2>=2.11.1
-netdisco==2.6.0
+netdisco==2.7.0
 pip>=8.0.3
 python-slugify==4.0.0
 pytz>=2020.1
