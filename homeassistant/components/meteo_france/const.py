@@ -1,6 +1,7 @@
 """Meteo-France component constants."""
 
 from homeassistant.const import (
+    PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_MINUTES,
@@ -21,11 +22,11 @@ ENTITY_ENABLE = "enable"
 ENTITY_API_DATA_PATH = "data_path"
 
 SENSOR_TYPES = {
-    "sea_level": {
-        ENTITY_NAME: "Sea level",
-        ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:waves",
-        ENTITY_CLASS: None,
+    "pressure": {
+        ENTITY_NAME: "Pressure",
+        ENTITY_UNIT: PRESSURE_HPA,
+        ENTITY_ICON: "mdi:gauge",
+        ENTITY_CLASS: "pressure",
         ENTITY_ENABLE: False,
         ENTITY_API_DATA_PATH: "forecast:sea_level",
     },
