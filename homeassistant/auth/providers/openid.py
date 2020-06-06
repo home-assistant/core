@@ -30,13 +30,15 @@ CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 CONF_CONFIGURATION = "configuration"
 CONF_EMAILS = "emails"
+CONF_SUBJECTS = "subjects"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
         vol.Required(CONF_CONFIGURATION): str,
         vol.Required(CONF_CLIENT_ID): str,
         vol.Required(CONF_CLIENT_SECRET): str,
-        vol.Required(CONF_EMAILS): [str],
+        vol.Optional(CONF_EMAILS, default=[]): [str],
+        vol.Optional(CONF_SUBJECTS, default=[]): [str],
     },
     extra=vol.PREVENT_EXTRA,
 )
@@ -167,13 +169,17 @@ class OpenIdAuthProvider(AuthProvider):
         if id_token.get("nonce") != nonce:
             raise InvalidAuthError("Nonce mismatch in id_token")
 
-        if id_token["email"] not in self.config[CONF_EMAILS]:
-            raise InvalidAuthError(f"Email {id_token['email']} not in allowed users")
+        if id_token["sub"] in self.config[CONF_SUBJECTS]:
+            return id_token
 
-        if not id_token["email_verified"]:
-            raise InvalidAuthError(f"Email {id_token['email']} must be verified")
+        if "email" in id_token and "email_verified" in id_token:
+            if (
+                id_token["email"] in self.config[CONF_EMAILS]
+                and id_token["email_verified"]
+            ):
+                return id_token
 
-        return id_token
+        raise InvalidAuthError(f"Subject {id_token['sub']} is not allowed")
 
     async def async_generate_authorize_url(self, flow_id: str, nonce: str) -> str:
         """Generate a authorization url for a given flow."""

@@ -36,10 +36,11 @@ CONST_ACCESS_TOKEN = "dummy_access_token"
 
 CONST_NONCE = "dummy_nonce"
 CONST_EMAIL = "john.doe@openid.test"
+CONST_SUBJECT = "248289761001"
 
 CONST_ID_TOKEN = {
     "iss": "https://openid.test/",
-    "sub": "248289761001",
+    "sub": CONST_SUBJECT,
     "aud": CONST_CLIENT_ID,
     "nonce": CONST_NONCE,
     "exp": datetime(2099, 1, 1, tzinfo=timezone.utc).timestamp(),
@@ -74,7 +75,29 @@ async def openid_server_fixture(hass, aioclient_mock):
     )
 
 
-async def test_login_flow_validates(hass, aiohttp_client, openid_server):
+async def _run_external_flow(hass, manager, aiohttp_client):
+    with patch("homeassistant.auth.providers.openid.token_hex") as token_hex:
+        token_hex.return_value = CONST_NONCE
+        result = await manager.login_flow.async_init(("openid", None))
+
+    state = _encode_jwt(hass, {"flow_id": result["flow_id"], "flow_type": "login"})
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["url"] == (
+        f"{CONST_AUTHORIZATION_ENDPOINT}?response_type=code&client_id={CONST_CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope=email+openid+profile&nonce={CONST_NONCE}"
+    )
+
+    client = await aiohttp_client(hass.http.app)
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    return result["flow_id"]
+
+
+async def test_login_flow_validates_email(hass, aiohttp_client, openid_server):
     """Test login flow."""
     assert await async_setup_component(hass, "http", {})
 
@@ -95,25 +118,38 @@ async def test_login_flow_validates(hass, aiohttp_client, openid_server):
     )
     hass.auth = manager
 
-    with patch("homeassistant.auth.providers.openid.token_hex") as token_hex:
-        token_hex.return_value = CONST_NONCE
-        result = await manager.login_flow.async_init(("openid", None))
+    flow_id = await _run_external_flow(hass, manager, aiohttp_client)
 
-    state = _encode_jwt(hass, {"flow_id": result["flow_id"], "flow_type": "login"})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
-    assert result["url"] == (
-        f"{CONST_AUTHORIZATION_ENDPOINT}?response_type=code&client_id={CONST_CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=email+openid+profile&nonce={CONST_NONCE}"
-    )
-
-    client = await aiohttp_client(hass.http.app)
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-    result = await manager.login_flow.async_configure(result["flow_id"])
+    result = await manager.login_flow.async_configure(flow_id)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"]["email"] == CONST_EMAIL
+
+
+async def test_login_flow_validates_subject(hass, aiohttp_client, openid_server):
+    """Test login flow."""
+    assert await async_setup_component(hass, "http", {})
+
+    hass.config.external_url = "https://example.com"
+
+    manager = await auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "openid",
+                "configuration": CONST_DESCRIPTION_URI,
+                "client_id": CONST_CLIENT_ID,
+                "client_secret": CONST_CLIENT_SECRET,
+                "subjects": [CONST_SUBJECT],
+            }
+        ],
+        [],
+    )
+    hass.auth = manager
+
+    flow_id = await _run_external_flow(hass, manager, aiohttp_client)
+
+    result = await manager.login_flow.async_configure(flow_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"]["sub"] == CONST_SUBJECT
