@@ -17,6 +17,7 @@ FLOWS = [
     "ambient_station",
     "atag",
     "august",
+    "avri",
     "axis",
     "blebox",
     "blink",

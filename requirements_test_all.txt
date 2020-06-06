@@ -146,6 +146,9 @@ async-upnp-client==0.14.13
 # homeassistant.components.stream
 av==8.0.2
 
+# homeassistant.components.avri
+avri-api==0.1.7
+
 # homeassistant.components.axis
 axis==29
 
@@ -399,7 +402,7 @@ nessclient==0.9.15
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.6.0
+netdisco==2.7.0
 
 # homeassistant.components.nexia
 nexia==0.9.3
@@ -543,6 +546,9 @@ pychromecast==6.0.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
+
+# homeassistant.components.avri
+pycountry==19.8.18
 
 # homeassistant.components.daikin
 pydaikin==2.1.1
@@ -924,7 +930,7 @@ zeroconf==0.27.1
 zha-quirks==0.0.39
 
 # homeassistant.components.zha
-zigpy-cc==0.4.2
+zigpy-cc==0.4.4
 
 # homeassistant.components.zha
 zigpy-deconz==0.9.2
