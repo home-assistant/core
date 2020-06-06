@@ -41,10 +41,12 @@ def discovery(hass):
         for bulb in nearby_bulbs:
             bulb.get_name()
             bulb.get_brightness()
-            if bulb.name != 'Unknown':
+            if bulb.name != "Unknown":
                 lights.append(bulb)
             else:
-                _LOGGER.warning("Found Avea bulb but could got get the name: %s", vars(bulb))
+                _LOGGER.warning(
+                    "Found Avea bulb but could got get the name: %s", vars(bulb)
+                )
     except OSError as err:
         raise PlatformNotReady from err
     return lights
@@ -88,7 +90,7 @@ class AveaLight(LightEntity):
     def name(self):
         """Return the display name of this light."""
         return self._name
- 
+
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
