@@ -216,7 +216,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 mac_address = await self.hass.async_add_executor_job(
                     partial(get_mac_address, **{"hostname": host})
                 )
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Unable to get mac address: %s", err)
             mac_address = None
 
