@@ -25,7 +25,7 @@ SSDP = {
             "manufacturer": "Marantz"
         },
         {
-            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
             "manufacturer": "Denon"
         },
         {
