@@ -37,9 +37,6 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.data[CONF_USERNAME] = user_input["username"]
             self.data[CONF_PASSWORD] = user_input["password"]
 
-            if CONF_SCAN_INTERVAL in user_input:
-                self.data[CONF_SCAN_INTERVAL] = user_input["scan_interval"]
-
             try:
                 SpiderApi(
                     self.data[CONF_USERNAME],

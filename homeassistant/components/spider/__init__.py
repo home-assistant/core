@@ -1,6 +1,5 @@
 """Support for Spider Smart devices."""
 import asyncio
-from datetime import timedelta
 import logging
 
 from spiderpy.spiderapi import SpiderApi, UnauthorizedException
@@ -10,11 +9,9 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, PLATFORMS
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=120)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -22,7 +19,9 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): cv.time_period,
             }
         )
     },
