@@ -8,77 +8,98 @@ from homeassistant.const import (
 )
 
 DOMAIN = "meteo_france"
-PLATFORMS = ["weather"]
+PLATFORMS = ["sensor", "weather"]
 ATTRIBUTION = "Data provided by Météo-France"
 
 CONF_CITY = "city"
 
-DEFAULT_WEATHER_CARD = True
+ENTITY_NAME = "name"
+ENTITY_UNIT = "unit"
+ENTITY_ICON = "icon"
+ENTITY_CLASS = "device_class"
+ENTITY_ENABLE = "enable"
+ENTITY_API_DATA_PATH = "data_path"
 
-SENSOR_TYPE_NAME = "name"
-SENSOR_TYPE_UNIT = "unit"
-SENSOR_TYPE_ICON = "icon"
-SENSOR_TYPE_CLASS = "device_class"
 SENSOR_TYPES = {
+    "sea_level": {
+        ENTITY_NAME: "Sea level",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:waves",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "forecast:sea_level",
+    },
     "rain_chance": {
-        SENSOR_TYPE_NAME: "Rain chance",
-        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
-        SENSOR_TYPE_ICON: "mdi:weather-rainy",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "freeze_chance": {
-        SENSOR_TYPE_NAME: "Freeze chance",
-        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
-        SENSOR_TYPE_ICON: "mdi:snowflake",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "thunder_chance": {
-        SENSOR_TYPE_NAME: "Thunder chance",
-        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
-        SENSOR_TYPE_ICON: "mdi:weather-lightning",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Rain chance",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:weather-rainy",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "probability_forecast:rain:3h",
     },
     "snow_chance": {
-        SENSOR_TYPE_NAME: "Snow chance",
-        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
-        SENSOR_TYPE_ICON: "mdi:weather-snowy",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Snow chance",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:weather-snowy",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "probability_forecast:snow:3h",
     },
-    "weather": {
-        SENSOR_TYPE_NAME: "Weather",
-        SENSOR_TYPE_UNIT: None,
-        SENSOR_TYPE_ICON: "mdi:weather-partly-cloudy",
-        SENSOR_TYPE_CLASS: None,
+    "freeze_chance": {
+        ENTITY_NAME: "Freeze chance",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:snowflake",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "probability_forecast:freezing",
+    },
+    "thunder_chance": {
+        ENTITY_NAME: "Thunder chance",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:weather-lightning",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "forecast:T:value",  # NOT_OK
     },
     "wind_speed": {
-        SENSOR_TYPE_NAME: "Wind Speed",
-        SENSOR_TYPE_UNIT: SPEED_KILOMETERS_PER_HOUR,
-        SENSOR_TYPE_ICON: "mdi:weather-windy",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Wind Speed",
+        ENTITY_UNIT: SPEED_KILOMETERS_PER_HOUR,
+        ENTITY_ICON: "mdi:weather-windy",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "forecast:wind:speed",
     },
     "next_rain": {
-        SENSOR_TYPE_NAME: "Next rain",
-        SENSOR_TYPE_UNIT: TIME_MINUTES,
-        SENSOR_TYPE_ICON: "mdi:weather-rainy",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Next rain",
+        ENTITY_UNIT: TIME_MINUTES,
+        ENTITY_ICON: "mdi:weather-rainy",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "forecast:T:value",  # NOT_OK
     },
     "temperature": {
-        SENSOR_TYPE_NAME: "Temperature",
-        SENSOR_TYPE_UNIT: TEMP_CELSIUS,
-        SENSOR_TYPE_ICON: "mdi:thermometer",
-        SENSOR_TYPE_CLASS: "temperature",
+        ENTITY_NAME: "Temperature",
+        ENTITY_UNIT: TEMP_CELSIUS,
+        ENTITY_ICON: "mdi:thermometer",
+        ENTITY_CLASS: "temperature",
+        ENTITY_ENABLE: False,
+        ENTITY_API_DATA_PATH: "forecast:T:value",
     },
     "uv": {
-        SENSOR_TYPE_NAME: "UV",
-        SENSOR_TYPE_UNIT: None,
-        SENSOR_TYPE_ICON: "mdi:sunglasses",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "UV",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:sunglasses",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "daily_forecast:uv",
     },
     "weather_alert": {
-        SENSOR_TYPE_NAME: "Weather Alert",
-        SENSOR_TYPE_UNIT: None,
-        SENSOR_TYPE_ICON: "mdi:weather-cloudy-alert",
-        SENSOR_TYPE_CLASS: None,
+        ENTITY_NAME: "Weather Alert",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:weather-cloudy-alert",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "forecast:T:value",  # NOT_OK
     },
 }
 

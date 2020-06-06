@@ -1,4 +1,5 @@
 """Support for Meteo-France weather service."""
+from datetime import date
 import logging
 
 from homeassistant.components.weather import (
@@ -12,6 +13,7 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.util.dt as dt_util
 
 from . import MeteoFranceDataUpdateCoordinator
 from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN
@@ -42,6 +44,7 @@ class MeteoFranceWeather(WeatherEntity):
     def __init__(self, coordinator: MeteoFranceDataUpdateCoordinator):
         """Initialise the platform with a data instance and station name."""
         self.coordinator = coordinator
+        self._city_name = self.coordinator.data.position["name"]
 
     @property
     def available(self):
@@ -51,12 +54,12 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return self.coordinator.data.position["name"]
+        return self._city_name
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.coordinator.data.position["name"]
+        return self._city_name
 
     @property
     def condition(self):
@@ -94,12 +97,14 @@ class MeteoFranceWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast."""
         _LOGGER.warning(self.coordinator.data.forecast[2])
+        today = dt_util.as_timestamp(date.today())
         forecast_data = []
-        for index, forecast in enumerate(self.coordinator.data.daily_forecast):
-            # The first day is yesterday
-            if index == 0:
+        for forecast in self.coordinator.data.daily_forecast:
+            # Can have data of yesterday
+            if forecast["dt"] < today:
+                _LOGGER.error("remove_forecast %s", forecast)
                 continue
-            # keeping until we don't have a weather condition
+            # stop when we don't have a weather condition (can happen around last days of forcast, max 14)
             if not forecast.get("weather12H"):
                 break
             forecast_data.append(
@@ -117,11 +122,16 @@ class MeteoFranceWeather(WeatherEntity):
             )
         return forecast_data
 
-    async def async_update(self):
-        """Update the entity.
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
 
-        Only used by the generic entity update service.
-        """
+    async def async_update(self):
+        """Only used by the generic entity update service."""
+        if not self.enabled:
+            return
+
         await self.coordinator.async_request_refresh()
 
     @property
