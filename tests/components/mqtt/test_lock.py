@@ -12,6 +12,7 @@ from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -270,6 +271,13 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, LOCK_DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_availability_without_topic(hass, mqtt_mock):
