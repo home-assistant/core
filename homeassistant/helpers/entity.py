@@ -317,7 +317,8 @@ class Entity(ABC):
         if not self.available:
             state = STATE_UNAVAILABLE
         else:
-            state = STATE_UNKNOWN if self.state is None else str(self.state)
+            sstate = self.state
+            state = STATE_UNKNOWN if sstate is None else str(sstate)
             attr.update(self.state_attributes or {})
             attr.update(self.device_state_attributes or {})
 
