@@ -20,6 +20,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Hydrawise device."""
@@ -45,20 +47,19 @@ class HydrawiseSensor(HydrawiseEntity):
         """Get the latest data and updates the states."""
         mydata = self.hass.data[DATA_HYDRAWISE].data
         _LOGGER.debug("Updating Hydrawise sensor: %s", self._name)
+        relay_data = mydata.relays[self.data["relay"] - 1]
         if self._sensor_type == "watering_time":
-            if mydata.relays[self.data["relay"] - 1]["timestr"] == "Now":
-                self._state = int(mydata.relays[self.data["relay"] - 1]["run"] / 60)
+            if relay_data["timestr"] == "Now":
+                self._state = int(relay_data["run"] / 60)
             else:
                 self._state = 0
         else:  # _sensor_type == 'next_cycle'
-            # 31536000 = seconds in 1 year
-            if mydata.relays[self.data["relay"] - 1]["time"] > 31536000:
+            if relay_data["time"] > ONE_YEAR_SECONDS:
                 self._state = "not_scheduled"
             else:
+                _LOGGER.debug("New cycle time: %s", relay_data["time"])
                 self._state = time.asctime(
-                    time.localtime(
-                        time.time() + mydata.relays[self.data["relay"] - 1]["time"]
-                    )
+                    time.localtime(time.time() + relay_data["time"])
                 )
 
     @property

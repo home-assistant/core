@@ -62,33 +62,32 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        relay_data = self.data["relay"] - 1
         if self._sensor_type == "manual_watering":
             self.hass.data[DATA_HYDRAWISE].data.run_zone(
-                self._default_watering_timer, (self.data["relay"] - 1)
+                self._default_watering_timer, relay_data
             )
         elif self._sensor_type == "auto_watering":
-            self.hass.data[DATA_HYDRAWISE].data.suspend_zone(
-                0, (self.data["relay"] - 1)
-            )
+            self.hass.data[DATA_HYDRAWISE].data.suspend_zone(0, relay_data)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        relay_data = self.data["relay"] - 1
         if self._sensor_type == "manual_watering":
-            self.hass.data[DATA_HYDRAWISE].data.run_zone(0, (self.data["relay"] - 1))
+            self.hass.data[DATA_HYDRAWISE].data.run_zone(0, relay_data)
         elif self._sensor_type == "auto_watering":
-            self.hass.data[DATA_HYDRAWISE].data.suspend_zone(
-                365, (self.data["relay"] - 1)
-            )
+            self.hass.data[DATA_HYDRAWISE].data.suspend_zone(365, relay_data)
 
     def update(self):
         """Update device state."""
+        relay_data = self.data["relay"] - 1
         mydata = self.hass.data[DATA_HYDRAWISE].data
         _LOGGER.debug("Updating Hydrawise switch: %s", self._name)
         if self._sensor_type == "manual_watering":
-            self._state = mydata.relays[self.data["relay"] - 1]["timestr"] == "Now"
+            self._state = mydata.relays[relay_data]["timestr"] == "Now"
         elif self._sensor_type == "auto_watering":
-            self._state = (mydata.relays[self.data["relay"] - 1]["timestr"] != "") and (
-                mydata.relays[self.data["relay"] - 1]["timestr"] != "Now"
+            self._state = (mydata.relays[relay_data]["timestr"] != "") and (
+                mydata.relays[relay_data]["timestr"] != "Now"
             )
 
     @property
