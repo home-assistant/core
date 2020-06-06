@@ -68,6 +68,7 @@ omit =
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
+    homeassistant/components/avri/const.py
     homeassistant/components/avri/sensor.py
     homeassistant/components/azure_event_hub/*
     homeassistant/components/azure_service_bus/*
