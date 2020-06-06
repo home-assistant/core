@@ -21,9 +21,8 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
-
-# import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,13 +32,6 @@ DEFAULT_PORT = 5007
 SERVICE_BYPASS_ZONE = "bypass_zone"
 SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 ATTR_ZONE = "zone"
-
-BYPASS_ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_ZONE): cv.positive_int,
-    }
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -58,30 +50,48 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     url = f"http://{host}:{port}"
 
-    device = NX584Alarm(url, name)
+    try:
+        alarmclient = client.Client(url)
+        await hass.async_add_executor_job(alarmclient.list_zones)
+    except requests.exceptions.ConnectionError as ex:
+        _LOGGER.error(
+            "Unable to connect to %(host)s: %(reason)s", dict(host=url, reason=ex),
+        )
+        raise PlatformNotReady
 
-    async_add_entities([device])
+    entity = NX584Alarm(name, alarmclient, url)
+    async_add_entities([entity])
 
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_BYPASS_ZONE, BYPASS_ZONE_SCHEMA, "alarm_bypass",
+        SERVICE_BYPASS_ZONE,
+        {
+            vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+            vol.Required(ATTR_ZONE): cv.positive_int,
+        },
+        "alarm_bypass",
     )
 
     platform.async_register_entity_service(
-        SERVICE_UNBYPASS_ZONE, BYPASS_ZONE_SCHEMA, "alarm_unbypass",
+        SERVICE_UNBYPASS_ZONE,
+        {
+            vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+            vol.Required(ATTR_ZONE): cv.positive_int,
+        },
+        "alarm_unbypass",
     )
 
 
 class NX584Alarm(alarm.AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
-    def __init__(self, url, name):
+    def __init__(self, name, alarmclient, url):
         """Init the nx584 alarm panel."""
         self._name = name
-        self._url = url
-        self._alarm = client.Client(self._url)
         self._state = None
+        self._alarm = alarmclient
+        self._url = url
 
     @property
     def name(self):
