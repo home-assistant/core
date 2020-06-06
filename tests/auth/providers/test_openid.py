@@ -153,3 +153,31 @@ async def test_login_flow_validates_subject(hass, aiohttp_client, openid_server)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"]["sub"] == CONST_SUBJECT
+
+
+async def test_login_flow_not_whitelisted(hass, aiohttp_client, openid_server):
+    """Test login flow."""
+    assert await async_setup_component(hass, "http", {})
+
+    hass.config.external_url = "https://example.com"
+
+    manager = await auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "openid",
+                "configuration": CONST_DESCRIPTION_URI,
+                "client_id": CONST_CLIENT_ID,
+                "client_secret": CONST_CLIENT_SECRET,
+                "subjects": [],
+            }
+        ],
+        [],
+    )
+    hass.auth = manager
+
+    flow_id = await _run_external_flow(hass, manager, aiohttp_client)
+
+    result = await manager.login_flow.async_configure(flow_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
