@@ -15,26 +15,21 @@
         },
         "step": {
             "creds": {
-                "description": "Legitimasjon n\u00f8dvendig. Trykk 'Send' og deretter i PS4-ens andre skjerm app, kan du oppdatere enheter, og velg 'Home-Assistant' enheten for \u00e5 fortsette.",
-                "title": ""
+                "description": "Legitimasjon n\u00f8dvendig. Trykk 'Send' og deretter i PS4-ens andre skjerm app, kan du oppdatere enheter, og velg 'Home-Assistant' enheten for \u00e5 fortsette."
             },
             "link": {
                 "data": {
-                    "code": "",
                     "ip_address": "IP adresse",
-                    "name": "Navn",
-                    "region": ""
+                    "name": "Navn"
                 },
-                "description": "Fyll inn PlayStation 4-informasjonen. For 'PIN', naviger til 'Innstillinger' p\u00e5 PlayStation 4-konsoll. Naviger deretter til 'Mobile App Connection Settings' og velg 'Add Device'. Fyll inn PIN-koden som vises. Se [dokumentasjonen](https://www.home-assistant.io/components/ps4/) for mer informasjon.",
-                "title": ""
+                "description": "Fyll inn PlayStation 4-informasjonen. For 'PIN', naviger til 'Innstillinger' p\u00e5 PlayStation 4-konsoll. Naviger deretter til 'Mobile App Connection Settings' og velg 'Add Device'. Fyll inn PIN-koden som vises. Se [dokumentasjonen](https://www.home-assistant.io/components/ps4/) for mer informasjon."
             },
             "mode": {
                 "data": {
                     "ip_address": "IP-adresse (La st\u00e5 tom hvis du bruker Automatisk Oppdagelse).",
                     "mode": "Konfigureringsmodus"
                 },
-                "description": "Velg modus for konfigurasjon. Feltet IP-adresse kan st\u00e5 tomt dersom du velger Automatisk Oppdagelse, da enheter vil bli oppdaget automatisk.",
-                "title": ""
+                "description": "Velg modus for konfigurasjon. Feltet IP-adresse kan st\u00e5 tomt dersom du velger Automatisk Oppdagelse, da enheter vil bli oppdaget automatisk."
             }
         }
     }

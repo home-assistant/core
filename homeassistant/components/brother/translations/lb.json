@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Printer Numm oder IP Adresse",
+                    "host": "Host",
                     "type": "Typ vum Printer"
                 },
                 "description": "Brother Printer Integratioun ariichten. Am Fall vun Problemer kuckt op: https://www.home-assistant.io/integrations/brother"

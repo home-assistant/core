@@ -15,8 +15,7 @@
                     "password": "Passord",
                     "username": "E-post"
                 },
-                "description": "Fyll inn legitimasjonen din",
-                "title": ""
+                "description": "Fyll inn legitimasjonen din"
             }
         }
     }

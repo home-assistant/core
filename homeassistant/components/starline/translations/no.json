@@ -17,9 +17,7 @@
             "auth_captcha": {
                 "data": {
                     "captcha_code": "Kode fra bilde"
-                },
-                "description": "",
-                "title": ""
+                }
             },
             "auth_mfa": {
                 "data": {
