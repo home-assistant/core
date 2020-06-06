@@ -11,8 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Smile IP-adresse",
-                    "password": ""
+                    "host": "Smile IP-adresse"
                 },
                 "description": "Detaljer",
                 "title": "Koble til Smile"
