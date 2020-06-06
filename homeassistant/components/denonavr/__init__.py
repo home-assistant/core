@@ -71,7 +71,6 @@ async def async_setup_entry(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])},
-        identifiers={(DOMAIN, entry.unique_id)},
         manufacturer=entry.data[CONF_MANUFACTURER],
         name=entry.title,
         model=f"{entry.data[CONF_MODEL]}-{entry.data[CONF_TYPE]}",
