@@ -23,7 +23,7 @@ def get_entry_client(hass, entry):
 
 @config_entries.HANDLERS.register(DOMAIN)
 class ArcamFmjFlowHandler(config_entries.ConfigFlow):
-    """Handle a SimpliSafe config flow."""
+    """Handle config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
