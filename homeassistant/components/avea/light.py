@@ -25,7 +25,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Avea Light from a config entry."""
     lights = await hass.async_add_executor_job(discovery, hass)
     entities = []
-    
 
     for light in lights:
         entities.append(AveaLight(light))
@@ -33,7 +32,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
     return True
 
+
 def discovery(hass):
+    """Scan for Avea lightbulbs."""
     lights = []
     try:
         nearby_bulbs = avea.discover_avea_bulbs()
@@ -47,6 +48,7 @@ def discovery(hass):
     except OSError as err:
         raise PlatformNotReady from err
     return lights
+
 
 class AveaLight(LightEntity):
     """Representation of an Avea."""
@@ -76,7 +78,6 @@ class AveaLight(LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_AVEA
-        
 
     @property
     def unique_id(self):
@@ -87,7 +88,6 @@ class AveaLight(LightEntity):
     def name(self):
         """Return the display name of this light."""
         return self._name
-        
  
     @property
     def entity_registry_enabled_default(self):
