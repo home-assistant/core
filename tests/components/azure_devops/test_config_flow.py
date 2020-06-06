@@ -36,9 +36,13 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], FIXTURE_USER_INPUT,
-    )
+    with patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        return_value=False,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT,
+        )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
@@ -92,6 +96,9 @@ async def test_full_flow_implementation(
     assert result["step_id"] == "user"
 
     with patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.async_setup_entry",
+        return_value=True,
+    ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
     ):
