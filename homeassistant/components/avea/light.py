@@ -26,12 +26,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     lights = await hass.async_add_executor_job(discovery, hass)
     entities = []
     
+
     for light in lights:
         entities.append(AveaLight(light))
 
     async_add_entities(entities, True)
     return True
-    
+
 def discovery(hass):
     lights = []
     try:
@@ -57,7 +58,7 @@ class AveaLight(LightEntity):
         self._name = light.name
         self._state = None
         self._brightness = light.brightness
-        
+
     @property
     def device_info(self):
         """Return information about the device."""
@@ -76,6 +77,7 @@ class AveaLight(LightEntity):
         """Flag supported features."""
         return SUPPORT_AVEA
         
+
     @property
     def unique_id(self):
         """Return a unique ID."""
@@ -86,6 +88,7 @@ class AveaLight(LightEntity):
         """Return the display name of this light."""
         return self._name
         
+ 
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
