@@ -65,6 +65,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         data_class,
                         camera["id"],
                         camera["type"],
+                        camera["home_id"],
                         True,
                         DEFAULT_QUALITY,
                     )
@@ -92,7 +93,14 @@ class NetatmoCamera(Camera, NetatmoBase):
     """Representation of a Netatmo camera."""
 
     def __init__(
-        self, data_handler, data_class, camera_id, camera_type, verify_ssl, quality
+        self,
+        data_handler,
+        data_class,
+        camera_id,
+        camera_type,
+        home_id,
+        verify_ssl,
+        quality,
     ):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
@@ -101,6 +109,7 @@ class NetatmoCamera(Camera, NetatmoBase):
         self._data_classes.append({"name": data_class})
 
         self._camera_id = camera_id
+        self._home_id = home_id
         self._camera_name = self._data.get_camera(camera_id=camera_id).get("name")
         self._name = f"{MANUFACTURER} {self._camera_name}"
         self._camera_type = camera_type
@@ -113,6 +122,34 @@ class NetatmoCamera(Camera, NetatmoBase):
         self._sd_status = None
         self._alim_status = None
         self._is_local = None
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await NetatmoBase.async_added_to_hass(self)
+
+        async def handle_event(event):
+            """Handle webhook events."""
+            data = event.data["data"]
+
+            if not data.get("event_type"):
+                return
+
+            if not data.get("home"):
+                return
+
+            if (
+                data["home_id"] == self._home_id
+                and data["camera_id"] == self._camera_id
+            ):
+                if data["event_type"] == "NACamera-off":
+                    self._alim_status = self.is_streaming = "off"
+                elif data["event_type"] == "NACamera-on":
+                    self._alim_status = self.is_streaming = "on"
+
+                self.schedule_update_ha_state()
+                return
+
+        self.hass.bus.async_listen("netatmo_event", handle_event)
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -199,6 +236,18 @@ class NetatmoCamera(Camera, NetatmoBase):
     def is_on(self):
         """Return true if on."""
         return self.is_streaming
+
+    def turn_off(self):
+        """Turn off camera."""
+        self._data.set_state(
+            home_id=self._home_id, camera_id=self._camera_id, monitoring="off"
+        )
+
+    def turn_on(self):
+        """Turn on camera."""
+        self._data.set_state(
+            home_id=self._home_id, camera_id=self._camera_id, monitoring="on"
+        )
 
     async def stream_source(self):
         """Return the stream source."""
