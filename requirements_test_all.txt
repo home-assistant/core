@@ -146,6 +146,9 @@ async-upnp-client==0.14.13
 # homeassistant.components.stream
 av==8.0.2
 
+# homeassistant.components.avri
+avri-api==0.1.7
+
 # homeassistant.components.axis
 axis==29
 
@@ -543,6 +546,9 @@ pychromecast==6.0.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
+
+# homeassistant.components.avri
+pycountry==19.8.18
 
 # homeassistant.components.daikin
 pydaikin==2.1.1
