@@ -10,8 +10,6 @@ from homeassistant.components.azure_devops.const import (
     CONF_PAT,
     CONF_PROJECT,
     DATA_AZURE_DEVOPS_CLIENT,
-    DATA_ORG,
-    DATA_PROJECT,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -46,8 +44,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
     hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CLIENT] = client
-    hass.data.setdefault(instance_key, {})[DATA_ORG] = entry.data[CONF_ORG]
-    hass.data.setdefault(instance_key, {})[DATA_PROJECT] = entry.data[CONF_PROJECT]
 
     # Setup components
     hass.async_create_task(
