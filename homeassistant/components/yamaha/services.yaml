@@ -17,5 +17,5 @@ select_scene:
       description: Name(s) of entities to enable/disable port on.
       example: "media_player.yamaha"
     scene:
-      description: Name of the scene
+      description: Name of the scene. Standard for RX-V437 is 'BD/DVD Movie Viewing', 'TV Viewing', 'NET Audio Listening' or 'Radio Listening'
       example: "TV Viewing"

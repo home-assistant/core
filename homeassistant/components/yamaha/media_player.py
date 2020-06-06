@@ -30,9 +30,9 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PLAYING,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
-from .const import DOMAIN, SERVICE_ENABLE_OUTPUT, SERVICE_SELECT_SCENE
+from .const import SERVICE_ENABLE_OUTPUT, SERVICE_SELECT_SCENE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Yamaha platform."""
 
     # Keep track of configured receivers so that we don't end up
@@ -93,96 +93,62 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if hass.data.get(DATA_YAMAHA) is None:
         hass.data[DATA_YAMAHA] = {}
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    source_ignore = config.get(CONF_SOURCE_IGNORE)
-    source_names = config.get(CONF_SOURCE_NAMES)
-    zone_ignore = config.get(CONF_ZONE_IGNORE)
-    zone_names = config.get(CONF_ZONE_NAMES)
+    def _discovery():
+        """Discover receivers from configuration or network."""
 
-    if discovery_info is not None:
-        name = discovery_info.get("name")
-        model = discovery_info.get("model_name")
-        ctrl_url = discovery_info.get("control_url")
-        desc_url = discovery_info.get("description_url")
-        receivers = rxv.RXV(
-            ctrl_url, model_name=model, friendly_name=name, unit_desc_url=desc_url
-        ).zone_controllers()
-        _LOGGER.debug("Receivers: %s", receivers)
-        # when we are dynamically discovered config is empty
-        zone_ignore = []
-    elif host is None:
-        receivers = []
-        for recv in rxv.find():
-            receivers.extend(recv.zone_controllers())
-    else:
-        ctrl_url = f"http://{host}:80/YamahaRemoteControl/ctrl"
-        receivers = rxv.RXV(ctrl_url, name).zone_controllers()
+        name = config.get(CONF_NAME)
+        host = config.get(CONF_HOST)
+        source_ignore = config.get(CONF_SOURCE_IGNORE)
+        source_names = config.get(CONF_SOURCE_NAMES)
+        zone_ignore = config.get(CONF_ZONE_IGNORE)
+        zone_names = config.get(CONF_ZONE_NAMES)
 
-    devices = []
-    for receiver in receivers:
-        if receiver.zone in zone_ignore:
-            continue
-
-        device = YamahaDevice(name, receiver, source_ignore, source_names, zone_names)
-
-        # Only add device if it's not already added
-        if device.zone_id not in hass.data[DATA_YAMAHA]:
-            hass.data[DATA_YAMAHA][device.zone_id] = device
-            devices.append(device)
+        if discovery_info is not None:
+            name = discovery_info.get("name")
+            model = discovery_info.get("model_name")
+            ctrl_url = discovery_info.get("control_url")
+            desc_url = discovery_info.get("description_url")
+            receivers = rxv.RXV(
+                ctrl_url, model_name=model, friendly_name=name, unit_desc_url=desc_url
+            ).zone_controllers()
+            _LOGGER.debug("Receivers: %s", receivers)
+            # when we are dynamically discovered config is empty
+            zone_ignore = []
+        elif host is None:
+            receivers = []
+            for recv in rxv.find():
+                receivers.extend(recv.zone_controllers())
         else:
-            _LOGGER.debug("Ignoring duplicate receiver: %s", name)
+            ctrl_url = f"http://{host}:80/YamahaRemoteControl/ctrl"
+            receivers = rxv.RXV(ctrl_url, name).zone_controllers()
 
-    def service_handler_enable_output(service):
-        """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        devices = []
+        for receiver in receivers:
+            if receiver.zone in zone_ignore:
+                continue
 
-        devices = [
-            device
-            for device in hass.data[DATA_YAMAHA].values()
-            if not entity_ids or device.entity_id in entity_ids
-        ]
+            device = YamahaDevice(
+                name, receiver, source_ignore, source_names, zone_names
+            )
 
-        for device in devices:
-            port = service.data[ATTR_PORT]
-            enabled = service.data[ATTR_ENABLED]
+            # Only add device if it's not already added
+            if device.zone_id not in hass.data[DATA_YAMAHA]:
+                hass.data[DATA_YAMAHA][device.zone_id] = device
+                devices.append(device)
+            else:
+                _LOGGER.debug("Ignoring duplicate receiver: %s", name)
 
-            device.enable_output(port, enabled)
-            device.schedule_update_ha_state(True)
+        hass.add_job(async_add_entities, devices)
 
-    hass.services.register(
-        DOMAIN,
-        SERVICE_ENABLE_OUTPUT,
-        service_handler_enable_output,
-        schema=ENABLE_OUTPUT_SCHEMA,
+    hass.async_add_executor_job(_discovery)
+
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_SELECT_SCENE, SELECT_SCENE_SCHEMA, "async_set_scene",
     )
-
-    def service_handler_select_service(service):
-        """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-
-        _LOGGER.info("Select Scene: %s %s", entity_ids, service.data[ATTR_SCENE])
-
-        devices = [
-            device
-            for device in hass.data[DATA_YAMAHA].values()
-            if not entity_ids or device.entity_id in entity_ids
-        ]
-
-        for device in devices:
-            scene = service.data[ATTR_SCENE]
-
-            device.select_scene(scene)
-            device.schedule_update_ha_state(True)
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_SELECT_SCENE,
-        service_handler_select_service,
-        schema=SELECT_SCENE_SCHEMA,
+    platform.async_register_entity_service(
+        SERVICE_ENABLE_OUTPUT, ENABLE_OUTPUT_SCHEMA, "async_enable_output",
     )
-
-    add_entities(devices)
 
 
 class YamahaDevice(MediaPlayerEntity):
@@ -400,13 +366,25 @@ class YamahaDevice(MediaPlayerEntity):
         if media_type == "NET RADIO":
             self.receiver.net_radio(media_id)
 
+    async def async_enable_output(self, enabled, port):
+        """Enable or disable an output port.."""
+        await self.hass.async_add_job(self.enable_output, port, enabled)
+
     def enable_output(self, port, enabled):
         """Enable or disable an output port.."""
         self.receiver.enable_output(port, enabled)
 
-    def select_scene(self, scene):
-        """Select a scene.."""
-        _LOGGER.info("Select Scene: %s", scene)
+    async def async_set_scene(self, scene):
+        """Set the current scene."""
+        await self.hass.async_add_job(self.set_scene, scene)
+
+    @property
+    def scene(self):
+        """Return the current scene."""
+        return self.receiver.scene
+
+    def set_scene(self, scene):
+        """Set the current scene."""
         self.receiver.scene = scene
 
     def select_sound_mode(self, sound_mode):
