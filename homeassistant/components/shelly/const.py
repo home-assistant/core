@@ -12,4 +12,10 @@ CONF_ID = "id"
 CONF_MODEL = "model"
 CONF_TOPIC = "topic"
 
-MODELS = {"shelly1": {"title": "Shelly 1"}}
+MODEL_TITLE = "title"
+MODEL_SWITCHES = "switches"
+
+MODELS = {
+    "shelly1": {MODEL_TITLE: "Shelly 1", MODEL_SWITCHES: 1},
+    "shellyswitch": {MODEL_TITLE: "Shelly2", MODEL_SWITCHES: 2},
+}

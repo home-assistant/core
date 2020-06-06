@@ -7,6 +7,7 @@ from pprint import pformat
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.components import mqtt
 from homeassistant.const import CONF_DEVICE_ID
 
 from .const import (
@@ -17,6 +18,7 @@ from .const import (
     CONF_ID,
     CONF_MODEL,
     CONF_TOPIC,
+    MODEL_TITLE,
     MODELS,
     UPDATE_COMMAND,
 )
@@ -129,7 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if success:
                 device_id = self._device
                 model = device_id.split("-")[0]
-                title = f"{MODELS[model]['title']} ({device_id})"
+                title = f"{MODELS[model][MODEL_TITLE]} ({device_id})"
                 return self.async_create_entry(
                     title=title,
                     data={
@@ -146,6 +148,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="topic",
-            data_schema=vol.Schema({vol.Optional(CONF_TOPIC, default=topic): str}),
+            data_schema=vol.Schema(
+                {vol.Optional(CONF_TOPIC, default=topic): mqtt.valid_publish_topic}
+            ),
             errors=errors,
         )

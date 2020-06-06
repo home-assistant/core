@@ -4,7 +4,7 @@ import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-PLATFORMS = []
+PLATFORMS = ["switch"]  # , "binary_sensor", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

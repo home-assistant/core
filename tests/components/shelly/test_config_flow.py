@@ -1,5 +1,4 @@
 """Test the Shelly config flow."""
-import json
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.shelly.config_flow import (
@@ -10,6 +9,8 @@ from homeassistant.components.shelly.config_flow import (
     validate_input,
 )
 from homeassistant.components.shelly.const import DOMAIN
+
+from .common import send_msg
 
 from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
@@ -23,7 +24,7 @@ DISCOVERY = [
         "fw_ver": "20200320-123430/v1.6.2@514044b4",
     },
     {
-        "id": "shellyswitch25-B929CC",
+        "id": "shellyswitch-B929CC",
         "mac": "B929CC",
         "ip": "192.168.1.1",
         "new_fw": False,
@@ -39,14 +40,6 @@ DISCOVERY = [
 ]
 
 MOCK_TOPIC = "shellies/shelly1-A929CC"
-
-
-class MockMsg:
-    """Mock MQTT Message."""
-
-    def __init__(self, dict):
-        """Initialize a mock message."""
-        self.payload = json.dumps(dict)
 
 
 async def _setup_shelly_integration(hass):
@@ -234,14 +227,14 @@ async def test_discovery(hass):
 
     async def subscribed(topic, callback):
         assert topic == "shellies/announce"
-        callback(MockMsg(DISCOVERY[0]))
-        callback(MockMsg(DISCOVERY[1]))
-        callback(MockMsg(DISCOVERY[2]))
+        send_msg(callback, DISCOVERY[0])
+        send_msg(callback, DISCOVERY[1])
+        send_msg(callback, DISCOVERY[2])
         return unsubscribed
 
-    def published(topic, msg):
+    def published(topic, payload):
         assert topic == "shellies/command"
-        assert msg == "announce"
+        assert payload == "announce"
 
     with patch.object(
         hass.components.mqtt, "async_subscribe", AsyncMock(side_effect=subscribed)
@@ -263,12 +256,12 @@ async def test_validate(hass):
 
     async def subscribed(topic, callback):
         assert topic == topic_prefix + "online"
-        callback(MockMsg(True))
+        send_msg(callback, True)
         return unsubscribed
 
-    def published(topic, msg):
+    def published(topic, payload):
         assert topic == topic_prefix + "command"
-        assert msg == "update"
+        assert payload == "update"
 
     with patch.object(
         hass.components.mqtt, "async_subscribe", AsyncMock(side_effect=subscribed)
