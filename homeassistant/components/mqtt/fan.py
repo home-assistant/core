@@ -323,6 +323,11 @@ class MqttFan(
         await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
+    def should_poll(self):
+        """No polling needed for a MQTT fan."""
+        return False
+
+    @property
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic

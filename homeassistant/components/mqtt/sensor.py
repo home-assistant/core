@@ -193,6 +193,11 @@ class MqttSensor(
         self.async_write_ha_state()
 
     @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._config[CONF_NAME]

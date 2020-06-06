@@ -587,6 +587,11 @@ class MqttLight(
         return white_value
 
     @property
+    def should_poll(self):
+        """No polling needed for a MQTT light."""
+        return False
+
+    @property
     def name(self):
         """Return the name of the device if any."""
         return self._config[CONF_NAME]

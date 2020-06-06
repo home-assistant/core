@@ -207,6 +207,11 @@ class MqttSwitch(
         await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
+
+    @property
     def name(self):
         """Return the name of the switch."""
         return self._config[CONF_NAME]
