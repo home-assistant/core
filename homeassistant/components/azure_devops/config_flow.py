@@ -61,6 +61,9 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "connection_error"
             return await self._show_setup_form(errors)
 
+        await self.async_set_unique_id(f"{organization}_{project}")
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title=f"{organization}/{project}",
             data={CONF_ORG: organization, CONF_PROJECT: project, CONF_PAT: pat},
