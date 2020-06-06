@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_UDN
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
@@ -38,7 +37,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         try:
             await client.start()
         except ConnectionFailed:
-            raise AbortFlow("unable_to_connect")
+            return self.async_abort(reason="unable_to_connect")
         finally:
             await client.stop()
 
