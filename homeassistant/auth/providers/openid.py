@@ -1,4 +1,4 @@
-"""OpenId based authentication provider."""
+"""OpenID based authentication provider."""
 
 import logging
 import re
@@ -92,7 +92,7 @@ class OpenIdAuthProvider(AuthProvider):
     _jwks: Dict[str, Any]
 
     async def async_get_configuration(self) -> Dict[str, Any]:
-        """Get discovery document for openid."""
+        """Get discovery document for OpenID."""
         session = async_get_clientsession(self.hass)
         async with session.get(self.config[CONF_CONFIGURATION]) as response:
             await raise_for_status(response)
