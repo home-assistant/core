@@ -861,10 +861,11 @@ async def test_adb_command_learn_sendevent(hass):
         patch_key
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+        await hass.async_block_till_done()
 
     with patch(
         "androidtv.basetv.BaseTV.learn_sendevent", return_value=response
-    ) as patch_get_props:
+    ) as patch_learn_sendevent:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             SERVICE_ADB_COMMAND,
@@ -872,7 +873,7 @@ async def test_adb_command_learn_sendevent(hass):
             blocking=True,
         )
 
-        patch_get_props.assert_called()
+        patch_learn_sendevent.assert_called()
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.attributes["adb_response"] == response
