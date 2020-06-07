@@ -55,6 +55,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _check_setup(self):
+        """Check the setup of the flow."""
         errors = {}
 
         client = DevOpsClient()
