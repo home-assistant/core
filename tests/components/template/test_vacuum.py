@@ -314,6 +314,7 @@ async def test_attribute_templates(hass, calls):
     state = hass.states.get("vacuum.test_template_vacuum")
     assert state.attributes["test_attribute"] == "It Works."
 
+
 # End of template tests #
 
 
