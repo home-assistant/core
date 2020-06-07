@@ -1,6 +1,7 @@
 """Test the Azure DevOps config flow."""
 from unittest.mock import patch
 
+from aioazuredevops.core import DevOpsProject
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
@@ -11,6 +12,8 @@ from homeassistant.components.azure_devops.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+
+from tests.common import mock_coro
 
 FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project", CONF_PAT: "abc123"}
 
@@ -85,7 +88,7 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         return_value=True,
     ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
-        json={"id": "abcd-abcd-abcd-abcd", "name": "project"},
+        return_value=mock_coro(DevOpsProject("abcd-abcd-abcd-abcd", "project")),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT,
