@@ -77,7 +77,7 @@ async def test_awair_gen1_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_air_quality_index",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
         "88",
         {ATTR_ICON: "mdi:blur"},
@@ -112,26 +112,26 @@ async def test_awair_gen1_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_carbon_dioxide",
+        "sensor.living_room_co2",
         f"{AWAIR_UUID}-{DEVICE_CLASS_CO2}",
         "654.0",
         {
             ATTR_ICON: "mdi:cloud",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
-            "carbon_dioxide_awair_index": 0.0,
+            "co2_awair_index": 0.0,
         },
     )
 
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_volatile_organic_compounds",
+        "sensor.living_room_voc",
         f"{AWAIR_UUID}-{DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS}",
         "366",
         {
             ATTR_ICON: "mdi:cloud",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
-            "volatile_organic_compounds_awair_index": 1.0,
+            "voc_awair_index": 1.0,
         },
     )
 
@@ -166,7 +166,7 @@ async def test_awair_gen1_sensors(hass):
     assert hass.states.get("sensor.living_room_dust") is None
 
     # We should not have sound or lux sensors.
-    assert hass.states.get("sensor.living_room_sound_pressure_level") is None
+    assert hass.states.get("sensor.living_room_sound_level") is None
     assert hass.states.get("sensor.living_room_illuminance") is None
 
 
@@ -180,7 +180,7 @@ async def test_awair_gen2_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_air_quality_index",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
         "97",
         {ATTR_ICON: "mdi:blur"},
@@ -214,7 +214,7 @@ async def test_awair_mint_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_air_quality_index",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
         "98",
         {ATTR_ICON: "mdi:blur"},
@@ -243,7 +243,7 @@ async def test_awair_mint_sensors(hass):
     )
 
     # The Mint does not have a CO2 sensor.
-    assert hass.states.get("sensor.living_room_carbon_dioxide") is None
+    assert hass.states.get("sensor.living_room_co2") is None
 
 
 async def test_awair_glow_sensors(hass):
@@ -256,7 +256,7 @@ async def test_awair_glow_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_air_quality_index",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
         "93",
         {ATTR_ICON: "mdi:blur"},
@@ -276,7 +276,7 @@ async def test_awair_omni_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_air_quality_index",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
         "99",
         {ATTR_ICON: "mdi:blur"},
@@ -316,7 +316,7 @@ async def test_awair_offline(hass):
     # device *should* have if it's online. If we don't see it,
     # then we probably didn't set anything up. Which is correct,
     # in this case.
-    assert hass.states.get("sensor.living_room_air_quality_index") is None
+    assert hass.states.get("sensor.living_room_score") is None
 
 
 async def test_awair_unavailable(hass):
@@ -329,7 +329,7 @@ async def test_awair_unavailable(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_air_quality_index",
+        "sensor.living_room_score",
         f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
         "88",
         {ATTR_ICON: "mdi:blur"},
@@ -337,12 +337,12 @@ async def test_awair_unavailable(hass):
 
     with patch("python_awair.AwairClient.query", side_effect=OFFLINE_FIXTURE):
         await hass.helpers.entity_component.async_update_entity(
-            "sensor.living_room_air_quality_index"
+            "sensor.living_room_score"
         )
         assert_expected_properties(
             hass,
             registry,
-            "sensor.living_room_air_quality_index",
+            "sensor.living_room_score",
             f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
             STATE_UNAVAILABLE,
             {ATTR_ICON: "mdi:blur"},

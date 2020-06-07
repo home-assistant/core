@@ -5,9 +5,10 @@ from typing import Callable, List, Optional
 from python_awair.devices import AwairDevice
 
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
+from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import slugify
 
@@ -69,6 +70,14 @@ class AwairSensor(Entity):
         self.__kind = kind
         self.__device = device
         self.__coordinator = coordinator
+
+        entity_id_name = SENSOR_TYPES[self.__kind][ATTR_DEVICE_CLASS]
+        if self.__device.name:
+            entity_id_name = f"{self.__device.name} {entity_id_name}"
+
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, entity_id_name, hass=self.__coordinator.hass
+        )
 
     @property
     def should_poll(self) -> bool:
@@ -175,7 +184,7 @@ class AwairSensor(Entity):
         https://docs.developer.getawair.com/?version=latest#awair-score-and-index
         """
         attrs = {}
-        label = slugify(SENSOR_TYPES[self.__kind][ATTR_LABEL])
+        label = slugify(SENSOR_TYPES[self.__kind][ATTR_DEVICE_CLASS])
 
         if self.__kind in self.__air_data.indices:
             attrs[f"{label}_awair_index"] = abs(self.__air_data.indices[self.__kind])

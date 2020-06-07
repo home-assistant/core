@@ -36,12 +36,23 @@ ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 
-DEVICE_CLASS_AIR_QUALITY_INDEX = "air_quality_index"
-DEVICE_CLASS_CO2 = "carbon_dioxide"
-DEVICE_CLASS_PM_10 = "particulate_matter_10"
-DEVICE_CLASS_PM_2_5 = "particulate_matter_2_5"
+# Some of these names are historical, because this integration
+# created sensors with names that matched the API somewhat
+# directly. If air quality device classes are standardized
+# across home assistant, then we should adjust these as well.
+# For example:
+# score -> air_quality_index
+# CO2   -> carbon_dioxide
+# PM10  -> particulate_matter_10
+# PM2.5 -> particulate_matter_2_5
+# VOC   -> volatile_organic_compounds
+
+DEVICE_CLASS_AIR_QUALITY_INDEX = "score"
+DEVICE_CLASS_CO2 = "CO2"
+DEVICE_CLASS_PM_10 = "PM10"
+DEVICE_CLASS_PM_2_5 = "PM2.5"
 DEVICE_CLASS_SOUND_LEVEL = "sound_level"
-DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
+DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
 
 DOMAIN = "awair"
 
@@ -56,7 +67,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_AIR_QUALITY_INDEX,
         ATTR_ICON: "mdi:blur",
         ATTR_UNIT: UNIT_PERCENTAGE,
-        ATTR_LABEL: "Air quality index",
+        ATTR_LABEL: "Awair Score",
     },
     API_HUMID: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
