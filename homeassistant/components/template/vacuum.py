@@ -123,7 +123,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         }
 
         initialise_templates(hass, templates, attribute_templates)
-        entity_ids = extract_entities(device, "vacuum", None, templates, attribute_templates)
+        entity_ids = extract_entities(
+            device, "vacuum", None, templates, attribute_templates
+        )
 
         vacuums.append(
             TemplateVacuum(
