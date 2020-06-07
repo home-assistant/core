@@ -65,13 +65,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     platform.async_register_entity_service(
         SERVICE_BYPASS_ZONE,
-        {vol.Required(ATTR_ZONE): cv.positive_int,},  # noqa: E231
+        {vol.Required(ATTR_ZONE): cv.positive_int},
         "alarm_bypass",
     )
 
     platform.async_register_entity_service(
         SERVICE_UNBYPASS_ZONE,
-        {vol.Required(ATTR_ZONE): cv.positive_int,},  # noqa: E231
+        {vol.Required(ATTR_ZONE): cv.positive_int},
         "alarm_unbypass",
     )
 
