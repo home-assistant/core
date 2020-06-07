@@ -37,7 +37,6 @@ class ConnectDenonAVR:
             self._receiver.manufacturer is None
             or self._receiver.name is None
             or self._receiver.model_name is None
-            or self._receiver.serial_number is None
             or self._receiver.receiver_type is None
         ):
             return False
