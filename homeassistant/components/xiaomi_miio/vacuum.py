@@ -2,9 +2,8 @@
 from functools import partial
 import logging
 
-from croniter import croniter
 from miio import DeviceException, Vacuum  # pylint: disable=import-error
-from pytz import all_timezones, timezone, utc
+from pytz import utc
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -74,7 +73,6 @@ ATTR_RC_VELOCITY = "velocity"
 ATTR_STATUS = "status"
 ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
-ATTR_TIMEZONE = "timezone"
 ATTR_TIMERS = "timers"
 
 SUPPORT_XIAOMI = (
@@ -220,7 +218,6 @@ class MiroboVacuum(StateVacuumEntity):
         self._fan_speeds = None
         self._fan_speeds_reverse = None
 
-        self.timezone = None
         self._timers = None
 
     @property
@@ -272,23 +269,14 @@ class MiroboVacuum(StateVacuumEntity):
     @property
     def timers(self):
         """Get the list of added timers of the vacuum cleaner."""
-        if self.timezone not in all_timezones:
-            return []
-
-        timers = []
-        local_tz = timezone(self.timezone)
-
-        for timer in self._timers:
-            cron = croniter(timer.cron, start_time=local_tz.localize(datetime.now()))
-            next_schedule = cron.get_next(ret_type=datetime)
-            timers.append(
-                {
-                    "enabled": timer.enabled,
-                    "cron": timer.cron,
-                    "next_schedule": next_schedule.astimezone(utc),
-                }
-            )
-        return timers
+        return [
+            {
+                "enabled": timer.enabled,
+                "cron": timer.cron,
+                "next_schedule": timer.next_schedule.astimezone(utc),
+            }
+            for timer in self._timers
+        ]
 
     @property
     def device_state_attributes(self):
@@ -335,9 +323,6 @@ class MiroboVacuum(StateVacuumEntity):
 
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
-
-            if self.timezone:
-                attrs[ATTR_TIMEZONE] = self.timezone
 
             if self.timers:
                 attrs[ATTR_TIMERS] = self.timers
@@ -476,7 +461,6 @@ class MiroboVacuum(StateVacuumEntity):
             self.last_clean = self._vacuum.last_clean_details()
             self.dnd_state = self._vacuum.dnd_status()
 
-            self.timezone = self._vacuum.timezone()
             self._timers = self._vacuum.timer()
 
             self._available = True

@@ -199,9 +199,6 @@ coronavirus==1.1.1
 # homeassistant.scripts.credstash
 # credstash==1.15.0
 
-# homeassistant.components.xiaomi_miio
-croniter==0.3.31
-
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -720,7 +717,7 @@ python-izone==1.1.2
 python-juicenet==1.0.1
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.0.1
+python-miio==0.5.1
 
 # homeassistant.components.nest
 python-nest==4.1.0

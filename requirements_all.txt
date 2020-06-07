@@ -450,9 +450,6 @@ coronavirus==1.1.1
 # homeassistant.components.crimereports
 crimereports==1.0.1
 
-# homeassistant.components.xiaomi_miio
-croniter==0.3.31
-
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -1705,7 +1702,7 @@ python-juicenet==1.0.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.0.1
+python-miio==0.5.1
 
 # homeassistant.components.mpd
 python-mpd2==1.0.0
