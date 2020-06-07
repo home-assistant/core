@@ -876,6 +876,15 @@ class SonosEntity(MediaPlayerEntity):
 
     @property
     @soco_coordinator
+    def queue_position(self):
+        """If playing local queue return the position in the queue else -1."""
+        if self._is_playing_local_queue:
+            return self._queue_position
+
+        return -1
+
+    @property
+    @soco_coordinator
     def source(self):
         """Name of the current input source."""
         return self._source_name or None
@@ -1248,6 +1257,7 @@ class SonosEntity(MediaPlayerEntity):
         self.soco.play_from_queue(queue_position)
 
     @soco_error()
+    @soco_coordinator
     def remove_from_queue(self, queue_position=0):
         """Remove item from the queue."""
         self.soco.remove_from_queue(queue_position)
@@ -1263,7 +1273,7 @@ class SonosEntity(MediaPlayerEntity):
         if self._speech_enhance is not None:
             attributes[ATTR_SPEECH_ENHANCE] = self._speech_enhance
 
-        if self._queue_position is not None and self._is_playing_local_queue:
-            attributes[ATTR_QUEUE_POSITION] = self._queue_position
+        if self.queue_position is not None:
+            attributes[ATTR_QUEUE_POSITION] = self.queue_position
 
         return attributes
