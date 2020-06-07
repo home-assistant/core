@@ -91,7 +91,6 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
             result["flow_id"], FIXTURE_USER_INPUT,
         )
 
-    print(result2)
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert (
         result2["title"]
