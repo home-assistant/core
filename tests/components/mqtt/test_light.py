@@ -162,6 +162,7 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -1326,6 +1327,13 @@ async def test_effect(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
 
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -1418,7 +1426,7 @@ async def test_discovery_removal_light(hass, mqtt_mock, caplog):
 async def test_discovery_deprecated(hass, mqtt_mock, caplog):
     """Test discovery of mqtt light with deprecated platform option."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {"mqtt": {}}, entry)
+    await async_start(hass, "homeassistant", entry)
     data = (
         '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
     )

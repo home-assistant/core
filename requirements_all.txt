@@ -248,7 +248,7 @@ ambiclimate==0.2.1
 amcrest==1.7.0
 
 # homeassistant.components.androidtv
-androidtv==0.0.41
+androidtv==0.0.43
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -272,7 +272,7 @@ aprslib==0.6.46
 aqualogic==1.0
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.4.6
+arcam-fmj==0.5.1
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==1.0.0
@@ -780,7 +780,7 @@ ibmiotf==0.3.4
 iglo==1.2.7
 
 # homeassistant.components.ihc
-ihcsdk==2.6.0
+ihcsdk==2.7.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.4.0
@@ -1259,6 +1259,9 @@ pycomfoconnect==0.3
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
+
+# homeassistant.components.avri
+pycountry==19.8.18
 
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.3
@@ -2237,7 +2240,7 @@ yeelight==0.5.2
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.05.29
+youtube_dl==2020.06.06
 
 # homeassistant.components.zengge
 zengge==0.2
@@ -2255,7 +2258,7 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-cc==0.4.2
+zigpy-cc==0.4.4
 
 # homeassistant.components.zha
 zigpy-deconz==0.9.2

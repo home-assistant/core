@@ -68,6 +68,7 @@ omit =
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
+    homeassistant/components/avri/const.py
     homeassistant/components/avri/sensor.py
     homeassistant/components/azure_event_hub/*
     homeassistant/components/azure_service_bus/*
@@ -157,7 +158,10 @@ omit =
     homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
     homeassistant/components/devolo_home_control/__init__.py
+    homeassistant/components/devolo_home_control/binary_sensor.py
     homeassistant/components/devolo_home_control/const.py
+    homeassistant/components/devolo_home_control/devolo_device.py
+    homeassistant/components/devolo_home_control/subscriber.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/dht/sensor.py
     homeassistant/components/digital_ocean/*
