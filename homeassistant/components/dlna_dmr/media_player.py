@@ -31,6 +31,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_NAME,
     CONF_URL,
@@ -48,9 +49,9 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import get_local_ip
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DLNA_DMR_DATA = "dlna_dmr"
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "DLNA Digital Media Renderer"
 DEFAULT_LISTEN_PORT = 8301
@@ -119,7 +120,7 @@ async def async_start_event_handler(
     callback_url_override: Optional[str] = None,
 ):
     """Register notify view."""
-    hass_data = hass.data[DLNA_DMR_DATA]
+    hass_data = hass.data[DOMAIN]
     if "event_handler" in hass_data:
         return hass_data["event_handler"]
 
@@ -151,29 +152,45 @@ async def async_setup_platform(
 ):
     """Set up DLNA DMR platform."""
     if config.get(CONF_URL) is not None:
-        url = config[CONF_URL]
-        name = config.get(CONF_NAME)
+        data = config
     elif discovery_info is not None:
-        url = discovery_info["ssdp_description"]
-        name = discovery_info.get("name")
+        data = {
+            CONF_URL: discovery_info["ssdp_description"],
+            CONF_NAME: discovery_info.get("name"),
+        }
 
-    if DLNA_DMR_DATA not in hass.data:
-        hass.data[DLNA_DMR_DATA] = {}
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=data,
+        )
+    )
+    return True
 
-    if "lock" not in hass.data[DLNA_DMR_DATA]:
-        hass.data[DLNA_DMR_DATA]["lock"] = asyncio.Lock()
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    if "lock" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["lock"] = asyncio.Lock()
 
     # build upnp/aiohttp requester
     session = async_get_clientsession(hass)
     requester = AiohttpSessionRequester(session, True)
 
     # ensure event handler has been started
-    with await hass.data[DLNA_DMR_DATA]["lock"]:
-        server_host = config.get(CONF_LISTEN_IP)
-        if server_host is None:
-            server_host = get_local_ip()
-        server_port = config.get(CONF_LISTEN_PORT, DEFAULT_LISTEN_PORT)
-        callback_url_override = config.get(CONF_CALLBACK_URL_OVERRIDE)
+    with await hass.data[DOMAIN]["lock"]:
+        # TODO
+        # server_host = config_entry.options.get(CONF_LISTEN_IP)
+        # if server_host is None:
+        #    server_host = get_local_ip()
+        # server_port = config_entry.options.get(CONF_LISTEN_PORT, DEFAULT_LISTEN_PORT)
+        # callback_url_override = config_entry.options.get(CONF_CALLBACK_URL_OVERRIDE)
+
+        server_host = get_local_ip()
+        server_port = DEFAULT_LISTEN_PORT
+        callback_url_override = None
+
         event_handler = await async_start_event_handler(
             hass, server_host, server_port, requester, callback_url_override
         )
@@ -181,15 +198,15 @@ async def async_setup_platform(
     # create upnp device
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
     try:
-        upnp_device = await factory.async_create_device(url)
+        upnp_device = await factory.async_create_device(config_entry.data[CONF_URL])
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady()
+        raise PlatformNotReady()  # TODO
 
     # wrap with DmrDevice
     dlna_device = DmrDevice(upnp_device, event_handler)
 
     # create our own device
-    device = DlnaDmrDevice(dlna_device, name)
+    device = DlnaDmrDevice(dlna_device, config_entry.data[CONF_NAME])
     _LOGGER.debug("Adding device: %s", device)
     async_add_entities([device], True)
 
@@ -220,7 +237,7 @@ class DlnaDmrDevice(MediaPlayerEntity):
 
     async def _async_on_hass_stop(self, event):
         """Event handler on Home Assistant stop."""
-        with await self.hass.data[DLNA_DMR_DATA]["lock"]:
+        with await self.hass.data[DOMAIN]["lock"]:
             await self._device.async_unsubscribe_services()
 
     async def async_update(self):
