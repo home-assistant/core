@@ -67,7 +67,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(
             DenonDevice(
                 receiver_zone,
-                receiver_device_id,
                 unique_id,
                 config_entry.data[CONF_MAC],
             )
@@ -81,13 +80,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
-    def __init__(self, receiver, receiver_device_id, unique_id, mac):
+    def __init__(self, receiver, unique_id, mac):
         """Initialize the device."""
         self._receiver = receiver
         self._name = self._receiver.name
         self._unique_id = unique_id
         self._mac = mac
-        self._receiver_device_id = receiver_device_id
         self._muted = self._receiver.muted
         self._volume = self._receiver.volume
         self._current_source = self._receiver.input_func
@@ -163,11 +161,6 @@ class DenonDevice(MediaPlayerEntity):
     def unique_id(self):
         """Return the unique id of the zone."""
         return self._unique_id
-
-    @property
-    def device_id(self):
-        """Return the device id of the receiver."""
-        return self._receiver_device_id
 
     @property
     def device_info(self):
