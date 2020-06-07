@@ -1426,7 +1426,7 @@ async def test_discovery_removal_light(hass, mqtt_mock, caplog):
 async def test_discovery_deprecated(hass, mqtt_mock, caplog):
     """Test discovery of mqtt light with deprecated platform option."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {"mqtt": {}}, entry)
+    await async_start(hass, "homeassistant", entry)
     data = (
         '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
     )

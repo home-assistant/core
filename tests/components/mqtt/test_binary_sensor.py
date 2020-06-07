@@ -528,7 +528,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
 ):
     """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
+    await async_start(hass, "homeassistant", entry)
 
     config = {
         "name": "Test",

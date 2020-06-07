@@ -156,7 +156,7 @@ async def test_discovery_removal_camera(hass, mqtt_mock, caplog):
 async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     """Test update of discovered camera."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
+    await async_start(hass, "homeassistant", entry)
 
     data1 = '{ "name": "Beer",' '  "topic": "test_topic"}'
     data2 = '{ "name": "Milk",' '  "topic": "test_topic"}'
@@ -170,7 +170,7 @@ async def test_discovery_update_camera(hass, mqtt_mock, caplog):
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
+    await async_start(hass, "homeassistant", entry)
 
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk",' '  "topic": "test_topic"}'
