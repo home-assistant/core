@@ -1,5 +1,5 @@
 """Support for Meteo-France weather service."""
-from datetime import date
+from datetime import datetime
 import logging
 
 from homeassistant.components.weather import (
@@ -13,10 +13,10 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import MeteoFranceDataUpdateCoordinator
-from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN
+# from . import MeteoFranceDataUpdateCoordinator
+from .const import ATTRIBUTION, CONDITION_CLASSES, COORDINATOR_FORECAST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Meteo-France weather platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
 
     async_add_entities([MeteoFranceWeather(coordinator)], True)
 
@@ -41,7 +41,7 @@ async def async_setup_entry(
 class MeteoFranceWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, coordinator: MeteoFranceDataUpdateCoordinator):
+    def __init__(self, coordinator: DataUpdateCoordinator):
         """Initialise the platform with a data instance and station name."""
         self.coordinator = coordinator
         self._city_name = self.coordinator.data.position["name"]
@@ -96,8 +96,7 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
-        _LOGGER.warning(self.coordinator.data.forecast[2])
-        today = dt_util.as_timestamp(date.today())
+        today = datetime.utcnow().timestamp()
         forecast_data = []
         for forecast in self.coordinator.data.daily_forecast:
             # Can have data of yesterday
