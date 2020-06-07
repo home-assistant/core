@@ -1,1 +1,0 @@
-"""The snmp component."""
