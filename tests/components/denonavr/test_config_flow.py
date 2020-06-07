@@ -322,6 +322,7 @@ async def test_config_flow_manual_host_no_serial_no_mac(hass):
     assert result["type"] == "abort"
     assert result["reason"] == "no_mac"
 
+
 async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
     """Test a failed config flow manually initialized by the user with the host specified and an error getting the serial number and exception getting mac address."""
     result = await hass.config_entries.flow.async_init(
@@ -350,6 +351,7 @@ async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_mac"
+
 
 async def test_config_flow_manual_host_connection_error(hass):
     """Test a failed config flow manually initialized by the user with the host specified and a connection error."""
