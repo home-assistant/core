@@ -2224,7 +2224,7 @@ xknx==0.11.3
 xmltodict==0.12.0
 
 # homeassistant.components.xs1
-xs1-api-client==2.3.5
+xs1-api-client==3.0.0
 
 # homeassistant.components.yandex_transport
 ya_ma==0.3.8
