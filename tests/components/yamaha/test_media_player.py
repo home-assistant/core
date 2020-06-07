@@ -92,3 +92,6 @@ class TestYamahaMediaPlayer(unittest.TestCase):
 
         self.select_scene("TV Viewing")
         assert self.main_zone.scene == "TV Viewing"
+
+        self.select_scene("BD/DVD Movie Viewing")
+        assert self.main_zone.scene == "BD/DVD Movie Viewing"

@@ -77,6 +77,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+class YamahaConfigInfo:
+    """Configuration Info for Yamaha Receivers."""
+
+    def __init__(self, config: None, discovery_info: None):
+        self.name = config.get(CONF_NAME)
+        self.host = config.get(CONF_HOST)
+        self.ctrl_url = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
+        self.source_ignore = config.get(CONF_SOURCE_IGNORE)
+        self.source_names = config.get(CONF_SOURCE_NAMES)
+        self.zone_ignore = config.get(CONF_ZONE_IGNORE)
+        self.zone_names = config.get(CONF_ZONE_NAMES)
+        self.from_discovery = False
+        if discovery_info is not None:
+            self.name = discovery_info.get("name")
+            self.model = discovery_info.get("model_name")
+            self.ctrl_url = discovery_info.get("control_url")
+            self.desc_url = discovery_info.get("description_url")
+            self.zone_ignore = []
+            self.from_discovery = True
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Yamaha platform."""
 
@@ -86,54 +107,52 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # YamahaDevice is not hashable (thus not possible to add to a set).
     known_zones = hass.data.setdefault(DATA_YAMAHA, set())
 
-    def _discovery():
+    config_info = YamahaConfigInfo(config=config, discovery_info=discovery_info)
+
+    def _discovery(config_info):
         """Discover receivers from configuration or network."""
 
-        name = config.get(CONF_NAME)
-        host = config.get(CONF_HOST)
-        source_ignore = config.get(CONF_SOURCE_IGNORE)
-        source_names = config.get(CONF_SOURCE_NAMES)
-        zone_ignore = config.get(CONF_ZONE_IGNORE)
-        zone_names = config.get(CONF_ZONE_NAMES)
-
-        if discovery_info is not None:
-            name = discovery_info.get("name")
-            model = discovery_info.get("model_name")
-            ctrl_url = discovery_info.get("control_url")
-            desc_url = discovery_info.get("description_url")
+        if config_info.from_discovery:
             receivers = rxv.RXV(
-                ctrl_url, model_name=model, friendly_name=name, unit_desc_url=desc_url
+                config_info.ctrl_url,
+                model_name=config_info.model,
+                friendly_name=config_info.name,
+                unit_desc_url=config_info.desc_url,
             ).zone_controllers()
             _LOGGER.debug("Receivers: %s", receivers)
-            # when we are dynamically discovered config is empty
-            zone_ignore = []
-        elif host is None:
+        elif config_info.host is None:
             receivers = []
             for recv in rxv.find():
                 receivers.extend(recv.zone_controllers())
         else:
-            ctrl_url = f"http://{host}:80/YamahaRemoteControl/ctrl"
-            receivers = rxv.RXV(ctrl_url, name).zone_controllers()
+            receivers = rxv.RXV(
+                config_info.ctrl_url, config_info.name
+            ).zone_controllers()
 
-        entities = []
-        for receiver in receivers:
-            if receiver.zone in zone_ignore:
-                continue
+        return receivers
 
-            entity = YamahaDevice(
-                name, receiver, source_ignore, source_names, zone_names
-            )
+    receivers = await hass.async_add_executor_job(_discovery, config_info)
 
-            # Only add device if it's not already added
-            if entity.zone_id not in known_zones:
-                known_zones.add(entity.zone_id)
-                entities.append(entity)
-            else:
-                _LOGGER.debug("Ignoring duplicate receiver: %s", name)
+    entities = []
+    for receiver in receivers:
+        if receiver.zone in config_info.zone_ignore:
+            continue
 
-        return entities
+        entity = YamahaDevice(
+            config_info.name,
+            receiver,
+            config_info.source_ignore,
+            config_info.source_names,
+            config_info.zone_names,
+        )
 
-    entities = await hass.async_add_executor_job(_discovery)
+        # Only add device if it's not already added
+        if entity.zone_id not in known_zones:
+            known_zones.add(entity.zone_id)
+            entities.append(entity)
+        else:
+            _LOGGER.debug("Ignoring duplicate receiver: %s", config_info.name)
+
     async_add_entities(entities)
 
     platform = entity_platform.current_platform.get()
@@ -368,7 +387,10 @@ class YamahaDevice(MediaPlayerEntity):
 
     def set_scene(self, scene):
         """Set the current scene."""
-        self.receiver.scene = scene
+        try:
+            self.receiver.scene = scene
+        except AssertionError:
+            _LOGGER.warning("Scene '%s' does not exist!", scene)
 
     def select_sound_mode(self, sound_mode):
         """Set Sound Mode for Receiver.."""
