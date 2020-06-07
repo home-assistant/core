@@ -323,7 +323,7 @@ async def test_invalid_attribute_template(hass, caplog):
         {
             "vacuum": {
                 "platform": "template",
-                "vacuum": {
+                "vacuums": {
                     "invalid_template": {
                         "value_template": "{{ 'docked' }}",
                         "attribute_templates": {
