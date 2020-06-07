@@ -16,9 +16,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import mock_coro
 
 FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project", CONF_PAT: "abc123"}
+FIXTURE_REAUTH_INPUT = {CONF_PAT: "abc123"}
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
+async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -26,6 +27,16 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+
+
+async def test_show_reauth_form(hass: HomeAssistant) -> None:
+    """Test that the reauth form is served."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth"
 
 
 async def test_authorization_error(hass: HomeAssistant) -> None:
@@ -50,6 +61,28 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "authorization_error"}
 
 
+async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
+    """Test we show user form on Azure DevOps authorization error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth"
+
+    with patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        return_value=mock_coro(False),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_REAUTH_INPUT,
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "reauth"
+    assert result2["errors"] == {"base": "authorization_error"}
+
+
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on Azure DevOps connection error."""
     result = await hass.config_entries.flow.async_init(
@@ -69,6 +102,28 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "connection_error"}
+
+
+async def test_reauth_connection_error(hass: HomeAssistant) -> None:
+    """Test we show user form on Azure DevOps connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth"
+
+    with patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        side_effect=aiohttp.ClientError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_REAUTH_INPUT,
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "reauth"
     assert result2["errors"] == {"base": "connection_error"}
 
 
