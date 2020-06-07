@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.device_registry import format_mac
 
 from .receiver import ConnectDenonAVR
@@ -28,7 +28,7 @@ CONF_MODEL = "model"
 CONF_MANUFACTURER = "manufacturer"
 
 DEFAULT_SHOW_SOURCES = False
-DEFAULT_TIMEOUT = 2
+DEFAULT_TIMEOUT = 5
 DEFAULT_ZONE2 = False
 DEFAULT_ZONE3 = False
 
@@ -36,9 +36,6 @@ CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 
 SETTINGS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
-            int, vol.Range(min=1)
-        ),
         vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES): bool,
         vol.Optional(CONF_ZONE2, default=DEFAULT_ZONE2): bool,
         vol.Optional(CONF_ZONE3, default=DEFAULT_ZONE3): bool,
@@ -112,7 +109,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow the user to specify settings."""
         if user_input is not None:
             # Get config option that have defaults
-            self.timeout = user_input[CONF_TIMEOUT]
             self.show_all_sources = user_input[CONF_SHOW_ALL_SOURCES]
             self.zone2 = user_input[CONF_ZONE2]
             self.zone3 = user_input[CONF_ZONE3]
@@ -161,7 +157,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: self.host,
                 CONF_MAC: mac_address,
-                CONF_TIMEOUT: self.timeout,
                 CONF_SHOW_ALL_SOURCES: self.show_all_sources,
                 CONF_ZONE2: self.zone2,
                 CONF_ZONE3: self.zone3,
