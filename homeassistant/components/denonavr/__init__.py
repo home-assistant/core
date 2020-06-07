@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC, CONF_TIMEOUT
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -14,6 +14,7 @@ from .config_flow import (
     CONF_TYPE,
     CONF_ZONE2,
     CONF_ZONE3,
+    DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from .receiver import ConnectDenonAVR
@@ -56,7 +57,7 @@ async def async_setup_entry(
     connect_denonavr = ConnectDenonAVR(
         hass,
         entry.data[CONF_HOST],
-        entry.data[CONF_TIMEOUT],
+        DEFAULT_TIMEOUT,
         entry.data[CONF_SHOW_ALL_SOURCES],
         entry.data[CONF_ZONE2],
         entry.data[CONF_ZONE3],

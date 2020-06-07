@@ -13,7 +13,6 @@
         "title": "Denon AVR Network Receivers",
         "description": "Specify optional settings",
         "data": {
-          "timeout": "Timeout in seconds",
           "show_all_sources": "Show all sources",
           "zone2": "Set up Zone 2",
           "zone3": "Set up Zone 3"
