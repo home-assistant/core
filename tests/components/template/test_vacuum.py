@@ -315,6 +315,32 @@ async def test_attribute_templates(hass, calls):
     assert state.attributes["test_attribute"] == "It Works."
 
 
+async def test_invalid_attribute_template(hass, caplog):
+    """Test that errors are logged if rendering template fails."""
+    assert await setup.async_setup_component(
+        hass,
+        "vacuum",
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuum": {
+                    "invalid_template": {
+                        "value_template": "{{ 'docked' }}",
+                        "attribute_templates": {
+                            "test_attribute": "{{ states.sensor.unknown.attributes.picture }}"
+                        },
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+    await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
+
+    assert ("Error rendering attribute test_attribute") in caplog.text
+
+
 # End of template tests #
 
 
