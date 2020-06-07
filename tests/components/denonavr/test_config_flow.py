@@ -256,7 +256,7 @@ async def test_config_flow_settings(hass):
 
 
 async def test_config_flow_manual_host_no_serial(hass):
-    """Test a successful config flow manually initialized by the user with the host specified and an error getting the serial number but backup mac adress succes."""
+    """Test a successful config flow manually initialized by the user with the host specified and an error getting the serial number but backup mac address success."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -294,7 +294,7 @@ async def test_config_flow_manual_host_no_serial(hass):
 
 
 async def test_config_flow_manual_host_no_serial_no_mac(hass):
-    """Test a failed config flow manually initialized by the user with the host specified and an error getting the serial number and mac adress."""
+    """Test a failed config flow manually initialized by the user with the host specified and an error getting the serial number and mac address."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
