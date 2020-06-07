@@ -6,8 +6,10 @@ from unittest import mock
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
+from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.async_mock import ANY
 from tests.common import (
@@ -33,6 +35,22 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "model": "Glass",
     "sw_version": "0.1-beta",
 }
+
+
+async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, config):
+    """Test availability after MQTT disconnection."""
+    assert await async_setup_component(hass, domain, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+
+    mqtt_mock.connected = False
+    async_dispatcher_send(hass, MQTT_DISCONNECTED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def help_test_availability_without_topic(hass, mqtt_mock, domain, config):
