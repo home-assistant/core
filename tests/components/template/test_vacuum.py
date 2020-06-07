@@ -281,6 +281,37 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     assert hass.states.get("vacuum.test_template_vacuum") != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
 
+    def test_attribute_templates(self):
+        """Test attribute_templates template."""
+        assert await setup.async_setup_component(
+            hass,
+            "vacuum",
+            {
+                "vacuum": {
+                    "platform": "template",
+                    "vacuums": {
+                        "test_template_vacuum": {
+                            "value_template": "{{ 'cleaning' }}",
+                            "attribute_templates": {
+                                "test_attribute": "It {{ states.sensor.test_state.state }}."
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+        await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+        state = self.hass.states.get("vacuum.test_template_vacuum")
+        assert state.attributes.get("test_attribute") == "It ."
+
+        self.hass.states.set("sensor.test_state", "Works")
+        self.hass.block_till_done()
+        state = self.hass.states.get("vacuum.test_template_vacuum")
+        assert state.attributes["test_attribute"] == "It Works."
 
 # End of template tests #
 
