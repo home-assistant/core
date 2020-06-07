@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 _LOGGER.warning(
                     "Could not authorize with Azure DevOps. You may need to update your token"
                 )
-                hass.add_job(
+                hass.async_create_task(
                     hass.config_entries.flow.async_init(
                         DOMAIN, context={"source": "reauth"}, data=entry.data,
                     )
