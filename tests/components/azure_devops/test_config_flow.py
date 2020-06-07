@@ -12,8 +12,6 @@ from homeassistant.components.azure_devops.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project", CONF_PAT: "abc123"}
 
 
@@ -49,15 +47,8 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "authorization_error"}
 
 
-async def test_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on Azure DevOps connection error."""
-    aioclient_mock.get(
-        f"https://dev.azure.com/{FIXTURE_USER_INPUT[CONF_ORG]}/_apis/projects",
-        status=403,
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -78,16 +69,8 @@ async def test_connection_error(
     assert result2["errors"] == {"base": "connection_error"}
 
 
-async def test_full_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow works."""
-    aioclient_mock.get(
-        f"https://dev.azure.com/{FIXTURE_USER_INPUT[CONF_ORG]}/_apis/projects/{FIXTURE_USER_INPUT[CONF_PROJECT]}",
-        json={"id": "abcd-abcd-abcd-abcd", "name": "project"},
-        headers={"Content-Type": "application/json"},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -100,11 +83,15 @@ async def test_full_flow_implementation(
     ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
+    ), patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
+        json={"id": "abcd-abcd-abcd-abcd", "name": "project"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT,
         )
 
+    print(result2)
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert (
         result2["title"]
