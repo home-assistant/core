@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "conn_error": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "Tuya Konfiguration",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Geben Sie Ihre Tuya-Anmeldeinformationen ein.",
+                "title": "Tuya"
+            }
+        }
+    }
+}
