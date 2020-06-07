@@ -11,7 +11,7 @@ from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_PLATFORMS = ["alarm_control_panel"]
+GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
@@ -49,6 +49,7 @@ async def async_setup_gateway_entry(
     if not await gateway.async_connect_gateway(host, token):
         return False
     gateway_info = gateway.gateway_info
+    subdevices = gateway.gateway_device.devices
 
     hass.data[DOMAIN][entry.entry_id] = gateway.gateway_device
 
@@ -64,6 +65,17 @@ async def async_setup_gateway_entry(
         model=gateway_model,
         sw_version=gateway_info.firmware_version,
     )
+
+    for subdevice in subdevices:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, subdevice.sid)},
+            via_device=(DOMAIN, gateway_id),
+            manufacturer="Xiaomi",
+            name=f"{subdevice.device_type}-{subdevice.sid}",
+            model=subdevice.device_type,
+            sw_version=subdevice._fw_ver,
+        )
 
     for component in GATEWAY_PLATFORMS:
         hass.async_create_task(

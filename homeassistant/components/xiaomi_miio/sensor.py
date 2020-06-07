@@ -5,10 +5,23 @@ from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-er
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
+from .const import DOMAIN
+from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +47,39 @@ ATTR_SENSOR_STATE = "sensor_state"
 ATTR_MODEL = "model"
 
 SUCCESS = ["ok"]
+
+GATEWAY_SENSOR_TYPES = {
+    "temperature": [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "humidity": [UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
+    "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],
+}
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Xiaomi sensor from a config entry."""
+    entities = []
+
+    # Gateway subdevices
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+        gateway = hass.data[DOMAIN][config_entry.entry_id]
+        subdevices = gateway.devices
+        for subdevice in subdevices:
+            if subdevice.device_type == "AqaraHT":
+                entity = XiaomiGatewaySensor(subdevice, "temperature")
+                entities.append(entity)
+                entity = XiaomiGatewaySensor(subdevice, "humidity")
+                entities.append(entity)
+                entity = XiaomiGatewaySensor(subdevice, "pressure")
+                entities.append(entity)
+            if subdevice.device_type == "SensorHT":
+                entity = XiaomiGatewaySensor(subdevice, "temperature")
+                entities.append(entity)
+                entity = XiaomiGatewaySensor(subdevice, "humidity")
+                entities.append(entity)
+                entity = XiaomiGatewaySensor(subdevice, "pressure")
+                entities.append(entity)
+
+    async_add_entities(entities, update_before_add=True)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -156,3 +202,44 @@ class XiaomiAirQualityMonitor(Entity):
         except DeviceException as ex:
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+
+class XiaomiGatewaySensor(XiaomiGatewayDevice):
+    """Representation of a XiaomiGatewaySensor."""
+
+    def __init__(self, subdevice, data_key):
+        """Initialize the XiaomiSensor."""
+        XiaomiGatewayDevice.__init__(self, subdevice)
+        self._data_key = data_key
+        self._unique_id = f"{subdevice.sid}-{data_key}"
+        self._name = f"{subdevice.sid}-{data_key}"
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        try:
+            return GATEWAY_SENSOR_TYPES.get(self._data_key)[1]
+        except TypeError:
+            return None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        try:
+            return GATEWAY_SENSOR_TYPES.get(self._data_key)[0]
+        except TypeError:
+            return None
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return (
+            GATEWAY_SENSOR_TYPES.get(self._data_key)[2]
+            if self._data_key in GATEWAY_SENSOR_TYPES
+            else None
+        )
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._subdevice.status[self._data_key]
