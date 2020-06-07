@@ -69,11 +69,18 @@ def normalize_event(event):
     normalized_event["end"] = end
 
     # cleanup the string so we don't have a bunch of double+ spaces
+    normalized_event["event_id"] = event.get("id", "")
+    normalized_event["status"] = event.get("status", "")
+    normalized_event["created"] = event.get("created", "")
+    normalized_event["updated"] = event.get("updated", "")
     summary = event.get("summary", "")
     normalized_event["message"] = re.sub("  +", "", summary).strip()
     normalized_event["location"] = event.get("location", "")
     normalized_event["description"] = event.get("description", "")
     normalized_event["all_day"] = "date" in event["start"]
+    normalized_event["reminders"] = event.get("reminders", "")
+    normalized_event["transparency"] = event.get("transparency", "")
+    normalized_event["visibility"] = event.get("visibility", "")
 
     return normalized_event
 
@@ -132,12 +139,19 @@ class CalendarEventDevice(Entity):
 
         event = normalize_event(event)
         return {
+            "event_id": event["event_id"],
+            "status": event["status"],
+            "created": event["created"],
+            "updated": event["updated"],
             "message": event["message"],
             "all_day": event["all_day"],
             "start_time": event["start"],
             "end_time": event["end"],
             "location": event["location"],
             "description": event["description"],
+            "reminders": event["reminders"],
+            "transparency": event["transparency"],
+            "visibility": event["visibility"],
         }
 
     @property
