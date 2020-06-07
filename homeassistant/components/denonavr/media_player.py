@@ -71,7 +71,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 config_entry.data[CONF_MAC],
             )
         )
-    _LOGGER.info(
+    _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )
     async_add_entities(entities)
