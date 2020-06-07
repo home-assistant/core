@@ -36,7 +36,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 _LOGGER.warning(
                     "Could not authorize with Azure DevOps. You may need to update your token"
                 )
-                raise ConfigEntryNotReady
+                hass.add_job(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN, context={"source": "reauth"}, data=entry.data,
+                    )
+                )
+                return False
         await client.get_project(entry.data[CONF_ORG], entry.data[CONF_PROJECT])
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)

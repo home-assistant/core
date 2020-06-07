@@ -6,7 +6,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.azure_devops.const import (
+from homeassistant.components.azure_devops.const import (  # pylint:disable=unused-import
     CONF_ORG,
     CONF_PAT,
     CONF_PROJECT,
@@ -23,14 +23,21 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def __init__(self):
+        """Initialize config flow."""
+        self._organization = None
+        self._project = None
+        self._pat = None
+        self._reauth = False
+
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ORG): str,
-                    vol.Required(CONF_PROJECT): str,
+                    vol.Required(CONF_ORG, default=self._organization): str,
+                    vol.Required(CONF_PROJECT, default=self._project): str,
                     vol.Optional(CONF_PAT): str,
                 }
             ),
@@ -42,29 +49,55 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input)
 
-        errors = {}
+        self._organization = user_input[CONF_ORG]
+        self._project = user_input[CONF_PROJECT]
+        self._pat = user_input.get(CONF_PAT)
 
-        organization = user_input[CONF_ORG]
-        project = user_input[CONF_PROJECT]
-        pat = user_input.get(CONF_PAT)
+        return await self.async_step_confirm()
+
+    async def async_step_reauth(self, user_input=None):
+        """Handle configuration by re-auth."""
+        if user_input is None:
+            return await self._show_setup_form(user_input)
+
+        self._organization = user_input[CONF_ORG]
+        self._project = user_input[CONF_PROJECT]
+        self._pat = user_input[CONF_PAT]
+        self._reauth = True
+
+        await self.async_set_unique_id(f"{self._organization}_{self._project}")
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(self):
+        """Handle final configuration step."""
+        if not self._reauth:
+            await self.async_set_unique_id(f"{self._organization}_{self._project}")
+            self._abort_if_unique_id_configured()
+
+        errors = {}
 
         client = DevOpsClient()
 
         try:
-            if pat is not None:
-                await client.authorize(pat, organization)
+            if self._pat is not None:
+                await client.authorize(self._pat, self._organization)
                 if not client.authorized:
                     errors["base"] = "authorization_error"
                     return await self._show_setup_form(errors)
-            await client.get_project(organization, project)
+            project_info = await client.get_project(self._organization, self._project)
+            if project_info is None:
+                errors["base"] = "authorization_error"
+                return await self._show_setup_form(errors)
         except aiohttp.ClientError:
             errors["base"] = "connection_error"
             return await self._show_setup_form(errors)
 
-        await self.async_set_unique_id(f"{organization}_{project}")
-        self._abort_if_unique_id_configured()
-
         return self.async_create_entry(
-            title=f"{organization}/{project}",
-            data={CONF_ORG: organization, CONF_PROJECT: project, CONF_PAT: pat},
+            title=f"{self._organization}/{self._project}",
+            data={
+                CONF_ORG: self._organization,
+                CONF_PROJECT: self._project,
+                CONF_PAT: self._pat,
+            },
         )

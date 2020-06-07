@@ -42,13 +42,14 @@ async def async_setup_entry(
         builds: List[DevOpsBuild] = await client.get_builds(
             organization, project, BUILDS_QUERY
         )
-        for build in builds:
-            sensors.append(
-                AzureDevOpsLatestBuildSensor(client, organization, project, build)
-            )
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
         raise PlatformNotReady from exception
+
+    for build in builds:
+        sensors.append(
+            AzureDevOpsLatestBuildSensor(client, organization, project, build)
+        )
 
     async_add_entities(sensors, True)
 
