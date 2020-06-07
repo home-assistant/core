@@ -85,7 +85,7 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         "homeassistant.components.azure_devops.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.azure_devops.async_setup_entry", return_value=True,
-    ) as mock_setup_entry, patch(
+    ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
     ), patch(
@@ -109,4 +109,3 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 0
