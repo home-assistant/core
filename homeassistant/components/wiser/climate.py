@@ -70,6 +70,12 @@ WISER_PRESET_TO_HASS = {
     "fromcomfortmode": None,
 }
 
+HASS_HVAC_TO_WISER = {
+    HVAC_MODE_AUTO: "auto",
+    HVAC_MODE_HEAT: "manual",
+    HVAC_MODE_OFF: "manual",
+}
+
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 BOOST_HEATING_SCHEMA = vol.Schema(
@@ -417,7 +423,7 @@ class WiserRoom(ClimateEntity):
         """ Cancel boost mode """
         # TODO: Map HVAC modes to Wiser Modes
         if preset_mode.lower() == PRESET_BOOST_CANCEL.lower():
-            preset_mode = self.hvac_mode
+            preset_mode = HASS_HVAC_TO_WISER[self.hvac_mode]
 
         """ Deal with boost time variations """
         if preset_mode.lower() == PRESET_BOOST30.lower():
