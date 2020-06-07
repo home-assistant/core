@@ -57,9 +57,6 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Handle configuration by re-auth."""
-        if user_input is None:
-            return await self._show_setup_form(user_input)
-
         self._organization = user_input[CONF_ORG]
         self._project = user_input[CONF_PROJECT]
         self._pat = user_input[CONF_PAT]
