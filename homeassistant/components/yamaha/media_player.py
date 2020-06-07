@@ -51,12 +51,6 @@ DEFAULT_NAME = "Yamaha Receiver"
 
 MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
-ENABLE_OUTPUT_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string}
-)
-
-SELECT_SCENE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({vol.Required(ATTR_SCENE): cv.string})
-
 SUPPORT_YAMAHA = (
     SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_MUTE
@@ -90,8 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # discovering a receiver dynamically that we have static config
     # for. Map each device from its zone_id to an instance since
     # YamahaDevice is not hashable (thus not possible to add to a set).
-    if hass.data.get(DATA_YAMAHA) is None:
-        hass.data[DATA_YAMAHA] = {}
+    known_zones = hass.data.setdefault(DATA_YAMAHA, set())
 
     def _discovery():
         """Discover receivers from configuration or network."""
@@ -122,32 +115,35 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             ctrl_url = f"http://{host}:80/YamahaRemoteControl/ctrl"
             receivers = rxv.RXV(ctrl_url, name).zone_controllers()
 
-        devices = []
+        entities = []
         for receiver in receivers:
             if receiver.zone in zone_ignore:
                 continue
 
-            device = YamahaDevice(
+            entity = YamahaDevice(
                 name, receiver, source_ignore, source_names, zone_names
             )
 
             # Only add device if it's not already added
-            if device.zone_id not in hass.data[DATA_YAMAHA]:
-                hass.data[DATA_YAMAHA][device.zone_id] = device
-                devices.append(device)
+            if entity.zone_id not in known_zones:
+                known_zones.add(entity.zone_id)
+                entities.append(entity)
             else:
                 _LOGGER.debug("Ignoring duplicate receiver: %s", name)
 
-        hass.add_job(async_add_entities, devices)
+        return entities
 
-    hass.async_add_executor_job(_discovery)
+    entities = await hass.async_add_executor_job(_discovery)
+    async_add_entities(entities)
 
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        SERVICE_SELECT_SCENE, SELECT_SCENE_SCHEMA, "async_set_scene",
+        SERVICE_SELECT_SCENE, {vol.Required(ATTR_SCENE): cv.string,}, "set_scene",
     )
     platform.async_register_entity_service(
-        SERVICE_ENABLE_OUTPUT, ENABLE_OUTPUT_SCHEMA, "async_enable_output",
+        SERVICE_ENABLE_OUTPUT,
+        {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string,},
+        "enable_output",
     )
 
 
@@ -366,17 +362,9 @@ class YamahaDevice(MediaPlayerEntity):
         if media_type == "NET RADIO":
             self.receiver.net_radio(media_id)
 
-    async def async_enable_output(self, enabled, port):
-        """Enable or disable an output port.."""
-        await self.hass.async_add_job(self.enable_output, port, enabled)
-
     def enable_output(self, port, enabled):
         """Enable or disable an output port.."""
         self.receiver.enable_output(port, enabled)
-
-    async def async_set_scene(self, scene):
-        """Set the current scene."""
-        await self.hass.async_add_job(self.set_scene, scene)
 
     @property
     def scene(self):
