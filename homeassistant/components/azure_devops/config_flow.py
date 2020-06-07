@@ -44,6 +44,17 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    async def _show_reauth_form(self, errors=None):
+        """Show the reauth form to the user."""
+        return self.async_show_form(
+            step_id="reauth",
+            description_placeholders={
+                "project_url": f"{self._organization}/{self._project}"
+            },
+            data_schema=vol.Schema({vol.Required(CONF_PAT): str}),
+            errors=errors or {},
+        )
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if user_input is None:
@@ -57,10 +68,19 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Handle configuration by re-auth."""
-        self._organization = user_input[CONF_ORG]
-        self._project = user_input[CONF_PROJECT]
+        if user_input is None:
+            return await self._show_reauth_form(user_input)
+
+        if user_input.get(CONF_ORG) and user_input.get(CONF_PROJECT):
+            self._organization = user_input[CONF_ORG]
+            self._project = user_input[CONF_PROJECT]
         self._pat = user_input[CONF_PAT]
         self._reauth = True
+
+        # pylint: disable=no-member
+        self.context["title_placeholders"] = {
+            "project_url": f"{self._organization}/{self._project}",
+        }
 
         await self.async_set_unique_id(f"{self._organization}_{self._project}")
 
@@ -81,13 +101,19 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
                 await client.authorize(self._pat, self._organization)
                 if not client.authorized:
                     errors["base"] = "authorization_error"
+                    if self._reauth:
+                        return await self._show_reauth_form(errors)
                     return await self._show_setup_form(errors)
             project_info = await client.get_project(self._organization, self._project)
             if project_info is None:
                 errors["base"] = "authorization_error"
+                if self._reauth:
+                    return await self._show_reauth_form(errors)
                 return await self._show_setup_form(errors)
         except aiohttp.ClientError:
             errors["base"] = "connection_error"
+            if self._reauth:
+                return await self._show_reauth_form(errors)
             return await self._show_setup_form(errors)
 
         return self.async_create_entry(
