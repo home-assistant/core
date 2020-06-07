@@ -1,0 +1,85 @@
+{
+    "state": {
+        "_": {
+            "off": "Off",
+            "on": "On"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Rendah"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Dingin"
+        },
+        "connectivity": {
+            "off": "Terputus",
+            "on": "Terhubung"
+        },
+        "door": {
+            "off": "Tertutup",
+            "on": "Terbuka"
+        },
+        "garage_door": {
+            "off": "Tertutup",
+            "on": "Terbuka"
+        },
+        "gas": {
+            "off": "Kosong",
+            "on": "Terdeteksi"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Panas"
+        },
+        "lock": {
+            "off": "Terkunci",
+            "on": "Terbuka"
+        },
+        "moisture": {
+            "off": "Kering",
+            "on": "Basah"
+        },
+        "motion": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "occupancy": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "opening": {
+            "off": "Tertutup",
+            "on": "Terbuka"
+        },
+        "presence": {
+            "off": "Keluar",
+            "on": "Rumah"
+        },
+        "problem": {
+            "off": "Oke",
+            "on": "Masalah"
+        },
+        "safety": {
+            "off": "Aman",
+            "on": "Tidak aman"
+        },
+        "smoke": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "sound": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "vibration": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "window": {
+            "off": "Tertutup",
+            "on": "Terbuka"
+        }
+    },
+    "title": "Sensor biner"
+}

@@ -1,5 +1,4 @@
 """Support for WiLight lights."""
-import asyncio
 import logging
 
 from homeassistant.components.light import (
@@ -9,12 +8,12 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     LightEntity,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from . import WiLightDevice
 from .const import (
     DOMAIN,
-    DT_PENDING,
     ITEM_LIGHT,
     LIGHT_COLOR,
     LIGHT_DIMMER,
@@ -26,47 +25,44 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def devices_from_discovered_wilight(hass, wilight):
-    """Parse configuration and add WiLight light devices."""
-    devices = []
-    for item in wilight.items:
+def entities_from_discovered_wilight(hass, api_device):
+    """Parse configuration and add WiLight light entities."""
+    entities = []
+    for item in api_device.items:
         if item["type"] != ITEM_LIGHT:
             continue
         if item["sub_type"] == LIGHT_NONE:
             continue
         index = item["index"]
         item_name = item["name"]
-        aux1 = item["type"]
-        aux2 = item["sub_type"]
-        item_type = f"{aux1}.{aux2}"
         if item["sub_type"] == LIGHT_ON_OFF:
-            device = WiLightLightOnOff(wilight, index, item_name, item_type)
+            entity = WiLightLightOnOff(api_device, index, item_name)
         elif item["sub_type"] == LIGHT_DIMMER:
-            device = WiLightLightDimmer(wilight, index, item_name, item_type)
+            entity = WiLightLightDimmer(api_device, index, item_name)
         elif item["sub_type"] == LIGHT_COLOR:
-            device = WiLightLightColor(wilight, index, item_name, item_type)
+            entity = WiLightLightColor(api_device, index, item_name)
         else:
             continue
-        devices.append(device)
+        entities.append(entity)
 
-    return devices
+    return entities
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up WiLights lights."""
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
+    """Set up WiLight lights from a config entry."""
+    parent = hass.data[DOMAIN][entry.entry_id]
 
-    async def _discovered_wilight(hass, device):
-        """Handle a discovered WiLight device."""
-        async_add_entities(devices_from_discovered_wilight(hass, device))
+    """Handle a discovered WiLight device."""
+    entities = entities_from_discovered_wilight(hass, parent.api)
+    async_add_entities(entities)
 
-    async_dispatcher_connect(hass, f"{DOMAIN}.light", _discovered_wilight)
 
-    await asyncio.gather(
-        *[
-            _discovered_wilight(hass, device)
-            for device in hass.data[DOMAIN][DT_PENDING].pop("light")
-        ]
-    )
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+
+    return True
 
 
 class WiLightLightOnOff(WiLightDevice, LightEntity):
@@ -75,6 +71,7 @@ class WiLightLightOnOff(WiLightDevice, LightEntity):
     def __init__(self, *args, **kwargs):
         """Initialize the device."""
         WiLightDevice.__init__(self, *args, **kwargs)
+        """Initialize the WiLights onoff."""
         self._on = False
 
     @property
@@ -104,6 +101,7 @@ class WiLightLightDimmer(WiLightDevice, LightEntity):
     def __init__(self, *args, **kwargs):
         """Initialize the device."""
         WiLightDevice.__init__(self, *args, **kwargs)
+        """Initialize the WiLights dimmer."""
         self._on = False
         self._brightness = 0
 
@@ -167,6 +165,7 @@ class WiLightLightColor(WiLightDevice, LightEntity):
     def __init__(self, *args, **kwargs):
         """Initialize the device."""
         WiLightDevice.__init__(self, *args, **kwargs)
+        """Initialize the WiLights color."""
         self._on = False
         self._brightness = 0
         self._hue = 0

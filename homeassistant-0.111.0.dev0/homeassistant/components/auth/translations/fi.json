@@ -1,0 +1,15 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "step": {
+                "setup": {
+                    "title": "Varmista asetukset"
+                }
+            },
+            "title": "Ilmoita kertaluonteinen salasana"
+        },
+        "totp": {
+            "title": "TOTP"
+        }
+    }
+}

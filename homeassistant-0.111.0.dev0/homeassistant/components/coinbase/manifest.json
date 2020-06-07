@@ -1,0 +1,7 @@
+{
+  "domain": "coinbase",
+  "name": "Coinbase",
+  "documentation": "https://www.home-assistant.io/integrations/coinbase",
+  "requirements": ["coinbase==2.1.0"],
+  "codeowners": []
+}

@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este televisor ya est\u00e1 configurado."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, host o c\u00f3digo PIN no v\u00e1lido.",
+            "invalid_host": "Nombre del host o direcci\u00f3n IP no v\u00e1lidos.",
+            "unsupported_model": "Tu modelo de televisor no es compatible."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "C\u00f3digo PIN"
+                },
+                "description": "Introduce el c\u00f3digo PIN que se muestra en el televisor Sony Bravia.\n\nSi no se muestra ning\u00fan c\u00f3digo PIN, necesitas eliminar el registro de Home Assistant de tu televisor, ve a: Configuraci\u00f3n -> Red -> Configuraci\u00f3n del dispositivo remoto -> Eliminar el dispositivo remoto.",
+                "title": "Autorizar televisor Sony Bravia"
+            },
+            "user": {
+                "data": {
+                    "host": "Nombre host del televisor o direcci\u00f3n IP"
+                },
+                "description": "Configura la integraci\u00f3n del televisor Sony Bravia. Si tienes problemas con la configuraci\u00f3n, ve a: https://www.home-assistant.io/integrations/braviatv\n\nAseg\u00farate de que tu televisor est\u00e1 encendido.",
+                "title": "Televisor Sony Bravia"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Lista de fuentes ignoradas"
+                },
+                "title": "Opciones para el televisor Sony Bravia"
+            }
+        }
+    }
+}

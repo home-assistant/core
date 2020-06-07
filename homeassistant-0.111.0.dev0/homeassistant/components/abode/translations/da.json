@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning af Abode."
+        },
+        "error": {
+            "connection_error": "Kunne ikke oprette forbindelse til Abode.",
+            "identifier_exists": "Konto er allerede registreret.",
+            "invalid_credentials": "Ugyldige legitimationsoplysninger."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Email-adresse"
+                },
+                "title": "Udfyld dine Abode-loginoplysninger"
+            }
+        }
+    }
+}

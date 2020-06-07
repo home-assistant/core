@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Home Assistant \uc5d0\ub294 \ud558\ub098\uc758 Atag \uae30\uae30\ub9cc \ucd94\uac00\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "connection_error": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "\uc774\uba54\uc77c (\uc120\ud0dd \uc0ac\ud56d)",
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "port": "\ud3ec\ud2b8"
+                },
+                "title": "\uae30\uae30\uc5d0 \uc5f0\uacb0\ud558\uae30"
+            }
+        }
+    },
+    "title": "Atag"
+}

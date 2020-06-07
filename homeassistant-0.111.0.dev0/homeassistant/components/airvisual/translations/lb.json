@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebs Koordinate oder ode/Pro ID si schon registr\u00e9iert."
+        },
+        "error": {
+            "general_error": "Onbekannten Feeler",
+            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel uginn",
+            "unable_to_connect": "Kann sech net mat der Node/Pri verbannen."
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad"
+                },
+                "description": "Benotz Airvisual cloud API fir eng geografescher Lag z'iwwerwaachen.",
+                "title": "Geografie ariichten"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "IP Adresse / Numm vun der Unit\u00e9it",
+                    "password": "Passwuert vun der Unit\u00e9it"
+                },
+                "description": "Pers\u00e9inlech Airvisual Unit\u00e9it iwwerwaachen. Passwuert kann vum UI vum Apparat ausgelies ginn.",
+                "title": "Airvisual Node/Pro ariichten"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "cloud_api": "Geografesche Standuert",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad",
+                    "node_pro": "Airvisual Node Pro",
+                    "type": "Typ vun der Integratioun"
+                },
+                "description": "Loft Qualit\u00e9it an enger geografescher Lag iwwerwaachen.",
+                "title": "AirVisual konfigur\u00e9ieren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Iwwerwaachte Geografie op der Kaart uweisen"
+                },
+                "description": "Verschidden Optioune fir d'AirVisual Integratioun d\u00e9fin\u00e9ieren.",
+                "title": "Airvisual ariichten"
+            }
+        }
+    }
+}

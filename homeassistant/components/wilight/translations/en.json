@@ -1,14 +1,19 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No WiLight devices found on the network.",
-            "single_instance_allowed": "Only a single configuration of WiLight is possible."
+			"already_in_progress": "WiLight configuration is already in progress.",
+			"already_configured": "This WiLight is already configured.",
+			"not_successful": "Unable to connect to this WiLight device.",
+			"not_supported": "This WiLight device is currently not supported.",
+			"not_wilight": "This Device is not WiLight.",
+			"unknown": "Unknown error occurred."
         },
-        "step": {
-            "confirm": {
-                "description": "Do you want to set up WiLight?",
-                "title": "WiLight"
-            }
-        }
+		"flow_title": "WiLight: {name}",
+		"step": {
+			"confirm": {
+				"title": "WiLight",
+				"description": "Do you want to set up WiLight {name}?\n\n It supports: {components}"
+			}
+		}
     }
 }

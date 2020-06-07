@@ -1,0 +1,175 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_bat_low": "{entity_name} Batterie ass niddereg",
+            "is_cold": "{entity_name} ass kal",
+            "is_connected": "{entity_name} ass verbonnen",
+            "is_gas": "{entity_name} entdeckt Gas",
+            "is_hot": "{entity_name} ass waarm",
+            "is_light": "{entity_name} entdeckt Luucht",
+            "is_locked": "{entity_name} ass gespaart",
+            "is_moist": "{entity_name} ass fiicht",
+            "is_motion": "{entity_name} entdeckt Beweegung",
+            "is_moving": "{entity_name} beweegt sech",
+            "is_no_gas": "{entity_name} entdeckt kee Gas",
+            "is_no_light": "{entity_name} entdeckt keng Luucht",
+            "is_no_motion": "{entity_name} entdeckt keng Beweegung",
+            "is_no_problem": "{entity_name} entdeckt keng Problemer",
+            "is_no_smoke": "{entity_name} entdeckt keen Damp",
+            "is_no_sound": "{entity_name} entdeckt keen Toun",
+            "is_no_vibration": "{entity_name} entdeckt keng Vibratiounen",
+            "is_not_bat_low": "{entity_name} Batterie ass normal",
+            "is_not_cold": "{entity_name} ass net kal",
+            "is_not_connected": "{entity_name} ass d\u00e9connect\u00e9iert",
+            "is_not_hot": "{entity_name} ass net waarm",
+            "is_not_locked": "{entity_name} ass entspaart",
+            "is_not_moist": "{entity_name} ass dr\u00e9chen",
+            "is_not_moving": "{entity_name} beweegt sech net",
+            "is_not_occupied": "{entity_name} ass fr\u00e4i",
+            "is_not_open": "{entity_name} ass zou",
+            "is_not_plugged_in": "{entity_name} ass net ugeschloss",
+            "is_not_powered": "{entity_name} ass net aliment\u00e9iert",
+            "is_not_present": "{entity_name} ass net pr\u00e4sent",
+            "is_not_unsafe": "{entity_name} ass s\u00e9cher",
+            "is_occupied": "{entity_name} ass besat",
+            "is_off": "{entity_name} ass aus",
+            "is_on": "{entity_name} ass un",
+            "is_open": "{entity_name} ass op",
+            "is_plugged_in": "{entity_name} ass ugeschloss",
+            "is_powered": "{entity_name} ass aliment\u00e9iert",
+            "is_present": "{entity_name} ass pr\u00e4sent",
+            "is_problem": "{entity_name} entdeckt Problemer",
+            "is_smoke": "{entity_name} entdeckt Damp",
+            "is_sound": "{entity_name} entdeckt Toun",
+            "is_unsafe": "{entity_name} ass ons\u00e9cher",
+            "is_vibration": "{entity_name} entdeckt Vibratiounen"
+        },
+        "trigger_type": {
+            "bat_low": "{entity_name} Batterie niddereg",
+            "cold": "{entity_name} gouf kal",
+            "connected": "{entity_name} ass verbonnen",
+            "gas": "{entity_name} huet ugefaangen Gas z'entdecken",
+            "hot": "{entity_name} gouf waarm",
+            "light": "{entity_name} huet ugefange Luucht z'entdecken",
+            "locked": "{entity_name} gespaart",
+            "moist": "{entity_name} gouf fiicht",
+            "motion": "{entity_name} huet ugefaange Beweegung z'entdecken",
+            "moving": "{entity_name} huet ugefaangen sech ze beweegen",
+            "no_gas": "{entity_name} huet opgehale Gas z'entdecken",
+            "no_light": "{entity_name} huet opgehale Luucht z'entdecken",
+            "no_motion": "{entity_name} huet opgehale Beweegung z'entdecken",
+            "no_problem": "{entity_name} huet opgehale Problemer z'entdecken",
+            "no_smoke": "{entity_name} huet opgehale Damp z'entdecken",
+            "no_sound": "{entity_name} huet opgehale Toun z'entdecken",
+            "no_vibration": "{entity_name} huet opgehale Vibratiounen z'entdecken",
+            "not_bat_low": "{entity_name} Batterie normal",
+            "not_cold": "{entity_name} gouf net kal",
+            "not_connected": "{entity_name} d\u00e9connect\u00e9iert",
+            "not_hot": "{entity_name} gouf net waarm",
+            "not_locked": "{entity_name} entspaart",
+            "not_moist": "{entity_name} gouf dr\u00e9chen",
+            "not_moving": "{entity_name} huet opgehale sech ze beweegen",
+            "not_occupied": "{entity_name} gouf fr\u00e4i",
+            "not_opened": "{entity_name} gouf zougemaach",
+            "not_plugged_in": "{entity_name} net ugeschloss",
+            "not_powered": "{entity_name} net aliment\u00e9iert",
+            "not_present": "{entity_name} net pr\u00e4sent",
+            "not_unsafe": "{entity_name} gouf s\u00e9cher",
+            "occupied": "{entity_name} gouf besat",
+            "opened": "{entity_name} gouf opgemaach",
+            "plugged_in": "{entity_name} ugeschloss",
+            "powered": "{entity_name} aliment\u00e9iert",
+            "present": "{entity_name} pr\u00e4sent",
+            "problem": "{entity_name} huet ugefaange Problemer z'entdecken",
+            "smoke": "{entity_name} huet ugefaangen Damp z'entdecken",
+            "sound": "{entity_name} huet ugefaangen Toun z'entdecken",
+            "turned_off": "{entity_name} gouf ausgeschalt",
+            "turned_on": "{entity_name} gouf ugeschalt",
+            "unsafe": "{entity_name} gouf ons\u00e9cher",
+            "vibration": "{entity_name} huet ugefaange Vibratiounen z'entdecken"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "Un"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Niddreg"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Kal"
+        },
+        "connectivity": {
+            "off": "Net Verbonnen",
+            "on": "Verbonnen"
+        },
+        "door": {
+            "off": "Zou",
+            "on": "Op"
+        },
+        "garage_door": {
+            "off": "Zou",
+            "on": "Op"
+        },
+        "gas": {
+            "off": "Kloer",
+            "on": "Detekt\u00e9iert"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Waarm"
+        },
+        "lock": {
+            "off": "Gespaart",
+            "on": "Net gespaart"
+        },
+        "moisture": {
+            "off": "Dr\u00e9chen",
+            "on": "Naass"
+        },
+        "motion": {
+            "off": "Roueg",
+            "on": "Detekt\u00e9iert"
+        },
+        "occupancy": {
+            "off": "Roueg",
+            "on": "Detekt\u00e9iert"
+        },
+        "opening": {
+            "off": "Zou",
+            "on": "Op"
+        },
+        "presence": {
+            "off": "\u00cbnnerwee",
+            "on": "Doheem"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "S\u00e9cher",
+            "on": "Ons\u00e9cher"
+        },
+        "smoke": {
+            "off": "Kloer",
+            "on": "Detekt\u00e9iert"
+        },
+        "sound": {
+            "off": "Roueg",
+            "on": "Detekt\u00e9iert"
+        },
+        "vibration": {
+            "off": "Kloer",
+            "on": "Detekt\u00e9iert"
+        },
+        "window": {
+            "off": "Zou",
+            "on": "Op"
+        }
+    },
+    "title": "Bin\u00e4ren Sensor"
+}

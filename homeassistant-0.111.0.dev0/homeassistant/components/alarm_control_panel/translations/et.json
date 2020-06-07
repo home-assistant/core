@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "armed": "Valves",
+            "armed_away": "Valves eemal",
+            "armed_custom_bypass": "Valves, eranditega",
+            "armed_home": "Valves kodus",
+            "armed_night": "Valves \u00f6ine",
+            "arming": "Valvestab",
+            "disarmed": "Maas",
+            "disarming": "Maas...",
+            "pending": "Ootel",
+            "triggered": "H\u00e4ires"
+        }
+    },
+    "title": "Valvekeskuse juhtpaneel"
+}

@@ -1,0 +1,88 @@
+enable_recording:
+  description: Enable continuous recording to camera storage.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+
+disable_recording:
+  description: Disable continuous recording to camera storage.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+
+enable_audio:
+  description: Enable audio stream.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+
+disable_audio:
+  description: Disable audio stream.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+
+enable_motion_recording:
+  description: Enable recording a clip to camera storage when motion is detected.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+
+disable_motion_recording:
+  description: Disable recording a clip to camera storage when motion is detected.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+
+goto_preset:
+  description: Move camera to PTZ preset.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+    preset:
+      description: Preset number, starting from 1.
+      example: 1
+
+set_color_bw:
+  description: Set camera color mode.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+    color_bw:
+      description: Color mode, one of 'auto', 'color' or 'bw'.
+      example: auto
+
+start_tour:
+  description: Start camera's PTZ tour function.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+
+stop_tour:
+  description: Stop camera's PTZ tour function.
+  fields:
+    entity_id:
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+
+ptz_control:
+  description: Move (Pan/Tilt) and/or Zoom a PTZ camera
+  fields:
+    entity_id:
+      description: "Name of the camera, or 'all' for all cameras."
+      example: "camera.house_front"
+    movement:
+      description: "up, down, right, left, right_up, right_down, left_up, left_down, zoom_in, zoom_out"
+      example: "right"
+    travel_time:
+      description: "(optional) Travel time in fractional seconds: from 0 to 1.  Default: .2"
+      example: ".5"
