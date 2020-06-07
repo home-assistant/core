@@ -81,6 +81,7 @@ class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
     def __init__(self, config: None, discovery_info: None):
+        """Initialize the Configuration Info for Yamaha Receiver."""
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
         self.ctrl_url = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
@@ -157,11 +158,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        SERVICE_SELECT_SCENE, {vol.Required(ATTR_SCENE): cv.string,}, "set_scene",
+        SERVICE_SELECT_SCENE, {vol.Required(ATTR_SCENE): cv.string}, "set_scene",
     )
     platform.async_register_entity_service(
         SERVICE_ENABLE_OUTPUT,
-        {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string,},
+        {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string},
         "enable_output",
     )
 
