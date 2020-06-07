@@ -37,6 +37,7 @@ from .const import (
     CURRENT,
     DAILY,
     DEFAULT_NAME,
+    DISABLE_FORECASTS,
     DOMAIN,
     FORECASTS,
     HOURLY,
@@ -53,10 +54,10 @@ SCHEMA = vol.Schema(
         vol.Inclusive(CONF_LATITUDE, "location"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "location"): cv.longitude,
         vol.Optional(CONF_UNIT_SYSTEM): cv.unit_system,
-        vol.Optional(CONF_FORECAST_FREQUENCY): vol.In((DAILY, HOURLY)),
-        vol.Optional(CONF_AQI_COUNTRY, default=USA.lower()): vol.In(
-            (USA.lower(), CHINA.lower())
+        vol.Optional(CONF_FORECAST_FREQUENCY, default=DAILY): vol.In(
+            (DISABLE_FORECASTS, DAILY, HOURLY)
         ),
+        vol.Optional(CONF_AQI_COUNTRY, default=USA): vol.In((USA, CHINA)),
     }
 )
 
@@ -111,18 +112,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
-    apikey = config_entry.data[CONF_API_KEY]
-    if CONF_LATITUDE in config_entry.data:
-        latitude = str(config_entry.data[CONF_LATITUDE])
-        longitude = str(config_entry.data[CONF_LONGITUDE])
-    else:
-        latitude = str(hass.config.latitude)
-        longitude = str(hass.config.longitude)
-
     coordinator = ClimaCellDataUpdateCoordinator(
         hass,
         config_entry,
-        ClimaCell(apikey, latitude, longitude, session=async_get_clientsession(hass)),
+        ClimaCell(
+            config_entry.data[CONF_API_KEY],
+            config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
+            config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+            session=async_get_clientsession(hass),
+        ),
         set_update_interval(hass, config_entry),
     )
 
@@ -194,14 +192,14 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                 self._api.availabile_fields(REALTIME)
             )
 
-            if self._forecast_frequency == HOURLY:
+            if self._forecast_frequency == HOURLY.lower():
                 data[FORECASTS] = await self._api.forecast_hourly(
                     self._api.availabile_fields(FORECAST_HOURLY),
                     None,
                     timedelta(hours=90),
                 )
 
-            if self._forecast_frequency == DAILY:
+            if self._forecast_frequency == DAILY.lower():
                 data[FORECASTS] = await self._api.forecast_daily(
                     self._api.availabile_fields(FORECAST_DAILY),
                     None,

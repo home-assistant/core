@@ -58,11 +58,11 @@ def _get_config_schema(
                 "location",
                 default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
             ): cv.longitude,
-            vol.Required(
+            vol.Optional(
                 CONF_FORECAST_FREQUENCY,
                 default=input_dict.get(CONF_FORECAST_FREQUENCY, DAILY),
             ): vol.In((DISABLE_FORECASTS, DAILY, HOURLY)),
-            vol.Required(
+            vol.Optional(
                 CONF_AQI_COUNTRY, default=input_dict.get(CONF_AQI_COUNTRY, USA),
             ): vol.In((USA, CHINA)),
         },

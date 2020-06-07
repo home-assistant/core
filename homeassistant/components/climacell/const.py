@@ -2,11 +2,11 @@
 CONF_FORECAST_FREQUENCY = "forecast_frequency"
 CONF_AQI_COUNTRY = "aqi_country"
 
-DISABLE_FORECASTS = "(Disable Forecasts)"
-DAILY = "Daily"
-HOURLY = "Hourly"
-USA = "USA"
-CHINA = "China"
+DISABLE_FORECASTS = "disable"
+DAILY = "daily"
+HOURLY = "hourly"
+USA = "usa"
+CHINA = "china"
 
 CURRENT = "current"
 FORECASTS = "forecasts"
@@ -27,7 +27,7 @@ ATTR_WEATHER_PRECIPITATION = "precipitation"
 ATTR_WEATHER_PRECIPITATION_TYPE = "precipitation_type"
 ATTR_WEATHER_WIND_GUST = "wind_gust"
 
-AQI_FIELD_LOOKUP = {USA.lower(): "epa_aqi", CHINA.lower(): "china_aqi"}
+AQI_FIELD_LOOKUP = {USA: "epa_aqi", CHINA: "china_aqi"}
 
 DIRECTIONS_LIST = [
     "N",
