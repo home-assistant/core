@@ -366,11 +366,6 @@ class YamahaDevice(MediaPlayerEntity):
         """Enable or disable an output port.."""
         self.receiver.enable_output(port, enabled)
 
-    @property
-    def scene(self):
-        """Return the current scene."""
-        return self.receiver.scene
-
     def set_scene(self, scene):
         """Set the current scene."""
         self.receiver.scene = scene
