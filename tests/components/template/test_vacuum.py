@@ -310,7 +310,7 @@ async def test_attribute_templates(hass, calls):
     assert state.attributes.get("test_attribute") == "It ."
 
     hass.states.set("sensor.test_state", "Works")
-    hass.block_till_done()
+    await hass.block_till_done()
     state = hass.states.get("vacuum.test_template_vacuum")
     assert state.attributes["test_attribute"] == "It Works."
 
