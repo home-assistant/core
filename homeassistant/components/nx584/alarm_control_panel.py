@@ -12,7 +12,6 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -51,34 +50,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     url = f"http://{host}:{port}"
 
     try:
-        alarmclient = client.Client(url)
-        await hass.async_add_executor_job(alarmclient.list_zones)
+        alarm_client = client.Client(url)
+        await hass.async_add_executor_job(alarm_client.list_zones)
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error(
             "Unable to connect to %(host)s: %(reason)s", dict(host=url, reason=ex),
         )
         raise PlatformNotReady
 
-    entity = NX584Alarm(name, alarmclient, url)
+    entity = NX584Alarm(name, alarm_client, url)
     async_add_entities([entity])
 
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
         SERVICE_BYPASS_ZONE,
-        {
-            vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Required(ATTR_ZONE): cv.positive_int,
-        },
+        {vol.Required(ATTR_ZONE): cv.positive_int,},  # noqa: E231
         "alarm_bypass",
     )
 
     platform.async_register_entity_service(
         SERVICE_UNBYPASS_ZONE,
-        {
-            vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Required(ATTR_ZONE): cv.positive_int,
-        },
+        {vol.Required(ATTR_ZONE): cv.positive_int,},  # noqa: E231
         "alarm_unbypass",
     )
 
