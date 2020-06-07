@@ -3,11 +3,14 @@
 from typing import Callable, List, Optional
 
 from python_awair.devices import AwairDevice
+import voluptuous as vol
 
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ACCESS_TOKEN
 from homeassistant.helpers import device_registry as dr
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import slugify
@@ -26,6 +29,19 @@ from .const import (
     LOGGER,
     SENSOR_TYPES,
 )
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_ACCESS_TOKEN): cv.string}, extra=vol.ALLOW_EXTRA,
+)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import Awair configuration from YAML."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config,
+        )
+    )
 
 
 async def async_setup_entry(

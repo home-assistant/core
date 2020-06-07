@@ -94,6 +94,6 @@ async def test_create_entry(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == f"foo@bar.com (32406)"
+        assert result["title"] == "foo@bar.com (32406)"
         assert result["data"][CONF_ACCESS_TOKEN] == CONFIG[CONF_ACCESS_TOKEN]
         assert result["result"].unique_id == CONFIG_ENTRY_UNIQUE_ID

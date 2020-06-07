@@ -23,6 +23,21 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up the Awair configuration flow."""
         self._errors = {}
 
+    async def async_step_import(self, conf: dict):
+        """Import a configuration from config.yaml."""
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason="already_setup")
+
+        if not conf[CONF_ACCESS_TOKEN]:
+            return self.async_abort(reason="auth")
+
+        await self.__abort_if_configured(conf[CONF_ACCESS_TOKEN])
+
+        return self.async_create_entry(
+            title="Awair (imported from configuration.yaml",
+            data={CONF_ACCESS_TOKEN: conf[CONF_ACCESS_TOKEN]},
+        )
+
     async def async_step_user(self, user_input: Union[dict, None] = None):
         """Handle a flow initialized by the user."""
         self._errors = {}
@@ -43,9 +58,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._errors["base"] = "unknown"
 
             if not self._errors:
-                unique_id = f"awair-{user_input[CONF_ACCESS_TOKEN]}"
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+                await self.__abort_if_configured(user_input[CONF_ACCESS_TOKEN])
 
                 title = f"{user.email} ({user.user_id})"
                 return self.async_create_entry(title=title, data=user_input)
@@ -55,3 +68,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
             errors=self._errors,
         )
+
+    async def __abort_if_configured(self, access_token: str):
+        """Abort if this access_token has been set up."""
+        unique_id = f"awair-{access_token}"
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
