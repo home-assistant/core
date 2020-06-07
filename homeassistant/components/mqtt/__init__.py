@@ -66,7 +66,6 @@ DOMAIN = "mqtt"
 
 DATA_MQTT = "mqtt"
 DATA_MQTT_CONFIG = "mqtt_config"
-DATA_MQTT_HASS_CONFIG = "mqtt_hass_config"
 
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
@@ -484,18 +483,14 @@ async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
 
 
 async def _async_setup_discovery(
-    hass: HomeAssistantType, conf: ConfigType, hass_config: ConfigType, config_entry
+    hass: HomeAssistantType, conf: ConfigType, config_entry
 ) -> bool:
     """Try to start the discovery of MQTT devices.
 
     This method is a coroutine.
     """
-    if discovery is None:
-        _LOGGER.error("Unable to load MQTT discovery")
-        return False
-
     success: bool = await discovery.async_start(
-        hass, conf[CONF_DISCOVERY_PREFIX], hass_config, config_entry
+        hass, conf[CONF_DISCOVERY_PREFIX], config_entry
     )
 
     return success
@@ -504,11 +499,6 @@ async def _async_setup_discovery(
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
     conf: Optional[ConfigType] = config.get(DOMAIN)
-
-    # We need this because discovery can cause components to be set up and
-    # otherwise it will not load the users config.
-    # This needs a better solution.
-    hass.data[DATA_MQTT_HASS_CONFIG] = config
 
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_remove_device)
@@ -716,9 +706,7 @@ async def async_setup_entry(hass, entry):
     )
 
     if conf.get(CONF_DISCOVERY):
-        await _async_setup_discovery(
-            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG], entry
-        )
+        await _async_setup_discovery(hass, conf, entry)
 
     return True
 
