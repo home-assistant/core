@@ -6,7 +6,7 @@
     "@rajlaud"
   ],
   "requirements": [
-    "pysqueezebox==0.2.1"
+    "pysqueezebox==0.2.2"
   ],
   "config_flow": true
 }
