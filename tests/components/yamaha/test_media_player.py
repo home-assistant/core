@@ -91,4 +91,4 @@ class TestYamahaMediaPlayer(unittest.TestCase):
         self.create_receiver(mock_rxv)
 
         self.select_scene("TV Viewing")
-        self.main_zone.select_scene.assert_called_with("TV Viewing")
+        assert self.main_zone.scene == "TV Viewing"
