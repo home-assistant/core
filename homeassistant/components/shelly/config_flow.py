@@ -7,7 +7,6 @@ from pprint import pformat
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components import mqtt
 from homeassistant.const import CONF_DEVICE_ID
 
 from .const import (
@@ -128,7 +127,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             try:
-                mqtt.valid_publish_topic(user_input[CONF_TOPIC])
+                self.hass.components.mqtt.valid_publish_topic(user_input[CONF_TOPIC])
                 success = await validate_input(self.hass, user_input)
                 if success:
                     device_id = self._device
