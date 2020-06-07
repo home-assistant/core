@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "already_in_progress": "La configuraci\u00f3n del flujo para el dispositivo ya est\u00e1 en marcha.",
+            "device_unavailable": "El dispositivo no est\u00e1 disponible"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "title": "Configurar el Agente de DVR"
+            }
+        }
+    },
+    "title": "Agente DVR"
+}

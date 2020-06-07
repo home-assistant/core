@@ -44,6 +44,8 @@ ZHA_CONFIG_SCHEMA = {
     ),
     vol.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
     vol.Optional(CONF_ZIGPY): dict,
+    vol.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
+    vol.Optional(CONF_USB_PATH): cv.string,
 }
 CONFIG_SCHEMA = vol.Schema(
     {

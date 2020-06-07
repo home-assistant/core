@@ -1,0 +1,21 @@
+# Describes the format for available Elexa Guardians services
+disable_ap:
+  description: Disable the device's onboard access point.
+enable_ap:
+  description: Enable the device's onboard access point.
+reboot:
+  description: Reboot the device.
+reset_valve_diagnostics:
+  description: Fully (and irrecoverably) reset all valve diagnostics.
+upgrade_firmware:
+  description: Upgrade the device firmware.
+  fields:
+    url:
+      description: (optional) The URL of the server hosting the firmware file.
+      example: https://repo.guardiancloud.services/gvc/fw
+    port:
+      description: (optional) The port on which the firmware file is served.
+      example: 443
+    filename:
+      description: (optional) The firmware filename.
+      example: latest.bin

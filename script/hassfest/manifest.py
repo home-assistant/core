@@ -54,8 +54,6 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("dependencies"): [str],
         vol.Optional("after_dependencies"): [str],
         vol.Required("codeowners"): [str],
-        vol.Optional("logo"): vol.Url(),  # pylint: disable=no-value-for-parameter
-        vol.Optional("icon"): vol.Url(),  # pylint: disable=no-value-for-parameter
     }
 )
 

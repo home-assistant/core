@@ -30,6 +30,8 @@ SENSOR_TYPES_CLASS = {
     "TiltSensor": None,
     "WeatherSensor": None,
     "IPContact": DEVICE_CLASS_OPENING,
+    "MotionIPV2": DEVICE_CLASS_MOTION,
+    "IPRemoteMotionV2": DEVICE_CLASS_MOTION,
 }
 
 

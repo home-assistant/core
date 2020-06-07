@@ -1,5 +1,7 @@
 """Tests for the WLED light platform."""
-import aiohttp
+import json
+
+from wled import Device as WLEDDevice, WLEDConnectionError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -11,6 +13,7 @@ from homeassistant.components.light import (
     ATTR_WHITE_VALUE,
     DOMAIN as LIGHT_DOMAIN,
 )
+from homeassistant.components.wled import SCAN_INTERVAL
 from homeassistant.components.wled.const import (
     ATTR_INTENSITY,
     ATTR_PALETTE,
@@ -30,8 +33,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
+from tests.common import async_fire_time_changed, load_fixture
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -137,6 +142,35 @@ async def test_switch_change_state(
         )
 
 
+async def test_dynamically_handle_segments(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test if a new/deleted segment is dynamically added/removed."""
+    await init_integration(hass, aioclient_mock)
+
+    assert hass.states.get("light.wled_rgb_light")
+    assert hass.states.get("light.wled_rgb_light_1")
+
+    data = json.loads(load_fixture("wled/rgb_single_segment.json"))
+    device = WLEDDevice(data)
+
+    # Test removal if segment went missing
+    with patch(
+        "homeassistant.components.wled.WLED.update", return_value=device,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
+        assert hass.states.get("light.wled_rgb_light")
+        assert not hass.states.get("light.wled_rgb_light_1")
+
+    # Test adding if segment shows up again
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.wled_rgb_light")
+    assert hass.states.get("light.wled_rgb_light_1")
+
+
 async def test_light_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
 ) -> None:
@@ -144,7 +178,7 @@ async def test_light_error(
     aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
+    with patch("homeassistant.components.wled.WLED.update"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -162,10 +196,11 @@ async def test_light_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test error handling of the WLED switches."""
-    aioclient_mock.post("http://192.168.1.123:80/json/state", exc=aiohttp.ClientError)
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
+    with patch("homeassistant.components.wled.WLED.update"), patch(
+        "homeassistant.components.wled.WLED.light", side_effect=WLEDConnectionError
+    ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -342,7 +377,7 @@ async def test_effect_service_error(
     aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
+    with patch("homeassistant.components.wled.WLED.update"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EFFECT,

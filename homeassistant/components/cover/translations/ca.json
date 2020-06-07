@@ -13,8 +13,8 @@
             "is_closing": "{entity_name} est\u00e0 tancant-se",
             "is_open": "{entity_name} est\u00e0 obert/a",
             "is_opening": "{entity_name} s'est\u00e0 obrint",
-            "is_position": "La posici\u00f3 de {entity_name} \u00e9s",
-            "is_tilt_position": "La posici\u00f3 d'inclinaci\u00f3 de {entity_name} \u00e9s"
+            "is_position": "La posici\u00f3 actual de {entity_name} \u00e9s",
+            "is_tilt_position": "La inclinaci\u00f3 actual de {entity_name} \u00e9s"
         },
         "trigger_type": {
             "closed": "{entity_name} tancat/da",
@@ -27,9 +27,9 @@
     },
     "state": {
         "_": {
-            "closed": "Tancada",
+            "closed": "Tancat/da",
             "closing": "Tancant",
-            "open": "Oberta",
+            "open": "Obert/a",
             "opening": "Obrint",
             "stopped": "Aturat"
         }

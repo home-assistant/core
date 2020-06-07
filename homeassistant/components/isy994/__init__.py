@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -19,18 +20,23 @@ from .const import (
     CONF_RESTORE_LIGHT_STATE,
     CONF_SENSOR_STRING,
     CONF_TLS_VER,
+    CONF_VAR_SENSOR_STRING,
     DEFAULT_IGNORE_STRING,
     DEFAULT_RESTORE_LIGHT_STATE,
     DEFAULT_SENSOR_STRING,
+    DEFAULT_VAR_SENSOR_STRING,
     DOMAIN,
     ISY994_ISY,
     ISY994_NODES,
     ISY994_PROGRAMS,
+    ISY994_VARIABLES,
+    MANUFACTURER,
     SUPPORTED_PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
-from .helpers import _categorize_nodes, _categorize_programs
+from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
+from .services import async_setup_services, async_unload_services
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -45,6 +51,9 @@ CONFIG_SCHEMA = vol.Schema(
                 ): cv.string,
                 vol.Optional(
                     CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
+                ): cv.string,
+                vol.Optional(
+                    CONF_VAR_SENSOR_STRING, default=DEFAULT_VAR_SENSOR_STRING
                 ): cv.string,
                 vol.Required(
                     CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
@@ -109,6 +118,8 @@ async def async_setup_entry(
     for platform in SUPPORTED_PROGRAM_PLATFORMS:
         hass_isy_data[ISY994_PROGRAMS][platform] = []
 
+    hass_isy_data[ISY994_VARIABLES] = []
+
     isy_config = entry.data
     isy_options = entry.options
 
@@ -121,6 +132,9 @@ async def async_setup_entry(
     tls_version = isy_config.get(CONF_TLS_VER)
     ignore_identifier = isy_options.get(CONF_IGNORE_STRING, DEFAULT_IGNORE_STRING)
     sensor_identifier = isy_options.get(CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
+    variable_identifier = isy_options.get(
+        CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING
+    )
 
     if host.scheme == "http":
         https = False
@@ -151,11 +165,13 @@ async def async_setup_entry(
 
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass_isy_data, isy.programs)
+    _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
     _LOGGER.info(repr(isy.clock))
 
     hass_isy_data[ISY994_ISY] = isy
+    await _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
     for platform in SUPPORTED_PLATFORMS:
@@ -173,6 +189,9 @@ async def async_setup_entry(
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass_isy_data[UNDO_UPDATE_LISTENER] = undo_listener
+
+    # Register Integration-wide Services:
+    async_setup_services(hass)
 
     return True
 
@@ -203,6 +222,22 @@ def _async_import_options_from_data_if_missing(
         hass.config_entries.async_update_entry(entry, options=options)
 
 
+async def _async_get_or_create_isy_device_in_registry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry, isy
+) -> None:
+    device_registry = await dr.async_get_registry(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, isy.configuration["uuid"])},
+        identifiers={(DOMAIN, isy.configuration["uuid"])},
+        manufacturer=MANUFACTURER,
+        name=isy.configuration["name"],
+        model=isy.configuration["model"],
+        sw_version=isy.configuration["firmware"],
+    )
+
+
 async def async_unload_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
@@ -231,5 +266,7 @@ async def async_unload_entry(
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    async_unload_services(hass)
 
     return unload_ok

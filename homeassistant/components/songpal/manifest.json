@@ -10,5 +10,6 @@
       "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
       "manufacturer": "Sony Corporation"
     }
-  ]
+  ],
+  "quality_scale": "gold"
 }

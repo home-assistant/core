@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_songpal_device": "Ikke en Songpal-enhet"
+        },
+        "step": {
+            "init": {
+                "description": "Vil du sette opp {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Endepunkt"
+                }
+            }
+        }
+    }
+}

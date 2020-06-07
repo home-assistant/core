@@ -90,12 +90,28 @@
         }
     },
     "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        },
         "battery": {
             "off": "Normalt",
             "on": "Lavt"
         },
         "cold": {
             "on": "Kald"
+        },
+        "connectivity": {
+            "off": "Frakoblet",
+            "on": "Tilkoblet"
+        },
+        "door": {
+            "off": "Lukket",
+            "on": "\u00c5pen"
+        },
+        "garage_door": {
+            "off": "Lukket",
+            "on": "\u00c5pen"
         },
         "gas": {
             "off": "Klar",
@@ -104,17 +120,49 @@
         "heat": {
             "on": "Varm"
         },
+        "lock": {
+            "off": "L\u00e5st",
+            "on": "Ul\u00e5st"
+        },
         "moisture": {
             "off": "T\u00f8rr",
             "on": "V\u00e5t"
         },
-        "problem": {
-            "off": "",
-            "on": ""
+        "motion": {
+            "off": "Klart",
+            "on": "Oppdaget"
+        },
+        "occupancy": {
+            "off": "Klart",
+            "on": "Oppdaget"
+        },
+        "opening": {
+            "off": "Lukket",
+            "on": "\u00c5pen"
+        },
+        "presence": {
+            "off": "Borte",
+            "on": "Hjemme"
         },
         "safety": {
             "off": "Sikker",
             "on": "Usikker"
+        },
+        "smoke": {
+            "off": "Klart",
+            "on": "Oppdaget"
+        },
+        "sound": {
+            "off": "Klart",
+            "on": "Oppdaget"
+        },
+        "vibration": {
+            "off": "Klart",
+            "on": "Oppdaget"
+        },
+        "window": {
+            "off": "Lukket",
+            "on": "\u00c5pen"
         }
     },
     "title": "Bin\u00e6r sensor"

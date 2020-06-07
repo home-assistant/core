@@ -1,6 +1,8 @@
 """Support for ISY994 fans."""
 from typing import Callable
 
+from pyisy.constants import ISY_VALUE_UNKNOWN
+
 from homeassistant.components.fan import (
     DOMAIN as FAN,
     SPEED_HIGH,
@@ -16,6 +18,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
+from .services import async_setup_device_services
 
 VALUE_TO_STATE = {
     0: SPEED_OFF,
@@ -48,6 +51,7 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, FAN, devices)
     async_add_entities(devices)
+    async_setup_device_services(hass)
 
 
 class ISYFanEntity(ISYNodeEntity, FanEntity):
@@ -56,12 +60,14 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        return VALUE_TO_STATE.get(self.value)
+        return VALUE_TO_STATE.get(self._node.status)
 
     @property
     def is_on(self) -> bool:
         """Get if the fan is on."""
-        return self.value != 0
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return self._node.status != 0
 
     def set_speed(self, speed: str) -> None:
         """Send the set speed command to the ISY994 fan device."""
@@ -92,12 +98,12 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        return VALUE_TO_STATE.get(self.value)
+        return VALUE_TO_STATE.get(self._node.status)
 
     @property
     def is_on(self) -> bool:
         """Get if the fan is on."""
-        return self.value != 0
+        return self._node.status != 0
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn on command to ISY994 fan program."""

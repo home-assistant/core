@@ -1,10 +1,13 @@
 """The tests the History component."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
+import json
 import unittest
 
 from homeassistant.components import history, recorder
+from homeassistant.components.recorder.models import process_timestamp
 import homeassistant.core as ha
+from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
@@ -103,6 +106,11 @@ class TestComponentHistory(unittest.TestCase):
         # Test get_state here because we have a DB setup
         assert states[0] == history.get_state(self.hass, future, states[0].entity_id)
 
+        time_before_recorder_ran = now - timedelta(days=1000)
+        assert history.get_states(self.hass, time_before_recorder_ran) == []
+
+        assert history.get_state(self.hass, time_before_recorder_ran, "demo.id") is None
+
     def test_state_changes_during_period(self):
         """Test state change during period."""
         self.init_recorder()
@@ -192,6 +200,41 @@ class TestComponentHistory(unittest.TestCase):
         )
         assert states == hist
 
+    def test_get_significant_states_minimal_response(self):
+        """Test that only significant states are returned.
+
+        When minimal responses is set only the first and
+        last states return a complete state.
+
+        We should get back every thermostat change that
+        includes an attribute change, but only the state updates for
+        media player (attribute changes are not significant and not returned).
+        """
+        zero, four, states = self.record_states()
+        hist = history.get_significant_states(
+            self.hass, zero, four, filters=history.Filters(), minimal_response=True
+        )
+
+        # The second media_player.test state is reduced
+        # down to last_changed and state when minimal_response
+        # is set.  We use JSONEncoder to make sure that are
+        # pre-encoded last_changed is always the same as what
+        # will happen with encoding a native state
+        input_state = states["media_player.test"][1]
+        orig_last_changed = json.dumps(
+            process_timestamp(input_state.last_changed.replace(microsecond=0)),
+            cls=JSONEncoder,
+        ).replace('"', "")
+        if orig_last_changed.endswith("+00:00"):
+            orig_last_changed = f"{orig_last_changed[:-6]}{recorder.models.DB_TIMEZONE}"
+        orig_state = input_state.state
+        states["media_player.test"][1] = {
+            "last_changed": orig_last_changed,
+            "state": orig_state,
+        }
+
+        assert states == hist
+
     def test_get_significant_states_with_initial(self):
         """Test that only significant states are returned.
 
@@ -247,6 +290,7 @@ class TestComponentHistory(unittest.TestCase):
         """Test that only significant states are returned for one entity."""
         zero, four, states = self.record_states()
         del states["media_player.test2"]
+        del states["media_player.test3"]
         del states["thermostat.test"]
         del states["thermostat.test2"]
         del states["script.can_cancel_this_one"]
@@ -260,6 +304,7 @@ class TestComponentHistory(unittest.TestCase):
         """Test that only significant states are returned for one entity."""
         zero, four, states = self.record_states()
         del states["media_player.test2"]
+        del states["media_player.test3"]
         del states["thermostat.test2"]
         del states["script.can_cancel_this_one"]
 
@@ -281,6 +326,7 @@ class TestComponentHistory(unittest.TestCase):
         zero, four, states = self.record_states()
         del states["media_player.test"]
         del states["media_player.test2"]
+        del states["media_player.test3"]
 
         config = history.CONFIG_SCHEMA(
             {
@@ -341,6 +387,7 @@ class TestComponentHistory(unittest.TestCase):
         """
         zero, four, states = self.record_states()
         del states["media_player.test2"]
+        del states["media_player.test3"]
         del states["thermostat.test"]
         del states["thermostat.test2"]
         del states["script.can_cancel_this_one"]
@@ -367,6 +414,7 @@ class TestComponentHistory(unittest.TestCase):
         zero, four, states = self.record_states()
         del states["media_player.test"]
         del states["media_player.test2"]
+        del states["media_player.test3"]
 
         config = history.CONFIG_SCHEMA(
             {
@@ -387,6 +435,7 @@ class TestComponentHistory(unittest.TestCase):
         """
         zero, four, states = self.record_states()
         del states["media_player.test2"]
+        del states["media_player.test3"]
         del states["thermostat.test"]
         del states["thermostat.test2"]
         del states["script.can_cancel_this_one"]
@@ -409,6 +458,7 @@ class TestComponentHistory(unittest.TestCase):
         """
         zero, four, states = self.record_states()
         del states["media_player.test2"]
+        del states["media_player.test3"]
         del states["script.can_cancel_this_one"]
 
         config = history.CONFIG_SCHEMA(
@@ -433,6 +483,7 @@ class TestComponentHistory(unittest.TestCase):
         zero, four, states = self.record_states()
         del states["media_player.test"]
         del states["media_player.test2"]
+        del states["media_player.test3"]
         del states["thermostat.test"]
         del states["thermostat.test2"]
         del states["script.can_cancel_this_one"]
@@ -457,6 +508,7 @@ class TestComponentHistory(unittest.TestCase):
         zero, four, states = self.record_states()
         del states["media_player.test"]
         del states["media_player.test2"]
+        del states["media_player.test3"]
         del states["thermostat.test"]
         del states["thermostat.test2"]
         del states["script.can_cancel_this_one"]
@@ -602,6 +654,7 @@ class TestComponentHistory(unittest.TestCase):
         self.init_recorder()
         mp = "media_player.test"
         mp2 = "media_player.test2"
+        mp3 = "media_player.test3"
         therm = "thermostat.test"
         therm2 = "thermostat.test2"
         zone = "zone.home"
@@ -620,7 +673,7 @@ class TestComponentHistory(unittest.TestCase):
         three = two + timedelta(seconds=1)
         four = three + timedelta(seconds=1)
 
-        states = {therm: [], therm2: [], mp: [], mp2: [], script_c: []}
+        states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=one
         ):
@@ -633,6 +686,9 @@ class TestComponentHistory(unittest.TestCase):
             states[mp2].append(
                 set_state(mp2, "YouTube", attributes={"media_title": str(sentinel.mt2)})
             )
+            states[mp3].append(
+                set_state(mp3, "idle", attributes={"media_title": str(sentinel.mt1)})
+            )
             states[therm].append(
                 set_state(therm, 20, attributes={"current_temperature": 19.5})
             )
@@ -642,6 +698,12 @@ class TestComponentHistory(unittest.TestCase):
         ):
             # This state will be skipped only different in time
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
+            # This state will be skipped as it hidden
+            set_state(
+                mp3,
+                "Apple TV",
+                attributes={"media_title": str(sentinel.mt2), "hidden": True},
+            )
             # This state will be skipped because domain blacklisted
             set_state(zone, "zoning")
             set_state(script_nc, "off")
@@ -661,6 +723,9 @@ class TestComponentHistory(unittest.TestCase):
             states[mp].append(
                 set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
             )
+            states[mp3].append(
+                set_state(mp3, "Netflix", attributes={"media_title": str(sentinel.mt3)})
+            )
             # Attributes changed even though state is the same
             states[therm].append(
                 set_state(therm, 21, attributes={"current_temperature": 20})
@@ -678,6 +743,30 @@ async def test_fetch_period_api(hass, hass_client):
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
+    assert response.status == 200
+
+
+async def test_fetch_period_api_with_use_include_order(hass, hass_client):
+    """Test the fetch period view for history with include order."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass, "history", {history.DOMAIN: {history.CONF_ORDER: True}}
+    )
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await hass_client()
+    response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
+    assert response.status == 200
+
+
+async def test_fetch_period_api_with_minimal_response(hass, hass_client):
+    """Test the fetch period view for history with minimal_response."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {})
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}?minimal_response"
+    )
     assert response.status == 200
 
 

@@ -29,6 +29,13 @@
                 "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
                 "title": "Configuraci\u00f3n avanzada"
             },
+            "cameras": {
+                "data": {
+                    "camera_copy": "C\u00e1maras compatibles con transmisiones H.264 nativas"
+                },
+                "description": "Verifique todas las c\u00e1maras que admiten transmisiones H.264 nativas. Si la c\u00e1mara no emite una transmisi\u00f3n H.264, el sistema transcodificar\u00e1 el video a H.264 para HomeKit. La transcodificaci\u00f3n requiere una CPU de alto rendimiento y es poco probable que funcione en computadoras de placa \u00fanica.",
+                "title": "Seleccione el c\u00f3dec de video de la c\u00e1mara."
+            },
             "exclude": {
                 "data": {
                     "exclude_entities": "Entidades a excluir"

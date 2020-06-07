@@ -7,6 +7,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
@@ -14,11 +15,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_STANDBY
 
-from . import RokuDataUpdateCoordinator, RokuEntity
+from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,9 +27,10 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_ROKU = (
     SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
-    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PAUSE
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_TURN_ON
@@ -159,38 +161,60 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """List of available input sources."""
         return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
 
+    @roku_exception_handler
     async def async_turn_on(self) -> None:
         """Turn on the Roku."""
         await self.coordinator.roku.remote("poweron")
 
+    @roku_exception_handler
     async def async_turn_off(self) -> None:
         """Turn off the Roku."""
         await self.coordinator.roku.remote("poweroff")
 
+    @roku_exception_handler
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
+
+    @roku_exception_handler
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
+
+    @roku_exception_handler
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        await self.coordinator.roku.remote("play")
+        if self.state != STATE_STANDBY:
+            await self.coordinator.roku.remote("play")
 
+    @roku_exception_handler
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.coordinator.roku.remote("reverse")
 
+    @roku_exception_handler
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.coordinator.roku.remote("forward")
 
+    @roku_exception_handler
     async def async_mute_volume(self, mute) -> None:
         """Mute the volume."""
         await self.coordinator.roku.remote("volume_mute")
 
+    @roku_exception_handler
     async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self.coordinator.roku.remote("volume_up")
 
+    @roku_exception_handler
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self.coordinator.roku.remote("volume_down")
 
+    @roku_exception_handler
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Tune to channel."""
         if media_type != MEDIA_TYPE_CHANNEL:
@@ -203,13 +227,19 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         await self.coordinator.roku.tune(media_id)
 
+    @roku_exception_handler
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if source == "Home":
             await self.coordinator.roku.remote("home")
 
         appl = next(
-            (app for app in self.coordinator.data.apps if app.name == source), None
+            (
+                app
+                for app in self.coordinator.data.apps
+                if source in (app.name, app.app_id)
+            ),
+            None,
         )
 
         if appl is not None:

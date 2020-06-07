@@ -73,7 +73,7 @@ class UniFiBandwidthSensor(UniFiClient):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_allow_bandwidth_sensors:
-            await self.async_remove()
+            await self.remove_item({self.client.mac})
 
 
 class UniFiRxBandwidthSensor(UniFiBandwidthSensor):

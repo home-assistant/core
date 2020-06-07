@@ -8,14 +8,17 @@ from requests import Session
 from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     BASE_TOKEN_FILENAME,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     DOMAIN,
     FLUME_AUTH,
     FLUME_DEVICES,

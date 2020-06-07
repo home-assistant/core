@@ -171,12 +171,3 @@ def _custom_tasks(template, info) -> None:
                 },
             },
         )
-        _append(
-            info.integration_dir / "const.py",
-            """
-
-# TODO Update with your own urls
-OAUTH2_AUTHORIZE = "https://www.example.com/auth/authorize"
-OAUTH2_TOKEN = "https://www.example.com/auth/token"
-""",
-        )

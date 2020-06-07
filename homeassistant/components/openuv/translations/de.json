@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Diese Koordinaten sind bereits registriert."
+        },
         "error": {
             "identifier_exists": "Koordinaten existieren bereits",
             "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel"
@@ -7,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "OpenUV API-Schl\u00fcssel",
+                    "api_key": "API-Schl\u00fcssel",
                     "elevation": "H\u00f6he",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad"

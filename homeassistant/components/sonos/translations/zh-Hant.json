@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Sonos\uff1f",
-                "title": "Sonos"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Sonos\uff1f"
             }
         }
     }

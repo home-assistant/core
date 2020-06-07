@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Erreur inattendue."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Adresse (voir description ci-dessus)",
+                    "file_path": "Chemin et nom du fichier d'exportation UPStart UPB.",
+                    "protocol": "Protocole"
+                },
+                "title": "Se connecter \u00e0 UPB PIM"
+            }
+        }
+    }
+}

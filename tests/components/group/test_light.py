@@ -34,17 +34,25 @@ from tests.async_mock import MagicMock
 
 async def test_default_state(hass):
     """Test light group default state."""
+    hass.states.async_set("light.kitchen", "on")
     await async_setup_component(
         hass,
         LIGHT_DOMAIN,
-        {LIGHT_DOMAIN: {"platform": DOMAIN, "entities": [], "name": "Bedroom Group"}},
+        {
+            LIGHT_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["light.kitchen", "light.bedroom"],
+                "name": "Bedroom Group",
+            }
+        },
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("light.bedroom_group")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["light.kitchen", "light.bedroom"]
     assert state.attributes.get(ATTR_BRIGHTNESS) is None
     assert state.attributes.get(ATTR_HS_COLOR) is None
     assert state.attributes.get(ATTR_COLOR_TEMP) is None

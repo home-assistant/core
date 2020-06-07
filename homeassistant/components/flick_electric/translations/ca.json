@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquest compte ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "ID de client (opcional)",
+                    "client_secret": "Secret de client (opcional)",
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Credencials d'inici de sessi\u00f3 de Flick"
+            }
+        }
+    },
+    "title": "Flick Electric"
+}
