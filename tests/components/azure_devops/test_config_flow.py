@@ -39,7 +39,7 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
-        return_value=False,
+        return_value=mock_coro(False),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT,
