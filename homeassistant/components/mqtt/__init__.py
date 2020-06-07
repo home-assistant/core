@@ -32,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.loader import bind_hass
@@ -51,6 +51,8 @@ from .const import (
     CONF_STATE_TOPIC,
     DEFAULT_DISCOVERY,
     DEFAULT_QOS,
+    MQTT_CONNECTED,
+    MQTT_DISCONNECTED,
     PROTOCOL_311,
 )
 from .debug_info import log_messages
@@ -923,6 +925,7 @@ class MQTT:
             return
 
         self.connected = True
+        dispatcher_send(self.hass, MQTT_CONNECTED)
         _LOGGER.info("Connected to MQTT server (%s)", result_code)
 
         # Group subscriptions to only re-subscribe once for each topic.
@@ -990,6 +993,7 @@ class MQTT:
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
         self.connected = False
+        dispatcher_send(self.hass, MQTT_DISCONNECTED)
         _LOGGER.warning("Disconnected from MQTT server (%s)", result_code)
 
 
@@ -1099,6 +1103,8 @@ class MqttAvailability(Entity):
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
         await self._availability_subscribe_topics()
+        async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
+        async_dispatcher_connect(self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect)
 
     async def availability_discovery_update(self, config: dict):
         """Handle updated discovery message."""
@@ -1131,6 +1137,11 @@ class MqttAvailability(Entity):
             },
         )
 
+    @callback
+    def async_mqtt_connect(self):
+        """Update state on connection/disconnection to MQTT broker."""
+        self.async_write_ha_state()
+
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
         self._availability_sub_state = await async_unsubscribe_topics(
@@ -1141,6 +1152,8 @@ class MqttAvailability(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         availability_topic = self._avail_config.get(CONF_AVAILABILITY_TOPIC)
+        if not self.hass.data[DATA_MQTT].connected:
+            return False
         return availability_topic is None or self._available
 
 

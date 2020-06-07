@@ -25,6 +25,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import STATE_OFF
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -606,6 +607,13 @@ async def test_set_aux(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("aux-topic", "OFF", 0, False)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("aux_heat") == "off"
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_availability_without_topic(hass, mqtt_mock):

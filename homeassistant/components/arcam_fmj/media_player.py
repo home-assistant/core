@@ -1,6 +1,5 @@
 """Arcam media player."""
 import logging
-from typing import Optional
 
 from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceCodes
 from arcam.fmj.state import State
@@ -17,21 +16,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_NAME,
-    CONF_ZONE,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import callback
-from homeassistant.helpers.service import async_call_from_config
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 
+from .config_flow import get_entry_client
 from .const import (
     DOMAIN,
-    DOMAIN_DATA_ENTRIES,
     EVENT_TURN_ON,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
@@ -47,19 +38,17 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Set up the configuration entry."""
-    data = hass.data[DOMAIN_DATA_ENTRIES][config_entry.entry_id]
-    client = data["client"]
-    config = data["config"]
+
+    client = get_entry_client(hass, config_entry)
 
     async_add_entities(
         [
             ArcamFmj(
+                config_entry.title,
                 State(client, zone),
                 config_entry.unique_id or config_entry.entry_id,
-                zone_config[CONF_NAME],
-                zone_config.get(SERVICE_TURN_ON),
             )
-            for zone, zone_config in config[CONF_ZONE].items()
+            for zone in [1, 2]
         ],
         True,
     )
@@ -71,13 +60,13 @@ class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
     def __init__(
-        self, state: State, uuid: str, name: str, turn_on: Optional[ConfigType]
+        self, device_name, state: State, uuid: str,
     ):
         """Initialize device."""
         self._state = state
+        self._device_name = device_name
+        self._name = f"{device_name} - Zone: {state.zn}"
         self._uuid = uuid
-        self._name = name
-        self._turn_on = turn_on
         self._support = (
             SUPPORT_SELECT_SOURCE
             | SUPPORT_VOLUME_SET
@@ -103,6 +92,11 @@ class ArcamFmj(MediaPlayerEntity):
         )
 
     @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._state.zn == 1
+
+    @property
     def unique_id(self):
         """Return unique identifier if known."""
         return f"{self._uuid}-{self._state.zn}"
@@ -111,8 +105,12 @@ class ArcamFmj(MediaPlayerEntity):
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            "identifiers": {(DOMAIN, self._state.client.host, self._state.client.port)},
-            "model": "FMJ",
+            "name": self._device_name,
+            "identifiers": {
+                (DOMAIN, self._uuid),
+                (DOMAIN, self._state.client.host, self._state.client.port),
+            },
+            "model": "Arcam FMJ AVR",
             "manufacturer": "Arcam",
         }
 
@@ -229,15 +227,6 @@ class ArcamFmj(MediaPlayerEntity):
         if self._state.get_power() is not None:
             _LOGGER.debug("Turning on device using connection")
             await self._state.set_power(True)
-        elif self._turn_on:
-            _LOGGER.debug("Turning on device using service call")
-            await async_call_from_config(
-                self.hass,
-                self._turn_on,
-                variables=None,
-                blocking=True,
-                validate_config=False,
-            )
         else:
             _LOGGER.debug("Firing event to turn on device")
             self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})

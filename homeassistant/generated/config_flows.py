@@ -15,6 +15,7 @@ FLOWS = [
     "almond",
     "ambiclimate",
     "ambient_station",
+    "arcam_fmj",
     "atag",
     "august",
     "avri",
