@@ -4,13 +4,13 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
-            "unknown": "Unerwarteter Fehler"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {
                 "data": {
-                    "username": "Benutzername"
+                    "host": "Host"
                 }
             }
         }

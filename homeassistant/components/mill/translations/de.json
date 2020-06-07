@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Account ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
-            "unknown": "Unerwarteter Fehler"
+            "connection_error": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {
                 "data": {
+                    "password": "Passwort",
                     "username": "Benutzername"
                 }
             }
