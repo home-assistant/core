@@ -79,11 +79,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class NX584Alarm(alarm.AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
-    def __init__(self, name, alarmclient, url):
+    def __init__(self, name, alarm_client, url):
         """Init the nx584 alarm panel."""
         self._name = name
         self._state = None
-        self._alarm = alarmclient
+        self._alarm = alarm_client
         self._url = url
 
     @property
