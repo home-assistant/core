@@ -35,6 +35,7 @@ class TestOpenHardwareMonitorSetup(unittest.TestCase):
         )
 
         assert setup_component(self.hass, "sensor", self.config)
+        self.hass.block_till_done()
         entities = self.hass.states.async_entity_ids("sensor")
         assert len(entities) == 38
 

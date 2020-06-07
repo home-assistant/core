@@ -9,6 +9,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    SIGNAL_ADD_DEFAULT_LINKS,
     SIGNAL_LOAD_ALDB,
     SIGNAL_PRINT_ALDB,
     SIGNAL_SAVE_DEVICES,
@@ -96,6 +97,10 @@ class InsteonEntity(Entity):
         )
         print_signal = f"{self.entity_id}_{SIGNAL_PRINT_ALDB}"
         async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
+        default_links_signal = f"{self.entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"
+        async_dispatcher_connect(
+            self.hass, default_links_signal, self._async_add_default_links
+        )
 
     async def _async_read_aldb(self, reload):
         """Call device load process and print to log."""
@@ -116,3 +121,7 @@ class InsteonEntity(Entity):
             else:
                 label = f"Group {self.group:d}"
         return label
+
+    async def _async_add_default_links(self):
+        """Add default links between the device and the modem."""
+        await self._insteon_device.async_add_default_links(self.address)

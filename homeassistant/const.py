@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 111
+MINOR_VERSION = 112
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -180,7 +180,6 @@ CONF_XY = "xy"
 CONF_ZONE = "zone"
 
 # #### EVENTS ####
-EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 EVENT_CALL_SERVICE = "call_service"
 EVENT_COMPONENT_LOADED = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE = "core_config_updated"

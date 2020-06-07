@@ -293,7 +293,7 @@ async def test_tracked_devices(hass):
     device_2 = hass.states.get("device_tracker.device_2")
     assert device_2.state == "home"
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=40))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
     await hass.async_block_till_done()
 
     device_1 = hass.states.get("device_tracker.device_1")

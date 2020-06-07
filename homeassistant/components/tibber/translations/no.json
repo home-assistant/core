@@ -13,10 +13,8 @@
                 "data": {
                     "access_token": "Tilgangstoken"
                 },
-                "description": "Fyll inn din tilgangstoken fra [https://developer.tibber.com/settings/accesstoken](https://developer.tibber.com/settings/accesstoken)",
-                "title": ""
+                "description": "Fyll inn din tilgangstoken fra [https://developer.tibber.com/settings/accesstoken](https://developer.tibber.com/settings/accesstoken)"
             }
         }
-    },
-    "title": ""
+    }
 }

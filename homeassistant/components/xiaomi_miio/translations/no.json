@@ -21,8 +21,7 @@
                 "data": {
                     "gateway": "Koble til en Xiaomi Gateway"
                 },
-                "description": "Velg hvilken enhet du vil koble til.",
-                "title": ""
+                "description": "Velg hvilken enhet du vil koble til."
             }
         }
     }

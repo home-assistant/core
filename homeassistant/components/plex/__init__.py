@@ -9,18 +9,12 @@ from plexwebsocket import PlexWebsocket
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_TOKEN,
     CONF_URL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
@@ -34,19 +28,12 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
-    CONF_IGNORE_NEW_SHARED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
-    CONF_SHOW_ALL_CONTROLS,
-    CONF_USE_EPISODE_ART,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DEFAULT_VERIFY_SSL,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     PLATFORMS,
     PLATFORMS_COMPLETED,
-    PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
@@ -55,40 +42,6 @@ from .const import (
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
-
-MEDIA_PLAYER_SCHEMA = vol.All(
-    cv.deprecated(CONF_SHOW_ALL_CONTROLS, invalidation_version="0.110"),
-    vol.Schema(
-        {
-            vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
-            vol.Optional(CONF_SHOW_ALL_CONTROLS): cv.boolean,
-            vol.Optional(CONF_IGNORE_NEW_SHARED_USERS, default=False): cv.boolean,
-        }
-    ),
-)
-
-SERVER_CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Optional(CONF_HOST): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_TOKEN): cv.string,
-            vol.Optional(CONF_SERVER): cv.string,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-            vol.Optional(MP_DOMAIN, default={}): MEDIA_PLAYER_SCHEMA,
-        },
-        cv.has_at_least_one_key(CONF_HOST, CONF_TOKEN),
-    )
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(PLEX_DOMAIN, invalidation_version="0.111"),
-        {PLEX_DOMAIN: SERVER_CONFIG_SCHEMA},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -100,30 +53,7 @@ async def async_setup(hass, config):
         {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
     )
 
-    plex_config = config.get(PLEX_DOMAIN, {})
-    if plex_config:
-        _async_setup_plex(hass, plex_config)
-
     return True
-
-
-def _async_setup_plex(hass, config):
-    """Pass configuration to a config flow."""
-    server_config = dict(config)
-    if MP_DOMAIN in server_config:
-        hass.data.setdefault(PLEX_MEDIA_PLAYER_OPTIONS, server_config.pop(MP_DOMAIN))
-    if CONF_HOST in server_config:
-        protocol = "https" if server_config.pop(CONF_SSL) else "http"
-        server_config[
-            CONF_URL
-        ] = f"{protocol}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            PLEX_DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=server_config,
-        )
-    )
 
 
 async def async_setup_entry(hass, entry):
@@ -134,14 +64,6 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_SERVER_IDENTIFIER]
         )
-
-    if MP_DOMAIN not in entry.options:
-        options = dict(entry.options)
-        options.setdefault(
-            MP_DOMAIN,
-            hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS) or MEDIA_PLAYER_SCHEMA({}),
-        )
-        hass.config_entries.async_update_entry(entry, options=options)
 
     plex_server = PlexServer(
         hass, server_config, entry.data[CONF_SERVER_IDENTIFIER], entry.options
