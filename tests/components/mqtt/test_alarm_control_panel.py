@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -466,6 +467,13 @@ async def test_attributes_code_text(hass, mqtt_mock):
     assert (
         state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
         == alarm_control_panel.FORMAT_TEXT
+    )
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG_CODE
     )
 
 
