@@ -11,7 +11,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import _LOGGER, DOMAIN, MANUFACTURER, WISER_SERVICES, WISER_SWITCHES
+from .const import _LOGGER, DATA, DOMAIN, MANUFACTURER, WISER_SERVICES, WISER_SWITCHES
 
 try:
     from homeassistant.components.switch import SwitchEntity
@@ -35,7 +35,7 @@ SET_HOTWATER_MODE_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Wiser System Switch entities."""
-    data = hass.data[DOMAIN]
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA]  # Get Handler
 
     # Add System Switches
     wiser_switches = []
@@ -183,7 +183,11 @@ class WiserSwitch(SwitchEntity):
             """Update sensor state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, "WiserHubUpdateMessage", async_update_state)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, "WiserHubUpdateMessage", async_update_state
+            )
+        )
 
 
 class WiserSmartPlug(SwitchEntity):
@@ -282,4 +286,8 @@ class WiserSmartPlug(SwitchEntity):
             """Update sensor state."""
             await self.async_update_ha_state(False)
 
-        async_dispatcher_connect(self.hass, "WiserHubUpdateMessage", async_update_state)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, "WiserHubUpdateMessage", async_update_state
+            )
+        )

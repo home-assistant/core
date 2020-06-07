@@ -28,6 +28,7 @@ from .const import (
     _LOGGER,
     CONF_BOOST_TEMP,
     CONF_BOOST_TEMP_TIME,
+    DATA,
     DOMAIN,
     MANUFACTURER,
     ROOM,
@@ -97,7 +98,7 @@ COPY_SCHEDULE_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Wiser climate device."""
-    data = hass.data[DOMAIN]
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA]  # Get Handler
 
     wiser_rooms = [
         WiserRoom(hass, data, room.get("id")) for room in data.wiserhub.getRooms()
@@ -114,10 +115,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         # Set to config values if not set
         if boost_time == 0:
-            boost_time = config_entry.data[CONF_BOOST_TEMP_TIME]
+            boost_time = config_entry.options[CONF_BOOST_TEMP_TIME]
 
         if boost_temp == 0 and boost_temp_delta == 0:
-            boost_temp_delta = config_entry.data[CONF_BOOST_TEMP]
+            boost_temp_delta = config_entry.options[CONF_BOOST_TEMP]
 
         # Find correct room to boost
         for room in wiser_rooms:
@@ -400,10 +401,10 @@ class WiserRoom(ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Async call to set preset mode ."""
-        boost_time = self.data._config_entry.data.get(
+        boost_time = self.data._config_entry.options.get(
             CONF_BOOST_TEMP_TIME, self.data.boost_time
         )
-        boost_temp = self.data._config_entry.data.get(
+        boost_temp = self.data._config_entry.options.get(
             CONF_BOOST_TEMP, self.data.boost_temp
         )
 
@@ -414,6 +415,7 @@ class WiserRoom(ClimateEntity):
         # Convert HA preset to required api presets
 
         """ Cancel boost mode """
+        # TODO: Map HVAC modes to Wiser Modes
         if preset_mode.lower() == PRESET_BOOST_CANCEL.lower():
             preset_mode = self.hvac_mode
 
@@ -553,4 +555,8 @@ class WiserRoom(ClimateEntity):
             """Update sensor state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, "WiserHubUpdateMessage", async_update_state)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, "WiserHubUpdateMessage", async_update_state
+            )
+        )
