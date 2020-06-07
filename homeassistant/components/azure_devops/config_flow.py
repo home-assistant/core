@@ -68,7 +68,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
                     return errors
             project_info = await client.get_project(self._organization, self._project)
             if project_info is None:
-                errors["base"] = "authorization_error"
+                errors["base"] = "project_error"
                 return errors
         except aiohttp.ClientError:
             errors["base"] = "connection_error"
