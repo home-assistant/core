@@ -2,6 +2,9 @@
 
 import pytest
 
+from homeassistant import data_entry_flow
+from homeassistant.components import mqtt
+from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
@@ -144,3 +147,44 @@ async def test_hassio_confirm(hass, mock_try_connection, mock_finish_setup):
     assert len(mock_try_connection.mock_calls) == 1
     # Check config entry got setup
     assert len(mock_finish_setup.mock_calls) == 1
+
+
+async def test_option_flow(hass, mqtt_mock, mock_try_connection):
+    """Test config flow options."""
+    mock_try_connection.return_value = True
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", config_entry)
+    config_entry.data = {
+        mqtt.CONF_BROKER: "test-broker",
+        mqtt.CONF_PORT: 1234,
+    }
+
+    mqtt_mock.async_connect.reset_mock()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "broker"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={mqtt.CONF_BROKER: "another-broker", mqtt.CONF_PORT: 2345},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "options"
+
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_connect.call_count == 0
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={mqtt.CONF_DISCOVERY: True},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] is None
+    assert config_entry.data == {
+        mqtt.CONF_BROKER: "another-broker",
+        mqtt.CONF_PORT: 2345,
+        mqtt.CONF_DISCOVERY: True,
+    }
+
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_connect.call_count == 1
