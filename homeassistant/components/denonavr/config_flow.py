@@ -178,6 +178,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         # Filter out non-Denon AVRs#1
+        _LOGGER.warning("async_step_ssdp: %s", discovery_info)
         if (
             discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER)
             not in SUPPORTED_MANUFACTURERS
