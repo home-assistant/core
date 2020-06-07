@@ -12,7 +12,7 @@ from homeassistant.components.shelly.const import DOMAIN
 
 from .common import send_msg
 
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry
 
 DISCOVERY = [
@@ -264,7 +264,7 @@ async def test_form_with_invalid_topic(hass):
 async def test_discovery(hass):
     """Test device discovery."""
 
-    unsubscribed = AsyncMock()
+    unsubscribed = MagicMock()
 
     async def subscribed(topic, callback):
         assert topic == "shellies/announce"
@@ -287,11 +287,13 @@ async def test_discovery(hass):
         assert devices == DISCOVERY
         assert len(mock_publish.mock_calls) == 1
 
+    unsubscribed.called_once()
+
 
 async def test_validate(hass):
     """Test input validation."""
 
-    unsubscribed = AsyncMock()
+    unsubscribed = MagicMock()
 
     topic_prefix = f"shellies/{DISCOVERY[0]['id']}/"
 
@@ -314,11 +316,13 @@ async def test_validate(hass):
         assert success
         assert len(mock_publish.mock_calls) == 1
 
+    unsubscribed.called_once()
+
 
 async def test_failed_validate(hass):
     """Test a failed input validation."""
 
-    unsubscribed = AsyncMock()
+    unsubscribed = MagicMock()
 
     topic_prefix = f"shellies/{DISCOVERY[0]['id']}/"
 
@@ -339,3 +343,5 @@ async def test_failed_validate(hass):
         success = await validate_input(hass, {"topic": topic_prefix}, 0)
         assert not success
         assert len(mock_publish.mock_calls) == 1
+
+    unsubscribed.called_once()
