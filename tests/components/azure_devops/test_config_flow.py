@@ -82,10 +82,15 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
+        "homeassistant.components.azure_devops.async_setup", return_value=True
+    ) as mock_setup, patch(
         "homeassistant.components.azure_devops.async_setup_entry", return_value=True,
-    ), patch(
+    ) as mock_setup_entry, patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
+    ), patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+        return_value=mock_coro(),
     ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
         return_value=mock_coro(DevOpsProject("abcd-abcd-abcd-abcd", "project")),
@@ -101,3 +106,7 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     )
     assert result2["data"][CONF_ORG] == FIXTURE_USER_INPUT[CONF_ORG]
     assert result2["data"][CONF_PROJECT] == FIXTURE_USER_INPUT[CONF_PROJECT]
+
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
