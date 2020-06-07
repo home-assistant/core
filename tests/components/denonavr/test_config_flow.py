@@ -322,6 +322,34 @@ async def test_config_flow_manual_host_no_serial_no_mac(hass):
     assert result["type"] == "abort"
     assert result["reason"] == "no_mac"
 
+async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
+    """Test a failed config flow manually initialized by the user with the host specified and an error getting the serial number and exception getting mac address."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "settings"
+
+    with patch(
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
+        None,
+    ), patch(
+        "homeassistant.components.denonavr.config_flow.get_mac_address",
+        side_effect=OSError,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_mac"
 
 async def test_config_flow_manual_host_connection_error(hass):
     """Test a failed config flow manually initialized by the user with the host specified and a connection error."""
