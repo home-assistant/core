@@ -53,10 +53,7 @@ from .const import (
     WISER_SERVICES,
 )
 
-# Set config values to default
-# These get set to config later
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -136,7 +133,11 @@ async def async_setup_entry(hass, config_entry):
 
     # Poll for updates in the background
     update_track = async_track_time_interval(
-        hass, lambda now: data.update(), SCAN_INTERVAL,
+        hass,
+        lambda now: data.update(),
+        timedelta(
+            seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        ),
     )
 
     update_listener = config_entry.add_update_listener(_async_update_listener)
