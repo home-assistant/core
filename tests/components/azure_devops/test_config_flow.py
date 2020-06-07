@@ -1,5 +1,5 @@
 """Test the Azure DevOps config flow."""
-from unittest.mock import patch
+from tests.async_mock import patch
 
 from aioazuredevops.core import DevOpsProject
 import aiohttp
@@ -12,8 +12,6 @@ from homeassistant.components.azure_devops.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import mock_coro
 
 FIXTURE_USER_INPUT = {CONF_ORG: "random", CONF_PROJECT: "project", CONF_PAT: "abc123"}
 FIXTURE_REAUTH_INPUT = {CONF_PAT: "abc123"}
@@ -50,7 +48,7 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
-        return_value=mock_coro(False),
+        return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT,
@@ -72,7 +70,7 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
-        return_value=mock_coro(False),
+        return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_REAUTH_INPUT,
@@ -145,10 +143,9 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         return_value=True,
     ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
-        return_value=mock_coro(),
     ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
-        return_value=mock_coro(DevOpsProject("abcd-abcd-abcd-abcd", "project")),
+        return_value=DevOpsProject("abcd-abcd-abcd-abcd", "project"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT,
