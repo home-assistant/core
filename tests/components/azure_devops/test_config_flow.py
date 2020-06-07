@@ -153,7 +153,7 @@ async def test_project_error(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_project_error(hass: HomeAssistant) -> None:
-    """Test we show user form on Azure DevOps connection error."""
+    """Test we show user form on Azure DevOps project error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "reauth"}
     )
@@ -179,6 +179,40 @@ async def test_reauth_project_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "project_error"}
 
 
+async def test_reauth_flow(hass: HomeAssistant) -> None:
+    """Test reauth works."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth"
+
+    with patch(
+        "homeassistant.components.azure_devops.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.azure_devops.async_setup_entry", return_value=True,
+    ), patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
+    ), patch(
+        "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
+        return_value=DevOpsProject(
+            "abcd-abcd-abcd-abcd", FIXTURE_USER_INPUT[CONF_PROJECT]
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_REAUTH_INPUT,
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+
+
 async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow works."""
     result = await hass.config_entries.flow.async_init(
@@ -199,7 +233,9 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",
     ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.get_project",
-        return_value=DevOpsProject("abcd-abcd-abcd-abcd", "project"),
+        return_value=DevOpsProject(
+            "abcd-abcd-abcd-abcd", FIXTURE_USER_INPUT[CONF_PROJECT]
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT,
