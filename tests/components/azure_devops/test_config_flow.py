@@ -96,8 +96,7 @@ async def test_full_flow_implementation(
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.azure_devops.config_flow.DevOpsClient.async_setup_entry",
-        return_value=True,
+        "homeassistant.components.azure_devops.async_setup_entry", return_value=True,
     ), patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorized",
         return_value=True,
