@@ -17,6 +17,7 @@
             },
             "user": {
                 "data": {
+                    "scan_interval": "Intervalle de mise \u00e0 jour (secondes, minimum 30)",
                     "usn": "Appareil"
                 }
             }
