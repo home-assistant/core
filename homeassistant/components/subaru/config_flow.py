@@ -2,7 +2,7 @@
 from datetime import datetime
 import logging
 
-from subarulink.hass import HassController as SubaruAPI, SubaruException
+from subarulink import Controller as SubaruAPI, SubaruException
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions

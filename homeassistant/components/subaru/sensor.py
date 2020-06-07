@@ -1,23 +1,28 @@
 """Support for the Subaru sensors."""
 import logging
 
+import subarulink.const as sc
+
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
+    TEMP_CELSIUS,
     TIME_MINUTES,
     UNIT_PERCENTAGE,
     VOLT,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.distance import convert as dist_convert
-from homeassistant.util.temperature import celsius_to_fahrenheit
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import (
+    IMPERIAL_SYSTEM,
+    LENGTH_UNITS,
+    TEMPERATURE_UNITS,
+)
 from homeassistant.util.volume import convert as vol_convert
 
-from . import DOMAIN as SUBARU_DOMAIN, SubaruDevice
+from . import DOMAIN as SUBARU_DOMAIN, SubaruEntity
 
 _LOGGER = logging.getLogger(__name__)
 L_PER_GAL = vol_convert(1, VOLUME_GALLONS, VOLUME_LITERS)
@@ -26,108 +31,178 @@ KM_PER_MI = dist_convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Subaru sensors by config_entry."""
-    controller = hass.data[SUBARU_DOMAIN][config_entry.entry_id]["controller"]
+    coordinator = hass.data[SUBARU_DOMAIN][config_entry.entry_id]["coordinator"]
+    vehicle_info = hass.data[SUBARU_DOMAIN][config_entry.entry_id]["vehicles"]
     entities = []
-    for device in hass.data[SUBARU_DOMAIN][config_entry.entry_id]["devices"]["sensor"]:
-        entities.append(SubaruSensor(device, controller, config_entry, hass))
+    for vin in vehicle_info.keys():
+        _create_sensor_entities(entities, vehicle_info[vin], coordinator, hass)
     async_add_entities(entities, True)
 
 
-class SubaruSensor(SubaruDevice, Entity):
-    """Representation of Subaru sensors."""
+def _create_sensor_entities(entities, vehicle_info, coordinator, hass):
 
-    def __init__(self, subaru_device, controller, config_entry, hass):
-        """Initialize of the sensor."""
+    if vehicle_info["is_ev"]:
+        entities.append(
+            SubaruSensor(
+                vehicle_info,
+                coordinator,
+                hass,
+                "EV Range",
+                sc.EV_DISTANCE_TO_EMPTY,
+                LENGTH_MILES,
+            )
+        )
+        entities.append(
+            SubaruSensor(
+                vehicle_info,
+                coordinator,
+                hass,
+                "EV Battery Level",
+                sc.EV_STATE_OF_CHARGE_PERCENT,
+                UNIT_PERCENTAGE,
+            )
+        )
+        entities.append(
+            SubaruSensor(
+                vehicle_info,
+                coordinator,
+                hass,
+                "EV Time to Full Charge",
+                sc.EV_TIME_TO_FULLY_CHARGED,
+                TIME_MINUTES,
+            )
+        )
+
+    if vehicle_info["api_gen"] == "g2":
+        entities.append(FuelEconomySensor(vehicle_info, coordinator, hass))
+        entities.append(
+            SubaruSensor(
+                vehicle_info,
+                coordinator,
+                hass,
+                "12V Battery Voltage",
+                sc.BATTERY_VOLTAGE,
+                VOLT,
+            )
+        )
+        entities.append(
+            SubaruSensor(
+                vehicle_info,
+                coordinator,
+                hass,
+                "Range",
+                sc.DIST_TO_EMPTY,
+                LENGTH_KILOMETERS,
+            )
+        )
+        entities.append(
+            SubaruSensor(
+                vehicle_info, coordinator, hass, "Odometer", sc.ODOMETER, LENGTH_METERS
+            )
+        )
+        entities.append(
+            SubaruSensor(
+                vehicle_info,
+                coordinator,
+                hass,
+                "External Temp",
+                sc.EXTERNAL_TEMP,
+                TEMP_CELSIUS,
+            )
+        )
+
+
+class SubaruSensor(SubaruEntity):
+    """Class for Subaru sensors."""
+
+    def __init__(self, vehicle_info, coordinator, hass, title, data_field, api_unit):
+        """Initialize the sensor."""
+        super().__init__(vehicle_info, coordinator)
+        self.hass_type = "sensor"
         self.current_value = None
         self.hass = hass
-        self._unit_of_measurement = None
-        super().__init__(subaru_device, controller, config_entry)
+        self.title = title
+        self.data_field = data_field
+        self.api_unit = api_unit
 
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self.current_value is None:
+            return None
+
+        if self.api_unit in TEMPERATURE_UNITS:
+            return round(
+                self.hass.config.units.temperature(self.current_value, self.api_unit), 1
+            )
+
+        if self.api_unit in LENGTH_UNITS:
+            return round(
+                self.hass.config.units.length(self.current_value, self.api_unit), 1
+            )
+
         return self.current_value
 
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return self._unit_of_measurement
+        if self.api_unit in TEMPERATURE_UNITS:
+            return self.hass.config.units.temperature_unit
+
+        if self.api_unit in LENGTH_UNITS:
+            return self.hass.config.units.length_unit
+
+        return self.api_unit
 
     async def async_update(self):
         """Update the state from the sensor."""
-        _LOGGER.debug("Updating sensor: %s", self._name)
         await super().async_update()
-        self.units = self.hass.config.units
-        self.current_value = self.subaru_device.get_value()
 
+        self.current_value = self.coordinator.data[self.vin]["status"][self.data_field]
+        if self.current_value in sc.BAD_SENSOR_VALUES:
+            self.current_value = None
+        if isinstance(self.current_value, str):
+            if "." in self.current_value:
+                self.current_value = float(self.current_value)
+            else:
+                self.current_value = int(self.current_value)
+
+
+class FuelEconomySensor(SubaruSensor):
+    """
+    Subaru Sensor for fuel economy.
+
+    This SubaruSensor subclass is needed for this sensor for non-standard units and conversions.
+    The units provided by the API are: Liters/10km
+    """
+
+    def __init__(self, vehicle_info, coordinator, hass):
+        """Initialize the sensor."""
+        super().__init__(
+            vehicle_info,
+            coordinator,
+            hass,
+            "Avg Fuel Consumption",
+            sc.AVG_FUEL_CONSUMPTION,
+            None,
+        )
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
         if self.current_value is None:
-            pass
+            return None
 
-        elif self.subaru_device.type == "External Temp":  # C
-            if self.units == IMPERIAL_SYSTEM:
-                self.current_value = round(
-                    celsius_to_fahrenheit(float(self.current_value)), 1
-                )
-            self._unit_of_measurement = self.units.temperature_unit
+        if self.hass.config.units == IMPERIAL_SYSTEM:
+            self.current_value = (1000.0 * L_PER_GAL) / (KM_PER_MI * self.current_value)
+            return round(self.current_value, 1)
 
-        elif self.subaru_device.type == "Odometer":  # m
-            if self.units == IMPERIAL_SYSTEM:
-                self.current_value = round(
-                    dist_convert(int(self.current_value), LENGTH_METERS, LENGTH_MILES),
-                    1,
-                )
-            else:
-                self.current_value = round(
-                    dist_convert(
-                        int(self.current_value), LENGTH_METERS, LENGTH_KILOMETERS
-                    ),
-                    1,
-                )
-            self._unit_of_measurement = self.units.length_unit
+        return self.current_value / 10.0
 
-        elif self.subaru_device.type == "EV Range":  # mi
-            if self.units == IMPERIAL_SYSTEM:
-                pass
-            else:
-                self.current_value = round(
-                    dist_convert(
-                        int(self.current_value), LENGTH_MILES, LENGTH_KILOMETERS
-                    ),
-                    1,
-                )
-            self._unit_of_measurement = self.units.length_unit
+    @property
+    def unit_of_measurement(self):
+        """Return the unit_of_measurement of the device."""
+        if self.hass.config.units == IMPERIAL_SYSTEM:
+            return "mi/gal"
 
-        elif self.subaru_device.type == "Range":  # km
-            if self.units == IMPERIAL_SYSTEM:
-                self.current_value = round(
-                    dist_convert(
-                        int(self.current_value), LENGTH_KILOMETERS, LENGTH_MILES
-                    ),
-                    0,
-                )
-            self._unit_of_measurement = self.units.length_unit
-
-        elif self.subaru_device.type == "EV Charge Rate":  # min
-            self._unit_of_measurement = TIME_MINUTES
-
-        elif self.subaru_device.type == "12V Battery Voltage":  # V
-            self._unit_of_measurement = VOLT
-
-        elif self.subaru_device.type == "Avg Fuel Consumption":  # L/10km
-            if self.units == IMPERIAL_SYSTEM:
-                self._unit_of_measurement = "mi/gal"
-                self.current_value = (1000.0 * L_PER_GAL) / (
-                    KM_PER_MI * float(self.current_value)
-                )
-                self.current_value = round(self.current_value, 1)
-            else:
-                self._unit_of_measurement = "L/100km"
-                self.current_value = float(self.current_value) / 10.0
-
-        elif self.subaru_device.type == "EV Battery Level":  # %
-            self._unit_of_measurement = UNIT_PERCENTAGE
-
-        else:
-            _LOGGER.warning(
-                "Unsupported Subaru Sensor Type %s" % self.subaru_device.type
-            )
+        return "L/100km"
