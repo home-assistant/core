@@ -178,7 +178,7 @@ async def test_flow(hass):
 
 
 async def test_form_with_failed_validation(hass):
-    """Test we failed validation during the flow."""
+    """Test failed validation during the flow."""
     hass.config.components.add("mqtt")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -218,6 +218,47 @@ async def test_form_with_failed_validation(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "topic"
         assert result["errors"]["base"] == "cannot_connect"
+
+
+async def test_form_with_invalid_topic(hass):
+    """Test invalid mqtt topic."""
+    hass.config.components.add("mqtt")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_discovery",
+        return_value=DISCOVERY,
+    ):
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "device"
+        assert len(result["data_schema"].schema[CONF_DEVICE_ID].container) == 3
+
+        device_id = DISCOVERY[0]["id"]
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_DEVICE_ID: device_id}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "topic"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_TOPIC: MOCK_TOPIC + "/#"},
+        )
+
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "topic"
+        assert result["errors"]["base"] == "invalid_topic"
 
 
 async def test_discovery(hass):

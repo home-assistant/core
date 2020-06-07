@@ -127,29 +127,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Model and topic configuration for Shelly device."""
         errors = {}
         if user_input:
-            success = await validate_input(self.hass, user_input)
-            if success:
-                device_id = self._device
-                model = device_id.split("-")[0]
-                title = f"{MODELS[model][MODEL_TITLE]} ({device_id})"
-                return self.async_create_entry(
-                    title=title,
-                    data={
-                        CONF_DEVICE_ID: device_id,
-                        CONF_MODEL: model,
-                        CONF_TOPIC: user_input[CONF_TOPIC],
-                    },
-                )
+            try:
+                mqtt.valid_publish_topic(user_input[CONF_TOPIC])
+                success = await validate_input(self.hass, user_input)
+                if success:
+                    device_id = self._device
+                    model = device_id.split("-")[0]
+                    title = f"{MODELS[model][MODEL_TITLE]} ({device_id})"
+                    return self.async_create_entry(
+                        title=title,
+                        data={
+                            CONF_DEVICE_ID: device_id,
+                            CONF_MODEL: model,
+                            CONF_TOPIC: user_input[CONF_TOPIC],
+                        },
+                    )
 
-            errors["base"] = "cannot_connect"
-            topic = user_input[CONF_TOPIC]
+                errors["base"] = "cannot_connect"
+                topic = user_input[CONF_TOPIC]
+            except vol.Invalid:
+                errors["base"] = "invalid_topic"
+                topic = user_input[CONF_TOPIC]
         else:
             topic = f"shellies/{self._device}/"
 
         return self.async_show_form(
             step_id="topic",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_TOPIC, default=topic): mqtt.valid_publish_topic}
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_TOPIC, default=topic): str}),
             errors=errors,
         )
