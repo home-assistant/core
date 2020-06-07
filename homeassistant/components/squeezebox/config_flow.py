@@ -74,6 +74,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             uuid: search for this uuid (optional)
         """
         self.discovery_info = None
+        discovery_event = asyncio.Event()
 
         def _discovery_callback(server):
             if server.uuid:
@@ -92,12 +93,13 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "uuid": server.uuid,
                 }
                 _LOGGER.debug("Discovered server: %s", self.discovery_info)
+                discovery_event.set()
 
         discovery_task = self.hass.async_create_task(
             async_discover(_discovery_callback)
         )
-        while not self.discovery_info:
-            await asyncio.sleep(0)
+
+        await discovery_event.wait()
         discovery_task.cancel()  # stop searching as soon as we find server
 
         # update with suggested values from discovery
