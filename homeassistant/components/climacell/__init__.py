@@ -17,13 +17,7 @@ import voluptuous as vol
 from homeassistant.components.air_quality import DOMAIN as AQ_DOMAIN
 from homeassistant.components.weather import DOMAIN as W_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_UNIT_SYSTEM,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -53,7 +47,6 @@ SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Inclusive(CONF_LATITUDE, "location"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "location"): cv.longitude,
-        vol.Optional(CONF_UNIT_SYSTEM): cv.unit_system,
         vol.Optional(CONF_FORECAST_FREQUENCY, default=DAILY): vol.In(
             (DISABLE_FORECASTS, DAILY, HOURLY)
         ),
