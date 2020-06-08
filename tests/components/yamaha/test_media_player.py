@@ -6,7 +6,7 @@ from homeassistant.components.yamaha import media_player as yamaha
 from homeassistant.components.yamaha.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, call, patch
+from tests.async_mock import MagicMock, PropertyMock, call, patch
 
 CONFIG = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
 
@@ -65,8 +65,11 @@ async def test_enable_output(hass, device, main_zone):
     assert main_zone.enable_output.call_args == call(port, enabled)
 
 
-async def test_select_scene(hass, device, main_zone):
+async def test_select_scene(hass, device, main_zone, caplog):
     """Test select scene service."""
+    scene_prop = PropertyMock(return_value=None)
+    type(main_zone).scene = scene_prop
+
     assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
     await hass.async_block_till_done()
 
@@ -78,11 +81,22 @@ async def test_select_scene(hass, device, main_zone):
 
     await hass.services.async_call(DOMAIN, yamaha.SERVICE_SELECT_SCENE, data, True)
 
-    assert main_zone.scene == scene
+    assert scene_prop.call_count == 1
+    assert scene_prop.call_args == call(scene)
 
     scene = "BD/DVD Movie Viewing"
     data["scene"] = scene
 
     await hass.services.async_call(DOMAIN, yamaha.SERVICE_SELECT_SCENE, data, True)
 
-    assert main_zone.scene == scene
+    assert scene_prop.call_count == 2
+    assert scene_prop.call_args == call(scene)
+
+    scene_prop.side_effect = AssertionError()
+
+    missing_scene = "Missing scene"
+    data["scene"] = missing_scene
+
+    await hass.services.async_call(DOMAIN, yamaha.SERVICE_SELECT_SCENE, data, True)
+
+    assert f"Scene '{missing_scene}' does not exist!" in caplog.text
