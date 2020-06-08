@@ -92,8 +92,9 @@ class TestMQTTComponent(unittest.TestCase):
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         self.calls = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -307,8 +308,9 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass = get_test_home_assistant()
         mock_mqtt_client(self.hass)
         self.calls = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
