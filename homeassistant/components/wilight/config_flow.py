@@ -4,12 +4,12 @@ from urllib.parse import urlparse
 
 import pywilight
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
 from homeassistant.const import CONF_HOST
 
 from . import PLATFORMS
-from .const import DOMAIN
+from .const import DOMAIN  # pylint: disable=unused-import
 
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_MODEL_NAME = "model_name"
@@ -19,14 +19,13 @@ WILIGHT_MANUFACTURER = "All Automacao Ltda"
 _LOGGER = logging.getLogger(__name__)
 
 
-class WiLightFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WiLight config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-
     def __init__(self):
         """Initialize the WiLight flow."""
         self._host = None

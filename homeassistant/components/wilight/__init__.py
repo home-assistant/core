@@ -1,5 +1,4 @@
 """The WiLight integration."""
-import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -9,8 +8,6 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .parent_device import WiLightParent
-
-_LOGGER = logging.getLogger(__name__)
 
 # List the platforms that you want to support.
 PLATFORMS = ["light"]

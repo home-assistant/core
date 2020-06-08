@@ -11,50 +11,29 @@ from homeassistant.config_entries import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.components.wilight import HOST, setup_integration
+from tests.components.wilight import (
+    HOST,
+    UPNP_MAC_ADDRESS,
+    UPNP_MODEL_NAME,
+    UPNP_MODEL_NUMBER,
+    UPNP_SERIAL,
+    setup_integration,
+)
 
 
 @pytest.fixture(name="dummy_create_api_device")
 def mock_dummy_create_api_device():
     """Mock a valid api_devce."""
 
-    class Dummy:
-        async def status(self, index=None):
-            pass
-
-        async def turn_on(self, index=None):
-            pass
-
-        async def turn_off(self, index=None):
-            pass
-
-        async def set_brightness(self, index=None, brightness=None):
-            pass
-
-        async def set_hs_color(self, index=None, hue=None, saturation=None):
-            pass
-
-        async def set_hsb_color(
-            self, index=None, hue=None, saturation=None, brightness=None
-        ):
-            pass
-
-        def stop(self):
-            pass
-
-        @property
-        def is_connected(self):
-            return True
-
-    device = pywilight.discovery.wilight_from_model_serial_and_location(
+    device = pywilight.discovery.wilight_from_discovery(
         f"http://{HOST}:45995/wilight.xml",
-        "5C:CF:7F:8B:CA:56",
-        "WiLight 0105001800020009-00000000002510",
-        "000000000090",
-        "123456789012345678901234567890123456",
+        UPNP_MAC_ADDRESS,
+        UPNP_MODEL_NAME,
+        UPNP_SERIAL,
+        UPNP_MODEL_NUMBER,
     )
 
-    device.set_dummy(Dummy())
+    device.set_dummy(True)
 
     with patch(
         "homeassistant.components.wilight.parent_device.create_api_device",

@@ -1,5 +1,4 @@
 """Support for WiLight lights."""
-import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,8 +20,6 @@ from .const import (
     LIGHT_ON_OFF,
     SUPPORT_NONE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def entities_from_discovered_wilight(hass, api_device):
@@ -54,7 +51,7 @@ async def async_setup_entry(
     """Set up WiLight lights from a config entry."""
     parent = hass.data[DOMAIN][entry.entry_id]
 
-    """Handle a discovered WiLight device."""
+    # Handle a discovered WiLight device.
     entities = entities_from_discovered_wilight(hass, parent.api)
     async_add_entities(entities)
 
@@ -71,7 +68,7 @@ class WiLightLightOnOff(WiLightDevice, LightEntity):
     def __init__(self, *args, **kwargs):
         """Initialize the device."""
         WiLightDevice.__init__(self, *args, **kwargs)
-        """Initialize the WiLights onoff."""
+        # Initialize the WiLights onoff.
         self._on = False
 
     @property
@@ -101,7 +98,7 @@ class WiLightLightDimmer(WiLightDevice, LightEntity):
     def __init__(self, *args, **kwargs):
         """Initialize the device."""
         WiLightDevice.__init__(self, *args, **kwargs)
-        """Initialize the WiLights dimmer."""
+        # Initialize the WiLights dimmer.
         self._on = False
         self._brightness = 0
 
@@ -165,7 +162,7 @@ class WiLightLightColor(WiLightDevice, LightEntity):
     def __init__(self, *args, **kwargs):
         """Initialize the device."""
         WiLightDevice.__init__(self, *args, **kwargs)
-        """Initialize the WiLights color."""
+        # Initialize the WiLights color.
         self._on = False
         self._brightness = 0
         self._hue = 0
