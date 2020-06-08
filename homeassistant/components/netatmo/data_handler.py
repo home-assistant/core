@@ -63,6 +63,7 @@ class NetatmoDataHandler:
         self._data_classes: Dict = {}
         self.data = {}
         self._queue: List = []
+        self._webhook: bool = False
 
         self.lock = asyncio.Lock()
 
@@ -102,6 +103,7 @@ class NetatmoDataHandler:
             """Handle webhook events."""
             if event.data["data"]["push_type"] == "webhook_activation":
                 _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
+                self._webhook = True
 
         self.hass.bus.async_listen("netatmo_event", handle_event)
 
@@ -122,11 +124,19 @@ class NetatmoDataHandler:
                     "kwargs": kwargs,
                     "registered": 1,
                 }
-                self.data[data_class_entry] = await self.hass.async_add_executor_job(
-                    partial(DATA_CLASSES[data_class_name], **kwargs,), self._auth,
-                )
+
+                try:
+                    self.data[
+                        data_class_entry
+                    ] = await self.hass.async_add_executor_job(
+                        partial(DATA_CLASSES[data_class_name], **kwargs,), self._auth,
+                    )
+                except (pyatmo.NoDevice, pyatmo.ApiError) as err:
+                    _LOGGER.debug(err)
+
                 self._queue.append(self._data_classes[data_class_entry])
                 _LOGGER.debug("Data class %s added", data_class_name)
+
             else:
                 self._data_classes[data_class_entry].update(
                     registered=self._data_classes[data_class_entry]["registered"] + 1
@@ -143,6 +153,11 @@ class NetatmoDataHandler:
                 self._queue.remove(self._data_classes[data_class_entry])
                 self._data_classes.pop(data_class_entry)
                 _LOGGER.debug("Data class %s removed", data_class_entry)
+
+    @property
+    def webhook(self) -> bool:
+        """Return the webhook state."""
+        return self._webhook
 
 
 @callback

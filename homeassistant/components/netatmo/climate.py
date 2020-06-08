@@ -143,7 +143,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 room_name = home_data.rooms[home_id][room_id]["name"]
                 _LOGGER.debug("Setting up room %s (%s) ...", room_name, room_id)
                 await data_handler.register_data_class("HomeStatus", home_id=home_id)
-                if room_id in data_handler.data[f"HomeStatus-{home_id}"].rooms:
+                home_status = data_handler.data.get(f"HomeStatus-{home_id}")
+                if home_status and room_id in home_status.rooms:
                     entities.append(
                         NetatmoThermostat(data_handler, data_class, home_id, room_id)
                     )
