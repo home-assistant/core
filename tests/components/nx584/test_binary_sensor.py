@@ -134,6 +134,7 @@ class TestNX584ZoneSensor(unittest.TestCase):
         assert "foo" == sensor.name
         assert not sensor.should_poll
         assert sensor.is_on
+        assert 1 == sensor.device_state_attributes["zone_number"]
 
         zone["state"] = False
         assert not sensor.is_on
