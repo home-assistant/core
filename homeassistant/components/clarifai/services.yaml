@@ -1,0 +1,15 @@
+predict:
+  description: Process an image immediately using a workflow.
+  fields:
+    app_id:
+      description: The ID of the Clarifai Application to be used.
+      example: '5fd9c2eca5564d1da2474be3709bfcf9'
+    workflow_id:
+      description: The ID of the Workflow to be used.
+      example: 'Face'
+    result_format:
+      description: Use the default result format from Clarifai or only return concepts.
+      example: concepts
+    entity_id:
+      description: The camera entity to scan for images.
+      example: 'camera.front_door'

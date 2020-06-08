@@ -401,6 +401,9 @@ circuit-webhook==1.0.1
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.3
 
+# homeassistant.components.clarifai
+clarifai-grpc==0.1.1
+
 # homeassistant.components.cppm_tracker
 clearpasspy==1.0.2
 

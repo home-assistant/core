@@ -1,0 +1,8 @@
+{
+  "domain": "clarifai",
+  "name": "Clarifai",
+  "documentation": "https://www.home-assistant.io/integrations/clarifai",
+  "requirements": ["clarifai-grpc==0.1.1"],
+  "dependencies": ["image_processing", "camera"],
+  "codeowners": ["@djbowers"]
+}
