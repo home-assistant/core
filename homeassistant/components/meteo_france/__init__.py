@@ -52,6 +52,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up an Meteo-France account from a config entry."""
+    _LOGGER.warning("SETUP")
     hass.data.setdefault(DOMAIN, {})
 
     latitude = entry.data[CONF_LATITUDE]
@@ -138,6 +139,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
+    _LOGGER.warning("UNLOAD")
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -148,6 +150,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+        if len(hass.data[DOMAIN]) == 0:
+            hass.data.pop(DOMAIN)
 
     return unload_ok
 
