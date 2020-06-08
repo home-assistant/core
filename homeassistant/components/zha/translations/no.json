@@ -27,8 +27,7 @@
                 "data": {
                     "path": "Seriell enhetsbane"
                 },
-                "description": "Velg seriell port for Zigbee radio",
-                "title": ""
+                "description": "Velg seriell port for Zigbee radio"
             }
         }
     },

@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "OpenUV API Schl\u00ebssel",
+                    "api_key": "API Schl\u00ebssel",
                     "elevation": "H\u00e9icht",
                     "latitude": "Breedegrad",
                     "longitude": "L\u00e4ngegrad"

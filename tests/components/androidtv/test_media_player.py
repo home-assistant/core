@@ -31,9 +31,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
     SERVICE_VOLUME_SET,
-    STATE_IDLE,
     STATE_OFF,
     STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
@@ -150,7 +150,7 @@ async def _test_reconnect(hass, caplog, config):
         # state will be the last known state
         state = hass.states.get(entity_id)
         if patch_key == "server":
-            assert state.state == STATE_IDLE
+            assert state.state == STATE_STANDBY
         else:
             assert state.state == STATE_OFF
 
@@ -159,7 +159,7 @@ async def _test_reconnect(hass, caplog, config):
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == STATE_IDLE
+        assert state.state == STATE_STANDBY
 
     if patch_key == "python":
         assert (
@@ -879,7 +879,7 @@ async def test_update_lock_not_acquired(hass):
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == STATE_IDLE
+        assert state.state == STATE_STANDBY
 
 
 async def test_download(hass):

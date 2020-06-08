@@ -542,7 +542,7 @@ class EntityPlatform:
             for entity in self.entities.values():
                 if not entity.should_poll:
                     continue
-                tasks.append(entity.async_update_ha_state(True))  # type: ignore
+                tasks.append(entity.async_update_ha_state(True))
 
             if tasks:
                 await asyncio.gather(*tasks)

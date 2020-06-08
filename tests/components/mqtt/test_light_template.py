@@ -39,6 +39,7 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -795,6 +796,13 @@ async def test_invalid_values(hass, mqtt_mock):
     # effect should not have changed
     state = hass.states.get("light.test")
     assert state.attributes.get("effect") == "rainbow"
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_availability_without_topic(hass, mqtt_mock):
