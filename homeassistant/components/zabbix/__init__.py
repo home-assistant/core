@@ -149,7 +149,7 @@ def setup(hass, config):
             for float_key in float_keys:
                 floats_discovery.append({"{#KEY}": float_key})
             m = ZabbixMetric(hostname, 'homeassistant.floats_discovery', json.dumps(floats_discovery))
-            pprint(json.dumps(floats_discovery))
+            #pprint(json.dumps(floats_discovery))
             metrics.append(m)
         for key, value in floats.items():
             m = ZabbixMetric(hostname, f"homeassistant.floats[{key}]", value)
