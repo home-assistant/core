@@ -352,7 +352,7 @@ async def webhook_enable_encryption(hass, config_entry, data):
         vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
         vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
         vol.Optional(ATTR_SENSOR_UOM): cv.string,
-        vol.Required(ATTR_SENSOR_STATE): vol.Any(bool, str, int, float),
+        vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, str, int, float),
         vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
     }
 )
@@ -414,7 +414,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
         {
             vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
             vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-            vol.Required(ATTR_SENSOR_STATE): vol.Any(bool, str, int, float),
+            vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, str, int, float),
             vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
             vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
         }
