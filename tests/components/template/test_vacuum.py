@@ -311,7 +311,7 @@ async def test_attribute_templates(hass, calls):
     attributes = state.attributes
     assert attributes.get("test_attribute") == "It ."
 
-    hass.states.set("sensor.test_state", "Works")
+    hass.states.async_set("sensor.test_state", "Works")
     await hass.block_till_done()
     state = hass.states.get("vacuum.test_template_vacuum")
     attributes = state.attributes
@@ -328,7 +328,7 @@ async def test_invalid_attribute_template(hass, caplog):
                 "platform": "template",
                 "vacuums": {
                     "invalid_template": {
-                        "value_template": "{{ 'docked' }}",
+                        "value_template": "{{ states('input_select.state') }}",
                         "start": {"service": "script.vacuum_start"},
                         "attribute_templates": {
                             "test_attribute": "{{ states.sensor.unknown.attributes.picture }}"
