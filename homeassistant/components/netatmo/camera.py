@@ -10,7 +10,7 @@ from homeassistant.components.camera import (
     SUPPORT_STREAM,
     Camera,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -26,8 +26,6 @@ CONF_QUALITY = "quality"
 DEFAULT_QUALITY = "high"
 
 VALID_QUALITIES = ["high", "medium", "low", "poor"]
-
-_BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 SCHEMA_SERVICE_SETLIGHTAUTO = vol.Schema(
     {vol.Optional(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN)}
@@ -66,7 +64,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         camera["id"],
                         camera["type"],
                         camera["home_id"],
-                        True,
                         DEFAULT_QUALITY,
                     )
                 )
@@ -93,14 +90,7 @@ class NetatmoCamera(Camera, NetatmoBase):
     """Representation of a Netatmo camera."""
 
     def __init__(
-        self,
-        data_handler,
-        data_class,
-        camera_id,
-        camera_type,
-        home_id,
-        verify_ssl,
-        quality,
+        self, data_handler, data_class, camera_id, camera_type, home_id, quality,
     ):
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
@@ -114,7 +104,6 @@ class NetatmoCamera(Camera, NetatmoBase):
         self._name = f"{MANUFACTURER} {self._camera_name}"
         self._camera_type = camera_type
         self._unique_id = f"{self._camera_id}-{self._camera_type}"
-        self._verify_ssl = verify_ssl
         self._quality = quality
         self._vpnurl = None
         self._localurl = None
@@ -162,9 +151,7 @@ class NetatmoCamera(Camera, NetatmoBase):
                 )
             elif self._vpnurl:
                 response = requests.get(
-                    f"{self._vpnurl}/live/snapshot_720.jpg",
-                    timeout=10,
-                    verify=self._verify_ssl,
+                    f"{self._vpnurl}/live/snapshot_720.jpg", timeout=10, verify=True,
                 )
             else:
                 _LOGGER.error("Welcome/Presence VPN URL is None")

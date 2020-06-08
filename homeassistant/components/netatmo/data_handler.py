@@ -1,4 +1,5 @@
 """The Netatmo data handler."""
+import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -63,6 +64,8 @@ class NetatmoDataHandler:
         self.data = {}
         self._queue: List = []
 
+        self.lock = asyncio.Lock()
+
     async def async_setup(self):
         """Set up the Netatmo data handler."""
 
@@ -109,35 +112,37 @@ class NetatmoDataHandler:
         else:
             data_class_entry = data_class_name
 
-        if data_class_entry not in self._data_classes:
-            self._data_classes[data_class_entry] = {
-                "class": DATA_CLASSES[data_class_name],
-                "name": data_class_entry,
-                "interval": DEFAULT_INTERVALS[data_class_name],
-                "next_scan": time() + DEFAULT_INTERVALS[data_class_name],
-                "kwargs": kwargs,
-                "registered": 1,
-            }
-            self.data[data_class_entry] = await self.hass.async_add_executor_job(
-                partial(DATA_CLASSES[data_class_name], **kwargs,), self._auth,
-            )
-            self._queue.append(self._data_classes[data_class_entry])
-            _LOGGER.debug("Data class %s added", data_class_name)
-        else:
-            self._data_classes[data_class_entry].update(
-                registered=self._data_classes[data_class_entry]["registered"] + 1
-            )
+        async with self.lock:
+            if data_class_entry not in self._data_classes:
+                self._data_classes[data_class_entry] = {
+                    "class": DATA_CLASSES[data_class_name],
+                    "name": data_class_entry,
+                    "interval": DEFAULT_INTERVALS[data_class_name],
+                    "next_scan": time() + DEFAULT_INTERVALS[data_class_name],
+                    "kwargs": kwargs,
+                    "registered": 1,
+                }
+                self.data[data_class_entry] = await self.hass.async_add_executor_job(
+                    partial(DATA_CLASSES[data_class_name], **kwargs,), self._auth,
+                )
+                self._queue.append(self._data_classes[data_class_entry])
+                _LOGGER.debug("Data class %s added", data_class_name)
+            else:
+                self._data_classes[data_class_entry].update(
+                    registered=self._data_classes[data_class_entry]["registered"] + 1
+                )
 
     async def unregister_data_class(self, data_class_entry):
         """Unregister data class."""
-        registered = self._data_classes[data_class_entry]["registered"]
-        self._queue.remove(self._data_classes[data_class_entry])
+        async with self.lock:
+            registered = self._data_classes[data_class_entry]["registered"]
 
-        if registered > 1:
-            self._data_classes[data_class_entry].update(registered=registered - 1)
-        else:
-            self._data_classes.pop(data_class_entry)
-            _LOGGER.debug("Data class %s removed", data_class_entry)
+            if registered > 1:
+                self._data_classes[data_class_entry].update(registered=registered - 1)
+            else:
+                self._queue.remove(self._data_classes[data_class_entry])
+                self._data_classes.pop(data_class_entry)
+                _LOGGER.debug("Data class %s removed", data_class_entry)
 
 
 @callback
