@@ -90,7 +90,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = await self._check_setup()
         if errors is not None:
             return await self._show_setup_form(errors)
-        return await self.async_step_confirm()
+        return self._async_create_entry()
 
     async def async_step_reauth(self, user_input=None):
         """Handle configuration by re-auth."""
@@ -112,10 +112,10 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = await self._check_setup()
         if errors is not None:
             return await self._show_reauth_form(errors)
-        return await self.async_step_confirm()
+        return self._async_create_entry()
 
-    async def async_step_confirm(self):
-        """Handle final configuration step."""
+    def _async_create_entry(self):
+        """Handle create entry."""
         return self.async_create_entry(
             title=f"{self._organization}/{self._project}",
             data={
