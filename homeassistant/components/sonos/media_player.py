@@ -87,6 +87,7 @@ SERVICE_CLEAR_TIMER = "clear_sleep_timer"
 SERVICE_UPDATE_ALARM = "update_alarm"
 SERVICE_SET_OPTION = "set_option"
 SERVICE_PLAY_QUEUE = "play_queue"
+SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
 
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_ALARM_ID = "alarm_id"
@@ -290,6 +291,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "play_queue",
     )
 
+    platform.async_register_entity_service(
+        SERVICE_REMOVE_FROM_QUEUE,
+        {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        "remove_from_queue",
+    )
+
 
 class _ProcessSonosEventQueue:
     """Queue like object for dispatching sonos events."""
@@ -382,6 +389,8 @@ class SonosEntity(MediaPlayerEntity):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
+        self._is_playing_local_queue = None
+        self._queue_position = None
         self._night_sound = None
         self._speech_enhance = None
         self._source_name = None
@@ -592,6 +601,8 @@ class SonosEntity(MediaPlayerEntity):
         update_position = new_status != self._status
         self._status = new_status
 
+        self._is_playing_local_queue = self.soco.is_playing_local_queue
+
         if self.soco.is_playing_tv:
             self.update_media_linein(SOURCE_TV)
         elif self.soco.is_playing_line_in:
@@ -689,6 +700,8 @@ class SonosEntity(MediaPlayerEntity):
             self._media_position_updated_at = utcnow()
 
         self._media_image_url = track_info.get("album_art")
+
+        self._queue_position = int(track_info.get("playlist_position")) - 1
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -862,6 +875,15 @@ class SonosEntity(MediaPlayerEntity):
 
     @property
     @soco_coordinator
+    def queue_position(self):
+        """If playing local queue return the position in the queue else None."""
+        if self._is_playing_local_queue:
+            return self._queue_position
+
+        return None
+
+    @property
+    @soco_coordinator
     def source(self):
         """Name of the current input source."""
         return self._source_name or None
@@ -929,7 +951,7 @@ class SonosEntity(MediaPlayerEntity):
             sources += [SOURCE_LINEIN]
         elif "PLAYBAR" in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
-        elif "BEAM" in model:
+        elif "BEAM" in model or "PLAYBASE" in model:
             sources += [SOURCE_TV]
 
         return sources
@@ -1233,6 +1255,12 @@ class SonosEntity(MediaPlayerEntity):
         """Start playing the queue."""
         self.soco.play_from_queue(queue_position)
 
+    @soco_error()
+    @soco_coordinator
+    def remove_from_queue(self, queue_position=0):
+        """Remove item from the queue."""
+        self.soco.remove_from_queue(queue_position)
+
     @property
     def device_state_attributes(self):
         """Return entity specific state attributes."""
@@ -1243,5 +1271,8 @@ class SonosEntity(MediaPlayerEntity):
 
         if self._speech_enhance is not None:
             attributes[ATTR_SPEECH_ENHANCE] = self._speech_enhance
+
+        if self.queue_position is not None:
+            attributes[ATTR_QUEUE_POSITION] = self.queue_position
 
         return attributes
