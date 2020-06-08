@@ -211,7 +211,7 @@ class ZabbixThread(threading.Thread):
         dropped = 0
 
         try:
-            while len(json) < BATCH_BUFFER_SIZE and not self.shutdown:
+            while len(metrics) < BATCH_BUFFER_SIZE and not self.shutdown:
                 timeout = None if count == 0 else self.batch_timeout()
                 item = self.queue.get(timeout=timeout)
                 count += 1
@@ -266,7 +266,7 @@ class ZabbixThread(threading.Thread):
         """Process incoming events."""
         while not self.shutdown:
             count, metrics = self.get_metrics()
-            if json:
+            if metrics:
                 self.write_to_zabbix(metrics)
             for _ in range(count):
                 self.queue.task_done()
