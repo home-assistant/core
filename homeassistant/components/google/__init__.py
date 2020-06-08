@@ -136,20 +136,25 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
         vol.Exclusive(EVENT_IN, EVENT_START_CONF, EVENT_END_CONF): _EVENT_IN_TYPES,
         vol.Optional(EVENT_LOCATION, default=""): cv.string,
         vol.Optional(EVENT_RECURRENCE, default=[]): cv.ensure_list_csv,
-        vol.Optional(EVENT_STATUS, default="confirmed"): vol.In(["confirmed", "tentative", "cancelled"]),
+        vol.Optional(EVENT_STATUS, default="confirmed"): vol.In(
+            ["confirmed", "tentative", "cancelled"]
+        ),
         vol.Optional(EVENT_TRANSPARENCY): vol.In(["opaque", "transparent"]),
-        vol.Optional(EVENT_VISIBILITY, default="default"): vol.In(["default", "public", "private", "confidential"]),
+        vol.Optional(EVENT_VISIBILITY, default="default"): vol.In(
+            ["default", "public", "private", "confidential"]
+        ),
         vol.Optional(EVENT_REMINDERS_USEDEFAULT, default="false"): cv.boolean,
-        vol.Optional(EVENT_REMINDERS_OVERRIDES_METHOD, default="popup"): vol.In(["email", "popup"]),
-        vol.Optional(EVENT_REMINDERS_OVERRIDES_MINUTES, default=10): vol.All(vol.Coerce(int), vol.Range(min=1, max=40320)),
+        vol.Optional(EVENT_REMINDERS_OVERRIDES_METHOD, default="popup"): vol.In(
+            ["email", "popup"]
+        ),
+        vol.Optional(EVENT_REMINDERS_OVERRIDES_MINUTES, default=10): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=40320)
+        ),
     }
 )
 
 DELETE_EVENT_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(EVENT_CALENDAR_ID): cv.string,
-        vol.Required(EVENT_ID): cv.string,
-    }
+    {vol.Required(EVENT_CALENDAR_ID): cv.string, vol.Required(EVENT_ID): cv.string,}
 )
 
 UPDATE_EVENT_SERVICE_SCHEMA = vol.Schema(
@@ -165,12 +170,20 @@ UPDATE_EVENT_SERVICE_SCHEMA = vol.Schema(
         vol.Exclusive(EVENT_IN, EVENT_START_CONF, EVENT_END_CONF): _EVENT_IN_TYPES,
         vol.Optional(EVENT_LOCATION, default=""): cv.string,
         vol.Optional(EVENT_RECURRENCE, default=[]): cv.ensure_list_csv,
-        vol.Optional(EVENT_STATUS, default="confirmed"): vol.In(["confirmed", "tentative", "cancelled"]),
+        vol.Optional(EVENT_STATUS, default="confirmed"): vol.In(
+            ["confirmed", "tentative", "cancelled"]
+        ),
         vol.Optional(EVENT_TRANSPARENCY): vol.In(["opaque", "transparent"]),
-        vol.Optional(EVENT_VISIBILITY, default="default"): vol.In(["default", "public", "private", "confidential"]),
+        vol.Optional(EVENT_VISIBILITY, default="default"): vol.In(
+            ["default", "public", "private", "confidential"]
+        ),
         vol.Optional(EVENT_REMINDERS_USEDEFAULT, default="false"): cv.boolean,
-        vol.Optional(EVENT_REMINDERS_OVERRIDES_METHOD, default="popup"): vol.In(["email", "popup"]),
-        vol.Optional(EVENT_REMINDERS_OVERRIDES_MINUTES, default=10): vol.All(vol.Coerce(int), vol.Range(min=1, max=40320)),
+        vol.Optional(EVENT_REMINDERS_OVERRIDES_METHOD, default="popup"): vol.In(
+            ["email", "popup"]
+        ),
+        vol.Optional(EVENT_REMINDERS_OVERRIDES_MINUTES, default=10): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=40320)
+        ),
     }
 )
 
@@ -325,7 +338,10 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
     def _delete_event(call):
         """Delete event from calendar."""
         service = calendar_service.get()
-        service_data = {"calendarId": call.data[EVENT_CALENDAR_ID], "eventId": call.data[EVENT_ID]}
+        service_data = {
+            "calendarId": call.data[EVENT_CALENDAR_ID],
+            "eventId": call.data[EVENT_ID]
+        }
         service = service.events().delete(**service_data).execute()
 
     hass.services.register(
@@ -336,7 +352,11 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
         """Update an event."""
         service = calendar_service.get()
         event = _event_info(call)
-        service_data = {"calendarId": call.data[EVENT_CALENDAR_ID], "eventId": call.data[EVENT_ID], "body": event}
+        service_data = {
+            "calendarId": call.data[EVENT_CALENDAR_ID],
+            "eventId": call.data[EVENT_ID],
+            "body": event
+        }
         event = service.events().update(**service_data).execute()
 
     hass.services.register(
@@ -391,10 +411,15 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
             "reminders": {
                 "useDefault": call.data[EVENT_REMINDERS_USEDEFAULT],
                 "overrides": [
-                    {"method": call.data[EVENT_REMINDERS_OVERRIDES_METHOD], "minutes": call.data[EVENT_REMINDERS_OVERRIDES_MINUTES]}, ]
-            }
+                    {
+                        "method": call.data[EVENT_REMINDERS_OVERRIDES_METHOD],
+                        "minutes": call.data[EVENT_REMINDERS_OVERRIDES_MINUTES],
+                    },
+                ],
+            },
         }
         return event
+
     return True
 
 
