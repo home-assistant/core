@@ -154,7 +154,7 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
 )
 
 DELETE_EVENT_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(EVENT_CALENDAR_ID): cv.string, vol.Required(EVENT_ID): cv.string, }
+    {vol.Required(EVENT_CALENDAR_ID): cv.string, vol.Required(EVENT_ID): cv.string,}
 )
 
 UPDATE_EVENT_SERVICE_SCHEMA = vol.Schema(
