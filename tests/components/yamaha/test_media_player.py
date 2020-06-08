@@ -91,6 +91,26 @@ async def test_setup_discovery(hass, device, main_zone):
     assert state.state == "off"
 
 
+async def test_setup_zone_ignore(hass, device, main_zone):
+    """Test set up integration without host."""
+    assert await async_setup_component(
+        hass,
+        mp.DOMAIN,
+        {
+            "media_player": {
+                "platform": "yamaha",
+                "host": "127.0.0.1",
+                "zone_ignore": "Main zone",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+
+    assert state is None
+
+
 async def test_enable_output(hass, device, main_zone):
     """Test enable output service."""
     assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
