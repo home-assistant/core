@@ -21,7 +21,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_MAC,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     STATE_OFF,
@@ -29,7 +28,6 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .config_flow import DOMAIN
@@ -65,7 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         receiver_device_id = config_entry.unique_id
         unique_id = f"{receiver_device_id}-{receiver_zone.zone}"
         entities.append(
-            DenonDevice(receiver_zone, unique_id, config_entry.data[CONF_MAC])
+            DenonDevice(receiver_zone, unique_id, receiver_device_id)
         )
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
@@ -76,12 +74,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
-    def __init__(self, receiver, unique_id, mac):
+    def __init__(self, receiver, unique_id, receiver_device_id):
         """Initialize the device."""
         self._receiver = receiver
         self._name = self._receiver.name
         self._unique_id = unique_id
-        self._mac = mac
+        self._receiver_device_id = receiver_device_id
         self._muted = self._receiver.muted
         self._volume = self._receiver.volume
         self._current_source = self._receiver.input_func
@@ -162,7 +160,7 @@ class DenonDevice(MediaPlayerEntity):
     def device_info(self):
         """Return the device info of the receiver."""
         return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
+            "identifiers": {(DOMAIN, self._receiver_device_id)},
         }
 
     @property
