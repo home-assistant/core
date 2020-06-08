@@ -5,7 +5,6 @@
   "dependencies": [
     "automation",
     "cloud",
-    "config",
     "frontend",
     "history",
     "logbook",
