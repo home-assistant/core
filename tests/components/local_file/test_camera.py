@@ -25,6 +25,7 @@ async def test_loading_file(hass, hass_client):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -57,6 +58,7 @@ async def test_file_not_readable(hass, caplog):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     assert "Could not read" in caplog.text
     assert "config_test" in caplog.text
@@ -91,6 +93,7 @@ async def test_camera_content_type(hass, hass_client):
         "camera",
         {"camera": [cam_config_jpg, cam_config_png, cam_config_svg, cam_config_noext]},
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -143,6 +146,7 @@ async def test_update_file_path(hass):
             "file_path": "mock/path_2.jpg",
         }
         await async_setup_component(hass, "camera", {"camera": [camera_1, camera_2]})
+        await hass.async_block_till_done()
 
         # Fetch state and check motion detection attribute
         state = hass.states.get("camera.local_file")

@@ -14,6 +14,7 @@ from pychromecast.socket_client import (
 )
 import voluptuous as vol
 
+from homeassistant.components import zeroconf
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
@@ -170,6 +171,7 @@ async def _async_setup_platform(
     for chromecast in list(hass.data[KNOWN_CHROMECAST_INFO_KEY]):
         async_cast_discovered(chromecast)
 
+    ChromeCastZeroconf.set_zeroconf(await zeroconf.async_get_instance(hass))
     hass.async_add_executor_job(setup_internal_discovery, hass)
 
 

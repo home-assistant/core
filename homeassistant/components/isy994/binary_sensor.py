@@ -24,7 +24,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import HomeAssistantType
@@ -136,7 +135,7 @@ async def async_setup_entry(
             # the initial state is forced "OFF"/"NORMAL" if the
             # parent device has a valid state. This is corrected
             # upon connection to the ISY event stream if subnode has a valid state.
-            initial_state = None if parent_device.state == STATE_UNKNOWN else False
+            initial_state = None if parent_device.state is None else False
             if subnode_id == SUBNODE_DUSK_DAWN:
                 # Subnode 2 is the Dusk/Dawn sensor
                 device = ISYInsteonBinarySensorEntity(node, DEVICE_CLASS_LIGHT)
@@ -216,18 +215,10 @@ class ISYBinarySensorEntity(ISYNodeEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        """Get whether the ISY994 binary sensor device is on.
-
-        Note: This method will return false if the current state is UNKNOWN
-        """
-        return bool(self.value)
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if self.value == ISY_VALUE_UNKNOWN:
-            return STATE_UNKNOWN
-        return STATE_ON if self.is_on else STATE_OFF
+        """Get whether the ISY994 binary sensor device is on."""
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return bool(self._node.status)
 
     @property
     def device_class(self) -> str:
@@ -354,8 +345,8 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             self._heartbeat()
 
     @property
-    def value(self) -> object:
-        """Get the current value of the device.
+    def is_on(self) -> bool:
+        """Get whether the ISY994 binary sensor device is on.
 
         Insteon leak sensors set their primary node to On when the state is
         DRY, not WET, so we invert the binary state if the user indicates
@@ -369,13 +360,6 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             return not self._computed_state
 
         return self._computed_state
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if self._computed_state is None:
-            return STATE_UNKNOWN
-        return STATE_ON if self.is_on else STATE_OFF
 
 
 class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
@@ -394,7 +378,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
         self._parent_device = parent_device
         self._heartbeat_timer = None
         self._computed_state = None
-        if self.state != STATE_UNKNOWN:
+        if self.state is None:
             self._computed_state = False
 
     async def async_added_to_hass(self) -> None:
@@ -460,24 +444,14 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
         """
 
     @property
-    def value(self) -> object:
-        """Get the current value of this sensor."""
-        return self._computed_state
-
-    @property
     def is_on(self) -> bool:
         """Get whether the ISY994 binary sensor device is on.
 
         Note: This method will return false if the current state is UNKNOWN
+        which occurs after a restart until the first heartbeat or control
+        parent control event is received.
         """
-        return bool(self.value)
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if self._computed_state is None:
-            return None
-        return STATE_ON if self.is_on else STATE_OFF
+        return bool(self._computed_state)
 
     @property
     def device_class(self) -> str:
@@ -502,4 +476,4 @@ class ISYBinarySensorProgramEntity(ISYProgramEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 binary sensor device is on."""
-        return bool(self.value)
+        return bool(self._node.status)

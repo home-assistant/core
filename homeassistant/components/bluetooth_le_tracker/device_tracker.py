@@ -5,7 +5,9 @@ import logging
 from uuid import UUID
 
 import pygatt  # pylint: disable=import-error
+import voluptuous as vol
 
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
@@ -17,6 +19,7 @@ from homeassistant.components.device_tracker.legacy import (
     async_load_config,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
@@ -26,11 +29,21 @@ _LOGGER = logging.getLogger(__name__)
 # Battery characteristic: 0x2a19 (https://www.bluetooth.com/specifications/gatt/characteristics/)
 BATTERY_CHARACTERISTIC_UUID = UUID("00002a19-0000-1000-8000-00805f9b34fb")
 CONF_TRACK_BATTERY = "track_battery"
+CONF_TRACK_BATTERY_INTERVAL = "track_battery_interval"
 DEFAULT_TRACK_BATTERY_INTERVAL = timedelta(days=1)
 DATA_BLE = "BLE"
 DATA_BLE_ADAPTER = "ADAPTER"
 BLE_PREFIX = "BLE_"
 MIN_SEEN_NEW = 5
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TRACK_BATTERY, default=False): cv.boolean,
+        vol.Optional(
+            CONF_TRACK_BATTERY_INTERVAL, default=DEFAULT_TRACK_BATTERY_INTERVAL
+        ): cv.time_period,
+    }
+)
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
@@ -49,8 +62,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
-    if config.get(CONF_TRACK_BATTERY):
-        battery_track_interval = DEFAULT_TRACK_BATTERY_INTERVAL
+    if config[CONF_TRACK_BATTERY]:
+        battery_track_interval = config[CONF_TRACK_BATTERY_INTERVAL]
     else:
         battery_track_interval = timedelta(0)
 

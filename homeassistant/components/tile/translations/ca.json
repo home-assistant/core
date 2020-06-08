@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquest compte de Tile ja est\u00e0 registrat."
+        },
+        "error": {
+            "invalid_credentials": "Credencials de Tile inv\u00e0lides."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic"
+                },
+                "title": "Configura Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Mostra 'Tiles' inactives"
+                },
+                "title": "Configura Tile"
+            }
+        }
+    }
+}

@@ -4,13 +4,12 @@ from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
     EMPTY_TIME,
     EVENT_PROPS_IGNORED,
-    ISY_VALUE_UNKNOWN,
     PROTO_GROUP,
     PROTO_ZWAVE,
 )
 from pyisy.helpers import NodeProperty
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import Dict
 
@@ -51,7 +50,7 @@ class ISYEntity(Entity):
             "precision": event.prec,
         }
 
-        if event.value is None or event.control not in EVENT_PROPS_IGNORED:
+        if event.control not in EVENT_PROPS_IGNORED:
             # New state attributes may be available, update the state.
             self.schedule_update_ha_state()
 
@@ -127,18 +126,6 @@ class ISYEntity(Entity):
     def should_poll(self) -> bool:
         """No polling required since we're using the subscription."""
         return False
-
-    @property
-    def value(self) -> int:
-        """Get the current value of the device."""
-        return self._node.status
-
-    @property
-    def state(self):
-        """Return the state of the ISY device."""
-        if self.value == ISY_VALUE_UNKNOWN:
-            return STATE_UNKNOWN
-        return super().state
 
 
 class ISYNodeEntity(ISYEntity):

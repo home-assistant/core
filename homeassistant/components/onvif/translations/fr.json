@@ -33,6 +33,7 @@
             "manual_input": {
                 "data": {
                     "host": "H\u00f4te",
+                    "name": "Nom",
                     "port": "Port"
                 },
                 "title": "Configurer l\u2019appareil ONVIF"

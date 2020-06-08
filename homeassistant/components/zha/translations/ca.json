@@ -7,11 +7,27 @@
             "cannot_connect": "No s'ha pogut connectar amb el dispositiu ZHA."
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Tipus de r\u00e0dio"
+                },
+                "description": "Tria el teu tipus de r\u00e0dio Zigbee",
+                "title": "Tipus de r\u00e0dio"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "velocitat del port",
+                    "flow_control": "control de flux de dades",
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
+                },
+                "description": "Introdueix la configuraci\u00f3 espec\u00edfica de port",
+                "title": "Configuraci\u00f3"
+            },
             "user": {
                 "data": {
-                    "radio_type": "Tipus de r\u00e0dio",
-                    "usb_path": "Ruta del port USB al dispositiu"
+                    "path": "Ruta del port s\u00e8rie al dispositiu"
                 },
+                "description": "Selecciona el port s\u00e8rie per a la r\u00e0dio Zigbee",
                 "title": "ZHA"
             }
         }

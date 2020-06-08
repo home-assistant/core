@@ -207,7 +207,7 @@ async def test_user_invalid(hass):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "connection"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
     mocked_device.get_supported_methods.assert_called_once()
     mocked_device.get_interface_information.assert_not_called()
@@ -223,7 +223,7 @@ async def test_import_invalid(hass):
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
         assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "connection"
+        assert result["reason"] == "cannot_connect"
 
     mocked_device.get_supported_methods.assert_called_once()
     mocked_device.get_interface_information.assert_not_called()

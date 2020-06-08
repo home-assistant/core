@@ -1,16 +1,20 @@
 """Support for exposing Home Assistant via Zeroconf."""
+import asyncio
 import ipaddress
 import logging
 import socket
 
 import voluptuous as vol
 from zeroconf import (
+    DNSPointer,
+    DNSRecord,
     InterfaceChoice,
     NonUniqueNameException,
     ServiceBrowser,
     ServiceInfo,
     ServiceStateChange,
     Zeroconf,
+    log as zeroconf_log,
 )
 
 from homeassistant import util
@@ -40,6 +44,10 @@ HOMEKIT_TYPE = "_hap._tcp.local."
 
 CONF_DEFAULT_INTERFACE = "default_interface"
 DEFAULT_DEFAULT_INTERFACE = False
+
+HOMEKIT_PROPERTIES = "properties"
+HOMEKIT_PAIRED_STATUS_FLAG = "sf"
+HOMEKIT_MODEL = "md"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -75,6 +83,27 @@ def _get_instance(hass, default_interface=False):
     return zeroconf
 
 
+class HaServiceBrowser(ServiceBrowser):
+    """ServiceBrowser that only consumes DNSPointer records."""
+
+    def update_record(self, zc: "Zeroconf", now: float, record: DNSRecord) -> None:
+        """Pre-Filter update_record to DNSPointers for the configured type."""
+
+        #
+        # Each ServerBrowser currently runs in its own thread which
+        # processes every A or AAAA record update per instance.
+        #
+        # As the list of zeroconf names we watch for grows, each additional
+        # ServiceBrowser would process all the A and AAAA updates on the network.
+        #
+        # To avoid overwhemling the system we pre-filter here and only process
+        # DNSPointers for the configured record name (type)
+        #
+        if record.name not in self.types or not isinstance(record, DNSPointer):
+            return
+        super().update_record(zc, now, record)
+
+
 class HaZeroconf(Zeroconf):
     """Zeroconf that cannot be closed."""
 
@@ -86,21 +115,30 @@ class HaZeroconf(Zeroconf):
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
+    # Zeroconf sets its log level to WARNING, reset it to allow filtering by the logger component.
+    zeroconf_log.setLevel(logging.NOTSET)
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
     )
-    zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
+
+    # Get instance UUID
+    uuid = asyncio.run_coroutine_threadsafe(
+        hass.helpers.instance_id.async_get(), hass.loop
+    ).result()
 
     params = {
+        "location_name": hass.config.location_name,
+        "uuid": uuid,
         "version": __version__,
-        "external_url": None,
-        "internal_url": None,
+        "external_url": "",
+        "internal_url": "",
         # Old base URL, for backward compatibility
-        "base_url": None,
+        "base_url": "",
         # Always needs authentication
         "requires_api_password": True,
     }
 
+    # Get instance URL's
     try:
         params["external_url"] = get_url(hass, allow_internal=False)
     except NoURLAvailableError:
@@ -123,8 +161,8 @@ def setup(hass, config):
 
     info = ServiceInfo(
         ZEROCONF_TYPE,
-        zeroconf_name,
-        None,
+        name=f"{hass.config.location_name}.{ZEROCONF_TYPE}",
+        server=f"{uuid}.local.",
         addresses=[host_ip_pton],
         port=hass.http.server_port,
         properties=params,
@@ -151,12 +189,37 @@ def setup(hass, config):
             return
 
         service_info = zeroconf.get_service_info(service_type, name)
+        if not service_info:
+            # Prevent the browser thread from collapsing as
+            # service_info can be None
+            _LOGGER.debug("Failed to get info for device %s", name)
+            return
+
         info = info_from_service(service_info)
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
         # If we can handle it as a HomeKit discovery, we do that here.
-        if service_type == HOMEKIT_TYPE and handle_homekit(hass, info):
-            return
+        if service_type == HOMEKIT_TYPE:
+            handle_homekit(hass, info)
+            # Continue on here as homekit_controller
+            # still needs to get updates on devices
+            # so it can see when the 'c#' field is updated.
+            #
+            # We only send updates to homekit_controller
+            # if the device is already paired in order to avoid
+            # offering a second discovery for the same device
+            if (
+                HOMEKIT_PROPERTIES in info
+                and HOMEKIT_PAIRED_STATUS_FLAG in info[HOMEKIT_PROPERTIES]
+            ):
+                try:
+                    # 0 means paired and not discoverable by iOS clients)
+                    if int(info[HOMEKIT_PROPERTIES][HOMEKIT_PAIRED_STATUS_FLAG]):
+                        return
+                except ValueError:
+                    # HomeKit pairing status unknown
+                    # likely bad homekit data
+                    return
 
         for domain in ZEROCONF[service_type]:
             hass.add_job(
@@ -165,11 +228,12 @@ def setup(hass, config):
                 )
             )
 
-    for service in ZEROCONF:
-        ServiceBrowser(zeroconf, service, handlers=[service_update])
+    types = list(ZEROCONF)
 
     if HOMEKIT_TYPE not in ZEROCONF:
-        ServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
+        types.append(HOMEKIT_TYPE)
+
+    HaServiceBrowser(zeroconf, types, handlers=[service_update])
 
     return True
 
@@ -180,10 +244,10 @@ def handle_homekit(hass, info) -> bool:
     Return if discovery was forwarded.
     """
     model = None
-    props = info.get("properties", {})
+    props = info.get(HOMEKIT_PROPERTIES, {})
 
     for key in props:
-        if key.lower() == "md":
+        if key.lower() == HOMEKIT_MODEL:
             model = props[key]
             break
 

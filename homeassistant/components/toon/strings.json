@@ -5,15 +5,17 @@
         "title": "Link your Toon account",
         "description": "Authenticate with your Eneco Toon account (not the developer account).",
         "data": {
-          "username": "Username",
-          "password": "Password",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "tenant": "Tenant"
         }
       },
       "display": {
         "title": "Select display",
         "description": "Select the Toon display to connect with.",
-        "data": { "display": "Choose display" }
+        "data": {
+          "display": "Choose display"
+        }
       }
     },
     "error": {

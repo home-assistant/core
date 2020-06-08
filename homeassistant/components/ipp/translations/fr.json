@@ -6,7 +6,8 @@
             "connection_upgrade": "Impossible de se connecter \u00e0 l'imprimante parce qu'une mise \u00e0 niveau de la connexion est n\u00e9cessaire.",
             "ipp_error": "Erreur IPP rencontr\u00e9e.",
             "ipp_version_error": "Version d'IPP non prise en charge par l'imprimante.",
-            "parse_error": "Impossible d'analyser la r\u00e9ponse de l'imprimante."
+            "parse_error": "Impossible d'analyser la r\u00e9ponse de l'imprimante.",
+            "unique_id_required": "Dispositif ne portant pas l'identification unique requise pour la d\u00e9couverte."
         },
         "error": {
             "connection_error": "Impossible de se connecter \u00e0 l'imprimante.",

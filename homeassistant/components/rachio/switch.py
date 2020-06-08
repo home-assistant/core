@@ -9,13 +9,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import as_timestamp, now
 
 from .const import (
-    ATTR_ZONE_SHADE,
-    ATTR_ZONE_TYPE,
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
     DOMAIN as DOMAIN_RACHIO,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
+    KEY_CUSTOM_SLOPE,
     KEY_DEVICE_ID,
     KEY_DURATION,
     KEY_ENABLED,
@@ -33,6 +32,10 @@ from .const import (
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE,
+    SLOPE_FLAT,
+    SLOPE_MODERATE,
+    SLOPE_SLIGHT,
+    SLOPE_STEEP,
 )
 from .entity import RachioDevice
 from .webhooks import (
@@ -50,11 +53,14 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ZONE_SUMMARY = "Summary"
-ATTR_ZONE_NUMBER = "Zone number"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
+ATTR_ZONE_NUMBER = "Zone number"
+ATTR_ZONE_SHADE = "Shade"
+ATTR_ZONE_SLOPE = "Slope"
+ATTR_ZONE_SUMMARY = "Summary"
+ATTR_ZONE_TYPE = "Type"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -235,6 +241,7 @@ class RachioZone(RachioSwitch):
         self._person = person
         self._shade_type = data.get(KEY_CUSTOM_SHADE, {}).get(KEY_NAME)
         self._zone_type = data.get(KEY_CUSTOM_CROP, {}).get(KEY_NAME)
+        self._slope_type = data.get(KEY_CUSTOM_SLOPE, {}).get(KEY_NAME)
         self._summary = ""
         self._current_schedule = current_schedule
         super().__init__(controller)
@@ -281,6 +288,15 @@ class RachioZone(RachioSwitch):
             props[ATTR_ZONE_SHADE] = self._shade_type
         if self._zone_type:
             props[ATTR_ZONE_TYPE] = self._zone_type
+        if self._slope_type:
+            if self._slope_type == SLOPE_FLAT:
+                props[ATTR_ZONE_SLOPE] = "Flat"
+            elif self._slope_type == SLOPE_SLIGHT:
+                props[ATTR_ZONE_SLOPE] = "Slight"
+            elif self._slope_type == SLOPE_MODERATE:
+                props[ATTR_ZONE_SLOPE] = "Moderate"
+            elif self._slope_type == SLOPE_STEEP:
+                props[ATTR_ZONE_SLOPE] = "Steep"
         return props
 
     def turn_on(self, **kwargs) -> None:
@@ -312,7 +328,7 @@ class RachioZone(RachioSwitch):
         if args[0][KEY_ZONE_ID] != self.zone_id:
             return
 
-        self._summary = kwargs.get(KEY_SUMMARY, "")
+        self._summary = args[0][KEY_SUMMARY]
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True

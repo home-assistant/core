@@ -91,20 +91,20 @@ def gen_data_entry_schema(
     """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
     schema = {
-        vol.Optional("flow_title"): str,
+        vol.Optional("flow_title"): cv.string_with_no_html,
         vol.Required("step"): {
             str: {
-                step_title_class("title"): str,
-                vol.Optional("description"): str,
-                vol.Optional("data"): {str: str},
+                step_title_class("title"): cv.string_with_no_html,
+                vol.Optional("description"): cv.string_with_no_html,
+                vol.Optional("data"): {str: cv.string_with_no_html},
             }
         },
-        vol.Optional("error"): {str: str},
-        vol.Optional("abort"): {str: str},
-        vol.Optional("create_entry"): {str: str},
+        vol.Optional("error"): {str: cv.string_with_no_html},
+        vol.Optional("abort"): {str: cv.string_with_no_html},
+        vol.Optional("create_entry"): {str: cv.string_with_no_html},
     }
     if flow_title == REQUIRED:
-        schema[vol.Required("title")] = str
+        schema[vol.Required("title")] = cv.string_with_no_html
     elif flow_title == REMOVED:
         schema[vol.Optional("title", msg=REMOVED_TITLE_MSG)] = partial(
             removed_title_validator, config, integration
@@ -117,7 +117,7 @@ def gen_strings_schema(config: Config, integration: Integration):
     """Generate a strings schema."""
     return vol.Schema(
         {
-            vol.Optional("title"): str,
+            vol.Optional("title"): cv.string_with_no_html,
             vol.Optional("config"): gen_data_entry_schema(
                 config=config,
                 integration=integration,
@@ -131,10 +131,10 @@ def gen_strings_schema(config: Config, integration: Integration):
                 require_step_title=False,
             ),
             vol.Optional("device_automation"): {
-                vol.Optional("action_type"): {str: str},
-                vol.Optional("condition_type"): {str: str},
-                vol.Optional("trigger_type"): {str: str},
-                vol.Optional("trigger_subtype"): {str: str},
+                vol.Optional("action_type"): {str: cv.string_with_no_html},
+                vol.Optional("condition_type"): {str: cv.string_with_no_html},
+                vol.Optional("trigger_type"): {str: cv.string_with_no_html},
+                vol.Optional("trigger_subtype"): {str: cv.string_with_no_html},
             },
             vol.Optional("state"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
@@ -180,7 +180,7 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
         """
         if not value.startswith(f"{integration.domain}__"):
             raise vol.Invalid(
-                f"Device class need to start with '{integration.domain}__'. Key {value} is invalid"
+                f"Device class need to start with '{integration.domain}__'. Key {value} is invalid. See https://developers.home-assistant.io/docs/internationalization/core#stringssensorjson"
             )
 
         slug_friendly = value.replace("__", "_", 1)
@@ -203,7 +203,7 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
     )
 
 
-ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: str}})
+ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: cv.string_with_no_html}})
 
 
 def validate_translation_file(config: Config, integration: Integration, all_strings):

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "invalid_credentials": "Credenciales no v\u00e1lidas",
-            "user_already_configured": "La cuenta ya ha sido configurada"
+            "user_already_configured": "La cuenta ya est\u00e1 configurada"
         },
         "create_entry": {
             "default": "Para configurar las opciones avanzadas, consulta la [documentaci\u00f3n de Life360]({docs_url})."

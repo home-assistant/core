@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebs Home Control Zentrale g\u00ebtt scho benotzt."
+        },
+        "error": {
+            "invalid_credentials": "Ong\u00ebltege Benotzernumm an/oder Passwuert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "home_control_url": "Home Control URL",
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Passwuert",
+                    "username": "E-Mail-Address / devolo ID"
+                },
+                "title": "devolo Home Control"
+            }
+        }
+    },
+    "title": "devolo Home Control"
+}

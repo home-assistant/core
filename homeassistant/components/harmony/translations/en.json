@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Hostname or IP Address",
+                    "host": "Host",
                     "name": "Hub Name"
                 },
                 "title": "Setup Logitech Harmony Hub"

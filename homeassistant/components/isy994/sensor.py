@@ -1,11 +1,11 @@
 """Support for ISY994 sensors."""
-from typing import Callable, Dict
+from typing import Callable, Dict, Union
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -13,11 +13,12 @@ from .const import (
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
     ISY994_VARIABLES,
+    UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
     UOM_TO_STATES,
 )
 from .entity import ISYEntity, ISYNodeEntity
-from .helpers import migrate_old_unique_ids
+from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 from .services import async_setup_device_services
 
 
@@ -46,48 +47,52 @@ class ISYSensorEntity(ISYNodeEntity):
     """Representation of an ISY994 sensor device."""
 
     @property
-    def raw_unit_of_measurement(self) -> str:
+    def raw_unit_of_measurement(self) -> Union[dict, str]:
         """Get the raw unit of measurement for the ISY994 sensor device."""
         uom = self._node.uom
 
         # Backwards compatibility for ISYv4 Firmware:
         if isinstance(uom, list):
             return UOM_FRIENDLY_NAME.get(uom[0], uom[0])
+
+        # Special cases for ISY UOM index units:
+        isy_states = UOM_TO_STATES.get(uom)
+        if isy_states:
+            return isy_states
+
         return UOM_FRIENDLY_NAME.get(uom)
 
     @property
     def state(self) -> str:
         """Get the state of the ISY994 sensor device."""
-        if self.value == ISY_VALUE_UNKNOWN:
-            return STATE_UNKNOWN
+        value = self._node.status
+        if value == ISY_VALUE_UNKNOWN:
+            return None
 
-        uom = self._node.uom
-        # Backwards compatibility for ISYv4 Firmware:
-        if isinstance(uom, list):
-            uom = uom[0]
-        if not uom:
-            return STATE_UNKNOWN
+        # Get the translated ISY Unit of Measurement
+        uom = self.raw_unit_of_measurement
 
-        states = UOM_TO_STATES.get(uom)
-        if states and states.get(self.value):
-            return states.get(self.value)
-        if self._node.prec and int(self._node.prec) != 0:
-            str_val = str(self.value)
-            int_prec = int(self._node.prec)
-            decimal_part = str_val[-int_prec:]
-            whole_part = str_val[: len(str_val) - int_prec]
-            val = float(f"{whole_part}.{decimal_part}")
-            raw_units = self.raw_unit_of_measurement
-            if raw_units in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-                val = self.hass.config.units.temperature(val, raw_units)
-            return val
-        return self.value
+        # Check if this is a known index pair UOM
+        if isinstance(uom, dict):
+            return uom.get(value, value)
+
+        # Handle ISY precision and rounding
+        value = convert_isy_value_to_hass(value, uom, self._node.prec)
+
+        # Convert temperatures to Home Assistant's unit
+        if uom in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+            value = self.hass.config.units.temperature(value, uom)
+
+        return value
 
     @property
     def unit_of_measurement(self) -> str:
-        """Get the unit of measurement for the ISY994 sensor device."""
+        """Get the Home Assistant unit of measurement for the device."""
         raw_units = self.raw_unit_of_measurement
-        if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
+        # Check if this is a known index pair UOM
+        if isinstance(raw_units, dict):
+            return None
+        if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS, UOM_DOUBLE_TEMP):
             return self.hass.config.units.temperature_unit
         return raw_units
 
@@ -103,7 +108,7 @@ class ISYSensorVariableEntity(ISYEntity):
     @property
     def state(self):
         """Return the state of the variable."""
-        return self.value
+        return self._node.status
 
     @property
     def device_state_attributes(self) -> Dict:
