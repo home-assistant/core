@@ -6,7 +6,7 @@ from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -46,6 +46,7 @@ class MyStromSwitch(SwitchEntity):
         self.plug = plug
         self._available = True
         self.relay = None
+        self._attrs = {}
 
     @property
     def name(self):
@@ -71,6 +72,14 @@ class MyStromSwitch(SwitchEntity):
     def available(self):
         """Could the device be accessed during the last update call."""
         return self._available
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        if self.plug.temperature is not None:
+            self._attrs[ATTR_TEMPERATURE] = self.plug.temperature
+
+        return self._attrs
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
