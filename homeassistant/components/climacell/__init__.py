@@ -169,6 +169,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
         self._api = api
         self._forecast_frequency = config_entry.data.get(CONF_FORECAST_FREQUENCY)
         self.name = config_entry.data[CONF_NAME]
+        self.data = {CURRENT: {}, FORECASTS: []}
 
         super().__init__(
             hass,

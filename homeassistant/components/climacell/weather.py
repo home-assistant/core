@@ -303,6 +303,9 @@ class ClimaCellWeatherEntity(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
+        if not self._coordinator.data[FORECASTS]:
+            return None
+
         forecasts = []
         for forecast in self._coordinator.data[FORECASTS]:
             temp_max = None
