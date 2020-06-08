@@ -6,7 +6,6 @@
   "requirements": [
     "pygti==0.6.0"
   ],
-  "dependencies": [],
   "codeowners": [
     "@vigonotion"
   ]

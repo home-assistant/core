@@ -55,72 +55,67 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
 
-        if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=SCHEMA_STEP_USER)
-
-        errors = {}
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        self.hub = GTIHub(
-            user_input[CONF_HOST],
-            user_input[CONF_USERNAME],
-            user_input[CONF_PASSWORD],
-            session,
-        )
-
-        try:
-            response = await self.hub.authenticate()
-            _LOGGER.debug("init gti: %r", response)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-
-        if not errors:
-            self.data = user_input
-
-            return self.async_show_form(
-                step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
+        if user_input:
+            errors = {}
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            self.hub = GTIHub(
+                user_input[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                session,
             )
 
-        return self.async_show_form(
-            step_id="user", data_schema=SCHEMA_STEP_USER, errors=errors
-        )
+            try:
+                response = await self.hub.authenticate()
+                _LOGGER.debug("Init gti: %r", response)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+
+            if not errors:
+                self.data = user_input
+                return await self.async_step_station()
+
+            return self.async_show_form(
+                step_id="user", data_schema=SCHEMA_STEP_USER, errors=errors
+            )
+
+        return self.async_show_form(step_id="user", data_schema=SCHEMA_STEP_USER)
 
     async def async_step_station(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
-        if user_input is None:
+        if user_input:
 
-            return self.async_show_form(
-                step_id="station", data_schema=SCHEMA_STEP_STATION
+            errors = {}
+
+            check_name = await self.hub.gti.checkName(
+                {"theName": {"name": user_input[CONF_STATION]}, "maxList": 20}
             )
 
-        errors = {}
+            stations = check_name.get("results")
 
-        check_name = await self.hub.gti.checkName(
-            {"theName": {"name": user_input[CONF_STATION]}, "maxList": 20}
-        )
+            if not stations:
+                errors["base"] = "no_results"
 
-        stations = check_name.get("results")
+                return self.async_show_form(
+                    step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
+                )
 
-        if not stations:
-            errors["base"] = "no_results"
+            self.stations = {
+                f"{station.get('name')} ({station.get('type')})": station
+                for station in stations
+            }
 
-            return self.async_show_form(
-                step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
+            schema = vol.Schema(
+                {vol.Required(CONF_STATION): vol.In(list(self.stations.keys()))}
             )
 
-        self.stations = {
-            f"{station.get('name')} ({station.get('type')})": station
-            for station in stations
-        }
+            return self.async_show_form(
+                step_id="station_select", data_schema=schema, errors=errors
+            )
 
-        schema = vol.Schema(
-            {vol.Required(CONF_STATION): vol.In(list(self.stations.keys()))}
-        )
-
-        return self.async_show_form(
-            step_id="station_select", data_schema=schema, errors=errors
-        )
+        return self.async_show_form(step_id="station", data_schema=SCHEMA_STEP_STATION)
 
     async def async_step_station_select(self, user_input=None):
         """Handle the step where the user inputs his/her station."""

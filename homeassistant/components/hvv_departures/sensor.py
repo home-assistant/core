@@ -40,10 +40,6 @@ PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the sensor platform."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the sensor platform."""
 
@@ -115,25 +111,45 @@ class HVVDepartureSensor(Entity):
                 self._last_error = error
             self._available = False
 
-        if data["returnCode"] == "OK" and data.get("departures"):
+        if not (data["returnCode"] == "OK" and data.get("departures")):
+            self._available = False
+            return
 
-            if self._last_error == ClientConnectorError:
-                _LOGGER.debug("Network available again")
+        if self._last_error == ClientConnectorError:
+            _LOGGER.debug("Network available again")
 
-            self._last_error = None
+        self._last_error = None
 
-            departure = data["departures"][0]
+        departure = data["departures"][0]
+        line = departure["line"]
+        delay = departure.get("delay", 0)
+        self._available = True
+        self._state = (
+            departure_time
+            + timedelta(minutes=departure["timeOffset"])
+            + timedelta(seconds=delay)
+        )
+
+        self.attr.update(
+            {
+                ATTR_LINE: line["name"],
+                ATTR_ORIGIN: line["origin"],
+                ATTR_DIRECTION: line["direction"],
+                ATTR_TYPE: line["type"]["shortInfo"],
+                ATTR_ID: line["id"],
+                ATTR_DELAY: delay,
+            }
+        )
+
+        departures = []
+        for departure in data["departures"]:
             line = departure["line"]
             delay = departure.get("delay", 0)
-            self._available = True
-            self._state = (
-                departure_time
-                + timedelta(minutes=departure["timeOffset"])
-                + timedelta(seconds=delay)
-            )
-
-            self.attr.update(
+            departures.append(
                 {
+                    ATTR_DEPARTURE: departure_time
+                    + timedelta(minutes=departure["timeOffset"])
+                    + timedelta(seconds=delay),
                     ATTR_LINE: line["name"],
                     ATTR_ORIGIN: line["origin"],
                     ATTR_DIRECTION: line["direction"],
@@ -142,27 +158,7 @@ class HVVDepartureSensor(Entity):
                     ATTR_DELAY: delay,
                 }
             )
-
-            departures = []
-            for departure in data["departures"]:
-                line = departure["line"]
-                delay = departure.get("delay", 0)
-                departures.append(
-                    {
-                        ATTR_DEPARTURE: departure_time
-                        + timedelta(minutes=departure["timeOffset"])
-                        + timedelta(seconds=delay),
-                        ATTR_LINE: line["name"],
-                        ATTR_ORIGIN: line["origin"],
-                        ATTR_DIRECTION: line["direction"],
-                        ATTR_TYPE: line["type"]["shortInfo"],
-                        ATTR_ID: line["id"],
-                        ATTR_DELAY: delay,
-                    }
-                )
-            self.attr[ATTR_NEXT] = departures
-        else:
-            self._available = False
+        self.attr[ATTR_NEXT] = departures
 
     @property
     def unique_id(self):

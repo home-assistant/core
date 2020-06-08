@@ -11,14 +11,6 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "options": {
-                "data": {
-                    "filter": "Select lines",
-                    "offset": "Offset (minutes)",
-                    "realtime": "Use realtime data"
-                },
-                "title": "Options"
-            },
             "station": {
                 "data": {
                     "station": "Station/Address"

@@ -21,14 +21,6 @@
         "data": {
           "station": "Station/Address"
         }
-      },
-      "options": {
-        "title": "Options",
-        "data": {
-          "filter": "Select lines",
-          "offset": "Offset (minutes)",
-          "realtime": "Use realtime data"
-        }
       }
     },
     "error": {
