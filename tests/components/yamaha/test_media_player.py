@@ -1,13 +1,17 @@
 """The tests for the Yamaha Media player platform."""
 import unittest
 
+import pytest
+
 import homeassistant.components.media_player as mp
 from homeassistant.components.yamaha import media_player as yamaha
 from homeassistant.components.yamaha.const import DOMAIN
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 
-from tests.async_mock import MagicMock, patch
+from tests.async_mock import MagicMock, call, patch
 from tests.common import get_test_home_assistant
+
+CONFIG = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
 
 
 def _create_zone_mock(name, url):
@@ -24,11 +28,25 @@ class FakeYamahaDevice:
         """Initialize the fake Yamaha device."""
         self.ctrl_url = ctrl_url
         self.name = name
-        self.zones = zones or []
+        self._zones = zones or []
 
     def zone_controllers(self):
         """Return controllers for all available zones."""
-        return self.zones
+        return self._zones
+
+
+@pytest.fixture(name="main_zone")
+def main_zone_fixture():
+    """Mock the main zone."""
+    return _create_zone_mock("Main zone", "http://main")
+
+
+@pytest.fixture(name="device")
+def device_fixture(main_zone):
+    """Mock the yamaha device."""
+    device = FakeYamahaDevice("http://receiver", "Receiver", zones=[main_zone])
+    with patch("rxv.RXV", return_value=device):
+        yield device
 
 
 class TestYamahaMediaPlayer(unittest.TestCase):
@@ -75,17 +93,6 @@ class TestYamahaMediaPlayer(unittest.TestCase):
         self.hass.block_till_done()
 
     @patch("rxv.RXV")
-    def test_enable_output(self, mock_rxv):
-        """Test enabling and disabling outputs."""
-        self.create_receiver(mock_rxv)
-
-        self.enable_output("hdmi1", True)
-        self.main_zone.enable_output.assert_called_with("hdmi1", True)
-
-        self.enable_output("hdmi2", False)
-        self.main_zone.enable_output.assert_called_with("hdmi2", False)
-
-    @patch("rxv.RXV")
     def test_select_scene(self, mock_rxv):
         """Test selecting scenes."""
         self.create_receiver(mock_rxv)
@@ -95,3 +102,22 @@ class TestYamahaMediaPlayer(unittest.TestCase):
 
         self.select_scene("BD/DVD Movie Viewing")
         assert self.main_zone.scene == "BD/DVD Movie Viewing"
+
+
+async def test_enable_output(hass, device, main_zone):
+    """Test enable output service."""
+    assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    port = "hdmi1"
+    enabled = True
+    data = {
+        "entity_id": "media_player.yamaha_receiver_main_zone",
+        "port": port,
+        "enabled": enabled,
+    }
+
+    await hass.services.async_call(DOMAIN, yamaha.SERVICE_ENABLE_OUTPUT, data, True)
+
+    assert main_zone.enable_output.call_count == 1
+    assert main_zone.enable_output.call_args == call(port, enabled)
