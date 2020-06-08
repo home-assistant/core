@@ -3,8 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from meteofrance.auth import AuthMeteofrance
-from meteofrance.client import MeteofranceClient
+from meteofrance.client import MeteoFranceClient
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -60,8 +59,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     # coordinator = MeteoFranceDataUpdateCoordinator(hass, latitude, longitude)
 
-    auth = AuthMeteofrance()
-    client = MeteofranceClient(auth)
+    client = MeteoFranceClient()
 
     async def _async_update_data_forecast_forecast():
         """Fetch data from API endpoint."""

@@ -1,8 +1,8 @@
 """Config flow to configure the Meteo-France integration."""
 import logging
 
-from meteofrance.auth import AuthMeteofrance
-from meteofrance.client import MeteofranceClient
+from meteofrance.client import MeteoFranceClient
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -46,8 +46,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         latitude = user_input.get(CONF_LATITUDE)
         longitude = user_input.get(CONF_LONGITUDE)
 
-        auth = AuthMeteofrance()
-        client = MeteofranceClient(auth)
+        client = MeteoFranceClient()
 
         try:
             if not latitude:
