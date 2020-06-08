@@ -104,11 +104,7 @@ class NX584ZoneSensor(BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        zone_number = self._zone["number"]
-        if zone_number:
-            return {"zone_number": zone_number}
-        else:
-            return {"zone_number": "unknown"}
+        return {"zone_number": self._zone["number"]}
 
 
 class NX584Watcher(threading.Thread):
