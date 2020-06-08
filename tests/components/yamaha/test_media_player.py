@@ -4,6 +4,7 @@ import pytest
 import homeassistant.components.media_player as mp
 from homeassistant.components.yamaha import media_player as yamaha
 from homeassistant.components.yamaha.const import DOMAIN
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import MagicMock, PropertyMock, call, patch
@@ -64,6 +65,25 @@ async def test_setup_no_host(hass, device, main_zone):
             hass, mp.DOMAIN, {"media_player": {"platform": "yamaha"}}
         )
         await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+
+    assert state is not None
+    assert state.state == "off"
+
+
+async def test_setup_discovery(hass, device, main_zone):
+    """Test set up integration via discovery."""
+    discovery_info = {
+        "name": "Yamaha Receiver",
+        "model_name": "Yamaha",
+        "control_url": "http://receiver",
+        "description_url": "http://receiver/description",
+    }
+    await async_load_platform(
+        hass, mp.DOMAIN, "yamaha", discovery_info, {mp.DOMAIN: {}}
+    )
+    await hass.async_block_till_done()
 
     state = hass.states.get("media_player.yamaha_receiver_main_zone")
 
