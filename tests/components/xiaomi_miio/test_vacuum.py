@@ -19,6 +19,7 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_ERROR,
 )
+from homeassistant.components.xiaomi_miio.const import DOMAIN as XIAOMI_DOMAIN
 from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_CLEANED_AREA,
     ATTR_CLEANED_TOTAL_AREA,
@@ -35,8 +36,8 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
-    DOMAIN as XIAOMI_DOMAIN,
     SERVICE_CLEAN_ZONE,
+    SERVICE_GOTO,
     SERVICE_MOVE_REMOTE_CONTROL,
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL,
@@ -355,7 +356,10 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 
     control = {"duration": 1000, "rotation": -40, "velocity": -0.1}
     await hass.services.async_call(
-        XIAOMI_DOMAIN, SERVICE_MOVE_REMOTE_CONTROL, control, blocking=True
+        XIAOMI_DOMAIN,
+        SERVICE_MOVE_REMOTE_CONTROL,
+        {**control, ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     mock_mirobo_is_on.manual_control.assert_has_calls(
         [mock.call(**control)], any_order=True
@@ -364,7 +368,10 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     mock_mirobo_is_on.reset_mock()
 
     await hass.services.async_call(
-        XIAOMI_DOMAIN, SERVICE_STOP_REMOTE_CONTROL, {}, blocking=True
+        XIAOMI_DOMAIN,
+        SERVICE_STOP_REMOTE_CONTROL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     mock_mirobo_is_on.assert_has_calls([mock.call.manual_stop()], any_order=True)
     mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
@@ -372,7 +379,10 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 
     control_once = {"duration": 2000, "rotation": 120, "velocity": 0.1}
     await hass.services.async_call(
-        XIAOMI_DOMAIN, SERVICE_MOVE_REMOTE_CONTROL_STEP, control_once, blocking=True
+        XIAOMI_DOMAIN,
+        SERVICE_MOVE_REMOTE_CONTROL_STEP,
+        {**control_once, ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     mock_mirobo_is_on.manual_control_once.assert_has_calls(
         [mock.call(**control_once)], any_order=True
@@ -382,7 +392,10 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 
     control = {"zone": [[123, 123, 123, 123]], "repeats": 2}
     await hass.services.async_call(
-        XIAOMI_DOMAIN, SERVICE_CLEAN_ZONE, control, blocking=True
+        XIAOMI_DOMAIN,
+        SERVICE_CLEAN_ZONE,
+        {**control, ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
     mock_mirobo_is_on.zoned_clean.assert_has_calls(
         [mock.call([[123, 123, 123, 123, 2]])], any_order=True
@@ -453,3 +466,30 @@ async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
         blocking=True,
     )
     assert "ERROR" in caplog.text
+
+
+async def test_xiaomi_vacuum_goto_service(hass, caplog, mock_mirobo_is_on):
+    """Test vacuum supported features."""
+    entity_name = "test_vacuum_cleaner_2"
+    entity_id = f"{DOMAIN}.{entity_name}"
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_PLATFORM: PLATFORM,
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: entity_name,
+                CONF_TOKEN: "12345678901234567890123456789012",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    data = {"entity_id": entity_id, "x_coord": 25500, "y_coord": 25500}
+    await hass.services.async_call(XIAOMI_DOMAIN, SERVICE_GOTO, data, blocking=True)
+    mock_mirobo_is_on.goto.assert_has_calls(
+        [mock.call(x_coord=data["x_coord"], y_coord=data["y_coord"])], any_order=True
+    )
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
