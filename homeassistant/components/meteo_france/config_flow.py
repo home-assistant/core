@@ -6,6 +6,7 @@ from meteofrance.client import MeteofranceClient
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
 from .const import CONF_CITY
@@ -73,15 +74,17 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_cities(self, user_input=None, places=None):
         """Step where the user choose the city from the API search results."""
-        if places:
+        if places and len(places) > 1 and self.source != SOURCE_IMPORT:
             places_for_form = {}
             for place in places:
                 places_for_form[
-                    f"{place.name};{place.latitude};{place.longitude}"
+                    _build_place_key(place)
                 ] = f"{place.name} - {place.admin} - {place.country}"
             _LOGGER.warning(places_for_form)
 
             return await self._show_cities_form(places_for_form)
+        else:
+            user_input = {CONF_CITY: _build_place_key(places[0])}
 
         city_infos = user_input.get(CONF_CITY).split(";")
         return await self.async_step_user(
@@ -100,3 +103,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {vol.Required(CONF_CITY): vol.All(vol.Coerce(str), vol.In(cities))}
             ),
         )
+
+
+def _build_place_key(place) -> str:
+    return f"{place.name};{place.latitude};{place.longitude}"
