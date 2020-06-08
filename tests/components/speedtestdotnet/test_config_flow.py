@@ -1,4 +1,6 @@
 """Tests for SpeedTest config flow."""
+from datetime import timedelta
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -8,8 +10,9 @@ from homeassistant.components.speedtestdotnet.const import (
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
     DOMAIN,
+    SENSOR_TYPES,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
 
 from . import MOCK_SERVERS
 
@@ -39,6 +42,26 @@ async def test_flow_works(hass, mock_setup):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "SpeedTest"
+
+
+async def test_import(hass, mock_setup):
+    """Test import step."""
+    result = await hass.config_entries.flow.async_init(
+        speedtestdotnet.DOMAIN,
+        context={"source": "import"},
+        data={
+            CONF_SERVER_ID: "1",
+            CONF_MANUAL: True,
+            CONF_SCAN_INTERVAL: timedelta(minutes=1),
+            CONF_MONITORED_CONDITIONS: list(SENSOR_TYPES),
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "SpeedTest"
+    assert result["data"][CONF_SERVER_ID] == "1"
+    assert result["data"][CONF_MANUAL] is True
+    assert result["data"][CONF_SCAN_INTERVAL] == 1
 
 
 async def test_options(hass):

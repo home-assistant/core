@@ -21,12 +21,11 @@ ATTR_BYTES_SENT = "bytes_sent"
 ATTR_SERVER_COUNTRY = "server_country"
 ATTR_SERVER_ID = "server_id"
 ATTR_SERVER_NAME = "server_name"
-AUTO_DETECT = "*Auto Detect"
 
 
 DEFAULT_NAME = "SpeedTest"
 DEFAULT_SCAN_INTERVAL = 60
-DEFAULT_SERVER = AUTO_DETECT
+DEFAULT_SERVER = "*Auto Detect"
 
 ATTRIBUTION = "Data retrieved from Speedtest.net by Ookla"
 

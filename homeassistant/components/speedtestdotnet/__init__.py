@@ -3,9 +3,12 @@ from datetime import timedelta
 import logging
 
 import speedtest
+import voluptuous as vol
 
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
 from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -14,14 +17,58 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SERVER,
     DOMAIN,
+    SENSOR_TYPES,
     SPEED_TEST_SERVICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_SERVER_ID): cv.positive_int,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=timedelta(minutes=DEFAULT_SCAN_INTERVAL)
+                ): vol.All(cv.time_period, cv.positive_timedelta),
+                vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+                vol.Optional(
+                    CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
+                ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+def server_id_valid(server_id):
+    """Check if server_id is valid."""
+    try:
+        api = speedtest.Speedtest()
+        api.get_servers([int(server_id)])
+    except (speedtest.ConfigRetrievalError, speedtest.NoMatchedServers):
+        return False
+
+    return True
+
 
 async def async_setup(hass, config):
-    """Intergation no longer supports importing from config."""
+    """Import integration from config."""
+
+    if DOMAIN in config:
+        # check if server_id is valid
+        if CONF_SERVER_ID in config[DOMAIN] and not await hass.async_add_executor_job(
+            server_id_valid, config[DOMAIN][CONF_SERVER_ID]
+        ):
+            _LOGGER.error("Speedtest server_id is not valid.")
+            return False
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
     return True
 
 
@@ -79,11 +126,11 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         """Get the latest data from speedtest.net."""
         server_list = self.api.get_servers()
 
-        self.servers[DEFAULT_SERVER] = None
+        self.servers[DEFAULT_SERVER] = {}
         for server in sorted(
             server_list.values(), key=lambda server: server[0]["country"]
         ):
-            self.servers[f"{server[0]['country']} - {server[0]['name']}"] = server
+            self.servers[f"{server[0]['country']} - {server[0]['sponsor']}"] = server[0]
 
         if self.config_entry.options.get(CONF_SERVER_ID):
             server_id = self.config_entry.options.get(CONF_SERVER_ID)
@@ -105,6 +152,19 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         except (speedtest.ConfigRetrievalError, speedtest.NoMatchedServers):
             raise UpdateFailed
 
+    async def async_set_options(self):
+        """Set options for entry."""
+        if not self.config_entry.options:
+            data = {**self.config_entry.data}
+            options = {
+                CONF_SCAN_INTERVAL: data.pop(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                CONF_MANUAL: data.pop(CONF_MANUAL, False),
+                CONF_SERVER_ID: str(data.pop(CONF_SERVER_ID, "")),
+            }
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=data, options=options
+            )
+
     async def async_setup(self):
         """Set up SpeedTest."""
         try:
@@ -115,6 +175,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         async def request_update(call):
             """Request update."""
             await self.async_request_refresh()
+
+        await self.async_set_options()
 
         self.hass.services.async_register(DOMAIN, SPEED_TEST_SERVICE, request_update)
 

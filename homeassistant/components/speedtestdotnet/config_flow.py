@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 
 from .const import (
@@ -42,6 +42,18 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
+    async def async_step_import(self, import_config):
+        """Import from config."""
+        import_config[CONF_SCAN_INTERVAL] = int(
+            import_config[CONF_SCAN_INTERVAL].seconds / 60
+        )
+        import_config.pop(CONF_MONITORED_CONDITIONS)
+
+        return await self.async_step_user(user_input=import_config)
+
+    async def _server_id_valid(self, server_id):
+        """Check if server_id is valid."""
+
 
 class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle SpeedTest options."""
@@ -58,7 +70,7 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             server_name = user_input[CONF_SERVER_NAME]
             if server_name != "*Auto Detect":
-                server_id = self._servers[server_name][0]["id"]
+                server_id = self._servers[server_name]["id"]
                 user_input[CONF_SERVER_ID] = server_id
             else:
                 user_input[CONF_SERVER_ID] = None
@@ -66,10 +78,22 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         self._servers = self.hass.data[DOMAIN].servers
+
+        server_name = DEFAULT_SERVER
+        if self.config_entry.options.get(
+            CONF_SERVER_ID
+        ) and not self.config_entry.options.get(CONF_SERVER_NAME):
+            server = [
+                key
+                for (key, value) in self._servers.items()
+                if value.get("id") == self.config_entry.options[CONF_SERVER_ID]
+            ]
+            server_name = server[0]
+
         options = {
             vol.Optional(
                 CONF_SERVER_NAME,
-                default=self.config_entry.options.get(CONF_SERVER_NAME, DEFAULT_SERVER),
+                default=self.config_entry.options.get(CONF_SERVER_NAME, server_name),
             ): vol.In(self._servers.keys()),
             vol.Optional(
                 CONF_SCAN_INTERVAL,
