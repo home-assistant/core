@@ -697,7 +697,7 @@ pychromecast==8.1.0
 pycomfoconnect==0.4
 
 # homeassistant.components.climacell
-pyclimacell==0.7.0
+pyclimacell==0.8.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
