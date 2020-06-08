@@ -46,6 +46,17 @@ def device_fixture(main_zone):
         yield device
 
 
+async def test_setup_host(hass, device, main_zone):
+    """Test set up integration with host."""
+    assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+
+    assert state is not None
+    assert state.state == "off"
+
+
 async def test_enable_output(hass, device, main_zone):
     """Test enable output service."""
     assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
