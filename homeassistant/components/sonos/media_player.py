@@ -99,6 +99,7 @@ ATTR_WITH_GROUP = "with_group"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
+ATTR_STATUS_LIGHT = "status_light"
 
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
@@ -281,6 +282,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {
             vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
             vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
+            vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
         },
         "set_option",
     )
@@ -1242,13 +1244,16 @@ class SonosEntity(MediaPlayerEntity):
         alarm.save()
 
     @soco_error()
-    def set_option(self, night_sound=None, speech_enhance=None):
+    def set_option(self, night_sound=None, speech_enhance=None, status_light=None):
         """Modify playback options."""
         if night_sound is not None and self._night_sound is not None:
             self.soco.night_mode = night_sound
 
         if speech_enhance is not None and self._speech_enhance is not None:
             self.soco.dialog_mode = speech_enhance
+
+        if status_light is not None:
+            self.soco.status_light = status_light
 
     @soco_error()
     def play_queue(self, queue_position=0):
