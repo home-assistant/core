@@ -399,7 +399,6 @@ class SonosEntity(MediaPlayerEntity):
         self._favorites = []
         self._soco_snapshot = None
         self._snapshot_group = None
-        self._status_light = None
 
         # Set these early since device_info() needs them
         speaker_info = self.soco.get_speaker_info(True)
@@ -723,16 +722,12 @@ class SonosEntity(MediaPlayerEntity):
             if "dialog_level" in variables:
                 self._speech_enhance = variables["dialog_level"] == "1"
 
-            if "status_light" in variables:
-                self._status_light = variables["status_light"] == "1"
-
             self.schedule_update_ha_state()
         else:
             self._player_volume = self.soco.volume
             self._player_muted = self.soco.mute
             self._night_sound = self.soco.night_mode
             self._speech_enhance = self.soco.dialog_mode
-            self._status_light = self.soco.status_light
 
     def update_groups(self, event=None):
         """Handle callback for topology change event."""
@@ -1257,7 +1252,7 @@ class SonosEntity(MediaPlayerEntity):
         if speech_enhance is not None and self._speech_enhance is not None:
             self.soco.dialog_mode = speech_enhance
 
-        if status_light is not None and self._status_light is not None:
+        if status_light is not None:
             self.soco.status_light = status_light
 
     @soco_error()
@@ -1281,9 +1276,6 @@ class SonosEntity(MediaPlayerEntity):
 
         if self._speech_enhance is not None:
             attributes[ATTR_SPEECH_ENHANCE] = self._speech_enhance
-
-        if self._status_light is not None:
-            attributes[ATTR_STATUS_LIGHT] = self._status_light
 
         if self.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.queue_position
