@@ -293,6 +293,7 @@ async def test_attribute_templates(hass, calls):
                 "vacuums": {
                     "test_template_vacuum": {
                         "value_template": "{{ 'cleaning' }}",
+                        "start": {"service": "script.vacuum_start"},
                         "attribute_templates": {
                             "test_attribute": "It {{ states.sensor.test_state.state }}."
                         },
@@ -328,6 +329,7 @@ async def test_invalid_attribute_template(hass, caplog):
                 "vacuums": {
                     "invalid_template": {
                         "value_template": "{{ 'docked' }}",
+                        "start": {"service": "script.vacuum_start"},
                         "attribute_templates": {
                             "test_attribute": "{{ states.sensor.unknown.attributes.picture }}"
                         },
