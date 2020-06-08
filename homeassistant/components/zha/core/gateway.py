@@ -485,16 +485,20 @@ class ZHAGateway:
         self, sender, profile, cluster, src_ep, dst_ep, message
     ):
         """Handle tasks when a device becomes available."""
-        self.async_update_device(sender)
+        self.async_update_device(sender, available=True)
 
     @callback
-    def async_update_device(self, sender: zigpy_dev.Device, available: bool = True):
+    def async_update_device(
+        self, sender: zigpy_dev.Device, available: bool = True
+    ) -> None:
         """Update device that has just become available."""
         if sender.ieee in self.devices:
             device = self.devices[sender.ieee]
             # avoid a race condition during new joins
             if device.status is DeviceStatus.INITIALIZED:
                 device.update_available(available)
+            else:
+                device.available = available
 
     async def async_update_device_storage(self):
         """Update the devices in the store."""
