@@ -85,7 +85,7 @@ aiofreepybox==0.0.8
 aioguardian==0.2.3
 
 # homeassistant.components.harmony
-aioharmony==0.1.13
+aioharmony==0.2.4
 
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.38
