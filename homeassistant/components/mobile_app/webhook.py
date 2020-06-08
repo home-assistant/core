@@ -78,7 +78,6 @@ from .const import (
     ERR_ENCRYPTION_NOT_AVAILABLE,
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
-    ERR_SENSOR_DUPLICATE_UNIQUE_ID,
     ERR_SENSOR_NOT_REGISTERED,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
@@ -364,21 +363,22 @@ async def webhook_enable_encryption(hass, config_entry, data):
 async def webhook_register_sensor(hass, config_entry, data):
     """Handle a register sensor webhook."""
     entity_type = data[ATTR_SENSOR_TYPE]
-
     unique_id = data[ATTR_SENSOR_UNIQUE_ID]
 
     unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
 
+    # If sensor already is registered, dispatch an update instead
     if unique_store_key in hass.data[DOMAIN][entity_type]:
-        _LOGGER.error("Refusing to re-register existing sensor %s!", unique_id)
-        return error_response(
-            ERR_SENSOR_DUPLICATE_UNIQUE_ID,
-            f"{entity_type} {unique_id} already exists!",
-            status=409,
+        _LOGGER.debug("Re-register existing sensor %s", unique_id)
+        entry = hass.data[DOMAIN][entity_type][unique_store_key]
+        new_state = {**entry, **data}
+        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
+
+        return webhook_response(
+            {"success": True}, registration=config_entry.data, status=HTTP_CREATED,
         )
 
     data[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
-
     hass.data[DOMAIN][entity_type][unique_store_key] = data
 
     hass.data[DOMAIN][DATA_STORE].async_delay_save(
