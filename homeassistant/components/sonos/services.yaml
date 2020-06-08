@@ -74,3 +74,13 @@ play_queue:
     queue_position:
       description: Position of the song in the queue to start playing from.
       example: "0"
+
+remove_from_queue:
+  description: Removes an item from the queue.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will remove an item.
+      example: "media_player.living_room_sonos"
+    queue_position:
+      description: Position in the queue to remove.
+      example: "0"

@@ -211,7 +211,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             if not self.zha_device.is_mains_powered:
                 # mains powered devices will get real time state
                 self.async_restore_last_state(last_state)
-            self._zha_device.set_available(True)
+            self._zha_device.available = True
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
