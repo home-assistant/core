@@ -590,6 +590,9 @@ async def _register_components(hass):
                 },
             },
             "fan_speeds": ["low", "medium", "high"],
+            "attribute_templates": {
+                "test_attribute": "It {{ states.sensor.test_state.state }}."
+            },
         }
 
         assert await setup.async_setup_component(
