@@ -382,11 +382,11 @@ async def webhook_register_sensor(hass, config_entry, data):
         lambda: savable_state(hass), DELAY_SAVE
     )
 
-    if not existing_sensor:
+    if existing_sensor:
+        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, data)
+    else:
         register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
         async_dispatcher_send(hass, register_signal, data)
-    else:
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, data)
 
     return webhook_response(
         {"success": True}, registration=config_entry.data, status=HTTP_CREATED,
