@@ -95,7 +95,7 @@ def setup(hass, config):
     _LOGGER.info("Initialized Zabbix sender")
 
     def event_to_metrics(event, float_keys, string_keys):
-        """Add an event to the outgoing Influx list."""
+        """Add an event to the outgoing Zabbix list."""
         state = event.data.get("new_state")
         entity_id = state.entity_id
         if (
@@ -152,7 +152,7 @@ def setup(hass, config):
             #pprint(json.dumps(floats_discovery))
             metrics.append(m)
         for key, value in floats.items():
-            m = ZabbixMetric(hostname, f"homeassistant.floats[{key}]", value)
+            m = ZabbixMetric(hostname, f"homeassistant.float[{key}]", value)
             metrics.append(m)
 
         string_keys |= strings.keys()
