@@ -61,7 +61,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["camera", "climate", "sensor"]
+PLATFORMS = ["camera", "climate", "light", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -112,6 +112,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     async def unregister_webhook(event):
+        if CONF_WEBHOOK_ID not in entry.data:
+            return
         _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
