@@ -22,7 +22,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     STATE_IDLE,
@@ -48,8 +47,6 @@ CONF_ZONE_NAMES = "zone_names"
 
 DATA_YAMAHA = "yamaha_known_receivers"
 DEFAULT_NAME = "Yamaha Receiver"
-
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
 SUPPORT_YAMAHA = (
     SUPPORT_VOLUME_SET
@@ -99,39 +96,37 @@ class YamahaConfigInfo:
             self.from_discovery = True
 
 
+def _discovery(config_info):
+    """Discover receivers from configuration in the network."""
+    if config_info.from_discovery:
+        receivers = rxv.RXV(
+            config_info.ctrl_url,
+            model_name=config_info.model,
+            friendly_name=config_info.name,
+            unit_desc_url=config_info.desc_url,
+        ).zone_controllers()
+        _LOGGER.debug("Receivers: %s", receivers)
+    elif config_info.host is None:
+        receivers = []
+        for recv in rxv.find():
+            receivers.extend(recv.zone_controllers())
+    else:
+        receivers = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
+
+    return receivers
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Yamaha platform."""
 
     # Keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
-    # for. Map each device from its zone_id to an instance since
-    # YamahaDevice is not hashable (thus not possible to add to a set).
+    # for. Map each device from its zone_id .
     known_zones = hass.data.setdefault(DATA_YAMAHA, set())
 
+    # Get the Infos for configuration from config (YAML) or Discovery
     config_info = YamahaConfigInfo(config=config, discovery_info=discovery_info)
-
-    def _discovery(config_info):
-        """Discover receivers from configuration or network."""
-
-        if config_info.from_discovery:
-            receivers = rxv.RXV(
-                config_info.ctrl_url,
-                model_name=config_info.model,
-                friendly_name=config_info.name,
-                unit_desc_url=config_info.desc_url,
-            ).zone_controllers()
-            _LOGGER.debug("Receivers: %s", receivers)
-        elif config_info.host is None:
-            receivers = []
-            for recv in rxv.find():
-                receivers.extend(recv.zone_controllers())
-        else:
-            receivers = rxv.RXV(
-                config_info.ctrl_url, config_info.name
-            ).zone_controllers()
-
-        return receivers
-
+    # Async check if the Receivers are there in the network
     receivers = await hass.async_add_executor_job(_discovery, config_info)
 
     entities = []
@@ -156,10 +151,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(entities)
 
+    # Register Service 'select_scene'
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
         SERVICE_SELECT_SCENE, {vol.Required(ATTR_SCENE): cv.string}, "set_scene",
     )
+    # Register Service 'enable_output'
     platform.async_register_entity_service(
         SERVICE_ENABLE_OUTPUT,
         {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string},
