@@ -83,7 +83,7 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             await self.async_set_unique_id(
-                unique_id=f"{cv.slugify(user_input[CONF_NAME])}_{user_input[CONF_API_KEY].lower()}",
+                unique_id=f"{cv.slugify(user_input[CONF_NAME])}",
                 raise_on_progress=True,
             )
             self._abort_if_unique_id_configured()
@@ -119,24 +119,32 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a configuration.yaml import."""
         # Check if new config entry matches any existing config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                entry.data[CONF_API_KEY].lower() == import_config[CONF_API_KEY].lower()
-                and entry.data[CONF_NAME].lower() == import_config[CONF_NAME].lower()
+            if cv.slugify(entry.data[CONF_NAME]) == cv.slugify(
+                import_config[CONF_NAME]
             ):
-                updated_data = {}
-                keys = entry.data.keys()
-                for key in keys:
-                    if key in import_config and entry.data[key] != import_config[key]:
-                        updated_data[key] = import_config[key]
+                if (
+                    entry.data[CONF_API_KEY].lower()
+                    == import_config[CONF_API_KEY].lower()
+                ):
+                    updated_data = {}
+                    keys = entry.data.keys()
+                    for key in keys:
+                        if (
+                            key in import_config
+                            and entry.data[key] != import_config[key]
+                        ):
+                            updated_data[key] = import_config[key]
 
-                if updated_data:
-                    new_data = entry.data.copy()
-                    new_data.update(updated_data)
-                    self.hass.config_entries.async_update_entry(
-                        entry=entry, data=new_data
-                    )
-                    return self.async_abort(reason="updated_entry")
+                    if updated_data:
+                        new_data = entry.data.copy()
+                        new_data.update(updated_data)
+                        self.hass.config_entries.async_update_entry(
+                            entry=entry, data=new_data
+                        )
+                        return self.async_abort(reason="updated_entry")
 
-                return self.async_abort(reason="already_configured_account")
+                    return self.async_abort(reason="already_configured_account")
+                else:
+                    return self.async_abort(reason="unique_name_required")
 
         return await self.async_step_user(user_input=import_config)

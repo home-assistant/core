@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Forecasts can be disabled by choosing `(Disable Forecasts)` for [%key:component::climacell::config::step::user::data::forecast_frequency%].",
+        "description": "If [%key:component::climacell::config::step::user::data::latitude%] and [%key:component::climacell::config::step::user::data::longitude%] are not provided, the default values in the Home Assistant configuration will be used. Forecasts can be disabled by choosing `disable` for [%key:component::climacell::config::step::user::data::forecast_frequency%].",
         "data": {
           "name": "Name",
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -23,7 +23,8 @@
     },
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
-      "updated_entry": "An entry has been updated via configuration import."
+      "updated_entry": "An entry has been updated via configuration import.",
+      "unique_name_required": "Every [%key:component::climacell::title%] entry must have a unique case insensitive name. If you are attempting to update an existing entry, remove the old entry via the Integrations menu in the frontend first and then restart Home Assistant."
     }
   }
 }

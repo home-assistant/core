@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+            "unique_name_required": "Every [%key:component::climacell::title%] entry must have a unique case insensitive name. If you are attempting to update an existing entry, remove the old entry via the Integrations menu in the frontend first and then restart Home Assistant.",
             "updated_entry": "An entry has been updated via configuration import."
         },
         "error": {
@@ -21,7 +22,7 @@
                     "name": "Name",
                     "unit_system": "Unit System"
                 },
-                "description": "Forecasts can be disabled by choosing `(Disable Forecasts)` for [%key:component::climacell::config::step::user::data::forecast_frequency%]."
+                "description": "If [%key:component::climacell::config::step::user::data::forecast_frequency%] and [%key:component::climacell::config::step::user::data::forecast_frequency%] are not provided, the default values in the Home Assistant configuration will be used. Forecasts can be disabled by choosing `disable` for [%key:component::climacell::config::step::user::data::forecast_frequency%]."
             }
         }
     },
