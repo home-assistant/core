@@ -194,8 +194,7 @@ class FuelEconomySensor(SubaruSensor):
             return None
 
         if self.hass.config.units == IMPERIAL_SYSTEM:
-            self.current_value = (1000.0 * L_PER_GAL) / (KM_PER_MI * self.current_value)
-            return round(self.current_value, 1)
+            return round((1000.0 * L_PER_GAL) / (KM_PER_MI * self.current_value), 1)
 
         return self.current_value / 10.0
 
