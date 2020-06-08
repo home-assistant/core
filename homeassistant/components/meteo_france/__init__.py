@@ -83,23 +83,27 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         update_interval=SCAN_INTERVAL,
     )
 
-    coordinator_rain = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"Météo-France rain for city {entry.title}",
-        update_method=_async_update_data_rain,
-        update_interval=SCAN_INTERVAL,
-    )
-
     # Fetch initial data so we have data when entities subscribe
     await coordinator_forecast.async_refresh()
-    await coordinator_rain.async_refresh()
 
-    if (
-        not coordinator_forecast.last_update_success
-        or not coordinator_rain.last_update_success
-    ):
+    if not coordinator_forecast.last_update_success:
         raise ConfigEntryNotReady
+
+    # Check if rain forecast is availabe.
+    if coordinator_forecast.data.position.get("rain_product_available") == 1:
+        coordinator_rain = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"Météo-France rain for city {entry.title}",
+            update_method=_async_update_data_rain,
+            update_interval=SCAN_INTERVAL,
+        )
+        await coordinator_rain.async_refresh()
+
+        if not coordinator_rain.last_update_success:
+            raise ConfigEntryNotReady
+    else:
+        coordinator_rain = None
 
     department = coordinator_forecast.data.position["dept"]
     if department:
@@ -115,6 +119,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
         if not coordinator_alert.last_update_success:
             raise ConfigEntryNotReady
+    else:
+        coordinator_alert = None
 
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR_FORECAST: coordinator_forecast,
