@@ -311,7 +311,7 @@ async def test_attribute_templates(hass, calls):
     attributes = state.attributes
     assert attributes.get("test_attribute") == "It ."
 
-    hass.states.async_set("sensor.test_state", "Works")
+    hass.states.async_set("sensor.test_state.state", "Works")
     await hass.async_block_till_done()
     state = hass.states.get("vacuum.test_template_vacuum")
     attributes = state.attributes
@@ -339,7 +339,7 @@ async def test_invalid_attribute_template(hass, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.async_all() == []
+    assert len(hass.states.async_all()) == 2
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
 
     assert ("Error rendering attribute test_attribute") in caplog.text
