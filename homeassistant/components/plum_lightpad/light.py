@@ -55,6 +55,11 @@ class PlumLight(LightEntity):
         return False
 
     @property
+    def unique_id(self):
+        """Combine logical load ID with .light to guarantee it is unique."""
+        return f"{self._load.llid}.light"
+
+    @property
     def name(self):
         """Return the name of the switch if any."""
         return self._load.name
@@ -129,6 +134,11 @@ class GlowRing(LightEntity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def unique_id(self):
+        """Combine LightPad ID with .glow to guarantee it is unique."""
+        return f"{self._lightpad.lpid}.glow"
 
     @property
     def name(self):
