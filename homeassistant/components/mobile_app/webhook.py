@@ -366,27 +366,27 @@ async def webhook_register_sensor(hass, config_entry, data):
     unique_id = data[ATTR_SENSOR_UNIQUE_ID]
 
     unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
-
-    # If sensor already is registered, dispatch an update instead
-    if unique_store_key in hass.data[DOMAIN][entity_type]:
-        _LOGGER.debug("Re-register existing sensor %s", unique_id)
-        entry = hass.data[DOMAIN][entity_type][unique_store_key]
-        new_state = {**entry, **data}
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
-
-        return webhook_response(
-            {"success": True}, registration=new_state, status=HTTP_CREATED,
-        )
+    existing_sensor = unique_store_key in hass.data[DOMAIN][entity_type]
 
     data[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
+
+    # If sensor already is registered, update current state instead
+    if existing_sensor:
+        _LOGGER.debug("Re-register existing sensor %s", unique_id)
+        entry = hass.data[DOMAIN][entity_type][unique_store_key]
+        data = {**entry, **data}
+
     hass.data[DOMAIN][entity_type][unique_store_key] = data
 
     hass.data[DOMAIN][DATA_STORE].async_delay_save(
         lambda: savable_state(hass), DELAY_SAVE
     )
 
-    register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
-    async_dispatcher_send(hass, register_signal, data)
+    if not existing_sensor:
+        register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
+        async_dispatcher_send(hass, register_signal, data)
+    else:
+        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, data)
 
     return webhook_response(
         {"success": True}, registration=config_entry.data, status=HTTP_CREATED,
