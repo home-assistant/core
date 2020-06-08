@@ -57,6 +57,20 @@ async def test_setup_host(hass, device, main_zone):
     assert state.state == "off"
 
 
+async def test_setup_no_host(hass, device, main_zone):
+    """Test set up integration without host."""
+    with patch("rxv.find", return_value=[device]):
+        assert await async_setup_component(
+            hass, mp.DOMAIN, {"media_player": {"platform": "yamaha"}}
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+
+    assert state is not None
+    assert state.state == "off"
+
+
 async def test_enable_output(hass, device, main_zone):
     """Test enable output service."""
     assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
