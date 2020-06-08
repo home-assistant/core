@@ -429,12 +429,6 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
         unique_id = sensor[ATTR_SENSOR_UNIQUE_ID]
 
-        # Work around bug in iOS app https://github.com/home-assistant/iOS/issues/599
-        # It's sending state but not registering sensor
-        if unique_id == "connectivity_sim_2":
-            resp[unique_id] = {"success": True}
-            continue
-
         unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
 
         if unique_store_key not in hass.data[DOMAIN][entity_type]:
