@@ -3,10 +3,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Servidor",
                     "password": "Palavra-passe",
-                    "username": "Nome de Utilizador"
-                }
+                    "username": "E-mail"
+                },
+                "title": "Configurar Tile"
             }
         }
     }

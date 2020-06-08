@@ -4,7 +4,7 @@
             "user": {
                 "data": {
                     "host": "Servidor",
-                    "type": "Tipo de impressora"
+                    "port": "Porto"
                 }
             }
         }

@@ -1,10 +1,9 @@
 {
     "config": {
         "step": {
-            "user": {
+            "gateway": {
                 "data": {
-                    "host": "Servidor",
-                    "type": "Tipo de impressora"
+                    "host": "Endere\u00e7o IP"
                 }
             }
         }
