@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 from pyzabbix import ZabbixAPI, ZabbixAPIException, ZabbixMetric, ZabbixSender
 import json
 import math
+from pprint import pprint
 import queue
 import threading
 import time
@@ -144,6 +145,7 @@ def setup(hass, config):
                 strings[attribute_id] = str(value)
 
         metrics = []
+        pprint(float_keys)
         float_keys_count = len(float_keys)
         float_keys |= floats.keys()
         if len(float_keys) != float_keys_count:
