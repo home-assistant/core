@@ -37,7 +37,8 @@ async def async_setup_entry(
     entities = []
     for sensor_type in SENSOR_TYPES:
         if sensor_type == "next_rain":
-            entities.append(MeteoFranceRainSensor(sensor_type, coordinator_rain))
+            if coordinator_rain:
+                entities.append(MeteoFranceRainSensor(sensor_type, coordinator_rain))
         elif sensor_type == "weather_alert":
             print("alert")
             # entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
