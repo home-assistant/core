@@ -142,9 +142,8 @@ def setup(hass, config):
                 strings[attribute_id] = str(value)
 
         metrics = []
-        pprint(float_keys)
         float_keys_count = len(float_keys)
-        float_keys |= floats.keys()
+        float_keys.update(floats.keys())
         if len(float_keys) != float_keys_count:
             floats_discovery = []
             for float_key in float_keys:
