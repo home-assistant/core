@@ -309,7 +309,7 @@ async def test_config_flow_manual_host_no_mac(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
-        CONF_MAC: TEST_SERIALNUMBER,
+        CONF_MAC: None,
         CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
         CONF_ZONE2: DEFAULT_ZONE2,
         CONF_ZONE3: DEFAULT_ZONE3,
