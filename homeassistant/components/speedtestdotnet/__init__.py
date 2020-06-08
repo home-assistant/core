@@ -57,13 +57,6 @@ async def async_setup(hass, config):
     """Import integration from config."""
 
     if DOMAIN in config:
-        # check if server_id is valid
-        if CONF_SERVER_ID in config[DOMAIN] and not await hass.async_add_executor_job(
-            server_id_valid, config[DOMAIN][CONF_SERVER_ID]
-        ):
-            _LOGGER.error("Speedtest server_id is not valid.")
-            return False
-
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]

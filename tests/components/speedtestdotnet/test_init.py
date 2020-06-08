@@ -9,18 +9,8 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_setup_failed_with_config(hass):
-    """Test that we don't import if server_id is not valid."""
-
-    config = {speedtestdotnet.DOMAIN: {speedtestdotnet.CONF_SERVER_ID: "1"}}
-    with patch("speedtest.Speedtest", side_effect=speedtest.NoMatchedServers):
-        assert (
-            await async_setup_component(hass, speedtestdotnet.DOMAIN, config) is False
-        )
-
-
-async def test_setup_success_with_config(hass):
-    """Test that we import the config and setup the client if server_id is valid."""
+async def test_setup_with_config(hass):
+    """Test that we import the config and setup the integration."""
     config = {
         speedtestdotnet.DOMAIN: {
             speedtestdotnet.CONF_SERVER_ID: "1",

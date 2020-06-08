@@ -1,4 +1,4 @@
-"""Config flow for Transmission Bittorent Client."""
+"""Config flow for Speedtest.net."""
 import logging
 
 import voluptuous as vol
@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 
+from . import server_id_valid
 from .const import (
     CONF_MANUAL,
     CONF_SERVER_ID,
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle SpeedTest config flow."""
+    """Handle Speedtest.net config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
@@ -44,15 +45,20 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import from config."""
+        if (
+            CONF_SERVER_ID in import_config
+            and not await self.hass.async_add_executor_job(
+                server_id_valid, import_config[CONF_SERVER_ID]
+            )
+        ):
+            return self.async_abort(reason="wrong_server_id")
+
         import_config[CONF_SCAN_INTERVAL] = int(
             import_config[CONF_SCAN_INTERVAL].seconds / 60
         )
         import_config.pop(CONF_MONITORED_CONDITIONS)
 
         return await self.async_step_user(user_input=import_config)
-
-    async def _server_id_valid(self, server_id):
-        """Check if server_id is valid."""
 
 
 class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):

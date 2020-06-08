@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 import pytest
+from speedtest import NoMatchedServers
 
 from homeassistant import data_entry_flow
 from homeassistant.components import speedtestdotnet
@@ -44,24 +45,45 @@ async def test_flow_works(hass, mock_setup):
     assert result["title"] == "SpeedTest"
 
 
-async def test_import(hass, mock_setup):
-    """Test import step."""
-    result = await hass.config_entries.flow.async_init(
-        speedtestdotnet.DOMAIN,
-        context={"source": "import"},
-        data={
-            CONF_SERVER_ID: "1",
-            CONF_MANUAL: True,
-            CONF_SCAN_INTERVAL: timedelta(minutes=1),
-            CONF_MONITORED_CONDITIONS: list(SENSOR_TYPES),
-        },
-    )
+async def test_import_fails(hass, mock_setup):
+    """Test import step fails if server_id is not valid."""
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "SpeedTest"
-    assert result["data"][CONF_SERVER_ID] == "1"
-    assert result["data"][CONF_MANUAL] is True
-    assert result["data"][CONF_SCAN_INTERVAL] == 1
+    with patch("speedtest.Speedtest") as mock_api:
+        mock_api.return_value.get_servers.side_effect = NoMatchedServers
+        result = await hass.config_entries.flow.async_init(
+            speedtestdotnet.DOMAIN,
+            context={"source": "import"},
+            data={
+                CONF_SERVER_ID: "223",
+                CONF_MANUAL: True,
+                CONF_SCAN_INTERVAL: timedelta(minutes=1),
+                CONF_MONITORED_CONDITIONS: list(SENSOR_TYPES),
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "wrong_server_id"
+
+
+async def test_import_success(hass, mock_setup):
+    """Test import step is successful if server_id is valid."""
+
+    with patch("speedtest.Speedtest"):
+        result = await hass.config_entries.flow.async_init(
+            speedtestdotnet.DOMAIN,
+            context={"source": "import"},
+            data={
+                CONF_SERVER_ID: "1",
+                CONF_MANUAL: True,
+                CONF_SCAN_INTERVAL: timedelta(minutes=1),
+                CONF_MONITORED_CONDITIONS: list(SENSOR_TYPES),
+            },
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "SpeedTest"
+        assert result["data"][CONF_SERVER_ID] == "1"
+        assert result["data"][CONF_MANUAL] is True
+        assert result["data"][CONF_SCAN_INTERVAL] == 1
 
 
 async def test_options(hass):
