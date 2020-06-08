@@ -29,7 +29,7 @@ from homeassistant.const import (
     HTTP_CREATED,
 )
 from homeassistant.core import EventOrigin
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
+from homeassistant.exceptions import ServiceNotFound, TemplateError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.template import attach
@@ -96,6 +96,7 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DELAY_SAVE = 10
 
 WEBHOOK_COMMANDS = Registry()
 
@@ -380,11 +381,9 @@ async def webhook_register_sensor(hass, config_entry, data):
 
     hass.data[DOMAIN][entity_type][unique_store_key] = data
 
-    try:
-        await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
-    except HomeAssistantError as ex:
-        _LOGGER.error("Error registering sensor: %s", ex)
-        return empty_okay_response()
+    hass.data[DOMAIN][DATA_STORE].async_delay_save(
+        lambda: savable_state(hass), DELAY_SAVE
+    )
 
     register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
     async_dispatcher_send(hass, register_signal, data)
@@ -462,17 +461,13 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
         hass.data[DOMAIN][entity_type][unique_store_key] = new_state
 
-        safe = savable_state(hass)
-
-        try:
-            await hass.data[DOMAIN][DATA_STORE].async_save(safe)
-        except HomeAssistantError as ex:
-            _LOGGER.error("Error updating mobile_app registration: %s", ex)
-            return empty_okay_response()
-
         async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
 
         resp[unique_id] = {"success": True}
+
+    hass.data[DOMAIN][DATA_STORE].async_delay_save(
+        lambda: savable_state(hass), DELAY_SAVE
+    )
 
     return webhook_response(resp, registration=config_entry.data)
 
