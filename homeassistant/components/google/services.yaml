@@ -8,6 +8,9 @@ add_event:
     calendar_id:
       description: The id of the calendar you want.
       example: "Your email"
+    sendupdates:
+      description: 'Acceptable values are: "all": Notifications are sent to all guests. "externalOnly": Notifications are sent to non-Google Calendar guests only. "none": No notifications are sent.'
+      example: "all"
     summary:
       description: Acts as the title of the event.
       example: "Bowling"
@@ -20,6 +23,12 @@ add_event:
     end_date_time:
       description: The date and time the event should end.
       example: "2019-03-22 22:00:00"
+    location:
+      description: The location the event will be.
+      example: "89 E 42nd St"
+    recurrence:
+      description: "List of RRULE, EXRULE, RDATE and EXDATE lines for a recurring event, as specified in RFC5545."
+      example: "[RRULE:FREQ=DAILY;INTERVAL=1]"
     start_date:
       description: The date the whole day event should start.
       example: "2019-03-10"
@@ -29,3 +38,90 @@ add_event:
     in:
       description: Days or weeks that you want to create the event in.
       example: '"days": 2 or "weeks": 2'
+    status:
+      description: 'Status of the event. Possible values are: "confirmed", "tentative", "cancelled"'
+      example: "confirmed"
+    transparency:
+      description: 'Whether the event blocks time on the calendar. "opaque": The event does block time on the calendar. "transparent": The event does not block time on the calendar.'
+      example: "opaque"
+    visibility:
+      description: 'Visibility of the event. Possible values are: "default", "public", "private", and "confidential" This value is provided for compatibility reasons.'
+      example: "default"
+    reminders_usedefault:
+      description: Whether the default reminders of the calendar apply to the event. Default is false. This does nothing if method and minutes are not specified, event will have a default reminder of 10 minutes.
+      example: "boolean"
+    reminders_overrides_method:
+      description: 'The method used by this reminder. Possible values are: "email" - Reminders are sent via email. "popup" - Reminders are sent via a UI popup.'
+      example: "popup"
+    reminders_overrides_minutes:
+      description: "Number of minutes before the start of the event when the reminder should trigger. Valid values are between 0 and 40320 (4 weeks in minutes)."
+      example: "integer"
+delete_event:
+  description: Delete an event from a calendar.
+  fields:
+    calendar_id:
+      description: The id of the calendar you want.
+      example: "Your email"
+    event_id:
+      description: The id of the event you want.
+      example: "string"
+    sendupdates:
+      description: 'Acceptable values are: "all": Notifications are sent to all guests. "externalOnly": Notifications are sent to non-Google Calendar guests only. "none": No notifications are sent.'
+      example: "all"
+update_event:
+  description: Add a new calendar event.
+  fields:
+    calendar_id:
+      description: The id of the calendar you want.
+      example: "Your email"
+    event_id:
+      description: The id of the event you want.
+      example: "string"
+    sendupdates:
+      description: 'Acceptable values are: "all": Notifications are sent to all guests. "externalOnly": Notifications are sent to non-Google Calendar guests only. "none": No notifications are sent.'
+      example: "all"
+    summary:
+      description: Acts as the title of the event.
+      example: "Bowling"
+    description:
+      description: The description of the event. Optional.
+      example: "Birthday bowling"
+    start_date_time:
+      description: The date and time the event should start.
+      example: "2019-03-22 20:00:00"
+    end_date_time:
+      description: The date and time the event should end.
+      example: "2019-03-22 22:00:00"
+    location:
+      description: The location the event will be.
+      example: "89 E 42nd St"
+    recurrence:
+      description: "List of RRULE, EXRULE, RDATE and EXDATE lines for a recurring event, as specified in RFC5545."
+      example: "[RRULE:FREQ=DAILY;INTERVAL=1]"
+    start_date:
+      description: The date the whole day event should start.
+      example: "2019-03-10"
+    end_date:
+      description: The date the whole day event should end.
+      example: "2019-03-11"
+    in:
+      description: Days or weeks that you want to create the event in.
+      example: '"days": 2 or "weeks": 2'
+    status:
+      description: 'Status of the event. Possible values are: "confirmed", "tentative", "cancelled"'
+      example: "confirmed"
+    transparency:
+      description: 'Whether the event blocks time on the calendar. "opaque": The event does block time on the calendar. "transparent": The event does not block time on the calendar.'
+      example: "opaque"
+    visibility:
+      description: 'Visibility of the event. Possible values are: "default", "public", "private", and "confidential" This value is provided for compatibility reasons.'
+      example: "default"
+    reminders_usedefault:
+      description: Whether the default reminders of the calendar apply to the event. Default is false. This does nothing if method and minutes are not specified, event will have a default reminder of 10 minutes.
+      example: "boolean"
+    reminders_overrides_method:
+      description: 'The method used by this reminder. Possible values are: "email" - Reminders are sent via email. "popup" - Reminders are sent via a UI popup.'
+      example: "popup"
+    reminders_overrides_minutes:
+      description: "Number of minutes before the start of the event when the reminder should trigger. Valid values are between 0 and 40320 (4 weeks in minutes)."
+      example: "integer"
