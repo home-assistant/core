@@ -498,7 +498,7 @@ class ZHAGateway:
             if device.status is DeviceStatus.INITIALIZED:
                 device.update_available(available)
             else:
-                device.set_available(available)
+                device.available = available
 
     async def async_update_device_storage(self):
         """Update the devices in the store."""
