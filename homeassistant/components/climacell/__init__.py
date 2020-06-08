@@ -211,5 +211,5 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
             CantConnectException,
             InvalidAPIKeyException,
             RateLimitedException,
-        ) as e:
-            raise UpdateFailed(e)
+        ) as error:
+            raise UpdateFailed(error)
