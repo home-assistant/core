@@ -154,7 +154,7 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
 )
 
 DELETE_EVENT_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(EVENT_CALENDAR_ID): cv.string, vol.Required(EVENT_ID): cv.string,}
+    {vol.Required(EVENT_CALENDAR_ID): cv.string, vol.Required(EVENT_ID): cv.string, }
 )
 
 UPDATE_EVENT_SERVICE_SCHEMA = vol.Schema(
@@ -340,7 +340,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
         service = calendar_service.get()
         service_data = {
             "calendarId": call.data[EVENT_CALENDAR_ID],
-            "eventId": call.data[EVENT_ID]
+            "eventId": call.data[EVENT_ID],
         }
         service = service.events().delete(**service_data).execute()
 
@@ -355,7 +355,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
         service_data = {
             "calendarId": call.data[EVENT_CALENDAR_ID],
             "eventId": call.data[EVENT_ID],
-            "body": event
+            "body": event,
         }
         event = service.events().update(**service_data).execute()
 
