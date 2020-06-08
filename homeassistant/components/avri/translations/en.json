@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This address is already configured."
+        },
+        "error": {
+            "invalid_country_code": "Unknown 2 letter country code.",
+            "invalid_house_number": "Invalid house number."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "2 Letter country code",
+                    "house_number": "House number",
+                    "house_number_extension": "House number extension",
+                    "zip_code": "Zip code"
+                },
+                "description": "Enter your address",
+                "title": "Avri"
+            }
+        }
+    },
+    "title": "Avri"
+}

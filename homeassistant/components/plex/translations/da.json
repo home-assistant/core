@@ -21,10 +21,6 @@
                 },
                 "description": "Flere servere til r\u00e5dighed, v\u00e6lg en:",
                 "title": "V\u00e6lg Plex-server"
-            },
-            "start_website_auth": {
-                "description": "Forts\u00e6t for at godkende p\u00e5 plex.tv.",
-                "title": "Forbind Plex-server"
             }
         }
     },

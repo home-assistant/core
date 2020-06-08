@@ -3,6 +3,5 @@
         "trigger_type": {
             "turn_on": "{entity_name} soll ugeschalt ginn"
         }
-    },
-    "title": "Arcam FMJ"
+    }
 }
