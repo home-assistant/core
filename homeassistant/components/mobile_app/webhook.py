@@ -375,7 +375,7 @@ async def webhook_register_sensor(hass, config_entry, data):
         async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
 
         return webhook_response(
-            {"success": True}, registration=config_entry.data, status=HTTP_CREATED,
+            {"success": True}, registration=new_state, status=HTTP_CREATED,
         )
 
     data[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
