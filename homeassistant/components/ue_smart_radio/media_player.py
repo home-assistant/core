@@ -82,10 +82,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     session = session_request.cookies["sdi_squeezenetwork_session"]
 
     player_request = send_request({"params": ["", ["serverstatus"]]}, session)
-    for player in player_request["result"]["players_loop"]:      
+    for player in player_request["result"]["players_loop"]:
         player_id = player["playerid"]
         player_name = player["name"]
-        
         add_entities([UERadioDevice(session, player_id, player_name)])
 
 
