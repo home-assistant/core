@@ -36,8 +36,9 @@ class TestNX584SensorSetup(unittest.TestCase):
         client = nx584_client.Client.return_value
         client.list_zones.return_value = self.fake_zones
         client.get_version.return_value = "1.1"
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
         self._mock_client.stop()

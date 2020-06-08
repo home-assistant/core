@@ -44,10 +44,7 @@ class TestComponentLogbook(unittest.TestCase):
         init_recorder_component(self.hass)  # Force an in memory DB
         with patch("homeassistant.components.http.start_http_server_and_save_config"):
             assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_service_call_create_logbook_entry(self):
         """Test if service call create log book entry."""
