@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import STATE_UNKNOWN, UNIT_PERCENTAGE
 from homeassistant.helpers import device_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,3 +128,80 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client):
     dupe_json = await dupe_resp.json()
     assert dupe_json["success"] is False
     assert dupe_json["error"]["code"] == "duplicate_unique_id"
+
+
+async def test_register_sensor_no_state(hass, create_registrations, webhook_client):
+    """Test that sensors can be registered, when there is no (unknown) state."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": None,
+                "type": "sensor",
+                "unique_id": "battery_state",
+            },
+        },
+    )
+
+    assert reg_resp.status == 201
+
+    json = await reg_resp.json()
+    assert json == {"success": True}
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+
+    assert entity.domain == "sensor"
+    assert entity.name == "Test 1 Battery State"
+    assert entity.state == STATE_UNKNOWN
+
+
+async def test_update_sensor_no_state(hass, create_registrations, webhook_client):
+    """Test that sensors can be updated, when there is no (unknown) state."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "battery_state",
+            },
+        },
+    )
+
+    assert reg_resp.status == 201
+
+    json = await reg_resp.json()
+    assert json == {"success": True}
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+    assert entity.state == "100"
+
+    update_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "update_sensor_states",
+            "data": [{"state": None, "type": "sensor", "unique_id": "battery_state"}],
+        },
+    )
+
+    assert update_resp.status == 200
+
+    json = await update_resp.json()
+    assert json == {"battery_state": {"success": True}}
+
+    updated_entity = hass.states.get("sensor.test_1_battery_state")
+    assert updated_entity.state == STATE_UNKNOWN
