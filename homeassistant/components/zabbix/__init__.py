@@ -94,7 +94,7 @@ def setup(hass, config):
         return False
 
     zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
-
+    _LOGGER.info("Initialized Zabbix sender")
 
     def event_to_metrics(event):
         """Add an event to the outgoing Influx list."""
@@ -159,8 +159,11 @@ def setup(hass, config):
         string_keys |= strings.keys()
         return metrics
 
-    instance = hass.data[DOMAIN] = ZabbixThread(hass, zabbix_sender, event_to_metrics, max_tries)
+
+    hass.data[DOMAIN] = zapi
+    instance = ZabbixThread(hass, zabbix_sender, event_to_metrics, max_tries)
     instance.start()
+    _LOGGER.info("Started ZabbixThread")
 
     def shutdown(event):
         """Shut down the thread."""
@@ -177,14 +180,16 @@ class ZabbixThread(threading.Thread):
 
     def __init__(self, hass, zabbix_sender, event_to_metrics, max_tries):
         """Initialize the listener."""
+        _LOGGER.info("ZabbixThread 1")
         threading.Thread.__init__(self, name="Zabbix")
         self.queue = queue.Queue()
         self.zabbix_sender = zabbix_sender
-        self.event_to_json = event_to_json
+        self.event_to_metrics = event_to_metrics
         self.max_tries = max_tries
         self.write_errors = 0
         self.shutdown = False
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        _LOGGER.info("ZabbixThread 2")
 
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Zabbix."""
