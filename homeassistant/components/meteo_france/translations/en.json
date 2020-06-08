@@ -20,5 +20,14 @@
                 "title": "M\u00e9t\u00e9o-France"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Forecast mode"
+                }
+            }
+        }
     }
 }

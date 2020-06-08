@@ -16,6 +16,9 @@ COORDINATOR_ALERT = "coordinator_alert"
 ATTRIBUTION = "Data provided by Météo-France"
 
 CONF_CITY = "city"
+FORECAST_MODE_HOURLY = "hourly"
+FORECAST_MODE_DAILY = "daily"
+FORECAST_MODE = [FORECAST_MODE_HOURLY, FORECAST_MODE_DAILY]
 
 ENTITY_NAME = "name"
 ENTITY_UNIT = "unit"

@@ -8,15 +8,23 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import CONF_MODE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 # from . import MeteoFranceDataUpdateCoordinator
-from .const import ATTRIBUTION, CONDITION_CLASSES, COORDINATOR_FORECAST, DOMAIN
+from .const import (
+    ATTRIBUTION,
+    CONDITION_CLASSES,
+    COORDINATOR_FORECAST,
+    DOMAIN,
+    FORECAST_MODE_HOURLY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,16 +43,19 @@ async def async_setup_entry(
     """Set up the Meteo-France weather platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
 
-    async_add_entities([MeteoFranceWeather(coordinator)], True)
+    async_add_entities(
+        [MeteoFranceWeather(coordinator, entry.options.get(CONF_MODE))], True
+    )
 
 
 class MeteoFranceWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator):
+    def __init__(self, coordinator: DataUpdateCoordinator, mode: str):
         """Initialise the platform with a data instance and station name."""
         self.coordinator = coordinator
         self._city_name = self.coordinator.data.position["name"]
+        self._mode = mode
 
     @property
     def unique_id(self):
@@ -96,29 +107,54 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
-        today = datetime.utcnow().timestamp()
         forecast_data = []
-        for forecast in self.coordinator.data.daily_forecast:
-            # Can have data of yesterday
-            if forecast["dt"] < today:
-                _LOGGER.error("remove_forecast %s", forecast)
-                continue
-            # stop when we don't have a weather condition (can happen around last days of forcast, max 14)
-            if not forecast.get("weather12H"):
-                break
-            forecast_data.append(
-                {
-                    ATTR_FORECAST_TIME: self.coordinator.data.timestamp_to_locale_time(
-                        forecast["dt"]
-                    ),
-                    ATTR_FORECAST_CONDITION: format_condition(
-                        forecast["weather12H"]["desc"]
-                    ),
-                    ATTR_FORECAST_TEMP: forecast["T"]["max"],
-                    ATTR_FORECAST_TEMP_LOW: forecast["T"]["min"],
-                    ATTR_FORECAST_PRECIPITATION: forecast["precipitation"]["24h"],
-                }
-            )
+
+        if self._mode == FORECAST_MODE_HOURLY:
+            today = datetime.now().timestamp()
+            for forecast in self.coordinator.data.forecast:
+                # Can have data of yesterday
+                if forecast["dt"] < today:
+                    _LOGGER.error("remove_forecast %s %s", self._mode, forecast)
+                    continue
+                forecast_data.append(
+                    {
+                        ATTR_FORECAST_TIME: self.coordinator.data.timestamp_to_locale_time(
+                            forecast["dt"]
+                        ),
+                        ATTR_FORECAST_CONDITION: format_condition(
+                            forecast["weather"]["desc"]
+                        ),
+                        ATTR_FORECAST_TEMP: forecast["T"]["value"],
+                        ATTR_FORECAST_PRECIPITATION: forecast["rain"].get("1h"),
+                        ATTR_FORECAST_WIND_SPEED: forecast["wind"]["speed"],
+                        ATTR_FORECAST_WIND_BEARING: forecast["wind"]["direction"]
+                        if forecast["wind"]["direction"] != -1
+                        else None,
+                    }
+                )
+        else:
+            today = datetime.utcnow().timestamp()
+            for forecast in self.coordinator.data.daily_forecast:
+                # Can have data of yesterday
+                if forecast["dt"] < today:
+                    _LOGGER.error("remove_forecast %s %s", self._mode, forecast)
+                    continue
+                # stop when we don't have a weather condition (can happen around last days of forcast, max 14)
+                if not forecast.get("weather12H"):
+                    break
+                forecast_data.append(
+                    {
+                        ATTR_FORECAST_TIME: self.coordinator.data.timestamp_to_locale_time(
+                            forecast["dt"]
+                        ),
+                        ATTR_FORECAST_CONDITION: format_condition(
+                            forecast["weather12H"]["desc"]
+                        ),
+                        ATTR_FORECAST_TEMP: forecast["T"]["max"],
+                        ATTR_FORECAST_TEMP_LOW: forecast["T"]["min"],
+                        ATTR_FORECAST_PRECIPITATION: forecast["precipitation"]["24h"],
+                    }
+                )
         return forecast_data
 
     @property
