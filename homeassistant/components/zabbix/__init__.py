@@ -81,8 +81,8 @@ def setup(hass, config):
     blacklist_e = set(exclude.get(CONF_ENTITIES, []))
     blacklist_d = set(exclude.get(CONF_DOMAINS, []))
 
-    float_keys = set()
-    string_keys = set()
+    float_keys = set([])
+    string_keys = set([])
 
     max_tries = conf.get(CONF_RETRY_COUNT)
 
