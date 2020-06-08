@@ -128,6 +128,8 @@ class SubaruSensor(SubaruEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        self.current_value = self.get_current_value()
+
         if self.current_value is None:
             return None
 
@@ -154,18 +156,17 @@ class SubaruSensor(SubaruEntity):
 
         return self.api_unit
 
-    async def async_update(self):
-        """Update the state from the sensor."""
-        await super().async_update()
-
-        self.current_value = self.coordinator.data[self.vin]["status"][self.data_field]
-        if self.current_value in sc.BAD_SENSOR_VALUES:
-            self.current_value = None
-        if isinstance(self.current_value, str):
-            if "." in self.current_value:
-                self.current_value = float(self.current_value)
+    def get_current_value(self):
+        """Get raw value from the coordinator."""
+        value = self.coordinator.data[self.vin]["status"][self.data_field]
+        if value in sc.BAD_SENSOR_VALUES:
+            value = None
+        if isinstance(value, str):
+            if "." in value:
+                value = float(value)
             else:
-                self.current_value = int(self.current_value)
+                value = int(value)
+        return value
 
 
 class FuelEconomySensor(SubaruSensor):
@@ -190,6 +191,8 @@ class FuelEconomySensor(SubaruSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
+        self.current_value = self.get_current_value()
+
         if self.current_value is None:
             return None
 

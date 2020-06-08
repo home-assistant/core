@@ -83,7 +83,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER,
         name="subaru_data",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=30),
+        update_interval=timedelta(seconds=60),
     )
 
     await coordinator.async_refresh()
@@ -177,6 +177,11 @@ class SubaruEntity(Entity):
             "name": self.car_name,
             "manufacturer": "Subaru",
         }
+
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self):
         """Register state update callback."""
