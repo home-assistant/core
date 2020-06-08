@@ -1,4 +1,5 @@
 """Webhook handlers for mobile_app."""
+import asyncio
 from functools import wraps
 import logging
 import secrets
@@ -184,7 +185,10 @@ async def handle_webhook(
         "Received webhook payload for type %s: %s", webhook_type, webhook_payload
     )
 
-    return await WEBHOOK_COMMANDS[webhook_type](hass, config_entry, webhook_payload)
+    # Shield so we make sure we finish the webhook, even if sender hangs up.
+    return await asyncio.shield(
+        WEBHOOK_COMMANDS[webhook_type](hass, config_entry, webhook_payload)
+    )
 
 
 @WEBHOOK_COMMANDS.register("call_service")
