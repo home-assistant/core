@@ -82,9 +82,6 @@ def setup(hass, config):
     blacklist_e = set(exclude.get(CONF_ENTITIES, []))
     blacklist_d = set(exclude.get(CONF_DOMAINS, []))
 
-    float_keys = set([])
-    string_keys = set([])
-
     max_tries = conf.get(CONF_RETRY_COUNT)
 
     try:
@@ -97,7 +94,7 @@ def setup(hass, config):
     zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
     _LOGGER.info("Initialized Zabbix sender")
 
-    def event_to_metrics(event):
+    def event_to_metrics(event, float_keys, string_keys):
         """Add an event to the outgoing Influx list."""
         state = event.data.get("new_state")
         entity_id = state.entity_id
@@ -190,6 +187,9 @@ class ZabbixThread(threading.Thread):
         self.max_tries = max_tries
         self.write_errors = 0
         self.shutdown = False
+        self.float_keys = set([])
+        self.string_keys = set([])
+
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
         _LOGGER.info("ZabbixThread 2")
 
@@ -225,7 +225,7 @@ class ZabbixThread(threading.Thread):
                     age = time.monotonic() - timestamp
 
                     if age < queue_seconds:
-                        event_metrics = self.event_to_metrics(event)
+                        event_metrics = self.event_to_metrics(event, self.float_keys, self.string_keys)
                         if event_metrics:
                             metrics += event_metrics
                     else:
