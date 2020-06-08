@@ -877,7 +877,7 @@ class SonosEntity(MediaPlayerEntity):
     @property
     @soco_coordinator
     def queue_position(self):
-        """If playing local queue return the position in the queue else -1."""
+        """If playing local queue return the position in the queue else None."""
         if self._is_playing_local_queue:
             return self._queue_position
 
