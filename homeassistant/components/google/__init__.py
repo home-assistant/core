@@ -141,7 +141,7 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(EVENT_VISIBILITY, default="default"): vol.In(["default", "public", "private", "confidential"]),
         vol.Optional(EVENT_REMINDERS_USEDEFAULT, default="false"): cv.boolean,
         vol.Optional(EVENT_REMINDERS_OVERRIDES_METHOD, default="popup"): vol.In(["email", "popup"]),
-        vol.Optional(EVENT_REMINDERS_OVERRIDES_MINUTES, default=10): vol.All(vol.Coerce(int), vol.Range(min=1,max=40320)),
+        vol.Optional(EVENT_REMINDERS_OVERRIDES_MINUTES, default=10): vol.All(vol.Coerce(int), vol.Range(min=1, max=40320)),
     }
 )
 
@@ -170,9 +170,10 @@ UPDATE_EVENT_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(EVENT_VISIBILITY, default="default"): vol.In(["default", "public", "private", "confidential"]),
         vol.Optional(EVENT_REMINDERS_USEDEFAULT, default="false"): cv.boolean,
         vol.Optional(EVENT_REMINDERS_OVERRIDES_METHOD, default="popup"): vol.In(["email", "popup"]),
-        vol.Optional(EVENT_REMINDERS_OVERRIDES_MINUTES, default=10): vol.All(vol.Coerce(int), vol.Range(min=1,max=40320)),
+        vol.Optional(EVENT_REMINDERS_OVERRIDES_MINUTES, default=10): vol.All(vol.Coerce(int), vol.Range(min=1, max=40320)),
     }
 )
+
 
 def do_authentication(hass, hass_config, config):
     """Notify user of actions and authenticate.
@@ -320,7 +321,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
     hass.services.register(
         DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
     )
-	
+
     def _delete_event(call):
         """Delete event from calendar."""
         service = calendar_service.get()
@@ -330,7 +331,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
     hass.services.register(
         DOMAIN, SERVICE_DELETE_EVENT, _delete_event, schema=DELETE_EVENT_SERVICE_SCHEMA
     )
-	
+
     def _update_event(call):
         """Update an event."""
         service = calendar_service.get()
@@ -341,7 +342,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
     hass.services.register(
         DOMAIN, SERVICE_UPDATE_EVENT, _update_event, schema=UPDATE_EVENT_SERVICE_SCHEMA
     )
-	
+
     def _event_info(call):
         start = {}
         end = {}
@@ -390,7 +391,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
             "reminders": {
                 "useDefault": call.data[EVENT_REMINDERS_USEDEFAULT],
                 "overrides": [
-                { "method": call.data[EVENT_REMINDERS_OVERRIDES_METHOD], "minutes": call.data[EVENT_REMINDERS_OVERRIDES_MINUTES] },]
+                    {"method": call.data[EVENT_REMINDERS_OVERRIDES_METHOD], "minutes": call.data[EVENT_REMINDERS_OVERRIDES_MINUTES]}, ]
             }
         }
         return event
