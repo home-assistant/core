@@ -19,10 +19,7 @@ class TestWorldClockSensor(unittest.TestCase):
 
         assert setup_component(self.hass, "sensor", config)
         self.hass.block_till_done()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_time(self):
         """Test the time at a different location."""
