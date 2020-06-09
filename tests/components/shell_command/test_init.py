@@ -40,8 +40,9 @@ class TestShellCommand(unittest.TestCase):
         """
         self.hass = get_test_home_assistant()
         asyncio.get_child_watcher().attach_loop(self.hass.loop)
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

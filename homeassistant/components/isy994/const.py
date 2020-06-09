@@ -232,7 +232,7 @@ NODE_FILTERS = {
             "RemoteLinc2_ADV",
         ],
         FILTER_INSTEON_TYPE: ["0.16.", "0.17.", "0.18.", "9.0.", "9.7."],
-        FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 185)))),
+        FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 186)))),
     },
     LOCK: {
         FILTER_UOM: ["11"],

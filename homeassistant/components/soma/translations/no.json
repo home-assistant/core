@@ -16,7 +16,8 @@
                     "host": "Vert",
                     "port": "Port"
                 },
-                "description": "Vennligst fyll inn tilkoblingsinnstillingene for din SOMA Connect."
+                "description": "Vennligst fyll inn tilkoblingsinnstillingene for din SOMA Connect.",
+                "title": ""
             }
         }
     }
