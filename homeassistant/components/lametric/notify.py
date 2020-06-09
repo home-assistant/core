@@ -134,7 +134,7 @@ class LaMetricNotificationService(BaseNotificationService):
                 try:
                     lmn.set_device(dev)
                     lmn.send_notification(
-                        model, lifetime=self._lifetime, priority=priority, icon_type=icon_type,
+                        model, lifetime=self._lifetime, priority=priority, icon_type=icon_type
                     )
                     _LOGGER.debug("Sent notification to LaMetric %s", dev["name"])
                 except OSError:
