@@ -349,7 +349,7 @@ class GrowattInverter(Entity):
     def state(self):
         """Return the state of the sensor."""
         result = self.probe.get_data(SENSOR_TYPES[self.sensor][2])
-        round_to = SENSOR_TYPES[self.sensor][3].get("round", None)
+        round_to = SENSOR_TYPES[self.sensor][3].get("round")
         if round_to is not None:
             result = round(result, round_to)
         return result
@@ -357,7 +357,7 @@ class GrowattInverter(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return SENSOR_TYPES[self.sensor][3].get("device_class", None)
+        return SENSOR_TYPES[self.sensor][3].get("device_class")
 
     @property
     def unit_of_measurement(self):
