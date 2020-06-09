@@ -129,6 +129,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         type(error),
                         error,
                     )
+                    errors["base"] = "cannot_connect"
         # If no user input, must be first pass through the config.  Show  initial form.
         config_options = {
             vol.Required(CONF_PORT, default=self._defaultcomport): vol.In(
