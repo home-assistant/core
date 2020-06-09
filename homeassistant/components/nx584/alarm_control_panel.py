@@ -1,4 +1,5 @@
 """Support for NX584 alarm control panels."""
+from datetime import timedelta
 import logging
 
 from nx584 import client
@@ -24,6 +25,8 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=10)
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "NX584"
