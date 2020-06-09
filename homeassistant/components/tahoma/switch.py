@@ -57,7 +57,7 @@ class TahomaSwitch(TahomaDevice, SwitchEntity):
         # so we must assume the socket is available.
         if self.tahoma_device.type == "rts:OnOffRTSComponent":
             self._available = True
-        elif  self.tahoma_device.type == "zwave:OnOffLightZWaveComponent":   
+        elif self.tahoma_device.type == "zwave:OnOffLightZWaveComponent":
             self._available = True
         else:
             self._available = bool(
