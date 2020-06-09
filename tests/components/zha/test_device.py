@@ -107,13 +107,13 @@ async def test_check_available_success(
     basic_ch.read_attributes.reset_mock()
     device_with_basic_channel.last_seen = None
     assert zha_device.available is True
-    _send_time_changed(hass, zha_core_device._CONSIDER_UNAVAILABLE_MAINS + 2)
+    _send_time_changed(hass, zha_core_device.CONSIDER_UNAVAILABLE_MAINS + 2)
     await hass.async_block_till_done()
     assert zha_device.available is False
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_MAINS - 2
+        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2
     )
     _seens = [time.time(), device_with_basic_channel.last_seen]
 
@@ -162,7 +162,7 @@ async def test_check_available_unsuccessful(
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_MAINS - 2
+        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_MAINS - 2
     )
 
     # unsuccessfuly ping zigpy device, but zha_device is still available
@@ -203,7 +203,7 @@ async def test_check_available_no_basic_channel(
     assert zha_device.available is True
 
     device_without_basic_channel.last_seen = (
-        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_BATTERY - 2
+        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2
     )
 
     assert "does not have a mandatory basic cluster" not in caplog.text
