@@ -68,6 +68,7 @@ omit =
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
+    homeassistant/components/avri/const.py
     homeassistant/components/avri/sensor.py
     homeassistant/components/azure_event_hub/*
     homeassistant/components/azure_service_bus/*
@@ -156,7 +157,10 @@ omit =
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/deutsche_bahn/sensor.py
     homeassistant/components/devolo_home_control/__init__.py
+    homeassistant/components/devolo_home_control/binary_sensor.py
     homeassistant/components/devolo_home_control/const.py
+    homeassistant/components/devolo_home_control/devolo_device.py
+    homeassistant/components/devolo_home_control/subscriber.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/dht/sensor.py
     homeassistant/components/digital_ocean/*
@@ -538,6 +542,7 @@ omit =
     homeassistant/components/notion/sensor.py
     homeassistant/components/noaa_tides/sensor.py
     homeassistant/components/norway_air/air_quality.py
+    homeassistant/components/notify_events/notify.py
     homeassistant/components/nsw_fuel_station/sensor.py
     homeassistant/components/nuimo_controller/*
     homeassistant/components/nuki/lock.py
@@ -797,6 +802,7 @@ omit =
     homeassistant/components/thomson/device_tracker.py
     homeassistant/components/tibber/*
     homeassistant/components/tikteck/light.py
+    homeassistant/components/tile/__init__.py
     homeassistant/components/tile/device_tracker.py
     homeassistant/components/time_date/sensor.py
     homeassistant/components/tmb/sensor.py

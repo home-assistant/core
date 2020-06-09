@@ -22,7 +22,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import axis
 from homeassistant.components.axis.const import (
-    CONF_CAMERA,
     CONF_EVENTS,
     CONF_MODEL,
     DOMAIN as AXIS_DOMAIN,
@@ -48,7 +47,7 @@ MAC = "00408C12345"
 MODEL = "model"
 NAME = "name"
 
-ENTRY_OPTIONS = {CONF_CAMERA: True, CONF_EVENTS: True}
+ENTRY_OPTIONS = {CONF_EVENTS: True}
 
 ENTRY_CONFIG = {
     CONF_HOST: "1.2.3.4",

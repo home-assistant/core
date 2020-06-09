@@ -158,7 +158,6 @@ class DaikinApi:
         info = self.device.values
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "identifiers": self.device.mac,
             "manufacturer": "Daikin",
             "model": info.get("model"),
             "name": info.get("name"),

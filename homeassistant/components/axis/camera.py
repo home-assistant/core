@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
-    if not device.option_camera:
+    if not device.api.vapix.params.image_format:
         return
 
     async_add_entities([AxisCamera(device)])

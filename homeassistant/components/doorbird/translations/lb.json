@@ -6,7 +6,7 @@
             "not_doorbird_device": "D\u00ebsen Apparat ass kee DoorBird"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
         },
@@ -14,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Numm (IP Adresse)",
+                    "host": "Host",
                     "name": "Numm vum Apparat",
                     "password": "Passwuert",
                     "username": "Benotzernumm"
