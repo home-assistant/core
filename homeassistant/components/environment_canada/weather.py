@@ -184,7 +184,7 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(half_days[0]["icon_code"])
                     ),
-                    ATTR_FORECAST_PRECIPITATION_PROB: int(
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
                         half_days[0]["precip_probability"]
                     ),
                 }
@@ -204,7 +204,7 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(half_days[high]["icon_code"])
                     ),
-                    ATTR_FORECAST_PRECIPITATION_PROB: int(
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
                         half_days[high]["precip_probability"]
                     ),
                 }
@@ -222,7 +222,7 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(hours[hour]["icon_code"])
                     ),
-                    ATTR_FORECAST_PRECIPITATION_PROB: int(
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
                         hours[hour]["precip_probability"]
                     ),
                 }
