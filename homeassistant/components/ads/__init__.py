@@ -38,6 +38,7 @@ CONF_ADS_DIGIT = "digit"
 CONF_ADS_TYPE = "adstype"
 CONF_ADS_VALUE = "value"
 CONF_ADS_VAR = "adsvar"
+CONF_ADS_VAR_STATE = "adsvar_state"
 CONF_ADS_VAR_BRIGHTNESS = "adsvar_brightness"
 CONF_ADS_VAR_POSITION = "adsvar_position"
 
@@ -151,7 +152,7 @@ def setup(hass, config):
 
 # Tuple to hold data needed for notification
 NotificationItem = namedtuple(
-    "NotificationItem", "hnotify huser name plc_datatype digit callback"
+    "NotificationItem", "hnotify huser name plc_datatype callback"
 )
 
 
@@ -202,15 +203,15 @@ class AdsHub:
             except pyads.ADSError as err:
                 _LOGGER.error("Error writing %s: %s", name, err)
 
-    def read_by_name(self, name, plc_datatype, digit):
+    def read_by_name(self, name, plc_datatype):
         """Read a value from the device."""
         with self._lock:
             try:
-                return self._client.read_by_name(name, plc_datatype, digit)
+                return self._client.read_by_name(name, plc_datatype)
             except pyads.ADSError as err:
                 _LOGGER.error("Error reading %s: %s", name, err)
 
-    def add_device_notification(self, name, plc_datatype, digit, callback):
+    def add_device_notification(self, name, plc_datatype, callback):
         """Add a notification to the ADS devices."""
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
@@ -225,7 +226,7 @@ class AdsHub:
             else:
                 hnotify = int(hnotify)
                 self._notification_items[hnotify] = NotificationItem(
-                    hnotify, huser, name, plc_datatype, digit, callback
+                    hnotify, huser, name, plc_datatype,  callback
                 )
 
                 _LOGGER.debug(
@@ -261,9 +262,9 @@ class AdsHub:
         elif notification_item.plc_datatype == self.PLCTYPE_UDINT:
             value = struct.unpack("<I", bytearray(data)[:4])[0]
         elif notification_item.plc_datatype == self.PLCTYPE_REAL:
-            value = float("{:0.{prec}f}".format(struct.unpack("<f", bytearray(data)[:4])[0], prec = notification_item.digit))
+            value = struct.unpack("<f", bytearray(data)[:4])[0]
         elif notification_item.plc_datatype == self.PLCTYPE_LREAL:
-            value = float("{:0.{prec}f}".format(struct.unpack("<d", bytearray(data)[:8])[0], prec = notification_item.digit))
+            value = struct.unpack("<d", bytearray(data)[:8])[0]
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")
@@ -274,7 +275,7 @@ class AdsHub:
 class AdsEntity(Entity):
     """Representation of ADS entity."""
 
-    def __init__(self, ads_hub, name, ads_var, digit):
+    def __init__(self, ads_hub, name, ads_var):
         """Initialize ADS binary sensor."""
         self._name = name
         self._unique_id = ads_var
@@ -282,18 +283,23 @@ class AdsEntity(Entity):
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
-        self._digit = digit
         self._event = None
 
     async def async_initialize_device(
-        self, ads_var, plctype, digit, state_key=STATE_KEY_STATE, factor=None
+        self, ads_var, plctype, digit=None, state_key=STATE_KEY_STATE, factor=None
     ):
         """Register device notification."""
 
         def update(name, value):
             """Handle device notifications."""
             _LOGGER.debug("Variable %s changed its value to %d", name, value)
-                              
+
+            """Format the float, with the Paramter digit"""
+            if plctype == pyads.PLCTYPE_REAL:
+                value = float("{:0.{prec}f}".format(value, prec = digit))
+            elif plctype == pyads.PLCTYPE_LREAL:
+                value = float("{:0.{prec}f}".format(value, prec = digit))
+
             if factor is None:
                 self._state_dict[state_key] = value
             else:
@@ -309,7 +315,7 @@ class AdsEntity(Entity):
         self._event = asyncio.Event()
 
         await self.hass.async_add_executor_job(
-            self._ads_hub.add_device_notification, ads_var, plctype, digit, update
+            self._ads_hub.add_device_notification, ads_var, plctype, update
         )
         try:
             with async_timeout.timeout(10):
