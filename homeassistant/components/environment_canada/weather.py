@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION_PROB,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
