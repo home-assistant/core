@@ -3,6 +3,7 @@
         "step": {
             "init": {
                 "data": {
+                    "id": "",
                     "name": "Nome"
                 }
             }

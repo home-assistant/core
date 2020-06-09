@@ -3,10 +3,11 @@
         "step": {
             "user": {
                 "data": {
-                    "city": "Cidade"
+                    "access_token": ""
                 },
                 "title": ""
             }
         }
-    }
+    },
+    "title": ""
 }
