@@ -134,7 +134,7 @@ class BlinkOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             self.options.update(user_input)
             self.blink.refresh_rate = user_input[CONF_SCAN_INTERVAL]
-            return await self.async_create_entry(title="", data=self.options)
+            return self.async_create_entry(title="", data=self.options)
 
         options = self.config_entry.options
         scan_interval = options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
