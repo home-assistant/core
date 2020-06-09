@@ -7,7 +7,8 @@
       }
     },
     "abort": {
-      "one_instance_allowed": "Only a single instance is necessary."
+      "one_instance_allowed": "Only a single instance is necessary.",
+      "wrong_server_id": "Server id is not valid"
     }
   },
   "options": {
