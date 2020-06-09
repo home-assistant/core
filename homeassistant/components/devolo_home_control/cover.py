@@ -46,7 +46,7 @@ class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
-            name=device_instance.name,
+            name=device_instance.itemName,
             sync=self._sync,
         )
 
