@@ -3,9 +3,8 @@
         "step": {
             "user": {
                 "data": {
-                    "city": "Cidade"
-                },
-                "title": ""
+                    "host": ""
+                }
             }
         }
     }
