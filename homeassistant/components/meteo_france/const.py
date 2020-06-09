@@ -79,7 +79,7 @@ SENSOR_TYPES = {
     },
     "next_rain": {
         ENTITY_NAME: "Next rain",
-        ENTITY_UNIT: TIME_MINUTES,
+        ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:weather-rainy",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
