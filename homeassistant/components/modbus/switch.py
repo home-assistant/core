@@ -170,10 +170,8 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
             self._available = False
             return
 
-        value = bool(result.bits[0])
         self._available = True
-
-        return value
+        return bool(result.bits[0])
 
     def _write_coil(self, coil, value):
         """Write coil using the Modbus hub slave."""
@@ -288,10 +286,9 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._available = False
             return
 
-        value = int(result.registers[0])
         self._available = True
 
-        return value
+        return int(result.registers[0])
 
     def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""

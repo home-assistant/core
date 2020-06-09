@@ -1,9 +1,7 @@
 """The tests for the NSW Rural Fire Service Feeds platform."""
 import datetime
-from unittest.mock import ANY
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
-from asynctest.mock import MagicMock, call, patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -37,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import ANY, MagicMock, call, patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {

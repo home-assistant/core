@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "access_token": "S'ha produ\u00eft un error desconegut al generat un testimoni d'acc\u00e9s.",
-            "already_setup": "El compte d\u2019Ambi Climate est\u00e0 configurat.",
+            "access_token": "S'ha produ\u00eft un error desconegut al generat un token d'acc\u00e9s.",
+            "already_setup": "El compte d'Ambi Climate est\u00e0 configurat.",
             "no_config": "Necessites configurar Ambiclimate abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/ambiclimate/)."
         },
         "create_entry": {

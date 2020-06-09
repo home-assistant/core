@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -96,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanel):
+class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
     """Representation of an Envisalink-based alarm panel."""
 
     def __init__(

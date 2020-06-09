@@ -1,5 +1,5 @@
 """Support for IHC switches."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import IHC_CONTROLLER, IHC_INFO
 from .const import CONF_OFF_ID, CONF_ON_ID
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class IHCSwitch(IHCDevice, SwitchDevice):
+class IHCSwitch(IHCDevice, SwitchEntity):
     """Representation of an IHC switch."""
 
     def __init__(

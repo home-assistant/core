@@ -1,3 +1,18 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Cas\u00e9ta Bridge ass schon konfigur\u00e9iert.",
+            "cannot_connect": "Ariichten vun der Cas\u00e9ta Bridge ofgebrach w\u00e9inst engem Problem mat der Verbindung."
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbanne mat der Cas\u00e9ta Bridge; iwwerpr\u00e9if den Numm an Zertifikat"
+        },
+        "step": {
+            "import_failed": {
+                "description": "Konnt Bridge (host: {host}) net arrichten anhand vum import vun der configuration.yaml.",
+                "title": "Feeler beim import vun der Cas\u00e9ta Bridge Konfiguratioun"
+            }
+        }
+    },
     "title": "Lutron Cas\u00e9ta"
 }

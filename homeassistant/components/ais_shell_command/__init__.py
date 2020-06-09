@@ -7,6 +7,7 @@ https://home-assistant.io/components/shell_command/
 import asyncio
 import logging
 import os
+import platform
 
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
@@ -14,6 +15,9 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 DOMAIN = "ais_shell_command"
 GLOBAL_X = 0
 _LOGGER = logging.getLogger(__name__)
+G_LT_PATH = "/data/data/pl.sviete.dom/files/usr/bin/lt"
+if platform.machine() == "x86_64":
+    G_LT_PATH = "~/.nvm/versions/node/v12.1.0/bin/lt"
 
 
 async def async_setup(hass, config):
@@ -80,6 +84,12 @@ async def async_setup(hass, config):
     async def change_remote_access(service):
         await _change_remote_access(hass, service)
 
+    async def set_scaling_governor(service):
+        await _set_scaling_governor(hass, service)
+
+    async def set_io_scheduler(service):
+        await _set_io_scheduler(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "execute_command", execute_command)
@@ -110,6 +120,8 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "hdmi_control_disable", hdmi_control_disable)
     hass.services.async_register(DOMAIN, "change_wm_overscan", change_wm_overscan)
     hass.services.async_register(DOMAIN, "disable_irda_remote", disable_irda_remote)
+    hass.services.async_register(DOMAIN, "set_scaling_governor", set_scaling_governor)
+    hass.services.async_register(DOMAIN, "set_io_scheduler", set_io_scheduler)
     return True
 
 
@@ -153,17 +165,15 @@ async def _change_remote_access(hass, call):
     await hass.services.async_call("ais_ai_service", "say_it", {"text": text})
 
     if access == "on":
-        await _run("pm2 stop tunnel")
-        await _run("pm2 delete tunnel")
         await _run(
-            "pm2 start lt --name tunnel --output NULL --error NULL --restart-delay=30000 -- "
-            "-h http://paczka.pro -p 8180 -s {}".format(gate_id)
+            "pm2 restart tunnel || pm2 start {}"
+            " --name tunnel --output /dev/null --error /dev/null"
+            " --restart-delay=150000 -- -h http://paczka.pro -p 8180 -s {}".format(
+                G_LT_PATH, gate_id
+            )
         )
-        await _run("pm2 save")
     else:
-        await _run("pm2 stop tunnel")
-        await _run("pm2 delete tunnel")
-        await _run("pm2 save")
+        await _run("pm2 delete tunnel && pm2 save")
 
 
 async def _hdmi_control_disable(hass, call):
@@ -308,20 +318,19 @@ async def _ssh_remote_access(hass, call):
     if "access" in call.data:
         access = call.data["access"]
     gate_id = "ssh-" + hass.states.get("sensor.ais_secure_android_id_dom").state
-
     if access == "on":
-        await _run("pm2 delete ssh-tunnel")
         await _run(
-            "pm2 start lt --name ssh-tunnel --restart-delay=30000 -- -h http://paczka.pro -p 8888 -s "
-            + gate_id
+            "pm2 restart ssh-tunnel || pm2 start {}"
+            " --name ssh-tunnel --output /dev/null --error /dev/null"
+            " --restart-delay=150000 -- -h http://paczka.pro -p 8888 -s {}".format(
+                G_LT_PATH, gate_id
+            )
         )
-        await _run("pm2 save")
         _LOGGER.warning(
             "You have SSH access to gate on http://" + gate_id + ".paczka.pro"
         )
     else:
-        await _run("pm2 delete ssh-tunnel")
-        await _run("pm2 save")
+        await _run("pm2 delete ssh-tunnel && pm2 save")
 
 
 async def _key_event(hass, call):
@@ -661,7 +670,6 @@ async def _scan_network_for_devices(hass, call):
 
 
 async def _flush_logs(hass, call):
-
     # pm2
     await _run("pm2 flush")
     await _run("rm /data/data/pl.sviete.dom/files/home/.pm2/logs/*.log")
@@ -695,3 +703,48 @@ async def _disable_irda_remote(hass, call):
     comm = r'su -c "rm -rf /dev/input/event2"'
     await _run(comm)
     # gpio_keypad -> event0 - button behind the AV port can be used it in the future :)
+
+
+async def _set_scaling_governor(hass, call):
+    # /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+    scaling_available_governors = ["hotplug", "interactive", "performance"]
+
+    # interactive is default scaling
+    scaling = "interactive"
+    if "scaling" in call.data:
+        scaling = call.data["scaling"]
+    # default powersave freq
+    # /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+    # scaling_available_frequencies = 100000 250000 500000 667000 1000000 1200000
+    freq = "1000000"
+    if scaling == "performance":
+        freq = "1200000"
+
+    if scaling in scaling_available_governors:
+        comm = (
+            r'su -c "echo '
+            + scaling
+            + ' > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"'
+        )
+        await _run(comm)
+
+    comm = (
+        r'su -c "echo '
+        + freq
+        + ' > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"'
+    )
+    await _run(comm)
+
+
+async def _set_io_scheduler(hass, call):
+    # /sys/block/mmcblk0/queue/scheduler
+    available_io_schedulers = ["noop", "deadline", "cfq"]
+
+    # noop is now default scheduler
+    scheduler = "noop"
+    if "scheduler" in call.data:
+        scheduler = call.data["scheduler"]
+
+    if scheduler in available_io_schedulers:
+        comm = r'su -c "echo ' + scheduler + ' > /sys/block/mmcblk0/queue/scheduler"'
+        await _run(comm)

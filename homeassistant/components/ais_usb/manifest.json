@@ -3,8 +3,9 @@
   "name": "AIS USB",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "requirements": [
-    "pyinotify==0.9.6"
+    "pyinotify>=0.9.6"
   ],
   "dependencies": [],
   "codeowners": []

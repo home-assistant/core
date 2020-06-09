@@ -3,8 +3,9 @@
   "name": "AIS Updater",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "requirements": [
-    "distro==1.4.0"
+    "distro>=1.5.0"
   ],
   "dependencies": [],
   "codeowners": []

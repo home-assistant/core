@@ -14,7 +14,7 @@
                 "data": {
                     "host": "Nazwa hosta certyfikatu",
                     "name": "Nazwa certyfikatu",
-                    "port": "Port certyfikatu"
+                    "port": "[%key_id:common::config_flow::data::port%] certyfikatu"
                 },
                 "title": "Zdefiniuj certyfikat do przetestowania"
             }

@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6b64\u5370\u8868\u6a5f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "connection_error": "\u5370\u8868\u6a5f\u9023\u7dda\u5931\u6557\u3002",
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "connection_error": "\u9023\u7dda\u5931\u6557",
             "connection_upgrade": "\u7531\u65bc\u9700\u8981\u5148\u5347\u7d1a\u9023\u7dda\u3001\u9023\u7dda\u81f3\u5370\u8868\u6a5f\u5931\u6557\u3002",
             "ipp_error": "\u767c\u751f IPP \u932f\u8aa4\u3002",
             "ipp_version_error": "\u4e0d\u652f\u63f4\u5370\u8868\u6a5f\u7684 IPP \u7248\u672c\u3002",
             "parse_error": "\u7372\u5f97\u5370\u8868\u6a5f\u56de\u61c9\u5931\u6557\u3002"
         },
         "error": {
-            "connection_error": "\u5370\u8868\u6a5f\u9023\u7dda\u5931\u6557\u3002",
+            "connection_error": "\u9023\u7dda\u5931\u6557",
             "connection_upgrade": "\u9023\u7dda\u81f3\u5370\u8868\u6a5f\u5931\u6557\u3002\u8acb\u52fe\u9078 SSL/TLS \u9078\u9805\u5f8c\u518d\u8a66\u4e00\u6b21\u3002"
         },
         "flow_title": "\u5370\u8868\u6a5f\uff1a{name}",
@@ -17,7 +17,7 @@
             "user": {
                 "data": {
                     "base_path": "\u5370\u8868\u6a5f\u76f8\u5c0d\u8def\u5f91",
-                    "host": "\u4e3b\u6a5f\u6216 IP \u4f4d\u5740",
+                    "host": "\u4e3b\u6a5f\u7aef",
                     "port": "\u901a\u8a0a\u57e0",
                     "ssl": "\u5370\u8868\u6a5f\u652f\u63f4 SSL/TLS \u901a\u8a0a",
                     "verify_ssl": "\u5370\u8868\u6a5f\u4f7f\u7528\u5c0d\u61c9\u8a8d\u8b49"
@@ -26,7 +26,7 @@
                 "title": "\u9023\u7d50\u5370\u8868\u6a5f"
             },
             "zeroconf_confirm": {
-                "description": "\u662f\u5426\u8981\u65b0\u589e\u540d\u7a31 `{name}` \u5370\u8868\u6a5f\u81f3 Home Assistant\uff1f",
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f",
                 "title": "\u81ea\u52d5\u641c\u7d22\u5230\u7684\u5370\u8868\u6a5f"
             }
         }

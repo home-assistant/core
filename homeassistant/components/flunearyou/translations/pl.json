@@ -4,14 +4,16 @@
             "already_configured": "Wsp\u00f3\u0142rz\u0119dne s\u0105 ju\u017c zarejestrowane."
         },
         "error": {
-            "general_error": "Nieznany b\u0142\u0105d"
+            "general_error": "[%key_id:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
                 "data": {
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
-                }
+                },
+                "description": "Monitoruj repoty oparte na u\u017cytkownikach i CDC dla pary wsp\u00f3\u0142rz\u0119dnych.",
+                "title": "Skonfiguruj Flu Near You"
             }
         }
     }

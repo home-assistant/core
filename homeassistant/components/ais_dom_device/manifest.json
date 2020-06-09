@@ -3,6 +3,7 @@
   "name": "AIS add new device",
   "config_flow": true,
   "documentation": "https://www.ai-speaker.com",
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

@@ -115,8 +115,8 @@
             "on": "Aperta"
         },
         "gas": {
-            "off": "Assente",
-            "on": "Rilevato"
+            "off": "Assenza",
+            "on": "Presenza"
         },
         "heat": {
             "off": "Normale",
@@ -131,16 +131,16 @@
             "on": "Bagnato"
         },
         "motion": {
-            "off": "Assente",
-            "on": "Rilevato"
+            "off": "Assenza",
+            "on": "Presenza"
         },
         "occupancy": {
-            "off": "Vuoto",
-            "on": "Rilevato"
+            "off": "Assenza",
+            "on": "Presenza"
         },
         "opening": {
             "off": "Chiuso",
-            "on": "Aperta"
+            "on": "Aperto"
         },
         "presence": {
             "off": "Fuori casa",
@@ -155,15 +155,15 @@
             "on": "Non Sicuro"
         },
         "smoke": {
-            "off": "Assente",
-            "on": "Rilevato"
+            "off": "Assenza",
+            "on": "Presenza"
         },
         "sound": {
-            "off": "Assente",
-            "on": "Rilevato"
+            "off": "Assenza",
+            "on": "Presenza"
         },
         "vibration": {
-            "off": "Assente",
+            "off": "Assenza",
             "on": "Rilevata"
         },
         "window": {

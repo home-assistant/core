@@ -1,6 +1,4 @@
 """Define tests for the WWLLN config flow."""
-from asynctest import patch
-
 from homeassistant import data_entry_flow
 from homeassistant.components.wwlln import (
     CONF_WINDOW,
@@ -11,6 +9,7 @@ from homeassistant.components.wwlln import (
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

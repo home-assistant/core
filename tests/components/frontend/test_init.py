@@ -1,7 +1,6 @@
 """The tests for Home Assistant frontend."""
 import re
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components.frontend import (
@@ -17,6 +16,7 @@ from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import async_capture_events
 
 CONFIG_THEMES = {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}}
@@ -345,7 +345,7 @@ async def test_get_version(hass, hass_ws_client):
     cur_version = next(
         req.split("==", 1)[1]
         for req in frontend.requirements
-        if req.startswith("home-assistant-frontend==")
+        if req.startswith("ais-dom-frontend==")
     )
 
     await async_setup_component(hass, "frontend", {})

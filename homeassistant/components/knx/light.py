@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import callback
@@ -132,7 +132,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     async_add_entities([KNXLight(light)])
 
 
-class KNXLight(Light):
+class KNXLight(LightEntity):
     """Representation of a KNX light."""
 
     def __init__(self, device):
@@ -161,6 +161,10 @@ class KNXLight(Light):
     async def async_added_to_hass(self):
         """Store register state change callback."""
         self.async_register_callbacks()
+
+    async def async_update(self):
+        """Request a state update from KNX bus."""
+        await self.device.sync()
 
     @property
     def name(self):

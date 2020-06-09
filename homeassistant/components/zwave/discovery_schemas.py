@@ -56,6 +56,7 @@ DISCOVERY_SCHEMAS = [
         const.DISC_SPECIFIC_DEVICE_CLASS: [
             const.SPECIFIC_TYPE_THERMOSTAT_HEATING,
             const.SPECIFIC_TYPE_SETPOINT_THERMOSTAT,
+            const.SPECIFIC_TYPE_NOT_USED,
         ],
         const.DISC_VALUES: dict(
             DEFAULT_VALUES_SCHEMA,

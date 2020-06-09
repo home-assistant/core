@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This printer is already configured.",
-            "connection_error": "Failed to connect to printer.",
+            "already_configured": "Device is already configured",
+            "connection_error": "Failed to connect",
             "connection_upgrade": "Failed to connect to printer due to connection upgrade being required.",
             "ipp_error": "Encountered IPP error.",
             "ipp_version_error": "IPP version not supported by printer.",
             "parse_error": "Failed to parse response from printer."
         },
         "error": {
-            "connection_error": "Failed to connect to printer.",
+            "connection_error": "Failed to connect",
             "connection_upgrade": "Failed to connect to printer. Please try again with SSL/TLS option checked."
         },
         "flow_title": "Printer: {name}",
@@ -17,7 +17,7 @@
             "user": {
                 "data": {
                     "base_path": "Relative path to the printer",
-                    "host": "Host or IP address",
+                    "host": "Host",
                     "port": "Port",
                     "ssl": "Printer supports communication over SSL/TLS",
                     "verify_ssl": "Printer uses a proper SSL certificate"
@@ -26,7 +26,7 @@
                 "title": "Link your printer"
             },
             "zeroconf_confirm": {
-                "description": "Do you want to add the printer named `{name}` to Home Assistant?",
+                "description": "Do you want to set up {name}?",
                 "title": "Discovered printer"
             }
         }

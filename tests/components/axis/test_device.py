@@ -1,13 +1,13 @@
 """Test Axis device."""
 from copy import deepcopy
 
-from asynctest import Mock, patch
 import axis as axislib
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import axis
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 MAC = "00408C12345"

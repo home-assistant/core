@@ -1,7 +1,6 @@
 """The test for the data filter sensor platform."""
 from datetime import timedelta
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components.filter.sensor import (
     LowPassFilter,
@@ -15,6 +14,7 @@ import homeassistant.core as ha
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     get_test_home_assistant,

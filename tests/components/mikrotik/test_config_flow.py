@@ -1,6 +1,5 @@
 """Test Mikrotik setup process."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import librouteros
 import pytest
@@ -16,6 +15,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DEMO_USER_INPUT = {

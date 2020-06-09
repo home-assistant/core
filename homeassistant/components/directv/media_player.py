@@ -4,7 +4,7 @@ from typing import Callable, List
 
 from directv import DIRECTV
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -77,7 +77,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerDevice):
+class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     """Representation of a DirecTV receiver on the network."""
 
     def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
@@ -141,7 +141,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerDevice):
 
         return self._address
 
-    # MediaPlayerDevice properties and methods
+    # MediaPlayerEntity properties and methods
     @property
     def state(self):
         """Return the state of the device."""

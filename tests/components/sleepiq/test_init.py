@@ -1,12 +1,12 @@
 """The tests for the SleepIQ component."""
 import unittest
-from unittest.mock import MagicMock, patch
 
 import requests_mock
 
 from homeassistant import setup
 import homeassistant.components.sleepiq as sleepiq
 
+from tests.async_mock import MagicMock, patch
 from tests.common import get_test_home_assistant, load_fixture
 
 

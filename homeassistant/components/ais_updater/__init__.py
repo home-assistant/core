@@ -815,7 +815,6 @@ def grant_write_to_sdcard():
 
 
 def do_download_upgrade(hass, call):
-
     # get the version status from sensor
     state = hass.states.get(ENTITY_ID)
     attr = state.attributes
@@ -902,7 +901,6 @@ def do_fix_scripts_permissions():
 
 
 def do_install_upgrade(hass, call):
-
     # get the version status from sensor
     state = hass.states.get(ENTITY_ID)
     attr = state.attributes

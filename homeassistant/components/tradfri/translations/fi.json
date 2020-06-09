@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Palvelin",
+                    "security_code": "Turvakoodi"
+                },
+                "title": "Kirjoita suojakoodi"
+            }
+        }
+    }
+}

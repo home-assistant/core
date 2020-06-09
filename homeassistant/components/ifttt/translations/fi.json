@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Vain yksi instanssi on tarpeen."
+        }
+    }
+}

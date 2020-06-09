@@ -3,6 +3,8 @@ import asyncio
 import logging
 import threading
 
+import pytest
+
 import homeassistant.util.logging as logging_util
 
 
@@ -65,6 +67,7 @@ async def test_async_handler_thread_log(loop):
     assert queue.empty()
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_async_create_catching_coro(hass, caplog):
     """Test exception logging of wrapped coroutine."""
 

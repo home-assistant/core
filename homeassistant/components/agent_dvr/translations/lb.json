@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "already_in_progress": "Konfiguratioun's Oflaf fir den Apparat ass schonn am gaangen.",
+            "device_unavailable": "Apparat ass net erreechbar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "port": "Port"
+                },
+                "title": "Agent DVR ariichten"
+            }
+        }
+    },
+    "title": "Agent DVR"
+}

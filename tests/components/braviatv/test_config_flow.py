@@ -1,11 +1,10 @@
 """Define tests for the Bravia TV config flow."""
-from asynctest import patch
-
 from homeassistant import data_entry_flow
 from homeassistant.components.braviatv.const import CONF_IGNORED_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 BRAVIA_SYSTEM_INFO = {

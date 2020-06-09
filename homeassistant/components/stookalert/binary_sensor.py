@@ -5,7 +5,7 @@ import logging
 import stookalert
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([StookalertBinarySensor(name, api_handler)], update_before_add=True)
 
 
-class StookalertBinarySensor(BinarySensorDevice):
+class StookalertBinarySensor(BinarySensorEntity):
     """An implementation of RIVM Stookalert."""
 
     def __init__(self, name, api_handler):

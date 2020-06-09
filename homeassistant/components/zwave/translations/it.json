@@ -21,13 +21,13 @@
     "state": {
         "_": {
             "dead": "Disattivo",
-            "initializing": "Avvio",
+            "initializing": "In avvio",
             "ready": "Pronto",
-            "sleeping": "In attesa"
+            "sleeping": "Dormiente"
         },
         "query_stage": {
-            "dead": "Disattivo ({query_stage})",
-            "initializing": "Avvio ({query_stage})"
+            "dead": "Disattivo",
+            "initializing": "In avvio"
         }
     }
 }

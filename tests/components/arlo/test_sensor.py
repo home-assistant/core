@@ -1,6 +1,5 @@
 """The tests for the Netgear Arlo sensors."""
 from collections import namedtuple
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,6 +10,8 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     UNIT_PERCENTAGE,
 )
+
+from tests.async_mock import patch
 
 
 def _get_named_tuple(input_dict):
@@ -94,7 +95,7 @@ def sensor_with_hass_data(default_sensor, hass):
 def mock_dispatch():
     """Mock the dispatcher connect method."""
     target = "homeassistant.components.arlo.sensor.async_dispatcher_connect"
-    with patch(target, MagicMock()) as _mock:
+    with patch(target) as _mock:
         yield _mock
 
 

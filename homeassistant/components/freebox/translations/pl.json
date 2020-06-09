@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host jest ju\u017c skonfigurowany."
+            "already_configured": "[%key_id:common::config_flow::data::host%]"
         },
         "error": {
             "connection_failed": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
@@ -15,8 +15,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "port": "Port"
+                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "port": "[%key_id:common::config_flow::data::port%]"
                 },
                 "title": "Freebox"
             }

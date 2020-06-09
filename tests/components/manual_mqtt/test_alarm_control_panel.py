@@ -1,7 +1,6 @@
 """The tests for the manual_mqtt Alarm Control Panel component."""
 from datetime import timedelta
 import unittest
-from unittest.mock import Mock, patch
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.const import (
@@ -15,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     assert_setup_component,
     fire_mqtt_message,

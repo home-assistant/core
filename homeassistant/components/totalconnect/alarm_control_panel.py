@@ -36,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     async_add_entities(alarms, True)
 
 
-class TotalConnectAlarm(alarm.AlarmControlPanel):
+class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
     """Represent an TotalConnect status."""
 
     def __init__(self, name, location_id, client):

@@ -4,14 +4,14 @@
             "already_setup": "Du kan bare konfigurere en Logi Circle konto.",
             "external_error": "Det oppstod et unntak fra en annen flow.",
             "external_setup": "Logi Circle er vellykket konfigurert fra en annen flow.",
-            "no_flows": "Du m\u00e5 konfigurere Logi Circle f\u00f8r du kan autentisere med den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/logi_circle/)."
+            "no_flows": "Du m\u00e5 konfigurere Logi Circle f\u00f8r du kan godkjenne den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/logi_circle/)."
         },
         "create_entry": {
-            "default": "Vellykket autentisering med Logi Circle"
+            "default": "Vellykket godkjenning med Logi Circle"
         },
         "error": {
-            "auth_error": "API-autorisasjonen mislyktes.",
-            "auth_timeout": "Autorisasjon ble tidsavbrutt da du ba om token.",
+            "auth_error": "API-godkjenning mislyktes.",
+            "auth_timeout": "Godkjenningen ble tidsavbrutt ved foresp\u00f8rsel om token.",
             "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker send."
         },
         "step": {
@@ -23,8 +23,8 @@
                 "data": {
                     "flow_impl": "Tilbyder"
                 },
-                "description": "Velg med hvilken autentiseringsleverand\u00f8r du vil godkjenne Logi Circle.",
-                "title": "Autentiseringsleverand\u00f8r"
+                "description": "Velg med hvilken godkjenningsleverand\u00f8r du vil godkjenne Logi Circle.",
+                "title": "Godkjenningsleverand\u00f8r"
             }
         }
     }

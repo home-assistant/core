@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Klucz API",
+                    "api_key": "[%key_id:common::config_flow::data::api_key%]",
                     "app_key": "Klucz aplikacji"
                 },
                 "title": "Wprowad\u017a dane"

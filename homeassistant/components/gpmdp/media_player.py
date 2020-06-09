@@ -7,7 +7,7 @@ import time
 import voluptuous as vol
 from websocket import _exceptions, create_connection
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -167,7 +167,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     setup_gpmdp(hass, config, code, add_entities)
 
 
-class GPMDP(MediaPlayerDevice):
+class GPMDP(MediaPlayerEntity):
     """Representation of a GPMDP."""
 
     def __init__(self, name, url, code):

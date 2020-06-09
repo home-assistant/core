@@ -10,7 +10,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN, JuicenetDevice
+from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
+from .entity import JuiceNetDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,38 +26,39 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Juicenet sensor."""
-    api = hass.data[DOMAIN]["api"]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the JuiceNet Sensors."""
+    entities = []
+    juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = juicenet_data[JUICENET_API]
+    coordinator = juicenet_data[JUICENET_COORDINATOR]
 
-    dev = []
-    for device in api.get_devices():
-        for variable in SENSOR_TYPES:
-            dev.append(JuicenetSensorDevice(device, variable, hass))
-
-    add_entities(dev)
+    for device in api.devices:
+        for sensor in SENSOR_TYPES:
+            entities.append(JuiceNetSensorDevice(device, sensor, coordinator))
+    async_add_entities(entities)
 
 
-class JuicenetSensorDevice(JuicenetDevice, Entity):
-    """Implementation of a Juicenet sensor."""
+class JuiceNetSensorDevice(JuiceNetDevice, Entity):
+    """Implementation of a JuiceNet sensor."""
 
-    def __init__(self, device, sensor_type, hass):
+    def __init__(self, device, sensor_type, coordinator):
         """Initialise the sensor."""
-        super().__init__(device, sensor_type, hass)
+        super().__init__(device, sensor_type, coordinator)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{self.device.name()} {self._name}"
+        return f"{self.device.name} {self._name}"
 
     @property
     def icon(self):
         """Return the icon of the sensor."""
         icon = None
         if self.type == "status":
-            status = self.device.getStatus()
+            status = self.device.status
             if status == "standby":
                 icon = "mdi:power-plug-off"
             elif status == "plugged":
@@ -87,29 +89,19 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
         """Return the state."""
         state = None
         if self.type == "status":
-            state = self.device.getStatus()
+            state = self.device.status
         elif self.type == "temperature":
-            state = self.device.getTemperature()
+            state = self.device.temperature
         elif self.type == "voltage":
-            state = self.device.getVoltage()
+            state = self.device.voltage
         elif self.type == "amps":
-            state = self.device.getAmps()
+            state = self.device.amps
         elif self.type == "watts":
-            state = self.device.getWatts()
+            state = self.device.watts
         elif self.type == "charge_time":
-            state = self.device.getChargeTime()
+            state = self.device.charge_time
         elif self.type == "energy_added":
-            state = self.device.getEnergyAdded()
+            state = self.device.energy_added
         else:
             state = "Unknown"
         return state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attributes = {}
-        if self.type == "status":
-            man_dev_id = self.device.id()
-            if man_dev_id:
-                attributes["manufacturer_device_id"] = man_dev_id
-        return attributes

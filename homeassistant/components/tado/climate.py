@@ -1,7 +1,7 @@
 """Support for Tado thermostats."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF,
     FAN_AUTO,
@@ -163,7 +163,7 @@ def create_climate_entity(tado, name: str, zone_id: int, zone: dict):
     return entity
 
 
-class TadoClimate(TadoZoneEntity, ClimateDevice):
+class TadoClimate(TadoZoneEntity, ClimateEntity):
     """Representation of a Tado climate entity."""
 
     def __init__(

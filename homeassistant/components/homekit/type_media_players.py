@@ -36,9 +36,9 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
     CHAR_ACTIVE_IDENTIFIER,
@@ -94,6 +94,13 @@ MODE_FRIENDLY_NAME = {
     FEATURE_TOGGLE_MUTE: "Mute",
 }
 
+MEDIA_PLAYER_OFF_STATES = (
+    STATE_OFF,
+    STATE_UNKNOWN,
+    STATE_STANDBY,
+    "None",
+)
+
 
 @TYPES.register("MediaPlayer")
 class MediaPlayer(HomeAccessory):
@@ -144,7 +151,7 @@ class MediaPlayer(HomeAccessory):
             self.chars[FEATURE_TOGGLE_MUTE] = serv_toggle_mute.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_toggle_mute
             )
-        self.update_state(state)
+        self.async_update_state(state)
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
@@ -183,17 +190,13 @@ class MediaPlayer(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_MEDIA_VOLUME_MUTED: value}
         self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state
 
         if self.chars[FEATURE_ON_OFF]:
-            hk_state = current_state not in (
-                STATE_OFF,
-                STATE_UNKNOWN,
-                STATE_STANDBY,
-                "None",
-            )
+            hk_state = current_state not in MEDIA_PLAYER_OFF_STATES
             _LOGGER.debug(
                 '%s: Set current state for "on_off" to %s', self.entity_id, hk_state
             )
@@ -320,7 +323,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
                 _LOGGER.debug("%s: Added source %s.", self.entity_id, source)
 
-        self.update_state(state)
+        self.async_update_state(state)
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -374,13 +377,14 @@ class TelevisionMediaPlayer(HomeAccessory):
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update Television state after state changed."""
         current_state = new_state.state
 
         # Power state television
         hk_state = 0
-        if current_state not in ("None", STATE_OFF, STATE_UNKNOWN):
+        if current_state not in MEDIA_PLAYER_OFF_STATES:
             hk_state = 1
         _LOGGER.debug("%s: Set current active state to %s", self.entity_id, hk_state)
         if self.char_active.value != hk_state:

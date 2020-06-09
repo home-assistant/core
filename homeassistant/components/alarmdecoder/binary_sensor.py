@@ -1,7 +1,7 @@
 """Support for AlarmDecoder zone states- represented as binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import (
     CONF_RELAY_ADDR,
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class AlarmDecoderBinarySensor(BinarySensorDevice):
+class AlarmDecoderBinarySensor(BinarySensorEntity):
     """Representation of an AlarmDecoder binary sensor."""
 
     def __init__(

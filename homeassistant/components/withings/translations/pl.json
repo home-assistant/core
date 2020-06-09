@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Min\u0105\u0142 limit czasu generowania url autoryzacji.",
+            "authorize_url_timeout": "[%key_id:common::config_flow::abort::oauth2_authorize_url_timeout%]",
             "missing_configuration": "Integracja z Withings nie jest skonfigurowana. Post\u0119puj zgodnie z dokumentacj\u0105."
         },
         "create_entry": {
@@ -9,7 +9,7 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "Wybierz metod\u0119 uwierzytelnienia"
+                "title": "[%key_id:common::config_flow::title::oauth2_pick_implementation%]"
             },
             "profile": {
                 "data": {

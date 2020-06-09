@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/axis",
   "requirements": ["axis==25"],
   "zeroconf": ["_axis-video._tcp.local."],
-  "codeowners": ["@kane610"]
+  "codeowners": ["@Kane610"]
 }

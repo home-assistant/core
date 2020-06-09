@@ -1,7 +1,7 @@
 """Support for stiebel_eltron climate platform."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([StiebelEltron(name, ste_data)], True)
 
 
-class StiebelEltron(ClimateDevice):
+class StiebelEltron(ClimateEntity):
     """Representation of a STIEBEL ELTRON heat pump."""
 
     def __init__(self, name, ste_data):

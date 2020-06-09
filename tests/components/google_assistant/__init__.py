@@ -1,7 +1,7 @@
 """Tests for the Google Assistant integration."""
-from asynctest.mock import MagicMock
-
 from homeassistant.components.google_assistant import helpers
+
+from tests.async_mock import MagicMock
 
 
 def mock_google_config_store(agent_user_ids=None):

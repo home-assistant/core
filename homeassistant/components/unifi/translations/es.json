@@ -2,11 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "El sitio del controlador ya est\u00e1 configurado",
+            "no_local_user": "No se encontr\u00f3 ning\u00fan usuario local, configure una cuenta local en el controlador e int\u00e9ntelo de nuevo",
             "user_privilege": "El usuario debe ser administrador"
         },
         "error": {
-            "faulty_credentials": "Credenciales de usuario incorrectas",
-            "service_unavailable": "Servicio No disponible",
+            "faulty_credentials": "Autenticaci\u00f3n no v\u00e1lida",
+            "service_unavailable": "Error al conectar",
             "unknown_client_mac": "Ning\u00fan cliente disponible en esa direcci\u00f3n MAC"
         },
         "step": {
@@ -16,7 +17,7 @@
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "site": "ID del sitio",
-                    "username": "Nombre de usuario",
+                    "username": "Usuario",
                     "verify_ssl": "Controlador usando el certificado adecuado"
                 },
                 "title": "Configurar el controlador UniFi"
@@ -52,9 +53,17 @@
                     "other": "vac\u00edo"
                 }
             },
+            "simple_options": {
+                "data": {
+                    "block_client": "Acceso controlado a la red de los clientes",
+                    "track_clients": "Rastree clientes de red",
+                    "track_devices": "Rastree dispositivos de red (dispositivos Ubiquiti)"
+                },
+                "description": "Configurar la integraci\u00f3n de UniFi"
+            },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Crear sensores para monitorizar uso de ancho de banda de clientes de red"
+                    "allow_bandwidth_sensors": "Sensores de uso de ancho de banda para los clientes de la red"
                 },
                 "description": "Configurar estad\u00edsticas de los sensores",
                 "title": "Opciones UniFi 3/3"

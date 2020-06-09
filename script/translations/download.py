@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
-import glob
 import json
 import os
 import pathlib
@@ -47,16 +46,6 @@ def run_download_docker():
         raise ExitApp("Failed to download translations")
 
 
-def load_json(filename: str) -> Union[List, Dict]:
-    """Load JSON data from a file and return as dict or list.
-
-    Defaults to returning empty dict if file is not found.
-    """
-    with open(filename, encoding="utf-8") as fdesc:
-        return json.loads(fdesc.read())
-    return {}
-
-
 def save_json(filename: str, data: Union[List, Dict]):
     """Save JSON data to a file.
 
@@ -67,11 +56,6 @@ def save_json(filename: str, data: Union[List, Dict]):
         fdesc.write(data)
         return True
     return False
-
-
-def get_language(path):
-    """Get the language code for the given file path."""
-    return os.path.splitext(os.path.basename(path))[0]
 
 
 def get_component_path(lang, component):
@@ -132,10 +116,9 @@ def save_language_translations(lang, translations):
 
 def write_integration_translations():
     """Write integration translations."""
-    paths = glob.iglob("build/translations-download/*.json")
-    for path in paths:
-        lang = get_language(path)
-        translations = load_json(path)
+    for lang_file in DOWNLOAD_DIR.glob("*.json"):
+        lang = lang_file.stem
+        translations = json.loads(lang_file.read_text())
         save_language_translations(lang, translations)
 
 

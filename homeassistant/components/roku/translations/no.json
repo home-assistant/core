@@ -11,14 +11,14 @@
         "step": {
             "ssdp_confirm": {
                 "description": "Vil du sette opp {name} ?",
-                "title": "Roku"
+                "title": ""
             },
             "user": {
                 "data": {
                     "host": "Vert eller IP-adresse"
                 },
-                "description": "Skriv inn Roku-informasjonen din.",
-                "title": "Roku"
+                "description": "Fyll inn Roku-informasjonen din.",
+                "title": ""
             }
         }
     }

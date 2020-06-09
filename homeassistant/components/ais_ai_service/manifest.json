@@ -3,7 +3,8 @@
   "name": "AIS AI",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
-  "requirements": ["fuzzywuzzy==0.15.1", "babel==2.7.0"],
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
+  "requirements": ["fuzzywuzzy>=0.15.1", "babel>=2.7.0"],
   "dependencies": [],
   "codeowners": []
 }

@@ -7,11 +7,29 @@
             "cannot_connect": "Kein Verbindung zu ZHA-Ger\u00e4t m\u00f6glich"
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Funktyp"
+                },
+                "description": "W\u00e4hlen Sie einen Typ Ihres Zigbee-Funks",
+                "title": "Funktyp"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "Port-Geschwindigkeit",
+                    "flow_control": "Datenflusskontrolle",
+                    "path": "Serieller Ger\u00e4tepfad"
+                },
+                "description": "Geben Sie die portspezifischen Einstellungen ein",
+                "title": "Einstellungen"
+            },
             "user": {
                 "data": {
+                    "path": "Serieller Ger\u00e4tepfad",
                     "radio_type": "Radio-Type",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
                 },
+                "description": "W\u00e4hlen Sie die serielle Schnittstelle f\u00fcr den ZigBee-Funk",
                 "title": "ZHA"
             }
         }

@@ -5,7 +5,7 @@ import hikvision.api
 from hikvision.error import HikvisionError, MissingParamError
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([HikvisionMotionSwitch(name, hikvision_cam)])
 
 
-class HikvisionMotionSwitch(SwitchDevice):
+class HikvisionMotionSwitch(SwitchEntity):
     """Representation of a switch to toggle on/off motion detection."""
 
     def __init__(self, name, hikvision_cam):

@@ -5,7 +5,7 @@ import logging
 from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     ATTR_LAST_TRIP_TIME,
     CONF_CUSTOMIZE,
@@ -183,7 +183,7 @@ class HikvisionData:
         return self.camdata.fetch_attributes(sensor, channel)
 
 
-class HikvisionBinarySensor(BinarySensorDevice):
+class HikvisionBinarySensor(BinarySensorEntity):
     """Representation of a Hikvision binary sensor."""
 
     def __init__(self, hass, sensor, channel, cam, delay):

@@ -5,7 +5,7 @@ import logging
 import ambiclimate
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -130,7 +130,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class AmbiclimateEntity(ClimateDevice):
+class AmbiclimateEntity(ClimateEntity):
     """Representation of a Ambiclimate Thermostat device."""
 
     def __init__(self, heater, store):

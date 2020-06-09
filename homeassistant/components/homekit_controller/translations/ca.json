@@ -13,7 +13,7 @@
             "authentication_error": "Codi HomeKit incorrecte. Verifica'l i torna-ho a provar.",
             "busy_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 actualment ho est\u00e0 intentant amb un altre controlador diferent.",
             "max_peers_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 no t\u00e9 suficient espai lliure.",
-            "max_tries_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 ha rebut m\u00e9s de 100 intents d\u2019autenticaci\u00f3 fallits.",
+            "max_tries_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 ha rebut m\u00e9s de 100 intents d'autenticaci\u00f3 fallits.",
             "pairing_failed": "S'ha produ\u00eft un error mentre s'intentava la vinculaci\u00f3 amb el dispositiu. Pot ser que sigui un error temporal o pot ser que el teu dispositiu encara no estigui suportat.",
             "unable_to_pair": "No s'ha pogut vincular, torna-ho a provar.",
             "unknown_error": "El dispositiu ha em\u00e8s un error desconegut. Vinculaci\u00f3 fallida."

@@ -1,10 +1,10 @@
 """Tests for Met.no config flow."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

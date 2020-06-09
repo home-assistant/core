@@ -1,7 +1,7 @@
 """Support for KEBA charging station switch."""
 import logging
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 
 from . import DOMAIN
 
@@ -19,7 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class KebaLock(LockDevice):
+class KebaLock(LockEntity):
     """The entity class for KEBA charging stations switch."""
 
     def __init__(self, keba, name, entity_type):

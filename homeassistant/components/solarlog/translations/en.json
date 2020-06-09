@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "The hostname or ip-address of your Solar-Log device",
+                    "host": "Host",
                     "name": "The prefix to be used for your Solar-Log sensors"
                 },
                 "title": "Define your Solar-Log connection"

@@ -9,6 +9,7 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "Correu electr\u00f2nic (opcional)",
                     "host": "Amfitri\u00f3",
                     "port": "Port (10000)"
                 },

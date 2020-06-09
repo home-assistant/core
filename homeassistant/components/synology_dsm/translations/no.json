@@ -4,11 +4,11 @@
             "already_configured": "Verten er allerede konfigurert"
         },
         "error": {
-            "connection": "Tilkoblingsfeil: sjekk verten, porten og ssl",
+            "connection": "Tilkoblingsfeil: Vennligst sjekk verten, porten og SSL",
             "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt",
-            "missing_data": "Manglende data: Pr\u00f8v p\u00e5 nytt senere eller en annen konfigurasjon",
-            "otp_failed": "To-trinns autentisering mislyktes. Pr\u00f8v p\u00e5 nytt med en ny passkode",
-            "unknown": "Ukjent feil: sjekk loggene for \u00e5 f\u00e5 flere detaljer"
+            "missing_data": "Manglende data: Vennligst pr\u00f8v p\u00e5 nytt senere eller en annen konfigurasjon",
+            "otp_failed": "Totrinnsgodkjenning mislyktes, pr\u00f8v p\u00e5 nytt med en ny passord",
+            "unknown": "Ukjent feil: Vennligst sjekk loggene for \u00e5 f\u00e5 flere detaljer"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -27,7 +27,7 @@
                     "username": "Brukernavn"
                 },
                 "description": "Vil du konfigurere {name} ({host})?",
-                "title": "Synology DSM"
+                "title": ""
             },
             "user": {
                 "data": {
@@ -38,7 +38,16 @@
                     "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
                     "username": "Brukernavn"
                 },
-                "title": "Synology DSM"
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minutter mellom skanninger"
+                }
             }
         }
     }

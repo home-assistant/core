@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -205,7 +205,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ItunesDevice(MediaPlayerDevice):
+class ItunesDevice(MediaPlayerEntity):
     """Representation of an iTunes API instance."""
 
     def __init__(self, name, host, port, use_ssl, add_entities):
@@ -408,7 +408,7 @@ class ItunesDevice(MediaPlayerDevice):
         self.update_state(response)
 
 
-class AirPlayDevice(MediaPlayerDevice):
+class AirPlayDevice(MediaPlayerEntity):
     """Representation an AirPlay device via an iTunes API instance."""
 
     def __init__(self, device_id, client):

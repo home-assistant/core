@@ -8,7 +8,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "V\u00e4rddatorn"
+                    "host": "V\u00e4rddatorn",
+                    "password": "Enhetsl\u00f6senord (anv\u00e4nds endast av SKYFi-enheter)"
                 },
                 "description": "Ange IP-adressen f\u00f6r din Daikin AC.",
                 "title": "Konfigurera Daikin AC"

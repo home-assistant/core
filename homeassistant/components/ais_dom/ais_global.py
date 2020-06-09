@@ -2,8 +2,9 @@
 Support for functionality to cache some data for AI-Speaker.
 """
 import logging
-import socket
 import platform
+import socket
+
 import requests
 
 # LV settings
@@ -65,7 +66,6 @@ G_SPEAKERS_GROUP_LIST = ["media_player.wbudowany_glosnik"]
 
 # tokens
 G_OFFLINE_MODE = False
-
 
 GLOBAL_MY_IP = None
 GLOBAL_MY_WIFI_SSID = None
@@ -146,40 +146,42 @@ def get_sercure_android_id_dom():
         and G_AIS_SECURE_ANDROID_ID_DOM.startswith("dom-")
     ):
         return G_AIS_SECURE_ANDROID_ID_DOM
+
+    # get dom_id from file
+    try:
+        with open(G_AIS_SECURE_ANDROID_ID_DOM_FILE) as fptr:
+            dom_id = fptr.read().replace("\n", "")
+            if dom_id.startswith("dom-"):
+                G_AIS_SECURE_ANDROID_ID_DOM = dom_id
+                return G_AIS_SECURE_ANDROID_ID_DOM
+    except Exception as e:
+        _LOGGER.error("Error get_sercure_android_id_dom " + str(e))
+
+    # get dom_id from secure android settings and save in file
+    import subprocess
+
+    android_id = ""
+    if platform.machine() == "x86_64":
+        # to suport local test
+        from uuid import getnode as get_mac
+
+        android_id = get_mac()
     else:
-        # get dom_id from file
         try:
-            with open(G_AIS_SECURE_ANDROID_ID_DOM_FILE) as fptr:
-                dom_id = fptr.read().replace("\n", "")
-                if dom_id.startswith("dom-"):
-                    G_AIS_SECURE_ANDROID_ID_DOM = dom_id
-                    return G_AIS_SECURE_ANDROID_ID_DOM
+            android_id = subprocess.check_output(
+                'su -c "settings get secure android_id"',
+                shell=True,  # nosec
+                timeout=10,
+            )
+            android_id = android_id.decode("utf-8").replace("\n", "")
         except Exception as e:
             _LOGGER.error("Error get_sercure_android_id_dom " + str(e))
 
-        # get dom_id from secure android settings and save in file
-        import subprocess
-
-        android_id = ""
-        if platform.machine() == "x86_64":
-            # to suport local test
-            from uuid import getnode as get_mac
-
-            android_id = get_mac()
-        else:
-            try:
-                android_id = subprocess.check_output(
-                    'su -c "settings get secure android_id"', shell=True, timeout=10
-                )
-                android_id = android_id.decode("utf-8").replace("\n", "")
-            except Exception as e:
-                _LOGGER.error("Error get_sercure_android_id_dom " + str(e))
-
-        # save in file
-        if android_id != "":
-            with open(G_AIS_SECURE_ANDROID_ID_DOM_FILE, "w") as fptr:
-                fptr.write("dom-" + str(android_id))
-                G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
+    # save in file
+    if android_id != "":
+        with open(G_AIS_SECURE_ANDROID_ID_DOM_FILE, "w") as fptr:
+            fptr.write("dom-" + str(android_id))
+            G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
     return G_AIS_SECURE_ANDROID_ID_DOM
 
 

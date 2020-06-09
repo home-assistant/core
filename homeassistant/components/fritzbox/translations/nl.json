@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Deze AVM FRITZ!Box is al geconfigureerd.",
             "already_in_progress": "AVM FRITZ!Box configuratie is al bezig.",
-            "not_found": "Geen ondersteunde AVM FRITZ!Box gevonden op het netwerk."
+            "not_found": "Geen ondersteunde AVM FRITZ!Box gevonden op het netwerk.",
+            "not_supported": "Verbonden met AVM FRITZ! Box, maar het kan geen Smart Home-apparaten bedienen."
         },
         "error": {
             "auth_failed": "Ongeldige gebruikersnaam of wachtwoord"
@@ -20,7 +21,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host- of IP-adres",
+                    "host": "Host of IP-adres",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 },

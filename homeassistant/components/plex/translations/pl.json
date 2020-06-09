@@ -11,10 +11,22 @@
         },
         "error": {
             "faulty_credentials": "Autoryzacja nie powiod\u0142a si\u0119",
+            "host_or_token": "Nalezy wprowadzi\u0107 przynajmniej jeden host lub token.",
             "no_servers": "Brak serwer\u00f3w po\u0142\u0105czonych z kontem",
-            "not_found": "Nie znaleziono serwera Plex"
+            "not_found": "Nie znaleziono serwera Plex",
+            "ssl_error": "Problem z certyfikatem SSL."
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "[%key_id:common::config_flow::data::host%] (opcjonalnie, je\u015bli wprowadzono token)",
+                    "port": "[%key_id:common::config_flow::data::port%]",
+                    "ssl": "U\u017cyj SSL",
+                    "token": "[%key_id:common::config_flow::data::access_token%] (opcjonalnie)",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                },
+                "title": "Manualna konfiguracja Plex"
+            },
             "select_server": {
                 "data": {
                     "server": "Serwer"
@@ -25,6 +37,16 @@
             "start_website_auth": {
                 "description": "Kontynuuj, by dokona\u0107 autoryzacji w plex.tv.",
                 "title": "Po\u0142\u0105cz z serwerem Plex"
+            },
+            "user": {
+                "description": "Przejd\u017a do [plex.tv](https://plex.tv), aby po\u0142\u0105czy\u0107 serwer Plex.",
+                "title": "Serwer medi\u00f3w Plex"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Metoda konfiguracji"
+                },
+                "title": "Serwer medi\u00f3w Plex"
             }
         }
     },

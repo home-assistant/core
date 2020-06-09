@@ -9,12 +9,13 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "E-post (valgfritt)",
                     "host": "Vert",
-                    "port": "Port (10000)"
+                    "port": "Port "
                 },
                 "title": "Koble til enheten"
             }
         }
     },
-    "title": "Atag "
+    "title": ""
 }

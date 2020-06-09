@@ -1,6 +1,6 @@
 """Define patches used for androidtv tests."""
 
-from unittest.mock import mock_open, patch
+from tests.async_mock import mock_open, patch
 
 
 class AdbDeviceTcpFake:

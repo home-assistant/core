@@ -8,9 +8,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert"
+                    "host": "Vert",
+                    "key": "Godkjenningsn\u00f8kkel (brukes bare av BRP072C/Zena enheter)",
+                    "password": "Enhetspassord (brukes bare av SKYFi-enheter)"
                 },
-                "description": "Angi IP-adressen til din Daikin AC.",
+                "description": "Fyll inn IP-adressen til din Daikin AC.",
                 "title": "Konfigurer Daikin AC"
             }
         }

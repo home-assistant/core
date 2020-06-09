@@ -82,7 +82,7 @@ async def prepare_usb_device(hass, device_info):
 
         # check if zigbee already exists
         if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
-            # download
+            # TODO download
             await hass.services.async_call(
                 "ais_ai_service",
                 "say_it",
@@ -93,21 +93,25 @@ async def prepare_usb_device(hass, device_info):
             )
             return
 
-        # start pm2 zigbee service
-        await _run("pm2 stop zigbee")
-        await _run("pm2 delete zigbee")
-        await _run(
-            "cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt && pm2 start npm --name zigbee --output NULL "
-            "--error NULL --restart-delay=30000 -- run start "
-        )
-        await _run("pm2 save")
-        # TODO check the /dev/ttyACM..
+        # fix permitions
+        uid = str(os.getuid())
+        gid = str(os.getgid())
+        await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM0'")
+        # TODO check the /dev/ttyACM.. number
         await _run("su -c 'chmod 777 /dev/ttyACM0'")
+
+        # restart-delay 150000 milisecond == 2.5 minutes
+        cmd_to_run = (
+            "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
+            "--name zigbee --output /dev/null --error /dev/null --restart-delay=150000"
+        )
+        await _run(cmd_to_run)
+
         #
-        if ais_global.G_AIS_START_IS_DONE:
-            await hass.services.async_call(
-                "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
-            )
+        # if ais_global.G_AIS_START_IS_DONE:
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
+        )
 
 
 async def remove_usb_device(hass, device_info):
@@ -118,9 +122,7 @@ async def remove_usb_device(hass, device_info):
         # Unregister the built-in zigbee panel
         hass.components.frontend.async_remove_panel("lovelace/ais_zigbee")
         # stop pm2 zigbee service
-        await _run("pm2 stop zigbee")
         await _run("pm2 delete zigbee")
-        await _run("pm2 save")
         await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zigbee"}
         )
@@ -300,9 +302,7 @@ async def async_setup(hass, config):
 
     async def stop_devices(call):
         # remove zigbee service on start - to prevent pm2 for restarting when usb is not connected
-        await _run("pm2 stop zigbee")
         await _run("pm2 delete zigbee")
-        await _run("pm2 save")
         #
 
     async def lsusb(call):

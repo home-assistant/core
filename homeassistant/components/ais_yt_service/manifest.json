@@ -1,1 +1,1 @@
-{"domain": "ais_yt_service", "name": "AIS YouTube", "config_flow": false, "documentation": "https://www.ai-speaker.com", "requirements": ["youtube_dl==2020.05.08"], "dependencies": [], "codeowners": []}
+{"domain": "ais_yt_service", "name": "AIS YouTube", "config_flow": false, "documentation": "https://www.ai-speaker.com", "issue_tracker": "https://github.com/sviete/AIS-home-assistant", "requirements": ["youtube_dl==2020.06.06"], "dependencies": [], "codeowners": []}

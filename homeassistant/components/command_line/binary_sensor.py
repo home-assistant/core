@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     CONF_COMMAND,
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class CommandBinarySensor(BinarySensorDevice):
+class CommandBinarySensor(BinarySensorEntity):
     """Representation of a command line binary sensor."""
 
     def __init__(

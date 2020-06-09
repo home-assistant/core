@@ -1,7 +1,7 @@
 """Support for Xiaomi Aqara binary sensors."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
+class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
     """Representation of a XiaomiPlug."""
 
     def __init__(self, device, name, data_key, supports_power_consumption, xiaomi_hub):

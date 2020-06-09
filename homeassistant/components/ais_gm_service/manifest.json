@@ -3,7 +3,8 @@
   "name": "AIS GM",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
-  "requirements": ["gmusicapi==12.0.0"],
+  "issue_tracker": "https://github.com/sviete/AIS-home-assistant",
+  "requirements": ["gmusicapi>=12.0.0"],
   "dependencies": [],
   "codeowners": []
 }

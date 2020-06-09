@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Serverport allerede i bruk.",
+            "start_server_failed": "Startserveren mislyktes."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Serverport"
+                },
+                "title": "Sett opp TCP-server for WIFFI-enheter"
+            }
+        }
+    }
+}

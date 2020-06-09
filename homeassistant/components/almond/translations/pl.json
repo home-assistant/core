@@ -11,7 +11,7 @@
                 "title": "Almond poprzez dodatek Hass.io"
             },
             "pick_implementation": {
-                "title": "Wybierz metod\u0119 uwierzytelniania"
+                "title": "[%key_id:common::config_flow::title::oauth2_pick_implementation%]"
             }
         }
     }

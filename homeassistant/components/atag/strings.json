@@ -5,8 +5,9 @@
       "user": {
         "title": "Connect to the device",
         "data": {
-          "host": "Host",
-          "port": "Port (10000)"
+          "host": "[%key:common::config_flow::data::host%]",
+          "email": "Email (Optional)",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },

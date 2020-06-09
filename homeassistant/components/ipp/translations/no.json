@@ -22,7 +22,7 @@
                     "ssl": "Skriveren st\u00f8tter kommunikasjon over SSL/TLS",
                     "verify_ssl": "Skriveren bruker et riktig SSL-sertifikat"
                 },
-                "description": "Konfigurer skriveren din via Internet Printing Protocol (IPP) for \u00e5 integrere med Home Assistant.",
+                "description": "Sett opp skriveren din via Internet Printing Protocol (IPP) for \u00e5 integrere med Home Assistant.",
                 "title": "Koble til skriveren din"
             },
             "zeroconf_confirm": {

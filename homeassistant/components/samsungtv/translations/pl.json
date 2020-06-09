@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
+                    "host": "[%key_id:common::config_flow::data::host%]",
                     "name": "Nazwa"
                 },
                 "description": "Wprowad\u017a informacje o telewizorze Samsung. Je\u015bli nigdy wcze\u015bniej ten telewizor nie by\u0142 \u0142\u0105czony z Home Assistant'em na jego ekranie powinna pojawi\u0107 si\u0119 pro\u015bba o uwierzytelnienie.",

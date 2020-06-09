@@ -3,7 +3,7 @@
         "abort": {
             "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno konto Nest.",
             "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
-            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
+            "authorize_url_timeout": "[%key_id:common::config_flow::abort::oauth2_authorize_url_timeout%]",
             "no_flows": "Musisz skonfigurowa\u0107 Nest, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/nest/)."
         },
         "error": {

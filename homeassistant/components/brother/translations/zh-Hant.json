@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u5370\u8868\u6a5f\u4e3b\u6a5f\u540d\u6216 IP \u4f4d\u5740",
+                    "host": "\u4e3b\u6a5f\u7aef",
                     "type": "\u5370\u8868\u6a5f\u985e\u578b"
                 },
                 "description": "\u8a2d\u5b9a Brother \u5370\u8868\u6a5f\u6574\u5408\u3002\u5047\u5982\u9700\u8981\u5354\u52a9\uff0c\u8acb\u53c3\u8003\uff1ahttps://www.home-assistant.io/integrations/brother",

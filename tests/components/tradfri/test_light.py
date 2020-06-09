@@ -1,7 +1,6 @@
 """Tradfri lights platform tests."""
 
 from copy import deepcopy
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from pytradfri.device import Device
@@ -10,6 +9,7 @@ from pytradfri.device.light_control import LightControl
 
 from homeassistant.components import tradfri
 
+from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 DEFAULT_TEST_FEATURES = {

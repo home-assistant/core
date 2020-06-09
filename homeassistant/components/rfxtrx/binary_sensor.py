@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     CONF_COMMAND_OFF,
@@ -171,7 +171,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         RECEIVED_EVT_SUBSCRIBERS.append(binary_sensor_update)
 
 
-class RfxtrxBinarySensor(BinarySensorDevice):
+class RfxtrxBinarySensor(BinarySensorEntity):
     """A representation of a RFXtrx binary sensor."""
 
     def __init__(
