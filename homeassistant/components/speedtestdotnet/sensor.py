@@ -105,4 +105,4 @@ class SpeedtestSensor(Entity):
 
     async def async_update(self):
         """Request coordinator to update data."""
-        await self.coordinator.async_request_update()
+        await self.coordinator.async_request_refresh()
