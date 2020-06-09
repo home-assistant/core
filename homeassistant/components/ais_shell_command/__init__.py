@@ -17,7 +17,7 @@ GLOBAL_X = 0
 _LOGGER = logging.getLogger(__name__)
 G_LT_PATH = "/data/data/pl.sviete.dom/files/usr/bin/lt"
 if platform.machine() == "x86_64":
-    G_LT_PATH = "/usr/local/bin/lt"
+    G_LT_PATH = "~/.nvm/versions/node/v12.1.0/bin/lt"
 
 
 async def async_setup(hass, config):
