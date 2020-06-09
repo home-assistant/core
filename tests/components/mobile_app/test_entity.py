@@ -161,6 +161,31 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
     assert entity.name == "Test 1 Battery State"
     assert entity.state == STATE_UNKNOWN
 
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Backup Battery State",
+                "type": "sensor",
+                "unique_id": "backup_battery_state",
+            },
+        },
+    )
+
+    assert reg_resp.status == 201
+
+    json = await reg_resp.json()
+    assert json == {"success": True}
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_backup_battery_state")
+    assert entity
+
+    assert entity.domain == "sensor"
+    assert entity.name == "Test 1 Backup Battery State"
+    assert entity.state == STATE_UNKNOWN
+
 
 async def test_update_sensor_no_state(hass, create_registrations, webhook_client):
     """Test that sensors can be updated, when there is no (unknown) state."""
