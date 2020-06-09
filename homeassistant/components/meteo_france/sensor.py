@@ -1,5 +1,6 @@
 """Support for Meteo-France raining forecast sensor."""
 from datetime import datetime
+
 import logging
 
 from meteofrance.helpers import (
@@ -177,18 +178,37 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     @property
     def state(self):
         """Return the state."""
-        return self.coordinator.data.forecast[0]["desc"]
+        return self.coordinator.data.next_rain_date_locale()
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+
+        if self.coordinator.data.next_rain_date_locale():
+            rain_text_forecast = "La pluie est attendue à {}.".self.coordinator.data.next_rain_date_locale().strftime(
+                "%H:%M"
+            )
+        else:
+            rain_text_forecast = "Pas de pluie dans la prochaine heure."
+
         return {
             **{
-                datetime.fromtimestamp(item["dt"]).strftime("%Y-%m-%d %H:%M:%S"): item[
-                    "desc"
-                ]
+                self.coordinator.data.timestamp_to_locale_time(item["dt"]).strftime(
+                    "%H:%M"
+                ): item["desc"]
                 for item in self.coordinator.data.forecast
             },
+            "1 hour forecast": [
+                {
+                    "time": self.coordinator.data.timestamp_to_locale_time(
+                        item["dt"]
+                    ).strftime("%H:%M"),
+                    "description": item["desc"],
+                    "indice": item["rain"],
+                }
+                for item in self.coordinator.data.forecast
+            ],
+            "for human": rain_text_forecast,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
