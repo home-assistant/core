@@ -55,6 +55,7 @@ class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
         )
 
         self._position = self._multi_level_switch_property.value
+        print()
 
     @property
     def current_cover_position(self):
