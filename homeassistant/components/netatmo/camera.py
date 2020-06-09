@@ -130,10 +130,10 @@ class NetatmoCamera(Camera, NetatmoBase):
                 data["home_id"] == self._home_id
                 and data["camera_id"] == self._camera_id
             ):
-                if data["push_type"] == "NACamera-off":
+                if data["push_type"] in ["NACamera-off", "NACamera-disconnection"]:
                     self.is_streaming = False
                     self._status = "off"
-                elif data["push_type"] == "NACamera-on":
+                elif data["push_type"] in ["NACamera-on", "NACamera-connection"]:
                     self.is_streaming = True
                     self._status = "on"
 
