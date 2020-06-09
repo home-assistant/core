@@ -55,6 +55,22 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
+                vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
+                    {
+                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                    }
+                ),
+                vol.Optional(CONF_INCLUDE, default={}): vol.Schema(
+                    {
+                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                    }
+                ),
             }
         )
     },
