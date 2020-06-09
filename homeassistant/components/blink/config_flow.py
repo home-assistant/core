@@ -56,14 +56,11 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.data[CONF_USERNAME] = user_input["username"]
             self.data[CONF_PASSWORD] = user_input["password"]
-            try:
-                # Import scan_interval if it was in the yaml config
-                # otherwise, setting this is handled with options flow
-                self.data[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
-            except KeyError:
-                pass
 
             await self.async_set_unique_id(self.data[CONF_USERNAME])
+
+            if CONF_SCAN_INTERVAL in user_input:
+                self.data[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
 
             self.blink = Blink(
                 username=self.data[CONF_USERNAME],
@@ -137,7 +134,7 @@ class BlinkOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             self.options.update(user_input)
             self.blink.refresh_rate = user_input[CONF_SCAN_INTERVAL]
-            return await self._update_options()
+            return await self.async_create_entry(title="", data=self.options)
 
         options = self.config_entry.options
         scan_interval = options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -148,10 +145,6 @@ class BlinkOptionsFlowHandler(config_entries.OptionsFlow):
                 {vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval,): int}
             ),
         )
-
-    async def _update_options(self):
-        """Update config entry options."""
-        return self.async_create_entry(title="", data=self.options)
 
 
 class Require2FA(exceptions.HomeAssistantError):
