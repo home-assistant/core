@@ -8,7 +8,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
-from . import DATA_HYDRAWISE, DEVICE_MAP, DEVICE_MAP_INDEX, SENSORS, HydrawiseEntity
+from . import DATA_HYDRAWISE, SENSORS, HydrawiseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,15 +54,5 @@ class HydrawiseSensor(HydrawiseEntity):
             else:
                 self._state = 0
         else:  # _sensor_type == 'next_cycle'
-            if relay_data["time"] > ONE_YEAR_SECONDS:
-                self._state = "not_scheduled"
-            else:
-                _LOGGER.debug("New cycle time: %s", relay_data["time"])
-                self._state = time.asctime(
-                    time.localtime(time.time() + relay_data["time"])
-                )
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index("ICON_INDEX")]
+            _LOGGER.debug("New cycle time: %s", relay_data["time"])
+            self._state = time.asctime(time.localtime(time.time() + relay_data["time"]))

@@ -12,8 +12,6 @@ from . import (
     CONF_WATERING_TIME,
     DATA_HYDRAWISE,
     DEFAULT_WATERING_TIME,
-    DEVICE_MAP,
-    DEVICE_MAP_INDEX,
     SWITCHES,
     HydrawiseEntity,
 )
@@ -89,8 +87,3 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
             self._state = (mydata.relays[relay_data]["timestr"] != "") and (
                 mydata.relays[relay_data]["timestr"] != "Now"
             )
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index("ICON_INDEX")]

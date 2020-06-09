@@ -40,10 +40,10 @@ DEVICE_MAP_INDEX = [
     "UNIT_OF_MEASURE_INDEX",
 ]
 DEVICE_MAP = {
-    "auto_watering": ["Automatic Watering", "mdi:autorenew", "", ""],
+    "auto_watering": ["Automatic Watering", "mdi:autorenew", "switch", ""],
     "is_watering": ["Watering", "", "moisture", ""],
-    "manual_watering": ["Manual Watering", "mdi:water-pump", "", ""],
-    "next_cycle": ["Next Cycle", "mdi:calendar-clock", "", ""],
+    "manual_watering": ["Manual Watering", "mdi:water-pump", "switch", ""],
+    "next_cycle": ["Next Cycle", "mdi:calendar-clock", "timestamp", ""],
     "status": ["Status", "", "connectivity", ""],
     "watering_time": ["Watering Time", "mdi:water-pump", "", TIME_MINUTES],
 }
@@ -148,3 +148,15 @@ class HydrawiseEntity(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.get("relay")}
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor type."""
+        return DEVICE_MAP[self._sensor_type][
+            DEVICE_MAP_INDEX.index("DEVICE_CLASS_INDEX")
+        ]
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index("ICON_INDEX")]

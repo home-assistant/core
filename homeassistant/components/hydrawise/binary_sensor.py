@@ -7,13 +7,7 @@ from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensor
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
-from . import (
-    BINARY_SENSORS,
-    DATA_HYDRAWISE,
-    DEVICE_MAP,
-    DEVICE_MAP_INDEX,
-    HydrawiseEntity,
-)
+from . import BINARY_SENSORS, DATA_HYDRAWISE, HydrawiseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,10 +55,3 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         elif self._sensor_type == "is_watering":
             relay_data = mydata.relays[self.data["relay"] - 1]
             self._state = relay_data["timestr"] == "Now"
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor type."""
-        return DEVICE_MAP[self._sensor_type][
-            DEVICE_MAP_INDEX.index("DEVICE_CLASS_INDEX")
-        ]
