@@ -161,7 +161,7 @@ def load_games(hass: HomeAssistantType, unique_id: str) -> dict:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
-        games = load_json(g_file, dict)
+        games = load_json(g_file)
     except HomeAssistantError as error:
         games = {}
         _LOGGER.error("Failed to load games file: %s", error)
