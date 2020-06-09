@@ -144,7 +144,7 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         return self.async_abort(reason="updated_entry")
 
                     return self.async_abort(reason="already_configured_account")
-                else:
-                    return self.async_abort(reason="unique_name_required")
+
+                return self.async_abort(reason="unique_name_required")
 
         return await self.async_step_user(user_input=import_config)

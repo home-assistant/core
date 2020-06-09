@@ -61,7 +61,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [AQ_DOMAIN, W_DOMAIN]
 
 
-def set_update_interval(
+def _set_update_interval(
     hass: HomeAssistantType, current_entry: ConfigEntry
 ) -> timedelta:
     """Recalculate update_interval based on existing ClimaCell instances and update them."""
@@ -93,10 +93,10 @@ def set_update_interval(
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the ClimaCell API component."""
     if DOMAIN in config:
-        for config_entry in config[DOMAIN]:
+        for climacell_config in config[DOMAIN]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=config_entry
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=climacell_config
                 )
             )
 
@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
             config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
             session=async_get_clientsession(hass),
         ),
-        set_update_interval(hass, config_entry),
+        _set_update_interval(hass, config_entry),
     )
 
     await coordinator.async_refresh()
