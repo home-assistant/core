@@ -30,7 +30,9 @@ from .const import (
     CONF_CLOUDHOOK_URL,
     DATA_DEVICE_IDS,
     DATA_HANDLER,
+    DATA_HOMES,
     DATA_PERSONS,
+    DATA_SCHEDULES,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -69,6 +71,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_PERSONS] = {}
     hass.data[DOMAIN][DATA_DEVICE_IDS] = {}
+    hass.data[DOMAIN][DATA_SCHEDULES] = {}
+    hass.data[DOMAIN][DATA_HOMES] = {}
 
     if DOMAIN not in config:
         return True

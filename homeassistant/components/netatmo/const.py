@@ -43,7 +43,9 @@ OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
 OAUTH2_TOKEN = "https://api.netatmo.com/oauth2/token"
 
 DATA_DEVICE_IDS = "netatmo_device_ids"
+DATA_HOMES = "netatmo_homes"
 DATA_PERSONS = "netatmo_persons"
+DATA_SCHEDULES = "netatmo_schedules"
 
 NETATMO_WEBHOOK_URL = None
 NETATMO_EVENT = "netatmo_event"

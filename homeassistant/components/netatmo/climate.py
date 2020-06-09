@@ -33,6 +33,8 @@ from .const import (
     ATTR_HOME_NAME,
     ATTR_SCHEDULE_NAME,
     DATA_HANDLER,
+    DATA_HOMES,
+    DATA_SCHEDULES,
     DOMAIN,
     MANUFACTURER,
     MODELS,
@@ -150,6 +152,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     )
                 await data_handler.unregister_data_class(f"HomeStatus-{home_id}")
 
+            hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {
+                schedule_id: schedule_data.get("name")
+                for schedule_id, schedule_data in (
+                    data_handler.data[data_class].schedules[home_id].items()
+                )
+            }
+
+        hass.data[DOMAIN][DATA_HOMES] = {
+            home_id: home_data.get("name")
+            for home_id, home_data in (data_handler.data[data_class].homes.items())
+        }
+
         return entities
 
     await data_handler.unregister_data_class(data_class)
@@ -157,12 +171,32 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     def _service_setschedule(service):
         """Service to change current home schedule."""
-        # TODO: ATTR_HOME_NAME->id
-        # TODO: ATTR_SCHEDULE_NAME->id
-        home_id = service.data.get(ATTR_HOME_NAME)
-        schedule_id = service.data.get(ATTR_SCHEDULE_NAME)
+        home_id = None
+        for hid, name in hass.data[DOMAIN][DATA_HOMES].items():
+            if name == service.data.get(ATTR_HOME_NAME):
+                home_id = hid
+
+        if not home_id:
+            _LOGGER.error("You passed an invalid home")
+            return
+
+        schedule_id = None
+        for sid, name in hass.data[DOMAIN][DATA_SCHEDULES][home_id].items():
+            if name == service.data.get(ATTR_SCHEDULE_NAME):
+                schedule_id = sid
+
+        if not schedule_id:
+            _LOGGER.error("You passed an invalid schedule")
+            return
+
         home_data.switch_home_schedule(home_id=home_id, schedule_id=schedule_id)
-        _LOGGER.info("Set home (%s) schedule to %s", home_id, schedule_id)
+        _LOGGER.info(
+            "Setting %s (%s) schedule to %s (%s)",
+            service.data.get(ATTR_HOME_NAME),
+            home_id,
+            service.data.get(ATTR_SCHEDULE_NAME),
+            schedule_id,
+        )
 
     if home_data is not None:
         hass.services.async_register(
