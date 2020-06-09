@@ -659,7 +659,7 @@ def deprecated(
         warning = (
             "The '{key}' option is deprecated,"
             " please replace it with '{replacement_key}'."
-            " This option will become invalid in version"
+            " This option {invalidation_status} invalid in version"
             " {invalidation_version}"
         )
     elif replacement_key:
@@ -671,7 +671,7 @@ def deprecated(
         warning = (
             "The '{key}' option is deprecated,"
             " please remove it from your configuration."
-            " This option will become invalid in version"
+            " This option {invalidation_status} invalid in version"
             " {invalidation_version}"
         )
     else:
@@ -690,6 +690,7 @@ def deprecated(
                 warning.format(
                     key=key,
                     replacement_key=replacement_key,
+                    invalidation_status="became",
                     invalidation_version=invalidation_version,
                 )
             )
@@ -702,6 +703,7 @@ def deprecated(
                 warning,
                 key=key,
                 replacement_key=replacement_key,
+                invalidation_status="will become",
                 invalidation_version=invalidation_version,
             )
 
