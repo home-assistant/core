@@ -109,7 +109,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_method=self.async_update,
             update_interval=timedelta(
-                seconds=self.config_entry.options.get(
+                minutes=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 )
             ),
