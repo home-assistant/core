@@ -20,7 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
+TWO_YEAR_SECONDS = 60 * 60 * 24 * 365 * 2
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -54,5 +54,6 @@ class HydrawiseSensor(HydrawiseEntity):
             else:
                 self._state = 0
         else:  # _sensor_type == 'next_cycle'
-            _LOGGER.debug("New cycle time: %s", relay_data["time"])
-            self._state = time.asctime(time.localtime(time.time() + relay_data["time"]))
+            next_cycle = min(relay_data["time"], TWO_YEAR_SECONDS)
+            _LOGGER.debug("New cycle time: %s", next_cycle)
+            self._state = time.asctime(time.localtime(time.time() + next_cycle))
