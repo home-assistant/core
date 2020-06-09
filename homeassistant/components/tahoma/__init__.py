@@ -68,7 +68,7 @@ TAHOMA_TYPES = {
     "rts:VenetianBlindRTSComponent": "cover",
     "somfythermostat:SomfyThermostatTemperatureSensor": "sensor",
     "somfythermostat:SomfyThermostatHumiditySensor": "sensor",
-	"zwave:OnOffLightZWaveComponent": "switch",
+    "zwave:OnOffLightZWaveComponent": "switch",
 }
 
 
