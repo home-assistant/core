@@ -34,7 +34,7 @@ async def test_setup_with_config(hass):
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp",
         return_value=make_timestamp(100),
     ), patch(
-        "homeassistant.components.cert_expiry.sensor.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
         return_value=make_timestamp(100),
     ):
         await hass.async_block_till_done()
@@ -53,7 +53,7 @@ async def test_update_unique_id(hass):
     assert not entry.unique_id
 
     with patch(
-        "homeassistant.components.cert_expiry.sensor.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
         return_value=make_timestamp(100),
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
@@ -77,7 +77,7 @@ async def test_unload_config_entry(hass):
     assert entry is config_entries[0]
 
     with patch(
-        "homeassistant.components.cert_expiry.sensor.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
         return_value=make_timestamp(100),
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
