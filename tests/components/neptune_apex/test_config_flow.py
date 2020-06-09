@@ -16,7 +16,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.neptune_apex.config_flow.ApexHub.authenticate",
+        "homeassistant.components.neptune_apex.config_flow.Apex.validate_connection",
         return_value=True,
     ), patch(
         "homeassistant.components.neptune_apex.async_setup", return_value=True

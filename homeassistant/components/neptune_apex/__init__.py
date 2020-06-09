@@ -15,7 +15,7 @@ from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["sensor", "light"]
+PLATFORMS = ["light", "sensor"]
 
 NEPTUNE_APEX = "neptune_apex"
 NEPTUNE_APEX_COORDINATOR = "neptune_apex_coordinator"

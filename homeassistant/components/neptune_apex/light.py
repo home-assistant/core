@@ -17,7 +17,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(
         Outlet(coordinator, apex, name)
-        for i, name in enumerate(coordinator.data.outlets)
+        for name in coordinator.data.outlets
     )
 
 
@@ -38,7 +38,7 @@ class Outlet(Light):
     @property
     def name(self):
         """Name of this outlet (From the Apex), prefixed."""
-        return "apex." + self._name
+        return "apex.{self._name}"
 
     @property
     def unique_id(self):
