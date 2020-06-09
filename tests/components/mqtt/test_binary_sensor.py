@@ -12,6 +12,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -77,9 +78,9 @@ async def test_setting_sensor_value_expires_availability_topic(
 
     async_fire_mqtt_message(hass, "availability-topic", "online")
 
-    # State should be unavailable since expire_after is defined and > 0
+    # State should be unknown since expire_after is defined and > 0
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
     await expires_helper(hass, mqtt_mock, caplog)
 
@@ -103,9 +104,9 @@ async def test_setting_sensor_value_expires(
     )
     await hass.async_block_till_done()
 
-    # State should be unavailable since expire_after is defined and > 0
+    # State should be unknown since expire_after is defined and > 0
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
     await expires_helper(hass, mqtt_mock, caplog)
 
@@ -157,7 +158,7 @@ async def expires_helper(hass, mqtt_mock, caplog):
 
     # Value is expired now
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
@@ -618,9 +619,9 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
         )
         await hass.async_block_till_done()
 
-    # Test that binary_sensor is not available
+    # Test that binary_sensor state is unknown
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
     # Publish state message
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
@@ -661,7 +662,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
 
     # Test that binary_sensor has expired
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
     # Resend config message to update discovery
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
@@ -672,7 +673,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
 
     # Test that binary_sensor is still expired
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.no_fail_on_log_exception
