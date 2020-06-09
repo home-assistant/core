@@ -83,7 +83,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     player_request = send_request({"params": ["", ["serverstatus"]]}, session)
 
-    players = [ UERadioDevice(session, player["playerid"], player["name"]) for player in player_request["result"]["players_loop"]]
+    players = [
+        UERadioDevice(session, player["playerid"], player["name"])
+        for player in player_request["result"]["players_loop"]
+    ]
 
     add_entities(players)
 
