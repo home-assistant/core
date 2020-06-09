@@ -55,6 +55,7 @@ class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
         )
 
         self._position = self._multi_level_switch_property.value
+        print()
 
     @property
     def current_cover_position(self):
@@ -69,7 +70,7 @@ class DevoloCoverDeviceEntity(DevoloDeviceEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the blind is closed or not."""
-        return True if self._position == 0 else False
+        return not bool(self._position)
 
     @property
     def supported_features(self):
