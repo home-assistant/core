@@ -356,7 +356,9 @@ async def webhook_enable_encryption(hass, config_entry, data):
         vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
         vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
         vol.Optional(ATTR_SENSOR_UOM): cv.string,
-        vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, str, int, float),
+        vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
+            None, bool, str, int, float
+        ),
         vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
     }
 )
