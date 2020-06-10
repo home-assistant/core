@@ -158,7 +158,7 @@ async def test_user_flow_invalid_auth(hass):
     """Test that config flow handles invalid auth."""
 
     with patch(
-        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
+        "homeassistant.components.hvv_departures.hub.GTI.init",
         side_effect=InvalidAuth(
             "ERROR_TEXT",
             "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",
@@ -185,7 +185,7 @@ async def test_user_flow_cannot_connect(hass):
     """Test that config flow handles connection errors."""
 
     with patch(
-        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
+        "homeassistant.components.hvv_departures.hub.GTI.init",
         side_effect=CannotConnect(),
     ):
 
@@ -208,8 +208,7 @@ async def test_user_flow_station(hass):
     """Test that config flow handles empty data on step station."""
 
     with patch(
-        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
-        return_value=True,
+        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True,
     ), patch(
         "pygti.gti.GTI.checkName", return_value={"returnCode": "OK", "results": []},
     ):
@@ -240,8 +239,7 @@ async def test_user_flow_station_select(hass):
     """Test that config flow handles empty data on step station_select."""
 
     with patch(
-        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
-        return_value=True,
+        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True,
     ), patch(
         "pygti.gti.GTI.checkName", return_value=FIXTURE_CHECK_NAME,
     ):
@@ -287,8 +285,7 @@ async def test_options_flow(hass):
     with patch(
         "homeassistant.components.hvv_departures.async_setup_entry", return_value=True
     ), patch(
-        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
-        return_value=True,
+        "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True,
     ), patch(
         "pygti.gti.GTI.departureList", return_value=FIXTURE_DEPARTURE_LIST,
     ):
@@ -334,7 +331,7 @@ async def test_options_flow_invalid_auth(hass):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
+        "homeassistant.components.hvv_departures.hub.GTI.init",
         side_effect=InvalidAuth(
             "ERROR_TEXT",
             "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",
