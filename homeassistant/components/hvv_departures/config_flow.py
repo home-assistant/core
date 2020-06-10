@@ -195,12 +195,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             options = {
                 CONF_FILTER: [
-                    departure_filter[1]
-                    for departure_filter in filter(
-                        lambda departure_filter: departure_filter[0]
-                        in user_input[CONF_FILTER],
-                        self.departure_filters.items(),
-                    )
+                    self.departure_filters[x] for x in user_input[CONF_FILTER]
                 ],
                 CONF_OFFSET: user_input[CONF_OFFSET],
                 CONF_REAL_TIME: user_input[CONF_REAL_TIME],
@@ -210,12 +205,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if CONF_FILTER in self.config_entry.options:
             old_filter = [
-                departure_filter[0]
-                for departure_filter in filter(
-                    lambda departure_filter: departure_filter[1]
-                    in self.config_entry.options.get(CONF_FILTER),
-                    self.departure_filters.items(),
-                )
+                i
+                for (i, f) in self.departure_filters.items()
+                if f in self.config_entry.options.get(CONF_FILTER)
             ]
         else:
             old_filter = []
