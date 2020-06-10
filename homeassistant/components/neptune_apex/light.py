@@ -38,7 +38,7 @@ class Outlet(Light):
     @property
     def unique_id(self):
         """Name of this outlet as defined in the Apex."""
-        return f"apex.{self.apex.serial}.{self.outlet.device_id}"
+        return f"{self.apex.serial}_{self.outlet.device_id}"
 
     @property
     def is_on(self):
