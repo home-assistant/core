@@ -5,7 +5,6 @@ from urllib.parse import urljoin
 from pyzabbix import ZabbixAPI, ZabbixAPIException, ZabbixMetric, ZabbixSender
 import json
 import math
-from pprint import pprint
 import queue
 import threading
 import time
@@ -32,6 +31,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_RETRY_COUNT = "max_retries"
+CONF_PUBLISH_STATES_HOST = "publish_states_host"
 
 DEFAULT_SSL = False
 DEFAULT_PATH = "zabbix"
@@ -54,6 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_USERNAME): cv.string,
+                vol.Optional(CONF_PUBLISH_STATES_HOST, default=""): cv.string,
                 vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
                 vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
                     {
@@ -89,7 +90,7 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     # todo: give good name and make configurable
-    hostname = "homeassistant"
+    publish_states_host = conf.get(CONF_PUBLISH_STATES_HOST)
 
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
@@ -164,11 +165,10 @@ def setup(hass, config):
             floats_discovery = []
             for float_key in float_keys:
                 floats_discovery.append({"{#KEY}": float_key})
-            m = ZabbixMetric(hostname, 'homeassistant.floats_discovery', json.dumps(floats_discovery))
-            #pprint(json.dumps(floats_discovery))
+            m = ZabbixMetric(publish_states_host, 'homeassistant.floats_discovery', json.dumps(floats_discovery))
             metrics.append(m)
         for key, value in floats.items():
-            m = ZabbixMetric(hostname, f"homeassistant.float[{key}]", value)
+            m = ZabbixMetric(publish_states_host, f"homeassistant.float[{key}]", value)
             metrics.append(m)
 
         string_keys |= strings.keys()
@@ -176,9 +176,10 @@ def setup(hass, config):
 
 
     hass.data[DOMAIN] = zapi
-    instance = ZabbixThread(hass, zabbix_sender, event_to_metrics, max_tries)
-    instance.start()
-    _LOGGER.info("Started ZabbixThread")
+    if publish_states_host:
+        instance = ZabbixThread(hass, zabbix_sender, event_to_metrics, max_tries)
+        instance.start()
+        _LOGGER.info("Started ZabbixThread")
 
     def shutdown(event):
         """Shut down the thread."""
