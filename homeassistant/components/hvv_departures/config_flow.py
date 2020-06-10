@@ -160,14 +160,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if not self.departure_filters:
 
             departure_list = {}
-
-            session = aiohttp_client.async_get_clientsession(self.hass)
-            self.hub = GTIHub(
-                self.config_entry.data[CONF_HOST],
-                self.config_entry.data[CONF_USERNAME],
-                self.config_entry.data[CONF_PASSWORD],
-                session,
-            )
+            self.hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
 
             try:
                 departure_list = await self.hub.gti.departureList(

@@ -4,16 +4,8 @@ import logging
 
 from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
-from pygti.gti import GTI, Auth
 
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_ID,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DEVICE_CLASS_TIMESTAMP,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -42,17 +34,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the sensor platform."""
+    hub = hass.data[DOMAIN][config_entry.entry_id]
 
     session = aiohttp_client.async_get_clientsession(hass)
 
-    sensor = HVVDepartureSensor(hass, config_entry, session)
+    sensor = HVVDepartureSensor(hass, config_entry, session, hub)
     async_add_devices([sensor], True)
 
 
 class HVVDepartureSensor(Entity):
     """HVVDepartureSensor class."""
 
-    def __init__(self, hass, config_entry, session):
+    def __init__(self, hass, config_entry, session, hub):
         """Initialize."""
         self.config_entry = config_entry
         self.station_name = self.config_entry.data["station"]["name"]
@@ -62,14 +55,7 @@ class HVVDepartureSensor(Entity):
         self._name = f"Departures at {self.station_name}"
         self._last_error = None
 
-        self.gti = GTI(
-            Auth(
-                session,
-                self.config_entry.data[CONF_USERNAME],
-                self.config_entry.data[CONF_PASSWORD],
-                self.config_entry.data[CONF_HOST],
-            )
-        )
+        self.gti = hub.gti
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self, **kwargs):

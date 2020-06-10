@@ -282,6 +282,8 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
     with patch(
         "homeassistant.components.hvv_departures.async_setup_entry", return_value=True
     ), patch(
@@ -289,6 +291,7 @@ async def test_options_flow(hass):
     ), patch(
         "pygti.gti.GTI.departureList", return_value=FIXTURE_DEPARTURE_LIST,
     ):
+
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -330,6 +333,8 @@ async def test_options_flow_invalid_auth(hass):
     )
     config_entry.add_to_hass(hass)
 
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
     with patch(
         "homeassistant.components.hvv_departures.hub.GTI.init",
         side_effect=InvalidAuth(
@@ -361,6 +366,8 @@ async def test_options_flow_cannot_connect(hass):
         unique_id="1234",
     )
     config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     with patch(
         "pygti.gti.GTI.departureList", side_effect=CannotConnect(),
