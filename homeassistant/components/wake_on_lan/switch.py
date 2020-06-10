@@ -7,7 +7,13 @@ import voluptuous as vol
 import wakeonlan
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
+    CONF_BROADCAST_PORT,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
@@ -22,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
+        vol.Optional(CONF_BROADCAST_PORT): cv.port,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
@@ -32,26 +39,48 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a wake on lan switch."""
     broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
+    broadcast_port = config.get(CONF_BROADCAST_PORT)
     host = config.get(CONF_HOST)
     mac_address = config[CONF_MAC]
     name = config[CONF_NAME]
     off_action = config.get(CONF_OFF_ACTION)
 
     add_entities(
-        [WolSwitch(hass, name, host, mac_address, off_action, broadcast_address)], True
+        [
+            WolSwitch(
+                hass,
+                name,
+                host,
+                mac_address,
+                off_action,
+                broadcast_address,
+                broadcast_port,
+            )
+        ],
+        True,
     )
 
 
 class WolSwitch(SwitchEntity):
     """Representation of a wake on lan switch."""
 
-    def __init__(self, hass, name, host, mac_address, off_action, broadcast_address):
+    def __init__(
+        self,
+        hass,
+        name,
+        host,
+        mac_address,
+        off_action,
+        broadcast_address,
+        broadcast_port,
+    ):
         """Initialize the WOL switch."""
         self._hass = hass
         self._name = name
         self._host = host
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
+        self._broadcast_port = broadcast_port
         self._off_script = Script(hass, off_action) if off_action else None
         self._state = False
 
@@ -69,7 +98,9 @@ class WolSwitch(SwitchEntity):
         """Turn the device on."""
         if self._broadcast_address:
             wakeonlan.send_magic_packet(
-                self._mac_address, ip_address=self._broadcast_address
+                self._mac_address,
+                ip_address=self._broadcast_address,
+                port=self._broadcast_port,
             )
         else:
             wakeonlan.send_magic_packet(self._mac_address)
