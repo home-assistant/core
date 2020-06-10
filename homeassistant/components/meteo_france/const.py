@@ -81,7 +81,7 @@ SENSOR_TYPES = {
         ENTITY_NAME: "Next rain",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:weather-rainy",
-        ENTITY_CLASS: None,
+        ENTITY_CLASS: "timestamp",
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "forecast:T:value",  # NOT_OK
     },
