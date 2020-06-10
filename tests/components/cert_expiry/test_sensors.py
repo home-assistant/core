@@ -42,7 +42,7 @@ async def test_async_setup_entry(hass):
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == str(timestamp)
+    assert state.state == timestamp.isoformat()
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
@@ -129,7 +129,7 @@ async def test_update_sensor(hass):
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == str(timestamp)
+    assert state.state == timestamp.isoformat()
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
@@ -154,7 +154,7 @@ async def test_update_sensor(hass):
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == str(timestamp2)
+    assert state.state == timestamp2.isoformat()
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
@@ -187,7 +187,7 @@ async def test_update_sensor_network_errors(hass):
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == str(timestamp)
+    assert state.state == timestamp.isoformat()
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 

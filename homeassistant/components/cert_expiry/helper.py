@@ -40,4 +40,4 @@ async def get_cert_expiry_timestamp(hass, hostname, port):
         raise ValidationFailure(err.args[0])
 
     ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
-    return dt.as_local(dt.utc_from_timestamp(ts_seconds))
+    return dt.utc_from_timestamp(ts_seconds)
