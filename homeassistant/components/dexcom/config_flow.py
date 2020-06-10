@@ -22,8 +22,8 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_SERVER, default=SERVER_US): vol.In({SERVER_US, SERVER_OUS}),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=MG_DL): vol.In({MG_DL, MMOL_L}),
+        vol.Required(CONF_SERVER, default=SERVER_US): vol.In({SERVER_US, SERVER_OUS}),
+        vol.Required(CONF_UNIT_OF_MEASUREMENT, default=MG_DL): vol.In({MG_DL, MMOL_L}),
     }
 )
 

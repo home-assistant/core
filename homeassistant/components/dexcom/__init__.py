@@ -25,10 +25,10 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_SERVER, default=SERVER_US): vol.In(
+                vol.Required(CONF_SERVER, default=SERVER_US): vol.In(
                     {SERVER_US, SERVER_OUS}
                 ),
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=MG_DL): vol.In(
+                vol.Required(CONF_UNIT_OF_MEASUREMENT, default=MG_DL): vol.In(
                     {MG_DL, MMOL_L}
                 ),
             }
