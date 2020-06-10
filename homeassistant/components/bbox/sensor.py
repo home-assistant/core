@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(error)
         return False
 
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:

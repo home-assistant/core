@@ -34,14 +34,16 @@ class EntitySubscription:
         if other is not None and other.unsubscribe_callback is not None:
             other.unsubscribe_callback()
             # Clear debug data if it exists
-            debug_info.remove_topic(self.hass, other.message_callback, other.topic)
+            debug_info.remove_subscription(
+                self.hass, other.message_callback, other.topic
+            )
 
         if self.topic is None:
             # We were asked to remove the subscription or not to create it
             return
 
         # Prepare debug data
-        debug_info.add_topic(self.hass, self.message_callback, self.topic)
+        debug_info.add_subscription(self.hass, self.message_callback, self.topic)
 
         self.unsubscribe_callback = await mqtt.async_subscribe(
             hass, self.topic, self.message_callback, self.qos, self.encoding
@@ -96,7 +98,9 @@ async def async_subscribe_topics(
         if remaining.unsubscribe_callback is not None:
             remaining.unsubscribe_callback()
             # Clear debug data if it exists
-            debug_info.remove_topic(hass, remaining.message_callback, remaining.topic)
+            debug_info.remove_subscription(
+                hass, remaining.message_callback, remaining.topic
+            )
 
     return new_state
 

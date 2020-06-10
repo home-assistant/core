@@ -1,14 +1,10 @@
 """Test config utils."""
 # pylint: disable=protected-access
-import asyncio
 from collections import OrderedDict
 import copy
 import os
 from unittest import mock
-from unittest.mock import Mock
 
-import asynctest
-from asynctest import CoroutineMock, patch
 import pytest
 import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
@@ -38,6 +34,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 CONFIG_DIR = get_test_config_dir()
@@ -99,7 +96,7 @@ async def test_ensure_config_exists_creates_config(hass):
 
     If not creates a new config file.
     """
-    with mock.patch("builtins.print") as mock_print:
+    with patch("builtins.print") as mock_print:
         await config_util.async_ensure_config_exists(hass)
 
     assert os.path.isfile(YAML_PATH)
@@ -111,8 +108,8 @@ async def test_ensure_config_exists_uses_existing_config(hass):
     create_file(YAML_PATH)
     await config_util.async_ensure_config_exists(hass)
 
-    with open(YAML_PATH) as f:
-        content = f.read()
+    with open(YAML_PATH) as fp:
+        content = fp.read()
 
     # File created with create_file are empty
     assert content == ""
@@ -127,8 +124,8 @@ def test_load_yaml_config_converts_empty_files_to_dict():
 
 def test_load_yaml_config_raises_error_if_not_dict():
     """Test error raised when YAML file is not a dict."""
-    with open(YAML_PATH, "w") as f:
-        f.write("5")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("5")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -136,8 +133,8 @@ def test_load_yaml_config_raises_error_if_not_dict():
 
 def test_load_yaml_config_raises_error_if_malformed_yaml():
     """Test error raised if invalid YAML."""
-    with open(YAML_PATH, "w") as f:
-        f.write(":")
+    with open(YAML_PATH, "w") as fp:
+        fp.write(":")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -145,8 +142,8 @@ def test_load_yaml_config_raises_error_if_malformed_yaml():
 
 def test_load_yaml_config_raises_error_if_unsafe_yaml():
     """Test error raised if unsafe YAML."""
-    with open(YAML_PATH, "w") as f:
-        f.write("hello: !!python/object/apply:os.system")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("hello: !!python/object/apply:os.system")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -154,9 +151,9 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml():
 
 def test_load_yaml_config_preserves_key_order():
     """Test removal of library."""
-    with open(YAML_PATH, "w") as f:
-        f.write("hello: 2\n")
-        f.write("world: 1\n")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("hello: 2\n")
+        fp.write("world: 1\n")
 
     assert [("hello", 2), ("world", 1)] == list(
         config_util.load_yaml_config_file(YAML_PATH).items()
@@ -169,7 +166,7 @@ async def test_create_default_config_returns_none_if_write_error(hass):
     Non existing folder returns None.
     """
     hass.config.config_dir = os.path.join(CONFIG_DIR, "non_existing_dir/")
-    with mock.patch("builtins.print") as mock_print:
+    with patch("builtins.print") as mock_print:
         assert await config_util.async_create_default_config(hass) is False
     assert mock_print.called
 
@@ -181,6 +178,8 @@ def test_core_config_schema():
         {"time_zone": "non-exist"},
         {"latitude": "91"},
         {"longitude": -181},
+        {"external_url": "not an url"},
+        {"internal_url": "not an url"},
         {"customize": "bla"},
         {"customize": {"light.sensor": 100}},
         {"customize": {"entity_id": []}},
@@ -193,6 +192,8 @@ def test_core_config_schema():
             "name": "Test name",
             "latitude": "-23.45",
             "longitude": "123.45",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             "customize": {"sensor.temperature": {"hidden": True}},
         }
@@ -246,15 +247,15 @@ async def test_entity_customization(hass):
     assert state.attributes["hidden"]
 
 
-@mock.patch("homeassistant.config.shutil")
-@mock.patch("homeassistant.config.os")
-@mock.patch("homeassistant.config.is_docker_env", return_value=False)
+@patch("homeassistant.config.shutil")
+@patch("homeassistant.config.os")
+@patch("homeassistant.config.is_docker_env", return_value=False)
 def test_remove_lib_on_upgrade(mock_docker, mock_os, mock_shutil, hass):
     """Test removal of library on upgrade from before 0.50."""
     ha_version = "0.49.0"
     mock_os.path.isdir = mock.Mock(return_value=True)
     mock_open = mock.mock_open()
-    with mock.patch("homeassistant.config.open", mock_open, create=True):
+    with patch("homeassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
         # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
@@ -268,15 +269,15 @@ def test_remove_lib_on_upgrade(mock_docker, mock_os, mock_shutil, hass):
         assert mock_shutil.rmtree.call_args == mock.call(hass_path)
 
 
-@mock.patch("homeassistant.config.shutil")
-@mock.patch("homeassistant.config.os")
-@mock.patch("homeassistant.config.is_docker_env", return_value=True)
+@patch("homeassistant.config.shutil")
+@patch("homeassistant.config.os")
+@patch("homeassistant.config.is_docker_env", return_value=True)
 def test_remove_lib_on_upgrade_94(mock_docker, mock_os, mock_shutil, hass):
     """Test removal of library on upgrade from before 0.94 and in Docker."""
     ha_version = "0.93.0.dev0"
     mock_os.path.isdir = mock.Mock(return_value=True)
     mock_open = mock.mock_open()
-    with mock.patch("homeassistant.config.open", mock_open, create=True):
+    with patch("homeassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
         # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
@@ -295,9 +296,9 @@ def test_process_config_upgrade(hass):
     ha_version = "0.92.0"
 
     mock_open = mock.mock_open()
-    with mock.patch(
-        "homeassistant.config.open", mock_open, create=True
-    ), mock.patch.object(config_util, "__version__", "0.91.0"):
+    with patch("homeassistant.config.open", mock_open, create=True), patch.object(
+        config_util, "__version__", "0.91.0"
+    ):
         opened_file = mock_open.return_value
         # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
@@ -313,7 +314,7 @@ def test_config_upgrade_same_version(hass):
     ha_version = __version__
 
     mock_open = mock.mock_open()
-    with mock.patch("homeassistant.config.open", mock_open, create=True):
+    with patch("homeassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
         # pylint: disable=no-member
         opened_file.readline.return_value = ha_version
@@ -327,7 +328,7 @@ def test_config_upgrade_no_file(hass):
     """Test update of version on upgrade, with no version file."""
     mock_open = mock.mock_open()
     mock_open.side_effect = [FileNotFoundError(), mock.DEFAULT, mock.DEFAULT]
-    with mock.patch("homeassistant.config.open", mock_open, create=True):
+    with patch("homeassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
         # pylint: disable=no-member
         config_util.process_ha_config_upgrade(hass)
@@ -345,6 +346,8 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
             "unit_system": "metric",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
         },
         "key": "core.config",
         "version": 1,
@@ -359,6 +362,8 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
+    assert hass.config.external_url == "https://www.example.com"
+    assert hass.config.internal_url == "http://example.local"
     assert len(hass.config.whitelist_external_dirs) == 2
     assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == SOURCE_STORAGE
@@ -374,6 +379,8 @@ async def test_updating_configuration(hass, hass_storage):
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
             "unit_system": "metric",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
         },
         "key": "core.config",
         "version": 1,
@@ -431,6 +438,8 @@ async def test_loading_configuration(hass):
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             "time_zone": "America/New_York",
             "whitelist_external_dirs": "/etc",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
         },
     )
 
@@ -440,6 +449,8 @@ async def test_loading_configuration(hass):
     assert hass.config.location_name == "Huis"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
     assert hass.config.time_zone.zone == "America/New_York"
+    assert hass.config.external_url == "https://www.example.com"
+    assert hass.config.internal_url == "http://example.local"
     assert len(hass.config.whitelist_external_dirs) == 2
     assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
@@ -456,6 +467,8 @@ async def test_loading_configuration_temperature_unit(hass):
             "name": "Huis",
             CONF_TEMPERATURE_UNIT: "C",
             "time_zone": "America/New_York",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
         },
     )
 
@@ -465,6 +478,8 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.location_name == "Huis"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "America/New_York"
+    assert hass.config.external_url == "https://www.example.com"
+    assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
@@ -479,6 +494,8 @@ async def test_loading_configuration_from_packages(hass):
             "name": "Huis",
             CONF_TEMPERATURE_UNIT: "C",
             "time_zone": "Europe/Madrid",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
             "packages": {
                 "package_1": {"wake_on_lan": None},
                 "package_2": {
@@ -506,14 +523,14 @@ async def test_loading_configuration_from_packages(hass):
         )
 
 
-@asynctest.mock.patch("homeassistant.helpers.check_config.async_check_ha_config_file")
+@patch("homeassistant.helpers.check_config.async_check_ha_config_file")
 async def test_check_ha_config_file_correct(mock_check, hass):
     """Check that restart propagates to stop."""
     mock_check.return_value = check_config.HomeAssistantConfig()
     assert await config_util.async_check_ha_config_file(hass) is None
 
 
-@asynctest.mock.patch("homeassistant.helpers.check_config.async_check_ha_config_file")
+@patch("homeassistant.helpers.check_config.async_check_ha_config_file")
 async def test_check_ha_config_file_wrong(mock_check, hass):
     """Check that restart with a bad config doesn't propagate to stop."""
     mock_check.return_value = check_config.HomeAssistantConfig()
@@ -522,9 +539,7 @@ async def test_check_ha_config_file_wrong(mock_check, hass):
     assert await config_util.async_check_ha_config_file(hass) == "bad"
 
 
-@asynctest.mock.patch(
-    "homeassistant.config.os.path.isfile", mock.Mock(return_value=True)
-)
+@patch("homeassistant.config.os.path.isfile", mock.Mock(return_value=True))
 async def test_async_hass_config_yaml_merge(merge_log_err, hass):
     """Test merge during async config reload."""
     config = {
@@ -550,7 +565,7 @@ async def test_async_hass_config_yaml_merge(merge_log_err, hass):
 @pytest.fixture
 def merge_log_err(hass):
     """Patch _merge_log_error from packages."""
-    with mock.patch("homeassistant.config._LOGGER.error") as logerr:
+    with patch("homeassistant.config._LOGGER.error") as logerr:
         yield logerr
 
 
@@ -740,8 +755,7 @@ async def test_merge_duplicate_keys(merge_log_err, hass):
     assert len(config["input_select"]) == 1
 
 
-@asyncio.coroutine
-def test_merge_customize(hass):
+async def test_merge_customize(hass):
     """Test loading core config onto hass object."""
     core_config = {
         "latitude": 60,
@@ -755,7 +769,7 @@ def test_merge_customize(hass):
             "pkg1": {"homeassistant": {"customize": {"b.b": {"friendly_name": "BB"}}}}
         },
     }
-    yield from config_util.async_process_ha_core_config(hass, core_config)
+    await config_util.async_process_ha_core_config(hass, core_config)
 
     assert hass.data[config_util.DATA_CUSTOMIZE].get("b.b") == {"friendly_name": "BB"}
 
@@ -909,7 +923,7 @@ async def test_component_config_exceptions(hass, caplog):
                 domain="test_domain",
                 get_platform=Mock(
                     return_value=Mock(
-                        async_validate_config=CoroutineMock(
+                        async_validate_config=AsyncMock(
                             side_effect=ValueError("broken")
                         )
                     )
@@ -1014,6 +1028,7 @@ async def test_component_config_exceptions(hass, caplog):
         ("not_existing", vol.Schema({vol.Optional("zone", default=dict): dict}), None,),
         ("non_existing", vol.Schema({"zone": int}), None),
         ("zone", vol.Schema({}), None),
+        ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),
     ],
 )
 def test_identify_config_schema(domain, schema, expected):

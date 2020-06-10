@@ -1,13 +1,12 @@
 {
   "config": {
-    "title": "SolarEdge",
     "step": {
       "user": {
         "title": "Define the API parameters for this installation",
         "data": {
           "name": "The name of this installation",
           "site_id": "The SolarEdge site-id",
-          "api_key": "The API key for this site"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },

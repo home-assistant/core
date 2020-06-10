@@ -1,8 +1,6 @@
 """Tests for Cert Expiry setup."""
 from datetime import timedelta
 
-from asynctest import patch
-
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
@@ -12,6 +10,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import HOST, PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

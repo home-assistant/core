@@ -6,7 +6,7 @@ from pyaftership.tracker import Tracking
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -66,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     await aftership.get_trackings()
 
-    if not aftership.meta or aftership.meta["code"] != 200:
+    if not aftership.meta or aftership.meta["code"] != HTTP_OK:
         _LOGGER.error(
             "No tracking data found. Check API key is correct: %s", aftership.meta
         )
@@ -164,7 +164,7 @@ class AfterShipSensor(Entity):
         if not self.aftership.meta:
             _LOGGER.error("Unknown errors when querying")
             return
-        if self.aftership.meta["code"] != 200:
+        if self.aftership.meta["code"] != HTTP_OK:
             _LOGGER.error(
                 "Errors when querying AfterShip. %s", str(self.aftership.meta)
             )

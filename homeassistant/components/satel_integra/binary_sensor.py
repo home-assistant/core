@@ -1,7 +1,7 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -49,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class SatelIntegraBinarySensor(BinarySensorDevice):
+class SatelIntegraBinarySensor(BinarySensorEntity):
     """Representation of an Satel Integra binary sensor."""
 
     def __init__(

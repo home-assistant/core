@@ -5,7 +5,7 @@ import logging
 import stookalert
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=60)
 CONF_PROVINCE = "province"
+DEFAULT_DEVICE_CLASS = "safety"
 DEFAULT_NAME = "Stookalert"
 ATTRIBUTION = "Data provided by rivm.nl"
 PROVINCES = [
@@ -46,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([StookalertBinarySensor(name, api_handler)], update_before_add=True)
 
 
-class StookalertBinarySensor(BinarySensorDevice):
+class StookalertBinarySensor(BinarySensorEntity):
     """An implementation of RIVM Stookalert."""
 
     def __init__(self, name, api_handler):
@@ -73,6 +74,11 @@ class StookalertBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return True if the Alert is active."""
         return self._api_handler.state == 1
+
+    @property
+    def device_class(self):
+        """Return the device class of this binary sensor."""
+        return DEFAULT_DEVICE_CLASS
 
     def update(self):
         """Update the data from the Stookalert handler."""

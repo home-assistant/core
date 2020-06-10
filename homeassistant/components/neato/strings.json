@@ -1,12 +1,11 @@
 {
   "config": {
-    "title": "Neato",
     "step": {
       "user": {
         "title": "Neato Account Info",
         "data": {
-          "username": "Username",
-          "password": "Password",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "vendor": "Vendor"
         },
         "description": "See [Neato documentation]({docs_url})."

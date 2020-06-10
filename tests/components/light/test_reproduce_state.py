@@ -53,8 +53,7 @@ async def test_reproducing_states(hass, caplog):
             State("light.entity_profile", "on", VALID_PROFILE),
             State("light.entity_rgb", "on", VALID_RGB_COLOR),
             State("light.entity_xy", "on", VALID_XY_COLOR),
-        ],
-        blocking=True,
+        ]
     )
 
     assert len(turn_on_calls) == 0
@@ -62,7 +61,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("light.entity_off", "not_supported")], blocking=True
+        [State("light.entity_off", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -86,7 +85,6 @@ async def test_reproducing_states(hass, caplog):
             State("light.entity_profile", "on", VALID_RGB_COLOR),
             State("light.entity_rgb", "on", VALID_XY_COLOR),
         ],
-        blocking=True,
     )
 
     assert len(turn_on_calls) == 12
@@ -163,7 +161,7 @@ async def test_deprecation_warning(hass, caplog):
     hass.states.async_set("light.entity_off", "off", {})
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
     await hass.helpers.state.async_reproduce_state(
-        [State("light.entity_off", "on", {"brightness_pct": 80})], blocking=True
+        [State("light.entity_off", "on", {"brightness_pct": 80})]
     )
     assert len(turn_on_calls) == 1
     assert DEPRECATION_WARNING % ["brightness_pct"] in caplog.text

@@ -17,7 +17,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -161,7 +161,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(covers)
 
 
-class CoverTemplate(CoverDevice):
+class CoverTemplate(CoverEntity):
     """Representation of a Template cover."""
 
     def __init__(
@@ -297,7 +297,7 @@ class CoverTemplate(CoverDevice):
         if self._position_script is not None:
             supported_features |= SUPPORT_SET_POSITION
 
-        if self.current_cover_tilt_position is not None:
+        if self._tilt_script is not None:
             supported_features |= TILT_FEATURES
 
         return supported_features

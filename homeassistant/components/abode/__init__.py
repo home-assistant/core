@@ -187,7 +187,7 @@ def setup_hass_services(hass):
 
     def trigger_automation(call):
         """Trigger an Abode automation."""
-        entity_ids = call.data.get(ATTR_ENTITY_ID, None)
+        entity_ids = call.data.get(ATTR_ENTITY_ID)
 
         target_entities = [
             entity_id
@@ -303,7 +303,7 @@ class AbodeEntity(Entity):
     async def async_will_remove_from_hass(self):
         """Unsubscribe from Abode connection status updates."""
         await self.hass.async_add_executor_job(
-            self._data.abode.events.remove_connection_status_callback, self.unique_id,
+            self._data.abode.events.remove_connection_status_callback, self.unique_id
         )
 
     def _update_connection_status(self):
@@ -396,10 +396,7 @@ class AbodeAutomation(AbodeEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            "type": "CUE automation",
-        }
+        return {ATTR_ATTRIBUTION: ATTRIBUTION, "type": "CUE automation"}
 
     @property
     def unique_id(self):

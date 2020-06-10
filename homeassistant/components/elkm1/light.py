@@ -1,6 +1,10 @@
 """Support for control of ElkM1 lighting (X10, UPB, etc)."""
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 
 from . import ElkEntity, create_elk_entities
 from .const import DOMAIN
@@ -15,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class ElkLight(ElkEntity, Light):
+class ElkLight(ElkEntity, LightEntity):
     """Representation of an Elk lighting device."""
 
     def __init__(self, element, elk, elk_data):

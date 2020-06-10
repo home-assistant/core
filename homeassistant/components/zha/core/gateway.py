@@ -10,6 +10,7 @@ import traceback
 from typing import List, Optional
 
 from serial import SerialException
+from zigpy.config import CONF_DEVICE
 import zigpy.device as zigpy_dev
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
@@ -20,7 +21,10 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_device,
+    async_get_registry as get_ent_reg,
+)
 
 from . import discovery, typing as zha_typing
 from .const import (
@@ -30,11 +34,9 @@ from .const import (
     ATTR_NWK,
     ATTR_SIGNATURE,
     ATTR_TYPE,
-    CONF_BAUDRATE,
     CONF_DATABASE,
     CONF_RADIO_TYPE,
-    CONF_USB_PATH,
-    CONTROLLER,
+    CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_GATEWAY,
@@ -49,7 +51,6 @@ from .const import (
     DEBUG_LEVEL_ORIGINAL,
     DEBUG_LEVELS,
     DEBUG_RELAY_LOGGERS,
-    DEFAULT_BAUDRATE,
     DEFAULT_DATABASE_NAME,
     DOMAIN,
     SIGNAL_ADD_ENTITIES,
@@ -71,15 +72,14 @@ from .const import (
     ZHA_GW_MSG_LOG_ENTRY,
     ZHA_GW_MSG_LOG_OUTPUT,
     ZHA_GW_MSG_RAW_INIT,
-    ZHA_GW_RADIO,
-    ZHA_GW_RADIO_DESCRIPTION,
+    RadioType,
 )
 from .device import DeviceStatus, ZHADevice
-from .group import ZHAGroup
+from .group import GroupMember, ZHAGroup
 from .patches import apply_application_controller_patch
-from .registries import RADIO_TYPES
+from .registries import GROUP_ENTITY_DOMAINS
 from .store import async_get_registry
-from .typing import ZhaDeviceType, ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
+from .typing import ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,43 +122,35 @@ class ZHAGateway:
         self.ha_device_registry = await get_dev_reg(self._hass)
         self.ha_entity_registry = await get_ent_reg(self._hass)
 
-        usb_path = self._config_entry.data.get(CONF_USB_PATH)
-        baudrate = self._config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
-        radio_type = self._config_entry.data.get(CONF_RADIO_TYPE)
+        radio_type = self._config_entry.data[CONF_RADIO_TYPE]
 
-        radio_details = RADIO_TYPES[radio_type]
-        radio = radio_details[ZHA_GW_RADIO]()
-        self.radio_description = radio_details[ZHA_GW_RADIO_DESCRIPTION]
+        app_controller_cls = RadioType[radio_type].controller
+        self.radio_description = RadioType[radio_type].description
+
+        app_config = self._config.get(CONF_ZIGPY, {})
+        database = self._config.get(
+            CONF_DATABASE,
+            os.path.join(self._hass.config.config_dir, DEFAULT_DATABASE_NAME),
+        )
+        app_config[CONF_DATABASE] = database
+        app_config[CONF_DEVICE] = self._config_entry.data[CONF_DEVICE]
+
+        app_config = app_controller_cls.SCHEMA(app_config)
         try:
-            await radio.connect(usb_path, baudrate)
-        except (SerialException, OSError) as exception:
-            _LOGGER.error("Couldn't open serial port for ZHA: %s", str(exception))
-            raise ConfigEntryNotReady
+            self.application_controller = await app_controller_cls.new(
+                app_config, auto_form=True, start_radio=True
+            )
+        except (asyncio.TimeoutError, SerialException, OSError) as exception:
+            _LOGGER.error(
+                "Couldn't start %s coordinator",
+                self.radio_description,
+                exc_info=exception,
+            )
+            raise ConfigEntryNotReady from exception
 
-        if CONF_DATABASE in self._config:
-            database = self._config[CONF_DATABASE]
-        else:
-            database = os.path.join(self._hass.config.config_dir, DEFAULT_DATABASE_NAME)
-
-        self.application_controller = radio_details[CONTROLLER](radio, database)
         apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
-
-        try:
-            res = await self.application_controller.startup(auto_form=True)
-            if res is False:
-                await self.application_controller.shutdown()
-                raise ConfigEntryNotReady
-        except asyncio.TimeoutError as exception:
-            _LOGGER.error(
-                "Couldn't start %s coordinator",
-                radio_details[ZHA_GW_RADIO_DESCRIPTION],
-                exc_info=exception,
-            )
-            radio.close()
-            raise ConfigEntryNotReady from exception
-
         self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
             self.application_controller.ieee
@@ -273,6 +265,9 @@ class ZHAGateway:
         async_dispatcher_send(
             self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
+        if len(zha_group.members) == 2:
+            # we need to do this because there wasn't already a group entity to remove and re-add
+            discovery.GROUP_PROBE.discover_group_entities(zha_group)
 
     def group_added(self, zigpy_group: ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
@@ -289,6 +284,7 @@ class ZHAGateway:
         async_dispatcher_send(
             self._hass, f"{SIGNAL_REMOVE_GROUP}_0x{zigpy_group.group_id:04x}"
         )
+        self._cleanup_group_entity_registry_entries(zigpy_group)
 
     def _send_group_gateway_message(
         self, zigpy_group: ZigpyGroupType, gateway_message_type: str
@@ -301,7 +297,7 @@ class ZHAGateway:
                 ZHA_GW_MSG,
                 {
                     ATTR_TYPE: gateway_message_type,
-                    ZHA_GW_MSG_GROUP_INFO: zha_group.async_get_info(),
+                    ZHA_GW_MSG_GROUP_INFO: zha_group.group_info,
                 },
             )
 
@@ -320,7 +316,7 @@ class ZHAGateway:
         zha_device = self._devices.pop(device.ieee, None)
         entity_refs = self._device_registry.pop(device.ieee, None)
         if zha_device is not None:
-            device_info = zha_device.async_get_info()
+            device_info = zha_device.zha_device_info
             zha_device.async_cleanup_handles()
             async_dispatcher_send(
                 self._hass, "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
@@ -367,6 +363,35 @@ class ZHAGateway:
             self.device_registry[entity.zha_device.ieee] = [
                 e for e in entity_refs if e.reference_id != entity.entity_id
             ]
+
+    def _cleanup_group_entity_registry_entries(
+        self, zigpy_group: ZigpyGroupType
+    ) -> None:
+        """Remove entity registry entries for group entities when the groups are removed from HA."""
+        # first we collect the potential unique ids for entities that could be created from this group
+        possible_entity_unique_ids = [
+            f"{domain}_zha_group_0x{zigpy_group.group_id:04x}"
+            for domain in GROUP_ENTITY_DOMAINS
+        ]
+
+        # then we get all group entity entries tied to the coordinator
+        all_group_entity_entries = async_entries_for_device(
+            self.ha_entity_registry, self.coordinator_zha_device.device_id
+        )
+
+        # then we get the entity entries for this specific group by getting the entries that match
+        entries_to_remove = [
+            entry
+            for entry in all_group_entity_entries
+            if entry.unique_id in possible_entity_unique_ids
+        ]
+
+        # then we remove the entries from the entity registry
+        for entry in entries_to_remove:
+            _LOGGER.debug(
+                "cleaning up entity registry entry for entity: %s", entry.entity_id
+            )
+            self.ha_entity_registry.async_remove(entry.entity_id)
 
     @property
     def devices(self):
@@ -460,16 +485,20 @@ class ZHAGateway:
         self, sender, profile, cluster, src_ep, dst_ep, message
     ):
         """Handle tasks when a device becomes available."""
-        self.async_update_device(sender)
+        self.async_update_device(sender, available=True)
 
     @callback
-    def async_update_device(self, sender: zigpy_dev.Device, available: bool = True):
+    def async_update_device(
+        self, sender: zigpy_dev.Device, available: bool = True
+    ) -> None:
         """Update device that has just become available."""
         if sender.ieee in self.devices:
             device = self.devices[sender.ieee]
             # avoid a race condition during new joins
             if device.status is DeviceStatus.INITIALIZED:
                 device.update_available(available)
+            else:
+                device.available = available
 
     async def async_update_device_storage(self):
         """Update the devices in the store."""
@@ -506,7 +535,7 @@ class ZHAGateway:
             )
             await self._async_device_joined(zha_device)
 
-        device_info = zha_device.async_get_info()
+        device_info = zha_device.zha_device_info
 
         async_dispatcher_send(
             self._hass,
@@ -535,11 +564,11 @@ class ZHAGateway:
         zha_device.update_available(True)
 
     async def async_create_zigpy_group(
-        self, name: str, members: List[ZhaDeviceType]
+        self, name: str, members: List[GroupMember]
     ) -> ZhaGroupType:
         """Create a new Zigpy Zigbee group."""
-        # we start with one to fill any gaps from a user removing existing groups
-        group_id = 1
+        # we start with two to fill any gaps from a user removing existing groups
+        group_id = 2
         while group_id in self.groups:
             group_id += 1
 
@@ -548,24 +577,21 @@ class ZHAGateway:
             self.application_controller.groups.add_group(group_id, name)
             if members is not None:
                 tasks = []
-                for ieee in members:
+                for member in members:
                     _LOGGER.debug(
-                        "Adding member with IEEE: %s to group: %s:0x%04x",
-                        ieee,
+                        "Adding member with IEEE: %s and endpoint id: %s to group: %s:0x%04x",
+                        member.ieee,
+                        member.endpoint_id,
                         name,
                         group_id,
                     )
-                    tasks.append(self.devices[ieee].async_add_to_group(group_id))
+                    tasks.append(
+                        self.devices[member.ieee].async_add_endpoint_to_group(
+                            member.endpoint_id, group_id
+                        )
+                    )
                 await asyncio.gather(*tasks)
-        zha_group = self.groups.get(group_id)
-        _LOGGER.debug(
-            "Probing group: %s:0x%04x for entity discovery",
-            zha_group.name,
-            zha_group.group_id,
-        )
-        discovery.GROUP_PROBE.discover_group_entities(zha_group)
-
-        return zha_group
+        return self.groups.get(group_id)
 
     async def async_remove_zigpy_group(self, group_id: int) -> None:
         """Remove a Zigbee group from Zigpy."""
@@ -576,7 +602,7 @@ class ZHAGateway:
         if group and group.members:
             tasks = []
             for member in group.members:
-                tasks.append(member.async_remove_from_group(group_id))
+                tasks.append(member.async_remove_from_group())
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)

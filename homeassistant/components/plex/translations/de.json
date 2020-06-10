@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alle verkn\u00fcpften Server sind bereits konfiguriert",
+            "already_configured": "Dieser Plex-Server ist bereits konfiguriert",
+            "already_in_progress": "Plex wird konfiguriert",
+            "invalid_import": "Die importierte Konfiguration ist ung\u00fcltig",
+            "non-interactive": "Nicht interaktiver Import",
+            "token_request_timeout": "Zeit\u00fcberschreitung beim Erhalt des Tokens",
+            "unknown": "Aus unbekanntem Grund fehlgeschlagen"
+        },
+        "error": {
+            "faulty_credentials": "Autorisierung fehlgeschlagen, Token \u00fcberpr\u00fcfen",
+            "host_or_token": "Es muss mindestens ein Host oder ein Token bereitgestellt werden",
+            "no_servers": "Keine Server mit Plex-Konto verbunden",
+            "not_found": "Plex-Server nicht gefunden",
+            "ssl_error": "SSL-Zertifikatsproblem"
+        },
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "SSL verwenden",
+                    "token": "Token (optional)",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                },
+                "title": "Manuelle Plex-Konfiguration"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Mehrere Server verf\u00fcgbar, w\u00e4hle einen aus:",
+                "title": "Plex-Server ausw\u00e4hlen"
+            },
+            "user": {
+                "description": "Gehen Sie zu [plex.tv] (https://plex.tv), um einen Plex-Server zu verbinden",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Einrichtungsmethode"
+                },
+                "title": "Plex Media Server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Ignorieren neuer verwalteter/freigegebener Benutzer",
+                    "ignore_plex_web_clients": "Plex-Webclients ignorieren",
+                    "monitored_users": "\u00dcberwachte Benutzer",
+                    "use_episode_art": "Episode-Bilder verwenden"
+                },
+                "description": "Optionen f\u00fcr Plex-Media-Player"
+            }
+        }
+    }
+}

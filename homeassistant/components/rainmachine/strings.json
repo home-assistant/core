@@ -1,13 +1,12 @@
 {
   "config": {
-    "title": "RainMachine",
     "step": {
       "user": {
         "title": "Fill in your information",
         "data": {
           "ip_address": "Hostname or IP Address",
-          "password": "Password",
-          "port": "Port"
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },

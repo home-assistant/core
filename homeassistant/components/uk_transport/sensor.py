@@ -7,7 +7,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MODE, TIME_MINUTES
+from homeassistant.const import CONF_MODE, HTTP_OK, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -133,7 +133,7 @@ class UkTransportSensor(Entity):
         )
 
         response = requests.get(self._url, params=request_params)
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.warning("Invalid response from API")
         elif "error" in response.json():
             if "exceeded" in response.json()["error"]:

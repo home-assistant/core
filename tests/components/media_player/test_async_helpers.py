@@ -14,7 +14,7 @@ from homeassistant.const import (
 from tests.common import get_test_home_assistant
 
 
-class AsyncMediaPlayer(mp.MediaPlayerDevice):
+class AsyncMediaPlayer(mp.MediaPlayerEntity):
     """Async media player test class."""
 
     def __init__(self, hass):
@@ -65,7 +65,7 @@ class AsyncMediaPlayer(mp.MediaPlayerDevice):
         self._state = STATE_OFF
 
 
-class SyncMediaPlayer(mp.MediaPlayerDevice):
+class SyncMediaPlayer(mp.MediaPlayerEntity):
     """Sync media player test class."""
 
     def __init__(self, hass):
@@ -146,8 +146,9 @@ class TestAsyncMediaPlayer(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.player = AsyncMediaPlayer(self.hass)
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Shut down test instance."""
         self.hass.stop()
 
@@ -207,8 +208,9 @@ class TestSyncMediaPlayer(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.player = SyncMediaPlayer(self.hass)
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Shut down test instance."""
         self.hass.stop()
 

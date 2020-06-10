@@ -1,13 +1,10 @@
 {
   "config": {
-    "title": "Météo-France",
     "step": {
       "user": {
-        "title": "Météo-France",
+        "title": "M\u00e9t\u00e9o-France",
         "description": "Enter the postal code (only for France, recommended) or city name",
-        "data": {
-          "city": "City"
-        }
+        "data": { "city": "City" }
       }
     },
     "abort": {

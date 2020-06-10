@@ -6,13 +6,17 @@ from typing import Callable, List, Tuple
 
 from homeassistant import const as ha_const
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import const as zha_const, registries as zha_regs, typing as zha_typing
 from .. import (  # noqa: F401 pylint: disable=unused-import,
     binary_sensor,
+    climate,
     cover,
     device_tracker,
     fan,
@@ -166,10 +170,30 @@ class GroupProbe:
     def __init__(self):
         """Initialize instance."""
         self._hass = None
+        self._unsubs = []
 
     def initialize(self, hass: HomeAssistantType) -> None:
         """Initialize the group probe."""
         self._hass = hass
+        self._unsubs.append(
+            async_dispatcher_connect(
+                hass, zha_const.SIGNAL_GROUP_ENTITY_REMOVED, self._reprobe_group
+            )
+        )
+
+    def cleanup(self):
+        """Clean up on when zha shuts down."""
+        for unsub in self._unsubs[:]:
+            unsub()
+            self._unsubs.remove(unsub)
+
+    def _reprobe_group(self, group_id: int) -> None:
+        """Reprobe a group for entities after its members change."""
+        zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        zha_group = zha_gateway.groups.get(group_id)
+        if zha_group is None:
+            return
+        self.discover_group_entities(zha_group)
 
     @callback
     def discover_group_entities(self, group: zha_typing.ZhaGroupType) -> None:
@@ -212,21 +236,13 @@ class GroupProbe:
     ) -> List[str]:
         """Determine the entity domains for this group."""
         entity_domains: List[str] = []
-        if len(group.members) < 2:
-            _LOGGER.debug(
-                "Group: %s:0x%04x has less than 2 members so cannot default an entity domain",
-                group.name,
-                group.group_id,
-            )
-            return entity_domains
-
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         all_domain_occurrences = []
-        for device in group.members:
-            if device.is_coordinator:
+        for member in group.members:
+            if member.device.is_coordinator:
                 continue
             entities = async_entries_for_device(
-                zha_gateway.ha_entity_registry, device.device_id
+                zha_gateway.ha_entity_registry, member.device.device_id
             )
             all_domain_occurrences.extend(
                 [

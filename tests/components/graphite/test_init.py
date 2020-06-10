@@ -2,7 +2,6 @@
 import socket
 import unittest
 from unittest import mock
-from unittest.mock import patch
 
 import homeassistant.components.graphite as graphite
 from homeassistant.const import (
@@ -15,6 +14,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -212,6 +212,6 @@ class TestGraphite(unittest.TestCase):
                 mock_queue.get.side_effect = fake_get
                 self.gf.run()
                 # Twice for two events, once for the stop
-                assert 3 == mock_queue.task_done.call_count
+                assert mock_queue.task_done.call_count == 3
                 assert mock_r.call_count == 1
                 assert mock_r.call_args == mock.call("entity", event.data["new_state"])

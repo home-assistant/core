@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "condition_type": {
-            "is_home": "{entity_name} \u0435 \u0443 \u0434\u043e\u043c\u0430",
-            "is_not_home": "{entity_name} \u043d\u0435 \u0435 \u0443 \u0434\u043e\u043c\u0430"
-        }
-    }
-}

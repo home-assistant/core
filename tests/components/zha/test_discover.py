@@ -3,7 +3,6 @@
 import re
 from unittest import mock
 
-import asynctest
 import pytest
 import zigpy.quirks
 import zigpy.types
@@ -30,6 +29,8 @@ import homeassistant.helpers.entity_registry
 from .common import get_zha_gateway
 from .zha_devices_list import DEVICES
 
+from tests.async_mock import AsyncMock, patch
+
 NO_TAIL_ID = re.compile("_\\d$")
 
 
@@ -51,11 +52,9 @@ def channels_mock(zha_device_mock):
     return _mock
 
 
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.general.Identify.request",
-    new=asynctest.CoroutineMock(
-        return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]
-    ),
+    new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @pytest.mark.parametrize("device", DEVICES)
 async def test_devices(
@@ -392,3 +391,12 @@ async def test_device_override(hass, zigpy_device_mock, setup_zha, override, ent
     await zha_gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id) is not None
+
+
+async def test_group_probe_cleanup_called(hass, setup_zha, config_entry):
+    """Test cleanup happens when zha is unloaded."""
+    await setup_zha()
+    disc.GROUP_PROBE.cleanup = mock.Mock(wraps=disc.GROUP_PROBE.cleanup)
+    await config_entry.async_unload(hass)
+    await hass.async_block_till_done()
+    disc.GROUP_PROBE.cleanup.assert_called()

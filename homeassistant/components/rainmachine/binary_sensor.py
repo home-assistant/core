@@ -1,7 +1,7 @@
 """This platform provides binary sensors for key RainMachine data."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -86,7 +86,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
+class RainMachineBinarySensor(RainMachineEntity, BinarySensorEntity):
     """A sensor implementation for raincloud device."""
 
     def __init__(
@@ -126,7 +126,7 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._dispatcher_handlers.append(
+        self.async_on_remove(
             async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, self._update_state)
         )
         await self.rainmachine.async_register_sensor_api_interest(self._api_category)

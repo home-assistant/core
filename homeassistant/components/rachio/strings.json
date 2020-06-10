@@ -1,12 +1,11 @@
 {
   "config": {
-    "title": "Rachio",
     "step": {
       "user": {
         "title": "Connect to your Rachio device",
         "description": "You will need the API Key from https://app.rach.io/. Select 'Account Settings, and then click on 'GET API KEY'.",
         "data": {
-          "api_key": "The API key for the Rachio account."
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },

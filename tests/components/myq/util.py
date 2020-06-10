@@ -2,12 +2,11 @@
 
 import json
 
-from asynctest import patch
-
 from homeassistant.components.myq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 
@@ -23,9 +22,9 @@ async def async_init_integration(
     def _handle_mock_api_request(method, endpoint, **kwargs):
         if endpoint == "Login":
             return {"SecurityToken": 1234}
-        elif endpoint == "My":
+        if endpoint == "My":
             return {"Account": {"Id": 1}}
-        elif endpoint == "Accounts/1/Devices":
+        if endpoint == "Accounts/1/Devices":
             return devices_dict
         return {}
 

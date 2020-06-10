@@ -16,11 +16,10 @@
       },
       "user": {
         "data": {
-          "host": "Host"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "title": "Pick endpoint."
       }
-    },
-    "title": "Telldus Live"
+    }
   }
 }

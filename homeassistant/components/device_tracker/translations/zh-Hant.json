@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name}\u5728\u5bb6",
+            "is_not_home": "{entity_name}\u4e0d\u5728\u5bb6"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "\u5728\u5bb6",
+            "not_home": "\u96e2\u5bb6"
+        }
+    },
+    "title": "\u8a2d\u5099\u8ffd\u8e64\u5668"
+}

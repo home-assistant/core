@@ -2,6 +2,7 @@
 import json
 
 from homeassistant.components.alexa import DOMAIN, smart_home_http
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 from . import get_new_request
@@ -38,4 +39,4 @@ async def test_http_api_disabled(hass, hass_client):
     config = {"alexa": {}}
     response = await do_http_discovery(config, hass, hass_client)
 
-    assert response.status == 404
+    assert response.status == HTTP_NOT_FOUND

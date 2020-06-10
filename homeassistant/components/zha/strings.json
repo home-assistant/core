@@ -1,27 +1,33 @@
 {
   "config": {
-    "title": "ZHA",
     "step": {
       "user": {
         "title": "ZHA",
+        "data": { "path": "Serial Device Path" },
+        "description": "Select serial port for Zigbee radio"
+      },
+      "pick_radio": {
+        "data": { "radio_type": "Radio Type" },
+        "title": "Radio Type",
+        "description": "Pick a type of your Zigbee radio"
+      },
+      "port_config": {
+        "title": "Settings",
+        "description": "Enter port specific settings",
         "data": {
-          "radio_type": "Radio Type",
-          "usb_path": "USB Device Path"
+          "path": "Serial device path",
+          "baudrate": "port speed",
+          "flow_control": "data flow control"
         }
       }
     },
-    "error": {
-      "cannot_connect": "Unable to connect to ZHA device."
-    },
+    "error": { "cannot_connect": "Unable to connect to ZHA device." },
     "abort": {
       "single_instance_allowed": "Only a single configuration of ZHA is allowed."
     }
   },
   "device_automation": {
-    "action_type": {
-      "squawk": "Squawk",
-      "warn": "Warn"
-    },
+    "action_type": { "squawk": "Squawk", "warn": "Warn" },
     "trigger_type": {
       "remote_button_short_press": "\"{subtype}\" button pressed",
       "remote_button_short_release": "\"{subtype}\" button released",

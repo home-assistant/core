@@ -7,7 +7,6 @@ import logging
 import os
 from tempfile import TemporaryDirectory
 import unittest
-from unittest.mock import MagicMock, patch
 
 import pytest
 import pytz
@@ -22,6 +21,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
@@ -35,6 +35,7 @@ from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import async_mock_service, get_test_home_assistant
 
 PST = pytz.timezone("America/Los_Angeles")
@@ -304,10 +305,11 @@ class TestEvent(unittest.TestCase):
 
     def test_repr(self):
         """Test that repr method works."""
-        assert "<Event TestEvent[L]>" == str(ha.Event("TestEvent"))
+        assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
 
-        assert "<Event TestEvent[R]: beer=nice>" == str(
-            ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote)
+        assert (
+            str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
+            == "<Event TestEvent[R]: beer=nice>"
         )
 
     def test_as_dict(self):
@@ -402,7 +404,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire("test_event")
 
         self.hass.block_till_done()
-        assert 1 == len(runs)
+        assert len(runs) == 1
 
     def test_listen_once_event_with_coroutine(self):
         """Test listen_once_event method."""
@@ -419,7 +421,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire("test_event")
 
         self.hass.block_till_done()
-        assert 1 == len(runs)
+        assert len(runs) == 1
 
     def test_listen_once_event_with_thread(self):
         """Test listen_once_event method."""
@@ -435,7 +437,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire("test_event")
 
         self.hass.block_till_done()
-        assert 1 == len(runs)
+        assert len(runs) == 1
 
     def test_thread_event_listener(self):
         """Test thread event listener."""
@@ -488,26 +490,26 @@ def test_state_init():
 def test_state_domain():
     """Test domain."""
     state = ha.State("some_domain.hello", "world")
-    assert "some_domain" == state.domain
+    assert state.domain == "some_domain"
 
 
 def test_state_object_id():
     """Test object ID."""
     state = ha.State("domain.hello", "world")
-    assert "hello" == state.object_id
+    assert state.object_id == "hello"
 
 
 def test_state_name_if_no_friendly_name_attr():
     """Test if there is no friendly name."""
     state = ha.State("domain.hello_world", "world")
-    assert "hello world" == state.name
+    assert state.name == "hello world"
 
 
 def test_state_name_if_friendly_name_attr():
     """Test if there is a friendly name."""
     name = "Some Unique Name"
     state = ha.State("domain.hello_world", "world", {ATTR_FRIENDLY_NAME: name})
-    assert name == state.name
+    assert state.name == name
 
 
 def test_state_dict_conversion():
@@ -535,14 +537,13 @@ def test_state_dict_conversion_with_wrong_data():
 
 def test_state_repr():
     """Test state.repr."""
-    assert "<state happy.happy=on @ 1984-12-08T12:00:00+00:00>" == str(
-        ha.State("happy.happy", "on", last_changed=datetime(1984, 12, 8, 12, 0, 0))
+    assert (
+        str(ha.State("happy.happy", "on", last_changed=datetime(1984, 12, 8, 12, 0, 0)))
+        == "<state happy.happy=on @ 1984-12-08T12:00:00+00:00>"
     )
 
     assert (
-        "<state happy.happy=on; brightness=144 @ "
-        "1984-12-08T12:00:00+00:00>"
-        == str(
+        str(
             ha.State(
                 "happy.happy",
                 "on",
@@ -550,6 +551,8 @@ def test_state_repr():
                 datetime(1984, 12, 8, 12, 0, 0),
             )
         )
+        == "<state happy.happy=on; brightness=144 @ "
+        "1984-12-08T12:00:00+00:00>"
     )
 
 
@@ -578,12 +581,12 @@ class TestStateMachine(unittest.TestCase):
     def test_entity_ids(self):
         """Test get_entity_ids method."""
         ent_ids = self.states.entity_ids()
-        assert 2 == len(ent_ids)
+        assert len(ent_ids) == 2
         assert "light.bowl" in ent_ids
         assert "switch.ac" in ent_ids
 
         ent_ids = self.states.entity_ids("light")
-        assert 1 == len(ent_ids)
+        assert len(ent_ids) == 1
         assert "light.bowl" in ent_ids
 
     def test_all(self):
@@ -606,16 +609,16 @@ class TestStateMachine(unittest.TestCase):
         self.hass.block_till_done()
 
         assert "light.bowl" not in self.states.entity_ids()
-        assert 1 == len(events)
-        assert "light.bowl" == events[0].data.get("entity_id")
+        assert len(events) == 1
+        assert events[0].data.get("entity_id") == "light.bowl"
         assert events[0].data.get("old_state") is not None
-        assert "light.bowl" == events[0].data["old_state"].entity_id
+        assert events[0].data["old_state"].entity_id == "light.bowl"
         assert events[0].data.get("new_state") is None
 
         # If it does not exist, we should get False
         assert not self.states.remove("light.Bowl")
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
     def test_case_insensitivty(self):
         """Test insensitivty."""
@@ -631,7 +634,7 @@ class TestStateMachine(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.states.is_state("light.bowl", "off")
-        assert 1 == len(runs)
+        assert len(runs) == 1
 
     def test_last_changed_not_updated_on_same_state(self):
         """Test to not update the existing, same state."""
@@ -659,11 +662,11 @@ class TestStateMachine(unittest.TestCase):
 
         self.states.set("light.bowl", "on")
         self.hass.block_till_done()
-        assert 0 == len(events)
+        assert len(events) == 0
 
         self.states.set("light.bowl", "on", None, True)
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
 
 def test_service_call_repr():
@@ -734,7 +737,7 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data["service"] == "register_calls"
 
         assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
@@ -758,7 +761,7 @@ class TestServiceRegistry(unittest.TestCase):
 
         assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_async_service_partial(self):
         """Test registering and calling an wrapped async service."""
@@ -799,7 +802,7 @@ class TestServiceRegistry(unittest.TestCase):
 
         assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_remove_service(self):
         """Test remove service."""
@@ -888,16 +891,18 @@ class TestConfig(unittest.TestCase):
     def test_path_with_file(self):
         """Test get_config_path method."""
         self.config.config_dir = "/test/ha-config"
-        assert "/test/ha-config/test.conf" == self.config.path("test.conf")
+        assert self.config.path("test.conf") == "/test/ha-config/test.conf"
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
         self.config.config_dir = "/test/ha-config"
-        assert "/test/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
+        assert self.config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
     def test_as_dict(self):
         """Test as dict."""
         self.config.config_dir = "/test/ha-config"
+        self.config.hass = MagicMock()
+        type(self.config.hass.state).value = PropertyMock(return_value="RUNNING")
         expected = {
             "latitude": 0,
             "longitude": 0,
@@ -911,6 +916,9 @@ class TestConfig(unittest.TestCase):
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
+            "state": "RUNNING",
+            "external_url": None,
+            "internal_url": None,
         }
 
         assert expected == self.config.as_dict()
@@ -946,7 +954,7 @@ class TestConfig(unittest.TestCase):
                 self.config.is_allowed_path(None)
 
 
-async def test_event_on_update(hass, hass_storage):
+async def test_event_on_update(hass):
     """Test that event is fired on update."""
     events = []
 
@@ -1056,7 +1064,7 @@ def test_timer_out_of_sync(mock_monotonic, loop):
         assert abs(event_data[ATTR_SECONDS] - 2.433333) < 0.001
 
         assert len(funcs) == 2
-        fire_time_event, stop_timer = funcs
+        fire_time_event, _ = funcs
 
     assert len(hass.loop.call_later.mock_calls) == 2
 
@@ -1279,3 +1287,49 @@ def test_valid_entity_id():
         "light.something_yoo",
     ]:
         assert ha.valid_entity_id(valid), valid
+
+
+async def test_migration_base_url(hass, hass_storage):
+    """Test that we migrate base url to internal/external url."""
+    config = ha.Config(hass)
+    stored = {"version": 1, "data": {}}
+    hass_storage[ha.CORE_STORAGE_KEY] = stored
+    with patch.object(hass.bus, "async_listen_once") as mock_listen:
+        # Empty config
+        await config.async_load()
+        assert len(mock_listen.mock_calls) == 0
+
+        # With just a name
+        stored["data"] = {"location_name": "Test Name"}
+        await config.async_load()
+        assert len(mock_listen.mock_calls) == 1
+
+        # With external url
+        stored["data"]["external_url"] = "https://example.com"
+        await config.async_load()
+        assert len(mock_listen.mock_calls) == 1
+
+    # Test that the event listener works
+    assert mock_listen.mock_calls[0][1][0] == EVENT_HOMEASSISTANT_START
+
+    # External
+    hass.config.api = Mock(deprecated_base_url="https://loaded-example.com")
+    await mock_listen.mock_calls[0][1][1](None)
+    assert config.external_url == "https://loaded-example.com"
+
+    # Internal
+    for internal in ("http://hass.local", "http://192.168.1.100:8123"):
+        hass.config.api = Mock(deprecated_base_url=internal)
+        await mock_listen.mock_calls[0][1][1](None)
+        assert config.internal_url == internal
+
+
+async def test_additional_data_in_core_config(hass, hass_storage):
+    """Test that we can handle additional data in core configuration."""
+    config = ha.Config(hass)
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {"location_name": "Test Name", "additional_valid_key": "value"},
+    }
+    await config.async_load()
+    assert config.location_name == "Test Name"

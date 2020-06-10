@@ -7,7 +7,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_TOKEN,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -30,9 +35,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 DATA_CONFIG_ENTRY_LOCK = "point_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "point_config_entry_is_setup"
@@ -82,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # Force token update.
     entry.data[CONF_TOKEN]["expires_in"] = -1
     session = PointSession(
-        entry.data["refresh_args"]["client_id"],
+        entry.data["refresh_args"][CONF_CLIENT_ID],
         token=entry.data[CONF_TOKEN],
         auto_refresh_kwargs=entry.data["refresh_args"],
         token_saver=token_saver,
@@ -309,7 +311,7 @@ class MinutPointEntity(Entity):
             "connections": {("mac", device["device_mac"])},
             "identifieres": device["device_id"],
             "manufacturer": "Minut",
-            "model": "Point v{}".format(device["hardware_version"]),
+            "model": f"Point v{device['hardware_version']}",
             "name": device["description"],
             "sw_version": device["firmware"]["installed"],
             "via_device": (DOMAIN, device["home"]),

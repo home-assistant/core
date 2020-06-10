@@ -1,11 +1,14 @@
 """The tests for mqtt camera component."""
 import json
 
+import pytest
+
 from homeassistant.components import camera, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -47,6 +50,7 @@ async def test_run_camera_setup(hass, aiohttp_client):
         "camera",
         {"camera": {"platform": "mqtt", "topic": topic, "name": "Test Camera"}},
     )
+    await hass.async_block_till_done()
 
     url = hass.states.get("camera.test_camera").attributes["entity_picture"]
 
@@ -57,6 +61,13 @@ async def test_run_camera_setup(hass, aiohttp_client):
     assert resp.status == 200
     body = await resp.text()
     assert body == "beer"
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, camera.DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_availability_without_topic(hass, mqtt_mock):
@@ -145,7 +156,7 @@ async def test_discovery_removal_camera(hass, mqtt_mock, caplog):
 async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     """Test update of discovered camera."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
+    await async_start(hass, "homeassistant", entry)
 
     data1 = '{ "name": "Beer",' '  "topic": "test_topic"}'
     data2 = '{ "name": "Milk",' '  "topic": "test_topic"}'
@@ -155,10 +166,11 @@ async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
+    await async_start(hass, "homeassistant", entry)
 
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk",' '  "topic": "test_topic"}'

@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Traccar",
     "step": {
       "user": {
         "title": "Set up Traccar",

@@ -17,28 +17,27 @@ from homeassistant.const import (
     STATE_ALARM_DISARMING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up an alarm control panel for a TotalConnect device."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, entry, async_add_entities) -> None:
+    """Set up TotalConnect alarm panels based on a config entry."""
     alarms = []
 
-    client = hass.data[DOMAIN].client
+    client = hass.data[DOMAIN][entry.entry_id]
 
     for location_id, location in client.locations.items():
         location_name = location.location_name
         alarms.append(TotalConnectAlarm(location_name, location_id, client))
-    add_entities(alarms)
+
+    async_add_entities(alarms, True)
 
 
-class TotalConnectAlarm(alarm.AlarmControlPanel):
+class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
     """Represent an TotalConnect status."""
 
     def __init__(self, name, location_id, client):
@@ -116,16 +115,20 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._client.disarm(self._location_id)
+        if self._client.disarm(self._location_id) is not True:
+            raise HomeAssistantError(f"TotalConnect failed to disarm {self._name}.")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._client.arm_stay(self._location_id)
+        if self._client.arm_stay(self._location_id) is not True:
+            raise HomeAssistantError(f"TotalConnect failed to arm home {self._name}.")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._client.arm_away(self._location_id)
+        if self._client.arm_away(self._location_id) is not True:
+            raise HomeAssistantError(f"TotalConnect failed to arm away {self._name}.")
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        self._client.arm_stay_night(self._location_id)
+        if self._client.arm_stay_night(self._location_id) is not True:
+            raise HomeAssistantError(f"TotalConnect failed to arm night {self._name}.")

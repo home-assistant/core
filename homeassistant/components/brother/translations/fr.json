@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cette imprimante est d\u00e9j\u00e0 configur\u00e9e.",
+            "unsupported_model": "Ce mod\u00e8le d'imprimante n'est pas pris en charge."
+        },
+        "error": {
+            "connection_error": "Erreur de connexion.",
+            "snmp_error": "Serveur SNMP d\u00e9sactiv\u00e9 ou imprimante non prise en charge.",
+            "wrong_host": "Nom d'h\u00f4te ou adresse IP invalide."
+        },
+        "flow_title": "Imprimante Brother: {model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP de l'imprimante",
+                    "type": "Type d'imprimante"
+                },
+                "description": "Configurez l'int\u00e9gration de l'imprimante Brother. Si vous avez des probl\u00e8mes avec la configuration, allez \u00e0 : https://www.home-assistant.io/integrations/brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Type d'imprimante"
+                },
+                "description": "Voulez-vous ajouter l'imprimante Brother {model} avec le num\u00e9ro de s\u00e9rie `{serial_number}` \u00e0 Home Assistant ?",
+                "title": "Imprimante Brother d\u00e9couverte"
+            }
+        }
+    }
+}

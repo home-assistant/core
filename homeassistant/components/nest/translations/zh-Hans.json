@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u60a8\u53ea\u80fd\u914d\u7f6e\u4e00\u4e2a Nest \u5e10\u6237\u3002",
+            "authorize_url_fail": "\u751f\u6210\u6388\u6743\u7f51\u5740\u65f6\u53d1\u751f\u672a\u77e5\u9519\u8bef\u3002",
+            "authorize_url_timeout": "\u751f\u6210\u6388\u6743\u7f51\u5740\u8d85\u65f6\u3002",
+            "no_flows": "\u60a8\u9700\u8981\u5148\u914d\u7f6e Nest\uff0c\u7136\u540e\u624d\u80fd\u5bf9\u5176\u8fdb\u884c\u6388\u6743\u3002 [\u8bf7\u9605\u8bfb\u8bf4\u660e](https://www.home-assistant.io/components/nest/)\u3002"
+        },
+        "error": {
+            "internal_error": "\u9a8c\u8bc1\u4ee3\u7801\u65f6\u53d1\u751f\u5185\u90e8\u9519\u8bef",
+            "invalid_code": "\u9a8c\u8bc1\u7801\u65e0\u6548",
+            "timeout": "\u9a8c\u8bc1\u7801\u8d85\u65f6",
+            "unknown": "\u9a8c\u8bc1\u7801\u672a\u77e5\u9519\u8bef"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "\u8ba4\u8bc1\u63d0\u4f9b\u8005"
+                },
+                "description": "\u9009\u62e9\u60a8\u60f3\u901a\u8fc7\u54ea\u4e2a\u6388\u6743\u63d0\u4f9b\u8005\u4e0e Nest \u8fdb\u884c\u6388\u6743\u3002",
+                "title": "\u6388\u6743\u63d0\u4f9b\u8005"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN \u7801"
+                },
+                "description": "\u8981\u5173\u8054 Nest \u8d26\u6237\uff0c\u8bf7[\u6388\u6743\u8d26\u6237]({url})\u3002\n\n\u5b8c\u6210\u6388\u6743\u540e\uff0c\u5728\u4e0b\u9762\u7c98\u8d34\u83b7\u5f97\u7684 PIN \u7801\u3002",
+                "title": "\u5173\u8054 Nest \u8d26\u6237"
+            }
+        }
+    }
+}

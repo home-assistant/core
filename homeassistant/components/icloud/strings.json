@@ -1,13 +1,12 @@
 {
   "config": {
-    "title": "Apple iCloud",
     "step": {
       "user": {
         "title": "iCloud credentials",
         "description": "Enter your credentials",
         "data": {
-          "username": "Email",
-          "password": "Password",
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "with_family": "With family"
         }
       },

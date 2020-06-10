@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, callback
+from homeassistant.core import callback
 
 # mypy: allow-untyped-defs
 
@@ -40,7 +40,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     # Automation are enabled while hass is starting up, fire right away
     # Check state because a config reload shouldn't trigger it.
-    if hass.state == CoreState.starting:
+    if automation_info["home_assistant_start"]:
         hass.async_run_job(
             action({"trigger": {"platform": "homeassistant", "event": event}})
         )

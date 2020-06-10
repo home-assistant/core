@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Mostek jest ju\u017c skonfigurowany.",
+            "already_in_progress": "Konfiguracja mostka jest ju\u017c w toku."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z bram\u0105.",
+            "invalid_key": "Rejestracja si\u0119 nie powiod\u0142a z podanym kluczem. Je\u015bli tak si\u0119 stanie, spr\u00f3buj ponownie uruchomi\u0107 bramk\u0119.",
+            "timeout": "Przekroczono limit czasu sprawdzania poprawno\u015bci kodu."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "security_code": "Kod bezpiecze\u0144stwa"
+                },
+                "description": "Mo\u017cesz znale\u017a\u0107 kod bezpiecze\u0144stwa z ty\u0142u bramki.",
+                "title": "Wprowad\u017a kod bezpiecze\u0144stwa"
+            }
+        }
+    }
+}

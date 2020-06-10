@@ -1,6 +1,8 @@
 """Define tests for the GDACS config flow."""
 from datetime import timedelta
 
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components.gdacs import CONF_CATEGORIES, DOMAIN
 from homeassistant.const import (
@@ -9,6 +11,15 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
 )
+
+from tests.async_mock import patch
+
+
+@pytest.fixture(name="gdacs_setup", autouse=True)
+def gdacs_setup_fixture():
+    """Mock gdacs entry setup."""
+    with patch("homeassistant.components.gdacs.async_setup_entry", return_value=True):
+        yield
 
 
 async def test_duplicate_error(hass, config_entry):

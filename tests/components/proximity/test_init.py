@@ -25,10 +25,7 @@ class TestProximity(unittest.TestCase):
             "zoning",
             {"name": "work", "latitude": 2.3, "longitude": 1.3, "radius": 10},
         )
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_proximities(self):
         """Test a list of proximities."""
@@ -48,14 +45,14 @@ class TestProximity(unittest.TestCase):
         proximities = ["home", "work"]
 
         for prox in proximities:
-            state = self.hass.states.get("proximity." + prox)
+            state = self.hass.states.get(f"proximity.{prox}")
             assert state.state == "not set"
             assert state.attributes.get("nearest") == "not set"
             assert state.attributes.get("dir_of_travel") == "not set"
 
-            self.hass.states.set("proximity." + prox, "0")
+            self.hass.states.set(f"proximity.{prox}", "0")
             self.hass.block_till_done()
-            state = self.hass.states.get("proximity." + prox)
+            state = self.hass.states.get(f"proximity.{prox}")
             assert state.state == "0"
 
     def test_proximities_setup(self):

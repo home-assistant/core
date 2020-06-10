@@ -2,7 +2,7 @@
 import voluptuous as vol
 from xknx.devices import BinarySensor
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -102,7 +102,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     async_add_entities([entity])
 
 
-class KNXBinarySensor(BinarySensorDevice):
+class KNXBinarySensor(BinarySensorEntity):
     """Representation of a KNX binary sensor."""
 
     def __init__(self, device):
@@ -123,6 +123,10 @@ class KNXBinarySensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Store register state change callback."""
         self.async_register_callbacks()
+
+    async def async_update(self):
+        """Request a state update from KNX bus."""
+        await self.device.sync()
 
     @property
     def name(self):

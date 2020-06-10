@@ -2,7 +2,7 @@
 import importlib
 import json
 import pathlib
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import attr
 
@@ -24,10 +24,11 @@ class Error:
 class Config:
     """Config for the run."""
 
-    root = attr.ib(type=pathlib.Path)
-    action = attr.ib(type=str)
-    errors = attr.ib(type=List[Error], factory=list)
-    cache = attr.ib(type=Dict[str, Any], factory=dict)
+    specific_integrations: Optional[pathlib.Path] = attr.ib()
+    root: pathlib.Path = attr.ib()
+    action: str = attr.ib()
+    errors: List[Error] = attr.ib(factory=list)
+    cache: Dict[str, Any] = attr.ib(factory=dict)
 
     def add_error(self, *args, **kwargs):
         """Add an error."""
@@ -65,6 +66,7 @@ class Integration:
     path = attr.ib(type=pathlib.Path)
     manifest = attr.ib(type=dict, default=None)
     errors = attr.ib(type=List[Error], factory=list)
+    warnings = attr.ib(type=List[Error], factory=list)
 
     @property
     def domain(self) -> str:
@@ -84,6 +86,10 @@ class Integration:
     def add_error(self, *args, **kwargs):
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
+
+    def add_warning(self, *args, **kwargs):
+        """Add an warning."""
+        self.warnings.append(Error(*args, **kwargs))
 
     def load_manifest(self) -> None:
         """Load manifest."""

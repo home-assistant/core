@@ -17,7 +17,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([AppleTVRemote(atv, power, name)])
 
 
-class AppleTVRemote(remote.RemoteDevice):
+class AppleTVRemote(remote.RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
     def __init__(self, atv, power, name):

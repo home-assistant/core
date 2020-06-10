@@ -1,10 +1,11 @@
 """The tests for the hddtemp platform."""
 import socket
 import unittest
-from unittest.mock import patch
 
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 VALID_CONFIG_MINIMAL = {"sensor": {"platform": "hddtemp"}}
@@ -48,11 +49,9 @@ class TelnetMock:
         """Return sample values."""
         if self.host == "alice.local":
             raise ConnectionRefusedError
-        elif self.host == "bob.local":
+        if self.host == "bob.local":
             raise socket.gaierror
-        else:
-            return self.sample_data
-        return None
+        return self.sample_data
 
 
 class TestHDDTempSensor(unittest.TestCase):
@@ -66,37 +65,35 @@ class TestHDDTempSensor(unittest.TestCase):
             "/dev/sda1": {
                 "device": "/dev/sda1",
                 "temperature": "29",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD30EZRX-12DC0B0",
             },
             "/dev/sdb1": {
                 "device": "/dev/sdb1",
                 "temperature": "32",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD15EADS-11P7B2",
             },
             "/dev/sdc1": {
                 "device": "/dev/sdc1",
                 "temperature": "29",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD20EARX-22MMMB0",
             },
             "/dev/sdd1": {
                 "device": "/dev/sdd1",
                 "temperature": "32",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD15EARS-00Z5B1",
             },
         }
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_min_config(self):
         """Test minimal hddtemp configuration."""
         assert setup_component(self.hass, "sensor", VALID_CONFIG_MINIMAL)
+        self.hass.block_till_done()
 
         entity = self.hass.states.all()[0].entity_id
         state = self.hass.states.get(entity)
@@ -112,25 +109,27 @@ class TestHDDTempSensor(unittest.TestCase):
         )
         assert (
             state.attributes.get("friendly_name")
-            == "HD Temperature " + reference["device"]
+            == f"HD Temperature {reference['device']}"
         )
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_rename_config(self):
         """Test hddtemp configuration with different name."""
         assert setup_component(self.hass, "sensor", VALID_CONFIG_NAME)
+        self.hass.block_till_done()
 
         entity = self.hass.states.all()[0].entity_id
         state = self.hass.states.get(entity)
 
         reference = self.reference[state.attributes.get("device")]
 
-        assert state.attributes.get("friendly_name") == "FooBar " + reference["device"]
+        assert state.attributes.get("friendly_name") == f"FooBar {reference['device']}"
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_one_disk(self):
         """Test hddtemp one disk configuration."""
         assert setup_component(self.hass, "sensor", VALID_CONFIG_ONE_DISK)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.hd_temperature_dev_sdd1")
 
@@ -145,13 +144,14 @@ class TestHDDTempSensor(unittest.TestCase):
         )
         assert (
             state.attributes.get("friendly_name")
-            == "HD Temperature " + reference["device"]
+            == f"HD Temperature {reference['device']}"
         )
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_wrong_disk(self):
         """Test hddtemp wrong disk configuration."""
         assert setup_component(self.hass, "sensor", VALID_CONFIG_WRONG_DISK)
+        self.hass.block_till_done()
 
         assert len(self.hass.states.all()) == 1
         state = self.hass.states.get("sensor.hd_temperature_dev_sdx1")
@@ -161,6 +161,7 @@ class TestHDDTempSensor(unittest.TestCase):
     def test_hddtemp_multiple_disks(self):
         """Test hddtemp multiple disk configuration."""
         assert setup_component(self.hass, "sensor", VALID_CONFIG_MULTIPLE_DISKS)
+        self.hass.block_till_done()
 
         for sensor in [
             "sensor.hd_temperature_dev_sda1",
@@ -181,17 +182,19 @@ class TestHDDTempSensor(unittest.TestCase):
             )
             assert (
                 state.attributes.get("friendly_name")
-                == "HD Temperature " + reference["device"]
+                == f"HD Temperature {reference['device']}"
             )
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_host_refused(self):
         """Test hddtemp if host unreachable."""
         assert setup_component(self.hass, "sensor", VALID_CONFIG_HOST)
+        self.hass.block_till_done()
         assert len(self.hass.states.all()) == 0
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_host_unreachable(self):
         """Test hddtemp if host unreachable."""
         assert setup_component(self.hass, "sensor", VALID_CONFIG_HOST_UNREACHABLE)
+        self.hass.block_till_done()
         assert len(self.hass.states.all()) == 0

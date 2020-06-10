@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts je \u017ee konfiguriran",
+            "unknown": "Pri\u0161lo je do neznane napake"
+        },
+        "error": {
+            "invalid_2fa": "Neveljavna 2FA avtorizacija, prosimo, poskusite znova.",
+            "invalid_2fa_method": "Neveljavna 2FA Metoda (Preverite na Telefonu).",
+            "invalid_login": "Neveljavna Prijava, prosimo, poskusite znova."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA Pin"
+                },
+                "description": "prazno",
+                "title": "Dvofaktorska avtorizacija"
+            },
+            "user": {
+                "data": {
+                    "authorization_code": "Koda pooblastila (potrebna za ro\u010dno overjanje)",
+                    "email": "E-po\u0161tni naslov",
+                    "password": "Geslo"
+                },
+                "description": "prazno",
+                "title": "Prijava za Google Hangouts"
+            }
+        }
+    }
+}

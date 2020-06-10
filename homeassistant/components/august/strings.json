@@ -20,13 +20,12 @@
         "description": "If the Login Method is 'email', Username is the email address. If the Login Method is 'phone', Username is the phone number in the format '+NNNNNNNNN'.",
         "data": {
           "timeout": "Timeout (seconds)",
-          "password": "Password",
-          "username": "Username",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
           "login_method": "Login Method"
         },
         "title": "Setup an August account"
       }
-    },
-    "title": "August"
+    }
   }
 }

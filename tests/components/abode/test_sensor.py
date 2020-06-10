@@ -6,6 +6,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_HUMIDITY,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 
 from .common import setup_platform
@@ -30,7 +32,7 @@ async def test_attributes(hass):
     assert not state.attributes.get("battery_low")
     assert not state.attributes.get("no_response")
     assert state.attributes.get("device_type") == "LM"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Environment Sensor Humidity"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
 
@@ -41,4 +43,4 @@ async def test_attributes(hass):
     state = hass.states.get("sensor.environment_sensor_temperature")
     # Abodepy device JSON reports 19.5, but Home Assistant shows 19.4
     assert state.state == "19.4"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS

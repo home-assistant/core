@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Scho konfigur\u00e9iert",
+            "invalid_credentials": "Ong\u00eblteg Login Informatioune"
+        },
+        "create_entry": {
+            "default": "Kuckt [Neato Dokumentatioun]({docs_url})."
+        },
+        "error": {
+            "invalid_credentials": "Ong\u00eblteg Login Informatioune",
+            "unexpected_error": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm",
+                    "vendor": "Hiersteller"
+                },
+                "description": "Kuckt [Neato Dokumentatioun]({docs_url}).",
+                "title": "Neato Kont Informatiounen"
+            }
+        }
+    }
+}

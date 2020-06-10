@@ -424,6 +424,9 @@ class HERETravelTimeData:
             if departure is not None:
                 departure = convert_time_to_isodate(departure)
 
+            if departure is None and arrival is None:
+                departure = "now"
+
             _LOGGER.debug(
                 "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s, arrival: %s, departure: %s",
                 origin,

@@ -40,7 +40,7 @@ SUPPORT_COLOR = 16
 SUPPORT_TRANSITION = 32
 SUPPORT_WHITE_VALUE = 128
 
-# Integer that represents transition time in seconds to make change.
+# Float that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
 
 # Lists holding color values
@@ -87,6 +87,7 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
 VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
+VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
 
 LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
@@ -116,7 +117,7 @@ LIGHT_TURN_ON_SCHEMA = {
     ),
     vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(vol.Coerce(int), vol.Range(min=0)),
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
+    ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
 
@@ -156,7 +157,7 @@ def preprocess_turn_on_alternatives(params):
 
     brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
     if brightness_pct is not None:
-        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct / 100)
+        params[ATTR_BRIGHTNESS] = round(255 * brightness_pct / 100)
 
     xy_color = params.pop(ATTR_XY_COLOR, None)
     if xy_color is not None:
@@ -166,12 +167,19 @@ def preprocess_turn_on_alternatives(params):
     if rgb_color is not None:
         params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
 
+    return params
+
+
+def filter_turn_off_params(params):
+    """Filter out params not used in turn off."""
+    return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
+
 
 def preprocess_turn_off(params):
     """Process data for turning light off if brightness is 0."""
     if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
         # Zero brightness: Light will be turned off
-        params = {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
+        params = filter_turn_off_params(params)
         return (True, params)  # Light should be turned off
 
     return (False, None)  # Light should be turned on
@@ -191,19 +199,13 @@ async def async_setup(hass, config):
 
     def preprocess_data(data):
         """Preprocess the service data."""
-        base = {}
+        base = {
+            entity_field: data.pop(entity_field)
+            for entity_field in cv.ENTITY_SERVICE_FIELDS
+            if entity_field in data
+        }
 
-        for entity_field in cv.ENTITY_SERVICE_FIELDS:
-            if entity_field in data:
-                base[entity_field] = data.pop(entity_field)
-
-        preprocess_turn_on_alternatives(data)
-        turn_lights_off, off_params = preprocess_turn_off(data)
-
-        base["params"] = data
-        base["turn_lights_off"] = turn_lights_off
-        base["off_params"] = off_params
-
+        base["params"] = preprocess_turn_on_alternatives(data)
         return base
 
     async def async_handle_light_on_service(light, call):
@@ -212,8 +214,6 @@ async def async_setup(hass, config):
         If brightness is set to 0, this service will turn the light off.
         """
         params = call.data["params"]
-        turn_light_off = call.data["turn_lights_off"]
-        off_params = call.data["off_params"]
 
         if not params:
             default_profile = Profiles.get_default(light.entity_id)
@@ -221,7 +221,6 @@ async def async_setup(hass, config):
             if default_profile is not None:
                 params = {ATTR_PROFILE: default_profile}
                 preprocess_turn_on_alternatives(params)
-                turn_light_off, off_params = preprocess_turn_off(params)
 
         elif ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
             brightness = light.brightness if light.is_on else 0
@@ -232,15 +231,26 @@ async def async_setup(hass, config):
                 brightness += params.pop(ATTR_BRIGHTNESS_STEP)
 
             else:
-                brightness += int(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
+                brightness += round(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
 
             params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
-            turn_light_off, off_params = preprocess_turn_off(params)
 
+        turn_light_off, off_params = preprocess_turn_off(params)
         if turn_light_off:
             await light.async_turn_off(**off_params)
         else:
             await light.async_turn_on(**params)
+
+    async def async_handle_toggle_service(light, call):
+        """Handle toggling a light.
+
+        If brightness is set to 0, this service will turn the light off.
+        """
+        if light.is_on:
+            off_params = filter_turn_off_params(call.data["params"])
+            await light.async_turn_off(**off_params)
+        else:
+            await async_handle_light_on_service(light, call)
 
     # Listen for light on and light off service calls.
 
@@ -252,15 +262,14 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {
-            ATTR_TRANSITION: VALID_TRANSITION,
-            ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
-        },
+        {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH},
         "async_turn_off",
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE, LIGHT_TURN_ON_SCHEMA, "async_toggle"
+        SERVICE_TOGGLE,
+        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
+        async_handle_toggle_service,
     )
 
     return True
@@ -334,7 +343,7 @@ class Profiles:
         return None
 
 
-class Light(ToggleEntity):
+class LightEntity(ToggleEntity):
     """Representation of a light."""
 
     @property
@@ -430,3 +439,14 @@ class Light(ToggleEntity):
     def supported_features(self):
         """Flag supported features."""
         return 0
+
+
+class Light(LightEntity):
+    """Representation of a light (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "Light is deprecated, modify %s to extend LightEntity", cls.__name__,
+        )

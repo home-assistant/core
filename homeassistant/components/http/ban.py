@@ -10,6 +10,7 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -81,7 +82,7 @@ def log_invalid_auth(func):
     async def handle_req(view, request, *args, **kwargs):
         """Try to log failed login attempts if response status >= 400."""
         resp = await func(view, request, *args, **kwargs)
-        if resp.status >= 400:
+        if resp.status >= HTTP_BAD_REQUEST:
             await process_wrong_login(request)
         return resp
 
@@ -109,6 +110,12 @@ async def process_wrong_login(request):
         return
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
+
+    # Supervisor IP should never be banned
+    if "hassio" in hass.config.components and hass.components.hassio.get_supervisor_ip() == str(
+        remote_addr
+    ):
+        return
 
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]

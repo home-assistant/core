@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ya est\u00e1 en curso.",
+            "not_konn_panel": "No es un dispositivo Konnected.io reconocido",
+            "unknown": "Se produjo un error desconocido"
+        },
+        "error": {
+            "cannot_connect": "No se puede conectar a un Panel conectado en {host}:{port}"
+        },
+        "step": {
+            "confirm": {
+                "description": "Modelo: {model}\nID: {id}\nHost: {host}\nPuerto: {port}\n\nPuede configurar las E/S y el comportamiento del panel en los ajustes del Panel de Alarmas Konnected.",
+                "title": "Dispositivo Konnected Listo"
+            },
+            "import_confirm": {
+                "description": "Se ha descubierto un Panel de Alarma Konnected con ID {id} en configuration.yaml. Este flujo te permitir\u00e1 importarlo a una entrada de configuraci\u00f3n.",
+                "title": "Importar Dispositivo Konnected"
+            },
+            "user": {
+                "data": {
+                    "host": "Direcci\u00f3n IP del dispositivo Konnected",
+                    "port": "Puerto del dispositivo Konnected"
+                },
+                "description": "Introduzca la informaci\u00f3n del host de su panel Konnected."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "No es un dispositivo Konnected.io reconocido"
+        },
+        "error": {
+            "bad_host": "URL del host de la API de invalidaci\u00f3n no v\u00e1lida",
+            "one": "",
+            "other": "otros"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Invertir el estado de apertura/cierre",
+                    "name": "Nombre (opcional)",
+                    "type": "Tipo de sensor binario"
+                },
+                "description": "Seleccione las opciones para el sensor binario conectado a {zone}",
+                "title": "Configurar sensor binario"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Nombre (opcional)",
+                    "poll_interval": "Intervalo de sondeo (minutos) (opcional)",
+                    "type": "Tipo de sensor"
+                },
+                "description": "Seleccione las opciones para el sensor digital conectado a {zone}",
+                "title": "Configurar el sensor digital"
+            },
+            "options_io": {
+                "data": {
+                    "1": "Zona 1",
+                    "2": "Zona 2",
+                    "3": "Zona 3",
+                    "4": "Zona 4",
+                    "5": "Zona 5",
+                    "6": "Zona 6",
+                    "7": "Zona 7",
+                    "out": "OUT"
+                },
+                "description": "Descubierto un {model} en {host} . Seleccione la configuraci\u00f3n base de cada E / S a continuaci\u00f3n: seg\u00fan la E / S, puede permitir sensores binarios (contactos de apertura / cierre), sensores digitales (dht y ds18b20) o salidas conmutables. Podr\u00e1 configurar opciones detalladas en los pr\u00f3ximos pasos.",
+                "title": "Configurar E/S"
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Zona 10",
+                    "11": "Zona 11",
+                    "12": "Zona 12",
+                    "8": "Zona 8",
+                    "9": "Zona 9",
+                    "alarm1": "ALARMA1",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
+                },
+                "description": "Seleccione la configuraci\u00f3n de las E/S restantes a continuaci\u00f3n.  Podr\u00e1s configurar opciones detalladas en los pr\u00f3ximos pasos.",
+                "title": "Configurar E/S extendidas"
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "Invalidar la direcci\u00f3n URL del host de la API (opcional)",
+                    "blink": "Parpadea el LED del panel cuando se env\u00eda un cambio de estado",
+                    "override_api_host": "Reemplazar la URL predeterminada del panel host de la API de Home Assistant"
+                },
+                "description": "Seleccione el comportamiento deseado para su panel",
+                "title": "Configurar miscel\u00e1neos"
+            },
+            "options_switch": {
+                "data": {
+                    "activation": "Salida cuando est\u00e1 activada",
+                    "momentary": "Duraci\u00f3n del pulso (ms) (opcional)",
+                    "more_states": "Configurar estados adicionales para esta zona",
+                    "name": "Nombre (opcional)",
+                    "pause": "Pausa entre pulsos (ms) (opcional)",
+                    "repeat": "Tiempos de repetici\u00f3n (-1 = infinito) (opcional)"
+                },
+                "description": "Por favor, seleccione las opciones de salida para {zone}",
+                "title": "Configurar la salida conmutable"
+            }
+        }
+    }
+}

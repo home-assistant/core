@@ -1,7 +1,6 @@
 """Alexa entity adapters."""
 import logging
 from typing import List
-from urllib.parse import urlparse
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -386,7 +385,7 @@ class CoverCapabilities(AlexaEntity):
     def default_display_categories(self):
         """Return the display categories for this entity."""
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
-        if device_class == cover.DEVICE_CLASS_GARAGE:
+        if device_class in (cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_GATE):
             return [DisplayCategory.GARAGE_DOOR]
         if device_class == cover.DEVICE_CLASS_DOOR:
             return [DisplayCategory.DOOR]
@@ -408,7 +407,7 @@ class CoverCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
-        if device_class != cover.DEVICE_CLASS_GARAGE:
+        if device_class not in (cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_GATE):
             yield AlexaPowerController(self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -548,7 +547,11 @@ class MediaPlayerCapabilities(AlexaEntity):
             yield AlexaChannelController(self.entity)
 
         if supported & media_player.const.SUPPORT_SELECT_SOUND_MODE:
-            yield AlexaEqualizerController(self.entity)
+            inputs = AlexaInputController.get_valid_inputs(
+                self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST, [])
+            )
+            if len(inputs) > 0:
+                yield AlexaEqualizerController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
@@ -791,19 +794,25 @@ class CameraCapabilities(AlexaEntity):
         yield Alexa(self.hass)
 
     def _check_requirements(self):
-        """Check the hass URL for HTTPS scheme and port 443."""
+        """Check the hass URL for HTTPS scheme."""
         if "stream" not in self.hass.config.components:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "%s requires stream component for AlexaCameraStreamController",
                 self.entity_id,
             )
             return False
 
-        url = urlparse(network.async_get_external_url(self.hass))
-        if url.scheme != "https" or (url.port is not None and url.port != 443):
-            _LOGGER.error(
-                "%s requires HTTPS support on port 443 for AlexaCameraStreamController",
-                self.entity_id,
+        try:
+            network.get_url(
+                self.hass,
+                allow_internal=False,
+                allow_ip=False,
+                require_ssl=True,
+                require_standard_port=True,
+            )
+        except network.NoURLAvailableError:
+            _LOGGER.debug(
+                "%s requires HTTPS for AlexaCameraStreamController", self.entity_id
             )
             return False
 

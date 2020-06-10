@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642\u3002",
+            "missing_configuration": "Withings \u6574\u5408\u5c1a\u672a\u8a2d\u7f6e\uff0c\u8acb\u53c3\u95b1\u6587\u4ef6\u8aaa\u660e\u3002"
+        },
+        "create_entry": {
+            "default": "\u5df2\u6210\u529f\u8a8d\u8b49 Withings \u8a2d\u5099\u3002"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
+            },
+            "profile": {
+                "data": {
+                    "profile": "\u500b\u4eba\u8a2d\u5b9a"
+                },
+                "description": "\u65bc Withings \u7db2\u7ad9\u6240\u9078\u64c7\u7684\u500b\u4eba\u8a2d\u5b9a\u70ba\u4f55\uff1f\u5047\u5982\u500b\u4eba\u8a2d\u5b9a\u4e0d\u7b26\u5408\u7684\u8a71\uff0c\u8cc7\u6599\u5c07\u6703\u6a19\u793a\u932f\u8aa4\u3002",
+                "title": "\u500b\u4eba\u8a2d\u5b9a\u3002"
+            }
+        }
+    }
+}

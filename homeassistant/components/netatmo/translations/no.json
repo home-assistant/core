@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tidsavbrutt ved oppretting av godkjennings url.",
+            "missing_configuration": "Komponeneten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning med Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            }
+        }
+    }
+}

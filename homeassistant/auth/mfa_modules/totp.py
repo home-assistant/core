@@ -41,7 +41,7 @@ def _generate_qr_code(data: str) -> str:
 
     with BytesIO() as buffer:
         qr_code.svg(file=buffer, scale=4)
-        return "{}".format(
+        return str(
             buffer.getvalue()
             .decode("ascii")
             .replace("\n", "")
@@ -117,7 +117,8 @@ class TotpAuthModule(MultiFactorAuthModule):
 
         Mfa module should extend SetupFlow
         """
-        user = await self.hass.auth.async_get_user(user_id)  # type: ignore
+        user = await self.hass.auth.async_get_user(user_id)
+        assert user is not None
         return TotpSetupFlow(self, self.input_schema, user)
 
     async def async_setup_user(self, user_id: str, setup_data: Any) -> str:

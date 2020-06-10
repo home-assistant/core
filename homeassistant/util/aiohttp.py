@@ -5,6 +5,8 @@ from urllib.parse import parse_qsl
 
 from multidict import CIMultiDict, MultiDict
 
+from homeassistant.const import HTTP_OK
+
 
 class MockRequest:
     """Mock an aiohttp request."""
@@ -13,7 +15,7 @@ class MockRequest:
         self,
         content: bytes,
         method: str = "GET",
-        status: int = 200,
+        status: int = HTTP_OK,
         headers: Optional[Dict[str, str]] = None,
         query_string: Optional[str] = None,
         url: str = "",

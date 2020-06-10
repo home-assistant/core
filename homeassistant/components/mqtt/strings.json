@@ -1,15 +1,13 @@
 {
   "config": {
-    "title": "MQTT",
     "step": {
       "broker": {
-        "title": "MQTT",
         "description": "Please enter the connection information of your MQTT broker.",
         "data": {
           "broker": "Broker",
-          "port": "Port",
-          "username": "Username",
-          "password": "Password",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "discovery": "Enable discovery"
         }
       },

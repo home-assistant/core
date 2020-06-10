@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -32,10 +32,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    async_add_entities([HomematicipAlarmControlPanel(hap)])
+    async_add_entities([HomematicipAlarmControlPanelEntity(hap)])
 
 
-class HomematicipAlarmControlPanel(AlarmControlPanel):
+class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     """Representation of an alarm control panel."""
 
     def __init__(self, hap: HomematicipHAP) -> None:

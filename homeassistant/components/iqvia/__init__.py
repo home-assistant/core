@@ -239,7 +239,6 @@ class IQVIAEntity(Entity):
 
     def __init__(self, iqvia, sensor_type, name, icon, zip_code):
         """Initialize the sensor."""
-        self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = icon
         self._iqvia = iqvia
@@ -301,8 +300,8 @@ class IQVIAEntity(Entity):
             self.update_from_latest_data()
             self.async_write_ha_state()
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_DATA_UPDATE, update
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, TOPIC_DATA_UPDATE, update)
         )
 
         await self._iqvia.async_register_api_interest(self._type)
@@ -315,10 +314,6 @@ class IQVIAEntity(Entity):
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-            self._async_unsub_dispatcher_connect = None
-
         self._iqvia.async_deregister_api_interest(self._type)
         if self._type == TYPE_ALLERGY_FORECAST:
             # Entities that lose interest in allergy forecast data should also lose

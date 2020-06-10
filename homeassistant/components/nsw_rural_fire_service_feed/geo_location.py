@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -41,7 +42,6 @@ ATTR_TYPE = "type"
 CONF_CATEGORIES = "categories"
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -281,7 +281,7 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
+        return LENGTH_KILOMETERS
 
     @property
     def device_state_attributes(self):

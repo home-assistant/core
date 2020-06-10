@@ -1,13 +1,12 @@
 {
   "config": {
-    "title": "Linky",
     "step": {
       "user": {
         "title": "Linky",
         "description": "Enter your credentials",
         "data": {
-          "username": "Email",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

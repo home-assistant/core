@@ -27,7 +27,6 @@ async def test_reproducing_states(hass, caplog):
             State("fan.entity_oscillating", "on", {"oscillating": True}),
             State("fan.entity_direction", "on", {"direction": "forward"}),
         ],
-        blocking=True,
     )
 
     assert len(turn_on_calls) == 0
@@ -38,7 +37,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("fan.entity_off", "not_supported")], blocking=True
+        [State("fan.entity_off", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -59,7 +58,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("fan.non_existing", "on"),
         ],
-        blocking=True,
     )
 
     assert len(turn_on_calls) == 1

@@ -1,0 +1,12 @@
+{
+    "state": {
+        "_": {
+            "closed": "Lukka",
+            "closing": "Lukkar",
+            "open": "Open",
+            "opening": "Opnar",
+            "stopped": "Stoppa"
+        }
+    },
+    "title": "Dekke"
+}

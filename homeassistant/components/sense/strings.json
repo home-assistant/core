@@ -1,12 +1,11 @@
 {
   "config": {
-    "title": "Sense",
     "step": {
       "user": {
         "title": "Connect to your Sense Energy Monitor",
         "data": {
-          "email": "Email Address",
-          "password": "Password"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

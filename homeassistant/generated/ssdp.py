@@ -6,6 +6,12 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 SSDP = {
+    "arcam_fmj": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "ARCAM"
+        }
+    ],
     "deconz": [
         {
             "manufacturer": "Royal Philips Electronics"
@@ -15,6 +21,11 @@ SSDP = {
         {
             "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
             "manufacturer": "DIRECTV"
+        }
+    ],
+    "fritzbox": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1"
         }
     ],
     "harmony": [
@@ -48,6 +59,12 @@ SSDP = {
             "modelName": "Philips hue bridge 2015"
         }
     ],
+    "isy994": [
+        {
+            "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
+            "manufacturer": "Universal Devices Inc."
+        }
+    ],
     "konnected": [
         {
             "manufacturer": "konnected.io"
@@ -65,9 +82,29 @@ SSDP = {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
         }
     ],
+    "songpal": [
+        {
+            "manufacturer": "Sony Corporation",
+            "st": "urn:schemas-sony-com:service:ScalarWebAPI:1"
+        }
+    ],
     "sonos": [
         {
             "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
+        }
+    ],
+    "synology_dsm": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "Synology"
+        }
+    ],
+    "upnp": [
+        {
+            "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+        },
+        {
+            "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
         }
     ],
     "wemo": [

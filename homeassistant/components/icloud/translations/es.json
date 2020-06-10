@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cuenta ya configurada",
+            "no_device": "Ninguno de tus dispositivos tiene activado \"Buscar mi iPhone\""
+        },
+        "error": {
+            "login": "Error de inicio de sesi\u00f3n: comprueba tu direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a",
+            "send_verification_code": "Error al enviar el c\u00f3digo de verificaci\u00f3n",
+            "validate_verification_code": "No se pudo verificar el c\u00f3digo de verificaci\u00f3n, elegir un dispositivo de confianza e iniciar la verificaci\u00f3n de nuevo"
+        },
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Dispositivo de confianza"
+                },
+                "description": "Seleccione su dispositivo de confianza",
+                "title": "Dispositivo de confianza iCloud"
+            },
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Correo electr\u00f3nico",
+                    "with_family": "Con la familia"
+                },
+                "description": "Ingrese sus credenciales",
+                "title": "Credenciales iCloud"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "C\u00f3digo de verificaci\u00f3n"
+                },
+                "description": "Por favor, introduzca el c\u00f3digo de verificaci\u00f3n que acaba de recibir de iCloud",
+                "title": "C\u00f3digo de verificaci\u00f3n de iCloud"
+            }
+        }
+    }
+}

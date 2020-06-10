@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "updated_entry": "Dette innlegget har allerede v\u00e6rt oppsett, men navnet, apps, og/eller alternativer som er definert i konfigurasjon som ikke stemmer med det som tidligere er importert konfigurasjon, s\u00e5 konfigurasjonen innlegget har blitt oppdatert i henhold til dette."
+        },
+        "error": {
+            "complete_pairing_failed": "Kan ikke fullf\u00f8re sammenkoblingen. Forsikre deg om at PIN-koden du oppga er riktig, og at TV-en fortsatt er p\u00e5 og tilkoblet nettverket f\u00f8r du sender inn p\u00e5 nytt.",
+            "host_exists": "VIZIO-enhet med spesifisert vert allerede konfigurert.",
+            "name_exists": "VIZIO-enhet med spesifisert navn allerede konfigurert."
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "TVen skal vise en kode. Fyll inn denne koden i skjemaet, og fortsett deretter til neste trinn for \u00e5 fullf\u00f8re paringen.",
+                "title": "Fullf\u00f8r sammenkoblingsprosess"
+            },
+            "pairing_complete": {
+                "title": "Sammenkoblingen fullf\u00f8rt"
+            },
+            "pairing_complete_import": {
+                "title": "Sammenkoblingen fullf\u00f8rt"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Tilgangstoken",
+                    "device_class": "Enhetstype",
+                    "host": "Vert",
+                    "name": "Navn"
+                },
+                "title": "VIZIO SmartCast-enhet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Apper \u00e5 inkludere eller ekskludere",
+                    "include_or_exclude": "Inkluder eller ekskludere apper?",
+                    "volume_step": "St\u00f8rrelse p\u00e5 volum trinn"
+                },
+                "description": "Hvis du har en Smart-TV, kan du eventuelt filtrere kildelisten ved \u00e5 velge hvilke apper som skal inkluderes eller utelates i kildelisten."
+            }
+        }
+    }
+}

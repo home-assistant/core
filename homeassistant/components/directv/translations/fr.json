@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le r\u00e9cepteur DirecTV est d\u00e9j\u00e0 configur\u00e9",
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "data": {
+                    "one": "Vide",
+                    "other": "Vide"
+                },
+                "description": "Voulez-vous configurer {name} ?"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te ou adresse IP"
+                }
+            }
+        }
+    }
+}

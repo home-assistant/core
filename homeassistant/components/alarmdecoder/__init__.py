@@ -187,12 +187,12 @@ def setup(hass, config):
 
     controller = False
     if device_type == "socket":
-        host = device.get(CONF_HOST)
-        port = device.get(CONF_DEVICE_PORT)
+        host = device[CONF_HOST]
+        port = device[CONF_DEVICE_PORT]
         controller = AlarmDecoder(SocketDevice(interface=(host, port)))
     elif device_type == "serial":
-        path = device.get(CONF_DEVICE_PATH)
-        baud = device.get(CONF_DEVICE_BAUD)
+        path = device[CONF_DEVICE_PATH]
+        baud = device[CONF_DEVICE_BAUD]
         controller = AlarmDecoder(SerialDevice(interface=path))
     elif device_type == "usb":
         AlarmDecoder(USBDevice.find())

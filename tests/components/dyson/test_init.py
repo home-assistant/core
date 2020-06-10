@@ -4,13 +4,15 @@ from unittest import mock
 
 from homeassistant.components import dyson
 
+from .common import load_mock_device
+
 from tests.common import get_test_home_assistant
 
 
 def _get_dyson_account_device_available():
     """Return a valid device provide by Dyson web services."""
     device = mock.Mock()
-    device.serial = "XX-XXXXX-XX"
+    load_mock_device(device)
     device.connect = mock.Mock(return_value=True)
     device.auto_connect = mock.Mock(return_value=True)
     return device
@@ -19,7 +21,7 @@ def _get_dyson_account_device_available():
 def _get_dyson_account_device_not_available():
     """Return an invalid device provide by Dyson web services."""
     device = mock.Mock()
-    device.serial = "XX-XXXXX-XX"
+    load_mock_device(device)
     device.connect = mock.Mock(return_value=False)
     device.auto_connect = mock.Mock(return_value=False)
     return device
@@ -28,7 +30,7 @@ def _get_dyson_account_device_not_available():
 def _get_dyson_account_device_error():
     """Return an invalid device raising OSError while connecting."""
     device = mock.Mock()
-    device.serial = "XX-XXXXX-XX"
+    load_mock_device(device)
     device.connect = mock.Mock(side_effect=OSError("Network error"))
     return device
 
@@ -39,8 +41,9 @@ class DysonTest(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

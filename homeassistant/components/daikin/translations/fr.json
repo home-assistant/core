@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "key": "Cl\u00e9 d'authentification (utilis\u00e9e uniquement par les appareils BRP072C/Zena)",
+                    "password": "Mot de passe de l'appareil (utilis\u00e9 uniquement par les appareils SKYFi)"
+                },
+                "description": "Entrez l'adresse IP de votre Daikin AC.",
+                "title": "Configurer Daikin AC"
+            }
+        }
+    }
+}

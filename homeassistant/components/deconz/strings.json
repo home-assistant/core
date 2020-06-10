@@ -1,13 +1,16 @@
 {
   "config": {
-    "title": "deCONZ Zigbee gateway",
     "flow_title": "deCONZ Zigbee gateway ({host})",
     "step": {
-      "init": {
-        "title": "Define deCONZ gateway",
+      "user": {
         "data": {
-          "host": "Host",
-          "port": "Port"
+          "host": "Select discovered deCONZ gateway"
+        }
+      },
+      "manual_input": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "link": {
@@ -83,6 +86,8 @@
       "open": "Open",
       "close": "Close",
       "both_buttons": "Both buttons",
+      "top_buttons": "Top buttons",
+      "bottom_buttons": "Bottom buttons",
       "button_1": "First button",
       "button_2": "Second button",
       "button_3": "Third button",

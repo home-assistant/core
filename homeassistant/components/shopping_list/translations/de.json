@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Die Einkaufsliste ist bereits konfiguriert."
+        },
+        "step": {
+            "user": {
+                "description": "M\u00f6chten Sie die Einkaufsliste konfigurieren?",
+                "title": "Einkaufsliste"
+            }
+        }
+    },
+    "title": "Einkaufsliste"
+}

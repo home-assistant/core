@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Den h\u00e4r enheten har redan konfigurerats",
+            "already_in_progress": "Den h\u00e4r enheten har redan konfigurerats",
+            "not_huawei_lte": "Inte en Huawei LTE-enhet"
+        },
+        "error": {
+            "connection_failed": "Anslutningen misslyckades",
+            "connection_timeout": "Timeout f\u00f6r anslutning",
+            "incorrect_password": "Felaktigt l\u00f6senord",
+            "incorrect_username": "Felaktigt anv\u00e4ndarnamn",
+            "incorrect_username_or_password": "Felaktigt anv\u00e4ndarnamn eller l\u00f6senord",
+            "invalid_url": "Ogiltig URL",
+            "login_attempts_exceeded": "Maximala inloggningsf\u00f6rs\u00f6k har \u00f6verskridits, f\u00f6rs\u00f6k igen senare",
+            "response_error": "Ok\u00e4nt fel fr\u00e5n enheten",
+            "unknown_connection_error": "Ok\u00e4nt fel vid anslutning till enheten"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "url": "URL",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Ange information om enhets\u00e5tkomst. Det \u00e4r valfritt att ange anv\u00e4ndarnamn och l\u00f6senord, men st\u00f6djer d\u00e5 fler integrationsfunktioner. \u00c5 andra sidan kan anv\u00e4ndning av en auktoriserad anslutning orsaka problem med att komma \u00e5t enhetens webbgr\u00e4nssnitt utanf\u00f6r Home Assistant medan integrationen \u00e4r aktiv och tv\u00e4rtom.",
+                "title": "Konfigurera Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Namn p\u00e5 meddelandetj\u00e4nsten (\u00e4ndring kr\u00e4ver omstart)",
+                    "recipient": "Mottagare av SMS-meddelanden",
+                    "track_new_devices": "Sp\u00e5ra nya enheter"
+                }
+            }
+        }
+    }
+}

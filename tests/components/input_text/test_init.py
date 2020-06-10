@@ -1,7 +1,4 @@
 """The tests for the Input text component."""
-# pylint: disable=protected-access
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.input_text import (
@@ -29,6 +26,8 @@ from homeassistant.helpers import entity_registry
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
+# pylint: disable=protected-access
+from tests.async_mock import patch
 from tests.common import mock_restore_cache
 
 TEST_VAL_MIN = 2
@@ -103,19 +102,19 @@ async def test_set_value(hass):
     entity_id = "input_text.test_1"
 
     state = hass.states.get(entity_id)
-    assert "test" == str(state.state)
+    assert str(state.state) == "test"
 
     set_value(hass, entity_id, "testing")
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "testing" == str(state.state)
+    assert str(state.state) == "testing"
 
     set_value(hass, entity_id, "testing too long")
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "testing" == str(state.state)
+    assert str(state.state) == "testing"
 
 
 async def test_mode(hass):
@@ -144,15 +143,15 @@ async def test_mode(hass):
 
     state = hass.states.get("input_text.test_default_text")
     assert state
-    assert "text" == state.attributes["mode"]
+    assert state.attributes["mode"] == "text"
 
     state = hass.states.get("input_text.test_explicit_text")
     assert state
-    assert "text" == state.attributes["mode"]
+    assert state.attributes["mode"] == "text"
 
     state = hass.states.get("input_text.test_explicit_password")
     assert state
-    assert "password" == state.attributes["mode"]
+    assert state.attributes["mode"] == "password"
 
 
 async def test_restore_state(hass):
@@ -273,8 +272,8 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_1 is not None
     assert state_2 is not None
     assert state_3 is None
-    assert "test 1" == state_1.state
-    assert "test 2" == state_2.state
+    assert state_1.state == "test 1"
+    assert state_2.state == "test 2"
     assert state_1.attributes[ATTR_MIN] == 0
     assert state_2.attributes[ATTR_MAX] == 100
 

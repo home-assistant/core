@@ -1,12 +1,11 @@
 {
   "config": {
-    "title": "VeSync",
     "step": {
       "user": {
         "title": "Enter Username and Password",
         "data": {
-          "username": "Email Address",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

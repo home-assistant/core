@@ -1,6 +1,6 @@
 {
+  "title": "Local IP Address",
   "config": {
-    "title": "Local IP Address",
     "step": {
       "user": {
         "title": "Local IP Address",
@@ -10,7 +10,7 @@
       }
     },
     "abort": {
-      "already_configured": "Integration is already configured with an existing sensor with that name"
+      "single_instance_allowed": "Only a single configuration of Local IP is allowed."
     }
   }
 }

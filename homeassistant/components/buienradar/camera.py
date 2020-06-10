@@ -128,7 +128,7 @@ class BuienradarCam(Camera):
                     _LOG.debug("HTTP 304 - success")
                     return True
 
-                last_modified = res.headers.get("Last-Modified", None)
+                last_modified = res.headers.get("Last-Modified")
                 if last_modified:
                     self._last_modified = last_modified
 

@@ -43,9 +43,9 @@ def setup(hass, config):
     """Set up for the Asterisk Voicemail box."""
     conf = config.get(DOMAIN)
 
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    password = conf.get(CONF_PASSWORD)
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
+    password = conf[CONF_PASSWORD]
 
     hass.data[DOMAIN] = AsteriskData(hass, host, port, password, config)
 

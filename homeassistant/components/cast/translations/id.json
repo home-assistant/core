@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Tidak ada perangkat Google Cast yang ditemukan pada jaringan.",
+            "single_instance_allowed": "Hanya satu konfigurasi Google Cast yang diperlukan."
+        },
+        "step": {
+            "confirm": {
+                "description": "Apakah Anda ingin menyiapkan Google Cast?"
+            }
+        }
+    }
+}

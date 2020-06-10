@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         if sensor_type == "total_cameras":
             sensors.append(ArloSensor(SENSOR_TYPES[sensor_type][0], arlo, sensor_type))
         else:

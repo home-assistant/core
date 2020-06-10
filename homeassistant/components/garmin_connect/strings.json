@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This account is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "Failed to connect, please try again.",
@@ -12,13 +12,12 @@
     "step": {
       "user": {
         "data": {
-          "password": "Password",
-          "username": "Username"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Enter your credentials.",
         "title": "Garmin Connect"
       }
-    },
-    "title": "Garmin Connect"
+    }
   }
 }

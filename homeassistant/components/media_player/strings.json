@@ -1,4 +1,5 @@
 {
+  "title": "Media player",
   "device_automation": {
     "condition_type": {
       "is_on": "{entity_name} is on",
@@ -6,6 +7,16 @@
       "is_idle": "{entity_name} is idle",
       "is_paused": "{entity_name} is paused",
       "is_playing": "{entity_name} is playing"
+    }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]",
+      "playing": "Playing",
+      "paused": "[%key:common::state::paused%]",
+      "idle": "[%key:common::state::idle%]",
+      "standby": "[%key:common::state::standby%]"
     }
   }
 }

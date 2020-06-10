@@ -5,7 +5,7 @@ import logging
 from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     ATTR_LAST_TRIP_TIME,
     CONF_CUSTOMIZE,
@@ -90,10 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     customize = config.get(CONF_CUSTOMIZE)
 
-    if config.get(CONF_SSL):
-        protocol = "https"
-    else:
-        protocol = "http"
+    protocol = "https" if config[CONF_SSL] else "http"
 
     url = f"{protocol}://{host}"
 
@@ -186,7 +183,7 @@ class HikvisionData:
         return self.camdata.fetch_attributes(sensor, channel)
 
 
-class HikvisionBinarySensor(BinarySensorDevice):
+class HikvisionBinarySensor(BinarySensorEntity):
     """Representation of a Hikvision binary sensor."""
 
     def __init__(self, hass, sensor, channel, cam, delay):

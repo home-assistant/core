@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Luftdaten",
     "step": {
       "user": {
         "title": "Define Luftdaten",

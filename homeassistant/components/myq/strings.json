@@ -1,12 +1,11 @@
 {
   "config": {
-    "title": "MyQ",
     "step": {
       "user": {
         "title": "Connect to the MyQ Gateway",
         "data": {
-          "username": "Username",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

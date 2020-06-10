@@ -7,6 +7,7 @@ import logging
 import aiohttp
 import async_timeout
 
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, HTTP_OK
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import dt
@@ -47,8 +48,8 @@ class Auth:
         lwa_params = {
             "grant_type": "authorization_code",
             "code": accept_grant_code,
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
+            CONF_CLIENT_ID: self.client_id,
+            CONF_CLIENT_SECRET: self.client_secret,
         }
         _LOGGER.debug(
             "Calling LWA to get the access token (first time), with: %s",
@@ -79,8 +80,8 @@ class Auth:
             lwa_params = {
                 "grant_type": "refresh_token",
                 "refresh_token": self._prefs[STORAGE_REFRESH_TOKEN],
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
+                CONF_CLIENT_ID: self.client_id,
+                CONF_CLIENT_SECRET: self.client_secret,
             }
 
             _LOGGER.debug("Calling LWA to refresh the access token.")
@@ -118,7 +119,7 @@ class Auth:
         _LOGGER.debug("LWA response header: %s", response.headers)
         _LOGGER.debug("LWA response status: %s", response.status)
 
-        if response.status != 200:
+        if response.status != HTTP_OK:
             _LOGGER.error("Error calling LWA to get auth token.")
             return None
 

@@ -1,6 +1,7 @@
 """Support for August sensors."""
 import logging
 
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 
 from .const import CONF_LOADZONE, DOMAIN
@@ -28,7 +29,7 @@ class GriddyPriceSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "¢/kWh"
+        return f"¢/{ENERGY_KILO_WATT_HOUR}"
 
     @property
     def name(self):
@@ -69,8 +70,6 @@ class GriddyPriceSensor(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )

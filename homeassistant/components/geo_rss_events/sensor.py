@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
+    LENGTH_KILOMETERS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -152,7 +153,7 @@ class GeoRssServiceSensor(Entity):
             # And now compute the attributes from the filtered events.
             matrix = {}
             for entry in feed_entries:
-                matrix[entry.title] = f"{entry.distance_to_home:.0f}km"
+                matrix[entry.title] = f"{entry.distance_to_home:.0f}{LENGTH_KILOMETERS}"
             self._state_attributes = matrix
         elif status == UPDATE_OK_NO_DATA:
             _LOGGER.debug("Update successful, but no data received from %s", self._feed)

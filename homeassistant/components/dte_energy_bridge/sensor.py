@@ -5,7 +5,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -32,9 +32,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DTE energy bridge sensor."""
-    name = config.get(CONF_NAME)
-    ip_address = config.get(CONF_IP_ADDRESS)
-    version = config.get(CONF_VERSION, 1)
+    name = config[CONF_NAME]
+    ip_address = config[CONF_IP_ADDRESS]
+    version = config[CONF_VERSION]
 
     add_entities([DteEnergyBridgeSensor(ip_address, name, version)], True)
 
@@ -85,7 +85,7 @@ class DteEnergyBridgeSensor(Entity):
             )
             return
 
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.warning(
                 "Invalid status_code from DTE Energy Bridge: %s (%s)",
                 response.status_code,

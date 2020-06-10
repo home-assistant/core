@@ -3,9 +3,7 @@ from datetime import datetime, timedelta
 import json
 import logging
 import os
-from unittest.mock import Mock, call
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components import zone
@@ -29,6 +27,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, call, patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,

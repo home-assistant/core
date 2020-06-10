@@ -2,7 +2,7 @@
   "domain": "scrape",
   "name": "Scrape",
   "documentation": "https://www.home-assistant.io/integrations/scrape",
-  "requirements": ["beautifulsoup4==4.8.2"],
+  "requirements": ["beautifulsoup4==4.9.0"],
   "after_dependencies": ["rest"],
   "codeowners": ["@fabaff"]
 }

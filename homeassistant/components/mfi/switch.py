@@ -5,7 +5,7 @@ from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    use_tls = config.get(CONF_SSL)
+    use_tls = config[CONF_SSL]
     verify_tls = config.get(CONF_VERIFY_SSL)
     default_port = 6443 if use_tls else 6080
     port = int(config.get(CONF_PORT, default_port))
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class MfiSwitch(SwitchDevice):
+class MfiSwitch(SwitchEntity):
     """Representation of an mFi switch-able device."""
 
     def __init__(self, port):

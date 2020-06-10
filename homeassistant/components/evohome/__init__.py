@@ -86,7 +86,7 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
             vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
         vol.Optional(ATTR_DURATION_UNTIL): vol.All(
-            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
+            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
         ),
     }
 )
@@ -121,7 +121,7 @@ def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
         """Convert a string to snake_case."""
         string = re.sub(r"[\-\.\s]", "_", str(key))
         return (string[0]).lower() + re.sub(
-            r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
+            r"[A-Z]", lambda matched: f"_{matched.group(0).lower()}", string[1:]
         )
 
     return {

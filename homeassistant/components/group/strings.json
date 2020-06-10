@@ -1,0 +1,17 @@
+{
+  "title": "Group",
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]",
+      "home": "[%key:component::device_tracker::state::_::home%]",
+      "not_home": "[%key:component::device_tracker::state::_::not_home%]",
+      "open": "[%key:common::state::open%]",
+      "closed": "[%key:common::state::closed%]",
+      "locked": "[%key:common::state::locked%]",
+      "unlocked": "[%key:common::state::unlocked%]",
+      "ok": "[%key:component::binary_sensor::state::problem::off%]",
+      "problem": "[%key:component::binary_sensor::state::problem::on%]"
+    }
+  }
+}

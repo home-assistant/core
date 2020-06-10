@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     SPEED_METERS_PER_SECOND,
@@ -61,7 +62,7 @@ SENSOR_TYPES = {
     ],
     "wind_direction": [
         "Wind direction",
-        "°",
+        DEGREE,
         "winddirection",
         "mdi:flag-triangle",
         None,

@@ -2,7 +2,7 @@
 import logging
 from time import monotonic
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import CONF_SMARTPLUGS, HUB as hub
 
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class VerisureSmartplug(SwitchDevice):
+class VerisureSmartplug(SwitchEntity):
     """Representation of a Verisure smartplug."""
 
     def __init__(self, device_id):

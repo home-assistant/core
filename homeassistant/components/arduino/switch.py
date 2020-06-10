@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -33,12 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
     board = hass.data[DOMAIN]
 
-    # Verify that Arduino board is present
-    if board is None:
-        _LOGGER.error("A connection has not been made to the Arduino board")
-        return False
-
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
 
     switches = []
     for pinnum, pin in pins.items():
@@ -46,19 +41,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class ArduinoSwitch(SwitchDevice):
+class ArduinoSwitch(SwitchEntity):
     """Representation of an Arduino switch."""
 
     def __init__(self, pin, options, board):
         """Initialize the Pin."""
         self._pin = pin
-        self._name = options.get(CONF_NAME)
+        self._name = options[CONF_NAME]
         self.pin_type = CONF_TYPE
         self.direction = "out"
 
-        self._state = options.get(CONF_INITIAL)
+        self._state = options[CONF_INITIAL]
 
-        if options.get(CONF_NEGATE):
+        if options[CONF_NEGATE]:
             self.turn_on_handler = board.set_digital_out_low
             self.turn_off_handler = board.set_digital_out_high
         else:

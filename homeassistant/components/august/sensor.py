@@ -7,6 +7,7 @@ from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.const import ATTR_ENTITY_PICTURE, UNIT_PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -33,21 +34,12 @@ def _retrieve_device_battery_state(detail):
 
 def _retrieve_linked_keypad_battery_state(detail):
     """Get the latest state of the sensor."""
-    if detail.keypad is None:
-        return None
-
-    return detail.keypad.battery_percentage
+    return detail.battery_percentage
 
 
 SENSOR_TYPES_BATTERY = {
-    "device_battery": {
-        "name": "Battery",
-        "state_provider": _retrieve_device_battery_state,
-    },
-    "linked_keypad_battery": {
-        "name": "Keypad Battery",
-        "state_provider": _retrieve_linked_keypad_battery_state,
-    },
+    "device_battery": {"state_provider": _retrieve_device_battery_state},
+    "linked_keypad_battery": {"state_provider": _retrieve_linked_keypad_battery_state},
 }
 
 
@@ -55,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the August sensors."""
     data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     devices = []
-
+    migrate_unique_id_devices = []
     operation_sensors = []
     batteries = {
         "device_battery": [],
@@ -68,28 +60,60 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         batteries["linked_keypad_battery"].append(device)
         operation_sensors.append(device)
 
-    for sensor_type in SENSOR_TYPES_BATTERY:
-        for device in batteries[sensor_type]:
-            state_provider = SENSOR_TYPES_BATTERY[sensor_type]["state_provider"]
-            detail = data.get_device_detail(device.device_id)
-            state = state_provider(detail)
-            sensor_name = SENSOR_TYPES_BATTERY[sensor_type]["name"]
-            if state is None:
-                _LOGGER.debug(
-                    "Not adding battery sensor %s for %s because it is not present",
-                    sensor_name,
-                    device.device_name,
-                )
-            else:
-                _LOGGER.debug(
-                    "Adding battery sensor %s for %s", sensor_name, device.device_name,
-                )
-                devices.append(AugustBatterySensor(data, sensor_type, device))
+    for device in batteries["device_battery"]:
+        state_provider = SENSOR_TYPES_BATTERY["device_battery"]["state_provider"]
+        detail = data.get_device_detail(device.device_id)
+        if detail is None or state_provider(detail) is None:
+            _LOGGER.debug(
+                "Not adding battery sensor for %s because it is not present",
+                device.device_name,
+            )
+            continue
+        _LOGGER.debug(
+            "Adding battery sensor for %s", device.device_name,
+        )
+        devices.append(AugustBatterySensor(data, "device_battery", device, device))
+
+    for device in batteries["linked_keypad_battery"]:
+        detail = data.get_device_detail(device.device_id)
+
+        if detail.keypad is None:
+            _LOGGER.debug(
+                "Not adding keypad battery sensor for %s because it is not present",
+                device.device_name,
+            )
+            continue
+        _LOGGER.debug(
+            "Adding keypad battery sensor for %s", device.device_name,
+        )
+        keypad_battery_sensor = AugustBatterySensor(
+            data, "linked_keypad_battery", detail.keypad, device
+        )
+        devices.append(keypad_battery_sensor)
+        migrate_unique_id_devices.append(keypad_battery_sensor)
 
     for device in operation_sensors:
         devices.append(AugustOperatorSensor(data, device))
 
+    await _async_migrate_old_unique_ids(hass, migrate_unique_id_devices)
+
     async_add_entities(devices, True)
+
+
+async def _async_migrate_old_unique_ids(hass, devices):
+    """Keypads now have their own serial number."""
+    registry = await async_get_registry(hass)
+    for device in devices:
+        old_entity_id = registry.async_get_entity_id(
+            "sensor", DOMAIN, device.old_unique_id
+        )
+        if old_entity_id is not None:
+            _LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                device.old_unique_id,
+                device.unique_id,
+            )
+            registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
 
 
 class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
@@ -194,12 +218,13 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
 class AugustBatterySensor(AugustEntityMixin, Entity):
     """Representation of an August sensor."""
 
-    def __init__(self, data, sensor_type, device):
+    def __init__(self, data, sensor_type, device, old_device):
         """Initialize the sensor."""
         super().__init__(data, device)
         self._data = data
         self._sensor_type = sensor_type
         self._device = device
+        self._old_device = old_device
         self._state = None
         self._available = False
         self._update_from_data()
@@ -228,8 +253,7 @@ class AugustBatterySensor(AugustEntityMixin, Entity):
     def name(self):
         """Return the name of the sensor."""
         device_name = self._device.device_name
-        sensor_name = SENSOR_TYPES_BATTERY[self._sensor_type]["name"]
-        return f"{device_name} {sensor_name}"
+        return f"{device_name} Battery"
 
     @callback
     def _update_from_data(self):
@@ -242,3 +266,8 @@ class AugustBatterySensor(AugustEntityMixin, Entity):
     def unique_id(self) -> str:
         """Get the unique id of the device sensor."""
         return f"{self._device_id}_{self._sensor_type}"
+
+    @property
+    def old_unique_id(self) -> str:
+        """Get the old unique id of the device sensor."""
+        return f"{self._old_device.device_id}_{self._sensor_type}"

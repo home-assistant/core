@@ -11,7 +11,7 @@ import socket
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST,
@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    HTTP_OK,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
@@ -103,7 +104,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([entity])
 
 
-class Volumio(MediaPlayerDevice):
+class Volumio(MediaPlayerEntity):
     """Volumio Player Object."""
 
     def __init__(self, name, host, port, hass):
@@ -127,7 +128,7 @@ class Volumio(MediaPlayerDevice):
         try:
             websession = async_get_clientsession(self.hass)
             response = await websession.get(url, params=params)
-            if response.status == 200:
+            if response.status == HTTP_OK:
                 data = await response.json()
             else:
                 _LOGGER.error(
@@ -143,11 +144,7 @@ class Volumio(MediaPlayerDevice):
             )
             return False
 
-        try:
-            return data
-        except AttributeError:
-            _LOGGER.error("Received invalid response: %s", data)
-            return False
+        return data
 
     async def async_update(self):
         """Update state."""

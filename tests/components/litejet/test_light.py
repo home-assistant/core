@@ -31,7 +31,7 @@ class TestLiteJetLight(unittest.TestCase):
         self.load_deactivated_callbacks = {}
 
         def get_load_name(number):
-            return "Mock Load #" + str(number)
+            return f"Mock Load #{number}"
 
         def on_load_activated(number, callback):
             self.load_activated_callbacks[number] = callback

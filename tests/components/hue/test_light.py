@@ -1,7 +1,6 @@
 """Philips Hue lights platform tests."""
 import asyncio
 import logging
-from unittest.mock import Mock
 
 import aiohue
 
@@ -9,6 +8,8 @@ from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.util import color
+
+from tests.async_mock import Mock
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +110,6 @@ LIGHT_2_CAPABILITIES = {
         "maxlumen": 600,
         "colorgamuttype": "A",
         "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        "ct": {"min": 153, "max": 500},
     },
     "streaming": {"renderer": True, "proxy": False},
 }
@@ -223,7 +223,7 @@ async def test_lights(hass, mock_bridge):
     lamp_1 = hass.states.get("light.hue_lamp_1")
     assert lamp_1 is not None
     assert lamp_1.state == "on"
-    assert lamp_1.attributes["brightness"] == 144
+    assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
@@ -239,7 +239,7 @@ async def test_lights_color_mode(hass, mock_bridge):
     lamp_1 = hass.states.get("light.hue_lamp_1")
     assert lamp_1 is not None
     assert lamp_1.state == "on"
-    assert lamp_1.attributes["brightness"] == 144
+    assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
     assert "color_temp" not in lamp_1.attributes
 
@@ -259,7 +259,7 @@ async def test_lights_color_mode(hass, mock_bridge):
     lamp_1 = hass.states.get("light.hue_lamp_1")
     assert lamp_1 is not None
     assert lamp_1.state == "on"
-    assert lamp_1.attributes["brightness"] == 144
+    assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["color_temp"] == 467
     assert "hs_color" not in lamp_1.attributes
 
@@ -278,7 +278,7 @@ async def test_groups(hass, mock_bridge):
     lamp_1 = hass.states.get("light.group_1")
     assert lamp_1 is not None
     assert lamp_1.state == "on"
-    assert lamp_1.attributes["brightness"] == 254
+    assert lamp_1.attributes["brightness"] == 255
     assert lamp_1.attributes["color_temp"] == 250
 
     lamp_2 = hass.states.get("light.group_2")
@@ -329,7 +329,7 @@ async def test_new_group_discovered(hass, mock_bridge):
     new_group = hass.states.get("light.group_3")
     assert new_group is not None
     assert new_group.state == "on"
-    assert new_group.attributes["brightness"] == 153
+    assert new_group.attributes["brightness"] == 154
     assert new_group.attributes["color_temp"] == 250
 
 
@@ -449,7 +449,7 @@ async def test_other_group_update(hass, mock_bridge):
     assert group_2 is not None
     assert group_2.name == "Group 2"
     assert group_2.state == "on"
-    assert group_2.attributes["brightness"] == 153
+    assert group_2.attributes["brightness"] == 154
     assert group_2.attributes["color_temp"] == 250
 
     updated_group_response = dict(GROUP_RESPONSE)

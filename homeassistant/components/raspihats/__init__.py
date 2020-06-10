@@ -95,7 +95,7 @@ class I2CHatsDIScanner:
                     state = (value >> channel) & 0x01
                     old_state = (old_value >> channel) & 0x01
                     if state != old_state:
-                        callback = callbacks.get(channel, None)
+                        callback = callbacks.get(channel)
                         if callback is not None:
                             callback(state)
             setattr(digital_inputs, self._OLD_VALUE, value)

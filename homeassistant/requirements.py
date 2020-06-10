@@ -3,15 +3,16 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set
+from typing import Any, Dict, Iterable, List, Optional, Set, Union, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import Integration, async_get_integration
+from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
 import homeassistant.util.package as pkg_util
 
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
+DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 CONSTRAINT_FILE = "package_constraints.txt"
 PROGRESS_FILE = ".pip_progress"
 _LOGGER = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }
+_UNDEF = object()
 
 
 class RequirementsNotFound(HomeAssistantError):
@@ -50,6 +52,27 @@ async def async_get_integration_with_requirements(
     if hass.config.skip_pip:
         return integration
 
+    cache = hass.data.get(DATA_INTEGRATIONS_WITH_REQS)
+    if cache is None:
+        cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
+
+    int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
+
+    if isinstance(int_or_evt, asyncio.Event):
+        await int_or_evt.wait()
+        int_or_evt = cache.get(domain, _UNDEF)
+
+        # When we have waited and it's _UNDEF, it doesn't exist
+        # We don't cache that it doesn't exist, or else people can't fix it
+        # and then restart, because their config will never be valid.
+        if int_or_evt is _UNDEF:
+            raise IntegrationNotFound(domain)
+
+    if int_or_evt is not _UNDEF:
+        return cast(Integration, int_or_evt)
+
+    event = cache[domain] = asyncio.Event()
+
     if integration.requirements:
         await async_process_requirements(
             hass, integration.domain, integration.requirements
@@ -77,6 +100,8 @@ async def async_get_integration_with_requirements(
             ]
         )
 
+    cache[domain] = integration
+    event.set()
     return integration
 
 

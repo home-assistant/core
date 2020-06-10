@@ -6,7 +6,7 @@ from homeassistant.components import light, scene
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_service
 from tests.components.light import common as common_light
 from tests.components.scene import common
 
@@ -23,6 +23,7 @@ class TestScene(unittest.TestCase):
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {"platform": "test"}}
         )
+        self.hass.block_till_done()
 
         self.light_1, self.light_2 = test_light.ENTITIES[0:2]
 
@@ -34,8 +35,9 @@ class TestScene(unittest.TestCase):
 
         assert not self.light_1.is_on
         assert not self.light_2.is_on
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -72,6 +74,7 @@ class TestScene(unittest.TestCase):
                 ]
             },
         )
+        self.hass.block_till_done()
 
         common.activate(self.hass, "scene.test")
         self.hass.block_till_done()
@@ -121,13 +124,26 @@ class TestScene(unittest.TestCase):
                 ]
             },
         )
+        self.hass.block_till_done()
 
         common.activate(self.hass, "scene.test")
         self.hass.block_till_done()
 
         assert self.light_1.is_on
         assert self.light_2.is_on
-        assert 100 == self.light_2.last_call("turn_on")[1].get("brightness")
+        assert self.light_2.last_call("turn_on")[1].get("brightness") == 100
+
+        turn_on_calls = mock_service(self.hass, "light", "turn_on")
+
+        self.hass.services.call(
+            scene.DOMAIN, "turn_on", {"transition": 42, "entity_id": "scene.test"}
+        )
+        self.hass.block_till_done()
+
+        assert len(turn_on_calls) == 1
+        assert turn_on_calls[0].domain == "light"
+        assert turn_on_calls[0].service == "turn_on"
+        assert turn_on_calls[0].data.get("transition") == 42
 
 
 async def test_services_registered(hass):

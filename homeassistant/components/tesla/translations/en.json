@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Error connecting; check network and retry",
+            "identifier_exists": "Email already registered",
+            "invalid_credentials": "Invalid credentials",
+            "unknown_error": "Unknown error, please report log info"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "description": "Please enter your information.",
+                "title": "Tesla - Configuration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "Force cars awake on startup",
+                    "scan_interval": "Seconds between scans"
+                }
+            }
+        }
+    }
+}

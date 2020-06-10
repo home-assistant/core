@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
     CONF_NAME,
+    HTTP_OK,
     TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
@@ -112,7 +113,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         }
 
         response = requests.get(RESOURCE, params, timeout=10)
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = response.json()

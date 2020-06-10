@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "M\u016f\u017eete nastavit pouze jeden Nest \u00fa\u010det.",
+            "authorize_url_fail": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed autoriza\u010dn\u00ed URL.",
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00ed URL vypr\u0161el",
+            "no_flows": "Pot\u0159ebujete nakonfigurovat Nest, abyste se s n\u00edm mohli autentizovat. [P\u0159e\u010dt\u011bte si pros\u00edm pokyny] (https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "internal_error": "Intern\u00ed chyba ov\u011b\u0159en\u00ed k\u00f3du",
+            "invalid_code": "Neplatn\u00fd k\u00f3d",
+            "timeout": "\u010casov\u00fd limit ov\u011b\u0159ov\u00e1n\u00ed k\u00f3du vypr\u0161el",
+            "unknown": "Nezn\u00e1m\u00e1 chyba ov\u011b\u0159en\u00ed k\u00f3du"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Poskytovatel"
+                },
+                "description": "Zvolte pomoc\u00ed kter\u00e9ho poskytovatele ov\u011b\u0159en\u00ed chcete ov\u011b\u0159it slu\u017ebu Nest.",
+                "title": "Poskytovatel ov\u011b\u0159en\u00ed"
+            },
+            "link": {
+                "data": {
+                    "code": "K\u00f3d PIN"
+                },
+                "description": "Chcete-li propojit \u00fa\u010det Nest, [autorizujte sv\u016fj \u00fa\u010det]({url}). \n\n Po autorizaci zkop\u00edrujte n\u00ed\u017ee uveden\u00fd k\u00f3d PIN.",
+                "title": "Propojit s Nest \u00fa\u010dtem"
+            }
+        }
+    }
+}

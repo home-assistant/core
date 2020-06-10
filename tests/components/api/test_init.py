@@ -1,7 +1,6 @@
 """The tests for the Home Assistant API component."""
 # pylint: disable=protected-access
 import json
-from unittest.mock import patch
 
 from aiohttp import web
 import pytest
@@ -12,6 +11,7 @@ from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import async_mock_service
 
 
@@ -52,7 +52,7 @@ async def test_api_get_state(hass, mock_api_client):
 async def test_api_get_non_existing_state(hass, mock_api_client):
     """Test if the debug interface allows us to get a state."""
     resp = await mock_api_client.get("/api/states/does_not_exist")
-    assert resp.status == 404
+    assert resp.status == const.HTTP_NOT_FOUND
 
 
 async def test_api_state_change(hass, mock_api_client):

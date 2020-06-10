@@ -5,7 +5,7 @@ from cpuinfo import cpuinfo
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, FREQUENCY_GIGAHERTZ
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CPU speed sensor."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     add_entities([CpuSpeedSensor(name)], True)
 
@@ -42,7 +42,6 @@ class CpuSpeedSensor(Entity):
         self._name = name
         self._state = None
         self.info = None
-        self._unit_of_measurement = "GHz"
 
     @property
     def name(self):
@@ -57,7 +56,7 @@ class CpuSpeedSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        return FREQUENCY_GIGAHERTZ
 
     @property
     def device_state_attributes(self):

@@ -4,7 +4,7 @@ from typing import Optional
 
 from aioesphomeapi import SwitchInfo, SwitchState
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class EsphomeSwitch(EsphomeEntity, SwitchDevice):
+class EsphomeSwitch(EsphomeEntity, SwitchEntity):
     """A switch implementation for ESPHome."""
 
     @property

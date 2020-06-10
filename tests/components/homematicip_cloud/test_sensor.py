@@ -310,7 +310,7 @@ async def test_hmip_windspeed_sensor(hass, default_mock_hap_factory):
         205: "SSW",
         227.5: "SW",
         250: "WSW",
-        272.5: "W",
+        272.5: POWER_WATT,
         295: "WNW",
         317.5: "NW",
         340: "NNW",

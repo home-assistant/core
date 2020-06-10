@@ -190,8 +190,6 @@ async def async_setup(hass, config):
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
 
-    await cloud.start()
-
     async def _shutdown(event):
         """Shutdown event."""
         await cloud.stop()
@@ -233,6 +231,7 @@ async def async_setup(hass, config):
 
     cloud.iot.register_on_connect(_on_connect)
 
+    await cloud.start()
     await http_api.async_setup(hass)
 
     account_link.async_setup(hass)

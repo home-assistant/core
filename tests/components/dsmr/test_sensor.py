@@ -9,15 +9,15 @@ import asyncio
 import datetime
 from decimal import Decimal
 from itertools import chain, repeat
-from unittest.mock import DEFAULT, Mock
 
-import asynctest
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
-from homeassistant.const import TIME_HOURS, VOLUME_CUBIC_METERS
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, TIME_HOURS, VOLUME_CUBIC_METERS
 
+import tests.async_mock
+from tests.async_mock import DEFAULT, Mock
 from tests.common import assert_setup_component
 
 
@@ -26,8 +26,8 @@ def mock_connection_factory(monkeypatch):
     """Mock the create functions for serial and TCP Asyncio connections."""
     from dsmr_parser.clients.protocol import DSMRProtocol
 
-    transport = asynctest.Mock(spec=asyncio.Transport)
-    protocol = asynctest.Mock(spec=DSMRProtocol)
+    transport = tests.async_mock.Mock(spec=asyncio.Transport)
+    protocol = tests.async_mock.Mock(spec=DSMRProtocol)
 
     async def connection_factory(*args, **kwargs):
         """Return mocked out Asyncio classes."""
@@ -62,7 +62,7 @@ async def test_default_setup(hass, mock_connection_factory):
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
-            [{"value": Decimal("0.0"), "unit": "kWh"}]
+            [{"value": Decimal("0.0"), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
         GAS_METER_READING: MBusObject(
@@ -75,6 +75,7 @@ async def test_default_setup(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -92,7 +93,9 @@ async def test_default_setup(hass, mock_connection_factory):
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get("sensor.power_consumption")
     assert power_consumption.state == "0.0"
-    assert power_consumption.attributes.get("unit_of_measurement") == "kWh"
+    assert (
+        power_consumption.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
+    )
 
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get("sensor.power_tariff")
@@ -169,6 +172,7 @@ async def test_v4_meter(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -213,6 +217,7 @@ async def test_v5_meter(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -257,6 +262,7 @@ async def test_belgian_meter(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -290,6 +296,7 @@ async def test_belgian_meter_low(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -313,6 +320,7 @@ async def test_tcp(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     assert connection_factory.call_args_list[0][0][0] == "localhost"
     assert connection_factory.call_args_list[0][0][1] == "1234"
@@ -325,7 +333,7 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
     config = {"platform": "dsmr", "reconnect_interval": 0}
 
     # override the mock to have it fail the first time and succeed after
-    first_fail_connection_factory = asynctest.CoroutineMock(
+    first_fail_connection_factory = tests.async_mock.AsyncMock(
         return_value=(transport, protocol),
         side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )

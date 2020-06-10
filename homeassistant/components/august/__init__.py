@@ -262,6 +262,13 @@ class AugustData(AugustSubscriberMixin):
                 await self._async_update_device_detail(
                     self._locks_by_id[device_id], self._api.async_get_lock_detail
                 )
+                # keypads are always attached to locks
+                if (
+                    device_id in self._device_detail_by_id
+                    and self._device_detail_by_id[device_id].keypad is not None
+                ):
+                    keypad = self._device_detail_by_id[device_id].keypad
+                    self._device_detail_by_id[keypad.device_id] = keypad
             elif device_id in self._doorbells_by_id:
                 await self._async_update_device_detail(
                     self._doorbells_by_id[device_id],

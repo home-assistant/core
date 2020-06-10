@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Servidor"
+                }
+            },
+            "select_server": {
+                "data": {
+                    "server": "Servidor"
+                }
+            }
+        }
+    }
+}

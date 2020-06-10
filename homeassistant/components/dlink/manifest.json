@@ -2,6 +2,6 @@
   "domain": "dlink",
   "name": "D-Link Wi-Fi Smart Plugs",
   "documentation": "https://www.home-assistant.io/integrations/dlink",
-  "requirements": ["pyW215==0.6.0"],
+  "requirements": ["pyW215==0.7.0"],
   "codeowners": []
 }

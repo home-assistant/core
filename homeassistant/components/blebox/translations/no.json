@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "En BleBox-enhet er allerede konfigurert p\u00e5 {address} .",
+            "already_configured": "Denne BleBox-enheten er allerede konfigurert."
+        },
+        "error": {
+            "cannot_connect": "Kan ikke koble til BleBox-enheten. (Kontroller loggene for feil.)",
+            "unknown": "Ukjent feil under tilkobling til BleBox-enheten. (Kontroller loggene for feil.)",
+            "unsupported_version": "BleBox-enheten har utdatert fastvare. Vennligst oppgrader den f\u00f8rst."
+        },
+        "flow_title": "BleBox-enhet: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Konfigurer BleBox-en til \u00e5 integreres med Home Assistant.",
+                "title": "Konfigurere BleBox-enheten"
+            }
+        }
+    }
+}

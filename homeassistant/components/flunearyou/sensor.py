@@ -56,7 +56,6 @@ class FluNearYouSensor(Entity):
 
     def __init__(self, fny, sensor_type, name, category, icon, unit):
         """Initialize the sensor."""
-        self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._category = category
         self._fny = fny
@@ -110,20 +109,12 @@ class FluNearYouSensor(Entity):
             self.update_from_latest_data()
             self.async_write_ha_state()
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
-
+        self.async_on_remove(async_dispatcher_connect(self.hass, TOPIC_UPDATE, update))
         await self._fny.async_register_api_interest(self._sensor_type)
-
         self.update_from_latest_data()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-            self._async_unsub_dispatcher_connect = None
-
         self._fny.async_deregister_api_interest(self._sensor_type)
 
     @callback

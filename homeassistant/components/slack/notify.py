@@ -18,11 +18,13 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+import homeassistant.helpers.template as template
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ATTACHMENTS = "attachments"
 ATTR_BLOCKS = "blocks"
+ATTR_BLOCKS_TEMPLATE = "blocks_template"
 ATTR_FILE = "file"
 
 CONF_DEFAULT_CHANNEL = "default_channel"
@@ -65,6 +67,20 @@ def _async_sanitize_channel_names(channel_list):
     return [channel.lstrip("#") for channel in channel_list]
 
 
+@callback
+def _async_templatize_blocks(hass, value):
+    """Recursive template creator helper function."""
+    if isinstance(value, list):
+        return [_async_templatize_blocks(hass, item) for item in value]
+    if isinstance(value, dict):
+        return {
+            key: _async_templatize_blocks(hass, item) for key, item in value.items()
+        }
+
+    tmpl = template.Template(value, hass=hass)
+    return tmpl.async_render()
+
+
 class SlackNotificationService(BaseNotificationService):
     """Define the Slack notification logic."""
 
@@ -74,11 +90,7 @@ class SlackNotificationService(BaseNotificationService):
         self._default_channel = default_channel
         self._hass = hass
         self._icon = icon
-
-        if username or self._icon:
-            self._as_user = False
-        else:
-            self._as_user = True
+        self._username = username
 
     async def _async_send_local_file_message(self, path, targets, message, title):
         """Upload a local file (with message) to Slack."""
@@ -108,11 +120,11 @@ class SlackNotificationService(BaseNotificationService):
             target: self._client.chat_postMessage(
                 channel=target,
                 text=message,
-                as_user=self._as_user,
                 attachments=attachments,
                 blocks=blocks,
                 icon_emoji=self._icon,
                 link_names=True,
+                username=self._username,
             )
             for target in targets
         }
@@ -146,7 +158,13 @@ class SlackNotificationService(BaseNotificationService):
                 "for them will be dropped in 0.114.0. In most cases, Blocks should be "
                 "used instead: https://www.home-assistant.io/integrations/slack/"
             )
-        blocks = data.get(ATTR_BLOCKS, {})
+
+        if ATTR_BLOCKS_TEMPLATE in data:
+            blocks = _async_templatize_blocks(self.hass, data[ATTR_BLOCKS_TEMPLATE])
+        elif ATTR_BLOCKS in data:
+            blocks = data[ATTR_BLOCKS]
+        else:
+            blocks = {}
 
         return await self._async_send_text_only_message(
             targets, message, title, attachments, blocks

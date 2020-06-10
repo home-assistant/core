@@ -2,7 +2,7 @@
   "domain": "sense",
   "name": "Sense",
   "documentation": "https://www.home-assistant.io/integrations/sense",
-  "requirements": ["sense_energy==0.7.1"],
+  "requirements": ["sense_energy==0.7.2"],
   "codeowners": ["@kbickar"],
   "config_flow": true
 }

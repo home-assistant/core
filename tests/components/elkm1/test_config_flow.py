@@ -1,16 +1,16 @@
 """Test the Elk-M1 Control config flow."""
 
-from asynctest import CoroutineMock, MagicMock, PropertyMock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.elkm1.const import DOMAIN
+
+from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 
 
 def mock_elk(invalid_auth=None, sync_complete=None):
     """Mock m1lib Elk."""
     mocked_elk = MagicMock()
     type(mocked_elk).invalid_auth = PropertyMock(return_value=invalid_auth)
-    type(mocked_elk).sync_complete = CoroutineMock()
+    type(mocked_elk).sync_complete = AsyncMock()
     return mocked_elk
 
 
@@ -39,7 +39,7 @@ async def test_form_user_with_secure_elk(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "F",
+                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -51,7 +51,7 @@ async def test_form_user_with_secure_elk(hass):
         "host": "elks://1.2.3.4",
         "password": "test-password",
         "prefix": "",
-        "temperature_unit": "F",
+        "temperature_unit": "°F",
         "username": "test-username",
     }
     await hass.async_block_till_done()
@@ -82,7 +82,7 @@ async def test_form_user_with_non_secure_elk(hass):
             {
                 "protocol": "non-secure",
                 "address": "1.2.3.4",
-                "temperature_unit": "F",
+                "temperature_unit": "°F",
                 "prefix": "guest_house",
             },
         )
@@ -95,7 +95,7 @@ async def test_form_user_with_non_secure_elk(hass):
         "prefix": "guest_house",
         "username": "",
         "password": "",
-        "temperature_unit": "F",
+        "temperature_unit": "°F",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -125,7 +125,7 @@ async def test_form_user_with_serial_elk(hass):
             {
                 "protocol": "serial",
                 "address": "/dev/ttyS0:115200",
-                "temperature_unit": "F",
+                "temperature_unit": "°C",
                 "prefix": "",
             },
         )
@@ -138,7 +138,7 @@ async def test_form_user_with_serial_elk(hass):
         "prefix": "",
         "username": "",
         "password": "",
-        "temperature_unit": "F",
+        "temperature_unit": "°C",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -166,7 +166,7 @@ async def test_form_cannot_connect(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "F",
+                "temperature_unit": "°F",
                 "prefix": "",
             },
         )
@@ -193,7 +193,7 @@ async def test_form_invalid_auth(hass):
                 "address": "1.2.3.4",
                 "username": "test-username",
                 "password": "test-password",
-                "temperature_unit": "F",
+                "temperature_unit": "°F",
                 "prefix": "",
             },
         )

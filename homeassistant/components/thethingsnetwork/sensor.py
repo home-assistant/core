@@ -8,7 +8,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_NOT_FOUND
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -139,7 +139,7 @@ class TtnDataStorage:
             _LOGGER.error("Not authorized for Application ID: %s", self._app_id)
             return None
 
-        if status == 404:
+        if status == HTTP_NOT_FOUND:
             _LOGGER.error("Application ID is not available: %s", self._app_id)
             return None
 

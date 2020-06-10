@@ -23,9 +23,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,
@@ -54,9 +54,9 @@ class Light(HomeAccessory):
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
 
         self.chars = []
-        self._features = self.hass.states.get(self.entity_id).attributes.get(
-            ATTR_SUPPORTED_FEATURES
-        )
+        state = self.hass.states.get(self.entity_id)
+
+        self._features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if self._features & SUPPORT_BRIGHTNESS:
             self.chars.append(CHAR_BRIGHTNESS)
@@ -78,7 +78,7 @@ class Light(HomeAccessory):
 
         if CHAR_BRIGHTNESS in self.chars:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
-            # an arbitrary non-zero value. It is updated immediately by update_state
+            # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
@@ -101,10 +101,12 @@ class Light(HomeAccessory):
         if CHAR_SATURATION in self.chars:
             self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
 
+        self.async_update_state(state)
+
         serv_light.setter_callback = self._set_chars
 
     def _set_chars(self, char_values):
-        _LOGGER.debug("_set_chars: %s", char_values)
+        _LOGGER.debug("Light _set_chars: %s", char_values)
         events = []
         service = SERVICE_TURN_ON
         params = {ATTR_ENTITY_ID: self.entity_id}
@@ -115,7 +117,7 @@ class Light(HomeAccessory):
 
         if CHAR_BRIGHTNESS in char_values:
             if char_values[CHAR_BRIGHTNESS] == 0:
-                events[-1] = f"Set state to 0"
+                events[-1] = "Set state to 0"
                 service = SERVICE_TURN_OFF
             else:
                 params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]
@@ -137,7 +139,8 @@ class Light(HomeAccessory):
 
         self.call_service(DOMAIN, service, params, ", ".join(events))
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update light after state change."""
         # Handle State
         state = new_state.state

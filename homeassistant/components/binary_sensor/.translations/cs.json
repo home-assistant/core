@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "trigger_type": {
-            "moist": "{entity_name} se navlh\u010dil",
-            "not_opened": "{entity_name} uzav\u0159eno"
-        }
-    }
-}

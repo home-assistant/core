@@ -1,9 +1,9 @@
 """Support for IKEA Tradfri covers."""
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 
 from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
+from .const import ATTR_MODEL, CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(TradfriCover(cover, api, gateway_id) for cover in covers)
 
 
-class TradfriCover(TradfriBaseDevice, CoverDevice):
+class TradfriCover(TradfriBaseDevice, CoverEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, device, api, gateway_id):
@@ -28,6 +28,12 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         self._unique_id = f"{gateway_id}-{device.id}"
 
         self._refresh(device)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attr = {ATTR_MODEL: self._device.device_info.model_number}
+        return attr
 
     @property
     def current_cover_position(self):

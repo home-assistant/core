@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge ass schon konfigur\u00e9iert",
+            "already_in_progress": "Bridge Konfiguratioun ass schonn am gaang."
+        },
+        "error": {
+            "cannot_connect": "Keng Verbindung mat der Gateway m\u00e9iglech.",
+            "invalid_key": "Konnt sech net mam ugebuedenem Schl\u00ebssel registr\u00e9ieren. Falls d\u00ebst widderhuelt optr\u00ebtt, prob\u00e9iert de Gateway fr\u00ebsch ze starten.",
+            "timeout": "Z\u00e4it Iwwerschreidung\u00a0beim valid\u00e9ieren vum Code"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Apparat",
+                    "security_code": "S\u00e9cherheets Code"
+                },
+                "description": "Dir fannt de S\u00e9cherheets Code op der R\u00e9cks\u00e4it vun \u00e4rem Gateway.",
+                "title": "Gitt de S\u00e9cherheets Code an"
+            }
+        }
+    }
+}

@@ -26,13 +26,10 @@ from typing import (
 )
 
 # Typing imports that create a circular dependency
-# pylint: disable=unused-import
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
-
-DEPENDENCY_BLACKLIST = {"config"}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -205,6 +202,7 @@ class Integration:
         self.pkg_path = pkg_path
         self.file_path = file_path
         self.manifest = manifest
+        manifest["is_built_in"] = self.is_built_in
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @property
@@ -243,19 +241,14 @@ class Integration:
         return cast(str, self.manifest.get("documentation"))
 
     @property
+    def issue_tracker(self) -> Optional[str]:
+        """Return issue tracker link."""
+        return cast(str, self.manifest.get("issue_tracker"))
+
+    @property
     def quality_scale(self) -> Optional[str]:
         """Return Integration Quality Scale."""
         return cast(str, self.manifest.get("quality_scale"))
-
-    @property
-    def logo(self) -> Optional[str]:
-        """Return Integration Logo."""
-        return cast(str, self.manifest.get("logo"))
-
-    @property
-    def icon(self) -> Optional[str]:
-        """Return Integration Icon."""
-        return cast(str, self.manifest.get("icon"))
 
     @property
     def is_built_in(self) -> bool:
@@ -419,9 +412,7 @@ def _load_file(
             parts = []
             for part in path.split("."):
                 parts.append(part)
-                white_listed_errors.append(
-                    "No module named '{}'".format(".".join(parts))
-                )
+                white_listed_errors.append(f"No module named '{'.'.join(parts)}'")
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(

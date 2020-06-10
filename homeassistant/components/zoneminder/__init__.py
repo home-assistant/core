@@ -58,13 +58,10 @@ def setup(hass, config):
     success = True
 
     for conf in config[DOMAIN]:
-        if conf[CONF_SSL]:
-            schema = "https"
-        else:
-            schema = "http"
+        protocol = "https" if conf[CONF_SSL] else "http"
 
         host_name = conf[CONF_HOST]
-        server_origin = f"{schema}://{host_name}"
+        server_origin = f"{protocol}://{host_name}"
         zm_client = ZoneMinder(
             server_origin,
             conf.get(CONF_USERNAME),

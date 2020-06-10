@@ -1,6 +1,7 @@
 """Common functions for RFLink component tests and generic platform tests."""
 
-from unittest.mock import Mock
+import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.rflink import (
@@ -13,6 +14,8 @@ from homeassistant.components.rflink import (
     RflinkCommand,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_STOP_COVER, SERVICE_TURN_OFF
+
+from tests.async_mock import Mock
 
 
 async def mock_rflink(
@@ -169,16 +172,17 @@ async def test_send_command_invalid_arguments(hass, monkeypatch):
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
     # one argument missing
-    hass.async_create_task(
-        hass.services.async_call(domain, SERVICE_SEND_COMMAND, {"command": "on"})
-    )
-    hass.async_create_task(
-        hass.services.async_call(
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(domain, SERVICE_SEND_COMMAND, {"command": "on"})
+
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
             domain, SERVICE_SEND_COMMAND, {"device_id": "newkaku_0000c6c2_1"}
         )
-    )
+
     # no arguments
-    hass.async_create_task(hass.services.async_call(domain, SERVICE_SEND_COMMAND, {}))
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(domain, SERVICE_SEND_COMMAND, {})
 
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list == []

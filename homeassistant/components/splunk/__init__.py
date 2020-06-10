@@ -70,7 +70,7 @@ def setup(hass, config):
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
     token = conf.get(CONF_TOKEN)
-    use_ssl = conf.get(CONF_SSL)
+    use_ssl = conf[CONF_SSL]
     verify_ssl = conf.get(CONF_VERIFY_SSL)
     name = conf.get(CONF_NAME)
     entity_filter = conf[CONF_FILTER]

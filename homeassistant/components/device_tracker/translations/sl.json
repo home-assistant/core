@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} je doma",
+            "is_not_home": "{entity_name} ni doma"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "Doma",
+            "not_home": "Odsoten"
+        }
+    },
+    "title": "Sledilnik naprave"
+}

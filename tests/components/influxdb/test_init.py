@@ -29,8 +29,9 @@ class TestInfluxDB(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.handler_method = None
         self.hass.bus.listen = mock.Mock()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Clear data."""
         self.hass.stop()
 
@@ -666,7 +667,7 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain=comp["domain"],
-                entity_id=comp["domain"] + "." + comp["id"],
+                entity_id=f"{comp['domain']}.{comp['id']}",
                 object_id=comp["id"],
                 attributes={},
             )

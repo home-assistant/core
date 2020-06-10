@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "keba"
-SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock"]
+SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock", "notify"]
 
 CONF_RFID = "rfid"
 CONF_FS = "failsafe"
@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 _SERVICE_MAP = {
-    "request_data": "request_data",
+    "request_data": "async_request_data",
     "set_energy": "async_set_energy",
     "set_current": "async_set_current",
     "authorize": "async_start",
@@ -179,6 +179,11 @@ class KebaHandler(KebaKeContact):
 
         # initial data is already loaded, thus update the component
         listener()
+
+    async def async_request_data(self, param):
+        """Request new data in async way."""
+        await self.request_data()
+        _LOGGER.debug("New data from KEBA wallbox requested")
 
     async def async_set_energy(self, param):
         """Set energy target in async way."""

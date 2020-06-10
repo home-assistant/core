@@ -3,6 +3,7 @@ import asyncio
 
 from aiohttp.client_exceptions import ClientResponseError
 
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -22,6 +23,7 @@ async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -54,6 +56,7 @@ async def test_expire_delta(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -77,6 +80,7 @@ async def test_only_one_fetch_at_a_time(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -100,6 +104,7 @@ async def test_dimension(aioclient_mock, hass, hass_client):
         "camera",
         {"camera": {"name": "config_test", "platform": "buienradar", "dimension": 700}},
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -123,6 +128,7 @@ async def test_belgium_country(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -138,6 +144,7 @@ async def test_failure_response_not_cached(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -171,6 +178,7 @@ async def test_last_modified_updates(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -199,10 +207,11 @@ async def test_retries_after_error(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
-    aioclient_mock.get(radar_map_url(), text=None, status=500)
+    aioclient_mock.get(radar_map_url(), text=None, status=HTTP_INTERNAL_SERVER_ERROR)
 
     # A 404 should not return data and throw:
     try:
