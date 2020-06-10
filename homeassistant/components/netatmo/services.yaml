@@ -3,8 +3,28 @@ set_schedule:
   description: Set the heating schedule.
   fields:
     schedule_name:
-      description: Schedule name.
+      description: Schedule name
       example: Standard
     home_name:
-      description: Home name.
+      description: Home name
+      example: MyHome
+
+set_persons_home:
+  description: Set a person home. Person's name must match a name known by the Welcome Camera.
+  fields:
+    persons:
+      description: List of names
+      example: Bob
+    home_name:
+      description: Home name
+      example: MyHome
+
+set_person_away:
+  description: Set a person away. Person's name must match a name known by the Welcome Camera.
+  fields:
+    person:
+      description: Person's name
+      example: Bob
+    home_name:
+      description: Home name
       example: MyHome
