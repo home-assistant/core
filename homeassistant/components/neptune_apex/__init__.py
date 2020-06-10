@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from pynepsys import Apex
+from pynepsys import Apex, ApexException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         try:
             async with async_timeout.timeout(10):
                 await apex.fetch_current_state()
-        except Exception as err:
+        except ApexException as err:
             raise UpdateFailed(f"Error communicating with Apex: {err}")
         return apex
 

@@ -1486,7 +1486,7 @@ pynanoleaf==0.0.5
 pynello==2.0.2
 
 # homeassistant.components.neptune_apex
-pynepsys==1.1.0
+pynepsys==1.2.1
 
 # homeassistant.components.netgear
 pynetgear==0.6.1

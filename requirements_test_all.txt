@@ -648,7 +648,7 @@ pymonoprice==0.3
 pymyq==2.0.3
 
 # homeassistant.components.neptune_apex
-pynepsys==1.1.0
+pynepsys==1.2.1
 
 # homeassistant.components.nut
 pynut2==2.1.2
