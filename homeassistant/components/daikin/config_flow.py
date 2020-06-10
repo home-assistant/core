@@ -40,8 +40,8 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def _create_entry(self, host, mac, key=None, uuid=None, password=None):
         """Register new entry."""
-        # Check if mac already is registered
-        await self.async_set_unique_id(mac)
+        if not self.unique_id:
+            await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
