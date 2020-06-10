@@ -1,5 +1,5 @@
 """Support for Dexcom sensors."""
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME, STATE_UNKNOWN
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, GLUCOSE_TREND_ICON, GLUCOSE_VALUE_ICON, MG_DL
@@ -48,11 +48,9 @@ class DexcomGlucoseValueSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return (
-            getattr(self._coordinator.data, self._attribute_unit_of_measurement)
-            if self._coordinator.data
-            else STATE_UNKNOWN
-        )
+        if self._coordinator.data:
+            return getattr(self._coordinator.data, self._attribute_unit_of_measurement)
+        return None
 
     @property
     def available(self):
@@ -109,11 +107,9 @@ class DexcomGlucoseTrendSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return (
-            self._coordinator.data.trend_description
-            if self._coordinator.data
-            else STATE_UNKNOWN
-        )
+        if self._coordinator.data:
+            return self._coordinator.data.trend_description
+        return None
 
     @property
     def available(self):
