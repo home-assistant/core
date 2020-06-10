@@ -1,12 +1,14 @@
 """Module for SIA Binary Sensors."""
 
 import logging
+from typing import Callable
 
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT as BINARY_SENSOR_FORMAT,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ZONE, STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -23,7 +25,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass, entry: ConfigEntry, async_add_devices: Callable[[], None]
+) -> bool:
     """Set up sia_binary_sensor from a config entry."""
     devices = [
         device
@@ -40,7 +44,15 @@ class SIABinarySensor(RestoreEntity):
     """Class for SIA Binary Sensors."""
 
     def __init__(
-        self, entity_id, name, device_class, zone, ping_interval, hass, account,
+        self,
+        entity_id: str,
+        name: str,
+        device_class: str,
+        port: int,
+        account: str,
+        zone: int,
+        ping_interval: int,
+        hass: HomeAssistant,
     ):
         """Create SIABinarySensor object."""
         self._should_poll = False
@@ -80,12 +92,12 @@ class SIABinarySensor(RestoreEntity):
         self.async_schedule_update_ha_state(True)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name."""
         return self._name
 
     @property
-    def ping_interval(self):
+    def ping_interval(self) -> int:
         """Get ping_interval."""
         return str(self._ping_interval)
 
@@ -103,35 +115,39 @@ class SIABinarySensor(RestoreEntity):
         return self._unique_id
 
     @property
-    def account(self):
+    def account(self) -> str:
         """Return device account."""
         return self._account
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return avalability."""
         return self._is_available
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> dict:
         """Return attributes."""
         return self._attr
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return device class."""
         return self._device_class
 
     @property
-    def is_on(self):
-        """Get whether the sensor is set to ON."""
-        if self._state is None:
-            return None
-        else:
-            return self._state == STATE_ON
+    def state(self) -> str:
+        """Return the state of the binary sensor."""
+        if self.is_on is None:
+            return STATE_UNKNOWN
+        return STATE_ON if self.is_on else STATE_OFF
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self._is_on
 
     @state.setter
-    def state(self, state):
+    def state(self, new_on: bool):
         """Set state."""
         self._state = state
         self.async_schedule_update_ha_state()
@@ -141,7 +157,7 @@ class SIABinarySensor(RestoreEntity):
         self._async_track_unavailable()
 
     @callback
-    def _async_track_unavailable(self):
+    async def _async_track_unavailable(self) -> bool:
         """Track availability."""
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
@@ -163,7 +179,8 @@ class SIABinarySensor(RestoreEntity):
         self.async_schedule_update_ha_state()
 
     @property
-    def device_info(self):
+    def device_info(self) -> dict:
+        """Return the device_info."""
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain

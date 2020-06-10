@@ -1,0 +1,29 @@
+{
+  "BA": { "type": "alarm", "new_state": "triggered" },
+  "BR": { "type": "alarm", "new_state": "previous_state" },
+  "CA": { "type": "alarm", "new_state": "armed_away" },
+  "CF": {
+    "type": "alarm",
+    "new_state": "armed_custom_bypass"
+  },
+  "CG": { "type": "alarm", "new_state": "armed_away" },
+  "CL": { "type": "alarm", "new_state": "armed_away" },
+  "CP": { "type": "alarm", "new_state": "armed_away" },
+  "CQ": { "type": "alarm", "new_state": "armed_away" },
+  "GA": { "type": "smoke", "new_state": true },
+  "GH": { "type": "smoke", "new_state": false },
+  "NL": {
+    "type": "alarm",
+    "new_state": "armed_night"
+  },
+  "OA": { "type": "alarm", "new_state": "disarmed" },
+  "OG": { "type": "alarm", "new_state": "disarmed" },
+  "OP": { "type": "alarm", "new_state": "disarmed" },
+  "OQ": { "type": "alarm", "new_state": "disarmed" },
+  "OR": { "type": "alarm", "new_state": "disarmed" },
+  "RP": { "type": "timestamp", "new_state_eval": "utcnow" },
+  "TA": { "type": "alarm", "new_state": "triggered" },
+  "WA": { "type": "moisture", "new_state": true },
+  "WH": { "type": "moisture", "new_state": false },
+  "YG": { "type": "timestamp", "attr": "last_message" }
+}

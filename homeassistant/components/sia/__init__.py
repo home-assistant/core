@@ -8,15 +8,10 @@ from pysiaalarm.sia_client import SIAClient
 from pysiaalarm.sia_event import SIAEvent
 import voluptuous as vol
 
-from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
-)
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_SMOKE,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -24,17 +19,12 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_ZONE,
     DEVICE_CLASS_TIMESTAMP,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-    STATE_OFF,
-    STATE_ON,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util.dt import utcnow
+from homeassistant.util.json import load_json
 
 from .alarm_control_panel import SIAAlarmControlPanel
 from .binary_sensor import SIABinarySensor
@@ -44,8 +34,13 @@ from .const import (
     CONF_ENCRYPTION_KEY,
     CONF_PING_INTERVAL,
     CONF_ZONES,
+    DEVICE_CLASS_ALARM,
     DOMAIN,
-    PREVIOUS_STATE,
+    HUB_SENSOR_NAME,
+    HUB_ZONE,
+    LAST_MESSAGE,
+    PLATFORMS,
+    UTCNOW,
 )
 from .sensor import SIASensor
 
@@ -103,41 +98,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SIAHub:
     """Class for SIA Hubs."""
 
-    sensor_types_classes = {
-        DEVICE_CLASS_ALARM: "SIAAlarmControlPanel",
-        DEVICE_CLASS_MOISTURE: "SIABinarySensor",
-        DEVICE_CLASS_SMOKE: "SIABinarySensor",
-        DEVICE_CLASS_TIMESTAMP: "SIASensor",
-    }
-
-    reactions = {
-        "BA": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_TRIGGERED},
-        "BR": {"type": DEVICE_CLASS_ALARM, "new_state": PREVIOUS_STATE},
-        "CA": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_ARMED_AWAY},
-        "CF": {
-            "type": DEVICE_CLASS_ALARM,
-            "new_state": STATE_ALARM_ARMED_CUSTOM_BYPASS,
-        },
-        "CG": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_ARMED_AWAY},
-        "CL": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_ARMED_AWAY},
-        "CP": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_ARMED_AWAY},
-        "CQ": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_ARMED_AWAY},
-        "GA": {"type": DEVICE_CLASS_SMOKE, "new_state": STATE_ON},
-        "GH": {"type": DEVICE_CLASS_SMOKE, "new_state": STATE_OFF},
-        "NL": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_ARMED_NIGHT},
-        "OA": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_DISARMED},
-        "OG": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_DISARMED},
-        "OP": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_DISARMED},
-        "OQ": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_DISARMED},
-        "OR": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_DISARMED},
-        "RP": {"type": DEVICE_CLASS_TIMESTAMP, "new_state_eval": "utcnow()"},
-        "TA": {"type": DEVICE_CLASS_ALARM, "new_state": STATE_ALARM_TRIGGERED},
-        "WA": {"type": DEVICE_CLASS_MOISTURE, "new_state": STATE_ON},
-        "WH": {"type": DEVICE_CLASS_MOISTURE, "new_state": STATE_OFF},
-        "YG": {"type": DEVICE_CLASS_TIMESTAMP, "attr": True},
-    }
-
-    def __init__(self, hass, hub_config, entry_id, title):
+    def __init__(
+        self, hass: HomeAssistant, hub_config: dict, entry_id: str, title: str
+    ):
         """Create the SIAHub."""
         self._hass = hass
         self.states = {}
@@ -145,6 +108,8 @@ class SIAHub:
         self.entry_id = entry_id
         self._title = title
         self._accounts = hub_config[CONF_ACCOUNTS]
+        self.shutdown_remove_listener = None
+        self._reactions = None
 
         self._zones = [
             {
@@ -184,8 +149,8 @@ class SIAHub:
 
         self.sia_client.start()
 
-    async def _create_device_registry(self):
-        """Add a device to the device_registry."""
+    async def async_setup_hub(self):
+        """Add a device to the device_registry, register shutdown listener, load reactions."""
         device_registry = await dr.async_get_registry(self._hass)
 
         for acc in self._accounts:
@@ -194,18 +159,37 @@ class SIAHub:
                 identifiers={(DOMAIN, acc[CONF_ACCOUNT])},
                 name=acc[CONF_ACCOUNT],
             )
+        self.shutdown_remove_listener = self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self.async_shutdown
+        )
+        self._reactions = load_json("homeassistant/components/sia/reactions.json")
 
-    def _create_sensor(self, account, zone, sensor_type):
+    async def async_shutdown(self, _: Event):
+        """Shutdown the SIA server."""
+        await self.sia_client.stop()
+
+    def _create_sensor(
+        self, port: int, account: str, zone: int, entity_type: str, ping: int
+    ):
         """Check if the entity exists, and creates otherwise."""
         sensor_id = self._get_id(account, zone, sensor_type)
         sensor_name = self._get_sensor_name(account, zone, sensor_type)
         ping = self._get_ping_interval(account)
 
-        sensor_type_constructor = self.sensor_types_classes.get(sensor_type)
-        if sensor_type_constructor and sensor_name:
-            if sensor_type_constructor == "SIAAlarmControlPanel":
-                new_sensor = SIAAlarmControlPanel(
-                    sensor_id, sensor_name, zone, ping, self._hass, account,
+    def _get_entity_id_and_name(
+        self, account: str, zone: int = 0, entity_type: str = None
+    ):
+        """Give back a entity_id and name according to the variables."""
+        if zone == 0:
+            return (
+                self._get_entity_id(account, zone, entity_type),
+                f"{self._port} - {account} - Last Heartbeat",
+            )
+        else:
+            if entity_type:
+                return (
+                    self._get_entity_id(account, zone, entity_type),
+                    f"{self._port} - {account} - zone {zone} - {entity_type}",
                 )
             elif sensor_type_constructor == "SIABinarySensor":
                 new_sensor = SIABinarySensor(
@@ -231,7 +215,7 @@ class SIAHub:
         else:
             _LOGGER.warning("Hub: Upsert Sensor: Unknown device type: %s", sensor_type)
 
-    def _get_id(self, account, zone=0, sensor_type=None):
+    def _get_entity_id(self, account: str, zone: int = 0, entity_type: str = None):
         """Give back a entity_id according to the variables, defaults to the hub sensor entity_id."""
         zone = int(zone)
         if zone == 0:
@@ -253,7 +237,7 @@ class SIAHub:
             else:
                 return None
 
-    def _get_ping_interval(self, account):
+    def _get_ping_interval(self, account: str):
         """Return the ping interval for specified account."""
         for acc in self._accounts:
             if acc[CONF_ACCOUNT] == account:
@@ -263,13 +247,21 @@ class SIAHub:
     def _update_states(self, event: SIAEvent):
         """Update the sensors."""
         # find the reactions for that code (if any)
-        reaction = self.reactions.get(event.code)
-        if reaction:
-            sensor_id = self._get_id(event.account, event.zone, reaction["type"])
-            # find out which action to take, update attribute, new state or eval for new state
-            attr = reaction.get("attr")
-            new_state = reaction.get("new_state")
-            new_state_eval = reaction.get("new_state_eval")
+        reaction = self._reactions.get(event.code)
+        if not reaction:
+            _LOGGER.warning(
+                "Unhandled event code: %s, Message: %s, Full event: %s",
+                event.code,
+                event.message,
+                event.sia_string,
+            )
+            return
+        attr = reaction.get("attr")
+        new_state = reaction.get("new_state")
+        new_state_eval = reaction.get("new_state_eval")
+        entity_id = self._get_entity_id(
+            event.account, int(event.zone), reaction["type"]
+        )
 
             # do the work (can be both a state and attribute)
             if new_state or new_state_eval:

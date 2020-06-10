@@ -1,11 +1,13 @@
 """Module for SIA Alarm Control Panels."""
 
 import logging
+from typing import Callable
 
 from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT as ALARM_FORMAT,
     AlarmControlPanel,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ZONE,
     STATE_ALARM_ARMED_AWAY,
@@ -14,7 +16,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -32,7 +34,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass, entry: ConfigEntry, async_add_devices: Callable[[], None]
+) -> bool:
     """Set up sia_alarm_control_panel from a config entry."""
     devices = [
         device
@@ -48,7 +52,16 @@ async def async_setup_entry(hass, entry, async_add_devices):
 class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
     """Class for SIA Alarm Control Panels."""
 
-    def __init__(self, entity_id, name, zone, ping_interval, hass, account):
+    def __init__(
+        self,
+        entity_id: str,
+        name: str,
+        port: int,
+        account: str,
+        zone: int,
+        ping_interval: int,
+        hass: HomeAssistant,
+    ):
         """Create SIAAlarmControlPanel object."""
         self._should_poll = False
         self._account = account
@@ -97,22 +110,22 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         self.async_schedule_update_ha_state(True)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Get Name."""
         return self._name
 
     @property
-    def ping_interval(self):
+    def ping_interval(self) -> int:
         """Get ping_interval."""
         return str(self._ping_interval)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Get state."""
         return self._state
 
     @property
-    def account(self):
+    def account(self) -> str:
         """Return device account."""
         return self._account
 
@@ -122,40 +135,14 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         return self._unique_id
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Get availability."""
         return self._is_available
 
     @property
-    def device_info(self):
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._account)
-            },
-            "name": self._account,
-            "via_device": (DOMAIN, self._account),
-        }
-
-    @property
-    def device_state_attributes(self):
-        """Return device attributes."""
-        return self._attr
-
-    @state.setter
-    def state(self, state):
-        """Set state."""
-        temp = self._old_state if state == PREVIOUS_STATE else state
-        self._old_state = self._state
-        self._state = temp
-        self.async_schedule_update_ha_state()
-
-    def assume_available(self):
-        """Reset unavalability tracker."""
         self._async_track_unavailable()
-
     @callback
-    def _async_track_unavailable(self):
+    async def _async_track_unavailable(self) -> bool:
         """Reset unavailability."""
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
@@ -170,7 +157,7 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
         return False
 
     @callback
-    def _async_set_unavailable(self, now):
+    def _async_set_unavailable(self, _):
         """Set availability."""
         self._remove_unavailability_tracker = None
         self._is_available = False
@@ -180,3 +167,12 @@ class SIAAlarmControlPanel(AlarmControlPanel, RestoreEntity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return None
+
+    @property
+    def device_info(self) -> dict:
+        """Return the device_info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "via_device": (DOMAIN, self._port, self._account),
+        }
