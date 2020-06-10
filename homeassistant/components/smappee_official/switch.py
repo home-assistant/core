@@ -5,7 +5,7 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import BASE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ SCAN_INTERVAL = timedelta(seconds=2)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee Comfort Plugs."""
-    smappee_base = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
+    smappee_base = hass.data[DOMAIN][BASE]
 
     dev = []
     for _, service_location in smappee_base.smappee.service_locations.items():
@@ -182,7 +182,6 @@ class SmappeeActuator(SwitchEntity):
                 "manufacturer": "Smappee",
                 "model": self._service_location.device_model,
                 "sw_version": self._service_location.firmware_version,
-                "via_device": (DOMAIN, self._smappee_base.smappee.username),
             }
         )
 

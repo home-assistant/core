@@ -701,6 +701,9 @@ pysignalclirestapi==0.3.4
 # homeassistant.components.sma
 pysma==0.3.5
 
+# homeassistant.components.smappee_official
+pysmappee==0.1.0
+
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
 

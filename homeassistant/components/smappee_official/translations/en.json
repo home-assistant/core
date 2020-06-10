@@ -1,26 +1,18 @@
 {
     "config": {
-        "title": "Smappee Official",
         "step": {
-            "user": {
-                "title": "Configure Smappee",
-                "description": "Enter username, password and API credentials",
-                "data": {
-                    "username": "Smappee username",
-                    "password": "Password",
-                    "client_id": "Smappee API client id",
-                    "client_secret": "Smappee API client secret",
-                    "platform": "Smappee platform"
-                }
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
             }
         },
-        "error": {
-            "identifier_exists": "This user is already configured",
-            "invalid_credentials": "Invalid credentials"
-        },
         "abort": {
-            "identifier_exists": "This user is already configured",
-            "invalid_credentials": "Invalid credentials"
+            "already_setup": "Smappee account already configured.",
+            "authorize_url_timeout": "Timeout generating authorize url.",
+            "missing_configuration": "The Smappee component is not configured."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated with Smappee."
         }
-    }
+    },
+    "title": "Smappee Official"
 }

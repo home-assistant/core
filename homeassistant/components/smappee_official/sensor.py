@@ -4,7 +4,7 @@ import logging
 from homeassistant.const import ATTR_VOLTAGE, ENERGY_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import Entity
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import BASE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ VOLTAGE_SENSORS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee sensor."""
-    smappee_base = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
+    smappee_base = hass.data[DOMAIN][BASE]
 
     dev = []
     for _, service_location in smappee_base.smappee.service_locations.items():
@@ -270,7 +270,6 @@ class SmappeeSensor(Entity):
                 "manufacturer": "Smappee",
                 "model": self._service_location.device_model,
                 "sw_version": self._service_location.firmware_version,
-                "via_device": (DOMAIN, self._smappee_base.smappee.username),
             }
         )
 
