@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
 
-        if user_input:
+        if user_input is not None:
             session = aiohttp_client.async_get_clientsession(self.hass)
             self.hub = GTIHub(
                 user_input[CONF_HOST],
