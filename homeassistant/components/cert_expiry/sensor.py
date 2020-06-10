@@ -120,9 +120,8 @@ class SSLCertificateDays(CertExpiryEntity):
         if not self.coordinator.is_cert_valid:
             return 0
 
-        if self.coordinator.data:
-            expiry = self.coordinator.data - dt.now()
-            return expiry.days
+        expiry = self.coordinator.data - dt.utcnow()
+        return expiry.days
 
     @property
     def unique_id(self):
@@ -153,6 +152,7 @@ class SSLCertificateTimestamp(CertExpiryEntity):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return self.coordinator.data.isoformat()
+        return None
 
     @property
     def unique_id(self):
