@@ -21,3 +21,5 @@ ATTR_DEVICE_ID = "device_id"
 ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_MODEL = "model"
 ATTR_FIRMWARE = "firmware"
+
+DEBUGMODE = True

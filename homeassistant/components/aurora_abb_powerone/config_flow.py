@@ -1,6 +1,5 @@
 """Config flow for Aurora ABB PowerOne integration."""
 import logging
-from logging import DEBUG
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import serial.tools.list_ports
@@ -17,6 +16,7 @@ from .const import (
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     CONF_USEDUMMYONFAIL,
+    DEBUGMODE,
     DEFAULT_ADDRESS,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
@@ -141,7 +141,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         }
         # Only show the debug option if debugging is active.
-        if _LOGGER.level == DEBUG:
+        if DEBUGMODE:
             config_options[vol.Required(CONF_USEDUMMYONFAIL, default=False)] = bool
         schema = vol.Schema(config_options)
 
