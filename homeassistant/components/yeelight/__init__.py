@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Optional
 
 import voluptuous as vol
 from yeelight import Bulb, BulbException
@@ -201,8 +202,7 @@ class YeelightDevice:
         self._config = config
         self._ipaddr = ipaddr
         self._name = config.get(CONF_NAME)
-        self._model = config.get(CONF_MODEL)
-        self._bulb_device = Bulb(self.ipaddr, model=self._model)
+        self._bulb_device = Bulb(self.ipaddr, model=config.get(CONF_MODEL))
         self._device_type = None
         self._available = False
         self._initialized = False
@@ -234,8 +234,8 @@ class YeelightDevice:
 
     @property
     def model(self):
-        """Return configured device model."""
-        return self._model
+        """Return configured/autodetected device model."""
+        return self._bulb_device.model
 
     @property
     def is_nightlight_supported(self) -> bool:
@@ -287,6 +287,11 @@ class YeelightDevice:
 
         return self._device_type
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self.bulb.capabilities.get("id")
+
     def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None):
         """Turn on device."""
         try:
@@ -324,7 +329,20 @@ class YeelightDevice:
 
         return self._available
 
+    def _get_capabilities(self):
+        """Request device capabilities."""
+        try:
+            self.bulb.get_capabilities()
+        except BulbException as ex:
+            _LOGGER.error(
+                "Unable to get device capabilities %s, %s: %s",
+                self.ipaddr,
+                self.name,
+                ex,
+            )
+
     def _initialize_device(self):
+        self._get_capabilities()
         self._initialized = True
         dispatcher_send(self._hass, DEVICE_INITIALIZED, self.ipaddr)
 
@@ -335,8 +353,4 @@ class YeelightDevice:
 
     def setup(self):
         """Fetch initial device properties."""
-        initial_update = self._update_properties()
-
-        # We can build correct class anyway.
-        if not initial_update and self.model:
-            self._initialize_device()
+        self._update_properties()

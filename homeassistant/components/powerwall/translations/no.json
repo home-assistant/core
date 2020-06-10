@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
-            "unknown": "Uventet feil"
+            "unknown": "Uventet feil",
+            "wrong_version": "Powerwall bruker en programvareversjon som ikke st\u00f8ttes. Vennligst vurder \u00e5 oppgradere eller rapportere dette problemet, s\u00e5 det kan l\u00f8ses."
         },
         "step": {
             "user": {

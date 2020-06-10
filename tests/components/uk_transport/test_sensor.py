@@ -2,7 +2,6 @@
 import re
 import unittest
 
-from asynctest import patch
 import requests_mock
 
 from homeassistant.components.uk_transport.sensor import (
@@ -20,6 +19,7 @@ from homeassistant.components.uk_transport.sensor import (
 from homeassistant.setup import setup_component
 from homeassistant.util.dt import now
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 
 BUS_ATCOCODE = "340000368SHE"
@@ -49,10 +49,7 @@ class TestUkTransportSensor(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @requests_mock.Mocker()
     def test_bus(self, mock_req):
@@ -61,6 +58,7 @@ class TestUkTransportSensor(unittest.TestCase):
             uri = re.compile(UkTransportSensor.TRANSPORT_API_URL_BASE + "*")
             mock_req.get(uri, text=load_fixture("uk_transport_bus.json"))
             assert setup_component(self.hass, "sensor", {"sensor": self.config})
+            self.hass.block_till_done()
 
         bus_state = self.hass.states.get("sensor.next_bus_to_wantage")
 
@@ -85,6 +83,7 @@ class TestUkTransportSensor(unittest.TestCase):
             uri = re.compile(UkTransportSensor.TRANSPORT_API_URL_BASE + "*")
             mock_req.get(uri, text=load_fixture("uk_transport_train.json"))
             assert setup_component(self.hass, "sensor", {"sensor": self.config})
+            self.hass.block_till_done()
 
         train_state = self.hass.states.get("sensor.next_train_to_WAT")
 

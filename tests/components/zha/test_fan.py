@@ -1,6 +1,4 @@
 """Test zha fan."""
-from unittest.mock import call
-
 import pytest
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
@@ -35,6 +33,8 @@ from .common import (
     send_attributes_report,
 )
 
+from tests.async_mock import call
+
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
 
@@ -62,9 +62,10 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
         },
         ieee="00:15:8d:00:02:32:4f:32",
         nwk=0x0000,
+        node_descriptor=b"\xf8\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff",
     )
     zha_device = await zha_device_joined(zigpy_device)
-    zha_device.set_available(True)
+    zha_device.available = True
     return zha_device
 
 
@@ -82,7 +83,7 @@ async def device_fan_1(hass, zigpy_device_mock, zha_device_joined):
         ieee=IEEE_GROUPABLE_DEVICE,
     )
     zha_device = await zha_device_joined(zigpy_device)
-    zha_device.set_available(True)
+    zha_device.available = True
     return zha_device
 
 
@@ -104,7 +105,7 @@ async def device_fan_2(hass, zigpy_device_mock, zha_device_joined):
         ieee=IEEE_GROUPABLE_DEVICE2,
     )
     zha_device = await zha_device_joined(zigpy_device)
-    zha_device.set_available(True)
+    zha_device.available = True
     return zha_device
 
 

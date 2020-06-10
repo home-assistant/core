@@ -8,7 +8,7 @@
                 "data": {
                     "advertise_ip": "IP rozg\u0142aszania",
                     "advertise_port": "Port rozg\u0142aszania",
-                    "host_ip": "IP hosta",
+                    "host_ip": "Adres IP",
                     "listen_port": "Port nas\u0142uchu",
                     "name": "Nazwa",
                     "upnp_bind_multicast": "Powi\u0105\u017c multicast (prawda/fa\u0142sz)"

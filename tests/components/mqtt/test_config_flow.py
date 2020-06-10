@@ -1,18 +1,18 @@
 """Test config flow."""
-from unittest.mock import patch
 
 import pytest
 
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
 def mock_finish_setup():
     """Mock out the finish setup method."""
     with patch(
-        "homeassistant.components.mqtt.MQTT.async_connect", return_value=mock_coro(True)
+        "homeassistant.components.mqtt.MQTT.async_connect", return_value=True
     ) as mock_finish:
         yield mock_finish
 

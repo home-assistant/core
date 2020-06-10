@@ -86,6 +86,7 @@ class GarminConnectData:
 
     def __init__(self, hass, client):
         """Initialize."""
+        self.hass = hass
         self.client = client
         self.data = None
 
@@ -95,7 +96,9 @@ class GarminConnectData:
         today = date.today()
 
         try:
-            self.data = self.client.get_stats_and_body(today.isoformat())
+            self.data = await self.hass.async_add_executor_job(
+                self.client.get_stats_and_body, today.isoformat()
+            )
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,

@@ -1,6 +1,5 @@
 """The tests for numeric state automation."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -11,6 +10,7 @@ from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -52,7 +52,7 @@ async def test_if_fires_on_entity_change_below(hass, calls):
     # 9 is below 10
     hass.states.async_set("test.entity", 9, context=context)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
 
     # Set above 12 so the automation will fire again
@@ -61,7 +61,7 @@ async def test_if_fires_on_entity_change_below(hass, calls):
     await hass.async_block_till_done()
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_over_to_below(hass, calls):
@@ -87,7 +87,7 @@ async def test_if_fires_on_entity_change_over_to_below(hass, calls):
     # 9 is below 10
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entities_change_over_to_below(hass, calls):
@@ -114,10 +114,10 @@ async def test_if_fires_on_entities_change_over_to_below(hass, calls):
     # 9 is below 10
     hass.states.async_set("test.entity_1", 9)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     hass.states.async_set("test.entity_2", 9)
     await hass.async_block_till_done()
-    assert 2 == len(calls)
+    assert len(calls) == 2
 
 
 async def test_if_not_fires_on_entity_change_below_to_below(hass, calls):
@@ -144,18 +144,18 @@ async def test_if_not_fires_on_entity_change_below_to_below(hass, calls):
     # 9 is below 10 so this should fire
     hass.states.async_set("test.entity", 9, context=context)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
 
     # already below so should not fire again
     hass.states.async_set("test.entity", 5)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     # still below so should not fire again
     hass.states.async_set("test.entity", 3)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_below_fires_on_entity_change_to_equal(hass, calls):
@@ -181,7 +181,7 @@ async def test_if_not_below_fires_on_entity_change_to_equal(hass, calls):
     # 10 is not below 10 so this should not fire again
     hass.states.async_set("test.entity", 10)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_initial_entity_below(hass, calls):
@@ -207,7 +207,7 @@ async def test_if_fires_on_initial_entity_below(hass, calls):
     # Fire on first update even if initial state was already below
     hass.states.async_set("test.entity", 8)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_initial_entity_above(hass, calls):
@@ -233,7 +233,7 @@ async def test_if_fires_on_initial_entity_above(hass, calls):
     # Fire on first update even if initial state was already above
     hass.states.async_set("test.entity", 12)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_above(hass, calls):
@@ -255,7 +255,7 @@ async def test_if_fires_on_entity_change_above(hass, calls):
     # 11 is above 10
     hass.states.async_set("test.entity", 11)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_below_to_above(hass, calls):
@@ -282,7 +282,7 @@ async def test_if_fires_on_entity_change_below_to_above(hass, calls):
     # 11 is above 10 and 9 is below
     hass.states.async_set("test.entity", 11)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_on_entity_change_above_to_above(hass, calls):
@@ -309,12 +309,12 @@ async def test_if_not_fires_on_entity_change_above_to_above(hass, calls):
     # 12 is above 10 so this should fire
     hass.states.async_set("test.entity", 12)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     # already above, should not fire again
     hass.states.async_set("test.entity", 15)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_above_fires_on_entity_change_to_equal(hass, calls):
@@ -341,7 +341,7 @@ async def test_if_not_above_fires_on_entity_change_to_equal(hass, calls):
     # 10 is not above 10 so this should not fire again
     hass.states.async_set("test.entity", 10)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_entity_change_below_range(hass, calls):
@@ -364,7 +364,7 @@ async def test_if_fires_on_entity_change_below_range(hass, calls):
     # 9 is below 10
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_below_above_range(hass, calls):
@@ -387,7 +387,7 @@ async def test_if_fires_on_entity_change_below_above_range(hass, calls):
     # 4 is below 5
     hass.states.async_set("test.entity", 4)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_entity_change_over_to_below_range(hass, calls):
@@ -414,7 +414,7 @@ async def test_if_fires_on_entity_change_over_to_below_range(hass, calls):
     # 9 is below 10
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_over_to_below_above_range(hass, calls):
@@ -441,7 +441,7 @@ async def test_if_fires_on_entity_change_over_to_below_above_range(hass, calls):
     # 4 is below 5 so it should not fire
     hass.states.async_set("test.entity", 4)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_if_entity_not_match(hass, calls):
@@ -463,7 +463,7 @@ async def test_if_not_fires_if_entity_not_match(hass, calls):
 
     hass.states.async_set("test.entity", 11)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_entity_change_below_with_attribute(hass, calls):
@@ -485,7 +485,7 @@ async def test_if_fires_on_entity_change_below_with_attribute(hass, calls):
     # 9 is below 10
     hass.states.async_set("test.entity", 9, {"test_attribute": 11})
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_on_entity_change_not_below_with_attribute(hass, calls):
@@ -507,7 +507,7 @@ async def test_if_not_fires_on_entity_change_not_below_with_attribute(hass, call
     # 11 is not below 10
     hass.states.async_set("test.entity", 11, {"test_attribute": 9})
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_fires_on_attribute_change_with_attribute_below(hass, calls):
@@ -530,7 +530,7 @@ async def test_if_fires_on_attribute_change_with_attribute_below(hass, calls):
     # 9 is below 10
     hass.states.async_set("test.entity", "entity", {"test_attribute": 9})
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_on_attribute_change_with_attribute_not_below(hass, calls):
@@ -553,7 +553,7 @@ async def test_if_not_fires_on_attribute_change_with_attribute_not_below(hass, c
     # 11 is not below 10
     hass.states.async_set("test.entity", "entity", {"test_attribute": 11})
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_on_entity_change_with_attribute_below(hass, calls):
@@ -576,7 +576,7 @@ async def test_if_not_fires_on_entity_change_with_attribute_below(hass, calls):
     # 11 is not below 10, entity state value should not be tested
     hass.states.async_set("test.entity", "9", {"test_attribute": 11})
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_on_entity_change_with_not_attribute_below(hass, calls):
@@ -599,7 +599,7 @@ async def test_if_not_fires_on_entity_change_with_not_attribute_below(hass, call
     # 11 is not below 10, entity state value should not be tested
     hass.states.async_set("test.entity", "entity")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(hass, calls):
@@ -624,7 +624,7 @@ async def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(hass,
         "test.entity", "entity", {"test_attribute": 9, "not_test_attribute": 11}
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_template_list(hass, calls):
@@ -647,7 +647,7 @@ async def test_template_list(hass, calls):
     # 3 is below 10
     hass.states.async_set("test.entity", "entity", {"test_attribute": [11, 15, 3]})
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_template_string(hass, calls):
@@ -686,10 +686,10 @@ async def test_template_string(hass, calls):
     await hass.async_block_till_done()
     hass.states.async_set("test.entity", "test state 2", {"test_attribute": "0.9"})
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert (
-        "numeric_state - test.entity - 10.0 - None - test state 1 - "
-        "test state 2" == calls[0].data["some"]
+        calls[0].data["some"]
+        == "numeric_state - test.entity - 10.0 - None - test state 1 - test state 2"
     )
 
 
@@ -715,7 +715,7 @@ async def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(hass, 
         "test.entity", "entity", {"test_attribute": 11, "not_test_attribute": 9}
     )
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_action(hass, calls):
@@ -742,19 +742,19 @@ async def test_if_action(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     hass.states.async_set(entity_id, 8)
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     hass.states.async_set(entity_id, 9)
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
 
-    assert 2 == len(calls)
+    assert len(calls) == 2
 
 
 async def test_if_fails_setup_bad_for(hass, calls):
@@ -826,7 +826,7 @@ async def test_if_not_fires_on_entity_change_with_for(hass, calls):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
@@ -853,7 +853,7 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 2 == len(calls)
+    assert len(calls) == 2
 
     hass.states.async_set("test.entity_1", 15)
     hass.states.async_set("test.entity_2", 15)
@@ -866,7 +866,7 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 2 == len(calls)
+    assert len(calls) == 2
 
 
 async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
@@ -897,11 +897,11 @@ async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
         async_fire_time_changed(hass, mock_utcnow.return_value)
         hass.states.async_set("test.entity", 9, attributes={"mock_attr": "attr_change"})
         await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
         mock_utcnow.return_value += timedelta(seconds=4)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_for(hass, calls):
@@ -927,7 +927,7 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_wait_template_with_trigger(hass, calls):
@@ -965,7 +965,7 @@ async def test_wait_template_with_trigger(hass, calls):
     hass.states.async_set("test.entity", "8")
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert "numeric_state - test.entity - 12" == calls[0].data["some"]
 
 
@@ -1000,16 +1000,16 @@ async def test_if_fires_on_entities_change_no_overlap(hass, calls):
         mock_utcnow.return_value += timedelta(seconds=10)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
-        assert "test.entity_1" == calls[0].data["some"]
+        assert len(calls) == 1
+        assert calls[0].data["some"] == "test.entity_1"
 
         hass.states.async_set("test.entity_2", 9)
         await hass.async_block_till_done()
         mock_utcnow.return_value += timedelta(seconds=10)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 2 == len(calls)
-        assert "test.entity_2" == calls[1].data["some"]
+        assert len(calls) == 2
+        assert calls[1].data["some"] == "test.entity_2"
 
 
 async def test_if_fires_on_entities_change_overlap(hass, calls):
@@ -1052,18 +1052,18 @@ async def test_if_fires_on_entities_change_overlap(hass, calls):
         async_fire_time_changed(hass, mock_utcnow.return_value)
         hass.states.async_set("test.entity_2", 9)
         await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
         mock_utcnow.return_value += timedelta(seconds=3)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
-        assert "test.entity_1" == calls[0].data["some"]
+        assert len(calls) == 1
+        assert calls[0].data["some"] == "test.entity_1"
 
         mock_utcnow.return_value += timedelta(seconds=3)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 2 == len(calls)
-        assert "test.entity_2" == calls[1].data["some"]
+        assert len(calls) == 2
+        assert calls[1].data["some"] == "test.entity_2"
 
 
 async def test_if_fires_on_change_with_for_template_1(hass, calls):
@@ -1087,10 +1087,10 @@ async def test_if_fires_on_change_with_for_template_1(hass, calls):
 
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_for_template_2(hass, calls):
@@ -1114,10 +1114,10 @@ async def test_if_fires_on_change_with_for_template_2(hass, calls):
 
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_for_template_3(hass, calls):
@@ -1141,10 +1141,10 @@ async def test_if_fires_on_change_with_for_template_3(hass, calls):
 
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_invalid_for_template(hass, calls):
@@ -1215,22 +1215,22 @@ async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
         async_fire_time_changed(hass, mock_utcnow.return_value)
         hass.states.async_set("test.entity_2", 9)
         await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
         mock_utcnow.return_value += timedelta(seconds=3)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
-        assert "test.entity_1 - 0:00:05" == calls[0].data["some"]
+        assert len(calls) == 1
+        assert calls[0].data["some"] == "test.entity_1 - 0:00:05"
 
         mock_utcnow.return_value += timedelta(seconds=3)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
         mock_utcnow.return_value += timedelta(seconds=5)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 2 == len(calls)
-        assert "test.entity_2 - 0:00:10" == calls[1].data["some"]
+        assert len(calls) == 2
+        assert calls[1].data["some"] == "test.entity_2 - 0:00:10"
 
 
 def test_below_above():

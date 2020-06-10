@@ -1,6 +1,4 @@
 """Test init of Brother integration."""
-from asynctest import patch
-
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -9,6 +7,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_TYPE, STATE_UNAVAILABLE
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.brother import init_integration
 

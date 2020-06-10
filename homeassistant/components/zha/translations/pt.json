@@ -8,10 +8,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "radio_type": "Tipo de r\u00e1dio",
-                    "usb_path": "Caminho do Dispositivo USB"
-                },
                 "title": "ZHA"
             }
         }

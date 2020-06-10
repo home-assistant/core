@@ -1,8 +1,7 @@
 """Test the webhook component."""
-from unittest.mock import Mock
-
 import pytest
 
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 
@@ -37,7 +36,9 @@ async def test_unregistering_webhook(hass, mock_client):
 
 async def test_generate_webhook_url(hass):
     """Test we generate a webhook url correctly."""
-    hass.config.api = Mock(base_url="https://example.com")
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     url = hass.components.webhook.async_generate_url("some_id")
 
     assert url == "https://example.com/api/webhook/some_id"

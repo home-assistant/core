@@ -2,7 +2,6 @@
 import unittest
 from unittest import mock
 
-import asynctest
 from libpurecool.const import FocusMode, HeatMode, HeatState, HeatTarget
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
@@ -14,6 +13,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -111,8 +111,9 @@ class DysonTest(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -344,11 +345,11 @@ class DysonTest(unittest.TestCase):
         assert entity.target_temperature == 23
 
 
-@asynctest.patch(
+@patch(
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_device_heat_on(), _get_device_cool()],
 )
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
 async def test_setup_component_with_parent_discovery(
     mocked_login, mocked_devices, hass
 ):

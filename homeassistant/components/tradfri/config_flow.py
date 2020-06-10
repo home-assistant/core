@@ -178,7 +178,7 @@ async def get_gateway_info(hass, host, identity, key):
     """Return info for the gateway."""
 
     try:
-        factory = APIFactory(host, psk_id=identity, psk=key, loop=hass.loop)
+        factory = APIFactory(host, psk_id=identity, psk=key)
 
         api = factory.request
         gateway = Gateway()

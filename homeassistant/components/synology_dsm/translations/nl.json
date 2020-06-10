@@ -3,16 +3,23 @@
         "abort": {
             "already_configured": "Host is al geconfigureerd."
         },
+        "error": {
+            "connection": "Verbindingsfout: controleer uw host, poort & ssl",
+            "login": "Aanmeldingsfout: controleer uw gebruikersnaam en wachtwoord",
+            "missing_data": "Ontbrekende gegevens: probeer het later opnieuw of een andere configuratie",
+            "otp_failed": "Tweestapsverificatie is mislukt, probeer het opnieuw met een nieuwe toegangscode",
+            "unknown": "Onbekende fout: controleer de logs voor meer informatie"
+        },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
             "2sa": {
                 "data": {
                     "otp_code": "Code"
-                }
+                },
+                "title": "Synology DSM: tweestapsverificatie"
             },
             "link": {
                 "data": {
-                    "api_version": "DSM-versie",
                     "password": "Wachtwoord",
                     "port": "Poort (optioneel)",
                     "ssl": "Gebruik SSL/TLS om verbinding te maken met uw NAS",
@@ -23,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM-versie",
                     "host": "Host",
                     "password": "Wachtwoord",
                     "port": "Poort (optioneel)",

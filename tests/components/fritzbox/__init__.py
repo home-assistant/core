@@ -1,8 +1,8 @@
 """Tests for the AVM Fritz!Box integration."""
-from unittest.mock import Mock
-
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+
+from tests.async_mock import Mock
 
 MOCK_CONFIG = {
     DOMAIN: {

@@ -1,11 +1,11 @@
 """HomeKit session fixtures."""
-from unittest.mock import patch
-
 from pyhap.accessory_driver import AccessoryDriver
 import pytest
 
 from homeassistant.components.homekit.const import EVENT_HOMEKIT_CHANGED
 from homeassistant.core import callback as ha_callback
+
+from tests.async_mock import patch
 
 
 @pytest.fixture(scope="session")
@@ -29,3 +29,10 @@ def events(hass):
         EVENT_HOMEKIT_CHANGED, ha_callback(lambda e: events.append(e))
     )
     yield events
+
+
+@pytest.fixture
+def mock_zeroconf():
+    """Mock zeroconf."""
+    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
+        yield mock_zc.return_value

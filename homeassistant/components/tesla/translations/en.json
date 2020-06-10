@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Email Address"
+                    "username": "Email"
                 },
                 "description": "Please enter your information.",
                 "title": "Tesla - Configuration"

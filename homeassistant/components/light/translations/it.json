@@ -19,8 +19,8 @@
     },
     "state": {
         "_": {
-            "off": "Spento",
-            "on": "Acceso"
+            "off": "Spenta",
+            "on": "Accesa"
         }
     },
     "title": "Luce"

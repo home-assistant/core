@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 import socket
 import unittest
-from unittest.mock import patch
 
 import pytest
 
@@ -12,6 +11,7 @@ from homeassistant.components import pilight
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,8 +71,9 @@ class TestPilight(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.skip_teardown_stop = False
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         if not self.skip_teardown_stop:
             self.hass.stop()
@@ -109,7 +110,7 @@ class TestPilight(unittest.TestCase):
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
     @patch("homeassistant.core._LOGGER.error")
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code_no_protocol(self, mock_pilight_error, mock_error):
         """Try to send data without protocol information, should give error."""
         with assert_setup_component(4):
@@ -127,7 +128,7 @@ class TestPilight(unittest.TestCase):
             assert "required key not provided @ data['protocol']" in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code(self, mock_pilight_error):
         """Try to send proper data."""
         with assert_setup_component(4):
@@ -167,7 +168,7 @@ class TestPilight(unittest.TestCase):
                 assert "Pilight send failed" in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code_delay(self, mock_pilight_error):
         """Try to send proper data with delay afterwards."""
         with assert_setup_component(4):
@@ -207,7 +208,7 @@ class TestPilight(unittest.TestCase):
             assert str(service_data2) in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_start_stop(self, mock_pilight_error):
         """Check correct startup and stop of pilight daemon."""
         with assert_setup_component(4):
@@ -374,10 +375,7 @@ class TestPilightCallrateThrottler(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_call_rate_delay_throttle_disabled(self):
         """Test that the limiter is a noop if no delay set."""

@@ -1,6 +1,5 @@
 """The test for light device automation."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 
@@ -11,6 +10,7 @@ from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
@@ -96,6 +96,7 @@ async def test_if_state(hass, calls):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     ent1, ent2, ent3 = platform.ENTITIES
 
@@ -173,6 +174,7 @@ async def test_if_fires_on_for_condition(hass, calls):
 
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     ent1, ent2, ent3 = platform.ENTITIES
 

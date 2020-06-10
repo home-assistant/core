@@ -244,9 +244,11 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> Lis
     return res
 
 
-# pylint: disable=redefined-outer-name
 def find_next_time_expression_time(
-    now: dt.datetime, seconds: List[int], minutes: List[int], hours: List[int]
+    now: dt.datetime,  # pylint: disable=redefined-outer-name
+    seconds: List[int],
+    minutes: List[int],
+    hours: List[int],
 ) -> dt.datetime:
     """Find the next datetime from now for which the time expression matches.
 

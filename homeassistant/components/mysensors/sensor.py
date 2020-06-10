@@ -4,6 +4,8 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONDUCTIVITY,
     DEGREE,
+    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRICAL_VOLT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
@@ -41,12 +43,12 @@ SENSORS = {
         "S_LIGHT_LEVEL": ["lx", "mdi:white-balance-sunny"],
     },
     "V_VOLTAGE": [VOLT, "mdi:flash"],
-    "V_CURRENT": ["A", "mdi:flash-auto"],
+    "V_CURRENT": [ELECTRICAL_CURRENT_AMPERE, "mdi:flash-auto"],
     "V_PH": ["pH", None],
     "V_ORP": ["mV", None],
     "V_EC": [CONDUCTIVITY, None],
     "V_VAR": ["var", None],
-    "V_VA": ["VA", None],
+    "V_VA": [ELECTRICAL_VOLT_AMPERE, None],
 }
 
 

@@ -16,12 +16,14 @@
                     "timeout": "D\u00e9lai d'expiration (secondes)",
                     "username": "Nom d'utilisateur"
                 },
+                "description": "Si la m\u00e9thode de connexion est \u00abe-mail\u00bb, le nom d'utilisateur est l'adresse e-mail. Si la m\u00e9thode de connexion est \u00abt\u00e9l\u00e9phone\u00bb, le nom d'utilisateur est le num\u00e9ro de t\u00e9l\u00e9phone au format \u00ab+ NNNNNNNNN\u00bb.",
                 "title": "Configurer un compte August"
             },
             "validation": {
                 "data": {
                     "code": "Code de v\u00e9rification"
                 },
+                "description": "Veuillez v\u00e9rifier votre {login_method} ( {username} ) et entrez le code de v\u00e9rification ci-dessous",
                 "title": "Authentification \u00e0 deux facteurs"
             }
         }

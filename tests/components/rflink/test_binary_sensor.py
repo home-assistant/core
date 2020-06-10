@@ -5,7 +5,6 @@ Test setup of rflink sensor component/platform. Verify manual and
 automatic sensor creation.
 """
 from datetime import timedelta
-from unittest.mock import patch
 
 from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
 from homeassistant.const import (
@@ -17,6 +16,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.rflink.test_init import mock_rflink
 

@@ -1,12 +1,12 @@
 """Test Z-Wave node entity."""
 import unittest
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.zwave import const, node_entity
 from homeassistant.const import ATTR_ENTITY_ID
 
+from tests.async_mock import MagicMock, patch
 import tests.mock.zwave as mock_zwave
 
 

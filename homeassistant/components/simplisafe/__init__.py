@@ -223,7 +223,9 @@ async def async_setup_entry(hass, config_entry):
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        api = await API.login_via_token(config_entry.data[CONF_TOKEN], websession)
+        api = await API.login_via_token(
+            config_entry.data[CONF_TOKEN], session=websession
+        )
     except InvalidCredentialsError:
         _LOGGER.error("Invalid credentials provided")
         return False

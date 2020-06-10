@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from bravia_tv.braviarc import NoIPControl
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -30,6 +31,7 @@ from homeassistant.util.json import load_json
 from .const import (
     ATTR_MANUFACTURER,
     BRAVIA_CONFIG_FILE,
+    BRAVIARC,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     DEFAULT_NAME,
@@ -103,7 +105,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "model": config_entry.title,
     }
 
-    braviarc = hass.data[DOMAIN][config_entry.entry_id]
+    braviarc = hass.data[DOMAIN][config_entry.entry_id][BRAVIARC]
 
     ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
 
@@ -161,9 +163,12 @@ class BraviaTVDevice(MediaPlayerEntity):
         )
         if power_status == "active":
             if self._need_refresh:
-                connected = await self.hass.async_add_executor_job(
-                    self._braviarc.connect, self._pin, CLIENTID_PREFIX, NICKNAME
-                )
+                try:
+                    connected = await self.hass.async_add_executor_job(
+                        self._braviarc.connect, self._pin, CLIENTID_PREFIX, NICKNAME
+                    )
+                except NoIPControl:
+                    _LOGGER.error("IP Control is disabled in the TV settings")
                 self._need_refresh = False
             else:
                 connected = self._braviarc.is_connected()

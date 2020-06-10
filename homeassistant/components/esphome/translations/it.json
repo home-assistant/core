@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP \u00e8 gi\u00e0 configurato"
+            "already_configured": "ESP \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "La configurazione ESP \u00e8 gi\u00e0 in corso"
         },
         "error": {
             "connection_error": "Impossibile connettersi ad ESP. Assicurati che il tuo file YAML contenga una riga \"api:\".",
@@ -14,8 +15,7 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Inserisci la password per {name} che hai impostato nella tua configurazione.",
-                "title": "Inserisci la password"
+                "description": "Inserisci la password per {name} che hai impostato nella tua configurazione."
             },
             "discovery_confirm": {
                 "description": "Vuoi aggiungere il nodo ESPHome `{name}` a Home Assistant?",
@@ -26,8 +26,7 @@
                     "host": "Host",
                     "port": "Porta"
                 },
-                "description": "Inserisci le impostazioni di connessione del tuo nodo [ESPHome] (https://esphomelib.com/).",
-                "title": "ESPHome"
+                "description": "Inserisci le impostazioni di connessione del tuo nodo [ESPHome](https://esphomelib.com/)."
             }
         }
     }

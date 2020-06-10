@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 import datetime
 import enum
 import functools
+from ipaddress import ip_address
 import logging
 import os
 import pathlib
@@ -29,12 +30,14 @@ from typing import (
     Set,
     TypeVar,
     Union,
+    cast,
 )
 import uuid
 
 from async_timeout import timeout
 import attr
 import voluptuous as vol
+import yarl
 
 from homeassistant import block_async_io, loader, util
 from homeassistant.const import (
@@ -68,21 +71,25 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location
+from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
+from homeassistant.util.thread import fix_threading_exception_logging
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from homeassistant.auth import AuthManager
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
 
 
 block_async_io.enable()
+fix_threading_exception_logging()
 
-# pylint: disable=invalid-name
 T = TypeVar("T")
+_UNDEF: dict = {}
+# pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name
@@ -168,6 +175,7 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
+    auth: "AuthManager"
     http: "HomeAssistantHTTP" = None  # type: ignore
     config_entries: "ConfigEntries" = None  # type: ignore
 
@@ -202,6 +210,11 @@ class HomeAssistant:
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
+
+    @property
+    def is_stopping(self) -> bool:
+        """Return if Home Assistant is stopping."""
+        return self.state in (CoreState.stopping, CoreState.final_write)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -254,6 +267,7 @@ class HomeAssistant:
 
         setattr(self.loop, "_thread_ident", threading.get_ident())
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
 
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
@@ -424,7 +438,7 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state == CoreState.stopping or self.state == CoreState.final_write:
+            if self.state in [CoreState.stopping, CoreState.final_write]:
                 _LOGGER.info("async_stop called twice: ignored")
                 return
             if self.state == CoreState.starting:
@@ -1299,6 +1313,8 @@ class Config:
         self.location_name: str = "Home"
         self.time_zone: datetime.tzinfo = dt_util.UTC
         self.units: UnitSystem = METRIC_SYSTEM
+        self.internal_url: Optional[str] = None
+        self.external_url: Optional[str] = None
 
         self.config_source: str = "default"
 
@@ -1383,6 +1399,9 @@ class Config:
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,
+            "state": self.hass.state.value,
+            "external_url": self.external_url,
+            "internal_url": self.internal_url,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1406,6 +1425,8 @@ class Config:
         unit_system: Optional[str] = None,
         location_name: Optional[str] = None,
         time_zone: Optional[str] = None,
+        external_url: Optional[Union[str, dict]] = _UNDEF,
+        internal_url: Optional[Union[str, dict]] = _UNDEF,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1424,6 +1445,10 @@ class Config:
             self.location_name = location_name
         if time_zone is not None:
             self.set_time_zone(time_zone)
+        if external_url is not _UNDEF:
+            self.external_url = cast(Optional[str], external_url)
+        if internal_url is not _UNDEF:
+            self.internal_url = cast(Optional[str], internal_url)
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -1437,10 +1462,51 @@ class Config:
             CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True
         )
         data = await store.async_load()
-        if not data:
-            return
 
-        self._update(source=SOURCE_STORAGE, **data)
+        async def migrate_base_url(_: Event) -> None:
+            """Migrate base_url to internal_url/external_url."""
+            if self.hass.config.api is None:
+                return
+
+            base_url = yarl.URL(self.hass.config.api.deprecated_base_url)
+
+            # Check if this is an internal URL
+            if str(base_url.host).endswith(".local") or (
+                network.is_ip_address(str(base_url.host))
+                and network.is_private(ip_address(base_url.host))
+            ):
+                await self.async_update(
+                    internal_url=network.normalize_url(str(base_url))
+                )
+                return
+
+            # External, ensure this is not a loopback address
+            if not (
+                network.is_ip_address(str(base_url.host))
+                and network.is_loopback(ip_address(base_url.host))
+            ):
+                await self.async_update(
+                    external_url=network.normalize_url(str(base_url))
+                )
+
+        if data:
+            # Try to migrate base_url to internal_url/external_url
+            if "external_url" not in data:
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_START, migrate_base_url
+                )
+
+            self._update(
+                source=SOURCE_STORAGE,
+                latitude=data.get("latitude"),
+                longitude=data.get("longitude"),
+                elevation=data.get("elevation"),
+                unit_system=data.get("unit_system"),
+                location_name=data.get("location_name"),
+                time_zone=data.get("time_zone"),
+                external_url=data.get("external_url", _UNDEF),
+                internal_url=data.get("internal_url", _UNDEF),
+            )
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
@@ -1455,6 +1521,8 @@ class Config:
             "unit_system": self.units.name,
             "location_name": self.location_name,
             "time_zone": time_zone,
+            "external_url": self.external_url,
+            "internal_url": self.internal_url,
         }
 
         store = self.hass.helpers.storage.Store(

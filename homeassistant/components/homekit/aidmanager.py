@@ -11,17 +11,16 @@ This module generates and stores them in a HA storage.
 """
 import logging
 import random
-from zlib import adler32
 
 from fnvhash import fnv1a_32
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .util import get_aid_storage_filename_for_entry_id
 
-AID_MANAGER_STORAGE_KEY = f"{DOMAIN}.aids"
 AID_MANAGER_STORAGE_VERSION = 1
 AID_MANAGER_SAVE_DELAY = 2
 
@@ -43,11 +42,6 @@ def get_system_unique_id(entity: RegistryEntry):
 
 def _generate_aids(unique_id: str, entity_id: str) -> int:
     """Generate accessory aid."""
-
-    # Backward compatibility: Previously HA used to *only* do adler32 on the entity id.
-    # Not stable if entity ID changes
-    # Not robust against collisions
-    yield adler32(entity_id.encode("utf-8"))
 
     if unique_id:
         # Use fnv1a_32 of the unique id as
@@ -74,13 +68,13 @@ class AccessoryAidStorage:
     persist over reboots.
     """
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         """Create a new entity map store."""
         self.hass = hass
-        self.store = Store(hass, AID_MANAGER_STORAGE_VERSION, AID_MANAGER_STORAGE_KEY)
         self.allocations = {}
         self.allocated_aids = set()
-
+        self._entry = entry
+        self.store = None
         self._entity_registry = None
 
     async def async_initialize(self):
@@ -88,21 +82,15 @@ class AccessoryAidStorage:
         self._entity_registry = (
             await self.hass.helpers.entity_registry.async_get_registry()
         )
+        aidstore = get_aid_storage_filename_for_entry_id(self._entry)
+        self.store = Store(self.hass, AID_MANAGER_STORAGE_VERSION, aidstore)
 
         raw_storage = await self.store.async_load()
         if not raw_storage:
             # There is no data about aid allocations yet
             return
 
-        # Remove the UNIQUE_IDS_KEY in 0.112 and later
-        # The beta version used UNIQUE_IDS_KEY but
-        # since we now have entity ids in the dict
-        # we use ALLOCATIONS_KEY but check for
-        # UNIQUE_IDS_KEY in case the database has not
-        # been upgraded yet
-        self.allocations = raw_storage.get(
-            ALLOCATIONS_KEY, raw_storage.get(UNIQUE_IDS_KEY, {})
-        )
+        self.allocations = raw_storage.get(ALLOCATIONS_KEY, {})
         self.allocated_aids = set(self.allocations.values())
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str):
@@ -116,17 +104,17 @@ class AccessoryAidStorage:
 
     def _get_or_allocate_aid(self, unique_id: str, entity_id: str):
         """Allocate (and return) a new aid for an accessory."""
-        # Prefer the unique_id over the
-        # entitiy_id
-        storage_key = unique_id or entity_id
-
-        if storage_key in self.allocations:
-            return self.allocations[storage_key]
+        if unique_id and unique_id in self.allocations:
+            return self.allocations[unique_id]
+        if entity_id in self.allocations:
+            return self.allocations[entity_id]
 
         for aid in _generate_aids(unique_id, entity_id):
             if aid in INVALID_AIDS:
                 continue
             if aid not in self.allocated_aids:
+                # Prefer the unique_id over the entitiy_id
+                storage_key = unique_id or entity_id
                 self.allocations[storage_key] = aid
                 self.allocated_aids.add(aid)
                 self.async_schedule_save()

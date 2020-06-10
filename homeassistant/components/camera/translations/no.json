@@ -1,6 +1,7 @@
 {
     "state": {
         "_": {
+            "idle": "Inaktiv",
             "recording": "Opptak",
             "streaming": "Str\u00f8mming"
         }

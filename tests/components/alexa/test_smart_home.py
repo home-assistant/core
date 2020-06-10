@@ -1,10 +1,10 @@
 """Test for smart home alexa support."""
-from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
+from homeassistant.components.cover import DEVICE_CLASS_GATE
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 import homeassistant.components.vacuum as vacuum
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entityfilter
@@ -39,7 +40,8 @@ from . import (
     reported_properties,
 )
 
-from tests.common import async_mock_service, mock_coro
+from tests.async_mock import patch
+from tests.common import async_mock_service
 
 
 @pytest.fixture
@@ -53,19 +55,19 @@ def events(hass):
 
 
 @pytest.fixture
-def mock_camera(hass):
+async def mock_camera(hass):
     """Initialize a demo camera platform."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "camera", {camera.DOMAIN: {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
-def mock_stream(hass):
+async def mock_stream(hass):
     """Initialize a demo camera platform with streaming."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "stream", {"stream": {}})
-    )
+    assert await async_setup_component(hass, "stream", {"stream": {}})
+    await hass.async_block_till_done()
 
 
 def test_create_api_message_defaults(hass):
@@ -2630,6 +2632,28 @@ async def test_cover_garage_door(hass):
     )
 
 
+async def test_cover_gate(hass):
+    """Test gate cover discovery."""
+    device = (
+        "cover.test_gate",
+        "off",
+        {
+            "friendly_name": "Test cover gate",
+            "supported_features": 3,
+            "device_class": DEVICE_CLASS_GATE,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "cover#test_gate"
+    assert appliance["displayCategories"][0] == "GARAGE_DOOR"
+    assert appliance["friendlyName"] == "Test cover gate"
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.ModeController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+
 async def test_cover_position_mode(hass):
     """Test cover discovery and position using modeController."""
     device = (
@@ -3273,8 +3297,8 @@ async def test_media_player_eq_modes(hass):
         assert call.data["sound_mode"] == mode.lower()
 
 
-async def test_media_player_sound_mode_list_none(hass):
-    """Test EqualizerController bands directive not supported."""
+async def test_media_player_sound_mode_list_unsupported(hass):
+    """Test EqualizerController with unsupported sound modes."""
     device = (
         "media_player.test",
         "on",
@@ -3282,12 +3306,17 @@ async def test_media_player_sound_mode_list_none(hass):
             "friendly_name": "Test media player",
             "supported_features": SUPPORT_SELECT_SOUND_MODE,
             "sound_mode": "unknown",
-            "sound_mode_list": None,
+            "sound_mode_list": ["unsupported", "non-existing"],
         },
     )
     appliance = await discovery_test(device, hass)
     assert appliance["endpointId"] == "media_player#test"
     assert appliance["friendlyName"] == "Test media player"
+
+    # Test equalizer controller is not there
+    assert_endpoint_capabilities(
+        appliance, "Alexa", "Alexa.PowerController", "Alexa.EndpointHealth",
+    )
 
 
 async def test_media_player_eq_bands_not_supported(hass):
@@ -3761,8 +3790,11 @@ async def test_camera_discovery(hass, mock_stream):
         "idle",
         {"friendly_name": "Test camera", "supported_features": 3},
     )
-    with patch(
-        "homeassistant.helpers.network.async_get_external_url",
+
+    hass.config.components.add("cloud")
+    with patch.object(
+        hass.components.cloud,
+        "async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
@@ -3789,8 +3821,11 @@ async def test_camera_discovery_without_stream(hass):
         "idle",
         {"friendly_name": "Test camera", "supported_features": 3},
     )
-    with patch(
-        "homeassistant.helpers.network.async_get_external_url",
+
+    hass.config.components.add("cloud")
+    with patch.object(
+        hass.components.cloud,
+        "async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
@@ -3803,8 +3838,7 @@ async def test_camera_discovery_without_stream(hass):
     [
         ("http://nohttpswrongport.org:8123", 2),
         ("http://nohttpsport443.org:443", 2),
-        ("tls://nohttpsport443.org:443", 2),
-        ("https://httpsnnonstandport.org:8123", 3),
+        ("https://httpsnnonstandport.org:8123", 2),
         ("https://correctschemaandport.org:443", 3),
         ("https://correctschemaandport.org", 3),
     ],
@@ -3816,11 +3850,12 @@ async def test_camera_hass_urls(hass, mock_stream, url, result):
         "idle",
         {"friendly_name": "Test camera", "supported_features": 3},
     )
-    with patch(
-        "homeassistant.helpers.network.async_get_external_url", return_value=url
-    ):
-        appliance = await discovery_test(device, hass)
-        assert len(appliance["capabilities"]) == result
+    await async_process_ha_core_config(
+        hass, {"external_url": url},
+    )
+
+    appliance = await discovery_test(device, hass)
+    assert len(appliance["capabilities"]) == result
 
 
 async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
@@ -3829,12 +3864,13 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
         "Alexa.CameraStreamController", "InitializeCameraStreams", "camera#demo_camera"
     )
 
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://mycamerastream.test"},
+    )
+
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=mock_coro("rtsp://example.local"),
-    ), patch(
-        "homeassistant.helpers.network.async_get_external_url",
-        return_value="https://mycamerastream.test",
+        return_value="rtsp://example.local",
     ):
         msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
         await hass.async_block_till_done()

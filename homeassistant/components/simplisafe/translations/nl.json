@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dit SimpliSafe-account is al in gebruik."
+        },
         "error": {
             "identifier_exists": "Account bestaat al",
             "invalid_credentials": "Ongeldige gebruikersgegevens"
@@ -7,10 +10,21 @@
         "step": {
             "user": {
                 "data": {
+                    "code": "Code (gebruikt in Home Assistant)",
                     "password": "Wachtwoord",
                     "username": "E-mailadres"
                 },
                 "title": "Vul uw gegevens in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (gebruikt in de Home Assistant UI)"
+                },
+                "title": "Configureer SimpliSafe"
             }
         }
     }

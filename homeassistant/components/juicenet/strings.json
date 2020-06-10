@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This JuiceNet account is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_token": "JuiceNet API Token"
+        },
+        "description": "You will need the API Token from https://home.juice.net/Manage.",
+        "title": "Connect to JuiceNet"
+      }
+    }
+  }
+}

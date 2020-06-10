@@ -1,6 +1,4 @@
 """Tests for the PS4 Integration."""
-from asynctest import MagicMock, patch
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
 from homeassistant.components.media_player.const import (
@@ -29,6 +27,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, mock_registry
 
 MOCK_HOST = "192.168.0.1"
@@ -202,7 +201,7 @@ def test_games_reformat_to_dict(hass):
     ), patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()), patch(
         "os.path.isfile", return_value=True
     ):
-        mock_games = ps4.load_games(hass)
+        mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     # New format is a nested dict.
     assert isinstance(mock_games, dict)
@@ -224,7 +223,7 @@ def test_load_games(hass):
     ), patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()), patch(
         "os.path.isfile", return_value=True
     ):
-        mock_games = ps4.load_games(hass)
+        mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     assert isinstance(mock_games, dict)
 
@@ -243,7 +242,7 @@ def test_loading_games_returns_dict(hass):
     ), patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()), patch(
         "os.path.isfile", return_value=True
     ):
-        mock_games = ps4.load_games(hass)
+        mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     assert isinstance(mock_games, dict)
     assert not mock_games
@@ -253,7 +252,7 @@ def test_loading_games_returns_dict(hass):
     ), patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()), patch(
         "os.path.isfile", return_value=True
     ):
-        mock_games = ps4.load_games(hass)
+        mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     assert isinstance(mock_games, dict)
     assert not mock_games
@@ -261,7 +260,7 @@ def test_loading_games_returns_dict(hass):
     with patch("homeassistant.components.ps4.load_json", return_value=[]), patch(
         "homeassistant.components.ps4.save_json", side_effect=MagicMock()
     ), patch("os.path.isfile", return_value=True):
-        mock_games = ps4.load_games(hass)
+        mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     assert isinstance(mock_games, dict)
     assert not mock_games

@@ -2,7 +2,6 @@
 from uuid import uuid4
 
 from aiohttp import ClientConnectionError, ClientResponseError
-from asynctest import Mock, patch
 from pysmartthings import InstalledAppStatus, OAuthToken
 import pytest
 
@@ -17,11 +16,13 @@ from homeassistant.components.smartthings.const import (
     SIGNAL_SMARTTHINGS_UPDATE,
     SUPPORTED_PLATFORMS,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -116,7 +117,9 @@ async def test_base_url_no_longer_https_does_not_load(
     hass, config_entry, app, smartthings_mock
 ):
     """Test base_url no longer valid creates a new flow."""
-    hass.config.api.base_url = "http://0.0.0.0"
+    await async_process_ha_core_config(
+        hass, {"external_url": "http://example.local:8123"},
+    )
     config_entry.add_to_hass(hass)
     smartthings_mock.app.return_value = app
 
@@ -218,7 +221,6 @@ async def test_config_entry_loads_unconnected_cloud(
     """Test entry loads during startup when cloud isn't connected."""
     config_entry.add_to_hass(hass)
     hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
-    hass.config.api.base_url = "http://0.0.0.0"
     smartthings_mock.app.return_value = app
     smartthings_mock.installed_app.return_value = installed_app
     smartthings_mock.devices.return_value = [device]

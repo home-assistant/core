@@ -9,14 +9,14 @@
         },
         "step": {
             "authorize": {
-                "description": "Vennligst autoriser denne appen p\u00e5 https://www.ecobee.com/consumerportal/index.html med pin-kode:\n\n{pin}\n\nTrykk deretter p\u00e5 Send.",
-                "title": "Autoriser app p\u00e5 ecobee.com"
+                "description": "Vennligst godkjenn denne appen p\u00e5 [https://www.ecobee.com/consumerportal](https://www.ecobee.com/consumerportal) med pin-kode:\n\n{pin}\n\nTrykk deretter p\u00e5 send.",
+                "title": "Godkjenn app p\u00e5 ecobee.com"
             },
             "user": {
                 "data": {
                     "api_key": "API-n\u00f8kkel"
                 },
-                "description": "Vennligst skriv inn API-n\u00f8kkel som er innhentet fra ecobee.com.",
+                "description": "Vennligst fyll inn API-n\u00f8kkel som er innhentet fra ecobee.com.",
                 "title": "ecobee API-n\u00f8kkel"
             }
         }

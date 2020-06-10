@@ -1,5 +1,4 @@
 """Define tests for the AirVisual config flow."""
-from asynctest import patch
 from pyairvisual.errors import InvalidKeyError, NodeProError
 
 from homeassistant import data_entry_flow
@@ -21,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -111,8 +111,11 @@ async def test_migration(hass):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    with patch("pyairvisual.api.API.nearest_city"):
+    with patch("pyairvisual.api.API.nearest_city"), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: conf})
+        await hass.async_block_till_done()
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
 

@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
+    ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     POWER_WATT,
@@ -31,8 +32,8 @@ SCAN_INTERVAL = datetime.timedelta(minutes=5)
 # Sensor type order is: Sensor name, Unit of measurement, api data name, additional options
 
 TOTAL_SENSOR_TYPES = {
-    "total_money_today": ("Total money today", "€", "plantMoneyText", {}),
-    "total_money_total": ("Money lifetime", "€", "totalMoneyText", {}),
+    "total_money_today": ("Total money today", "€", "plantMoneyText", None),
+    "total_money_total": ("Money lifetime", "€", "totalMoneyText", None),
     "total_energy_today": (
         "Energy Today",
         ENERGY_KILO_WATT_HOUR,
@@ -72,24 +73,39 @@ INVERTER_SENSOR_TYPES = {
         "e_total",
         {"device_class": "power"},
     ),
-    "inverter_voltage_input_1": ("Input 1 voltage", VOLT, "vpv1", {}),
-    "inverter_amperage_input_1": ("Input 1 Amperage", "A", "ipv1", {}),
+    "inverter_voltage_input_1": ("Input 1 voltage", VOLT, "vpv1", None),
+    "inverter_amperage_input_1": (
+        "Input 1 Amperage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "ipv1",
+        None
+    ),
     "inverter_wattage_input_1": (
         "Input 1 Wattage",
         POWER_WATT,
         "ppv1",
         {"device_class": "power"},
     ),
-    "inverter_voltage_input_2": ("Input 2 voltage", VOLT, "vpv2", {}),
-    "inverter_amperage_input_2": ("Input 2 Amperage", "A", "ipv2", {}),
+    "inverter_voltage_input_2": ("Input 2 voltage", VOLT, "vpv2", None),
+    "inverter_amperage_input_2": (
+        "Input 2 Amperage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "ipv2",
+        None
+    ),
     "inverter_wattage_input_2": (
         "Input 2 Wattage",
         POWER_WATT,
         "ppv2",
         {"device_class": "power"},
     ),
-    "inverter_voltage_input_3": ("Input 3 voltage", VOLT, "vpv3", {}),
-    "inverter_amperage_input_3": ("Input 3 Amperage", "A", "ipv3", {}),
+    "inverter_voltage_input_3": ("Input 3 voltage", VOLT, "vpv3", None),
+    "inverter_amperage_input_3": (
+        "Input 3 Amperage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "ipv3",
+        None
+    ),
     "inverter_wattage_input_3": (
         "Input 3 Wattage",
         POWER_WATT,
@@ -102,9 +118,14 @@ INVERTER_SENSOR_TYPES = {
         "ppv",
         {"device_class": "power"},
     ),
-    "inverter_reactive_voltage": ("Reactive voltage", VOLT, "vacr", {}),
-    "inverter_inverter_reactive_amperage": ("Reactive amperage", "A", "iacr", {}),
-    "inverter_frequency": ("AC frequency", FREQUENCY_HERTZ, "fac", {}),
+    "inverter_reactive_voltage": ("Reactive voltage", VOLT, "vacr", None),
+    "inverter_inverter_reactive_amperage": (
+        "Reactive amperage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "iacr",
+        None
+    ),
+    "inverter_frequency": ("AC frequency", FREQUENCY_HERTZ, "fac", None),
     "inverter_current_wattage": (
         "Output power",
         POWER_WATT,
@@ -184,7 +205,7 @@ STORAGE_SENSOR_TYPES = {
         "Load consumption(Solar + Storage)",
         "VA",
         "rateVA",
-        {},
+        None,
     ),
     "storage_charge_today": (
         "Charge today",
@@ -231,17 +252,27 @@ STORAGE_SENSOR_TYPES = {
         "freqGrid",
         {"round": 2},
     ),
-    "storage_current_PV": ("Solar charge current", "A", "iAcCharge", {"round": 2}),
-    "storage_current_1": ("Solar current to storage", "A", "iChargePV1", {"round": 2}),
+    "storage_current_PV": (
+        "Solar charge current",
+        ELECTRICAL_CURRENT_AMPERE,
+        "iAcCharge",
+        {"round": 2}
+    ),
+    "storage_current_1": (
+        "Solar current to storage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "iChargePV1",
+        {"round": 2}
+    ),
     "storage_grid_amperage_input": (
         "Grid charge current",
-        "A",
+        ELECTRICAL_CURRENT_AMPERE,
         "chgCurr",
         {"round": 2},
     ),
     "storage_grid_out_current": (
         "Grid out current",
-        "A",
+        ELECTRICAL_CURRENT_AMPERE,
         "outPutCurrent",
         {"round": 2},
     ),

@@ -21,7 +21,7 @@ def documentation_url(value: str) -> str:
         return value
 
     parsed_url = urlparse(value)
-    if not parsed_url.scheme == DOCUMENTATION_URL_SCHEMA:
+    if parsed_url.scheme != DOCUMENTATION_URL_SCHEMA:
         raise vol.Invalid("Documentation url is not prefixed with https")
     if parsed_url.netloc == DOCUMENTATION_URL_HOST and not parsed_url.path.startswith(
         DOCUMENTATION_URL_PATH_PREFIX
@@ -46,13 +46,14 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Required("documentation"): vol.All(
             vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
         ),
+        vol.Optional(
+            "issue_tracker"
+        ): vol.Url(),  # pylint: disable=no-value-for-parameter
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
         vol.Optional("after_dependencies"): [str],
         vol.Required("codeowners"): [str],
-        vol.Optional("logo"): vol.Url(),  # pylint: disable=no-value-for-parameter
-        vol.Optional("icon"): vol.Url(),  # pylint: disable=no-value-for-parameter
     }
 )
 

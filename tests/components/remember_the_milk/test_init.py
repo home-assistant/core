@@ -3,10 +3,10 @@
 import json
 import logging
 import unittest
-from unittest.mock import Mock, mock_open, patch
 
 import homeassistant.components.remember_the_milk as rtm
 
+from tests.async_mock import Mock, mock_open, patch
 from tests.common import get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,8 +30,9 @@ class TestConfiguration(unittest.TestCase):
                 }
             }
         )
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Exit Home Assistant."""
         self.hass.stop()
 

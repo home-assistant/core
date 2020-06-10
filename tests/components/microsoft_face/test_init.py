@@ -1,8 +1,6 @@
 """The tests for the microsoft face platform."""
 import asyncio
 
-from asynctest import patch
-
 from homeassistant.components import camera, microsoft_face as mf
 from homeassistant.components.microsoft_face import (
     ATTR_CAMERA_ENTITY,
@@ -19,6 +17,7 @@ from homeassistant.components.microsoft_face import (
 from homeassistant.const import ATTR_NAME
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 
 

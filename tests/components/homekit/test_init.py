@@ -1,6 +1,4 @@
 """Test HomeKit initialization."""
-from asynctest import patch
-
 from homeassistant import core as ha
 from homeassistant.components import logbook
 from homeassistant.components.homekit.const import (
@@ -11,6 +9,8 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SERVICE
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 
 async def test_humanify_homekit_changed_event(hass, hk_driver):

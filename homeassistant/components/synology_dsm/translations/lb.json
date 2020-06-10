@@ -4,6 +4,7 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
+            "connection": "Feeler beim verbannen Iwwerpr\u00e9if w.e.g. den Numm, Passwuert & SSL",
             "login": "Feeler beim Login: iwwerpr\u00e9if de Benotzernumm & Passwuert",
             "missing_data": "Donn\u00e9\u00ebe feelen, prob\u00e9ier sp\u00e9ider oder mat enger aner Konfiguratioun",
             "otp_failed": "Feeler mam 2-Faktor-Authentifikatiouns, prob\u00e9ier mat engem neie Code",
@@ -19,9 +20,8 @@
             },
             "link": {
                 "data": {
-                    "api_version": "DSM Versioun",
                     "password": "Passwuert",
-                    "port": "Port (Optionell)",
+                    "port": "Port",
                     "ssl": "Benotz SSL/TLS fir d'Verbindung mam NAS",
                     "username": "Benotzernumm"
                 },
@@ -30,14 +30,22 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM Versioun",
                     "host": "Apparat",
                     "password": "Passwuert",
-                    "port": "Port (Optionell)",
+                    "port": "Port",
                     "ssl": "Benotzt SSL/TLS fir sech mam NAS ze verbannen",
                     "username": "Benotzernumm"
                 },
                 "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minutte t\u00ebscht Scannen"
+                }
             }
         }
     }

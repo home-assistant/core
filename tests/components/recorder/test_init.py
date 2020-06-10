@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
 import unittest
-from unittest.mock import patch
 
 import pytest
 
@@ -17,6 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import wait_recording_done
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -28,8 +28,9 @@ class TestRecorder(unittest.TestCase):
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)
         self.hass.start()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
