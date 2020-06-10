@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].setdefault(entry_id, {})
 
     device = entry.data[CONF_DEVICE]
-    config = dict(Device=device, Connection="at")
+    config = {"Device": device, "Connection": "at"}
     gateway = await create_sms_gateway(config, hass)
     if gateway:
         hass.data[DOMAIN][SMS_GATEWAY] = gateway
