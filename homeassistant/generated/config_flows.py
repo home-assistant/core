@@ -141,6 +141,7 @@ FLOWS = [
     "sonarr",
     "songpal",
     "sonos",
+    "speedtestdotnet",
     "spotify",
     "starline",
     "synology_dsm",
