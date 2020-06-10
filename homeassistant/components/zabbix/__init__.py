@@ -89,7 +89,6 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
 
-    # todo: give good name and make configurable
     publish_states_host = conf.get(CONF_PUBLISH_STATES_HOST)
 
     include = conf.get(CONF_INCLUDE, {})
@@ -107,9 +106,8 @@ def setup(hass, config):
     except ZabbixAPIException as login_exception:
         _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
         return False
+    hass.data[DOMAIN] = zapi
 
-    zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
-    _LOGGER.info("Initialized Zabbix sender")
 
     def event_to_metrics(event, float_keys, string_keys):
         """Add an event to the outgoing Zabbix list."""
@@ -142,8 +140,6 @@ def setup(hass, config):
             except ValueError:
                 strings[entity_id] = state.state
 
-        # "time": event.time_fired,
-
         for key, value in state.attributes.items():
             # For each value we try to cast it as float
             # But if we can not do it we store the value
@@ -174,19 +170,18 @@ def setup(hass, config):
         string_keys |= strings.keys()
         return metrics
 
-
-    hass.data[DOMAIN] = zapi
-    if publish_states_host:
-        instance = ZabbixThread(hass, zabbix_sender, event_to_metrics, max_tries)
-        instance.start()
-        _LOGGER.info("Started ZabbixThread")
-
     def shutdown(event):
         """Shut down the thread."""
         instance.queue.put(None)
         instance.join()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+    if publish_states_host:
+        zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
+        _LOGGER.info("Initialized Zabbix sender")
+        instance = ZabbixThread(hass, zabbix_sender, event_to_metrics, max_tries)
+        instance.start()
+        _LOGGER.info("Started ZabbixThread")
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     return True
 
@@ -268,8 +263,6 @@ class ZabbixThread(threading.Thread):
                 _LOGGER.debug("Wrote %d metrics", len(metrics))
                 break
             except (
-                #exceptions.InfluxDBClientError,
-                #exceptions.InfluxDBServerError,
                 OSError,
             ) as err:
                 if retry < self.max_tries:
