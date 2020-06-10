@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/meteo_france",
   "requirements": [
-    "git+https://github.com/hacf-fr/meteofrance-api@new_helpers#meteofrance-api==0.0.4dev1"
+    "git+https://github.com/hacf-fr/meteofrance-api@master#meteofrance-api==0.0.4dev1"
   ],
   "codeowners": ["@hacf-fr", "@oncleben31", "@Quentame"]
 }
