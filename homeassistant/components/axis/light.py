@@ -80,7 +80,7 @@ class AxisLight(AxisEventBase, LightEntity):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self.event.state == "ON"
+        return self.event.is_tripped
 
     @property
     def brightness(self):
