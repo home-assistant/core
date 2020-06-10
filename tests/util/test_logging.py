@@ -1,11 +1,13 @@
 """Test Home Assistant logging util methods."""
 import asyncio
 import logging
-import threading
+import queue
 
 import pytest
 
 import homeassistant.util.logging as logging_util
+
+from tests.async_mock import patch
 
 
 def test_sensitive_data_filter():
@@ -21,50 +23,51 @@ def test_sensitive_data_filter():
     assert sensitive_record.msg == "******* log"
 
 
-async def test_async_handler_loop_log(loop):
-    """Test logging data inside from inside the event loop."""
-    loop._thread_ident = threading.get_ident()
+async def test_logging_with_queue_handler():
+    """Test logging with HomeAssistantQueueHandler."""
 
-    queue = asyncio.Queue(loop=loop)
-    base_handler = logging.handlers.QueueHandler(queue)
-    handler = logging_util.AsyncHandler(loop, base_handler)
-
-    # Test passthrough props and noop functions
-    assert handler.createLock() is None
-    assert handler.acquire() is None
-    assert handler.release() is None
-    assert handler.formatter is base_handler.formatter
-    assert handler.name is base_handler.get_name()
-    handler.name = "mock_name"
-    assert base_handler.get_name() == "mock_name"
+    simple_queue = queue.SimpleQueue()  # type: ignore
+    handler = logging_util.HomeAssistantQueueHandler(simple_queue)
 
     log_record = logging.makeLogRecord({"msg": "Test Log Record"})
+
     handler.emit(log_record)
-    await handler.async_close(True)
-    assert queue.get_nowait().msg == "Test Log Record"
-    assert queue.empty()
 
-
-async def test_async_handler_thread_log(loop):
-    """Test logging data from a thread."""
-    loop._thread_ident = threading.get_ident()
-
-    queue = asyncio.Queue(loop=loop)
-    base_handler = logging.handlers.QueueHandler(queue)
-    handler = logging_util.AsyncHandler(loop, base_handler)
-
-    log_record = logging.makeLogRecord({"msg": "Test Log Record"})
-
-    def add_log():
-        """Emit a mock log."""
+    with pytest.raises(asyncio.CancelledError), patch.object(
+        handler, "enqueue", side_effect=asyncio.CancelledError
+    ):
         handler.emit(log_record)
-        handler.close()
 
-    await loop.run_in_executor(None, add_log)
-    await handler.async_close(True)
+    with patch.object(handler, "emit") as emit_mock:
+        handler.handle(log_record)
+        emit_mock.assert_called_once()
 
-    assert queue.get_nowait().msg == "Test Log Record"
-    assert queue.empty()
+    with patch.object(handler, "filter") as filter_mock, patch.object(
+        handler, "emit"
+    ) as emit_mock:
+        filter_mock.return_value = False
+        handler.handle(log_record)
+        emit_mock.assert_not_called()
+
+    with patch.object(handler, "enqueue", side_effect=OSError), patch.object(
+        handler, "handleError"
+    ) as mock_handle_error:
+        handler.emit(log_record)
+        mock_handle_error.assert_called_once()
+
+    handler.close()
+
+    assert simple_queue.get_nowait().msg == "Test Log Record"
+    assert simple_queue.empty()
+
+
+async def test_migrate_log_handler(hass):
+    """Test migrating log handlers."""
+
+    logging_util.async_activate_log_queue_handler(hass)
+
+    assert len(logging.root.handlers) == 1
+    assert isinstance(logging.root.handlers[0], logging_util.HomeAssistantQueueHandler)
 
 
 @pytest.mark.no_fail_on_log_exception

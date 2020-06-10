@@ -9,16 +9,21 @@ from homeassistant.components import camera, ffmpeg
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     AUDIO_CODEC_COPY,
+    CHAR_MOTION_DETECTED,
     CONF_AUDIO_CODEC,
+    CONF_LINKED_MOTION_SENSOR,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
+    DEVICE_CLASS_MOTION,
+    SERV_MOTION_SENSOR,
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
 )
 from homeassistant.components.homekit.img_util import TurboJPEGSingleton
 from homeassistant.components.homekit.type_cameras import Camera
 from homeassistant.components.homekit.type_switches import Switch
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -118,6 +123,7 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -222,6 +228,7 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -266,6 +273,7 @@ async def test_camera_stream_source_found(hass, run_driver, events):
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -308,6 +316,7 @@ async def test_camera_stream_source_fails(hass, run_driver, events):
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -363,6 +372,7 @@ async def test_camera_stream_source_configured_and_copy_codec(hass, run_driver, 
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -431,6 +441,7 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(hass, run_driver, ev
     await async_setup_component(
         hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
     )
+    await hass.async_block_till_done()
 
     entity_id = "camera.demo_camera"
 
@@ -492,3 +503,93 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(hass, run_driver, ev
         output=expected_output.format(**session_info),
         stdout_pipe=False,
     )
+
+
+async def test_camera_with_linked_motion_sensor(hass, run_driver, events):
+    """Test a camera with a linked motion sensor can update."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    motion_entity_id = "binary_sensor.motion"
+
+    hass.states.async_set(
+        motion_entity_id, STATE_ON, {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION}
+    )
+    await hass.async_block_till_done()
+    entity_id = "camera.demo_camera"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {
+            CONF_STREAM_SOURCE: "/dev/null",
+            CONF_SUPPORT_AUDIO: True,
+            CONF_VIDEO_CODEC: VIDEO_CODEC_H264_OMX,
+            CONF_AUDIO_CODEC: AUDIO_CODEC_COPY,
+            CONF_LINKED_MOTION_SENSOR: motion_entity_id,
+        },
+    )
+    bridge = HomeBridge("hass", run_driver, "Test Bridge")
+    bridge.add_accessory(acc)
+
+    await acc.run_handler()
+
+    assert acc.aid == 2
+    assert acc.category == 17  # Camera
+
+    service = acc.get_service(SERV_MOTION_SENSOR)
+    assert service
+    char = service.get_characteristic(CHAR_MOTION_DETECTED)
+    assert char
+
+    assert char.value is True
+
+    hass.states.async_set(
+        motion_entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION}
+    )
+    await hass.async_block_till_done()
+    assert char.value is False
+
+    char.set_value(True)
+    hass.states.async_set(
+        motion_entity_id, STATE_ON, {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION}
+    )
+    await hass.async_block_till_done()
+    assert char.value is True
+
+
+async def test_camera_with_a_missing_linked_motion_sensor(hass, run_driver, events):
+    """Test a camera with a configured linked motion sensor that is missing."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    motion_entity_id = "binary_sensor.motion"
+    entity_id = "camera.demo_camera"
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {CONF_LINKED_MOTION_SENSOR: motion_entity_id},
+    )
+    bridge = HomeBridge("hass", run_driver, "Test Bridge")
+    bridge.add_accessory(acc)
+
+    await acc.run_handler()
+
+    assert acc.aid == 2
+    assert acc.category == 17  # Camera
+
+    assert not acc.get_service(SERV_MOTION_SENSOR)

@@ -13,17 +13,15 @@ from toonapilib.toonapilibexceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
-
-from .const import (
+from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_DISPLAY,
-    CONF_TENANT,
-    DATA_TOON_CONFIG,
-    DOMAIN,
+    CONF_PASSWORD,
+    CONF_USERNAME,
 )
+from homeassistant.core import callback
+
+from .const import CONF_DISPLAY, CONF_TENANT, DATA_TOON_CONFIG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,10 +92,10 @@ class ToonFlowHandler(config_entries.ConfigFlow):
             displays = toon.display_names
 
         except InvalidConsumerKey:
-            return self.async_abort(reason="client_id")
+            return self.async_abort(reason=CONF_CLIENT_ID)
 
         except InvalidConsumerSecret:
-            return self.async_abort(reason="client_secret")
+            return self.async_abort(reason=CONF_CLIENT_SECRET)
 
         except InvalidCredentials:
             return await self._show_authenticaticate_form({"base": "credentials"})

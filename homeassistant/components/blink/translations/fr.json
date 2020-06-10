@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "2fa": {
+                "title": "Authentification \u00e0 deux facteurs"
+            },
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Identifiant"
+                }
+            }
+        }
+    }
+}

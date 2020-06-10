@@ -9,6 +9,7 @@
             "invalid_host": "Host Entr\u00e9e muss am URL Format sinn, beispill, http://192.168.10.100:80",
             "unknown": "Onerwaarte Feeler"
         },
+        "flow_title": "Universal Devices ISY994 {name} ({host})",
         "step": {
             "user": {
                 "data": {

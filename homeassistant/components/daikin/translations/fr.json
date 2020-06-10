@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
-            "device_fail": "Erreur inattendue lors de la cr\u00e9ation du p\u00e9riph\u00e9rique.",
-            "device_timeout": "D\u00e9lai de connexion au p\u00e9riph\u00e9rique expir\u00e9."
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "step": {
             "user": {

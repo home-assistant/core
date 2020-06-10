@@ -7,11 +7,11 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant'a, aby \u0142\u0105czy\u0142 si\u0119 z Almond dostarczonym przez dodatek Hass.io: {addon}?",
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby \u0142\u0105czy\u0142 si\u0119 z Almond dostarczonym przez dodatek Hass.io: {addon}?",
                 "title": "Almond poprzez dodatek Hass.io"
             },
             "pick_implementation": {
-                "title": "[%key_id:common::config_flow::title::oauth2_pick_implementation%]"
+                "title": "Wybierz metod\u0119 uwierzytelniania"
             }
         }
     }

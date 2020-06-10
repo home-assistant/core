@@ -1,20 +1,19 @@
 """Tests for the Atag config flow."""
-from pyatag import AtagException
+from pyatag import errors
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.atag import DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_EMAIL, CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.async_mock import PropertyMock, patch
-from tests.common import MockConfigEntry
-
-FIXTURE_USER_INPUT = {
-    CONF_HOST: "127.0.0.1",
-    CONF_EMAIL: "test@domain.com",
-    CONF_PORT: 10000,
-}
-FIXTURE_COMPLETE_ENTRY = FIXTURE_USER_INPUT.copy()
-FIXTURE_COMPLETE_ENTRY[CONF_DEVICE] = "device_identifier"
+from tests.components.atag import (
+    PAIR_REPLY,
+    RECEIVE_REPLY,
+    UID,
+    USER_INPUT,
+    init_integration,
+)
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_show_form(hass):
@@ -27,29 +26,31 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_one_config_allowed(hass):
+async def test_adding_second_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that only one Atag configuration is allowed."""
-    MockConfigEntry(domain="atag", data=FIXTURE_USER_INPUT).add_to_hass(hass)
-
+    await init_integration(hass, aioclient_mock)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+    with patch(
+        "pyatag.AtagOne.id", new_callable=PropertyMock(return_value="secondary_device"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_connection_error(hass):
     """Test we show user form on Atag connection error."""
-
-    with patch(
-        "homeassistant.components.atag.config_flow.AtagOne.authorize",
-        side_effect=AtagException(),
-    ):
+    with patch("pyatag.AtagOne.authorize", side_effect=errors.AtagException()):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -57,19 +58,30 @@ async def test_connection_error(hass):
     assert result["errors"] == {"base": "connection_error"}
 
 
-async def test_full_flow_implementation(hass):
-    """Test registering an integration and finishing flow works."""
-    with patch("homeassistant.components.atag.AtagOne.authorize",), patch(
-        "homeassistant.components.atag.AtagOne.update",
-    ), patch(
-        "homeassistant.components.atag.AtagOne.id",
-        new_callable=PropertyMock(return_value="device_identifier"),
-    ):
+async def test_unauthorized(hass):
+    """Test we show correct form when Unauthorized error is raised."""
+    with patch("pyatag.AtagOne.authorize", side_effect=errors.Unauthorized()):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == FIXTURE_COMPLETE_ENTRY[CONF_DEVICE]
-        assert result["data"] == FIXTURE_COMPLETE_ENTRY
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unauthorized"}
+
+
+async def test_full_flow_implementation(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test registering an integration and finishing flow works."""
+    aioclient_mock.get(
+        "http://127.0.0.1:10000/retrieve", json=RECEIVE_REPLY,
+    )
+    aioclient_mock.post(
+        "http://127.0.0.1:10000/pair", json=PAIR_REPLY,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == UID
+    assert result["result"].unique_id == UID

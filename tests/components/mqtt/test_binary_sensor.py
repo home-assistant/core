@@ -71,6 +71,7 @@ async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, 
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
@@ -99,6 +100,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
             }
         },
     )
+    await hass.async_block_till_done()
 
     # State should be unavailable since expire_after is defined and > 0
     state = hass.states.get("binary_sensor.test")
@@ -172,6 +174,7 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
 
@@ -201,6 +204,7 @@ async def test_invalid_sensor_value_via_mqtt_message(hass, mqtt_mock, caplog):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
 
@@ -240,6 +244,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template(hass, mqtt_moc
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_OFF
@@ -267,6 +272,7 @@ async def test_valid_device_class(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
     assert state.attributes.get("device_class") == "motion"
@@ -286,6 +292,7 @@ async def test_invalid_device_class(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
     assert state is None
@@ -327,6 +334,7 @@ async def test_force_update_disabled(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 
@@ -362,6 +370,7 @@ async def test_force_update_enabled(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 
@@ -398,6 +407,7 @@ async def test_off_delay(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 

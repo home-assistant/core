@@ -40,12 +40,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
+import homeassistant.helpers.device_registry as dr
 from homeassistant.util.dt import utcnow
 
 from . import (
     CONF_ADVERTISE_ADDR,
     CONF_HOSTS,
     CONF_INTERFACE_ADDR,
+    DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
 )
 
@@ -68,8 +70,6 @@ SUPPORT_SONOS = (
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_CLEAR_PLAYLIST
 )
-
-DATA_SONOS = "sonos_media_player"
 
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
@@ -151,15 +151,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             try:
                 _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
 
-                if soco not in hass.data[DATA_SONOS].discovered:
+                if soco.uid not in hass.data[DATA_SONOS].discovered:
                     _LOGGER.debug("Adding new entity")
-                    hass.data[DATA_SONOS].discovered.append(soco)
+                    hass.data[DATA_SONOS].discovered.append(soco.uid)
                     hass.add_job(async_add_entities, [SonosEntity(soco)])
                 else:
                     entity = _get_entity_from_soco_uid(hass, soco.uid)
-                    if entity:
+                    if entity and (entity.soco == soco or not entity.available):
                         _LOGGER.debug("Seen %s", entity)
-                        hass.add_job(entity.async_seen())
+                        hass.add_job(entity.async_seen(soco))
+
             except SoCoException as ex:
                 _LOGGER.debug("SoCoException, ex=%s", ex)
 
@@ -392,10 +393,12 @@ class SonosEntity(MediaPlayerEntity):
         speaker_info = self.soco.get_speaker_info(True)
         self._name = speaker_info["zone_name"]
         self._model = speaker_info["model_name"]
+        self._sw_version = speaker_info["software_version"]
+        self._mac_address = speaker_info["mac_address"]
 
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
-        await self.async_seen()
+        await self.async_seen(self.soco)
 
         self.hass.data[DATA_SONOS].entities.append(self)
 
@@ -427,6 +430,8 @@ class SonosEntity(MediaPlayerEntity):
             "identifiers": {(SONOS_DOMAIN, self._unique_id)},
             "name": self._name,
             "model": self._model.replace("Sonos ", ""),
+            "sw_version": self._sw_version,
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
             "manufacturer": "Sonos",
         }
 
@@ -459,9 +464,11 @@ class SonosEntity(MediaPlayerEntity):
         """Return coordinator of this player."""
         return self._coordinator
 
-    async def async_seen(self):
+    async def async_seen(self, player):
         """Record that this player was seen right now."""
         was_available = self.available
+
+        self._player = player
 
         if self._seen_timer:
             self._seen_timer()

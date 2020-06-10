@@ -28,10 +28,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API Schl\u00ebssel",
                     "cloud_api": "Geografesche Standuert",
-                    "latitude": "Breedegrad",
-                    "longitude": "L\u00e4ngegrad",
                     "node_pro": "Airvisual Node Pro",
                     "type": "Typ vun der Integratioun"
                 },
@@ -46,7 +43,6 @@
                 "data": {
                     "show_on_map": "Iwwerwaachte Geografie op der Kaart uweisen"
                 },
-                "description": "Verschidden Optioune fir d'AirVisual Integratioun d\u00e9fin\u00e9ieren.",
                 "title": "Airvisual ariichten"
             }
         }

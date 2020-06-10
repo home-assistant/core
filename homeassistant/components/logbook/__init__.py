@@ -22,7 +22,6 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_EXCLUDE,
     CONF_INCLUDE,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
@@ -82,7 +81,6 @@ ALL_EVENT_TYPES = [
     EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_SCRIPT_STARTED,
 ]
 
@@ -316,17 +314,6 @@ def humanify(hass, events):
                     "context_user_id": event.context.user_id,
                 }
 
-            elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
-                yield {
-                    "when": event.time_fired,
-                    "name": event.data.get(ATTR_NAME),
-                    "message": "has been triggered",
-                    "domain": "automation",
-                    "entity_id": event.data.get(ATTR_ENTITY_ID),
-                    "context_id": event.context.id,
-                    "context_user_id": event.context.user_id,
-                }
-
             elif event.event_type == EVENT_SCRIPT_STARTED:
                 yield {
                     "when": event.time_fired,
@@ -459,10 +446,6 @@ def _keep_event(hass, event, entities_filter):
 
     elif event.event_type == EVENT_LOGBOOK_ENTRY:
         domain = event.data.get(ATTR_DOMAIN)
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-
-    elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
-        domain = "automation"
         entity_id = event.data.get(ATTR_ENTITY_ID)
 
     elif event.event_type == EVENT_SCRIPT_STARTED:

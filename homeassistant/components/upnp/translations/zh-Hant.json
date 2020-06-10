@@ -2,30 +2,20 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "incomplete_device": "\u5ffd\u7565\u4e0d\u76f8\u5bb9 UPnP \u8a2d\u5099",
+            "incomplete_discovery": "\u672a\u5b8c\u6210\u63a2\u7d22",
             "no_devices_discovered": "\u672a\u641c\u5c0b\u5230 UPnP/IGD",
-            "no_devices_found": "\u5728\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 UPnP/IGD \u8a2d\u5099\u3002",
-            "no_sensors_or_port_mapping": "\u81f3\u5c11\u958b\u555f\u611f\u61c9\u5668\u6216\u901a\u8a0a\u57e0\u8f49\u767c",
-            "single_instance_allowed": "\u50c5\u9700\u8a2d\u5b9a\u4e00\u6b21 UPnP/IGD \u5373\u53ef\u3002"
+            "no_devices_found": "\u5728\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 UPnP/IGD \u8a2d\u5099\u3002"
         },
         "flow_title": "UPnP/IGD\uff1a{name}",
         "step": {
-            "confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a UPnP/IGD\uff1f",
-                "title": "UPnP/IGD"
-            },
             "ssdp_confirm": {
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a UPnP/IGD \u8a2d\u5099\uff1f"
             },
             "user": {
                 "data": {
-                    "enable_port_mapping": "\u958b\u555f Home Assistant \u901a\u8a0a\u57e0\u8f49\u767c",
-                    "enable_sensors": "\u65b0\u589e\u6d41\u91cf\u611f\u61c9\u5668",
-                    "igd": "UPnP/IGD",
                     "scan_interval": "\u66f4\u65b0\u9593\u9694\uff08\u79d2\u3001\u6700\u5c11 30 \u79d2\uff09",
                     "usn": "\u8a2d\u5099"
-                },
-                "title": "\u8a2d\u5b9a\u9078\u9805"
+                }
             }
         }
     }

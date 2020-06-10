@@ -18,7 +18,7 @@ class AxisEntityBase(Entity):
         """Subscribe device events."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.device.event_reachable, self.update_callback
+                self.hass, self.device.signal_reachable, self.update_callback
             )
         )
 
@@ -49,14 +49,11 @@ class AxisEventBase(AxisEntityBase):
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""
         self.event.register_callback(self.update_callback)
-
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self.event.remove_callback(self.update_callback)
-
-        await super().async_will_remove_from_hass()
 
     @property
     def device_class(self):
