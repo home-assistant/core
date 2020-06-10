@@ -642,8 +642,8 @@ def test_deprecated_with_invalidation_version(caplog, schema, version):
         invalidated_schema(test_data)
     assert str(exc_info.value) == (
         "The 'mars' option is deprecated, "
-        "please remove it from your configuration. This option will "
-        "become invalid in version 0.1.0"
+        "please remove it from your configuration. This option became "
+        "invalid in version 0.1.0"
     )
 
 
@@ -702,7 +702,7 @@ def test_deprecated_with_replacement_key_and_invalidation_version(
         invalidated_schema(test_data)
     assert str(exc_info.value) == (
         "The 'mars' option is deprecated, "
-        "please replace it with 'jupiter'. This option will become "
+        "please replace it with 'jupiter'. This option became "
         "invalid in version 0.1.0"
     )
 
@@ -851,7 +851,7 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
         invalidated_schema(test_data)
     assert str(exc_info.value) == (
         "The 'mars' option is deprecated, "
-        "please replace it with 'jupiter'. This option will become "
+        "please replace it with 'jupiter'. This option became "
         "invalid in version 0.1.0"
     )
 

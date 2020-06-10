@@ -21,8 +21,9 @@ class TestOpenHardwareMonitorSetup(unittest.TestCase):
                 "port": 8085,
             }
         }
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
