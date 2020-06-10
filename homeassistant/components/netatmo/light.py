@@ -3,7 +3,7 @@ import logging
 
 import pyatmo
 
-from homeassistant.components.light import Light
+from homeassistant.components.light import LightEntity
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 
@@ -68,14 +68,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return
 
 
-class NetatmoLight(Light, NetatmoBase):
+class NetatmoLight(LightEntity, NetatmoBase):
     """Representation of a Netatmo Presence camera light."""
 
     def __init__(
         self, data_handler, data_class, camera_id: str, camera_type: str, home_id: str
     ):
         """Initialize a Netatmo Presence camera light."""
-        Light.__init__(self)
+        LightEntity.__init__(self)
         NetatmoBase.__init__(self, data_handler)
 
         self._data_classes.append({"name": data_class})
