@@ -106,6 +106,7 @@ def setup(hass, config):
     except ZabbixAPIException as login_exception:
         _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
         return False
+
     hass.data[DOMAIN] = zapi
 
 
