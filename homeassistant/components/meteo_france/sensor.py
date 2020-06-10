@@ -183,32 +183,24 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-
-        if self.coordinator.data.next_rain_date_locale():
-            rain_text_forecast = "La pluie est attendue à {}.".format(
-                self.coordinator.data.next_rain_date_locale().strftime("%H:%M")
+        next_rain_datetime = self.coordinator.data.next_rain_date_locale()
+        if next_rain_datetime:
+            rain_text_summary = (
+                f"La pluie est attendue à {next_rain_datetime.strftime('%H:%M')}."
             )
         else:
-            rain_text_forecast = "Pas de pluie dans la prochaine heure."
+            rain_text_summary = "Pas de pluie dans la prochaine heure."
 
         return {
-            **{
-                self.coordinator.data.timestamp_to_locale_time(item["dt"]).strftime(
-                    "%H:%M"
-                ): item["desc"]
-                for item in self.coordinator.data.forecast
-            },
             "1 hour forecast": [
                 {
-                    "time": self.coordinator.data.timestamp_to_locale_time(
-                        item["dt"]
-                    ).strftime("%H:%M"),
-                    "description": item["desc"],
-                    "indice": item["rain"],
+                    self.coordinator.data.timestamp_to_locale_time(item["dt"]).strftime(
+                        "%H:%M"
+                    ): item["desc"]
                 }
                 for item in self.coordinator.data.forecast
             ],
-            "for human": rain_text_forecast,
+            "summary": rain_text_summary,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
