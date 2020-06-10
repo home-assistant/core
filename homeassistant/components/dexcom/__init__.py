@@ -4,61 +4,23 @@ from datetime import timedelta
 import logging
 
 from pydexcom import AccountError, Dexcom, SessionError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SERVER, DOMAIN, MG_DL, MMOL_L, PLATFORMS, SERVER_OUS, SERVER_US
+from .const import CONF_SERVER, DOMAIN, PLATFORMS, SERVER_OUS
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=180)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_SERVER, default=SERVER_US): vol.In(
-                    {SERVER_US, SERVER_OUS}
-                ),
-                vol.Required(CONF_UNIT_OF_MEASUREMENT, default=MG_DL): vol.In(
-                    {MG_DL, MMOL_L}
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Dexcom component."""
-    conf = config.get(DOMAIN)
-    hass.data.setdefault(DOMAIN, {})
-
-    if not conf:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: conf.get(CONF_USERNAME),
-                CONF_PASSWORD: conf.get(CONF_PASSWORD),
-                CONF_SERVER: conf.get(CONF_SERVER),
-                CONF_UNIT_OF_MEASUREMENT: conf.get(CONF_UNIT_OF_MEASUREMENT),
-            },
-        )
-    )
-    return True
+    """Set up configured Dexcom."""
+    hass.data[DOMAIN] = {}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
