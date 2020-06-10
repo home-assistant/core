@@ -111,5 +111,10 @@ SSDP = {
         {
             "manufacturer": "Belkin International Inc."
         }
+    ],
+    "wilight": [
+        {
+            "manufacturer": "All Automacao Ltda"
+        }
     ]
 }
