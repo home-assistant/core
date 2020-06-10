@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_US
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_SERVER, DOMAIN, MG_DL, MMOL_L, PLATFORMS, SERVER_OUS, SERVER_US
 
@@ -80,6 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.debug("Session error, attempting to fetch new session id")
             await hass.async_add_executor_job(dexcom.create_session())
             return await hass.async_add_executor_job(dexcom.get_current_glucose_reading)
+        except SessionError as error:
+            raise UpdateFailed(error)
 
     hass.data[DOMAIN][entry.entry_id] = DataUpdateCoordinator(
         hass,
