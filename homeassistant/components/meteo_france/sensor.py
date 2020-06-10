@@ -13,6 +13,8 @@ from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
+
 
 from .const import (  # COORDINATOR_ALERT,
     ATTRIBUTION,
@@ -178,12 +180,14 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     @property
     def state(self):
         """Return the state."""
-        return self.coordinator.data.next_rain_date_locale()
+        return dt_util.as_local(self.coordinator.data.next_rain_date_locale())
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        next_rain_datetime = self.coordinator.data.next_rain_date_locale()
+        next_rain_datetime = dt_util.as_local(
+            self.coordinator.data.next_rain_date_locale()
+        )
         if next_rain_datetime:
             rain_text_summary = (
                 f"La pluie est attendue à {next_rain_datetime.strftime('%H:%M')}."
@@ -194,9 +198,9 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
         return {
             "1 hour forecast": [
                 {
-                    self.coordinator.data.timestamp_to_locale_time(item["dt"]).strftime(
-                        "%H:%M"
-                    ): item["desc"]
+                    dt_util.as_local(
+                        self.coordinator.data.timestamp_to_locale_time(item["dt"])
+                    ).strftime("%H:%M"): item["desc"]
                 }
                 for item in self.coordinator.data.forecast
             ],
