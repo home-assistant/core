@@ -15,8 +15,7 @@
                     "port": "\u901a\u8a0a\u57e0",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u8acb\u8f38\u5165 MQTT Broker \u9023\u7dda\u8cc7\u8a0a\u3002",
-                "title": "MQTT"
+                "description": "\u8acb\u8f38\u5165 MQTT Broker \u9023\u7dda\u8cc7\u8a0a\u3002"
             },
             "hassio_confirm": {
                 "data": {

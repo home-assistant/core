@@ -9,6 +9,7 @@
             "invalid_host": "La voce host non era nel formato URL completo, ad esempio http://192.168.10.100:80",
             "unknown": "Errore imprevisto"
         },
+        "flow_title": "Universal Devices ISY994 {name} ({host})",
         "step": {
             "user": {
                 "data": {

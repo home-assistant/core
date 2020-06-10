@@ -4,12 +4,18 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, HTTP_OK
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://llamalab.com/automate/cloud/message"
+
+ATTR_PRIORITY = "priority"
 
 CONF_TO = "to"
 
@@ -42,11 +48,20 @@ class AutomateNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        _LOGGER.debug("Sending to: %s, %s", self._recipient, str(self._device))
+
+        # Extract params from data dict
+        data = dict(kwargs.get(ATTR_DATA) or {})
+        priority = data.get(ATTR_PRIORITY, "Normal")
+
+        _LOGGER.debug(
+            "Sending to: %s, %s, prio: %s", self._recipient, str(self._device), priority
+        )
+
         data = {
             "secret": self._secret,
             "to": self._recipient,
             "device": self._device,
+            "priority": priority,
             "payload": message,
         }
 

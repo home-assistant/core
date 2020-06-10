@@ -7,6 +7,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "IP c\u00edm",
                     "port": "Port"
                 }
             }

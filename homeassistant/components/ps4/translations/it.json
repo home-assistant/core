@@ -4,8 +4,8 @@
             "credential_error": "Errore nel recupero delle credenziali.",
             "devices_configured": "Tutti i dispositivi trovati sono gi\u00e0 configurati.",
             "no_devices_found": "Nessun dispositivo PlayStation 4 trovato in rete.",
-            "port_987_bind_error": "Impossibile collegarsi alla porta 987. Per ulteriori informazioni, consultare la [documentazione] (https://www.home-assistant.io/components/ps4/) per ulteriori informazioni.",
-            "port_997_bind_error": "Impossibile collegarsi alla porta 997. Consultare la [documentazione] (https://www.home-assistant.io/components/ps4/) per ulteriori informazioni."
+            "port_987_bind_error": "Impossibile collegarsi alla porta 987. Fare riferimento alla [documentazione](https://www.home-assistant.io/components/ps4/) per ulteriori informazioni.",
+            "port_997_bind_error": "Impossibile collegarsi alla porta 997. Consultare la [documentazione](https://www.home-assistant.io/components/ps4/) per ulteriori informazioni."
         },
         "error": {
             "credential_timeout": "Servizio credenziali scaduto. Premi Invia per riavviare.",

@@ -222,7 +222,10 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
             self._state = self._tado_zone_data.preparation
 
         elif self.zone_variable == "open window":
-            self._state = self._tado_zone_data.open_window
+            self._state = bool(
+                self._tado_zone_data.open_window
+                or self._tado_zone_data.open_window_detected
+            )
             self._state_attributes = self._tado_zone_data.open_window_attr
 
 

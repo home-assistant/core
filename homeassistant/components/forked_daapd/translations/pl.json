@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o API (pozostaw puste, je\u015bli nie ma has\u0142a)",
+                    "port": "Port API"
+                }
+            }
+        }
+    }
+}

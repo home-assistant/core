@@ -14,15 +14,14 @@ import voluptuous as vol
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_STOP,
     REQUIRED_NEXT_PYTHON_DATE,
     REQUIRED_NEXT_PYTHON_VER,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import DATA_SETUP, async_setup_component
-from homeassistant.util.logging import AsyncHandler
+from homeassistant.setup import DATA_SETUP, DATA_SETUP_STARTED, async_setup_component
+from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
 
@@ -32,6 +31,8 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
+
+LOG_SLOW_STARTUP_INTERVAL = 60
 
 DEBUGGER_INTEGRATIONS = {"ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
@@ -43,6 +44,13 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
+    # Ensure supervisor is available
+    "hassio",
+    # Get the frontend up and running as soon
+    # as possible so problem integrations can
+    # be removed
+    "frontend",
+    "config",
 }
 
 
@@ -278,23 +286,16 @@ def async_enable_logging(
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
 
-        async_handler = AsyncHandler(hass.loop, err_handler)
-
-        async def async_stop_async_handler(_: Any) -> None:
-            """Cleanup async handler."""
-            logging.getLogger("").removeHandler(async_handler)  # type: ignore
-            await async_handler.async_close(blocking=True)
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
-
         logger = logging.getLogger("")
-        logger.addHandler(async_handler)  # type: ignore
-        logger.setLevel(logging.INFO)
+        logger.addHandler(err_handler)
+        logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
     else:
         _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
+
+    async_activate_log_queue_handler(hass)
 
 
 async def async_mount_local_lib_path(config_dir: str) -> str:
@@ -331,13 +332,30 @@ async def _async_set_up_integrations(
 ) -> None:
     """Set up all the integrations."""
 
+    setup_started = hass.data[DATA_SETUP_STARTED] = {}
+
     async def async_setup_multi_components(domains: Set[str]) -> None:
         """Set up multiple domains. Log on failure."""
+
+        async def _async_log_pending_setups() -> None:
+            """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
+            while True:
+                await asyncio.sleep(LOG_SLOW_STARTUP_INTERVAL)
+                remaining = [domain for domain in domains if domain in setup_started]
+
+                if remaining:
+                    _LOGGER.info(
+                        "Waiting on integrations to complete setup: %s",
+                        ", ".join(remaining),
+                    )
+
         futures = {
             domain: hass.async_create_task(async_setup_component(hass, domain, config))
             for domain in domains
         }
+        log_task = asyncio.create_task(_async_log_pending_setups())
         await asyncio.wait(futures.values())
+        log_task.cancel()
         errors = [domain for domain in domains if futures[domain].exception()]
         for domain in errors:
             exception = futures[domain].exception()
@@ -388,6 +406,8 @@ async def _async_set_up_integrations(
     )
 
     if stage_1_domains:
+        _LOGGER.info("Setting up %s", stage_1_domains)
+
         await async_setup_multi_components(stage_1_domains)
 
     # Load all integrations
@@ -430,4 +450,5 @@ async def _async_set_up_integrations(
         await async_setup_multi_components(stage_2_domains)
 
     # Wrap up startup
+    _LOGGER.debug("Waiting for startup to wrap up")
     await hass.async_block_till_done()

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne TV-en er allerede konfigurert."
+            "already_configured": "Denne TV-en er allerede konfigurert.",
+            "no_ip_control": "IP-kontrollen er deaktivert p\u00e5 TVen eller TV-en st\u00f8ttes ikke."
         },
         "error": {
             "cannot_connect": "Kunne ikke koble til, ugyldig vert eller PIN-kode.",

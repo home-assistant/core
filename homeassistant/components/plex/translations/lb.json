@@ -16,6 +16,7 @@
             "not_found": "Kee Plex Server fonnt",
             "ssl_error": "SSL Zertifikat Problem"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
@@ -33,10 +34,6 @@
                 },
                 "description": "M\u00e9i Server disponibel, wielt een aus:",
                 "title": "Plex Server auswielen"
-            },
-            "start_website_auth": {
-                "description": "Weiderfueren op plex.tv fir d'Autorisatioun.",
-                "title": "Plex Server verbannen"
             },
             "user": {
                 "description": "Verbann dech mat [plex.tv](https://pley.tv) fir ee Plex Server ze verlinken.",

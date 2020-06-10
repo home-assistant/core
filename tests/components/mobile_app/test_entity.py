@@ -95,8 +95,8 @@ async def test_sensor_must_register(hass, create_registrations, webhook_client):
     assert json["battery_state"]["error"]["code"] == "not_registered"
 
 
-async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client):
-    """Test that sensors must have a unique ID."""
+async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, caplog):
+    """Test that a duplicate unique ID in registration updates the sensor."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 
@@ -120,14 +120,41 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client):
 
     reg_json = await reg_resp.json()
     assert reg_json == {"success": True}
+    await hass.async_block_till_done()
 
+    assert "Re-register existing sensor" not in caplog.text
+
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+
+    assert entity.attributes["device_class"] == "battery"
+    assert entity.attributes["icon"] == "mdi:battery"
+    assert entity.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
+    assert entity.attributes["foo"] == "bar"
+    assert entity.domain == "sensor"
+    assert entity.name == "Test 1 Battery State"
+    assert entity.state == "100"
+
+    payload["data"]["state"] = 99
     dupe_resp = await webhook_client.post(webhook_url, json=payload)
 
-    assert dupe_resp.status == 409
+    assert dupe_resp.status == 201
+    dupe_reg_json = await dupe_resp.json()
+    assert dupe_reg_json == {"success": True}
+    await hass.async_block_till_done()
 
-    dupe_json = await dupe_resp.json()
-    assert dupe_json["success"] is False
-    assert dupe_json["error"]["code"] == "duplicate_unique_id"
+    assert "Re-register existing sensor" in caplog.text
+
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+
+    assert entity.attributes["device_class"] == "battery"
+    assert entity.attributes["icon"] == "mdi:battery"
+    assert entity.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
+    assert entity.attributes["foo"] == "bar"
+    assert entity.domain == "sensor"
+    assert entity.name == "Test 1 Battery State"
+    assert entity.state == "99"
 
 
 async def test_register_sensor_no_state(hass, create_registrations, webhook_client):

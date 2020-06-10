@@ -26,6 +26,7 @@ async def prometheus_client(loop, hass, hass_client):
     await setup.async_setup_component(
         hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
     )
+    await hass.async_block_till_done()
 
     sensor1 = DemoSensor(
         None, "Television Energy", 74, None, ENERGY_KILO_WATT_HOUR, None

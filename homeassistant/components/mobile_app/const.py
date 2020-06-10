@@ -56,7 +56,6 @@ ERR_ENCRYPTION_ALREADY_ENABLED = "encryption_already_enabled"
 ERR_ENCRYPTION_NOT_AVAILABLE = "encryption_not_available"
 ERR_ENCRYPTION_REQUIRED = "encryption_required"
 ERR_SENSOR_NOT_REGISTERED = "not_registered"
-ERR_SENSOR_DUPLICATE_UNIQUE_ID = "duplicate_unique_id"
 ERR_INVALID_FORMAT = "invalid_format"
 
 
