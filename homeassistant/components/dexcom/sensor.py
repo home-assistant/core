@@ -96,11 +96,9 @@ class DexcomGlucoseTrendSensor(Entity):
     @property
     def icon(self):
         """Return the icon for the frontend."""
-        return (
-            GLUCOSE_TREND_ICON[self._coordinator.data.trend]
-            if self._coordinator.data
-            else GLUCOSE_TREND_ICON[0]
-        )
+        if self._coordinator.data:
+            return GLUCOSE_TREND_ICON[self._coordinator.data.trend]
+        return GLUCOSE_TREND_ICON[0]
 
     @property
     def state(self):
