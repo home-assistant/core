@@ -133,6 +133,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         all_module_infos = {}
 
+        if not data_handler.data.get(data_class):
+            return []
+
         for station_id in data_handler.data.get(data_class).stations:
             for module_id in data_handler.data.get(data_class).get_modules(station_id):
                 all_module_infos[module_id] = data_handler.data.get(
