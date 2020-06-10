@@ -13,7 +13,7 @@ class GammuAsyncThread(gammu.worker.GammuThread):
 
     def __init__(self, queue, config, callback):
         """Initialize thread."""
-        gammu.worker.GammuThread.__init__(self, queue, config, callback)
+        super().__init__(queue, config, callback)
 
     def _do_command(self, future, cmd, params, percentage=100):
         """Execute single command on phone."""
