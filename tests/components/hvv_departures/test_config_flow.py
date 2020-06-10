@@ -147,7 +147,7 @@ async def test_user_flow_no_results(hass):
 
         # step: station
         result_station = await hass.config_entries.flow.async_configure(
-            result_user["flow_id"], {CONF_STATION: " "},
+            result_user["flow_id"], {CONF_STATION: "non_existing_station"},
         )
 
         assert result_station["step_id"] == "station"
