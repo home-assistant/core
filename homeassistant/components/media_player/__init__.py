@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
+from aiohttp.typedefs import LooseHeaders
 import async_timeout
 import voluptuous as vol
 
@@ -863,7 +864,7 @@ class MediaPlayerImageView(HomeAssistantView):
         """Initialize a media player view."""
         self.component = component
 
-    async def get(self, request, entity_id):
+    async def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Start a get request."""
         player = self.component.get_entity(entity_id)
         if player is None:
@@ -883,7 +884,7 @@ class MediaPlayerImageView(HomeAssistantView):
         if data is None:
             return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
 
-        headers = {CACHE_CONTROL: "max-age=3600"}
+        headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)
 
 

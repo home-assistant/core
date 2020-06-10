@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key_id:common::config_flow::data::host%]"
+            "already_configured": "Nazwa hosta lub adres IP"
         },
         "error": {
             "connection_failed": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
@@ -10,13 +10,13 @@
         },
         "step": {
             "link": {
-                "description": "Kliknij \"Zatwierd\u017a\", a nast\u0119pnie naci\u015bnij przycisk strza\u0142ki w prawo na routerze, aby zarejestrowa\u0107 Freebox w Home Assistan'cie. \n\n ![Lokalizacja przycisku na routerze] (/static/images/config_freebox.png)",
-                "title": "Po\u0142\u0105cz z routerem Freebox"
+                "description": "Kliknij \"Zatwierd\u017a\", a nast\u0119pnie naci\u015bnij przycisk strza\u0142ki w prawo na routerze, aby zarejestrowa\u0107 Freebox w Home Assistancie. \n\n ![Lokalizacja przycisku na routerze] (/static/images/config_freebox.png)",
+                "title": "Po\u0142\u0105czenie z routerem Freebox"
             },
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
-                    "port": "[%key_id:common::config_flow::data::port%]"
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
                 },
                 "title": "Freebox"
             }

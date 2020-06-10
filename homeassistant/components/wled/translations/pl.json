@@ -1,23 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]",
-            "connection_error": "[%key_id:common::config_flow::error::cannot_connect%]"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
         },
         "error": {
-            "connection_error": "[%key_id:common::config_flow::error::cannot_connect%]"
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
         },
         "flow_title": "WLED: {name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]"
+                    "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "Konfiguracja WLED w celu integracji z Home Assistant'em.",
-                "title": "Po\u0142\u0105cz z WLED"
+                "description": "Konfiguracja WLED w celu integracji z Home Assistantem."
             },
             "zeroconf_confirm": {
-                "description": "Czy chcesz doda\u0107 WLED o nazwie `{name}` do Home Assistant'a?",
+                "description": "Czy chcesz doda\u0107 WLED o nazwie `{name}` do Home Assistanta?",
                 "title": "Wykryto urz\u0105dzenie WLED"
             }
         }

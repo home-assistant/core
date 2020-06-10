@@ -25,9 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Serial Device Path",
-                    "radio_type": "Radio Type",
-                    "usb_path": "USB Device Path"
+                    "path": "Serial Device Path"
                 },
                 "description": "Select serial port for Zigbee radio",
                 "title": "ZHA"

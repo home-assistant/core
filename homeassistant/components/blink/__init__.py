@@ -25,12 +25,10 @@ from .const import (
     SERVICE_REFRESH,
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
-    SERVICE_TRIGGER,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_TRIGGER_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
     {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILENAME): cv.string}
 )
@@ -106,14 +104,6 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    def trigger_camera(call):
-        """Trigger a camera."""
-        cameras = hass.data[DOMAIN][entry.entry_id].cameras
-        name = call.data[CONF_NAME]
-        if name in cameras:
-            cameras[name].snap_picture()
-        blink_refresh()
-
     def blink_refresh(event_time=None):
         """Call blink to refresh info."""
         hass.data[DOMAIN][entry.entry_id].refresh(force_cache=True)
@@ -130,9 +120,6 @@ async def async_setup_entry(hass, entry):
         )
 
     hass.services.async_register(DOMAIN, SERVICE_REFRESH, blink_refresh)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TRIGGER, trigger_camera, schema=SERVICE_TRIGGER_SCHEMA
-    )
     hass.services.async_register(
         DOMAIN, SERVICE_SAVE_VIDEO, async_save_video, schema=SERVICE_SAVE_VIDEO_SCHEMA
     )
@@ -163,7 +150,6 @@ async def async_unload_entry(hass, entry):
         return True
 
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_TRIGGER)
     hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO_SCHEMA)
     hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
 

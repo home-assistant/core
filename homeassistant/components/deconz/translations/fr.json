@@ -17,25 +17,15 @@
                 "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 la passerelle deCONZ fournie par l'add-on hass.io {addon} ?",
                 "title": "Passerelle deCONZ Zigbee via l'add-on Hass.io"
             },
-            "init": {
-                "title": "Initialiser la passerelle deCONZ"
-            },
             "link": {
                 "description": "D\u00e9verrouillez votre passerelle deCONZ pour vous enregistrer avec Home Assistant. \n\n 1. Acc\u00e9dez aux param\u00e8tres avanc\u00e9s du syst\u00e8me deCONZ \n 2. Cliquez sur \"D\u00e9verrouiller la passerelle\"",
                 "title": "Lien vers deCONZ"
-            },
-            "manual_confirm": {
-                "data": {
-                    "host": "H\u00f4te",
-                    "port": "Port"
-                }
             },
             "manual_input": {
                 "data": {
                     "host": "H\u00f4te",
                     "port": "Port"
-                },
-                "title": "Configurer la passerelle deCONZ"
+                }
             }
         }
     },

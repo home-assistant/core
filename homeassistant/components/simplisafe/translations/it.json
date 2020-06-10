@@ -12,7 +12,7 @@
                 "data": {
                     "code": "Codice (utilizzato nell'Interfaccia Utente di Home Assistant)",
                     "password": "Password",
-                    "username": "Indirizzo E-mail"
+                    "username": "E-mail"
                 },
                 "title": "Inserisci le tue informazioni."
             }

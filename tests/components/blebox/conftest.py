@@ -71,17 +71,24 @@ def config_fixture():
 
 
 @pytest.fixture(name="feature")
-def feature(request):
+def feature_fixture(request):
     """Return an entity wrapper from given fixture name."""
     return request.getfixturevalue(request.param)
 
 
-async def async_setup_entity(hass, config, entity_id):
-    """Return a configured entity with the given entity_id."""
+async def async_setup_entities(hass, config, entity_ids):
+    """Return configured entries with the given entity ids."""
+
     config_entry = mock_config()
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    return entity_registry.async_get(entity_id)
+    return [entity_registry.async_get(entity_id) for entity_id in entity_ids]
+
+
+async def async_setup_entity(hass, config, entity_id):
+    """Return a configured entry with the given entity_id."""
+
+    return (await async_setup_entities(hass, config, [entity_id]))[0]

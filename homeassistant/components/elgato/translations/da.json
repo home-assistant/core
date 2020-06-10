@@ -14,8 +14,7 @@
                     "host": "V\u00e6rt eller IP-adresse",
                     "port": "Portnummer"
                 },
-                "description": "Indstil din Elgato Key Light til at integrere med Home Assistant.",
-                "title": "Forbind din Elgato Key Light"
+                "description": "Indstil din Elgato Key Light til at integrere med Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Vil du tilf\u00f8je Elgato Key Light med serienummer `{serial_number}` til Home Assistant?",

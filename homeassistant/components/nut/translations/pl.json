@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
-            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
         },
         "step": {
             "resources": {
@@ -23,12 +23,12 @@
             },
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "port": "[%key_id:common::config_flow::data::port%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
                 },
-                "title": "Po\u0142\u0105cz z serwerem NUT"
+                "title": "Po\u0142\u0105czenie z serwerem NUT"
             }
         }
     },

@@ -180,7 +180,7 @@ async def test_platform_not_ready(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_setup({DOMAIN: {"platform": "mod1"}})
-
+    await hass.async_block_till_done()
     assert len(platform1_setup.mock_calls) == 1
     assert "test_domain.mod1" not in hass.config.components
 
@@ -280,7 +280,7 @@ async def test_setup_dependencies_platform(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_setup({DOMAIN: {"platform": "test_component"}})
-
+    await hass.async_block_till_done()
     assert "test_component" in hass.config.components
     assert "test_component2" in hass.config.components
     assert "test_domain.test_component" in hass.config.components

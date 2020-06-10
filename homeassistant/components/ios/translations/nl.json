@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Wilt u het Home Assistant iOS component instellen?",
-                "title": "Home Assistant iOS"
+                "description": "Wilt u het Home Assistant iOS component instellen?"
             }
         }
     }

@@ -13,8 +13,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Set up your WLED to integrate with Home Assistant.",
-                "title": "Link your WLED"
+                "description": "Set up your WLED to integrate with Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Do you want to add the WLED named `{name}` to Home Assistant?",

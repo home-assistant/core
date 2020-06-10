@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "Segui il link qui sotto e <b> Accetta </b> l'accesso al tuo account Minut, quindi torna indietro e premi <b> Invia </b> qui sotto. \n\n [Link] ( {authorization_url} )",
+                "description": "Segui il link qui sotto e **Accetta** l'accesso al tuo account Minut, quindi torna indietro e premi **Invia** qui sotto. \n\n [Link]({authorization_url})",
                 "title": "Autenticare Point"
             },
             "user": {

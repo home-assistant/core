@@ -34,6 +34,7 @@
             "manual_input": {
                 "data": {
                     "host": "Endere\u00e7o (IP)",
+                    "name": "Nome",
                     "port": "Porta"
                 },
                 "title": "Configurar dispositivo ONVIF"
