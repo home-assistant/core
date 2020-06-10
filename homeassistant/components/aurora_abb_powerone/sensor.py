@@ -187,7 +187,7 @@ class AuroraSensor(AuroraDevice):
                     _LOGGER.info("Communication with %s back online", self._name)
                 else:
                     _LOGGER.warning(
-                        "Communication with %s lost (could be dark)",
+                        "Communication with %s lost",
                         self._name,
                     )
             self.availableprev = self._available
