@@ -196,7 +196,6 @@ class ZabbixThread(threading.Thread):
 
     def __init__(self, hass, zabbix_sender, event_to_metrics, max_tries):
         """Initialize the listener."""
-        _LOGGER.info("ZabbixThread 1")
         threading.Thread.__init__(self, name="Zabbix")
         self.queue = queue.Queue()
         self.zabbix_sender = zabbix_sender
@@ -208,7 +207,6 @@ class ZabbixThread(threading.Thread):
         self.string_keys = set([])
 
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
-        _LOGGER.info("ZabbixThread 2")
 
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Zabbix."""
