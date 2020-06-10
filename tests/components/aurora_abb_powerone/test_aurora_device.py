@@ -1,25 +1,59 @@
 """Test the Aurora ABB PowerOne Solar PV config flow."""
-from logging import INFO
-
-from aurorapy.client import AuroraError
+from aurorapy.client import AuroraError, AuroraSerialClient
 from serial.tools import list_ports_common
 
-# from homeassistant.components.aurora_abb_powerone.config_flow import (
-#     CannotConnect,
-#     InvalidAuth,
-# )
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.aurora_abb_powerone.aurora_device import AuroraDevice
 from homeassistant.components.aurora_abb_powerone.const import (
+    ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     CONF_USEDUMMYONFAIL,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
+    MANUFACTURER,
 )
+from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 
 from tests.async_mock import patch
+
+
+async def test_create_auroradevice(hass):
+    """Test creation of an aurora abb powerone device."""
+    client = AuroraSerialClient(7, "/dev/ttyUSB7", parity="N", timeout=1)
+    config = ConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title=DEFAULT_INTEGRATION_TITLE,
+        data={
+            ATTR_SERIAL_NUMBER: "65432",
+            ATTR_MODEL: "AAYYBB",
+            ATTR_DEVICE_NAME: "Feathers McGraw",
+            ATTR_FIRMWARE: "0.1.2.3",
+        },
+        source="dummysource",
+        connection_class=CONN_CLASS_LOCAL_POLL,
+        system_options={},
+        entry_id="13579",
+    )
+    device = AuroraDevice(client, config)
+    uid = device.unique_id
+    assert uid == "65432_device"
+
+    available = device.available
+    assert available
+
+    info = device.device_info
+    assert info == {
+        "config_entry_id": "13579",
+        "identifiers": {(DOMAIN, "65432")},
+        "manufacturer": MANUFACTURER,
+        "model": "AAYYBB",
+        "name": "Feathers McGraw",
+        "sw_version": "0.1.2.3",
+    }
 
 
 async def test_form(hass):
@@ -48,9 +82,6 @@ async def test_form(hass):
     ), patch(
         "aurorapy.client.AuroraSerialClient.firmware", return_value="1.234",
     ), patch(
-        "homeassistant.components.aurora_abb_powerone.config_flow._LOGGER.getEffectiveLevel",
-        return_value=INFO,
-    ), patch(
         "homeassistant.components.aurora_abb_powerone.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.aurora_abb_powerone.async_setup_entry",
@@ -62,7 +93,6 @@ async def test_form(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
     assert result2["data"] == {
         CONF_PORT: "/dev/ttyUSB7",
         CONF_ADDRESS: 7,
@@ -70,7 +100,6 @@ async def test_form(hass):
         ATTR_MODEL: "9.8.7.6 (A.B.C)",
         ATTR_SERIAL_NUMBER: "9876543",
         "title": "PhotoVoltaic Inverters",
-        # CONF_USEDUMMYONFAIL: False,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -169,6 +198,9 @@ async def test_form_populate_defaults(hass):
         "aurorapy.client.AuroraSerialClient.connect",
         side_effect=AuroraError,
         return_value=None,
+    ), patch(
+        "homeassistant.components.aurora_abb_powerone.config_flow.DEBUGMODE",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

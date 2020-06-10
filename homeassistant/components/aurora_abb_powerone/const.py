@@ -22,4 +22,4 @@ ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_MODEL = "model"
 ATTR_FIRMWARE = "firmware"
 
-DEBUGMODE = True
+DEBUGMODE = False
