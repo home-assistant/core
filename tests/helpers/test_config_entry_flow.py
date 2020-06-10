@@ -66,7 +66,7 @@ async def test_user_no_devices_found(hass, discovery_flow_conf):
 
 
 async def test_user_has_confirmation(hass, discovery_flow_conf):
-    """Test user requires no confirmation to setup."""
+    """Test user requires confirmation to setup."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
     flow.context = {}
@@ -75,6 +75,10 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
     result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+
+    result = await flow.async_step_confirm({})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 @pytest.mark.parametrize("source", ["discovery", "ssdp", "zeroconf"])
