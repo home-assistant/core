@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -20,17 +20,17 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     STATE_OFF,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
     ATTR_HEATING_POWER_REQUEST,
-    ATTR_HOME_NAME,
     ATTR_SCHEDULE_NAME,
     DATA_HANDLER,
     DATA_HOMES,
@@ -102,8 +102,8 @@ NA_VALVE = "NRV"
 
 SCHEMA_SERVICE_SETSCHEDULE = vol.Schema(
     {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_domain(CLIMATE_DOMAIN),
         vol.Required(ATTR_SCHEDULE_NAME): cv.string,
-        vol.Required(ATTR_HOME_NAME): cv.string,
     }
 )
 
@@ -169,42 +169,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await data_handler.unregister_data_class(data_class)
     async_add_entities(await get_entities(), True)
 
-    def _service_setschedule(service):
-        """Service to change current home schedule."""
-        home_id = None
-        for hid, name in hass.data[DOMAIN][DATA_HOMES].items():
-            if name == service.data.get(ATTR_HOME_NAME):
-                home_id = hid
-
-        if not home_id:
-            _LOGGER.error("You passed an invalid home")
-            return
-
-        schedule_name = service.data.get(ATTR_SCHEDULE_NAME)
-        schedule_id = None
-        for sid, name in hass.data[DOMAIN][DATA_SCHEDULES][home_id].items():
-            if name == schedule_name:
-                schedule_id = sid
-
-        if not schedule_id:
-            _LOGGER.error("You passed an invalid schedule")
-            return
-
-        home_data.switch_home_schedule(home_id=home_id, schedule_id=schedule_id)
-        _LOGGER.info(
-            "Setting %s (%s) schedule to %s (%s)",
-            service.data.get(ATTR_HOME_NAME),
-            home_id,
-            service.data.get(ATTR_SCHEDULE_NAME),
-            schedule_id,
-        )
+    platform = entity_platform.current_platform.get()
 
     if home_data is not None:
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_SETSCHEDULE,
-            _service_setschedule,
-            schema=SCHEMA_SERVICE_SETSCHEDULE,
+        platform.async_register_entity_service(
+            SERVICE_SETSCHEDULE, SCHEMA_SERVICE_SETSCHEDULE, "_service_setschedule",
         )
 
 
@@ -550,6 +519,25 @@ class NetatmoThermostat(ClimateEntity, NetatmoBase):
 
             self._connected = False
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
+
+    def _service_setschedule(self, **kwargs):
+        schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
+        schedule_id = None
+        for sid, name in self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].items():
+            if name == schedule_name:
+                schedule_id = sid
+
+        if not schedule_id:
+            _LOGGER.error("You passed an invalid schedule")
+            return
+
+        self._data.switch_home_schedule(home_id=self._home_id, schedule_id=schedule_id)
+        _LOGGER.info(
+            "Setting %s schedule to %s (%s)",
+            self._home_id,
+            kwargs.get(ATTR_SCHEDULE_NAME),
+            schedule_id,
+        )
 
 
 def interpolate(batterylevel, module_type):

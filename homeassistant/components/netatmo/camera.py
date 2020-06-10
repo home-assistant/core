@@ -12,15 +12,13 @@ from homeassistant.components.camera import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
-    ATTR_HOME_NAME,
     ATTR_PERSON,
     ATTR_PERSONS,
     ATTR_PSEUDO,
     DATA_HANDLER,
-    DATA_HOMES,
     DATA_PERSONS,
     DOMAIN,
     MANUFACTURER,
@@ -42,20 +40,23 @@ VALID_QUALITIES = ["high", "medium", "low", "poor"]
 
 SCHEMA_SERVICE_SETLIGHTAUTO = vol.Schema(
     {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
-        vol.Required(ATTR_HOME_NAME): cv.string,
+        # vol.Optional(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
+        # vol.Required(ATTR_HOME_NAME): cv.string,
     }
 )
 
 SCHEMA_SERVICE_SETPERSONSHOME = vol.Schema(
     {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
         vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(ATTR_HOME_NAME): cv.string,
     }
 )
 
 SCHEMA_SERVICE_SETPERSONAWAY = vol.Schema(
-    {vol.Optional(ATTR_PERSON): cv.string, vol.Required(ATTR_HOME_NAME): cv.string}
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
+        vol.Optional(ATTR_PERSON): cv.string,
+    }
 )
 
 
@@ -107,71 +108,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(await get_entities(), True)
 
-    def _service_setpersonshome(service):
-        """Service to change current home schedule."""
-        home_id = None
-        for hid, name in hass.data[DOMAIN][DATA_HOMES].items():
-            if name == service.data.get(ATTR_HOME_NAME):
-                home_id = hid
-
-        if not home_id:
-            _LOGGER.error("You passed an invalid home")
-            return
-
-        persons = service.data.get(ATTR_PERSONS)
-        person_ids = []
-        for person in persons:
-            for pid, data in data_handler.data[data_class].persons.items():
-                if data.get("pseudo") == person:
-                    person_ids.append(pid)
-
-        data_handler.data[data_class].set_persons_home(
-            person_ids=person_ids, home_id=home_id
-        )
-        _LOGGER.info("Set %s as at home", persons)
-
-    def _service_setpersonaway(service):
-        """Service to mark a person as away or set the home as empty."""
-        home_id = None
-        for hid, name in hass.data[DOMAIN][DATA_HOMES].items():
-            if name == service.data.get(ATTR_HOME_NAME):
-                home_id = hid
-
-        if not home_id:
-            _LOGGER.error("You passed an invalid home")
-            return
-
-        person = service.data.get(ATTR_PERSON)
-        person_id = None
-        if person:
-            for pid, data in data_handler.data[data_class].persons.items():
-                if data.get("pseudo") == person:
-                    person_id = pid
-
-        if person_id is not None:
-            data_handler.data[data_class].set_persons_away(
-                person_id=person_id, home_id=home_id,
-            )
-            _LOGGER.info("Set %s as away", person)
-
-        else:
-            data_handler.data[data_class].set_persons_away(
-                person_id=person_id, home_id=home_id,
-            )
-            _LOGGER.info("Set home as empty")
+    platform = entity_platform.current_platform.get()
 
     if data_handler.data[data_class] is not None:
-        hass.services.async_register(
-            DOMAIN,
+        platform.async_register_entity_service(
             SERVICE_SETPERSONSHOME,
-            _service_setpersonshome,
-            schema=SCHEMA_SERVICE_SETPERSONSHOME,
+            SCHEMA_SERVICE_SETPERSONSHOME,
+            "_service_setpersonshome",
         )
-        hass.services.async_register(
-            DOMAIN,
+        platform.async_register_entity_service(
             SERVICE_SETPERSONAWAY,
-            _service_setpersonaway,
-            schema=SCHEMA_SERVICE_SETPERSONAWAY,
+            SCHEMA_SERVICE_SETPERSONAWAY,
+            "_service_setpersonaway",
         )
 
 
@@ -354,3 +302,36 @@ class NetatmoCamera(Camera, NetatmoBase):
         self._alim_status = camera.get("alim_status")
         self._is_local = camera.get("is_local")
         self.is_streaming = bool(self._status == "on")
+
+    def _service_setpersonshome(self, **kwargs):
+        """Service to change current home schedule."""
+        persons = kwargs.get(ATTR_PERSONS)
+        person_ids = []
+        for person in persons:
+            for pid, data in self._data.persons.items():
+                if data.get("pseudo") == person:
+                    person_ids.append(pid)
+
+        self._data.set_persons_home(person_ids=person_ids, home_id=self._home_id)
+        _LOGGER.info("Set %s as at home", persons)
+
+    def _service_setpersonaway(self, **kwargs):
+        """Service to mark a person as away or set the home as empty."""
+        person = kwargs.get(ATTR_PERSON)
+        person_id = None
+        if person:
+            for pid, data in self._data.persons.items():
+                if data.get("pseudo") == person:
+                    person_id = pid
+
+        if person_id is not None:
+            self._data.set_persons_away(
+                person_id=person_id, home_id=self._home_id,
+            )
+            _LOGGER.info("Set %s as away", person)
+
+        else:
+            self._data.set_persons_away(
+                person_id=person_id, home_id=self._home_id,
+            )
+            _LOGGER.info("Set home as empty")
