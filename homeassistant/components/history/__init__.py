@@ -53,7 +53,13 @@ SIGNIFICANT_DOMAINS = (
     "water_heater",
 )
 IGNORE_DOMAINS = ("zone", "scene")
-NEED_ATTRIBUTE_DOMAINS = {"climate", "water_heater", "thermostat", "script"}
+NEED_ATTRIBUTE_DOMAINS = {
+    "climate",
+    "humidifier",
+    "script",
+    "thermostat",
+    "water_heater",
+}
 SCRIPT_DOMAIN = "script"
 ATTR_CAN_CANCEL = "can_cancel"
 
