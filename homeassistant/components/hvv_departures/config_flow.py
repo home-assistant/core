@@ -85,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_station(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
-        if user_input:
+        if user_input is not None:
 
             errors = {}
 
