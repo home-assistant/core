@@ -34,12 +34,13 @@
             "manual_input": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa",
                     "port": "Port"
                 },
                 "title": "Konfigurowanie urz\u0105dzenia ONVIF"
             },
             "user": {
-                "description": "Klikaj\u0105c przycisk Prze\u015blij, Twoja sie\u0107 zostanie przeszukana pod k\u0105tem urz\u0105dze\u0144 ONVIF obs\u0142uguj\u0105cych profil S.\n\nNiekt\u00f3rzy producenci zacz\u0119li domy\u015blnie wy\u0142\u0105cza\u0107 ONVIF. Upewnij si\u0119, \u017ce ONVIF jest w\u0142\u0105czony w konfiguracji kamery.",
+                "description": "Klikaj\u0105c przycisk Zatwierd\u017a, Twoja sie\u0107 zostanie przeszukana pod k\u0105tem urz\u0105dze\u0144 ONVIF obs\u0142uguj\u0105cych profil S.\n\nNiekt\u00f3rzy producenci zacz\u0119li domy\u015blnie wy\u0142\u0105cza\u0107 ONVIF. Upewnij si\u0119, \u017ce ONVIF jest w\u0142\u0105czony w konfiguracji kamery.",
                 "title": "Konfiguracja urz\u0105dzenia ONVIF"
             }
         }

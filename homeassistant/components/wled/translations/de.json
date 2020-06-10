@@ -13,8 +13,7 @@
                 "data": {
                     "host": "Hostname oder IP-Adresse"
                 },
-                "description": "Richten Sie Ihren WLED f\u00fcr die Integration mit Home Assistant ein.",
-                "title": "Verkn\u00fcpfen Sie Ihre WLED"
+                "description": "Richten Sie Ihren WLED f\u00fcr die Integration mit Home Assistant ein."
             },
             "zeroconf_confirm": {
                 "description": "M\u00f6chten Sie die WLED mit dem Namen `{name}` zu Home Assistant hinzuf\u00fcgen?",

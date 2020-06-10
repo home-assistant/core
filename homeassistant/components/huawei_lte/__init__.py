@@ -68,6 +68,7 @@ from .const import (
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_NET_CURRENT_PLMN,
     KEY_NET_NET_MODE,
+    KEY_SMS_SMS_COUNT,
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
@@ -243,6 +244,7 @@ class Router:
         )
         self._get_data(KEY_NET_CURRENT_PLMN, self.client.net.current_plmn)
         self._get_data(KEY_NET_NET_MODE, self.client.net.net_mode)
+        self._get_data(KEY_SMS_SMS_COUNT, self.client.sms.sms_count)
         self._get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
         self._get_data(
             KEY_WLAN_WIFI_FEATURE_SWITCH, self.client.wlan.wifi_feature_switch

@@ -2,22 +2,22 @@
     "config": {
         "abort": {
             "already_configured": "BoorBird jest ju\u017c skonfigurowany.",
-            "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane",
-            "not_doorbird_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem DoorBird"
+            "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane.",
+            "not_doorbird_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem DoorBird."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
-            "invalid_auth": "[%key_id:common::config_flow::error::invalid_auth%]",
-            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "invalid_auth": "Niepoprawne uwierzytelnienie.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
         },
         "flow_title": "DoorBird {name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa urz\u0105dzenia",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "title": "Po\u0142\u0105czenie z DoorBird"
             }

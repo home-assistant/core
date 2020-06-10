@@ -16,8 +16,7 @@
                     "host": "Nom d'h\u00f4te ou adresse IP de l'imprimante",
                     "type": "Type d'imprimante"
                 },
-                "description": "Configurez l'int\u00e9gration de l'imprimante Brother. Si vous avez des probl\u00e8mes avec la configuration, allez \u00e0 : https://www.home-assistant.io/integrations/brother",
-                "title": "Imprimante Brother"
+                "description": "Configurez l'int\u00e9gration de l'imprimante Brother. Si vous avez des probl\u00e8mes avec la configuration, allez \u00e0 : https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

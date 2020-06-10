@@ -20,9 +20,8 @@
             },
             "link": {
                 "data": {
-                    "api_version": "Versi\u00f3 DSM",
                     "password": "Contrasenya",
-                    "port": "Port (opcional)",
+                    "port": "Port",
                     "ssl": "Utilitza SSL/TLS per connectar-te al servidor NAS",
                     "username": "Nom d'usuari"
                 },
@@ -31,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "Versi\u00f3 DSM",
                     "host": "Amfitri\u00f3",
                     "password": "Contrasenya",
                     "port": "Port",

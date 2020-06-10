@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Google Hangouts jest ju\u017c skonfigurowany.",
-            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
         },
         "error": {
             "invalid_2fa": "Nieprawid\u0142owe uwierzytelnienie dwusk\u0142adnikowe, spr\u00f3buj ponownie.",
@@ -20,8 +20,8 @@
             "user": {
                 "data": {
                     "authorization_code": "Kod autoryzacji (wymagany do r\u0119cznego uwierzytelnienia)",
-                    "email": "[%key_id:common::config_flow::data::email%]",
-                    "password": "[%key_id:common::config_flow::data::password%]"
+                    "email": "Adres e-mail",
+                    "password": "Has\u0142o"
                 },
                 "description": "Pusty",
                 "title": "Logowanie do Google Hangouts"

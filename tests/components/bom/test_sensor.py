@@ -70,6 +70,7 @@ class TestBOMWeatherSensor(unittest.TestCase):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
             assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+            self.hass.block_till_done()
 
         fake_entities = [
             "bom_fake_feels_like_c",
@@ -85,6 +86,7 @@ class TestBOMWeatherSensor(unittest.TestCase):
     def test_sensor_values(self, mock_get):
         """Test retrieval of sensor values."""
         assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+        self.hass.block_till_done()
 
         weather = self.hass.states.get("sensor.bom_fake_weather").state
         assert "Fine" == weather

@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key_id:common::config_flow::abort::already_configured_device%]"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_in_progress": "Konfiguracja tego urz\u0105dzenia Xiaomi Miio jest ju\u017c w toku."
         },
         "error": {
-            "connect_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "connect_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
             "no_device_selected": "Nie wybrano \u017cadnego urz\u0105dzenia, wybierz jedno urz\u0105dzenie."
         },
         "step": {
@@ -12,7 +13,7 @@
                 "data": {
                     "host": "Adres IP",
                     "name": "Nazwa bramki",
-                    "token": "Klucz API"
+                    "token": "Token API"
                 },
                 "description": "B\u0119dziesz potrzebowa\u0107 tokenu API, odwied\u017a https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token, aby uzyska\u0107 instrukcje.",
                 "title": "Po\u0142\u0105cz si\u0119 z bramk\u0105 Xiaomi"

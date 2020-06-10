@@ -4,11 +4,11 @@ blink_update:
   description: Force a refresh.
 
 trigger_camera:
-  description: Request named camera to take new image.
+  description: Request camera to take new image.
   fields:
-    name:
-      description: Name of camera to take new image.
-      example: "Living Room"
+    entity_id:
+      description: Name(s) of camera entities to take new image.
+      example: "camera.living_room_camera"
 
 save_video:
   description: Save last recorded video clip to local file.

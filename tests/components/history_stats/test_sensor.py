@@ -45,6 +45,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
         assert state.state == STATE_UNKNOWN

@@ -8,8 +8,6 @@ DATA_TOON_CLIENT = "toon_client"
 DATA_TOON_CONFIG = "toon_config"
 DATA_TOON_UPDATED = "toon_updated"
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 CONF_DISPLAY = "display"
 CONF_TENANT = "tenant"
 

@@ -23,8 +23,7 @@
                     "host": "IP-naslov Konnected naprave",
                     "port": "Vrata Konnected naprave"
                 },
-                "description": "Vnesite podatke o gostitelju v svoj Konnected Panel.",
-                "title": "Odkrijte Konnected napravo"
+                "description": "Vnesite podatke o gostitelju v svoj Konnected Panel."
             }
         }
     },

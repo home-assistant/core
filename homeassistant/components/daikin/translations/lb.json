@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "device_fail": "Onerwaarte Feeler beim erstelle vum Apparat.",
-            "device_timeout": "Z\u00e4it Iwwerschreidung beim verbannen mam Apparat."
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
             "device_fail": "Onerwaarte Feeler",

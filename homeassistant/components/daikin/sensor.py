@@ -129,7 +129,7 @@ class DaikinPowerSensor(DaikinSensor):
         if self._device_attribute == ATTR_TOTAL_POWER:
             return round(self._api.device.current_total_power_consumption, 3)
         if self._device_attribute == ATTR_COOL_ENERGY:
-            return round(self._api.device.last_hour_cool_power_consumption, 3)
+            return round(self._api.device.last_hour_cool_energy_consumption, 3)
         if self._device_attribute == ATTR_HEAT_ENERGY:
-            return round(self._api.device.last_hour_heat_power_consumption, 3)
+            return round(self._api.device.last_hour_heat_energy_consumption, 3)
         return None
