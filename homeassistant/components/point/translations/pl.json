@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko konto Point.",
+            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
-            "authorize_url_timeout": "[%key_id:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
             "external_setup": "Punkt pomy\u015blnie skonfigurowany.",
-            "no_flows": "Musisz skonfigurowa\u0107 Point, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/point/)."
+            "no_flows": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105."
         },
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono przy u\u017cyciu Minut dla urz\u0105dze\u0144 Point"
         },
         "error": {
             "follow_link": "Prosz\u0119 klikn\u0105\u0107 link i uwierzytelni\u0107 przed naci\u015bni\u0119ciem przycisku \"Zatwierd\u017a\"",
-            "no_token": "Brak uwierzytelnienia za pomoc\u0105 Minut"
+            "no_token": "Niepoprawny token dost\u0119pu."
         },
         "step": {
             "auth": {
@@ -24,7 +24,7 @@
                     "flow_impl": "Dostawca"
                 },
                 "description": "Wybierz, kt\u00f3rego dostawc\u0119 uwierzytelnienia chcesz u\u017cywa\u0107 z Point.",
-                "title": "Dostawca uwierzytelnienia"
+                "title": "Wybierz metod\u0119 uwierzytelniania"
             }
         }
     }

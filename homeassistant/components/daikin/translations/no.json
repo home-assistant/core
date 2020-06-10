@@ -1,16 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert",
-            "device_fail": "Uventet feil under oppretting av enheten.",
-            "device_timeout": "Tidsavbrudd for tilkobling til enheten."
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert",
-                    "key": "Godkjenningsn\u00f8kkel (brukes bare av BRP072C/Zena enheter)",
-                    "password": "Enhetspassord (brukes bare av SKYFi-enheter)"
+                    "host": "Vert"
                 },
                 "description": "Fyll inn IP-adressen til din Daikin AC.",
                 "title": "Konfigurer Daikin AC"

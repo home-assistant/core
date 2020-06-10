@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "Vennligst f\u00f8lg lenken nedenfor og <b>Godta</b> tilgang til Logi Circle kontoen din, kom deretter tilbake og trykk <b>Send</b> nedenfor. \n\n [Link]({authorization_url})",
+                "description": "Vennligst f\u00f8lg lenken nedenfor og **Godta** tilgang til Logi Circle kontoen din, kom deretter tilbake og trykk **Send** nedenfor. \n\n [Link]({authorization_url})",
                 "title": "Godkjenn med Logi Circle"
             },
             "user": {

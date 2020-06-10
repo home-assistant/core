@@ -1,13 +1,11 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Falha ao conectar, tente novamente",
-            "unknown": "Erro inesperado"
+            "cannot_connect": "Falha ao conectar, tente novamente"
         },
         "step": {
             "user": {
                 "data": {
-                    "certificate": "Certificado",
                     "continuous": "Cont\u00ednuo",
                     "delay": "Atraso",
                     "host": "Nome servidor ou endere\u00e7o IP",

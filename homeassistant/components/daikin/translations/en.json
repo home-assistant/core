@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
-            "device_fail": "Unexpected error creating device.",
-            "device_timeout": "Timeout connecting to the device."
+            "already_configured": "Device is already configured"
         },
         "error": {
             "device_fail": "Unexpected error",
@@ -17,7 +15,7 @@
                     "key": "API Key",
                     "password": "Password"
                 },
-                "description": "Enter IP address of your Daikin AC.",
+                "description": "Enter IP address of your Daikin AC.\n\nNote that API Key and Password are used by BRP072Cxx and SKYFi devices respectively.",
                 "title": "Configure Daikin AC"
             }
         }

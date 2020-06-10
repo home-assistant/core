@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Nadzornik je \u017ee konfiguriran",
-            "no_local_user": "Nobenega lokalnega uporabnika ni mogo\u010de najti, konfigurirajte lokalni ra\u010dun na krmilniku in poskusite znova",
-            "user_privilege": "Uporabnik mora biti skrbnik"
+            "already_configured": "Nadzornik je \u017ee konfiguriran"
         },
         "error": {
             "faulty_credentials": "Napa\u010dni uporabni\u0161ki podatki",
@@ -29,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Odjemalci pod nadzorom dostopa do omre\u017eja",
-                    "new_client": "Dodajte novega odjemalca za nadzor dostopa do omre\u017eja",
                     "poe_clients": "Dovoli POE nadzor strank"
                 },
                 "description": "Konfigurirajte nadzor odjemalcev \n\n Ustvarite stikala za serijske \u0161tevilke, za katere \u017eelite nadzirati dostop do omre\u017eja.",

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\uc88c\ud45c\uac12\uc774 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
         "error": {
             "identifier_exists": "\uc88c\ud45c\uac12\uc774 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "invalid_api_key": "\uc798\ubabb\ub41c API \ud0a4"

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Odbiornik DirecTV jest ju\u017c skonfigurowany.",
-            "unknown": "[%key_id:common::config_flow::error::unknown%]"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
         },
         "flow_title": "DirecTV: {name}",
         "step": {
@@ -16,14 +16,12 @@
                     "one": "jeden",
                     "other": "inne"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 {name}?",
-                "title": "Po\u0142\u0105czenie z odbiornikiem DirecTV"
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
             },
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]"
-                },
-                "title": "Po\u0142\u0105czenie z odbiornikiem DirecTV"
+                    "host": "Nazwa hosta lub adres IP"
+                }
             }
         }
     }

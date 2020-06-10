@@ -1,81 +1,117 @@
-"""Insteon product database."""
-import collections
+"""Utility methods for the Insteon platform."""
+import logging
 
-from insteonplm.states.cover import Cover
-from insteonplm.states.dimmable import (
-    DimmableKeypadA,
-    DimmableRemote,
-    DimmableSwitch,
-    DimmableSwitch_Fan,
-)
-from insteonplm.states.onOff import (
-    OnOffKeypad,
-    OnOffKeypadA,
-    OnOffSwitch,
-    OnOffSwitch_OutletBottom,
-    OnOffSwitch_OutletTop,
-    OpenClosedRelay,
-)
-from insteonplm.states.sensor import (
-    IoLincSensor,
-    LeakSensorDryWet,
-    OnOffSensor,
-    SmokeCO2Sensor,
-    VariableSensor,
-)
-from insteonplm.states.x10 import (
-    X10AllLightsOffSensor,
-    X10AllLightsOnSensor,
-    X10AllUnitsOffSensor,
-    X10DimmableSwitch,
+from pyinsteon.device_types import (
+    ClimateControl_Thermostat,
+    ClimateControl_WirelessThermostat,
+    DimmableLightingControl,
+    DimmableLightingControl_DinRail,
+    DimmableLightingControl_FanLinc,
+    DimmableLightingControl_InLineLinc,
+    DimmableLightingControl_KeypadLinc_6,
+    DimmableLightingControl_KeypadLinc_8,
+    DimmableLightingControl_LampLinc,
+    DimmableLightingControl_OutletLinc,
+    DimmableLightingControl_SwitchLinc,
+    DimmableLightingControl_ToggleLinc,
+    GeneralController_ControlLinc,
+    GeneralController_MiniRemote_4,
+    GeneralController_MiniRemote_8,
+    GeneralController_MiniRemote_Switch,
+    GeneralController_RemoteLinc,
+    SecurityHealthSafety_DoorSensor,
+    SecurityHealthSafety_LeakSensor,
+    SecurityHealthSafety_MotionSensor,
+    SecurityHealthSafety_OpenCloseSensor,
+    SecurityHealthSafety_Smokebridge,
+    SensorsActuators_IOLink,
+    SwitchedLightingControl,
+    SwitchedLightingControl_ApplianceLinc,
+    SwitchedLightingControl_DinRail,
+    SwitchedLightingControl_InLineLinc,
+    SwitchedLightingControl_KeypadLinc_6,
+    SwitchedLightingControl_KeypadLinc_8,
+    SwitchedLightingControl_OnOffOutlet,
+    SwitchedLightingControl_OutletLinc,
+    SwitchedLightingControl_SwitchLinc,
+    SwitchedLightingControl_ToggleLinc,
+    WindowCovering,
+    X10Dimmable,
+    X10OnOff,
     X10OnOffSensor,
-    X10OnOffSwitch,
 )
 
-State = collections.namedtuple("Product", "stateType platform")
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.climate import DOMAIN as CLIMATE
+from homeassistant.components.cover import DOMAIN as COVER
+from homeassistant.components.fan import DOMAIN as FAN
+from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.switch import DOMAIN as SWITCH
+
+from .const import ON_OFF_EVENTS
+
+_LOGGER = logging.getLogger(__name__)
+
+DEVICE_PLATFORM = {
+    DimmableLightingControl: {LIGHT: [1], ON_OFF_EVENTS: [1]},
+    DimmableLightingControl_DinRail: {LIGHT: [1], ON_OFF_EVENTS: [1]},
+    DimmableLightingControl_FanLinc: {LIGHT: [1], FAN: [2], ON_OFF_EVENTS: [1, 2]},
+    DimmableLightingControl_InLineLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
+    DimmableLightingControl_KeypadLinc_6: {
+        LIGHT: [1],
+        SWITCH: [3, 4, 5, 6],
+        ON_OFF_EVENTS: [1, 3, 4, 5, 6],
+    },
+    DimmableLightingControl_KeypadLinc_8: {
+        LIGHT: [1],
+        SWITCH: range(2, 9),
+        ON_OFF_EVENTS: range(1, 9),
+    },
+    DimmableLightingControl_LampLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
+    DimmableLightingControl_OutletLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
+    DimmableLightingControl_SwitchLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
+    DimmableLightingControl_ToggleLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
+    GeneralController_ControlLinc: {ON_OFF_EVENTS: [1]},
+    GeneralController_MiniRemote_4: {ON_OFF_EVENTS: range(1, 5)},
+    GeneralController_MiniRemote_8: {ON_OFF_EVENTS: range(1, 9)},
+    GeneralController_MiniRemote_Switch: {ON_OFF_EVENTS: [1, 2]},
+    GeneralController_RemoteLinc: {ON_OFF_EVENTS: [1]},
+    SecurityHealthSafety_DoorSensor: {BINARY_SENSOR: [1, 3, 4], ON_OFF_EVENTS: [1]},
+    SecurityHealthSafety_LeakSensor: {BINARY_SENSOR: [2, 4]},
+    SecurityHealthSafety_MotionSensor: {BINARY_SENSOR: [1, 2, 3], ON_OFF_EVENTS: [1]},
+    SecurityHealthSafety_OpenCloseSensor: {BINARY_SENSOR: [1]},
+    SecurityHealthSafety_Smokebridge: {BINARY_SENSOR: [1, 2, 3, 4, 6, 7]},
+    SensorsActuators_IOLink: {SWITCH: [1], BINARY_SENSOR: [2], ON_OFF_EVENTS: [1, 2]},
+    SwitchedLightingControl: {SWITCH: [1], ON_OFF_EVENTS: [1]},
+    SwitchedLightingControl_ApplianceLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
+    SwitchedLightingControl_DinRail: {SWITCH: [1], ON_OFF_EVENTS: [1]},
+    SwitchedLightingControl_InLineLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
+    SwitchedLightingControl_KeypadLinc_6: {
+        SWITCH: [1, 3, 4, 5, 6],
+        ON_OFF_EVENTS: [1, 3, 4, 5, 6],
+    },
+    SwitchedLightingControl_KeypadLinc_8: {
+        SWITCH: range(1, 9),
+        ON_OFF_EVENTS: range(1, 9),
+    },
+    SwitchedLightingControl_OnOffOutlet: {SWITCH: [1, 2], ON_OFF_EVENTS: [1, 2]},
+    SwitchedLightingControl_OutletLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
+    SwitchedLightingControl_SwitchLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
+    SwitchedLightingControl_ToggleLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
+    ClimateControl_Thermostat: {CLIMATE: [1]},
+    ClimateControl_WirelessThermostat: {CLIMATE: [1]},
+    WindowCovering: {COVER: [1]},
+    X10Dimmable: {LIGHT: [1]},
+    X10OnOff: {SWITCH: [1]},
+    X10OnOffSensor: {BINARY_SENSOR: [1]},
+}
 
 
-class IPDB:
-    """Embodies the INSTEON Product Database static data and access methods."""
+def get_device_platforms(device):
+    """Return the HA platforms for a device type."""
+    return DEVICE_PLATFORM.get(type(device), {}).keys()
 
-    def __init__(self):
-        """Create the INSTEON Product Database (IPDB)."""
-        self.states = [
-            State(Cover, "cover"),
-            State(OnOffSwitch_OutletTop, "switch"),
-            State(OnOffSwitch_OutletBottom, "switch"),
-            State(OpenClosedRelay, "switch"),
-            State(OnOffSwitch, "switch"),
-            State(OnOffKeypadA, "switch"),
-            State(OnOffKeypad, "switch"),
-            State(LeakSensorDryWet, "binary_sensor"),
-            State(IoLincSensor, "binary_sensor"),
-            State(SmokeCO2Sensor, "sensor"),
-            State(OnOffSensor, "binary_sensor"),
-            State(VariableSensor, "sensor"),
-            State(DimmableSwitch_Fan, "fan"),
-            State(DimmableSwitch, "light"),
-            State(DimmableRemote, "on_off_events"),
-            State(DimmableKeypadA, "light"),
-            State(X10DimmableSwitch, "light"),
-            State(X10OnOffSwitch, "switch"),
-            State(X10OnOffSensor, "binary_sensor"),
-            State(X10AllUnitsOffSensor, "binary_sensor"),
-            State(X10AllLightsOnSensor, "binary_sensor"),
-            State(X10AllLightsOffSensor, "binary_sensor"),
-        ]
 
-    def __len__(self):
-        """Return the number of INSTEON state types mapped to HA platforms."""
-        return len(self.states)
-
-    def __iter__(self):
-        """Itterate through the INSTEON state types to HA platforms."""
-        yield from self.states
-
-    def __getitem__(self, key):
-        """Return a Home Assistant platform from an INSTEON state type."""
-        for state in self.states:
-            if isinstance(key, state.stateType):
-                return state
-        return None
+def get_platform_groups(device, domain) -> dict:
+    """Return the platforms that a device belongs in."""
+    return DEVICE_PLATFORM.get(type(device), {}).get(domain, {})

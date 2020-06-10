@@ -23,8 +23,7 @@
                     "username": "Benotzernumm",
                     "verify_ssl": "AdGuard Home benotzt een eegenen Zertifikat"
                 },
-                "description": "Konfigur\u00e9iert \u00e4r AdGuard Home Instanz fir d'Iwwerwaachung an d'Kontroll z'erlaben.",
-                "title": "Verbannt \u00e4ren AdGuard Home"
+                "description": "Konfigur\u00e9iert \u00e4r AdGuard Home Instanz fir d'Iwwerwaachung an d'Kontroll z'erlaben."
             }
         }
     }

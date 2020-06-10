@@ -10,9 +10,9 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Kod (u\u017cywany w interfejsie Home Assistant'a)",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "username": "[%key_id:common::config_flow::data::email%]"
+                    "code": "Kod (u\u017cywany w interfejsie Home Assistanta)",
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
                 },
                 "title": "Wprowad\u017a dane"
             }
@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "code": "Kod (u\u017cywany w interfejsie u\u017cytkownika Home Assistant'a)"
+                    "code": "Kod (u\u017cywany w interfejsie u\u017cytkownika Home Assistanta)"
                 },
                 "title": "Konfiguracja SimpliSafe"
             }

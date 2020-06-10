@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE
 
 from . import CLIMATE, DOMAIN, AtagEntity
 
@@ -66,9 +66,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self.coordinator.atag.climate.temp_unit in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
-            return self.coordinator.atag.climate.temp_unit
-        return None
+        return self.coordinator.atag.climate.temp_unit
 
     @property
     def current_temperature(self) -> Optional[float]:

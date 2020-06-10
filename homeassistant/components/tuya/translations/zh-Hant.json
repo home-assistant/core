@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Tuya \u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
             "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548",
             "conn_error": "\u9023\u7dda\u5931\u6557",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"

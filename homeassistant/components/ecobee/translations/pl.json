@@ -14,10 +14,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "[%key_id:common::config_flow::data::api_key%]"
+                    "api_key": "Klucz API"
                 },
                 "description": "Prosz\u0119 wprowadzi\u0107 klucz API uzyskany na ecobee.com.",
-                "title": "[%key_id:common::config_flow::data::api_key%]"
+                "title": "Klucz API"
             }
         }
     }
