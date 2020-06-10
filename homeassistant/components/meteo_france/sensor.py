@@ -185,8 +185,8 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
         """Return the state attributes."""
 
         if self.coordinator.data.next_rain_date_locale():
-            rain_text_forecast = "La pluie est attendue à {}.".self.coordinator.data.next_rain_date_locale().strftime(
-                "%H:%M"
+            rain_text_forecast = "La pluie est attendue à {}.".format(
+                self.coordinator.data.next_rain_date_locale().strftime("%H:%M")
             )
         else:
             rain_text_forecast = "Pas de pluie dans la prochaine heure."
