@@ -113,12 +113,10 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
 async def test_device_left(hass, zigpy_dev_basic, zha_dev_basic):
     """Device leaving the network should become unavailable."""
 
-    assert zha_dev_basic.available is False
-
-    await async_enable_traffic(hass, [zha_dev_basic])
     assert zha_dev_basic.available is True
 
     get_zha_gateway(hass).device_left(zigpy_dev_basic)
+    await hass.async_block_till_done()
     assert zha_dev_basic.available is False
 
 
