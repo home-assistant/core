@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-PLATFORMS = ["light", "sensor"]
+PLATFORMS = ["light"]
 
 NEPTUNE_APEX = "neptune_apex"
 NEPTUNE_APEX_COORDINATOR = "neptune_apex_coordinator"
