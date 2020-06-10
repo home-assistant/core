@@ -95,6 +95,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "No com ports found.  Need a valid RS485 device to communicate."
                 )
                 defaultcomport = "No COM ports found"
+                errors["base"] = "no_serial_ports"
             self._comportslist = comportslist
             self._defaultcomport = defaultcomport
 
