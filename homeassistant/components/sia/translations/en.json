@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured":  "This SIA Port is already used, please select another or recreate the existing with an extra account."
+        },
+        "error": {
+            "invalid_key_format": "The key is not a hex value, please use only 0-9 and A-F.",
+            "invalid_key_length": "The key is not the right length, it has to be 16, 24 or 32 characters hex characters.",
+            "invalid_account_format": "The account is not a hex value, please use only 0-9 and A-F.",
+            "invalid_account_length": "The account is not the right length, it has to be between 3 and 16 characters.",
+            "invalid_ping": "The ping interval needs to be between 1 and 1440 minutes.",
+            "invalid_zones": "There needs to be at least 1 zone.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "port": "Port",
+                    "account": "Account",
+                    "encryption_key": "Encryption Key",
+                    "ping_interval": "Ping Interval (min)",
+                    "zones": "Number of zones for the account",
+                    "additional_account": "Add more accounts?"
+                },
+                "title": "Create a connection for SIA DC-09 based alarm systems."
+            }
+        }
+    },
+    "title": "SIA Alarm Systems"
+}
