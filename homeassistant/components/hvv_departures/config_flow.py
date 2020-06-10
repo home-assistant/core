@@ -77,11 +77,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data = user_input
                 return await self.async_step_station()
 
-            return self.async_show_form(
-                step_id="user", data_schema=SCHEMA_STEP_USER, errors=errors
-            )
-
-        return self.async_show_form(step_id="user", data_schema=SCHEMA_STEP_USER)
+        return self.async_show_form(
+            step_id="user", data_schema=SCHEMA_STEP_USER, errors=errors
+        )
 
     async def async_step_station(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
@@ -107,22 +105,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for station in stations
             }
 
-            schema = vol.Schema(
-                {vol.Required(CONF_STATION): vol.In(list(self.stations.keys()))}
-            )
+            # schema
 
-            return self.async_show_form(
-                step_id="station_select", data_schema=schema, errors=errors
-            )
+            return await self.async_step_station_select()
 
         return self.async_show_form(step_id="station", data_schema=SCHEMA_STEP_STATION)
 
     async def async_step_station_select(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
+
+        schema = vol.Schema(
+            {vol.Required(CONF_STATION): vol.In(list(self.stations.keys()))}
+        )
+
         if user_input is None:
-            return self.async_show_form(
-                step_id="station_select", data_schema=SCHEMA_STEP_STATION
-            )
+            return self.async_show_form(step_id="station_select", data_schema=schema)
 
         self.data.update({"station": self.stations[user_input[CONF_STATION]]})
 
