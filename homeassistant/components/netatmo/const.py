@@ -61,6 +61,7 @@ ATTR_EVENT_TYPE = "event_type"
 ATTR_HEATING_POWER_REQUEST = "heating_power_request"
 ATTR_HOME_ID = "home_id"
 ATTR_HOME_NAME = "home_name"
+ATTR_PERSON = "person"
 ATTR_PERSONS = "persons"
 ATTR_IS_KNOWN = "is_known"
 ATTR_FACE_URL = "face_url"
@@ -71,3 +72,5 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=5)
 
 SERVICE_SETSCHEDULE = "set_schedule"
+SERVICE_SETPERSONSHOME = "set_persons_home"
+SERVICE_SETPERSONAWAY = "set_person_away"

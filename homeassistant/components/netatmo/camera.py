@@ -14,7 +14,20 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import ATTR_PSEUDO, DATA_HANDLER, DATA_PERSONS, DOMAIN, MANUFACTURER, MODELS
+from .const import (
+    ATTR_HOME_NAME,
+    ATTR_PERSON,
+    ATTR_PERSONS,
+    ATTR_PSEUDO,
+    DATA_HANDLER,
+    DATA_HOMES,
+    DATA_PERSONS,
+    DOMAIN,
+    MANUFACTURER,
+    MODELS,
+    SERVICE_SETPERSONAWAY,
+    SERVICE_SETPERSONSHOME,
+)
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +41,21 @@ DEFAULT_QUALITY = "high"
 VALID_QUALITIES = ["high", "medium", "low", "poor"]
 
 SCHEMA_SERVICE_SETLIGHTAUTO = vol.Schema(
-    {vol.Optional(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN)}
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN),
+        vol.Required(ATTR_HOME_NAME): cv.string,
+    }
+)
+
+SCHEMA_SERVICE_SETPERSONSHOME = vol.Schema(
+    {
+        vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(ATTR_HOME_NAME): cv.string,
+    }
+)
+
+SCHEMA_SERVICE_SETPERSONAWAY = vol.Schema(
+    {vol.Optional(ATTR_PERSON): cv.string, vol.Required(ATTR_HOME_NAME): cv.string}
 )
 
 
@@ -79,6 +106,73 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await get_entities(), True)
+
+    def _service_setpersonshome(service):
+        """Service to change current home schedule."""
+        home_id = None
+        for hid, name in hass.data[DOMAIN][DATA_HOMES].items():
+            if name == service.data.get(ATTR_HOME_NAME):
+                home_id = hid
+
+        if not home_id:
+            _LOGGER.error("You passed an invalid home")
+            return
+
+        persons = service.data.get(ATTR_PERSONS)
+        person_ids = []
+        for person in persons:
+            for pid, data in data_handler.data[data_class].persons.items():
+                if data.get("pseudo") == person:
+                    person_ids.append(pid)
+
+        data_handler.data[data_class].set_persons_home(
+            person_ids=person_ids, home_id=home_id
+        )
+        _LOGGER.info("Set %s as at home", persons)
+
+    def _service_setpersonaway(service):
+        """Service to mark a person as away or set the home as empty."""
+        home_id = None
+        for hid, name in hass.data[DOMAIN][DATA_HOMES].items():
+            if name == service.data.get(ATTR_HOME_NAME):
+                home_id = hid
+
+        if not home_id:
+            _LOGGER.error("You passed an invalid home")
+            return
+
+        person = service.data.get(ATTR_PERSON)
+        person_id = None
+        if person:
+            for pid, data in data_handler.data[data_class].persons.items():
+                if data.get("pseudo") == person:
+                    person_id = pid
+
+        if person_id is not None:
+            data_handler.data[data_class].set_persons_away(
+                person_id=person_id, home_id=home_id,
+            )
+            _LOGGER.info("Set %s as away", person)
+
+        else:
+            data_handler.data[data_class].set_persons_away(
+                person_id=person_id, home_id=home_id,
+            )
+            _LOGGER.info("Set home as empty")
+
+    if data_handler.data[data_class] is not None:
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SETPERSONSHOME,
+            _service_setpersonshome,
+            schema=SCHEMA_SERVICE_SETPERSONSHOME,
+        )
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SETPERSONAWAY,
+            _service_setpersonaway,
+            schema=SCHEMA_SERVICE_SETPERSONAWAY,
+        )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
