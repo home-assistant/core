@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2020-06-10T16:13:32Z</date>
+    <groups>
+        <group>
+            <name>Templates</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template Home Assistant</template>
+            <name>Template Home Assistant</name>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Floats Discovery</name>
+                    <type>TRAP</type>
+                    <key>homeassistant.floats_discovery</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>{#KEY}</name>
+                            <type>TRAP</type>
+                            <key>homeassistant.float[{#KEY}]</key>
+                            <delay>0</delay>
+                            <history>1095d</history>
+                            <trends>0</trends>
+                            <value_type>FLOAT</value_type>
+                            <preprocessing>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>14400</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+        </template>
+    </templates>
+</zabbix_export>
