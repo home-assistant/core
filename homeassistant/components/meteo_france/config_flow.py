@@ -2,7 +2,6 @@
 import logging
 
 from meteofrance.client import MeteoFranceClient
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -89,7 +88,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning(places_for_form)
 
             return await self._show_cities_form(places_for_form)
-        else:
+        if places and not user_input:
             user_input = {CONF_CITY: _build_place_key(places[0])}
 
         city_infos = user_input.get(CONF_CITY).split(";")
