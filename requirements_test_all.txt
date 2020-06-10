@@ -191,7 +191,7 @@ colorlog==4.1.0
 construct==2.9.45
 
 # homeassistant.components.coronavirus
-coronavirus==1.1.0
+coronavirus==1.1.1
 
 # homeassistant.scripts.credstash
 # credstash==1.15.0
