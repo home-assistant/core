@@ -180,9 +180,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
             _LOGGER.error("You passed an invalid home")
             return
 
+        schedule_name = service.data.get(ATTR_SCHEDULE_NAME)
         schedule_id = None
         for sid, name in hass.data[DOMAIN][DATA_SCHEDULES][home_id].items():
-            if name == service.data.get(ATTR_SCHEDULE_NAME):
+            if name == schedule_name:
                 schedule_id = sid
 
         if not schedule_id:
