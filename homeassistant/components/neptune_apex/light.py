@@ -16,17 +16,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[NEPTUNE_APEX_COORDINATOR]
 
     async_add_entities(
-        Outlet(coordinator, apex, name)
-        for name in coordinator.data.outlets
+        Outlet(coordinator, apex, name) for name in coordinator.data.outlets
     )
 
 
 class Outlet(Light):
-    """Shoehorn the Apex outlet concept into a hass Light entity.
-
-    This feels gross, but the more you play with Apex, you realize that once you get past
-    a certain point of revulsion, there is beauty in it. And madness.
-    """
+    """Shoehorn the Apex outlet concept into a hass Light entity."""
 
     def __init__(self, coordinator, apex: pynepsys.Apex, name):
         """Initialize this outlet, storing reference to parent Apex."""

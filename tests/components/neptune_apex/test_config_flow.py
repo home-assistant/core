@@ -1,9 +1,9 @@
 """Test the Neptune Apex config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.neptune_apex.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.neptune_apex.const import DOMAIN
+
+from tests.async_mock import patch
 
 
 async def test_form(hass):

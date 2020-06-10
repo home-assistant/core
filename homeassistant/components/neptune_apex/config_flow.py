@@ -38,6 +38,11 @@ class ApexHub:
             raise InvalidAuth
         raise CannotConnect
 
+    async def get_serial_number(self) -> str:
+        """Read the Apex serial number from the device previously connected to via authenticate."""
+        await self.apex.fetch_current_state()
+        return self.apex.serial
+
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
@@ -46,11 +51,11 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     hub = ApexHub(data[CONF_HOST])
 
-    if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
-        raise InvalidAuth
+    await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD])
+    serial = await hub.get_serial_number()
 
     # Return info that you want to store in the config entry.
-    return {"title": "Neptune Apex"}
+    return {"title": "Neptune Apex", "serial": serial}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -65,7 +70,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
+                await self.async_set_unique_id(info["serial"])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
