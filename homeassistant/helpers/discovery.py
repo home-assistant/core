@@ -9,9 +9,8 @@ from typing import Any, Callable, Collection, Dict, Optional, Union
 
 from homeassistant import core, setup
 from homeassistant.const import ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.loader import DEPENDENCY_BLACKLIST, bind_hass
+from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
 EVENT_LOAD_PLATFORM = "load_platform.{}"
@@ -79,9 +78,6 @@ async def async_discover(
     hass_config: ConfigType,
 ) -> None:
     """Fire discovery event. Can ensure a component is loaded."""
-    if component in DEPENDENCY_BLACKLIST:
-        raise HomeAssistantError(f"Cannot discover the {component} component.")
-
     if component is not None and component not in hass.config.components:
         await setup.async_setup_component(hass, component, hass_config)
 
@@ -180,9 +176,6 @@ async def async_load_platform(
     This method is a coroutine.
     """
     assert hass_config, "You need to pass in the real hass config"
-
-    if component in DEPENDENCY_BLACKLIST:
-        raise HomeAssistantError(f"Cannot discover the {component} component.")
 
     setup_success = True
 

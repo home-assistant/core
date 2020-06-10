@@ -31,8 +31,6 @@ if TYPE_CHECKING:
 
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
-DEPENDENCY_BLACKLIST = {"config"}
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_COMPONENTS = "components"
