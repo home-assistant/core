@@ -15,8 +15,6 @@ class Gateway:
     def __init__(self, worker, loop, hass):
         """Initialize the sms gateway."""
         self._worker = worker
-        self._loop = loop
-        self._hass = hass
 
     async def send_sms_async(self, message):
         """Send sms message via the worker."""
