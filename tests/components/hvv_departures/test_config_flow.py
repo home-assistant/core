@@ -63,7 +63,7 @@ async def test_user_flow(hass):
 
         # step: station_select
         result_station_select = await hass.config_entries.flow.async_configure(
-            result_user["flow_id"], {CONF_STATION: "Wartenau (STATION)"},
+            result_user["flow_id"], {CONF_STATION: "Wartenau"},
         )
 
         assert result_station_select["type"] == "create_entry"
