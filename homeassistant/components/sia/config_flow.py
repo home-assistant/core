@@ -128,13 +128,13 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self.data[CONF_ACCOUNTS].append(add_data)
                     await self.async_set_unique_id(self.data[CONF_PORT])
                     self._abort_if_unique_id_configured()
+
                     if not user_input[CONF_ADDITIONAL_ACCOUNTS]:
                         return self.async_create_entry(
                             title=f"SIA Alarm on port {self.data[CONF_PORT]}",
                             data=self.data,
                         )
-                    else:
-                        return await self.async_step_add_account()
+                    return await self.async_step_add_account()
             except InvalidKeyFormatError:
                 errors["base"] = "invalid_key_format"
             except InvalidKeyLengthError:

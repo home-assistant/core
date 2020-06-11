@@ -185,57 +185,21 @@ class SIAHub:
                 self._get_entity_id(account, zone, entity_type),
                 f"{self._port} - {account} - Last Heartbeat",
             )
-        else:
-            if entity_type:
-                return (
-                    self._get_entity_id(account, zone, entity_type),
-                    f"{self._port} - {account} - zone {zone} - {entity_type}",
-                )
-            elif sensor_type_constructor == "SIABinarySensor":
-                new_sensor = SIABinarySensor(
-                    sensor_id,
-                    sensor_name,
-                    sensor_type,
-                    zone,
-                    ping,
-                    self._hass,
-                    account,
-                )
-            elif sensor_type_constructor == "SIASensor":
-                new_sensor = SIASensor(
-                    sensor_id,
-                    sensor_name,
-                    sensor_type,
-                    zone,
-                    ping,
-                    self._hass,
-                    account,
-                )
-            self.states[sensor_id] = new_sensor
-        else:
-            _LOGGER.warning("Hub: Upsert Sensor: Unknown device type: %s", sensor_type)
+        if entity_type:
+            return (
+                self._get_entity_id(account, zone, entity_type),
+                f"{self._port} - {account} - zone {zone} - {entity_type}",
+            )
+        return None
 
     def _get_entity_id(self, account: str, zone: int = 0, entity_type: str = None):
         """Give back a entity_id according to the variables, defaults to the hub sensor entity_id."""
         zone = int(zone)
         if zone == 0:
             return f"{self._port}_{account}_{HUB_SENSOR_NAME}"
-        else:
-            if sensor_type:
-                return f"{self._port}_{account}_{zone}_{sensor_type}"
-            else:
-                return None
-
-    def _get_sensor_name(self, account, zone=0, sensor_type=None):
-        """Give back a entity_id according to the variables, defaults to the hub sensor entity_id."""
-        zone = int(zone)
-        if zone == 0:
-            return f"{self._port} - {account} - Last Heartbeat"
-        else:
-            if sensor_type:
-                return f"{self._port} - {account} - zone {zone} - {sensor_type}"
-            else:
-                return None
+        if entity_type:
+            return f"{self._port}_{account}_{zone}_{entity_type}"
+        return None
 
     def _get_ping_interval(self, account: str):
         """Return the ping interval for specified account."""
