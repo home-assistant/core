@@ -78,35 +78,35 @@ VOLTAGE_SENSORS = {
     "phase_voltages_b": [
         "Phase voltages - B",
         "mdi:flash",
-        ATTR_VOLTAGE,
+        VOLT,
         "phase_voltage_b",
         ["TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "phase_voltages_c": [
         "Phase voltages - C",
         "mdi:flash",
-        ATTR_VOLTAGE,
+        VOLT,
         "phase_voltage_c",
         ["THREE_STAR"],
     ],
     "line_voltages_a": [
         "Line voltages - A",
         "mdi:flash",
-        ATTR_VOLTAGE,
+        VOLT,
         "line_voltage_a",
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "line_voltages_b": [
         "Line voltages - B",
         "mdi:flash",
-        ATTR_VOLTAGE,
+        VOLT,
         "line_voltage_b",
         ["TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "line_voltages_c": [
         "Line voltages - C",
         "mdi:flash",
-        ATTR_VOLTAGE,
+        VOLT,
         "line_voltage_c",
         ["THREE_STAR", "THREE_DELTA"],
     ],
@@ -117,11 +117,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee sensor."""
     smappee_base = hass.data[DOMAIN][BASE]
 
-    dev = []
+    entities = []
     for service_location in smappee_base.smappee.service_locations.values():
         # Add all basic sensors (realtime values and aggregators)
         for sensor in TREND_SENSORS:
-            dev.append(
+            entities.append(
                 SmappeeSensor(
                     smappee_base=smappee_base,
                     service_location=service_location,
@@ -133,7 +133,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Add solar sensors
         if service_location.has_solar_production:
             for sensor in SOLAR_SENSORS:
-                dev.append(
+                entities.append(
                     SmappeeSensor(
                         smappee_base=smappee_base,
                         service_location=service_location,
@@ -144,7 +144,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         # Add all CT measurements
         for measurement_id, measurement in service_location.measurements.items():
-            dev.append(
+            entities.append(
                 SmappeeSensor(
                     smappee_base=smappee_base,
                     service_location=service_location,
@@ -161,7 +161,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Add phase- and line voltages
         for sensor_name, sensor in VOLTAGE_SENSORS.items():
             if service_location.phase_type in sensor[4]:
-                dev.append(
+                entities.append(
                     SmappeeSensor(
                         smappee_base=smappee_base,
                         service_location=service_location,
@@ -173,7 +173,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Add Gas and Water sensors
         for sensor_id, sensor in service_location.sensors.items():
             for channel in sensor.channels:
-                dev.append(
+                entities.append(
                     SmappeeSensor(
                         smappee_base=smappee_base,
                         service_location=service_location,
@@ -189,7 +189,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
-    async_add_entities(dev, True)
+    async_add_entities(entities, True)
 
 
 class SmappeeSensor(Entity):
