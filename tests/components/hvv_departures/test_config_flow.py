@@ -285,8 +285,6 @@ async def test_options_flow(hass):
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     with patch(
-        "homeassistant.components.hvv_departures.async_setup_entry", return_value=True
-    ), patch(
         "homeassistant.components.hvv_departures.hub.GTI.init", return_value=True,
     ), patch(
         "pygti.gti.GTI.departureList", return_value=FIXTURE_DEPARTURE_LIST,
