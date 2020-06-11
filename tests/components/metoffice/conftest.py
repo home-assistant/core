@@ -2,7 +2,7 @@
 from datapoint.exceptions import APIException
 import pytest
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 
 
 @pytest.fixture()
@@ -10,8 +10,10 @@ def mock_simple_manager_fail():
     """Mock datapoint Manager with default values for testing in config_flow."""
     with patch("datapoint.Manager") as mock_manager:
         instance = mock_manager.return_value
-        instance.get_nearest_forecast_site.return_value = patch(exception=APIException)
-        instance.get_forecast_for_site.return_value = patch(exception=APIException)
+        instance.get_nearest_forecast_site.return_value = AsyncMock(
+            exception=APIException
+        )
+        instance.get_forecast_for_site.return_value = AsyncMock(exception=APIException)
         instance.latitude = None
         instance.longitude = None
         instance.site = None
