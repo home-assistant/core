@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "port": "Serielle Port",
+                    "port": "Port",
                     "source_1": "Numm vun der Quell #1",
                     "source_2": "Numm vun der Quell #2",
                     "source_3": "Numm vun der Quell #3",
