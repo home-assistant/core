@@ -50,7 +50,6 @@ STAGE_1_INTEGRATIONS = {
     # as possible so problem integrations can
     # be removed
     "frontend",
-    "config",
 }
 
 

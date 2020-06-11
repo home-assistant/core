@@ -197,7 +197,7 @@ aioimaplib==0.7.15
 aiokafka==0.5.1
 
 # homeassistant.components.kef
-aiokef==0.2.9
+aiokef==0.2.10
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
@@ -336,7 +336,7 @@ beautifulsoup4==4.9.0
 beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
-bellows==0.16.2
+bellows==0.17.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.5
@@ -442,7 +442,7 @@ connect-box==0.2.5
 construct==2.9.45
 
 # homeassistant.components.coronavirus
-coronavirus==1.1.0
+coronavirus==1.1.1
 
 # homeassistant.scripts.credstash
 # credstash==1.15.0
@@ -705,7 +705,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.5
+hass-nabucasa==0.34.6
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -744,7 +744,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.5
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.17
+homematicip==0.10.18
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1475,7 +1475,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.3
+pymyq==2.0.4
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1988,7 +1988,7 @@ solaredge-local==0.2.0
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.2.2
+solax==0.2.3
 
 # homeassistant.components.honeywell
 somecomfort==0.5.2
@@ -2270,7 +2270,7 @@ zigpy-xbee==0.12.1
 zigpy-zigate==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.20.4
+zigpy==0.21.0
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0

@@ -220,8 +220,9 @@ class TestMediaPlayer(unittest.TestCase):
                 "shuffle": self.mock_shuffle_switch_id,
             },
         }
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

@@ -6,6 +6,7 @@
   "dependencies": [
     "api",
     "auth",
+    "config",
     "device_automation",
     "http",
     "lovelace",

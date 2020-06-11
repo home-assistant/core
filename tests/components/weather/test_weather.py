@@ -33,8 +33,9 @@ class TestWeather(unittest.TestCase):
             self.hass, weather.DOMAIN, {"weather": {"platform": "demo"}}
         )
         self.hass.block_till_done()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

@@ -3,7 +3,6 @@ from collections.abc import Mapping
 from datetime import timedelta
 import json
 import logging
-import shlex
 import subprocess
 
 import voluptuous as vol
@@ -171,7 +170,7 @@ class CommandSensorData:
             pass
         else:
             # Template used. Construct the string used in the shell
-            command = str(" ".join([prog] + shlex.split(rendered_args)))
+            command = f"{prog} {rendered_args}"
         try:
             _LOGGER.debug("Running command: %s", command)
             return_value = subprocess.check_output(
