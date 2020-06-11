@@ -92,7 +92,7 @@ async def test_no_devices(hass):
         )
 
         assert result["type"] == "abort"
-        assert result["reason"] == "no_devices"
+        assert result["reason"] == "no_devices_found"
 
 
 async def test_ignore_existing_and_abort(hass):

@@ -27,8 +27,9 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices": "Could not find any new devices",
-      "mqtt_required": "The MQTT integration is not set up"
+      "mqtt_required": "The MQTT integration is not set up",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }

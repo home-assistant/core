@@ -120,7 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({vol.Required(CONF_DEVICE_ID): vol.In(names)}),
             )
 
-        return self.async_abort(reason="no_devices")
+        return self.async_abort(reason="no_devices_found")
 
     async def async_step_topic(self, user_input=None):
         """Model and topic configuration for Shelly device."""
