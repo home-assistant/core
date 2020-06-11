@@ -22,6 +22,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from . import (
+    CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED,
     DATA_AD,
@@ -46,7 +47,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     auto_bypass = discovery_info[CONF_AUTO_BYPASS]
     code_arm_required = discovery_info[CONF_CODE_ARM_REQUIRED]
-    entity = AlarmDecoderAlarmPanel(auto_bypass, code_arm_required)
+    alt_night_mode = discovery_info[CONF_ALT_NIGHT_MODE]
+    entity = AlarmDecoderAlarmPanel(auto_bypass, code_arm_required, alt_night_mode)
     add_entities([entity])
 
     def alarm_toggle_chime_handler(service):
@@ -77,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, auto_bypass, code_arm_required):
+    def __init__(self, auto_bypass, code_arm_required, alt_night_mode):
         """Initialize the alarm panel."""
         self._display = ""
         self._name = "Alarm Panel"
@@ -93,6 +95,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self._zone_bypassed = None
         self._auto_bypass = auto_bypass
         self._code_arm_required = code_arm_required
+        self._alt_night_mode = alt_night_mode
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -178,28 +181,30 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if code:
-            if self._auto_bypass:
-                self.hass.data[DATA_AD].send(f"{code!s}6#")
-            self.hass.data[DATA_AD].send(f"{code!s}2")
-        elif not self._code_arm_required:
-            self.hass.data[DATA_AD].send("#2")
+        self.hass.data[DATA_AD].arm_away(
+            code=code,
+            code_arm_required=self._code_arm_required,
+            alt_night_mode=self._alt_night_mode,
+            auto_bypass=self._auto_bypass,
+        )
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if code:
-            if self._auto_bypass:
-                self.hass.data[DATA_AD].send(f"{code!s}6#")
-            self.hass.data[DATA_AD].send(f"{code!s}3")
-        elif not self._code_arm_required:
-            self.hass.data[DATA_AD].send("#3")
+        self.hass.data[DATA_AD].arm_home(
+            code=code,
+            code_arm_required=self._code_arm_required,
+            alt_night_mode=self._alt_night_mode,
+            auto_bypass=self._auto_bypass,
+        )
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        if code:
-            self.hass.data[DATA_AD].send(f"{code!s}7")
-        elif not self._code_arm_required:
-            self.hass.data[DATA_AD].send("#7")
+        self.hass.data[DATA_AD].arm_night(
+            code=code,
+            code_arm_required=self._code_arm_required,
+            alt_night_mode=self._alt_night_mode,
+            auto_bypass=self._auto_bypass,
+        )
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""
