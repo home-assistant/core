@@ -44,17 +44,19 @@ class MetOfficeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 f"{user_input[CONF_LATITUDE]}_{user_input[CONF_LONGITUDE]}"
             )
             self._abort_if_unique_id_configured()
+
             try:
                 info = await validate_input(self.hass, user_input)
-                user_input[CONF_NAME] = info["site_name"]
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                user_input[CONF_NAME] = info["site_name"]
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
 
         data_schema = vol.Schema(
             {

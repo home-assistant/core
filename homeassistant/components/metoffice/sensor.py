@@ -4,6 +4,8 @@ import logging
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
     LENGTH_KILOMETERS,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
@@ -32,35 +34,52 @@ ATTR_SENSOR_ID = "sensor_id"
 ATTR_SITE_ID = "site_id"
 ATTR_SITE_NAME = "site_name"
 
-# Sensor types are defined as: variable -> title, units, icon, enabled by default
+# Sensor types are defined as:
+#   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default
 SENSOR_TYPES = {
-    "name": ["Station Name", None, "mdi:label-outline", False],
+    "name": ["Station Name", None, None, "mdi:label-outline", False],
     "weather": [
         "Weather",
+        None,
         None,
         "mdi:weather-sunny",  # but will adapt to current conditions
         True,
     ],
-    "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer", True],
+    "temperature": ["Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None, True],
     "feels_like_temperature": [
         "Feels Like Temperature",
+        DEVICE_CLASS_TEMPERATURE,
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         False,
     ],
-    "wind_speed": ["Wind Speed", SPEED_MILES_PER_HOUR, "mdi:weather-windy", True],
-    "wind_direction": ["Wind Direction", None, "mdi:compass-outline", False],
-    "wind_gust": ["Wind Gust", SPEED_MILES_PER_HOUR, "mdi:weather-windy", False],
-    "visibility": ["Visibility", None, "mdi:eye", False],
-    "visibility_distance": ["Visibility Distance", LENGTH_KILOMETERS, "mdi:eye", False],
-    "uv": ["UV Index", UV_INDEX, "mdi:weather-sunny-alert", True],
+    "wind_speed": [
+        "Wind Speed",
+        None,
+        None,
+        SPEED_MILES_PER_HOUR,
+        "mdi:weather-windy",
+        True,
+    ],
+    "wind_direction": ["Wind Direction", None, None, "mdi:compass-outline", False],
+    "wind_gust": ["Wind Gust", None, SPEED_MILES_PER_HOUR, "mdi:weather-windy", False],
+    "visibility": ["Visibility", None, None, "mdi:eye", False],
+    "visibility_distance": [
+        "Visibility Distance",
+        None,
+        LENGTH_KILOMETERS,
+        "mdi:eye",
+        False,
+    ],
+    "uv": ["UV Index", None, UV_INDEX, "mdi:weather-sunny-alert", True],
     "precipitation": [
         "Probability of Precipitation",
+        None,
         UNIT_PERCENTAGE,
         "mdi:weather-rainy",
         True,
     ],
-    "humidity": ["Humidity", UNIT_PERCENTAGE, "mdi:water-percent", False],
+    "humidity": ["Humidity", DEVICE_CLASS_HUMIDITY, UNIT_PERCENTAGE, None, False],
 }
 
 
@@ -89,7 +108,7 @@ class MetOfficeCurrentSensor(Entity):
 
         self._type = sensor_type
         self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]}"
-        self._unique_id = f"{hass_data[METOFFICE_NAME]}_{SENSOR_TYPES[self._type][0]}_{self._data.latitude}_{self._data.longitude}"
+        self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{self._data.latitude}_{self._data.longitude}"
 
         self.metoffice_site_id = None
         self.metoffice_site_name = None
@@ -136,12 +155,12 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return SENSOR_TYPES[self._type][1]
+        return SENSOR_TYPES[self._type][2]
 
     @property
     def icon(self):
         """Return the icon for the entity card."""
-        value = SENSOR_TYPES[self._type][2]
+        value = SENSOR_TYPES[self._type][3]
         if self._type == "weather":
             value = self.state
             if value == "partlycloudy":
@@ -149,6 +168,11 @@ class MetOfficeCurrentSensor(Entity):
             value = f"mdi:weather-{value}"
 
         return value
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return SENSOR_TYPES[self._type][1]
 
     @property
     def device_state_attributes(self):
@@ -170,6 +194,10 @@ class MetOfficeCurrentSensor(Entity):
         )
         self._update_callback()
 
+    async def async_update(self):
+        """Schedule a custom update via the common entity update service."""
+        await self._coordinator.async_request_refresh()
+
     @callback
     def _update_callback(self) -> None:
         """Load data from integration."""
@@ -186,7 +214,7 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSOR_TYPES[self._type][3]
+        return SENSOR_TYPES[self._type][4]
 
     @property
     def available(self):

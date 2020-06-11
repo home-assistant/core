@@ -20,7 +20,7 @@ from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["weather", "sensor"]
+PLATFORMS = ["sensor", "weather"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -81,6 +81,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-        if len(hass.data[DOMAIN]) == 0:
+        if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
     return unload_ok

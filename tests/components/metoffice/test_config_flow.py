@@ -1,8 +1,6 @@
 """Test the National Weather Service (NWS) config flow."""
 import json
 
-from asynctest import patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.metoffice.const import DOMAIN
 
@@ -13,6 +11,7 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
+from tests.async_mock import patch
 from tests.common import load_fixture
 
 

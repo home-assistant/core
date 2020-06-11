@@ -1,9 +1,6 @@
 """The tests for the Met Office weather component."""
 from datetime import datetime, timedelta
 import json
-import logging
-
-from asynctest import patch
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
@@ -18,9 +15,8 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
-
-_LOGGER = logging.getLogger(__name__)
 
 KINGSLYNN_SENSOR_RESULTS = {
     "weather": ("weather", "sunny"),
@@ -125,13 +121,8 @@ async def test_one_sensor_site_running(hass, requests_mock):
     assert len(running_sensor_ids) > 0
     for running_id in running_sensor_ids:
         sensor = hass.states.get(running_id)
-        _LOGGER.info(
-            f"{sensor.attributes.get('sensor_id')} / {sensor.attributes.get('sensor_name')} currently {sensor.state}"
-        )
-
         sensor_id = sensor.attributes.get("sensor_id")
         sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
-        _LOGGER.info(f"{sensor_id} / {sensor_name} expecting {sensor_value}")
 
         assert sensor.state == sensor_value
         assert (
@@ -297,10 +288,6 @@ async def test_two_sensor_sites_running(hass, requests_mock):
     assert len(running_sensor_ids) > 0
     for running_id in running_sensor_ids:
         sensor = hass.states.get(running_id)
-        _LOGGER.info(
-            f"{sensor.attributes.get('sensor_id')} / {sensor.attributes.get('sensor_name')} currently {sensor.state}"
-        )
-
         sensor_id = sensor.attributes.get("sensor_id")
         if sensor.attributes.get("site_id") == "354107":
             sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
