@@ -17,7 +17,7 @@ To update, run python3 -m script.hassfest
 FLOWS = {}
 """.strip()
 
-UNIQUE_ID_IGNORE = {"esphome", "fritzbox", "heos", "huawei_lte"}
+UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
 
 
 def validate_integration(config: Config, integration: Integration):
@@ -30,16 +30,19 @@ def validate_integration(config: Config, integration: Integration):
         )
         return
 
-    needs_unique_id = integration.domain not in UNIQUE_ID_IGNORE and any(
-        bool(integration.manifest.get(key))
-        for keys in DISCOVERY_INTEGRATIONS.values()
-        for key in keys
+    config_flow = config_flow_file.read_text()
+
+    needs_unique_id = integration.domain not in UNIQUE_ID_IGNORE and (
+        "async_step_hassio" in config_flow
+        or any(
+            bool(integration.manifest.get(key))
+            for keys in DISCOVERY_INTEGRATIONS.values()
+            for key in keys
+        )
     )
 
     if not needs_unique_id:
         return
-
-    config_flow = config_flow_file.read_text()
 
     has_unique_id = (
         "self.async_set_unique_id" in config_flow
