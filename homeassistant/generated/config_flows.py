@@ -171,7 +171,6 @@ FLOWS = [
     "wiffi",
     "withings",
     "wled",
-    "wwlln",
     "xiaomi_aqara",
     "xiaomi_miio",
     "zerproc",
