@@ -7,6 +7,7 @@ import busio  # pylint: disable=import-error
 import digitalio  # pylint: disable=import-error
 import voluptuous as vol
 
+from homeassistant.components.mcp23017 import DEVICES as mcp23017Dict
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
@@ -39,7 +40,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     i2c_address = config.get(CONF_I2C_ADDRESS)
 
     i2c = busio.I2C(board.SCL, board.SDA)
-    mcp = MCP23017(i2c, address=i2c_address)
+
+    with mcp23017Dict:  # Protect global variable access
+        if i2c_address not in mcp23017Dict:
+            mcp23017Dict[i2c_address] = MCP23017(i2c, address=i2c_address)
+
+    mcp = mcp23017Dict[i2c_address]
 
     switches = []
     pins = config.get(CONF_PINS)
@@ -59,8 +65,9 @@ class MCP23017Switch(ToggleEntity):
         self._invert_logic = invert_logic
         self._state = False
 
-        self._pin.direction = digitalio.Direction.OUTPUT
-        self._pin.value = self._invert_logic
+        with mcp23017Dict:  # Protect device HW access
+            self._pin.direction = digitalio.Direction.OUTPUT
+            self._pin.value = self._invert_logic
 
     @property
     def name(self):
@@ -84,12 +91,14 @@ class MCP23017Switch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        self._pin.value = not self._invert_logic
+        with mcp23017Dict:  # Protect device HW access
+            self._pin.value = not self._invert_logic
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self._pin.value = self._invert_logic
+        with mcp23017Dict:  # Protect device HW access
+            self._pin.value = self._invert_logic
         self._state = False
         self.schedule_update_ha_state()

@@ -8,6 +8,7 @@ import digitalio  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.mcp23017 import DEVICES as mcp23017Dict
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -46,7 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     i2c_address = config[CONF_I2C_ADDRESS]
 
     i2c = busio.I2C(board.SCL, board.SDA)
-    mcp = MCP23017(i2c, address=i2c_address)
+
+    with mcp23017Dict:  # Protect global variable access
+        if i2c_address not in mcp23017Dict:
+            mcp23017Dict[i2c_address] = MCP23017(i2c, address=i2c_address)
+
+    mcp = mcp23017Dict[i2c_address]
 
     binary_sensors = []
     pins = config[CONF_PINS]
@@ -70,8 +76,9 @@ class MCP23017BinarySensor(BinarySensorEntity):
         self._pull_mode = pull_mode
         self._invert_logic = invert_logic
         self._state = None
-        self._pin.direction = digitalio.Direction.INPUT
-        self._pin.pull = digitalio.Pull.UP
+        with mcp23017Dict:  # Protect device HW access
+            self._pin.direction = digitalio.Direction.INPUT
+            self._pin.pull = digitalio.Pull.UP
 
     @property
     def name(self):
@@ -85,4 +92,5 @@ class MCP23017BinarySensor(BinarySensorEntity):
 
     def update(self):
         """Update the GPIO state."""
-        self._state = self._pin.value
+        with mcp23017Dict:  # Protect device HW access
+            self._state = self._pin.value
