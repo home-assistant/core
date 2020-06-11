@@ -173,6 +173,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Add Gas and Water sensors
         for sensor_id, sensor in service_location.sensors.items():
             for channel in sensor.channels:
+                gw_icon = (
+                    "mdi:water"
+                    if channel.get("type") == "water"
+                    else "mdi:gas-cylinder",
+                )
                 entities.append(
                     SmappeeSensor(
                         smappee_base=smappee_base,
@@ -180,9 +185,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         sensor="sensor",
                         attributes=[
                             channel.get("name"),
-                            "mdi:water"
-                            if channel.get("type") == "water"
-                            else "mdi:gas-cylinder",
+                            gw_icon,
                             channel.get("uom"),
                             f"{sensor_id}-{channel.get('channel')}",
                         ],
