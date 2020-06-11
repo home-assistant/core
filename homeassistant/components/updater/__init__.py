@@ -1,4 +1,5 @@
 """Support to check for available updates."""
+import asyncio
 from datetime import timedelta
 from distutils.version import StrictVersion
 import logging
@@ -105,7 +106,8 @@ async def async_setup(hass, config):
         update_interval=timedelta(days=1),
     )
 
-    await coordinator.async_refresh()
+    # This can take up to 15s which can delay startup
+    asyncio.create_task(coordinator.async_refresh())
 
     hass.async_create_task(
         discovery.async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)

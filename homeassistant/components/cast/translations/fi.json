@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Haluatko m\u00e4\u00e4ritt\u00e4\u00e4 Google Castin?",
-                "title": "Google Cast"
+                "description": "Haluatko m\u00e4\u00e4ritt\u00e4\u00e4 Google Castin?"
             }
         }
     }

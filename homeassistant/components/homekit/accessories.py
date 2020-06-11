@@ -25,6 +25,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
@@ -75,6 +76,7 @@ from .const import (
 from .util import (
     convert_to_float,
     dismiss_setup_message,
+    format_sw_version,
     show_setup_message,
     validate_media_player_features,
 )
@@ -253,7 +255,7 @@ class HomeAccessory(Accessory):
         else:
             model = domain.title()
         if ATTR_SOFTWARE_VERSION in self.config:
-            sw_version = self.config[ATTR_SOFTWARE_VERSION]
+            sw_version = format_sw_version(self.config[ATTR_SOFTWARE_VERSION])
         else:
             sw_version = __version__
 
@@ -320,6 +322,12 @@ class HomeAccessory(Accessory):
         self._char_low_battery = serv_battery.configure_char(
             CHAR_STATUS_LOW_BATTERY, value=0
         )
+
+    @property
+    def available(self):
+        """Return if accessory is available."""
+        state = self.hass.states.get(self.entity_id)
+        return state is not None and state.state != STATE_UNAVAILABLE
 
     async def run(self):
         """Handle accessory driver started event.

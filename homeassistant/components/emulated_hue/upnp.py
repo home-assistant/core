@@ -9,6 +9,8 @@ from aiohttp import web
 from homeassistant import core
 from homeassistant.components.http import HomeAssistantView
 
+from .const import HUE_SERIAL_NUMBER, HUE_UUID
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -42,8 +44,8 @@ class DescriptionXmlView(HomeAssistantView):
 <modelName>Philips hue bridge 2015</modelName>
 <modelNumber>BSB002</modelNumber>
 <modelURL>http://www.meethue.com</modelURL>
-<serialNumber>001788FFFE23BFC2</serialNumber>
-<UDN>uuid:2f402f80-da50-11e1-9b23-001788255acc</UDN>
+<serialNumber>{HUE_SERIAL_NUMBER}</serialNumber>
+<UDN>uuid:{HUE_UUID}</UDN>
 </device>
 </root>
 """
@@ -70,21 +72,8 @@ class UPNPResponderThread(threading.Thread):
         self.host_ip_addr = host_ip_addr
         self.listen_port = listen_port
         self.upnp_bind_multicast = upnp_bind_multicast
-
-        # Note that the double newline at the end of
-        # this string is required per the SSDP spec
-        resp_template = f"""HTTP/1.1 200 OK
-CACHE-CONTROL: max-age=60
-EXT:
-LOCATION: http://{advertise_ip}:{advertise_port}/description.xml
-SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/1.16.0
-hue-bridgeid: 001788FFFE23BFC2
-ST: upnp:rootdevice
-USN: uuid:2f402f80-da50-11e1-9b23-00178829d301::upnp:rootdevice
-
-"""
-
-        self.upnp_response = resp_template.replace("\n", "\r\n").encode("utf-8")
+        self.advertise_ip = advertise_ip
+        self.advertise_port = advertise_port
 
     def run(self):
         """Run the server."""
@@ -136,10 +125,13 @@ USN: uuid:2f402f80-da50-11e1-9b23-00178829d301::upnp:rootdevice
                 continue
 
             if "M-SEARCH" in data.decode("utf-8", errors="ignore"):
+                _LOGGER.debug("UPNP Responder M-SEARCH method received: %s", data)
                 # SSDP M-SEARCH method received, respond to it with our info
-                resp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                response = self._handle_request(data)
 
-                resp_socket.sendto(self.upnp_response, addr)
+                resp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                resp_socket.sendto(response, addr)
+                _LOGGER.debug("UPNP Responder responding with: %s", response)
                 resp_socket.close()
 
     def stop(self):
@@ -147,6 +139,31 @@ USN: uuid:2f402f80-da50-11e1-9b23-00178829d301::upnp:rootdevice
         # Request for server
         self._interrupted = True
         self.join()
+
+    def _handle_request(self, data):
+        if "upnp:rootdevice" in data.decode("utf-8", errors="ignore"):
+            return self._prepare_response(
+                "upnp:rootdevice", f"uuid:{HUE_UUID}::upnp:rootdevice"
+            )
+
+        return self._prepare_response(
+            "urn:schemas-upnp-org:device:basic:1", f"uuid:{HUE_UUID}"
+        )
+
+    def _prepare_response(self, search_target, unique_service_name):
+        # Note that the double newline at the end of
+        # this string is required per the SSDP spec
+        response = f"""HTTP/1.1 200 OK
+CACHE-CONTROL: max-age=60
+EXT:
+LOCATION: http://{self.advertise_ip}:{self.advertise_port}/description.xml
+SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/1.16.0
+hue-bridgeid: {HUE_SERIAL_NUMBER}
+ST: {search_target}
+USN: {unique_service_name}
+
+"""
+        return response.replace("\n", "\r\n").encode("utf-8")
 
 
 def clean_socket_close(sock):

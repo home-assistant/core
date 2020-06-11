@@ -12,5 +12,14 @@
                 "title": "Setup TCP server for WIFFI devices"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Timeout (minutes)"
+                }
+            }
+        }
     }
 }

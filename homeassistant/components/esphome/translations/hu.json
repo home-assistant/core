@@ -14,8 +14,7 @@
                 "data": {
                     "password": "Jelsz\u00f3"
                 },
-                "description": "K\u00e9rlek, add meg a konfigur\u00e1ci\u00f3ban {name} n\u00e9vhez be\u00e1ll\u00edtott jelsz\u00f3t.",
-                "title": "Add meg a jelsz\u00f3t"
+                "description": "K\u00e9rlek, add meg a konfigur\u00e1ci\u00f3ban {name} n\u00e9vhez be\u00e1ll\u00edtott jelsz\u00f3t."
             },
             "discovery_confirm": {
                 "description": "Szeretn\u00e9d hozz\u00e1adni a(z) `{name}` ESPHome csom\u00f3pontot a Home Assistant-hoz?",
@@ -26,8 +25,7 @@
                     "host": "Hoszt",
                     "port": "Port"
                 },
-                "description": "K\u00e9rlek, add meg az [ESPHome](https://esphomelib.com/) csom\u00f3pontod kapcsol\u00f3d\u00e1si be\u00e1ll\u00edt\u00e1sait.",
-                "title": "ESPHome"
+                "description": "K\u00e9rlek, add meg az [ESPHome](https://esphomelib.com/) csom\u00f3pontod kapcsol\u00f3d\u00e1si be\u00e1ll\u00edt\u00e1sait."
             }
         }
     }

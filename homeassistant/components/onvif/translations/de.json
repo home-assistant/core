@@ -34,6 +34,7 @@
             "manual_input": {
                 "data": {
                     "host": "Host",
+                    "name": "Name",
                     "port": "Port"
                 },
                 "title": "Konfigurieren Sie das ONVIF-Ger\u00e4t"

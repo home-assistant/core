@@ -208,8 +208,9 @@ class TestRadarrSetup(unittest.TestCase):
         self.DEVICES = []
         self.hass = get_test_home_assistant()
         self.hass.config.time_zone = "America/Los_Angeles"
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

@@ -23,5 +23,16 @@
                 "title": "Sign-in with Blink account"
             }
         }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Scan Interval (seconds)"
+                },
+                "description": "Configure Blink integration",
+                "title": "Blink options"
+            }
+        }
     }
 }
