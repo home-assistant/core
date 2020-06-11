@@ -25,6 +25,7 @@ MOCK_TOPIC = "shellies/shellyswitch-AAABBB/"
 MOCK_SWITCH_TOPIC = "shellies/shellyswitch-AAABBB/relay/0"
 MOCK_SECOND_SWITCH_TOPIC = "shellies/shellyswitch-AAABBB/relay/1"
 MOCK_MODEL = "shellyswitch"
+MOCK_TITLE = "Shelly 2"
 MOCK_CONFIG = {CONF_DEVICE_ID: MOCK_ID, CONF_MODEL: MOCK_MODEL, CONF_TOPIC: MOCK_TOPIC}
 
 
@@ -72,7 +73,7 @@ async def test_setup(hass):
     device = registry.async_get_device({(DOMAIN, MOCK_ID)}, {})
     assert device is not None
     assert device.manufacturer == "Shelly"
-    assert device.model == MOCK_MODEL
+    assert device.model == MOCK_TITLE
     assert device.name == MOCK_ID
 
     first_device_id = device.id
@@ -80,7 +81,7 @@ async def test_setup(hass):
     device = registry.async_get_device({(DOMAIN, MOCK_SECOND_ID)}, {})
     assert device is not None
     assert device.manufacturer == "Shelly"
-    assert device.model == MOCK_MODEL
+    assert device.model == MOCK_TITLE
     assert device.name == MOCK_SECOND_ID
     assert device.via_device_id == first_device_id
 
@@ -178,31 +179,3 @@ async def test_unsubscribe(hass):
         assert await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
         assert unsubscribe.call_count == 2
-
-
-# async def test_entity_device_info_with_connection(hass, mqtt_mock):
-#     """Test MQTT switch device registry integration."""
-#     await help_test_entity_device_info_with_connection(
-#         hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
-#     )
-
-
-# async def test_entity_device_info_with_identifier(hass, mqtt_mock):
-#     """Test MQTT switch device registry integration."""
-#     await help_test_entity_device_info_with_identifier(
-#         hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
-#     )
-
-
-# async def test_entity_device_info_update(hass, mqtt_mock):
-#     """Test device registry update."""
-#     await help_test_entity_device_info_update(
-#         hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
-#     )
-
-
-# async def test_entity_device_info_remove(hass, mqtt_mock):
-#     """Test device registry remove."""
-#     await help_test_entity_device_info_remove(
-#         hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
-#     )

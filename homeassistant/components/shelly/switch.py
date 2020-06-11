@@ -1,4 +1,4 @@
-"""Representation of Z-Wave switches."""
+"""Representation of Shelly switches."""
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import callback
@@ -9,6 +9,7 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
     MODEL_SWITCHES,
+    MODEL_TITLE,
     MODELS,
 )
 
@@ -23,6 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device_id = config_entry.data[CONF_DEVICE_ID]
     topic = config_entry.data[CONF_TOPIC]
     model = config_entry.data[CONF_MODEL]
+    title = MODELS[model][MODEL_TITLE]
     switches_count = MODELS[model][MODEL_SWITCHES]
     switches = []
     for i in range(0, switches_count):
@@ -35,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             via_device = device_id
         switches.append(
             ShellySwitch(
-                hass.components.mqtt, unique_id, switch_topic, model, via_device
+                hass.components.mqtt, unique_id, switch_topic, title, via_device
             )
         )
 
@@ -45,13 +47,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ShellySwitch(SwitchEntity):
     """Representation of a Shelly switch."""
 
-    def __init__(self, mqtt, unique_id, topic, model, via_device):
+    def __init__(self, mqtt, unique_id, topic, title, via_device):
         """Initialize the MQTT switch."""
         self._mqtt = mqtt
         self._unique_id = unique_id
         self._via_device = via_device
         self._topic = topic
-        self._model = model
+        self._title = title
         self._power = None
         self._energy = None
         self._unsubscribe = None
@@ -98,7 +100,7 @@ class ShellySwitch(SwitchEntity):
         info = {
             "identifiers": {(DOMAIN, self._unique_id)},
             "manufacturer": "Shelly",
-            "model": self._model,
+            "model": self._title,
             "name": self._unique_id,
         }
         if self._via_device:

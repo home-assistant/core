@@ -17,5 +17,5 @@ MODEL_SWITCHES = "switches"
 
 MODELS = {
     "shelly1": {MODEL_TITLE: "Shelly 1", MODEL_SWITCHES: 1},
-    "shellyswitch": {MODEL_TITLE: "Shelly2", MODEL_SWITCHES: 2},
+    "shellyswitch": {MODEL_TITLE: "Shelly 2", MODEL_SWITCHES: 2},
 }
