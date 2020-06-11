@@ -1,6 +1,5 @@
 {
     "config": {
-        "flow_title": "Xiaomi Miio: {name}",
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Config flow for this Xiaomi Miio device is already in progress."
@@ -9,6 +8,7 @@
             "connect_error": "Failed to connect",
             "no_device_selected": "No device selected, please select one device."
         },
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "gateway": {
                 "data": {
