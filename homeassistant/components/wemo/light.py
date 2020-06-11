@@ -175,20 +175,26 @@ class WemoLight(LightEntity):
             if color_temp is not None:
                 self.wemo.set_temperature(mireds=color_temp, transition=transition_time)
 
-            self.wemo.turn_on(**turn_on_kwargs)
+            if self.wemo.turn_on(**turn_on_kwargs):
+                self._state = 1
         except ActionException as err:
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
+
+        self.async_write_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
 
         try:
-            self.wemo.turn_off(transition=transition_time)
+            if self.wemo.turn_off(transition=transition_time):
+                self._state = 0
         except ActionException as err:
             _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
             self._available = False
+
+        self.async_write_ha_state()
 
     def _update(self, force_update=True):
         """Synchronize state with bridge."""
@@ -355,19 +361,26 @@ class WemoDimmer(LightEntity):
             brightness = 255
 
         try:
-            self.wemo.on()
+            if self.wemo.on():
+                self._state = 1
+
             self.wemo.set_brightness(brightness)
         except ActionException as err:
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
 
+        self.async_write_ha_state()
+
     def turn_off(self, **kwargs):
         """Turn the dimmer off."""
         try:
-            self.wemo.off()
+            if self.wemo.off():
+                self._state = 0
         except ActionException as err:
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
+
+        self.async_write_ha_state()
 
     @property
     def available(self):

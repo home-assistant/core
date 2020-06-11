@@ -191,18 +191,24 @@ class WemoSwitch(SwitchEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         try:
-            self.wemo.on()
+            if self.wemo.on():
+                self._state = 1
         except ActionException as err:
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
 
+        self.async_write_ha_state()
+
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         try:
-            self.wemo.off()
+            if self.wemo.off():
+                self._state = 0
         except ActionException as err:
             _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
             self._available = False
+
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Wemo switch added to Home Assistant."""
