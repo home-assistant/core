@@ -1162,6 +1162,9 @@ py-schluter==0.1.7
 # homeassistant.components.synology
 py-synology==0.2.0
 
+# homeassistant.components.zabbix
+py-zabbix==1.1.7
+
 # homeassistant.components.seventeentrack
 py17track==2.2.2
 
@@ -1818,9 +1821,6 @@ pywemo==0.4.43
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
-
-# homeassistant.components.zabbix
-pyzabbix==0.7.4
 
 # homeassistant.components.qrcode
 pyzbar==0.1.7
