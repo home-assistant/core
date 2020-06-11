@@ -159,31 +159,27 @@ class SmappeeActuator(SwitchEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        return dict(
-            {
-                "Service location id": self._service_location.service_location_id,
-                "Service location name": self._service_location.service_location_name,
-                "Device serialnumber": self._service_location.device_serial_number,
-                "Actuator id": self._actuator_id,
-                "Actuator name": self._actuator_name,
-                "Actuator type": self._actuator_type,
-                "Today energy kwh": self.today_energy_kwh,
-                "Unique id": self.unique_id,
-            }
-        )
+        return {
+            "Service location id": self._service_location.service_location_id,
+            "Service location name": self._service_location.service_location_name,
+            "Device serialnumber": self._service_location.device_serial_number,
+            "Actuator id": self._actuator_id,
+            "Actuator name": self._actuator_name,
+            "Actuator type": self._actuator_type,
+            "Today energy kwh": self.today_energy_kwh,
+            "Unique id": self.unique_id,
+        }
 
     @property
     def device_info(self):
         """Return the device info for this switch."""
-        return dict(
-            {
-                "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
-                "name": self._service_location.service_location_name,
-                "manufacturer": "Smappee",
-                "model": self._service_location.device_model,
-                "sw_version": self._service_location.firmware_version,
-            }
-        )
+        return {
+            "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
+            "name": self._service_location.service_location_name,
+            "manufacturer": "Smappee",
+            "model": self._service_location.device_model,
+            "sw_version": self._service_location.firmware_version,
+        }
 
     async def async_update(self):
         """Update state value for this switch."""

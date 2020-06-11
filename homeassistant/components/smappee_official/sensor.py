@@ -242,16 +242,14 @@ class SmappeeSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attributes = dict(
-            {
-                "Service location id": self._service_location.service_location_id,
-                "Service location name": self._service_location.service_location_name,
-                "Device serialnumber": self._service_location.device_serial_number,
-                "Sensor": self._sensor,
-                "Sensor id": self._sensor_id,
-                "Unique id": self.unique_id,
-            }
-        )
+        attributes = {
+            "Service location id": self._service_location.service_location_id,
+            "Service location name": self._service_location.service_location_name,
+            "Device serialnumber": self._service_location.device_serial_number,
+            "Sensor": self._sensor,
+            "Sensor id": self._sensor_id,
+            "Unique id": self.unique_id,
+        }
         if self._sensor == "sensor":
             sensor_id, _ = self._sensor_id.split("-")
             sensor = self._service_location.sensors.get(int(sensor_id))
@@ -263,15 +261,13 @@ class SmappeeSensor(Entity):
     @property
     def device_info(self):
         """Return the device info for this sensor."""
-        return dict(
-            {
-                "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
-                "name": self._service_location.service_location_name,
-                "manufacturer": "Smappee",
-                "model": self._service_location.device_model,
-                "sw_version": self._service_location.firmware_version,
-            }
-        )
+        return {
+            "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
+            "name": self._service_location.service_location_name,
+            "manufacturer": "Smappee",
+            "model": self._service_location.device_model,
+            "sw_version": self._service_location.firmware_version,
+        }
 
     async def async_update(self):
         """Get the latest data from Smappee and update the state."""
