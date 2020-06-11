@@ -21,7 +21,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from . import api, config_flow
@@ -162,7 +162,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, register_webhook)
+    if hass.state == CoreState.running:
+        await register_webhook(None)
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, register_webhook)
     return True
 
 
@@ -172,6 +175,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await hass.async_add_executor_job(
             hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook
         )
+        _LOGGER.info("Unregister Netatmo webhook.")
 
     unload_ok = all(
         await asyncio.gather(
