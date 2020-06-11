@@ -169,6 +169,7 @@ FLOWS = [
     "vizio",
     "wemo",
     "wiffi",
+    "wilight",
     "withings",
     "wled",
     "xiaomi_miio",
