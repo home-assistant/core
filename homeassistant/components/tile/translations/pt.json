@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "E-mail"
+                },
+                "title": "Configurar Tile"
+            }
+        }
+    }
+}

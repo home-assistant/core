@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi, si prega di riprovare",
-            "invalid_auth": "Autenticazione non valida. Controllare gli 8 caratterei dell'ID Smile",
+            "invalid_auth": "Autenticazione non valida. Controllare gli 8 caratteri dell'ID Smile",
             "unknown": "Errore imprevisto"
         },
         "step": {
