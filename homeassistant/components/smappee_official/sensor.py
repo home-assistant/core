@@ -118,7 +118,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     smappee_base = hass.data[DOMAIN][BASE]
 
     dev = []
-    for _, service_location in smappee_base.smappee.service_locations.items():
+    for service_location in smappee_base.smappee.service_locations.values():
         # Add all basic sensors (realtime values and aggregators)
         for sensor in TREND_SENSORS:
             dev.append(
