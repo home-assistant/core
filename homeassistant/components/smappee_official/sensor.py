@@ -327,6 +327,3 @@ class SmappeeSensor(Entity):
             for channel in sensor.channels:
                 if channel.get("channel") == int(channel_id):
                     self._state = channel.get("value_today")
-        else:
-            print("Unknown sensor type", self._sensor)
-            raise Exception()
