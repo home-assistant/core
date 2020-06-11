@@ -30,12 +30,6 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_LIMIT, default=DEFAULT_LIMIT): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=500)
-        ),
-        vol.Optional(CONF_ORDER, default=DEFAULT_ORDER): vol.All(
-            vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES.keys())
-        ),
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
