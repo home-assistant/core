@@ -297,7 +297,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info={}):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Growatt sensor."""
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
