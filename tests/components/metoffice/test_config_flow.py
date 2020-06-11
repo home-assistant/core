@@ -64,29 +64,26 @@ async def test_form_already_configured(hass, requests_mock):
     mock_json = json.loads(load_fixture("metoffice.json"))
 
     all_sites = json.dumps(mock_json["all_sites"])
+
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
-
-    entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE)
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=3hourly", text="",
     )
 
-    with patch(
-        "homeassistant.components.metoffice.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.metoffice.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"api_key": TEST_API_KEY},
-        )
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}",
+        data=METOFFICE_CONFIG_WAVERTREE,
+    ).add_to_hass(hass)
 
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "already_configured"
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 0
-    assert len(mock_setup_entry.mock_calls) == 0
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=METOFFICE_CONFIG_WAVERTREE,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_form_cannot_connect(hass, requests_mock):
