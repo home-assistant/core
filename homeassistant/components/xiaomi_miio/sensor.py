@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+from collections import namedtuple
 import logging
 
 from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
