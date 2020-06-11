@@ -98,13 +98,8 @@ class SmappeeBase:
 
     def __init__(self, smappee, hass):
         """Initialize the Smappee API wrapper class."""
-        self._smappee = smappee
+        self.smappee = smappee
         self.hass = hass
-
-    @property
-    def smappee(self):
-        """Return the Smappee API instance."""
-        return self._smappee
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
