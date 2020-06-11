@@ -25,6 +25,7 @@ from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
 HOST = "127.0.0.1"
+HOSTNAME = "DaikinUNIQUE.local"
 
 
 @pytest.fixture
@@ -112,11 +113,7 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
     "source, data, unique_id",
     [
         (SOURCE_DISCOVERY, {KEY_IP: HOST, KEY_MAC: MAC}, MAC),
-        (
-            SOURCE_ZEROCONF,
-            {CONF_HOST: HOST, KEY_HOSTNAME: "DaikinUNIQE.local"},
-            "DaikinUNIQE.local",
-        ),
+        (SOURCE_ZEROCONF, {CONF_HOST: HOST, KEY_HOSTNAME: HOSTNAME}, HOSTNAME),
     ],
 )
 async def test_discovery_zeroconf(hass, mock_daikin, source, data, unique_id):
@@ -128,6 +125,15 @@ async def test_discovery_zeroconf(hass, mock_daikin, source, data, unique_id):
     assert result["step_id"] == "user"
 
     MockConfigEntry(domain="daikin", unique_id=unique_id).add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        "daikin",
+        context={"source": SOURCE_USER, "unique_id": unique_id},
+        data={CONF_HOST: HOST},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
     result = await hass.config_entries.flow.async_init(
         "daikin", context={"source": source}, data=data,
     )
