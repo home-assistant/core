@@ -645,7 +645,7 @@ pymodbus==2.3.0
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==2.0.3
+pymyq==2.0.4
 
 # homeassistant.components.nut
 pynut2==2.1.2
