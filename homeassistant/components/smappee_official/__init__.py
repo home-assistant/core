@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     smappee = await hass.async_add_executor_job(Smappee, hass.data[DOMAIN][API])
     await hass.async_add_executor_job(smappee.load_service_locations)
 
-    hass.data[DOMAIN][BASE] = SmappeeBase(smappee=smappee, hass=hass)
+    hass.data[DOMAIN][BASE] = SmappeeBase(hass, smappee)
 
     for component in SMAPPEE_PLATFORMS:
         hass.async_create_task(
@@ -96,10 +96,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SmappeeBase:
     """An object to hold the PySmappee instance."""
 
-    def __init__(self, smappee, hass):
+    def __init__(self, hass, smappee):
         """Initialize the Smappee API wrapper class."""
-        self.smappee = smappee
         self.hass = hass
+        self.smappee = smappee
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
