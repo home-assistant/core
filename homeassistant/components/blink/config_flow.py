@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 
 from .const import DEFAULT_OFFSET, DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
 
@@ -40,9 +41,14 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = {
             CONF_USERNAME: "",
             CONF_PASSWORD: "",
-            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
             "login_response": None,
         }
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get options flow for this handler."""
+        return BlinkOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -54,7 +60,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self.data[CONF_USERNAME])
 
             if CONF_SCAN_INTERVAL in user_input:
-                self.data[CONF_SCAN_INTERVAL] = user_input["scan_interval"]
+                self.data[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
 
             self.blink = Blink(
                 username=self.data[CONF_USERNAME],
@@ -105,6 +111,40 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data):
         """Import blink config from configuration.yaml."""
         return await self.async_step_user(import_data)
+
+
+class BlinkOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Blink options."""
+
+    def __init__(self, config_entry):
+        """Initialize Blink options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+        self.blink = None
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Blink options."""
+        self.blink = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        self.options[CONF_SCAN_INTERVAL] = self.blink.refresh_rate
+
+        return await self.async_step_simple_options()
+
+    async def async_step_simple_options(self, user_input=None):
+        """For simple options."""
+        if user_input is not None:
+            self.options.update(user_input)
+            self.blink.refresh_rate = user_input[CONF_SCAN_INTERVAL]
+            return self.async_create_entry(title="", data=self.options)
+
+        options = self.config_entry.options
+        scan_interval = options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
+        return self.async_show_form(
+            step_id="simple_options",
+            data_schema=vol.Schema(
+                {vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval,): int}
+            ),
+        )
 
 
 class Require2FA(exceptions.HomeAssistantError):

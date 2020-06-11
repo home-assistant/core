@@ -149,6 +149,27 @@ async def test_only_one_in_progress(hass, discovery_flow_conf):
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
+async def test_import_abort_discovery(hass, discovery_flow_conf):
+    """Test import will finish and cancel discovered one."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    # Discovery starts flow
+    result = await hass.config_entries.flow.async_init(
+        "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    # Start import flow
+    result = await hass.config_entries.flow.async_init(
+        "test", context={"source": config_entries.SOURCE_IMPORT}, data={}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    # Discovery flow has been aborted
+    assert len(hass.config_entries.flow.async_progress()) == 0
+
+
 async def test_import_no_confirmation(hass, discovery_flow_conf):
     """Test import requires no confirmation to set up."""
     flow = config_entries.HANDLERS["test"]()

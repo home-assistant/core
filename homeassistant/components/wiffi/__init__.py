@@ -7,7 +7,7 @@ import logging
 from wiffi import WiffiTcpServer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
@@ -22,6 +22,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     CHECK_ENTITIES_SIGNAL,
     CREATE_ENTITY_SIGNAL,
+    DEFAULT_TIMEOUT,
     DOMAIN,
     UPDATE_ENTITY_SIGNAL,
 )
@@ -39,6 +40,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
+    if not config_entry.update_listeners:
+        config_entry.add_update_listener(async_update_options)
+
     # create api object
     api = WiffiIntegrationApi(hass)
     api.async_setup(config_entry)
@@ -61,6 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
 
     return True
+
+
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Update options."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -146,7 +155,7 @@ class WiffiIntegrationApi:
 class WiffiEntity(Entity):
     """Common functionality for all wiffi entities."""
 
-    def __init__(self, device, metric):
+    def __init__(self, device, metric, options):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
         self._device_info = {
@@ -162,6 +171,7 @@ class WiffiEntity(Entity):
         self._name = metric.description
         self._expiration_date = None
         self._value = None
+        self._timeout = options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
     async def async_added_to_hass(self):
         """Entity has been added to hass."""
@@ -208,7 +218,7 @@ class WiffiEntity(Entity):
 
         Will be called by derived classes after a value update has been received.
         """
-        self._expiration_date = utcnow() + timedelta(minutes=3)
+        self._expiration_date = utcnow() + timedelta(minutes=self._timeout)
 
     @callback
     def _update_value_callback(self, device, metric):

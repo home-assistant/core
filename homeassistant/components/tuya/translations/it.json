@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "La configurazione di Tuya \u00e8 gi\u00e0 in corso.",
             "auth_failed": "Autenticazione non valida",
             "conn_error": "Impossibile connettersi",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."

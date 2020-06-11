@@ -9,7 +9,8 @@
                     "latitude": "Leveysaste",
                     "longitude": "Pituusaste",
                     "name": "Nimi"
-                }
+                },
+                "title": "Sijainti"
             }
         }
     }

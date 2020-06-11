@@ -1,3 +1,9 @@
 {
-    "title": "Axis-laite"
+    "config": {
+        "step": {
+            "user": {
+                "title": "Asenna Axis-laite"
+            }
+        }
+    }
 }

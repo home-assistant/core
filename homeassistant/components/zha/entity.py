@@ -28,7 +28,7 @@ from .core.const import (
     SIGNAL_REMOVE_GROUP,
 )
 from .core.helpers import LogMixin
-from .core.typing import CALLABLE_T, ChannelsType, ChannelType, ZhaDeviceType
+from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         self,
         unique_id: str,
         zha_device: ZhaDeviceType,
-        channels: ChannelsType,
+        channels: List[ChannelType],
         **kwargs,
     ):
         """Init ZHA entity."""
@@ -211,7 +211,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             if not self.zha_device.is_mains_powered:
                 # mains powered devices will get real time state
                 self.async_restore_last_state(last_state)
-            self._zha_device.set_available(True)
+            self._zha_device.available = True
 
     async def async_update(self) -> None:
         """Retrieve latest state."""

@@ -8,6 +8,16 @@
             "user": {
                 "data": {
                     "port": "Server Port"
+                },
+                "title": "TCP Server fir WIFFI Apparater ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Z\u00e4itiwwerscheidung (minutten)"
                 }
             }
         }

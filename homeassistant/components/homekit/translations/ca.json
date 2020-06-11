@@ -33,6 +33,7 @@
                 "data": {
                     "camera_copy": "C\u00e0meres que admeten fluxos H.264 natius"
                 },
+                "description": "Comprova les c\u00e0meres que suporten fluxos nadius H.264. Si alguna c\u00e0mera not proporciona una sortida H.264, el sistema transcodificar\u00e0 el v\u00eddeo a H.264 per a HomeKit. La transcodificaci\u00f3 necessita una CPU potent i probablement no funcioni en ordinadors petits (SBC).",
                 "title": "Selecci\u00f3 del c\u00f2dec de v\u00eddeo de c\u00e0mera"
             },
             "exclude": {

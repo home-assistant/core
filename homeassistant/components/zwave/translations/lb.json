@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "network_key": "Netzwierk Schl\u00ebssel (eidel loossen fir een automatesch z'erstellen)",
-                    "usb_path": "USB Pad"
+                    "usb_path": "Pad zum USB Apparat"
                 },
                 "description": "Lies op https://www.home-assistant.io/docs/z-wave/installation/ fir weider Informatiounen iwwert d'Konfiguratioun vun den Variabelen",
                 "title": "Z-Wave konfigur\u00e9ieren"

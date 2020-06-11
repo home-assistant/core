@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry):
     # 0.104 introduced config entry unique id, this makes upgrading possible
     if config_entry.unique_id is None:
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=device.api.vapix.params.system_serialnumber
+            config_entry, unique_id=device.api.vapix.serial_number
         )
 
     hass.data[AXIS_DOMAIN][config_entry.unique_id] = device

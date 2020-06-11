@@ -12,18 +12,23 @@ from pyhap.camera import (
 )
 from pyhap.const import CATEGORY_CAMERA
 
-from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.const import STATE_ON
 from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_state_change,
+    async_track_time_interval,
+)
 from homeassistant.util import get_local_ip
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
+    CHAR_MOTION_DETECTED,
     CHAR_STREAMING_STRATUS,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
+    CONF_LINKED_MOTION_SENSOR,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
@@ -44,6 +49,7 @@ from .const import (
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
     SERV_CAMERA_RTP_STREAM_MANAGEMENT,
+    SERV_MOTION_SENSOR,
 )
 from .img_util import scale_jpeg_camera_image
 from .util import pid_is_alive
@@ -126,7 +132,6 @@ class Camera(HomeAccessory, PyhapCamera):
         """Initialize a Camera accessory object."""
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._cur_session = None
-        self._camera = hass.data[DOMAIN_CAMERA]
         for config_key in CONFIG_DEFAULTS:
             if config_key not in config:
                 config[config_key] = CONFIG_DEFAULTS[config_key]
@@ -180,6 +185,47 @@ class Camera(HomeAccessory, PyhapCamera):
             category=CATEGORY_CAMERA,
             options=options,
         )
+        self._char_motion_detected = None
+        self.linked_motion_sensor = self.config.get(CONF_LINKED_MOTION_SENSOR)
+        if not self.linked_motion_sensor:
+            return
+        state = self.hass.states.get(self.linked_motion_sensor)
+        if not state:
+            return
+        serv_motion = self.add_preload_service(SERV_MOTION_SENSOR)
+        self._char_motion_detected = serv_motion.configure_char(
+            CHAR_MOTION_DETECTED, value=False
+        )
+        self._async_update_motion_state(None, None, state)
+
+    async def run_handler(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
+        if self._char_motion_detected:
+            async_track_state_change(
+                self.hass, self.linked_motion_sensor, self._async_update_motion_state
+            )
+
+        await super().run_handler()
+
+    @callback
+    def _async_update_motion_state(
+        self, entity_id=None, old_state=None, new_state=None
+    ):
+        """Handle link motion sensor state change to update HomeKit value."""
+        detected = new_state.state == STATE_ON
+        if self._char_motion_detected.value == detected:
+            return
+
+        self._char_motion_detected.set_value(detected)
+        _LOGGER.debug(
+            "%s: Set linked motion %s sensor to %d",
+            self.entity_id,
+            self.linked_motion_sensor,
+            detected,
+        )
 
     @callback
     def async_update_state(self, new_state):
@@ -188,14 +234,13 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def _async_get_stream_source(self):
         """Find the camera stream source url."""
-        camera = self._camera.get_entity(self.entity_id)
-        if not camera or not camera.is_on:
-            return None
         stream_source = self.config.get(CONF_STREAM_SOURCE)
         if stream_source:
             return stream_source
         try:
-            stream_source = await camera.stream_source()
+            stream_source = await self.hass.components.camera.async_get_stream_source(
+                self.entity_id
+            )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to get stream source - this could be a transient error or your camera might not be compatible with HomeKit yet"

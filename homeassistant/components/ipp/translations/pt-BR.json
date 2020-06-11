@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "connection_upgrade": "Falha ao conectar \u00e0 impressora devido \u00e0 atualiza\u00e7\u00e3o da conex\u00e3o ser necess\u00e1ria.",
+            "ipp_error": "Erro IPP encontrado.",
+            "ipp_version_error": "Vers\u00e3o IPP n\u00e3o suportada pela impressora.",
+            "unique_id_required": "Dispositivo faltando identifica\u00e7\u00e3o \u00fanica necess\u00e1ria para a descoberta."
+        },
+        "error": {
+            "connection_upgrade": "Falha ao conectar \u00e0 impressora. Por favor, tente novamente com a op\u00e7\u00e3o SSL/TLS marcada."
+        },
+        "flow_title": "Impressora: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Caminho relativo para a impressora",
+                    "ssl": "A impressora suporta comunica\u00e7\u00e3o via SSL/TLS",
+                    "verify_ssl": "A impressora usa um certificado SSL adequado"
+                },
+                "description": "Configure sua impressora via IPP (Internet Printing Protocol) para integrar-se ao Home Assistant.",
+                "title": "Vincule sua impressora"
+            },
+            "zeroconf_confirm": {
+                "title": "Impressora descoberta"
+            }
+        }
+    }
+}

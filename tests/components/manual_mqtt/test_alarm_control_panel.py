@@ -35,8 +35,9 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.hass.config_entries._async_schedule_save = Mock()
         self.mock_publish = mock_mqtt_component(self.hass)
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -86,6 +87,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -114,6 +116,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -141,6 +144,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -184,6 +188,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -211,6 +216,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -239,6 +245,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -266,6 +273,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -294,6 +302,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -337,6 +346,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -364,6 +374,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -392,6 +403,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -419,6 +431,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -468,6 +481,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -494,6 +508,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -535,6 +550,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -583,6 +599,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -610,6 +627,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -637,6 +655,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -693,6 +712,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -734,6 +754,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -762,6 +783,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -802,6 +824,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -842,6 +865,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -904,6 +928,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -949,6 +974,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -996,6 +1022,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1046,6 +1073,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1096,6 +1124,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1162,6 +1191,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1224,6 +1254,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1261,6 +1292,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1298,6 +1330,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1337,6 +1370,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1391,6 +1425,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1465,6 +1500,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1504,6 +1540,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1544,6 +1581,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1584,6 +1622,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1624,6 +1663,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         entity_id = "alarm_control_panel.test"
 
@@ -1656,6 +1696,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         # Component should send disarmed alarm state on startup
         self.hass.block_till_done()

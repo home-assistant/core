@@ -11,13 +11,13 @@ from homeassistant.components.smartthings.const import (
     CONF_APP_ID,
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
-    CONF_OAUTH_CLIENT_ID,
-    CONF_OAUTH_CLIENT_SECRET,
     DOMAIN,
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     HTTP_FORBIDDEN,
     HTTP_NOT_FOUND,
     HTTP_UNAUTHORIZED,
@@ -97,8 +97,8 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
     assert result["data"]["location_id"] == location.location_id
     assert result["data"]["access_token"] == token
     assert result["data"]["refresh_token"] == request.refresh_token
-    assert result["data"]["client_secret"] == app_oauth_client.client_secret
-    assert result["data"]["client_id"] == app_oauth_client.client_id
+    assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
+    assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
     assert result["title"] == location.name
     entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)), None,)
     assert entry.unique_id == smartapp.format_unique_id(
@@ -165,8 +165,8 @@ async def test_entry_created_from_update_event(
     assert result["data"]["location_id"] == location.location_id
     assert result["data"]["access_token"] == token
     assert result["data"]["refresh_token"] == request.refresh_token
-    assert result["data"]["client_secret"] == app_oauth_client.client_secret
-    assert result["data"]["client_id"] == app_oauth_client.client_id
+    assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
+    assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
     assert result["title"] == location.name
     entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)), None,)
     assert entry.unique_id == smartapp.format_unique_id(
@@ -233,8 +233,8 @@ async def test_entry_created_existing_app_new_oauth_client(
     assert result["data"]["location_id"] == location.location_id
     assert result["data"]["access_token"] == token
     assert result["data"]["refresh_token"] == request.refresh_token
-    assert result["data"]["client_secret"] == app_oauth_client.client_secret
-    assert result["data"]["client_id"] == app_oauth_client.client_id
+    assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
+    assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
     assert result["title"] == location.name
     entry = next((entry for entry in hass.config_entries.async_entries(DOMAIN)), None,)
     assert entry.unique_id == smartapp.format_unique_id(
@@ -262,8 +262,8 @@ async def test_entry_created_existing_app_copies_oauth_client(
         domain=DOMAIN,
         data={
             CONF_APP_ID: app.app_id,
-            CONF_OAUTH_CLIENT_ID: oauth_client_id,
-            CONF_OAUTH_CLIENT_SECRET: oauth_client_secret,
+            CONF_CLIENT_ID: oauth_client_id,
+            CONF_CLIENT_SECRET: oauth_client_secret,
             CONF_LOCATION_ID: str(uuid4()),
             CONF_INSTALLED_APP_ID: str(uuid4()),
             CONF_ACCESS_TOKEN: token,
@@ -316,8 +316,8 @@ async def test_entry_created_existing_app_copies_oauth_client(
     assert result["data"]["location_id"] == location.location_id
     assert result["data"]["access_token"] == token
     assert result["data"]["refresh_token"] == request.refresh_token
-    assert result["data"]["client_secret"] == oauth_client_secret
-    assert result["data"]["client_id"] == oauth_client_id
+    assert result["data"][CONF_CLIENT_SECRET] == oauth_client_secret
+    assert result["data"][CONF_CLIENT_ID] == oauth_client_id
     assert result["title"] == location.name
     entry = next(
         (
@@ -405,8 +405,8 @@ async def test_entry_created_with_cloudhook(
         assert result["data"]["location_id"] == location.location_id
         assert result["data"]["access_token"] == token
         assert result["data"]["refresh_token"] == request.refresh_token
-        assert result["data"]["client_secret"] == app_oauth_client.client_secret
-        assert result["data"]["client_id"] == app_oauth_client.client_id
+        assert result["data"][CONF_CLIENT_SECRET] == app_oauth_client.client_secret
+        assert result["data"][CONF_CLIENT_ID] == app_oauth_client.client_id
         assert result["title"] == location.name
         entry = next(
             (entry for entry in hass.config_entries.async_entries(DOMAIN)), None,

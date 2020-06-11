@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 komponent aplikacji mobilnej?",
-                "title": "Aplikacja mobilna"
+                "description": "Czy chcesz skonfigurowa\u0107 komponent aplikacji mobilnej?"
             }
         }
     }

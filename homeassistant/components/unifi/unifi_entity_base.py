@@ -43,32 +43,6 @@ class UniFiBase(Entity):
         self._item.remove_callback(self.async_update_callback)
         self.controller.entities[self.DOMAIN][self.TYPE].remove(self._item.mac)
 
-    async def async_remove(self):
-        """Clean up when removing entity.
-
-        Remove entity if no entry in entity registry exist.
-        Remove entity registry entry if no entry in device registry exist.
-        Remove device registry entry if there is only one linked entity (this entity).
-        Remove entity registry entry if there are more than one entity linked to the device registry entry.
-        """
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        entity_entry = entity_registry.async_get(self.entity_id)
-        if not entity_entry:
-            await super().async_remove()
-            return
-
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(entity_entry.device_id)
-        if not device_entry:
-            entity_registry.async_remove(self.entity_id)
-            return
-
-        if len(async_entries_for_device(entity_registry, entity_entry.device_id)) == 1:
-            device_registry.async_remove_device(device_entry.id)
-            return
-
-        entity_registry.async_remove(self.entity_id)
-
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
@@ -82,9 +56,33 @@ class UniFiBase(Entity):
         raise NotImplementedError
 
     async def remove_item(self, mac_addresses: set) -> None:
-        """Remove entity if MAC is part of set."""
-        if self._item.mac in mac_addresses:
+        """Remove entity if MAC is part of set.
+
+        Remove entity if no entry in entity registry exist.
+        Remove entity registry entry if no entry in device registry exist.
+        Remove device registry entry if there is only one linked entity (this entity).
+        Remove entity registry entry if there are more than one entity linked to the device registry entry.
+        """
+        if self._item.mac not in mac_addresses:
+            return
+
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_entry = entity_registry.async_get(self.entity_id)
+        if not entity_entry:
             await self.async_remove()
+            return
+
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get(entity_entry.device_id)
+        if not device_entry:
+            entity_registry.async_remove(self.entity_id)
+            return
+
+        if len(async_entries_for_device(entity_registry, entity_entry.device_id)) == 1:
+            device_registry.async_remove_device(device_entry.id)
+            return
+
+        entity_registry.async_remove(self.entity_id)
 
     @property
     def should_poll(self) -> bool:
