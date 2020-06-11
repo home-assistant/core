@@ -25,7 +25,6 @@ ATTR_MAX_ENTITY_ID = "max_entity_id"
 ATTR_COUNT_SENSORS = "count_sensors"
 ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
-ATTR_MEDIAN_ENTITY_ID = "median_entity_id"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 
