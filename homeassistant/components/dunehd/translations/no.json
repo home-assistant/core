@@ -6,7 +6,7 @@
         "step": {
             "user": {
                 "description": "Konfigurer Dune HD-integrering. Hvis du har problemer med konfigurasjonen, kan du g\u00e5 til: https://www.home-assistant.io/integrations/dunehd \n\nKontroller at spilleren er sl\u00e5tt p\u00e5.",
-                "title": "Dune HD"
+                "title": ""
             }
         }
     }
