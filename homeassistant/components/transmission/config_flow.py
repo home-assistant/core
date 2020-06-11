@@ -88,8 +88,6 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import from Transmission client config."""
-        import_config[CONF_LIMIT] = import_config[CONF_LIMIT]
-        import_config[CONF_ORDER] = import_config[CONF_ORDER]
         import_config[CONF_SCAN_INTERVAL] = import_config[CONF_SCAN_INTERVAL].seconds
         return await self.async_step_user(user_input=import_config)
 
@@ -120,7 +118,7 @@ class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_ORDER,
                 default=self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER),
-            ): vol.All(vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES.keys())),
+            ): vol.All(vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES)),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

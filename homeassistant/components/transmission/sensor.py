@@ -157,8 +157,6 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         )
         return {
             STATE_ATTR_TORRENT_INFO: info,
-            CONF_LIMIT: limit,
-            CONF_ORDER: order,
         }
 
     def update(self):

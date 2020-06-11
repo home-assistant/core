@@ -39,7 +39,6 @@ from .const import (
     EVENT_STARTED_TORRENT,
     SERVICE_ADD_TORRENT,
     SERVICE_REMOVE_TORRENT,
-    SUPPORTED_ORDER_MODES,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -62,12 +61,6 @@ TRANS_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_LIMIT, default=DEFAULT_LIMIT): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=500)
-            ),
-            vol.Optional(CONF_ORDER, default=DEFAULT_ORDER): vol.All(
-                vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES.keys())
-            ),
             vol.Optional(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_USERNAME): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
