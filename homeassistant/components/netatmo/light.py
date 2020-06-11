@@ -23,9 +23,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    if not data_handler.webhook:
-        raise PlatformNotReady
-
     data_class = "CameraData"
 
     async def get_entities():
@@ -41,6 +38,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
             for camera in all_cameras:
                 if camera["type"] == "NOC":
+                    if not data_handler.webhook:
+                        raise PlatformNotReady
+
                     _LOGGER.debug(
                         "Adding camera light %s %s", camera["id"], camera["name"]
                     )
