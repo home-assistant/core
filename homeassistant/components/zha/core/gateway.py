@@ -172,24 +172,20 @@ class ZHAGateway:
             if zha_device.nwk == 0x0000:
                 self.coordinator_zha_device = zha_device
             zha_dev_entry = self.zha_storage.devices.get(str(zigpy_device.ieee))
-            delta = None
-            if zha_dev_entry is not None:
+            delta_msg = "not known"
+            if zha_dev_entry and zha_dev_entry.last_seen is not None:
                 delta = round(time.time() - zha_dev_entry.last_seen)
-                delta = f"{str(timedelta(seconds=delta))} ago"
                 if zha_device.is_mains_powered:
-                    zha_device.available = (
-                        time.time() - zha_dev_entry.last_seen
-                    ) < CONSIDER_UNAVAILABLE_MAINS
+                    zha_device.available = delta < CONSIDER_UNAVAILABLE_MAINS
                 else:
-                    zha_device.available = (
-                        time.time() - zha_dev_entry.last_seen
-                    ) < CONSIDER_UNAVAILABLE_BATTERY
+                    zha_device.available = delta < CONSIDER_UNAVAILABLE_BATTERY
+                delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
                 "[%s](%s) restored as '%s', last seen: %s",
                 zha_device.nwk,
                 zha_device.name,
                 "available" if zha_device.available else "unavailable",
-                delta or "not known",
+                delta_msg,
             )
 
     @callback
