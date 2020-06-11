@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.helpers.event import async_track_time_interval
 
 from .const import BASE, DOMAIN
 
@@ -74,11 +73,6 @@ class SmappeeActuator(SwitchEntity):
         self._connection_state = self._service_location.actuators.get(
             actuator_id
         ).connection_state
-
-        async def async_refresh(event_time):
-            await self.async_update()
-
-        async_track_time_interval(self._smappee_base.hass, async_refresh, SCAN_INTERVAL)
 
     @property
     def name(self):
