@@ -105,5 +105,5 @@ class SmappeeBase:
     async def async_update(self):
         """Update all Smappee trends and appliance states."""
         await self.hass.async_add_executor_job(
-            self._smappee.update_trends_and_appliance_states
+            self.smappee.update_trends_and_appliance_states
         )
