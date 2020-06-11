@@ -78,14 +78,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(BASE, None)
-    await asyncio.gather(
-        *[
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in SMAPPEE_PLATFORMS
-        ]
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in SMAPPEE_PLATFORMS
+            ]
+        )
     )
-    return True
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(BASE, None)
+
+    return unload_ok
 
 
 class SmappeeBase:
