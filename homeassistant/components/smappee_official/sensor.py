@@ -71,7 +71,7 @@ VOLTAGE_SENSORS = {
     "phase_voltages_a": [
         "Phase voltages - A",
         "mdi:flash",
-        ATTR_VOLTAGE,
+        VOLT,
         "phase_voltage_a",
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
     ],
