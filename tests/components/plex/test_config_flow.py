@@ -405,6 +405,56 @@ async def test_option_flow(hass):
     }
 
 
+async def test_missing_option_flow(hass):
+    """Test config options flow selection when no options stored."""
+    mock_plex_server = MockPlexServer()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEFAULT_DATA,
+        options=None,
+        unique_id=DEFAULT_DATA["server_id"],
+    )
+
+    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
+        "homeassistant.components.plex.PlexWebsocket.listen"
+    ) as mock_listen:
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_listen.called
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state == ENTRY_STATE_LOADED
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "plex_mp_settings"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USE_EPISODE_ART: True,
+            CONF_IGNORE_NEW_SHARED_USERS: True,
+            CONF_MONITORED_USERS: list(mock_plex_server.accounts),
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        MP_DOMAIN: {
+            CONF_USE_EPISODE_ART: True,
+            CONF_IGNORE_NEW_SHARED_USERS: True,
+            CONF_MONITORED_USERS: {
+                user: {"enabled": True} for user in mock_plex_server.accounts
+            },
+            CONF_IGNORE_PLEX_WEB_CLIENTS: False,
+        }
+    }
+
+
 async def test_option_flow_new_users_available(hass, caplog):
     """Test config options multiselect defaults when new Plex users are seen."""
 
