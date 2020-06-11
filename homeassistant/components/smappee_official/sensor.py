@@ -202,10 +202,10 @@ class SmappeeSensor(Entity):
         self._sensor = sensor
         self.data = None
         self._state = None
-        self._name = self._attributes[0]
-        self._icon = self._attributes[1]
-        self._unit_of_measurement = self._attributes[2]
-        self._sensor_id = self._attributes[3]
+        self._name = attributes[0]
+        self._icon = attributes[1]
+        self._unit_of_measurement = attributes[2]
+        self._sensor_id = attributes[3]
 
     @property
     def name(self):
