@@ -171,7 +171,7 @@ def setup(hass, config):
             m = ZabbixMetric(publish_states_host, f"homeassistant.float[{key}]", value)
             metrics.append(m)
 
-        string_keys |= strings.keys()
+        string_keys.update(strings.keys())
         return metrics
 
     def shutdown(event):
@@ -202,8 +202,8 @@ class ZabbixThread(threading.Thread):
         self.max_tries = max_tries
         self.write_errors = 0
         self.shutdown = False
-        self.float_keys = set([])
-        self.string_keys = set([])
+        self.float_keys = set()
+        self.string_keys = set()
 
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
