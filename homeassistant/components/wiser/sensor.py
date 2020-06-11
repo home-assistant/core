@@ -12,6 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 from .const import (
     _LOGGER,
+    DATA,
     DOMAIN,
     ROOMSTAT_FULL_BATTERY_LEVEL,
     ROOMSTAT_MIN_BATTERY_LEVEL,
@@ -23,7 +24,7 @@ from .const import (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize the entry."""
-    data = hass.data[DOMAIN]  # Get Handler
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA]  # Get Handler
     wiser_devices = []
 
     # Add device sensors, only if there are some.
@@ -140,7 +141,11 @@ class WiserSensor(Entity):
             """Update sensor state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, "WiserHubUpdateMessage", async_update_state)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, "WiserHubUpdateMessage", async_update_state
+            )
+        )
 
 
 class WiserBatterySensor(WiserSensor):

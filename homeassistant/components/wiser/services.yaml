@@ -7,7 +7,8 @@ boost_heating:
         example: "climate.wiser_lounge",
       }
     time_period:
-      { description: "Set the time period for the boost in minutes.",
+      {
+        description: "Set the time period for the boost in minutes.",
         example: "60",
       }
     temperature:
@@ -29,7 +30,8 @@ get_schedule:
         example: "climate.wiser_lounge",
       }
     filename:
-      { description: "The filename to write out the yaml. See README.MD if running within a docker container.",
+      {
+        description: "The filename to write out the yaml. See README.MD if running within a docker container.",
         example: "schedule1.yaml",
       }
 set_schedule:
@@ -66,12 +68,8 @@ set_smartplug_mode:
         description: "Enter the entity_id for the smartplug.",
         example: "switch.smartplug",
       }
-    plug_mode:
-      {
-        description: "Enter the mode, can
-        be auto or manual.",
-        example: "auto",
-      }
+    plug_mode: { description: "Enter the mode, can
+          be auto or manual.", example: "auto" }
 set_hotwater_mode:
   description: "Sets the hot water mode"
   fields:

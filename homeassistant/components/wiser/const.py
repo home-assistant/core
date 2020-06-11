@@ -13,9 +13,11 @@ DOMAIN = "wiser"
 DATA_WISER_CONFIG = "wiser_config"
 VERSION = "1.3.1"
 WISER_PLATFORMS = ["climate", "sensor", "switch"]
+DATA = "data"
+UPDATE_TRACK = "update_track"
+UPDATE_LISTENER = "update_listener"
 
 # Battery Constants
-
 TRV_FULL_BATTERY_LEVEL = 30
 TRV_MIN_BATTERY_LEVEL = 25
 ROOMSTAT_MIN_BATTERY_LEVEL = 17

@@ -7,9 +7,11 @@ https://github.com/asantaga/wiserHomeAssistantPlatform
 Angelo.santagata@gmail.com
 """
 import asyncio
+from datetime import timedelta
 from functools import partial
 import json
 
+import requests.exceptions
 import voluptuous as vol
 from wiserHeatingAPI.wiserHub import (
     TEMP_MAXIMUM,
@@ -27,44 +29,57 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import Throttle
 
 from .const import (
     _LOGGER,
     CONF_BOOST_TEMP,
     CONF_BOOST_TEMP_TIME,
-    DATA_WISER_CONFIG,
+    DATA,
     DEFAULT_BOOST_TEMP,
     DEFAULT_BOOST_TEMP_TIME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     HUBNAME,
     MANUFACTURER,
+    UPDATE_LISTENER,
+    UPDATE_TRACK,
     WISER_PLATFORMS,
     WISER_SERVICES,
 )
 
-# Set config values to default
-# These get set to config later
-SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-            vol.Coerce(int)
-        ),
-        vol.Optional(CONF_MINIMUM, default=TEMP_MINIMUM): vol.All(vol.Coerce(int)),
-        vol.Optional(CONF_BOOST_TEMP, default=DEFAULT_BOOST_TEMP): vol.All(
-            vol.Coerce(int)
-        ),
-        vol.Optional(CONF_BOOST_TEMP_TIME, default=DEFAULT_BOOST_TEMP_TIME): vol.All(
-            vol.Coerce(int)
-        ),
-    }
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): vol.All(vol.Coerce(int)),
+                    vol.Optional(CONF_MINIMUM, default=TEMP_MINIMUM): vol.All(
+                        vol.Coerce(int)
+                    ),
+                    vol.Optional(CONF_BOOST_TEMP, default=DEFAULT_BOOST_TEMP): vol.All(
+                        vol.Coerce(int)
+                    ),
+                    vol.Optional(
+                        CONF_BOOST_TEMP_TIME, default=DEFAULT_BOOST_TEMP_TIME
+                    ): vol.All(vol.Coerce(int)),
+                }
+            ],
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -78,18 +93,15 @@ async def async_setup(hass, config):
     migrating from the old wiser component. Otherwise, the user will have to
     continue setting up the integration via the config flow.
     """
-    hass.data[DATA_WISER_CONFIG] = config.get(DOMAIN, {})
+    hass.data.setdefault(DOMAIN, {})
 
-    if not hass.config_entries.async_entries(DOMAIN) and hass.data[DATA_WISER_CONFIG]:
-        """
-        No config entry exists and configuration.yaml config exists,
-        so lets trigger the import flow.
-        """
+    if DOMAIN not in config:
+        return True
+
+    for conf in config[DOMAIN]:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=hass.data[DATA_WISER_CONFIG],
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf,
             )
         )
 
@@ -97,78 +109,79 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Lets setup async service."""
-    global SCAN_INTERVAL
+    """Set up Wiser from a config entry."""
+    _async_import_options_from_data_if_missing(hass, config_entry)
 
-    """Set up the Wiser component."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    data = WiserHubHandle(hass, config_entry,)
 
-    SCAN_INTERVAL = int(
-        config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    )
+    try:
+        await hass.async_add_executor_job(data.connect)
+    except KeyError:
+        _LOGGER.error("Failed to login to wiser hub")
+        return False
+    except RuntimeError as exc:
+        _LOGGER.error("Failed to setup wiser hub: %s", exc)
+        return ConfigEntryNotReady
+    except requests.exceptions.HTTPError as ex:
+        if ex.response.status_code > 400 and ex.response.status_code < 500:
+            _LOGGER.error("Failed to login to wiser hub: %s", ex)
+            return False
+        raise ConfigEntryNotReady
 
-    _LOGGER.info(
-        "Wiser setup with Hub IP =  %s and scan interval of %s seconds",
-        config_entry.data[CONF_HOST],
-        SCAN_INTERVAL,
-    )
-    config_entry.add_update_listener(config_update_listener)
+    # Do first update
+    await hass.async_add_executor_job(data.update)
 
-    data = WiserHubHandle(
+    # Poll for updates in the background
+    update_track = async_track_time_interval(
         hass,
-        config_entry,
-        config_entry.data[CONF_HOST],
-        config_entry.data[CONF_PASSWORD],
+        lambda now: data.update(),
+        timedelta(
+            seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        ),
     )
 
-    @callback
-    def retryWiserHubSetup():
-        hass.async_create_task(wiserHubSetup())
+    update_listener = config_entry.add_update_listener(_async_update_listener)
 
-    async def wiserHubSetup():
-        _LOGGER.info("Initiating WiserHub connection")
-        try:
-            if await data.async_connect():
-                if await data.async_update():
-                    if data.wiserhub.getDevices is None:
-                        _LOGGER.error("No Wiser devices found to set up")
-                        return False
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        DATA: data,
+        UPDATE_TRACK: update_track,
+        UPDATE_LISTENER: update_listener,
+    }
 
-                    hass.data[DOMAIN] = data
-
-                    for platform in WISER_PLATFORMS:
-                        hass.async_create_task(
-                            hass.config_entries.async_forward_entry_setup(
-                                config_entry, platform
-                            )
-                        )
-
-                    _LOGGER.info("Wiser Component Setup Completed")
-                    await data.async_update_device_registry()
-                    return True
-                else:
-                    await scheduleWiserHubSetup()
-                    return True
-        except (asyncio.TimeoutError):
-            await scheduleWiserHubSetup()
-            return True
-        except WiserHubTimeoutException:
-            await scheduleWiserHubSetup()
-            return True
-        except Exception:
-            await scheduleWiserHubSetup()
-            return True
-
-    async def scheduleWiserHubSetup(interval=10):
-        _LOGGER.error(
-            "Unable to connect to the Wiser Hub, retrying in %s seconds", interval,
+    for platform in WISER_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
-        hass.loop.call_later(interval, retryWiserHubSetup)
-        return
 
-    await wiserHubSetup()
+    _LOGGER.info("Wiser Component Setup Completed")
+    await data.async_update_device_registry()
+
     return True
+
+
+@callback
+def _async_import_options_from_data_if_missing(hass, config_entry):
+    options = dict(config_entry.options)
+    modified = False
+    for importable_option in [
+        CONF_BOOST_TEMP,
+        CONF_BOOST_TEMP_TIME,
+        CONF_SCAN_INTERVAL,
+    ]:
+        if (
+            importable_option not in config_entry.options
+            and importable_option in config_entry.data
+        ):
+            options[importable_option] = config_entry.data[importable_option]
+            modified = True
+
+    if modified:
+        hass.config_entries.async_update_entry(config_entry, options=options)
+
+
+async def _async_update_listener(hass, config_entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass, config_entry):
@@ -185,84 +198,56 @@ async def async_unload_entry(hass, config_entry):
         hass.services.async_remove(DOMAIN, WISER_SERVICES[service])
 
     _LOGGER.debug("Unloading Wiser Component")
-    tasks = []
-    for platform in WISER_PLATFORMS:
-        tasks.append(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in WISER_PLATFORMS
+            ]
         )
-
-    unload_status = all(await asyncio.gather(*tasks))
-    if unload_status:
-        hass.data.pop(DOMAIN)
-    return unload_status
-
-
-async def config_update_listener(hass, config_entry):
-    """Handle config update update."""
-    global SCAN_INTERVAL
-
-    SCAN_INTERVAL = int(config_entry.data.get(CONF_SCAN_INTERVAL))
-    _LOGGER.info(
-        "Wiser config parameters changed. Boost temp = %s, Boost time = %s, "
-        + "scan interval = %s",
-        config_entry.data[CONF_BOOST_TEMP],
-        config_entry.data[CONF_BOOST_TEMP_TIME],
-        SCAN_INTERVAL,
     )
+
+    hass.data[DOMAIN][config_entry.entry_id][UPDATE_TRACK]()
+    hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]()
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok
 
 
 class WiserHubHandle:
     """Main Wiser class handling all data."""
 
-    def __init__(self, hass, config_entry, ip, secret):
+    def __init__(self, hass, config_entry):
         """Initialise the base class."""
         self._hass = hass
         self._config_entry = config_entry
         self._name = config_entry.data[CONF_NAME]
-        self.ip = ip
-        self.secret = secret
+        self.ip = config_entry.data[CONF_HOST]
+        self.secret = config_entry.data[CONF_PASSWORD]
         self.wiserhub = None
         self.minimum_temp = TEMP_MINIMUM
         self.maximum_temp = TEMP_MAXIMUM
-        self.boost_temp = config_entry.data.get(CONF_BOOST_TEMP, DEFAULT_BOOST_TEMP)
-        self.boost_time = config_entry.data.get(
+        self.boost_temp = config_entry.options.get(CONF_BOOST_TEMP, DEFAULT_BOOST_TEMP)
+        self.boost_time = config_entry.options.get(
             CONF_BOOST_TEMP_TIME, DEFAULT_BOOST_TEMP_TIME
         )
-        self.timer_handle = None
 
-    async def async_connect(self):
-        """Manage the async connection request."""
-        self.wiserhub = await self._hass.async_add_executor_job(
-            partial(wiserHub, self.ip, self.secret)
-        )
+    def connect(self):
+        """Connect to Wiser Hub."""
+        self.wiserhub = wiserHub(self.ip, self.secret)
         return True
 
-    @callback
-    def do_hub_update(self):
-        """Lets update the hub."""
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Call Wiser Hub async update."""
         self._hass.async_create_task(self.async_update())
 
     async def async_update(self, no_throttle: bool = False):
-        """Update uses event loop scheduler for scan interval."""
-        if no_throttle:
-            # Forced update
-            _LOGGER.info("Update of Wiser Hub data requested via On Demand")
-            # Cancel next scheduled update and schedule for next interval
-            if self.timer_handle:
-                self.timer_handle.cancel()
-        else:
-            # Updated on schedule
-            _LOGGER.info(
-                "Update of Wiser Hub data requested on %s seconds interval",
-                SCAN_INTERVAL,
-            )
-        # Schedule next update
-        self.timer_handle = self._hass.loop.call_later(
-            SCAN_INTERVAL, self.do_hub_update
-        )
-
+        """Update from Wiser Hub."""
         try:
-            # Update from hub
             result = await self._hass.async_add_executor_job(self.wiserhub.refreshData)
             if result is not None:
                 _LOGGER.info("**Wiser Hub data updated**")
