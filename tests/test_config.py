@@ -28,6 +28,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import async_get_integration
@@ -1029,6 +1030,7 @@ async def test_component_config_exceptions(hass, caplog):
         ("non_existing", vol.Schema({"zone": int}), None),
         ("zone", vol.Schema({}), None),
         ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),
+        ("openuv", cv.deprecated("openuv", invalidation_version="0.115"), None),
     ],
 )
 def test_identify_config_schema(domain, schema, expected):

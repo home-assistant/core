@@ -10,9 +10,9 @@
             "unknown": "Onbekannte Feeler opgetrueden"
         },
         "error": {
-            "faulty_credentials": "Feeler beider Autorisatioun",
+            "faulty_credentials": "Feeler bei der Autorisatioun, iwwerpr\u00e9if de Jeton",
             "host_or_token": "Op manst een Apparat oder Jeton muss ugi sinn.",
-            "no_servers": "Kee Server as mam Kont verbonnen",
+            "no_servers": "Kee Server as mam Plex Kont verbonnen",
             "not_found": "Kee Plex Server fonnt",
             "ssl_error": "SSL Zertifikat Problem"
         },
@@ -20,7 +20,7 @@
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Apparat (Optionell)",
+                    "host": "Apparat",
                     "port": "Port",
                     "ssl": "SSL benotzen",
                     "token": "Jeton (Optionell)",
