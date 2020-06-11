@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Freq\u00fc\u00e8ncia d'actualitzaci\u00f3 (minuts)"
+                }
+            }
+        }
+    }
+}
