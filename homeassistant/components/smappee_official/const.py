@@ -5,7 +5,6 @@ from datetime import timedelta
 DOMAIN = "smappee_official"
 DATA_CLIENT = "smappee_data"
 
-API = "API"
 BASE = "BASE"
 
 SMAPPEE_PLATFORMS = ["sensor", "switch"]

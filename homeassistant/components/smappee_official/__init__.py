@@ -12,7 +12,6 @@ from homeassistant.util import Throttle
 
 from . import api, config_flow
 from .const import (
-    API,
     AUTHORIZE_URL,
     BASE,
     DOMAIN,
@@ -62,12 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, entry
     )
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    smappee_api = api.ConfigEntrySmappeeApi(hass, entry, implementation)
 
-    # If using a requests-based API lib
-    hass.data[DOMAIN][API] = api.ConfigEntrySmappeeApi(hass, entry, session)
-
-    smappee = await hass.async_add_executor_job(Smappee, hass.data[DOMAIN][API])
+    smappee = Smappee(smappee_api)
     await hass.async_add_executor_job(smappee.load_service_locations)
 
     hass.data[DOMAIN][BASE] = SmappeeBase(hass, smappee)
@@ -82,7 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(API, None)
     hass.data[DOMAIN].pop(BASE, None)
     await asyncio.gather(
         *[
