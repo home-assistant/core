@@ -99,11 +99,13 @@ HVAC_CURRENT_MAPPINGS = {
 
 
 # Map Z-Wave HVAC Mode to Home Assistant value
+# Note: We treat "auto" as "heat_cool" as most Z-Wave devices
+# report auto_changeover as auto without schedule support.
 ZW_HVAC_MODE_MAPPINGS = {
     ThermostatMode.OFF: HVAC_MODE_OFF,
     ThermostatMode.HEAT: HVAC_MODE_HEAT,
     ThermostatMode.COOL: HVAC_MODE_COOL,
-    ThermostatMode.AUTO: HVAC_MODE_AUTO,
+    ThermostatMode.AUTO: HVAC_MODE_HEAT_COOL,
     ThermostatMode.AUXILIARY: HVAC_MODE_HEAT,
     ThermostatMode.FAN: HVAC_MODE_FAN_ONLY,
     ThermostatMode.FURNANCE: HVAC_MODE_HEAT,
@@ -212,19 +214,19 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def preset_mode(self):
         """Return preset operation ie. eco, away."""
-        # Z-Wave uses mode-values > 10 for presets
-        if self.values.mode.value[VALUE_SELECTED_ID] > 10:
+        # Z-Wave uses mode-values > 3 for presets
+        if self.values.mode.value[VALUE_SELECTED_ID] > 3:
             return self.values.mode.value[VALUE_SELECTED_LABEL]
         return PRESET_NONE
 
     @property
     def preset_modes(self):
         """Return the list of available preset operation modes."""
-        # Z-Wave uses mode-values > 10 for presets
+        # Z-Wave uses mode-values > 3 for presets
         return [PRESET_NONE] + [
             val[VALUE_LABEL]
             for val in self.values.mode.value[VALUE_LIST]
-            if val[VALUE_ID] > 10
+            if val[VALUE_ID] > 3
         ]
 
     @property
