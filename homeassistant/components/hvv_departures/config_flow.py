@@ -93,17 +93,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             stations = check_name.get("results")
 
-            if not stations:
+            self.stations = {
+                f"{station.get('name')}": station
+                for station in stations
+                if station.get("type") == "STATION"
+            }
+
+            if not self.stations:
                 errors["base"] = "no_results"
 
                 return self.async_show_form(
                     step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
                 )
-
-            self.stations = {
-                f"{station.get('name')} ({station.get('type')})": station
-                for station in stations
-            }
 
             # schema
 
