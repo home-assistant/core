@@ -61,14 +61,6 @@ SENSOR_TYPES = {
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "probability_forecast:freezing",
     },
-    "thunder_chance": {
-        ENTITY_NAME: "Thunder chance",
-        ENTITY_UNIT: UNIT_PERCENTAGE,
-        ENTITY_ICON: "mdi:weather-lightning",
-        ENTITY_CLASS: None,
-        ENTITY_ENABLE: True,
-        ENTITY_API_DATA_PATH: "forecast:T:value",  # NOT_OK
-    },
     "wind_speed": {
         ENTITY_NAME: "Wind Speed",
         ENTITY_UNIT: SPEED_KILOMETERS_PER_HOUR,
@@ -80,7 +72,7 @@ SENSOR_TYPES = {
     "next_rain": {
         ENTITY_NAME: "Next rain",
         ENTITY_UNIT: None,
-        ENTITY_ICON: "mdi:weather-rainy",
+        ENTITY_ICON: "mdi:weather-pouring",
         ENTITY_CLASS: "timestamp",
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "forecast:T:value",  # NOT_OK
@@ -108,6 +100,22 @@ SENSOR_TYPES = {
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
         ENTITY_API_DATA_PATH: "forecast:T:value",  # NOT_OK
+    },
+    "precipitation": {
+        ENTITY_NAME: "Daily Precipitation",
+        ENTITY_UNIT: "mm",
+        ENTITY_ICON: "mdi:cup-water",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "daily_forecast:precipitation:24h",
+    },
+    "cloud": {
+        ENTITY_NAME: "Cloud Cover",
+        ENTITY_UNIT: UNIT_PERCENTAGE,
+        ENTITY_ICON: "mdi:weather-partly-cloudy",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+        ENTITY_API_DATA_PATH: "forecast:clouds",
     },
 }
 
