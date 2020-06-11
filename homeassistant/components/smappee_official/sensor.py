@@ -199,7 +199,6 @@ class SmappeeSensor(Entity):
         """Initialize the Smappee sensor."""
         self._smappee_base = smappee_base
         self._service_location = service_location
-        self._attributes = attributes
         self._sensor = sensor
         self.data = None
         self._state = None
