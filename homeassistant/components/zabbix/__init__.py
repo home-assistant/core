@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers import event as event_helper, state as state_helper
+from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +109,6 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = zapi
 
-
     def event_to_metrics(event, float_keys, string_keys):
         """Add an event to the outgoing Zabbix list."""
         state = event.data.get("new_state")
@@ -162,7 +161,11 @@ def setup(hass, config):
             floats_discovery = []
             for float_key in float_keys:
                 floats_discovery.append({"{#KEY}": float_key})
-            m = ZabbixMetric(publish_states_host, 'homeassistant.floats_discovery', json.dumps(floats_discovery))
+            m = ZabbixMetric(
+                publish_states_host,
+                "homeassistant.floats_discovery",
+                json.dumps(floats_discovery),
+            )
             metrics.append(m)
         for key, value in floats.items():
             m = ZabbixMetric(publish_states_host, f"homeassistant.float[{key}]", value)
@@ -236,7 +239,9 @@ class ZabbixThread(threading.Thread):
                     age = time.monotonic() - timestamp
 
                     if age < queue_seconds:
-                        event_metrics = self.event_to_metrics(event, self.float_keys, self.string_keys)
+                        event_metrics = self.event_to_metrics(
+                            event, self.float_keys, self.string_keys
+                        )
                         if event_metrics:
                             metrics += event_metrics
                     else:
@@ -263,9 +268,7 @@ class ZabbixThread(threading.Thread):
 
                 _LOGGER.debug("Wrote %d metrics", len(metrics))
                 break
-            except (
-                OSError,
-            ) as err:
+            except OSError as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
                 else:
