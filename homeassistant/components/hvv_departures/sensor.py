@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
-from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
+from .const import ATTRIBUTION, CONF_STATION, DOMAIN, MANUFACTURER
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MAX_LIST = 20
@@ -48,7 +48,7 @@ class HVVDepartureSensor(Entity):
     def __init__(self, hass, config_entry, session, hub):
         """Initialize."""
         self.config_entry = config_entry
-        self.station_name = self.config_entry.data["station"]["name"]
+        self.station_name = self.config_entry.data[CONF_STATION]["name"]
         self.attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._available = False
         self._state = None
@@ -66,7 +66,7 @@ class HVVDepartureSensor(Entity):
         )
 
         payload = {
-            "station": self.config_entry.data["station"],
+            "station": self.config_entry.data[CONF_STATION],
             "time": {
                 "date": departure_time.strftime("%d.%m.%Y"),
                 "time": departure_time.strftime("%H:%M"),
@@ -149,8 +149,8 @@ class HVVDepartureSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this sensor."""
-        station_id = self.config_entry.data["station"]["id"]
-        station_type = self.config_entry.data["station"]["type"]
+        station_id = self.config_entry.data[CONF_STATION]["id"]
+        station_type = self.config_entry.data[CONF_STATION]["type"]
 
         return f"{self.config_entry.entry_id}-{station_id}-{station_type}"
 
@@ -162,8 +162,8 @@ class HVVDepartureSensor(Entity):
                 (
                     DOMAIN,
                     self.config_entry.entry_id,
-                    self.config_entry.data["station"]["id"],
-                    self.config_entry.data["station"]["type"],
+                    self.config_entry.data[CONF_STATION]["id"],
+                    self.config_entry.data[CONF_STATION]["type"],
                 )
             },
             "name": self._name,
