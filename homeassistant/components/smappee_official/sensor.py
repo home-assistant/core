@@ -212,7 +212,10 @@ class SmappeeSensor(Entity):
     def name(self):
         """Return the name for this sensor."""
         if self._sensor in ["sensor", "load"]:
-            return f"{self._service_location.service_location_name} - {self._sensor.title()} - {self._name}"
+            return (
+                f"{self._service_location.service_location_name} - "
+                f"{self._sensor.title()} - {self._name}"
+            )
 
         return f"{self._service_location.service_location_name} - {self._name}"
 
@@ -235,9 +238,17 @@ class SmappeeSensor(Entity):
     def unique_id(self,):
         """Return the unique ID for this sensor."""
         if self._sensor in ["load", "sensor"]:
-            return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-{self._sensor}-{self._sensor_id}"
+            return (
+                f"{self._service_location.device_serial_number}-"
+                f"{self._service_location.service_location_id}-"
+                f"{self._sensor}-{self._sensor_id}"
+            )
 
-        return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-{self._sensor}"
+        return (
+            f"{self._service_location.device_serial_number}-"
+            f"{self._service_location.service_location_id}-"
+            f"{self._sensor}"
+        )
 
     @property
     def device_state_attributes(self):

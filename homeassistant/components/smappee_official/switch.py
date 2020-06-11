@@ -84,10 +84,16 @@ class SmappeeActuator(SwitchEntity):
     def name(self):
         """Return the name of the switch."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
-            return f"{self._service_location.service_location_name} - Output module - {self._actuator_name} - {self._actuator_state_option}"
+            return (
+                f"{self._service_location.service_location_name} - "
+                f"Output module - {self._actuator_name} - {self._actuator_state_option}"
+            )
 
         # Switch or comfort plug
-        return f"{self._service_location.service_location_name} - {self._actuator_type.title()} - {self._actuator_name}"
+        return (
+            f"{self._service_location.service_location_name} - "
+            f"{self._actuator_type.title()} - {self._actuator_name}"
+        )
 
     @property
     def is_on(self):
@@ -151,10 +157,18 @@ class SmappeeActuator(SwitchEntity):
     def unique_id(self,):
         """Return the unique ID for this switch."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
-            return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-actuator-{self._actuator_id}-{self._actuator_state_option}"
+            return (
+                f"{self._service_location.device_serial_number}-"
+                f"{self._service_location.service_location_id}-actuator-"
+                f"{self._actuator_id}-{self._actuator_state_option}"
+            )
 
         # Switch or comfort plug
-        return f"{self._service_location.device_serial_number}-{self._service_location.service_location_id}-actuator-{self._actuator_id}"
+        return (
+            f"{self._service_location.device_serial_number}-"
+            f"{self._service_location.service_location_id}-actuator-"
+            f"{self._actuator_id}"
+        )
 
     @property
     def device_state_attributes(self):
