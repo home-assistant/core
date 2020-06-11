@@ -4,6 +4,9 @@ import logging
 
 from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.events import (
+    ACCESS_POINT_UPGRADED,
+    GATEWAY_UPGRADED,
+    SWITCH_UPGRADED,
     WIRED_CLIENT_CONNECTED,
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_ROAM,
@@ -49,6 +52,8 @@ CLIENT_STATIC_ATTRIBUTES = [
     "name",
     "oui",
 ]
+
+DEVICE_UPGRADED = (ACCESS_POINT_UPGRADED, GATEWAY_UPGRADED, SWITCH_UPGRADED)
 
 WIRED_CONNECTION = (WIRED_CLIENT_CONNECTED,)
 WIRELESS_CONNECTION = (
@@ -136,12 +141,12 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.schedule_update = False
         self.cancel_scheduled_update = None
         self._is_connected = False
-        if self.client.last_seen:
+        if client.last_seen:
             self._is_connected = (
-                self.is_wired == self.client.is_wired
+                self.is_wired == client.is_wired
                 and dt_util.utcnow()
-                - dt_util.utc_from_timestamp(float(self.client.last_seen))
-                < self.controller.option_detection_time
+                - dt_util.utc_from_timestamp(float(client.last_seen))
+                < controller.option_detection_time
             )
             if self._is_connected:
                 self.schedule_update = True
@@ -239,17 +244,17 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_track_clients:
-            await self.async_remove()
+            await self.remove_item({self.client.mac})
 
         elif self.is_wired:
             if not self.controller.option_track_wired_clients:
-                await self.async_remove()
+                await self.remove_item({self.client.mac})
 
         elif (
             self.controller.option_ssid_filter
             and self.client.essid not in self.controller.option_ssid_filter
         ):
-            await self.async_remove()
+            await self.remove_item({self.client.mac})
 
 
 class UniFiDeviceTracker(UniFiBase, ScannerEntity):
@@ -260,25 +265,18 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     def __init__(self, device, controller):
         """Set up tracked device."""
-        self.device = device
-        super().__init__(controller)
+        super().__init__(device, controller)
 
-        self._is_connected = self.device.state == 1
+        self._is_connected = device.state == 1
         self.cancel_scheduled_update = None
 
     @property
-    def mac(self):
-        """Return MAC of device."""
-        return self.device.mac
-
-    async def async_added_to_hass(self):
-        """Subscribe to device events."""
-        await super().async_added_to_hass()
-        self.device.register_callback(self.async_update_callback)
+    def device(self):
+        """Wrap item."""
+        return self._item
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        self.device.remove_callback(self.async_update_callback)
         if self.cancel_scheduled_update:
             self.cancel_scheduled_update()
         await super().async_will_remove_from_hass()
@@ -303,8 +301,15 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             self.cancel_scheduled_update = async_track_point_in_utc_time(
                 self.hass,
                 _no_heartbeat,
-                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 10),
+                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
             )
+
+        elif (
+            self.device.last_updated == SOURCE_EVENT
+            and self.device.event.event in DEVICE_UPGRADED
+        ):
+            self.hass.async_create_task(self.async_update_device_registry())
+            return
 
         super().async_update_callback()
 
@@ -348,6 +353,14 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
         return info
 
+    async def async_update_device_registry(self) -> None:
+        """Update device registry."""
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+
+        device_registry.async_get_or_create(
+            config_entry_id=self.controller.config_entry.entry_id, **self.device_info
+        )
+
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
@@ -370,4 +383,4 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_track_devices:
-            await self.async_remove()
+            await self.remove_item({self.device.mac})

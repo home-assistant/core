@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "wrong_server_id": "Server ID ist ung\u00fcltig"
+        }
+    },
+    "options": {
+        "error": {
+            "retrive_error": "Fehler beim Abrufen der Serverliste"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Automatische Updates deaktivieren"
+                }
+            }
+        }
+    }
+}

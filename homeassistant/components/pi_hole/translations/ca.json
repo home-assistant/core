@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "duplicated_name": "El nom ja existeix"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API (opcional)",
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
+                    "port": "Port",
+                    "ssl": "Utilitza SSL",
+                    "verify_ssl": "Verifica el certificat SSL"
+                }
+            }
+        }
+    }
+}

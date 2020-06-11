@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Smile \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "invalid_auth": "\u9a57\u8b49\u7121\u6548\uff0c\u8acb\u6aa2\u67e5\u6240\u8f38\u5165\u7684  Smile ID 8 \u4f4d\u5b57\u5143",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Smile IP \u4f4d\u5740",
+                    "password": "Smile ID"
+                },
+                "description": "\u8a73\u7d30\u8cc7\u8a0a",
+                "title": "\u9023\u7dda\u81f3 Smile"
+            }
+        }
+    }
+}

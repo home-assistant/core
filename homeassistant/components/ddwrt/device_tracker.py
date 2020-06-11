@@ -113,7 +113,7 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Checking ARP")
+        _LOGGER.debug("Checking ARP")
 
         endpoint = "Wireless" if self.wireless_only else "Lan"
         url = f"{self.protocol}://{self.host}/Status_{endpoint}.live.asp"

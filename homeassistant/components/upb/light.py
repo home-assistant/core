@@ -6,7 +6,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.helpers import entity_platform
 
@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class UpbLight(UpbAttachedEntity, Light):
+class UpbLight(UpbAttachedEntity, LightEntity):
     """Representation of an UPB Light."""
 
     def __init__(self, element, unique_id, upb):
@@ -72,7 +72,7 @@ class UpbLight(UpbAttachedEntity, Light):
             await self.async_light_blink(0.5 if flash == "short" else 1.5)
         else:
             rate = kwargs.get(ATTR_TRANSITION, -1)
-            brightness = kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55
+            brightness = round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
             self._element.turn_on(brightness, rate)
 
     async def async_turn_off(self, **kwargs):
@@ -83,7 +83,7 @@ class UpbLight(UpbAttachedEntity, Light):
     async def async_light_fade_start(self, rate, brightness=None, brightness_pct=None):
         """Start dimming of device."""
         if brightness is not None:
-            brightness_pct = brightness / 2.55
+            brightness_pct = round(brightness / 2.55)
         self._element.fade_start(brightness_pct, rate)
 
     async def async_light_fade_stop(self):

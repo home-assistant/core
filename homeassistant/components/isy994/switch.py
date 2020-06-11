@@ -4,26 +4,32 @@ from typing import Callable
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_GROUP
 
 from homeassistant.components.switch import DOMAIN as SWITCH, SwitchEntity
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ISY994_NODES, ISY994_PROGRAMS
-from .const import _LOGGER
+from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .helpers import migrate_old_unique_ids
+from .services import async_setup_device_services
 
 
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list], None],
+) -> bool:
     """Set up the ISY994 switch platform."""
+    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     devices = []
-    for node in hass.data[ISY994_NODES][SWITCH]:
+    for node in hass_isy_data[ISY994_NODES][SWITCH]:
         devices.append(ISYSwitchEntity(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][SWITCH]:
+    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][SWITCH]:
         devices.append(ISYSwitchProgramEntity(name, status, actions))
 
-    add_entities(devices)
+    await migrate_old_unique_ids(hass, SWITCH, devices)
+    async_add_entities(devices)
+    async_setup_device_services(hass)
 
 
 class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
@@ -32,9 +38,9 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 device is in the on state."""
-        if self.value == ISY_VALUE_UNKNOWN:
-            return STATE_UNKNOWN
-        return bool(self.value)
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return bool(self._node.status)
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 switch."""
@@ -60,7 +66,7 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 switch program is on."""
-        return bool(self.value)
+        return bool(self._node.status)
 
     def turn_on(self, **kwargs) -> None:
         """Send the turn on command to the ISY994 switch program."""

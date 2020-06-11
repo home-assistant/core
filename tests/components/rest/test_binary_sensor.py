@@ -33,10 +33,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
         self.hass = get_test_home_assistant()
         # Reset for this test.
         self.DEVICES = []
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_missing_config(self):
         """Test setup with configuration missing required entries."""
@@ -88,6 +85,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 "binary_sensor",
                 {"binary_sensor": {"platform": "rest", "resource": "http://localhost"}},
             )
+            self.hass.block_till_done()
         assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -113,6 +111,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
@@ -139,6 +138,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
         assert 1 == mock_req.call_count
 
 
@@ -159,10 +159,7 @@ class TestRestBinarySensor(unittest.TestCase):
         self.binary_sensor = rest.RestBinarySensor(
             self.hass, self.rest, self.name, self.device_class, self.value_template
         )
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def update_side_effect(self, data):
         """Side effect function for mocking RestData.update()."""

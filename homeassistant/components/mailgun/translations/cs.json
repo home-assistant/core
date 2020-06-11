@@ -5,7 +5,7 @@
             "one_instance_allowed": "Povolena je pouze jedna instance."
         },
         "create_entry": {
-            "default": "Chcete-li odeslat ud\u00e1losti do aplikace Home Assistant, budete muset nastavit [Webhooks with Mailgun]({mailgun_url}). \n\n Vypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: `{webhook_url}' \n - Metoda: POST \n - Typ obsahu: aplikace / json \n\n Viz [dokumentace]({docs_url}), jak konfigurovat automatizace pro zpracov\u00e1n\u00ed p\u0159\u00edchoz\u00edch dat."
+            "default": "Chcete-li odeslat ud\u00e1losti do aplikace Home Assistant, budete muset nastavit [Webhooks with Mailgun]({mailgun_url}). \n\n Vypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: `{webhook_url}`\n - Metoda: POST \n - Typ obsahu: application/json\n\n Viz [dokumentace]({docs_url}), jak konfigurovat automatizace pro zpracov\u00e1n\u00ed p\u0159\u00edchoz\u00edch dat."
         },
         "step": {
             "user": {

@@ -12,6 +12,7 @@
             },
             "user": {
                 "data": {
+                    "host": "Servidor",
                     "password": "Palavra-passe",
                     "username": "Nome de Utilizador"
                 }

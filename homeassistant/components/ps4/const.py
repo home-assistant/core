@@ -5,7 +5,7 @@ DEFAULT_NAME = "PlayStation 4"
 DEFAULT_REGION = "United States"
 DEFAULT_ALIAS = "Home-Assistant"
 DOMAIN = "ps4"
-GAMES_FILE = ".ps4-games.json"
+GAMES_FILE = ".ps4-games.{}.json"
 PS4_DATA = "ps4_data"
 
 COMMANDS = ("up", "down", "right", "left", "enter", "back", "option", "ps", "ps_hold")

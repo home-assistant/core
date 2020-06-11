@@ -35,13 +35,17 @@
             "button_4": "\u010cetrti gumb",
             "dim_down": "Zatemnite",
             "dim_up": "pove\u010dajte mo\u010d",
+            "double_buttons_1_3": "Prvi in tretji gumb",
+            "double_buttons_2_4": "Drugi in \u010detrti gumb",
             "turn_off": "Ugasni",
             "turn_on": "Pri\u017egi"
         },
         "trigger_type": {
             "remote_button_long_release": "\"{subtype}\" gumb spro\u0161\u010den po dolgem pritisku",
             "remote_button_short_press": "Pritisnjen \"{subtype}\" gumb",
-            "remote_button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den"
+            "remote_button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den",
+            "remote_double_button_long_press": "Po dolgem pritisku sta obe \" {subtype} \" spro\u0161\u010deni",
+            "remote_double_button_short_press": "Spro\u0161\u010dena oba \"{podvrsta}\""
         }
     }
 }

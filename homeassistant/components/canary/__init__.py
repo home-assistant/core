@@ -71,7 +71,6 @@ class CanaryData:
 
         self._locations_by_id = {}
         self._readings_by_device_id = {}
-        self._entries_by_location_id = {}
 
         self.update()
 
@@ -82,9 +81,6 @@ class CanaryData:
             location_id = location.location_id
 
             self._locations_by_id[location_id] = location
-            self._entries_by_location_id[location_id] = self._api.get_entries(
-                location_id, entry_type="motion", limit=1
-            )
 
             for device in location.devices:
                 if device.is_online:
@@ -96,10 +92,6 @@ class CanaryData:
     def locations(self):
         """Return a list of locations."""
         return self._locations_by_id.values()
-
-    def get_motion_entries(self, location_id):
-        """Return a list of motion entries based on location_id."""
-        return self._entries_by_location_id.get(location_id, [])
 
     def get_location(self, location_id):
         """Return a location based on location_id."""

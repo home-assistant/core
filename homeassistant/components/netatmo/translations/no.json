@@ -1,16 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan kun konfigurere en Netatmo-konto.",
-            "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
-            "missing_configuration": "Netatmo-komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+            "authorize_url_timeout": "Tidsavbrutt ved oppretting av godkjennings url.",
+            "missing_configuration": "Komponeneten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
         },
         "create_entry": {
-            "default": "Vellykket autentisering med Netatmo."
+            "default": "Vellykket godkjenning med Netatmo."
         },
         "step": {
             "pick_implementation": {
-                "title": "Velg autentiseringsmetode"
+                "title": "Velg godkjenningsmetode"
             }
         }
     }

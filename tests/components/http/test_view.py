@@ -19,7 +19,13 @@ from tests.async_mock import AsyncMock, Mock
 @pytest.fixture
 def mock_request():
     """Mock a request."""
-    return Mock(app={"hass": Mock(is_running=True)}, match_info={})
+    return Mock(app={"hass": Mock(is_stopping=False)}, match_info={})
+
+
+@pytest.fixture
+def mock_request_with_stopping():
+    """Mock a request."""
+    return Mock(app={"hass": Mock(is_stopping=True)}, match_info={})
 
 
 async def test_invalid_json(caplog):
@@ -55,3 +61,11 @@ async def test_handling_service_not_found(mock_request):
             Mock(requires_auth=False),
             AsyncMock(side_effect=ServiceNotFound("test", "test")),
         )(mock_request)
+
+
+async def test_not_running(mock_request_with_stopping):
+    """Test we get a 503 when not running."""
+    response = await request_handler_factory(
+        Mock(requires_auth=False), AsyncMock(side_effect=Unauthorized)
+    )(mock_request_with_stopping)
+    assert response.status == 503
