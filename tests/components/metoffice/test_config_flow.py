@@ -5,6 +5,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.metoffice.const import DOMAIN
 
 from .const import (
+    METOFFICE_CONFIG_WAVERTREE,
     TEST_API_KEY,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
@@ -12,7 +13,7 @@ from .const import (
 )
 
 from tests.async_mock import patch
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 async def test_form(hass, requests_mock):
@@ -65,23 +66,8 @@ async def test_form_already_configured(hass, requests_mock):
     all_sites = json.dumps(mock_json["all_sites"])
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.metoffice.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.metoffice.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"api_key": TEST_API_KEY},
-        )
-
-    assert result2["type"] == "create_entry"
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE)
+    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
