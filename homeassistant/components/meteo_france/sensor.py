@@ -180,13 +180,19 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     @property
     def state(self):
         """Return the state."""
-        return dt_util.as_local(self.coordinator.data.next_rain_date_locale())
+        return (
+            dt_util.as_local(self.coordinator.data.next_rain_date_locale())
+            if self.coordinator.data.next_rain_date_locale() is not None
+            else None
+        )
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        next_rain_datetime = dt_util.as_local(
-            self.coordinator.data.next_rain_date_locale()
+        next_rain_datetime = (
+            dt_util.as_local(self.coordinator.data.next_rain_date_locale())
+            if self.coordinator.data.next_rain_date_locale() is not None
+            else None
         )
         if next_rain_datetime:
             rain_text_summary = (
