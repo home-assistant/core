@@ -66,8 +66,8 @@ from .const import (
 from .helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
-_CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
-_CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
+CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
+CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
@@ -96,11 +96,6 @@ class ZHADevice(LogMixin):
         self._available_signal = f"{self.name}_{self.ieee}_{SIGNAL_AVAILABLE}"
         self._checkins_missed_count = 0
         self.unsubs = []
-        self.unsubs.append(
-            async_dispatcher_connect(
-                self.hass, self._available_signal, self.async_initialize
-            )
-        )
         self.quirk_applied = isinstance(self._zigpy_device, zigpy.quirks.CustomDevice)
         self.quirk_class = (
             f"{self._zigpy_device.__class__.__module__}."
@@ -108,9 +103,9 @@ class ZHADevice(LogMixin):
         )
 
         if self.is_mains_powered:
-            self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_MAINS
+            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_MAINS
         else:
-            self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_BATTERY
+            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_BATTERY
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self.unsubs.append(
             async_track_time_interval(
@@ -343,13 +338,20 @@ class ZHADevice(LogMixin):
         if res is not None:
             self._checkins_missed_count = 0
 
-    def update_available(self, available):
-        """Set sensor availability."""
-        if self._available != available and available:
-            # Update the state the first time the device comes online
-            async_dispatcher_send(self.hass, self._available_signal, False)
-        async_dispatcher_send(self.hass, f"{self._available_signal}_entity", available)
-        self._available = available
+    def update_available(self, available: bool) -> None:
+        """Update device availability and signal entities."""
+        availability_changed = self.available ^ available
+        self.available = available
+        if availability_changed and available:
+            # reinit channels then signal entities
+            self.hass.async_create_task(self._async_became_available())
+            return
+        async_dispatcher_send(self.hass, f"{self._available_signal}_entity")
+
+    async def _async_became_available(self) -> None:
+        """Update device availability and signal entities."""
+        await self.async_initialize(False)
+        async_dispatcher_send(self.hass, f"{self._available_signal}_entity")
 
     @property
     def device_info(self):
