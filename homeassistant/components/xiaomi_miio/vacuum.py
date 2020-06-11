@@ -3,7 +3,6 @@ from functools import partial
 import logging
 
 from miio import DeviceException, Vacuum  # pylint: disable=import-error
-from pytz import utc
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -29,6 +28,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.util.dt import as_utc
 
 from .const import (
     SERVICE_CLEAN_ZONE,
@@ -273,7 +273,7 @@ class MiroboVacuum(StateVacuumEntity):
             {
                 "enabled": timer.enabled,
                 "cron": timer.cron,
-                "next_schedule": timer.next_schedule.astimezone(utc),
+                "next_schedule": as_utc(timer.next_schedule),
             }
             for timer in self._timers
         ]
