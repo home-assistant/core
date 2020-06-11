@@ -30,6 +30,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STA
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
+    SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
     SERVICE_MOVE_REMOTE_CONTROL,
@@ -195,6 +196,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             vol.Required("y_coord"): vol.Coerce(int),
         },
         MiroboVacuum.async_goto.__name__,
+    )
+    platform.async_register_entity_service(
+        SERVICE_CLEAN_SEGMENT,
+        {vol.Required("segments"): vol.Any(vol.Coerce(int), list)},
+        MiroboVacuum.async_clean_segment.__name__,
     )
 
 
@@ -376,6 +382,7 @@ class MiroboVacuum(StateVacuumEntity):
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send raw command."""
+        _LOGGER.debug()
         await self._try_command(
             "Unable to send command to the vacuum: %s",
             self._vacuum.raw_command,
@@ -426,6 +433,17 @@ class MiroboVacuum(StateVacuumEntity):
             self._vacuum.goto,
             x_coord=x_coord,
             y_coord=y_coord,
+        )
+
+    async def async_clean_segment(self, segments):
+        """Clean the specified segments(s)."""
+        if isinstance(segments, int):
+            segments = [segments]
+
+        await self._try_command(
+            "Unable to start cleaning of the specified segments: %s",
+            self._vacuum.segment_clean,
+            segments=segments,
         )
 
     def update(self):
