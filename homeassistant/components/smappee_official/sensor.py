@@ -243,12 +243,9 @@ class SmappeeSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attributes = {
-            "Service location id": self._service_location.service_location_id,
             "Service location name": self._service_location.service_location_name,
             "Device serialnumber": self._service_location.device_serial_number,
             "Sensor": self._sensor,
-            "Sensor id": self._sensor_id,
-            "Unique id": self.unique_id,
         }
         if self._sensor == "sensor":
             sensor_id, _ = self._sensor_id.split("-")

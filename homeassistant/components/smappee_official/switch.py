@@ -160,14 +160,11 @@ class SmappeeActuator(SwitchEntity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return {
-            "Service location id": self._service_location.service_location_id,
             "Service location name": self._service_location.service_location_name,
             "Device serialnumber": self._service_location.device_serial_number,
-            "Actuator id": self._actuator_id,
             "Actuator name": self._actuator_name,
             "Actuator type": self._actuator_type,
             "Today energy kwh": self.today_energy_kwh,
-            "Unique id": self.unique_id,
         }
 
     @property
