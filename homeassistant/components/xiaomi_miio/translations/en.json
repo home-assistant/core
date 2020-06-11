@@ -16,7 +16,7 @@
                     "name": "Name of the Gateway",
                     "token": "API Token"
                 },
-                "description": "You will need the 32 character API Token, see https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token for instructions. Note that this token is diffrent from the key used by the xiaomi_aqara integration",
+                "description": "You will need the 32 character API Token, see https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token for instructions. Please note, that this token is different from the key used by the Xiaomi Aqara integration.",
                 "title": "Connect to a Xiaomi Gateway"
             },
             "user": {
