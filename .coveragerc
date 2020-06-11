@@ -80,7 +80,12 @@ omit =
     homeassistant/components/bh1750/sensor.py
     homeassistant/components/bitcoin/sensor.py
     homeassistant/components/bizkaibus/sensor.py
-    homeassistant/components/blink/*
+    homeassistant/components/blink/__init__.py
+    homeassistant/components/blink/alarm_control_panel.py
+    homeassistant/components/blink/binary_sensor.py
+    homeassistant/components/blink/camera.py
+    homeassistant/components/blink/const.py
+    homeassistant/components/blink/sensor.py
     homeassistant/components/blinksticklight/light.py
     homeassistant/components/blinkt/light.py
     homeassistant/components/blockchain/sensor.py
