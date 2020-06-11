@@ -5,6 +5,10 @@
             "already_in_progress": "Il flusso di configurazione per il dispositivo \u00e8 gi\u00e0 in corso.",
             "unable_to_connect": "Impossibile connettersi al dispositivo."
         },
+        "error": {
+            "one": "uno",
+            "other": "altri"
+        },
         "flow_title": "Arcam FMJ su {host}",
         "step": {
             "confirm": {
