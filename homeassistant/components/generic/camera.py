@@ -175,4 +175,4 @@ class GenericCamera(Camera):
             return self._stream_source.async_render()
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._stream_source, err)
-            return self._stream_source
+            return None
