@@ -1,5 +1,6 @@
 {
     "config": {
+        "flow_title": "Xiaomi Miio: {name}",
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Config flow for this Xiaomi Miio device is already in progress."
