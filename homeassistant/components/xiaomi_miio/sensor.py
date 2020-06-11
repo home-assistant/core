@@ -2,6 +2,7 @@
 import logging
 
 from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
+from miio.gateway import DeviceType
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -48,10 +49,15 @@ ATTR_MODEL = "model"
 
 SUCCESS = ["ok"]
 
+SensorType = namedtuple("SensorType", ["unit", "icon", "device_class"])
 GATEWAY_SENSOR_TYPES = {
-    "temperature": [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "humidity": [UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
-    "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],
+    "temperature": SensorType(
+        unit=TEMP_CELSIUS, icon=None, device_class=DEVICE_CLASS_TEMPERATURE
+    ),
+    "humidity": SensorType(
+        unit=UNIT_PERCENTAGE, icon=None, device_class=DEVICE_CLASS_HUMIDITY
+    ),
+    "pressure": SensorType(unit="hPa", icon=None, device_class=DEVICE_CLASS_PRESSURE),
 }
 
 
@@ -64,20 +70,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         gateway = hass.data[DOMAIN][config_entry.entry_id]
         subdevices = gateway.devices
         for subdevice in subdevices:
-            if subdevice.device_type == "AqaraHT":
-                entity = XiaomiGatewaySensor(subdevice, "temperature")
-                entities.append(entity)
-                entity = XiaomiGatewaySensor(subdevice, "humidity")
-                entities.append(entity)
-                entity = XiaomiGatewaySensor(subdevice, "pressure")
-                entities.append(entity)
-            if subdevice.device_type == "SensorHT":
-                entity = XiaomiGatewaySensor(subdevice, "temperature")
-                entities.append(entity)
-                entity = XiaomiGatewaySensor(subdevice, "humidity")
-                entities.append(entity)
-                entity = XiaomiGatewaySensor(subdevice, "pressure")
-                entities.append(entity)
+            if (
+                subdevice.type == DeviceType.AqaraHT
+                or subdevice.type == DeviceType.SensorHT
+            ):
+                sensor_variables = ["temperature", "humidity", "pressure"]
+                entities.extend(
+                    [
+                        XiaomiGatewaySensor(subdevice, variable)
+                        for variable in sensor_variables
+                    ]
+                )
 
     async_add_entities(entities, update_before_add=True)
 
@@ -217,27 +220,17 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        try:
-            return GATEWAY_SENSOR_TYPES.get(self._data_key)[1]
-        except TypeError:
-            return None
+        return GATEWAY_SENSOR_TYPES.get(self._data_key).icon
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        try:
-            return GATEWAY_SENSOR_TYPES.get(self._data_key)[0]
-        except TypeError:
-            return None
+        return GATEWAY_SENSOR_TYPES.get(self._data_key).unit
 
     @property
     def device_class(self):
         """Return the device class of this entity."""
-        return (
-            GATEWAY_SENSOR_TYPES.get(self._data_key)[2]
-            if self._data_key in GATEWAY_SENSOR_TYPES
-            else None
-        )
+        return GATEWAY_SENSOR_TYPES.get(self._data_key).device_class
 
     @property
     def state(self):
