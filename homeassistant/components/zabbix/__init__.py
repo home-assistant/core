@@ -1,13 +1,13 @@
 """Support for Zabbix."""
-import logging
-from urllib.parse import urljoin
-
-from pyzabbix import ZabbixAPI, ZabbixAPIException, ZabbixMetric, ZabbixSender
 import json
+import logging
 import math
 import queue
 import threading
 import time
+from urllib.parse import urljoin
+
+from pyzabbix import ZabbixAPI, ZabbixAPIException, ZabbixMetric, ZabbixSender
 import voluptuous as vol
 
 from homeassistant.const import (
