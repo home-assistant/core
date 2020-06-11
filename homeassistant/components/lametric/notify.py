@@ -54,7 +54,9 @@ def get_service(hass, config, discovery_info=None):
 class LaMetricNotificationService(BaseNotificationService):
     """Implement the notification service for LaMetric."""
 
-    def __init__(self, hasslametricmanager, icon, lifetime, cycles, priority, icon_type):
+    def __init__(
+        self, hasslametricmanager, icon, lifetime, cycles, priority, icon_type
+    ):
         """Initialize the service."""
         self.hasslametricmanager = hasslametricmanager
         self._icon = icon
@@ -134,7 +136,10 @@ class LaMetricNotificationService(BaseNotificationService):
                 try:
                     lmn.set_device(dev)
                     lmn.send_notification(
-                        model, lifetime=self._lifetime, priority=priority, icon_type=icon_type
+                        model,
+                        lifetime=self._lifetime,
+                        priority=priority,
+                        icon_type=icon_type,
                     )
                     _LOGGER.debug("Sent notification to LaMetric %s", dev["name"])
                 except OSError:
