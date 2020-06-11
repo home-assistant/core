@@ -168,7 +168,9 @@ def setup(hass, config):
             )
             metrics.append(metric)
         for key, value in floats.items():
-            metric = ZabbixMetric(publish_states_host, f"homeassistant.float[{key}]", value)
+            metric = ZabbixMetric(
+                publish_states_host, f"homeassistant.float[{key}]", value
+            )
             metrics.append(metric)
 
         string_keys.update(strings.keys())
