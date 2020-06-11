@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser Drucker ist bereits konfiguriert",
-            "connection_error": "Verbindung zum Drucker fehlgeschlagen.",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "connection_error": "Verbindung fehlgeschlagen.",
             "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen, da ein Verbindungsupgrade erforderlich ist.",
             "ipp_error": "IPP-Fehler festgestellt.",
             "ipp_version_error": "IPP-Version wird vom Drucker nicht unterst\u00fctzt.",
@@ -10,7 +10,7 @@
             "unique_id_required": "Ger\u00e4t fehlt die f\u00fcr die Entdeckung erforderliche eindeutige Identifizierung."
         },
         "error": {
-            "connection_error": "Verbindung zum Drucker fehlgeschlagen.",
+            "connection_error": "Verbindung fehlgeschlagen",
             "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen. Bitte versuchen Sie es erneut mit aktivierter SSL / TLS-Option."
         },
         "flow_title": "Drucker: {name}",
@@ -18,7 +18,7 @@
             "user": {
                 "data": {
                     "base_path": "Relativer Pfad zum Drucker",
-                    "host": "Host oder IP-Adresse",
+                    "host": "Host",
                     "port": "Port",
                     "ssl": "Der Drucker unterst\u00fctzt die Kommunikation \u00fcber SSL / TLS",
                     "verify_ssl": "Der Drucker verwendet ein ordnungsgem\u00e4\u00dfes SSL-Zertifikat"
