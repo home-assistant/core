@@ -1,7 +1,7 @@
 """Support for monitoring a Smappee energy sensor."""
 import logging
 
-from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, VOLT
+from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
 from homeassistant.helpers.entity import Entity
 
 from .const import BASE, DOMAIN
@@ -11,40 +11,52 @@ _LOGGER = logging.getLogger(__name__)
 TREND_SENSORS = {
     "total_power": [
         "Total consumption - Active power",
-        "mdi:power-plug",
+        None,
         POWER_WATT,
         "total_power",
+        DEVICE_CLASS_POWER,
     ],
     "total_reactive_power": [
         "Total consumption - Reactive power",
-        "mdi:power-plug",
+        None,
         POWER_WATT,
         "total_reactive_power",
+        DEVICE_CLASS_POWER,
     ],
-    "alwayson": ["Always on - Active power", "mdi:sleep", POWER_WATT, "alwayson"],
+    "alwayson": [
+        "Always on - Active power",
+        "mdi:sleep",
+        POWER_WATT,
+        "alwayson",
+        None,
+    ],
     "power_today": [
         "Total consumption - Today",
         "mdi:power-plug",
         ENERGY_WATT_HOUR,
         "power_today",
+        None,
     ],
     "power_current_hour": [
         "Total consumption - Current hour",
         "mdi:power-plug",
         ENERGY_WATT_HOUR,
         "power_current_hour",
+        None,
     ],
     "power_last_5_minutes": [
         "Total consumption - Last 5 minutes",
         "mdi:power-plug",
         ENERGY_WATT_HOUR,
         "power_last_5_minutes",
+        None,
     ],
     "alwayson_today": [
         "Always on - Today",
         "mdi:sleep",
         ENERGY_WATT_HOUR,
         "alwayson_today",
+        None,
     ],
 }
 SOLAR_SENSORS = {
@@ -53,18 +65,21 @@ SOLAR_SENSORS = {
         "mdi:white-balance-sunny",
         POWER_WATT,
         "solar_power",
+        DEVICE_CLASS_POWER,
     ],
     "solar_today": [
         "Total production - Today",
         "mdi:white-balance-sunny",
         ENERGY_WATT_HOUR,
         "solar_today",
+        None,
     ],
     "solar_current_hour": [
         "Total production - Current hour",
         "mdi:white-balance-sunny",
         ENERGY_WATT_HOUR,
         "solar_current_hour",
+        None,
     ],
 }
 VOLTAGE_SENSORS = {
@@ -74,6 +89,7 @@ VOLTAGE_SENSORS = {
         VOLT,
         "phase_voltage_a",
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
+        None,
     ],
     "phase_voltages_b": [
         "Phase voltages - B",
@@ -81,6 +97,7 @@ VOLTAGE_SENSORS = {
         VOLT,
         "phase_voltage_b",
         ["TWO", "THREE_STAR", "THREE_DELTA"],
+        None,
     ],
     "phase_voltages_c": [
         "Phase voltages - C",
@@ -88,6 +105,7 @@ VOLTAGE_SENSORS = {
         VOLT,
         "phase_voltage_c",
         ["THREE_STAR"],
+        None,
     ],
     "line_voltages_a": [
         "Line voltages - A",
@@ -95,6 +113,7 @@ VOLTAGE_SENSORS = {
         VOLT,
         "line_voltage_a",
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
+        None,
     ],
     "line_voltages_b": [
         "Line voltages - B",
@@ -102,6 +121,7 @@ VOLTAGE_SENSORS = {
         VOLT,
         "line_voltage_b",
         ["TWO", "THREE_STAR", "THREE_DELTA"],
+        None,
     ],
     "line_voltages_c": [
         "Line voltages - C",
@@ -109,6 +129,7 @@ VOLTAGE_SENSORS = {
         VOLT,
         "line_voltage_c",
         ["THREE_STAR", "THREE_DELTA"],
+        None,
     ],
 }
 
@@ -151,9 +172,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     sensor="load",
                     attributes=[
                         measurement.name,
-                        "mdi:power-plug",
+                        None,
                         POWER_WATT,
                         measurement_id,
+                        DEVICE_CLASS_POWER,
                     ],
                 )
             )
@@ -187,6 +209,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             gw_icon,
                             channel.get("uom"),
                             f"{sensor_id}-{channel.get('channel')}",
+                            None,
                         ],
                     )
                 )
@@ -208,6 +231,7 @@ class SmappeeSensor(Entity):
         self._icon = attributes[1]
         self._unit_of_measurement = attributes[2]
         self._sensor_id = attributes[3]
+        self._device_class = attributes[4]
 
     @property
     def name(self):
@@ -229,6 +253,11 @@ class SmappeeSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._device_class
 
     @property
     def unit_of_measurement(self):
