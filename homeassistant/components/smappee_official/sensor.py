@@ -1,7 +1,7 @@
 """Support for monitoring a Smappee energy sensor."""
 import logging
 
-from homeassistant.const import ATTR_VOLTAGE, ENERGY_WATT_HOUR, POWER_WATT
+from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, VOLT
 from homeassistant.helpers.entity import Entity
 
 from .const import BASE, DOMAIN
