@@ -657,7 +657,7 @@ pynut2==2.1.2
 pynws==0.10.4
 
 # homeassistant.components.nx584
-pynx584==0.4
+pynx584==0.5
 
 # homeassistant.components.openuv
 pyopenuv==1.0.9
