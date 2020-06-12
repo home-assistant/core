@@ -103,7 +103,7 @@ async def async_handle_webhook(hass, webhook_id, request):
             rj = await request.json()
             if "ais_gate_client_id" in rj:
                 response = await ai.async_process_json_from_frame(hass, rj)
-        if response is None:
+        if response is None and webhook is not None:
             response = await webhook["handler"](hass, webhook_id, request)
         if response is None:
             response = Response(status=HTTP_OK)
