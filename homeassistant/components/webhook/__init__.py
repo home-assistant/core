@@ -82,7 +82,7 @@ async def async_handle_webhook(hass, webhook_id, request):
     webhook = handlers.get(webhook_id)
 
     # Always respond successfully to not give away if a hook exists or not.
-    if webhook is None:
+    if webhook is None and webhook_id != "aisdomprocesscommandfromframe":
         peer_ip = request[KEY_REAL_IP]
         _LOGGER.warning(
             "Received message for unregistered webhook %s from %s", webhook_id, peer_ip
