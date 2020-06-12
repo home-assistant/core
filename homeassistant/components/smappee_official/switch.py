@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SWITCH_PREFIX = "Switch"
 ICON = "mdi:toggle-switch"
-SCAN_INTERVAL = timedelta(seconds=2)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
