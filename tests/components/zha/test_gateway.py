@@ -11,6 +11,7 @@ import zigpy.zcl.clusters.lighting as lighting
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.store import TOMBSTONE_LIFETIME
 
 from .common import async_enable_traffic, async_find_group_entity_id, get_zha_gateway
 
@@ -212,3 +213,25 @@ async def test_updating_device_store(hass, zigpy_dev_basic, zha_dev_basic):
     await hass.async_block_till_done()
     entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
     assert entry.last_seen == last_seen
+
+
+async def test_cleaning_up_storage(hass, zigpy_dev_basic, zha_dev_basic, hass_storage):
+    """Test cleaning up zha storage and remove stale devices."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+    await async_enable_traffic(hass, [zha_dev_basic])
+
+    assert zha_dev_basic.last_seen is not None
+    await zha_gateway.zha_storage.async_save()
+    await hass.async_block_till_done()
+
+    assert hass_storage["zha.storage"]["data"]["devices"]
+    device = hass_storage["zha.storage"]["data"]["devices"][0]
+    assert device["ieee"] == str(zha_dev_basic.ieee)
+
+    zha_dev_basic.device.last_seen = time.time() - TOMBSTONE_LIFETIME - 1
+    await zha_gateway.async_update_device_storage()
+    await hass.async_block_till_done()
+    await zha_gateway.zha_storage.async_save()
+    await hass.async_block_till_done()
+    assert not hass_storage["zha.storage"]["data"]["devices"]
