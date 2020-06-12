@@ -176,6 +176,9 @@ class SmappeeActuator(SwitchEntity):
         }
 
     async def async_update(self):
+        """Get the latest data from Smappee and update the state."""
+        await self._smappee_base.async_update()
+
         """Update state value for this switch."""
         new_state = self._service_location.actuators.get(self._actuator_id).state
         if new_state != self._state:
