@@ -460,6 +460,8 @@ def _keep_event(hass, event, entities_filter):
         domain = "script"
 
     elif not entity_id and event.event_type in hass.data.get(DOMAIN, {}):
+        # If the entity_id isn't described, use the domain that describes
+        # the event for filtering.
         domain = hass.data[DOMAIN][event.event_type][0]
 
     if not entity_id and domain:
