@@ -44,6 +44,12 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
+    # Ensure supervisor is available
+    "hassio",
+    # Get the frontend up and running as soon
+    # as possible so problem integrations can
+    # be removed
+    "frontend",
 }
 
 
@@ -281,7 +287,7 @@ def async_enable_logging(
 
         logger = logging.getLogger("")
         logger.addHandler(err_handler)
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
@@ -352,6 +358,7 @@ async def _async_set_up_integrations(
         errors = [domain for domain in domains if futures[domain].exception()]
         for domain in errors:
             exception = futures[domain].exception()
+            assert exception is not None
             _LOGGER.error(
                 "Error setting up integration %s - received exception",
                 domain,
@@ -399,6 +406,8 @@ async def _async_set_up_integrations(
     )
 
     if stage_1_domains:
+        _LOGGER.info("Setting up %s", stage_1_domains)
+
         await async_setup_multi_components(stage_1_domains)
 
     # Load all integrations

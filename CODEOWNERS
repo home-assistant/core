@@ -98,6 +98,7 @@ homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7 @bdraco
 homeassistant/components/dsmr_reader/* @depl0y
+homeassistant/components/dunehd/* @bieniu
 homeassistant/components/dweet/* @fabaff
 homeassistant/components/dynalite/* @ziv1234
 homeassistant/components/dyson/* @etheralm
@@ -180,7 +181,7 @@ homeassistant/components/homematicip_cloud/* @SukramJ
 homeassistant/components/honeywell/* @zxdavb
 homeassistant/components/html5/* @robbiet480
 homeassistant/components/http/* @home-assistant/core
-homeassistant/components/huawei_lte/* @scop
+homeassistant/components/huawei_lte/* @scop @fphammerle
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
 homeassistant/components/hunterdouglas_powerview/* @bdraco
@@ -273,6 +274,7 @@ homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
 homeassistant/components/notify/* @home-assistant/core
+homeassistant/components/notify_events/* @matrozov @papajojo
 homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
@@ -313,6 +315,7 @@ homeassistant/components/plugwise/* @CoMPaTech @bouwew
 homeassistant/components/plum_lightpad/* @ColinHarrington
 homeassistant/components/point/* @fredrike
 homeassistant/components/powerwall/* @bdraco @jrester
+homeassistant/components/prometheus/* @knyar
 homeassistant/components/proxmoxve/* @k4ds3 @jhollowe
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
@@ -374,7 +377,7 @@ homeassistant/components/somfy/* @tetienne
 homeassistant/components/sonarr/* @ctalkington
 homeassistant/components/songpal/* @rytilahti @shenxn
 homeassistant/components/spaceapi/* @fabaff
-homeassistant/components/speedtestdotnet/* @rohankapoorcom
+homeassistant/components/speedtestdotnet/* @rohankapoorcom @engrbm87
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes

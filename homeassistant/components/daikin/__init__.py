@@ -72,6 +72,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # For backwards compat, set unique ID
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
+    elif ".local" in entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
     daikin_api = await daikin_api_setup(
         hass,
         conf[CONF_HOST],
@@ -158,7 +160,6 @@ class DaikinApi:
         info = self.device.values
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "identifiers": self.device.mac,
             "manufacturer": "Daikin",
             "model": info.get("model"),
             "name": info.get("name"),

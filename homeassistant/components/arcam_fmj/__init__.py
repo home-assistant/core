@@ -5,27 +5,15 @@ import logging
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
 import async_timeout
-import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_ZONE,
-    EVENT_HOMEASSISTANT_STOP,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
-    DEFAULT_NAME,
-    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DOMAIN_DATA_CONFIG,
     DOMAIN_DATA_ENTRIES,
     DOMAIN_DATA_TASKS,
     SIGNAL_CLIENT_DATA,
@@ -35,44 +23,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _optional_zone(value):
-    if value:
-        return ZONE_SCHEMA(value)
-    return ZONE_SCHEMA({})
-
-
-def _zone_name_validator(config):
-    for zone, zone_config in config[CONF_ZONE].items():
-        if CONF_NAME not in zone_config:
-            zone_config[
-                CONF_NAME
-            ] = f"{DEFAULT_NAME} ({config[CONF_HOST]}:{config[CONF_PORT]}) - {zone}"
-    return config
-
-
-ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(SERVICE_TURN_ON): cv.SERVICE_SCHEMA,
-    }
-)
-
-DEVICE_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
-            vol.Optional(CONF_ZONE, default={1: _optional_zone(None)}): {
-                vol.In([1, 2]): _optional_zone
-            },
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.positive_int,
-        },
-        _zone_name_validator,
-    )
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.115")
 
 
 async def _await_cancel(task):
@@ -83,27 +34,10 @@ async def _await_cancel(task):
         pass
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA])}, extra=vol.ALLOW_EXTRA
-)
-
-
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the component."""
     hass.data[DOMAIN_DATA_ENTRIES] = {}
     hass.data[DOMAIN_DATA_TASKS] = {}
-    hass.data[DOMAIN_DATA_CONFIG] = {}
-
-    for device in config[DOMAIN]:
-        hass.data[DOMAIN_DATA_CONFIG][(device[CONF_HOST], device[CONF_PORT])] = device
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={CONF_HOST: device[CONF_HOST], CONF_PORT: device[CONF_PORT]},
-            )
-        )
 
     async def _stop(_):
         asyncio.gather(
@@ -116,21 +50,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry):
-    """Set up an access point from a config entry."""
+    """Set up config entry."""
+    entries = hass.data[DOMAIN_DATA_ENTRIES]
+    tasks = hass.data[DOMAIN_DATA_TASKS]
+
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
-
-    config = hass.data[DOMAIN_DATA_CONFIG].get(
-        (entry.data[CONF_HOST], entry.data[CONF_PORT]),
-        DEVICE_SCHEMA(
-            {CONF_HOST: entry.data[CONF_HOST], CONF_PORT: entry.data[CONF_PORT]}
-        ),
-    )
-    tasks = hass.data.setdefault(DOMAIN_DATA_TASKS, {})
-
-    hass.data[DOMAIN_DATA_ENTRIES][entry.entry_id] = {
-        "client": client,
-        "config": config,
-    }
+    entries[entry.entry_id] = client
 
     task = asyncio.create_task(_run_client(hass, client, DEFAULT_SCAN_INTERVAL))
     tasks[entry.entry_id] = task

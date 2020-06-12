@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquesta adre\u00e7a ja est\u00e0 configurada."
+        },
+        "error": {
+            "invalid_country_code": "Codi de pa\u00eds desconegut.",
+            "invalid_house_number": "N\u00famero de casa no v\u00e0lid."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Codi de pa\u00eds de 2 lletres",
+                    "house_number": "N\u00famero de casa",
+                    "house_number_extension": "Ampliaci\u00f3 de n\u00famero de casa",
+                    "zip_code": "Codi postal"
+                },
+                "description": "Introdueix la teva adre\u00e7a",
+                "title": "Avri"
+            }
+        }
+    },
+    "title": "Avri"
+}

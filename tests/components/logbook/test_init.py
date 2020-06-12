@@ -42,11 +42,9 @@ class TestComponentLogbook(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)  # Force an in memory DB
-        assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        with patch("homeassistant.components.http.start_http_server_and_save_config"):
+            assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
+        self.addCleanup(self.hass.stop)
 
     def test_service_call_create_logbook_entry(self):
         """Test if service call create log book entry."""
@@ -1352,3 +1350,126 @@ async def test_logbook_describe_event(hass, hass_client):
     assert event["name"] == "Test Name"
     assert event["message"] == "tested a message"
     assert event["domain"] == "test_domain"
+
+
+async def test_exclude_described_event(hass, hass_client):
+    """Test exclusions of events that are described by another integration."""
+    name = "My Automation Rule"
+    entity_id = "automation.excluded_rule"
+    entity_id2 = "automation.included_rule"
+    entity_id3 = "sensor.excluded_domain"
+
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    assert await async_setup_component(
+        hass,
+        logbook.DOMAIN,
+        {
+            logbook.DOMAIN: {
+                logbook.CONF_EXCLUDE: {
+                    logbook.CONF_DOMAINS: ["sensor"],
+                    logbook.CONF_ENTITIES: [entity_id],
+                }
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.utcnow() - timedelta(seconds=5),
+    ):
+        hass.bus.async_fire(
+            "some_automation_event",
+            {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id},
+        )
+        hass.bus.async_fire(
+            "some_automation_event",
+            {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id2},
+        )
+        hass.bus.async_fire(
+            "some_event", {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id3}
+        )
+        await hass.async_block_till_done()
+        await hass.async_add_executor_job(
+            hass.data[recorder.DATA_INSTANCE].block_till_done
+        )
+
+    def _describe(event):
+        """Describe an event."""
+        return {
+            "name": "Test Name",
+            "message": "tested a message",
+            "entity_id": event.data.get(ATTR_ENTITY_ID),
+        }
+
+    hass.components.logbook.async_describe_event(
+        "automation", "some_automation_event", _describe
+    )
+    hass.components.logbook.async_describe_event("sensor", "some_event", _describe)
+
+    client = await hass_client()
+    response = await client.get("/api/logbook")
+    results = await response.json()
+    assert len(results) == 1
+    event = results[0]
+    assert event["name"] == "Test Name"
+    assert event["message"] == "tested a message"
+    assert event["domain"] == "automation"
+    assert event["entity_id"] == "automation.included_rule"
+
+
+async def test_logbook_view_end_time_entity(hass, hass_client):
+    """Test the logbook view with end_time and entity."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    entity_id_test = "switch.test"
+    hass.states.async_set(entity_id_test, STATE_OFF)
+    hass.states.async_set(entity_id_test, STATE_ON)
+    entity_id_second = "switch.second"
+    hass.states.async_set(entity_id_second, STATE_OFF)
+    hass.states.async_set(entity_id_second, STATE_ON)
+    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_block_till_done()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 2
+    assert json[0]["entity_id"] == entity_id_test
+    assert json[1]["entity_id"] == entity_id_second
+
+    # Test entries for 3 days with filter by entity_id
+    end_time = start + timedelta(hours=72)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
+    )
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 1
+    assert json[0]["entity_id"] == entity_id_test
+
+    # Tomorrow time 00:00:00
+    start = dt_util.utcnow()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test entries from today to 3 days with filter by entity_id
+    end_time = start_date + timedelta(hours=72)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
+    )
+    assert response.status == 200
+    json = await response.json()
+    assert len(json) == 1
+    assert json[0]["entity_id"] == entity_id_test

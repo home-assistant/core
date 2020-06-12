@@ -559,6 +559,9 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
 
 def _identify_config_schema(module: ModuleType) -> Optional[str]:
     """Extract the schema and identify list or dict based."""
+    if not isinstance(module.CONFIG_SCHEMA, vol.Schema):  # type: ignore
+        return None
+
     schema = module.CONFIG_SCHEMA.schema  # type: ignore
 
     if isinstance(schema, vol.All):
