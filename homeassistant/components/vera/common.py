@@ -31,13 +31,6 @@ def get_configured_platforms(controller_data: ControllerData) -> Set[str]:
     return set(platforms)
 
 
-class UpdateCoordinatorData(NamedTuple):
-    """Data provided by the update coordinator."""
-
-    lu_sdata: dict
-    status: dict
-
-
 class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
     """Manages polling for data from vera."""
 

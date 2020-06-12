@@ -99,9 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     controller = veraApi.VeraController(base_url, subscription_registry)
     controller.start()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda event: controller.stop()
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.stop)
 
     try:
         all_devices = await hass.async_add_executor_job(controller.get_devices)
