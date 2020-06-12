@@ -172,7 +172,6 @@ class SmappeeActuator(SwitchEntity):
             "Device serialnumber": self._service_location.device_serial_number,
             "Actuator name": self._actuator_name,
             "Actuator type": self._actuator_type,
-            "Today energy kwh": self.today_energy_kwh,
         }
 
     @property
