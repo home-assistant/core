@@ -104,7 +104,25 @@ IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INE
 
 # There might be additional keys to be added for different
 # platforms / hardware combinations.
-CPU_SENSOR_PREFIXES = ("coretemp", "cpu-thermal")  # (Linux generic, Raspberry 4)
+# Taken from last version of "glances" integration before they moved to
+# a generic temperature sensor logic.
+# https://github.com/home-assistant/core/blob/5e15675593ba94a2c11f9f929cdad317e27ce190/homeassistant/components/glances/sensor.py#L199
+CPU_SENSOR_PREFIXES = (
+    "amdgpu 1",
+    "aml_thermal",
+    "Core 0",
+    "Core 1",
+    "CPU Temperature",
+    "CPU",
+    "cpu-thermal 1",
+    "cpu_thermal 1",
+    "exynos-therm 1",
+    "Package id 0",
+    "Physical id 0",
+    "radeon 1",
+    "soc-thermal 1",
+    "soc_thermal 1",
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -118,6 +136,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 resource[CONF_ARG] = "/"
             else:
                 resource[CONF_ARG] = ""
+
+        # Verify if we can retrieve CPU / processor temperatures.
+        # If not, do not create the entity and add a warning to the log
+        if resource[CONF_TYPE] == "processor_temperature":
+            if SystemMonitorSensor.read_cpu_temperature() is None:
+                _LOGGER.warning("Cannot read CPU / processor temperature information.")
+                continue
+
         dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource[CONF_ARG]))
 
     add_entities(dev, True)
@@ -138,13 +164,6 @@ class SystemMonitorSensor(Entity):
         if sensor_type in ["throughput_network_out", "throughput_network_in"]:
             self._last_value = None
             self._last_update_time = None
-
-        # Verify if we can retrieve CPU / processor temperatures.
-        # If not, set sensor to unavailable and log warning.
-        if sensor_type == "processor_temperature":
-            if self.read_cpu_temperature() is None:
-                self._available = False
-                _LOGGER.warning("Cannot read CPU / processor temperature information.")
 
     @property
     def name(self):
@@ -269,10 +288,11 @@ class SystemMonitorSensor(Entity):
         elif self.type == "load_15m":
             self._state = round(os.getloadavg()[2], 2)
 
-    def read_cpu_temperature(self):
+    @staticmethod
+    def read_cpu_temperature():
         """Attempt to read CPU / processor temperature."""
         temps = psutil.sensors_temperatures()
 
         for sensor in temps:
-            if sensor.startswith(CPU_SENSOR_PREFIXES):
+            if sensor["label"] in CPU_SENSOR_PREFIXES:
                 return round(temps[sensor][0].current, 1)
