@@ -293,6 +293,7 @@ class SystemMonitorSensor(Entity):
         """Attempt to read CPU / processor temperature."""
         temps = psutil.sensors_temperatures()
 
-        for sensor in temps:
-            if sensor["label"] in CPU_SENSOR_PREFIXES:
-                return round(temps[sensor][0].current, 1)
+        for entries in temps.items():
+            for entry in entries:
+                if entry["label"] in CPU_SENSOR_PREFIXES:
+                    return round(entry[0].current, 1)
