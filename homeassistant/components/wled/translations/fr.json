@@ -1,10 +1,19 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cet appareil WLED est d\u00e9j\u00e0 configur\u00e9.",
+            "connection_error": "Impossible de se connecter au p\u00e9riph\u00e9rique WLED."
+        },
+        "error": {
+            "connection_error": "Impossible de se connecter au p\u00e9riph\u00e9rique WLED."
+        },
+        "flow_title": "WLED: {name}",
         "step": {
             "user": {
                 "data": {
                     "host": "H\u00f4te ou adresse IP"
-                }
+                },
+                "description": "Configurez votre WLED pour l'int\u00e9grer \u00e0 Home Assistant."
             }
         }
     }

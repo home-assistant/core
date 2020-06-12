@@ -19,7 +19,7 @@
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Host (Optional, wenn Token bereitgestellt)",
+                    "host": "Host",
                     "port": "Port",
                     "ssl": "SSL verwenden",
                     "token": "Token (optional)",
