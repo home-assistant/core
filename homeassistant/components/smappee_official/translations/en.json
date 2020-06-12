@@ -1,6 +1,9 @@
 {
     "config": {
         "step": {
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            }
         },
         "abort": {
             "single_instance_allowed": "Already configured. Only a single configuration possible.",
