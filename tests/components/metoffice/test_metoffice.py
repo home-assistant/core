@@ -15,7 +15,7 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 KINGSLYNN_SENSOR_RESULTS = {
@@ -47,21 +47,12 @@ WAVERTREE_SENSOR_RESULTS = {
 }
 
 
-class MockDateTime(datetime):
-    """Replacement for datetime that can be mocked for testing."""
-
-    def __new__(cls, *args, **kwargs):
-        """Override to just return base class."""
-        return datetime.__new__(datetime, *args, **kwargs)
-
-
-@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_one_weather_site_running(hass, requests_mock):
     """Test the Met Office weather platform."""
-
-    MockDateTime.now = classmethod(
-        lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
-    )
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
@@ -90,7 +81,10 @@ async def test_one_weather_site_running(hass, requests_mock):
     assert entity.attributes.get("humidity") == 50
 
 
-@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_one_sensor_site_running(hass, requests_mock):
     """Test the Met Office sensor platform."""
 
@@ -98,10 +92,6 @@ async def test_one_sensor_site_running(hass, requests_mock):
     mock_json = json.loads(load_fixture("metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
-
-    MockDateTime.now = classmethod(
-        lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
-    )
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
@@ -130,13 +120,12 @@ async def test_one_sensor_site_running(hass, requests_mock):
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_site_cannot_connect(hass, requests_mock):
     """Test we handle cannot connect error."""
-
-    MockDateTime.now = classmethod(
-        lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
-    )
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
     requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=3hourly", text="")
@@ -153,13 +142,12 @@ async def test_site_cannot_connect(hass, requests_mock):
         assert sensor is None
 
 
-@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_site_cannot_update(hass, requests_mock):
     """Test we handle cannot connect error."""
-
-    MockDateTime.now = classmethod(
-        lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
-    )
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
@@ -189,13 +177,12 @@ async def test_site_cannot_update(hass, requests_mock):
     assert entity.state == STATE_UNAVAILABLE
 
 
-@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_two_weather_sites_running(hass, requests_mock):
     """Test we handle two different weather sites both running."""
-
-    MockDateTime.now = classmethod(
-        lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
-    )
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
@@ -242,13 +229,12 @@ async def test_two_weather_sites_running(hass, requests_mock):
     assert entity.attributes.get("humidity") == 60
 
 
-@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_two_sensor_sites_running(hass, requests_mock):
     """Test we handle two sets of sensors running for two different sites."""
-
-    MockDateTime.now = classmethod(
-        lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
-    )
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
