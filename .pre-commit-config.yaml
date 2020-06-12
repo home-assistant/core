@@ -63,19 +63,19 @@ repos:
     hooks:
       - id: prettier
         stages: [manual]
-  - repo: local
-    hooks:
+  # - repo: local
+  #   hooks:
       # Run mypy through our wrapper script in order to get the possible
       # pyenv and/or virtualenv activated; it may not have been e.g. if
       # committing from a GUI tool that was not launched from an activated
       # shell.
-      - id: mypy
-        name: mypy
-        entry: script/run-in-env.sh mypy
-        language: script
-        types: [python]
-        require_serial: true
-        files: ^homeassistant/.+\.py$
+      # - id: mypy
+      #   name: mypy
+      #   entry: script/run-in-env.sh mypy
+      #   language: script
+      #   types: [python]
+      #   require_serial: true
+      #   files: ^homeassistant/.+\.py$
       # - id: gen_requirements_all
       #   name: gen_requirements_all
       #   entry: script/run-in-env.sh python3 -m script.gen_requirements_all

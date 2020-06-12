@@ -12,7 +12,6 @@ from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant import config as conf_util, config_entries, core, loader
-from homeassistant.components import http
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     REQUIRED_NEXT_PYTHON_DATE,
@@ -281,7 +280,10 @@ def async_enable_logging(
         return
     log_rotate_days = 10
     if "logRotating" in ais_logs_settings:
-        log_rotate_days = ais_logs_settings["logRotating"]
+        try:
+            log_rotate_days = int(ais_logs_settings["logRotating"])
+        except Exception:
+            log_rotate_days = 10
     log_file = ais_global.G_REMOTE_DRIVES_DOM_PATH + "/" + log_drive + "/ais.log"
     # Log errors to a file if we have write access to file or config dir
     err_log_path = os.path.abspath(log_file)

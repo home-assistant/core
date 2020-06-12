@@ -88,6 +88,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         listener.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
+    hass.bus.async_listen("ais_stop_logs_event", _async_stop_queue_handler)
 
 
 def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
