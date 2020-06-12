@@ -157,6 +157,13 @@ INDICATE_ACTIVE_LOCAL_DEVICE = [
     "flame_state",
 ]
 
+CUSTOM_ICONS = {
+    "gas_consumed_interval": "mdi:fire",
+    "gas_consumed_cumulative": "mdi:fire",
+    "modulation_level": "mdi:percent",
+    "valve_position": "mdi:valve",
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smile sensors from a config entry."""
@@ -310,6 +317,8 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
+        if CUSTOM_ICONS.get(self._sensor) is not None:
+            self._icon = CUSTOM_ICONS.get(self._sensor)
         return self._icon
 
     @callback
