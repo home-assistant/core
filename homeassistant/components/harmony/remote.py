@@ -28,7 +28,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ACTIVITY_POWER_OFF,
-    ATTR_ACTIVITY_NOTIFY,
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
     SERVICE_CHANGE_CHANNEL,
@@ -55,7 +54,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(ATTR_ACTIVITY): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
-        vol.Optional(ATTR_ACTIVITY_NOTIFY, default=False): cv.boolean,
         vol.Required(CONF_HOST): cv.string,
         # The client ignores port so lets not confuse the user by pretenting we do anything with this
     },
@@ -168,20 +166,16 @@ class HarmonyRemote(remote.RemoteEntity):
         """Complete the initialization."""
         _LOGGER.debug("%s: Harmony Hub added", self._name)
         # Register the callbacks
+        callbacks = {
+            "config_updated": self.new_config,
+            "connect": self.got_connected,
+            "disconnect": self.got_disconnected,
+        }
         if self._activity_notify:
-            self._client.callbacks = ClientCallbackType(
-                new_activity_starting=self.new_activity,
-                config_updated=self.new_config,
-                connect=self.got_connected,
-                disconnect=self.got_disconnected,
-            )
+            callbacks["new_activity_starting"] = self.new_activity
         else:
-            self._client.callbacks = ClientCallbackType(
-                new_activity=self.new_activity,
-                config_updated=self.new_config,
-                connect=self.got_connected,
-                disconnect=self.got_disconnected,
-            )
+            callbacks["new_activity"] = self.new_activity
+        self._client.callbacks = ClientCallbackType(**callbacks)
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -217,7 +211,6 @@ class HarmonyRemote(remote.RemoteEntity):
             ),
             "name": self.name,
             "model": model,
-            "protocol": self._client.protocol,
         }
 
     @property
