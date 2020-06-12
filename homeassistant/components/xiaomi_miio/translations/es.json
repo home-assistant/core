@@ -8,6 +8,7 @@
             "connect_error": "No se ha podido conectar",
             "no_device_selected": "No se ha seleccionado ning\u00fan dispositivo, por favor, seleccione un dispositivo."
         },
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "gateway": {
                 "data": {
