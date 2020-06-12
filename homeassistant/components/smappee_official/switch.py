@@ -17,11 +17,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee Comfort Plugs."""
     smappee_base = hass.data[DOMAIN][BASE]
 
-    dev = []
+    entities = []
     for _, service_location in smappee_base.smappee.service_locations.items():
         for actuator_id, actuator in service_location.actuators.items():
             if actuator.type in ["SWITCH", "COMFORT_PLUG"]:
-                dev.append(
+                entities.append(
                     SmappeeActuator(
                         smappee_base,
                         service_location,
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             elif actuator.type == "INFINITY_OUTPUT_MODULE":
                 for option in actuator.state_options:
-                    dev.append(
+                    entities.append(
                         SmappeeActuator(
                             smappee_base,
                             service_location,
@@ -45,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         )
                     )
 
-    async_add_entities(dev, True)
+    async_add_entities(entities, True)
 
 
 class SmappeeActuator(SwitchEntity):
