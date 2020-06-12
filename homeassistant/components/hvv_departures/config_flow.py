@@ -115,7 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_station_select(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
 
-        schema = vol.Schema({vol.Required(CONF_STATION): vol.In(self.stations)})
+        schema = vol.Schema({vol.Required(CONF_STATION): vol.In(list(self.stations))})
 
         if user_input is None:
             return self.async_show_form(step_id="station_select", data_schema=schema)
