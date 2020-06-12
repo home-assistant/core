@@ -288,12 +288,6 @@ class SmappeeSensor(Entity):
             "Device serialnumber": self._service_location.device_serial_number,
             "Sensor": self._sensor,
         }
-        if self._sensor == "sensor":
-            sensor_id, _ = self._sensor_id.split("-")
-            sensor = self._service_location.sensors.get(int(sensor_id))
-            attributes["Temperature"] = sensor.temperature
-            attributes["Humidity"] = sensor.humidity
-            attributes["Battery"] = sensor.battery
         return attributes
 
     @property
