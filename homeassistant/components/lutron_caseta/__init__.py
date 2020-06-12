@@ -131,12 +131,10 @@ class LutronCasetaDevice(Entity):
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {
-                (DOMAIN, self.serial)
-            },
+            "identifiers": {(DOMAIN, self.serial)},
             "name": self.name,
             "manufacturer": "Lutron",
-            "model": self._device["model"]
+            "model": self._device["model"],
         }
 
     @property
