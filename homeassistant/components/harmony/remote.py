@@ -3,12 +3,9 @@ import asyncio
 import json
 import logging
 
+from aioharmony.const import ClientCallbackType
 import aioharmony.exceptions as aioexc
-from aioharmony.harmonyapi import (
-    ClientCallbackType,
-    HarmonyAPI as HarmonyClient,
-    SendCommandDevice,
-)
+from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient, SendCommandDevice
 import voluptuous as vol
 
 from homeassistant.components import remote
@@ -31,6 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ACTIVITY_POWER_OFF,
+    ATTR_ACTIVITY_NOTIFY,
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
     SERVICE_CHANGE_CHANNEL,
@@ -57,6 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(ATTR_ACTIVITY): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
+        vol.Optional(ATTR_ACTIVITY_NOTIFY, default=False): cv.boolean,
         vol.Required(CONF_HOST): cv.string,
         # The client ignores port so lets not confuse the user by pretenting we do anything with this
     },
@@ -128,7 +127,9 @@ async def async_setup_entry(
 class HarmonyRemote(remote.RemoteEntity):
     """Remote representation used to control a Harmony device."""
 
-    def __init__(self, name, unique_id, host, activity, out_path, delay_secs):
+    def __init__(
+        self, name, unique_id, host, activity, out_path, delay_secs, activity_notify
+    ):
         """Initialize HarmonyRemote class."""
         self._name = name
         self.host = host
@@ -140,6 +141,7 @@ class HarmonyRemote(remote.RemoteEntity):
         self.delay_secs = delay_secs
         self._available = False
         self._unique_id = unique_id
+        self._activity_notify = activity_notify
 
     @property
     def activity_names(self):
@@ -166,12 +168,20 @@ class HarmonyRemote(remote.RemoteEntity):
         """Complete the initialization."""
         _LOGGER.debug("%s: Harmony Hub added", self._name)
         # Register the callbacks
-        self._client.callbacks = ClientCallbackType(
-            new_activity=self.new_activity,
-            config_updated=self.new_config,
-            connect=self.got_connected,
-            disconnect=self.got_disconnected,
-        )
+        if self._activity_notify:
+            self._client.callbacks = ClientCallbackType(
+                new_activity_starting=self.new_activity,
+                config_updated=self.new_config,
+                connect=self.got_connected,
+                disconnect=self.got_disconnected,
+            )
+        else:
+            self._client.callbacks = ClientCallbackType(
+                new_activity=self.new_activity,
+                config_updated=self.new_config,
+                connect=self.got_connected,
+                disconnect=self.got_disconnected,
+            )
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -207,6 +217,7 @@ class HarmonyRemote(remote.RemoteEntity):
             ),
             "name": self.name,
             "model": model,
+            "protocol": self._client.protocol,
         }
 
     @property
