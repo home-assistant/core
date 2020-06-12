@@ -16,7 +16,7 @@
                     "security_code": "Sikkerhetskode"
                 },
                 "description": "Du finner sikkerhetskoden p\u00e5 baksiden av gatewayen din.",
-                "title": "Skriv inn sikkerhetskode"
+                "title": "Angi sikkerhetskode"
             }
         }
     }

@@ -1,12 +1,6 @@
 {
     "options": {
         "step": {
-            "init": {
-                "data": {
-                    "one": "Een",
-                    "other": "M\u00e9i"
-                }
-            },
             "options_1": {
                 "data": {
                     "bool": "Optionelle Boolean",

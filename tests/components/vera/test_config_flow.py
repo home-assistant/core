@@ -1,5 +1,4 @@
 """Vera tests."""
-from mock import patch
 from requests.exceptions import RequestException
 
 from homeassistant import config_entries, data_entry_flow
@@ -8,7 +7,7 @@ from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
-from tests.async_mock import MagicMock
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, mock_registry
 
 

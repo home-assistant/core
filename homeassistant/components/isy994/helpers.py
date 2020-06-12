@@ -2,6 +2,7 @@
 from typing import Any, List, Optional, Union
 
 from pyisy.constants import (
+    ISY_VALUE_UNKNOWN,
     PROTO_GROUP,
     PROTO_INSTEON,
     PROTO_PROGRAM,
@@ -10,6 +11,7 @@ from pyisy.constants import (
 )
 from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
+from pyisy.variables import Variables
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.climate.const import DOMAIN as CLIMATE
@@ -31,6 +33,7 @@ from .const import (
     FILTER_ZWAVE_CAT,
     ISY994_NODES,
     ISY994_PROGRAMS,
+    ISY994_VARIABLES,
     ISY_GROUP_PLATFORM,
     KEY_ACTIONS,
     KEY_STATUS,
@@ -44,6 +47,8 @@ from .const import (
     SUPPORTED_PROGRAM_PLATFORMS,
     TYPE_CATEGORY_SENSOR_ACTUATORS,
     TYPE_EZIO2X4,
+    UOM_DOUBLE_TEMP,
+    UOM_ISYV4_DEGREES,
 )
 
 BINARY_SENSOR_UOMS = ["2", "78"]
@@ -345,6 +350,23 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
             hass_isy_data[ISY994_PROGRAMS][platform].append(entity)
 
 
+def _categorize_variables(
+    hass_isy_data: dict, variables: Variables, identifier: str
+) -> None:
+    """Gather the ISY994 Variables to be added as sensors."""
+    try:
+        var_to_add = [
+            (vtype, vname, vid)
+            for (vtype, vname, vid) in variables.children
+            if identifier in vname
+        ]
+    except KeyError as err:
+        _LOGGER.error("Error adding ISY Variables: %s", err)
+        return
+    for vtype, vname, vid in var_to_add:
+        hass_isy_data[ISY994_VARIABLES].append((vname, variables[vtype][vid]))
+
+
 async def migrate_old_unique_ids(
     hass: HomeAssistantType, platform: str, devices: Optional[List[Any]]
 ) -> None:
@@ -375,3 +397,29 @@ async def migrate_old_unique_ids(
             registry.async_update_entity(
                 old_entity_id_2, new_unique_id=device.unique_id
             )
+
+
+def convert_isy_value_to_hass(
+    value: Union[int, float, None],
+    uom: str,
+    precision: str,
+    fallback_precision: Optional[int] = None,
+) -> Union[float, int]:
+    """Fix ISY Reported Values.
+
+    ISY provides float values as an integer and precision component.
+    Correct by shifting the decimal place left by the value of precision.
+    (e.g. value=2345, prec="2" == 23.45)
+
+    Insteon Thermostats report temperature in 0.5-deg precision as an int
+    by sending a value of 2 times the Temp. Correct by dividing by 2 here.
+    """
+    if value is None or value == ISY_VALUE_UNKNOWN:
+        return None
+    if uom in [UOM_DOUBLE_TEMP, UOM_ISYV4_DEGREES]:
+        return round(float(value) / 2.0, 1)
+    if precision != "0":
+        return round(float(value) / 10 ** int(precision), int(precision))
+    if fallback_precision:
+        return round(float(value), fallback_precision)
+    return value

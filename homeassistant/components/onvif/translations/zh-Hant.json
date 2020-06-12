@@ -34,6 +34,7 @@
             "manual_input": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u540d\u7a31",
                     "port": "\u901a\u8a0a\u57e0"
                 },
                 "title": "\u8a2d\u5b9a ONVIF \u8a2d\u5099"

@@ -5,8 +5,8 @@
         "title": "Connect to the Vilfo Router",
         "description": "Set up the Vilfo Router integration. You need your Vilfo Router hostname/IP and an API access token. For additional information on this integration and how to get those details, visit: https://www.home-assistant.io/integrations/vilfo",
         "data": {
-          "host": "Router hostname or IP",
-          "access_token": "Access token for the Vilfo Router API"
+          "host": "[%key:common::config_flow::data::host%]",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
         }
       }
     },

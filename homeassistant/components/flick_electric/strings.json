@@ -5,8 +5,8 @@
       "user": {
         "title": "Flick Login Credentials",
         "data": {
-          "username": "Username",
-          "password": "Password",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "client_id": "Client ID (Optional)",
           "client_secret": "Client Secret (Optional)"
         }

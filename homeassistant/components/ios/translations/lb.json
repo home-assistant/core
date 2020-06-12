@@ -5,8 +5,7 @@
         },
         "step": {
             "confirm": {
-                "description": "W\u00ebllt dir d'Home Assistant iOS Komponent ariichten?",
-                "title": "Home Assistant iOS"
+                "description": "W\u00ebllt dir d'Home Assistant iOS Komponent ariichten?"
             }
         }
     }

@@ -36,7 +36,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await self._get_bsblan_info(
                 host=user_input[CONF_HOST],
                 port=user_input[CONF_PORT],
-                passkey=user_input[CONF_PASSKEY],
+                passkey=user_input.get(CONF_PASSKEY),
             )
         except BSBLanError:
             return self._show_setup_form({"base": "connection_error"})
@@ -50,7 +50,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
-                CONF_PASSKEY: user_input[CONF_PASSKEY],
+                CONF_PASSKEY: user_input.get(CONF_PASSKEY),
                 CONF_DEVICE_IDENT: info.device_identification,
             },
         )
@@ -63,7 +63,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): str,
                     vol.Optional(CONF_PORT, default=80): int,
-                    vol.Optional(CONF_PASSKEY, default=""): str,
+                    vol.Optional(CONF_PASSKEY): str,
                 }
             ),
             errors=errors or {},

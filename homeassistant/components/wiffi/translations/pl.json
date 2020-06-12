@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Port serwera jest ju\u017c w u\u017cyciu.",
+            "start_server_failed": "Uruchomienie serwera nie powiod\u0142o si\u0119."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port serwera"
+                },
+                "title": "Konfiguracja serwera TCP dla urz\u0105dze\u0144 WIFFI"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Limit czasu (minuty)"
+                }
+            }
+        }
+    }
+}

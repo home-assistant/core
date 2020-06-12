@@ -4,13 +4,14 @@ import io
 import ipaddress
 import logging
 import os
+import re
 import secrets
 import socket
 
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import fan, media_player, sensor
+from homeassistant.components import binary_sensor, fan, media_player, sensor
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
@@ -31,7 +32,9 @@ from .const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_MOTION_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -49,6 +52,7 @@ from .const import (
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_SUPPORT_AUDIO,
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
@@ -81,6 +85,9 @@ BASIC_INFO_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
+            binary_sensor.DOMAIN
+        ),
         vol.Optional(
             CONF_LOW_BATTERY_THRESHOLD, default=DEFAULT_LOW_BATTERY_THRESHOLD
         ): cv.positive_int,
@@ -98,7 +105,7 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(CONF_AUDIO_CODEC, default=DEFAULT_AUDIO_CODEC): vol.In(
             VALID_AUDIO_CODECS
         ),
-        vol.Optional(CONF_SUPPORT_AUDIO, default=False): cv.boolean,
+        vol.Optional(CONF_SUPPORT_AUDIO, default=DEFAULT_SUPPORT_AUDIO): cv.boolean,
         vol.Optional(CONF_MAX_WIDTH, default=DEFAULT_MAX_WIDTH): cv.positive_int,
         vol.Optional(CONF_MAX_HEIGHT, default=DEFAULT_MAX_HEIGHT): cv.positive_int,
         vol.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,
@@ -113,6 +120,7 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(
             CONF_VIDEO_PACKET_SIZE, default=DEFAULT_VIDEO_PACKET_SIZE
         ): cv.positive_int,
+        vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(binary_sensor.DOMAIN),
     }
 )
 
@@ -414,6 +422,14 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
     )
 
 
+def format_sw_version(version):
+    """Extract the version string in a format homekit can consume."""
+    match = re.search(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?", str(version).replace("-", "."))
+    if match:
+        return match.group(0)
+    return None
+
+
 def migrate_filesystem_state_data_for_primary_imported_entry_id(
     hass: HomeAssistant, entry_id: str
 ):
@@ -472,3 +488,13 @@ def find_next_available_port(start_port: int):
             if port == MAX_PORT:
                 raise
             continue
+
+
+def pid_is_alive(pid):
+    """Check to see if a process is alive."""
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        pass
+    return False

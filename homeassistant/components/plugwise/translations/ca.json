@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Smile ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida, comprova els 8 car\u00e0cters de l'ID de Smile.",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Adre\u00e7a IP de Smile",
+                    "password": "ID de Smile"
+                },
+                "description": "Detalls",
+                "title": "Connecta\u2019t amb el Smile"
+            }
+        }
+    }
+}

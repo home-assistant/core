@@ -1,4 +1,5 @@
 """Support for a Hue API to control Home Assistant."""
+import asyncio
 import hashlib
 import logging
 
@@ -223,14 +224,7 @@ class HueFullStateView(HomeAssistantView):
 
         json_response = {
             "lights": create_list_of_entities(self.config, request),
-            "config": {
-                "mac": "00:00:00:00:00:00",
-                "swversion": "01003542",
-                "apiversion": "1.17.0",
-                "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
-                "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
-                "linkbutton": True,
-            },
+            "config": create_config_model(self.config, request),
         }
 
         return self.json(json_response)
@@ -255,14 +249,7 @@ class HueConfigView(HomeAssistantView):
         if username != HUE_API_USERNAME:
             return self.json(UNAUTHORIZED_USER)
 
-        json_response = {
-            "mac": "00:00:00:00:00:00",
-            "swversion": "01003542",
-            "apiversion": "1.17.0",
-            "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
-            "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
-            "linkbutton": True,
-        }
+        json_response = create_config_model(self.config, request)
 
         return self.json(json_response)
 
@@ -555,6 +542,10 @@ class HueOneLightChangeView(HomeAssistantView):
                     create_hue_success_response(entity_number, val, parsed[key])
                 )
 
+        # Echo fetches the state immediately after the PUT method returns.
+        # Waiting for a short time allows the changes to propagate.
+        await asyncio.sleep(0.25)
+
         return self.json(json_response)
 
 
@@ -749,6 +740,18 @@ def create_hue_success_response(entity_number, attr, value):
     """Create a success response for an attribute set on a light."""
     success_key = f"/lights/{entity_number}/state/{attr}"
     return {"success": {success_key: value}}
+
+
+def create_config_model(config, request):
+    """Create a config resource."""
+    return {
+        "mac": "00:00:00:00:00:00",
+        "swversion": "01003542",
+        "apiversion": "1.17.0",
+        "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
+        "ipaddress": f"{config.advertise_ip}:{config.advertise_port}",
+        "linkbutton": True,
+    }
 
 
 def create_list_of_entities(config, request):

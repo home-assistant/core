@@ -9,7 +9,6 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "\u4e3b\u6a5f\u7aef",
                     "host": "\u4e3b\u6a5f\u7aef"
                 },
                 "description": "\u8acb\u8f38\u5165\u4e3b\u6a5f\u6bb5\u540d\u7a31\u6216 Heos \u8a2d\u5099 IP \u4f4d\u5740\uff08\u5df2\u900f\u904e\u6709\u7dda\u7db2\u8def\u9023\u7dda\uff09\u3002",

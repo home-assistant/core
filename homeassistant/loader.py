@@ -31,8 +31,6 @@ if TYPE_CHECKING:
 
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
-DEPENDENCY_BLACKLIST = {"config"}
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_COMPONENTS = "components"
@@ -251,16 +249,6 @@ class Integration:
     def quality_scale(self) -> Optional[str]:
         """Return Integration Quality Scale."""
         return cast(str, self.manifest.get("quality_scale"))
-
-    @property
-    def logo(self) -> Optional[str]:
-        """Return Integration Logo."""
-        return cast(str, self.manifest.get("logo"))
-
-    @property
-    def icon(self) -> Optional[str]:
-        """Return Integration Icon."""
-        return cast(str, self.manifest.get("icon"))
 
     @property
     def is_built_in(self) -> bool:

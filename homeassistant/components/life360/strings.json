@@ -3,7 +3,10 @@
     "step": {
       "user": {
         "title": "Life360 Account Info",
-        "data": { "username": "Username", "password": "Password" },
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
         "description": "To set advanced options, see [Life360 documentation]({docs_url}).\nYou may want to do that before adding accounts."
       }
     },
