@@ -1,5 +1,5 @@
 """The tests for the Met Office weather component."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
@@ -55,20 +55,18 @@ class MockDateTime(datetime):
         return datetime.__new__(datetime, *args, **kwargs)
 
 
-@patch("datetime.datetime", MockDateTime)
+@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
 async def test_one_weather_site_running(hass, requests_mock):
     """Test the Met Office weather platform."""
+
+    MockDateTime.now = classmethod(
+        lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
+    )
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
-
-    from datetime import datetime, timezone
-
-    MockDateTime.now = classmethod(
-        lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
-    )
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
@@ -92,7 +90,7 @@ async def test_one_weather_site_running(hass, requests_mock):
     assert entity.attributes.get("humidity") == 50
 
 
-@patch("datetime.datetime", MockDateTime)
+@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
 async def test_one_sensor_site_running(hass, requests_mock):
     """Test the Met Office sensor platform."""
 
@@ -100,8 +98,6 @@ async def test_one_sensor_site_running(hass, requests_mock):
     mock_json = json.loads(load_fixture("metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
-
-    from datetime import datetime, timezone
 
     MockDateTime.now = classmethod(
         lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
@@ -134,11 +130,9 @@ async def test_one_sensor_site_running(hass, requests_mock):
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@patch("datetime.datetime", MockDateTime)
+@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
 async def test_site_cannot_connect(hass, requests_mock):
     """Test we handle cannot connect error."""
-
-    from datetime import datetime, timezone
 
     MockDateTime.now = classmethod(
         lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
@@ -159,11 +153,9 @@ async def test_site_cannot_connect(hass, requests_mock):
         assert sensor is None
 
 
-@patch("datetime.datetime", MockDateTime)
+@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
 async def test_site_cannot_update(hass, requests_mock):
     """Test we handle cannot connect error."""
-
-    from datetime import datetime, timezone
 
     MockDateTime.now = classmethod(
         lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
@@ -197,11 +189,9 @@ async def test_site_cannot_update(hass, requests_mock):
     assert entity.state == STATE_UNAVAILABLE
 
 
-@patch("datetime.datetime", MockDateTime)
+@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
 async def test_two_weather_sites_running(hass, requests_mock):
     """Test we handle two different weather sites both running."""
-
-    from datetime import datetime, timezone
 
     MockDateTime.now = classmethod(
         lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
@@ -252,11 +242,9 @@ async def test_two_weather_sites_running(hass, requests_mock):
     assert entity.attributes.get("humidity") == 60
 
 
-@patch("datetime.datetime", MockDateTime)
+@patch("datapoint.Forecast.datetime.datetime", MockDateTime)
 async def test_two_sensor_sites_running(hass, requests_mock):
     """Test we handle two sets of sensors running for two different sites."""
-
-    from datetime import datetime, timezone
 
     MockDateTime.now = classmethod(
         lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
