@@ -785,6 +785,9 @@ ihcsdk==2.7.0
 incomfort-client==0.4.0
 
 # homeassistant.components.influxdb
+influxdb-client==1.6.0
+
+# homeassistant.components.influxdb
 influxdb==5.2.3
 
 # homeassistant.components.iperf3
