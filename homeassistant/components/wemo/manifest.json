@@ -11,5 +11,6 @@
   ],
   "homekit": {
     "models": ["Wemo"]
-  }
+  },
+  "codeowners": []
 }
