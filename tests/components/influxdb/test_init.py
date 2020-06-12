@@ -172,6 +172,7 @@ async def _setup(hass, mock_influx_client, config_ext, get_write_api):
     }
     config["influxdb"].update(config_ext)
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
     # A call is made to the write API during setup to test the connection.
     # Therefore we reset the write API mock here before the test begins.
     get_write_api(mock_influx_client).reset_mock()
