@@ -1,5 +1,4 @@
 """Common vera code."""
-from datetime import timedelta
 import logging
 from typing import DefaultDict, List, NamedTuple, Set
 
@@ -7,7 +6,7 @@ import pyvera as pv
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,56 +45,28 @@ class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
         """Initialize the object."""
         super().__init__()
         self._hass = hass
-        self._update_coordinator = DataUpdateCoordinator(
-            self._hass,
-            _LOGGER,
-            name="vera",
-            update_interval=timedelta(seconds=1),
-            update_method=self._async_fetch_data,
-        )
+        self._cancel_poll = None
 
     def start(self) -> None:
         """Start polling for data."""
-        self._update_coordinator.async_add_listener(self._async_on_data_updated)
+        self.stop()
+        self._schedule_poll(1)
 
     def stop(self) -> None:
         """Stop polling for data."""
-        self._update_coordinator.async_remove_listener(self._async_on_data_updated)
+        if self._cancel_poll:
+            self._cancel_poll()
 
-    async def _async_fetch_data(self) -> UpdateCoordinatorData:
-        if not self._controller:
-            raise pv.ControllerNotSetException()
+    def _schedule_poll(self, delay: float) -> None:
+        self._cancel_poll = async_call_later(self._hass, delay, self._run_poll_server)
 
-        lu_sdata_respone = await self._hass.async_add_executor_job(
-            self.get_controller().data_request,
-            {"id": "lu_sdata", "output_format": "json"},
-        )
+    def _run_poll_server(self, now) -> None:
+        delay = 1
 
-        status_response = await self._hass.async_add_executor_job(
-            self.get_controller().data_request,
-            {"id": "status", "output_format": "json"},
-        )
+        # Long poll for changes. The downstream API instructs the endpoint to wait a
+        # a minimum of 200ms before returning data and a maximum of 9s before timing out.
+        if not self.poll_server_once():
+            # If an error was encountered, wait a bit longer before trying again.
+            delay = 60
 
-        return UpdateCoordinatorData(
-            lu_sdata=lu_sdata_respone.json(), status=status_response.json(),
-        )
-
-    def _async_on_data_updated(self) -> None:
-        self._hass.async_add_executor_job(self.poll_server_once)
-
-    def get_device_data(self, last_updated: dict) -> pv.ChangedDevicesValue:
-        """Get device data."""
-        return (
-            self._update_coordinator.data.lu_sdata.get("devices", []),
-            # Return static version data, always_update() renders version checking useless.
-            {"dataversion": 1, "loadtime": 0},
-        )
-
-    def get_alert_data(self, last_updated: dict) -> List[dict]:
-        """Get alert data."""
-        return self._update_coordinator.data.status.get("alerts", [])
-
-    def always_update(self) -> bool:  # pylint: disable=no-self-use
-        """Determine if we should treat every poll as a data change."""
-        # Ignore incremental checks for data changes.
-        return True
+        self._schedule_poll(delay)

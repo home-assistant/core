@@ -2,8 +2,6 @@
 from datetime import timedelta
 
 from asynctest import MagicMock
-from pyvera import VeraController
-from requests.adapters import Response
 
 from homeassistant.components.vera import SubscriptionRegistry
 from homeassistant.core import HomeAssistant
@@ -14,39 +12,40 @@ from tests.common import async_fire_time_changed
 
 async def test_subscription_registry(hass: HomeAssistant) -> None:
     """Test subscription registry polling."""
-    devices = ["device1"]
-    alerts = ["alert1"]
-    response = MagicMock(spec=Response)
-    response.json.return_value = {"devices": devices, "alerts": alerts}
-
-    controller = MagicMock(spec=VeraController)
-    controller.data_request.return_value = response
-
     subscription_registry = SubscriptionRegistry(hass)
-    subscription_registry.set_controller(controller)
     # pylint: disable=protected-access
-    subscription_registry._event = event_mock = MagicMock()
+    subscription_registry.poll_server_once = poll_server_once_mock = MagicMock()
+
+    poll_server_once_mock.return_value = True
     subscription_registry.start()
-
-    event_mock.reset_mock()
-    controller.data_request.reset_mock()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
-    event_mock.assert_called_once_with(devices, alerts)
-    assert controller.data_request.call_count == 2
+    poll_server_once_mock.assert_called_once()
 
-    event_mock.reset_mock()
-    controller.data_request.reset_mock()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    # Last poll was successful and already scheduled the next poll for 1s in the future.
+    # This will ensure that future poll will fail.
+    poll_server_once_mock.return_value = False
+
+    # Asserting future poll runs.
+    poll_server_once_mock.reset_mock()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=2))
     await hass.async_block_till_done()
-    event_mock.assert_called_once_with(devices, alerts)
-    assert controller.data_request.call_count == 2
+    poll_server_once_mock.assert_called_once()
 
+    # Asserting a future poll is delayed due to the failure set above.
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=2))
+    poll_server_once_mock.reset_mock()
+    poll_server_once_mock.assert_not_called()
+
+    poll_server_once_mock.reset_mock()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+    poll_server_once_mock.assert_called_once()
+
+    poll_server_once_mock.reset_mock()
     subscription_registry.stop()
 
-    event_mock.reset_mock()
-    controller.data_request.reset_mock()
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    # Assert no further polling is performed.
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=65))
     await hass.async_block_till_done()
-    event_mock.assert_not_called()
-    controller.data_request.assert_not_called()
+    poll_server_once_mock.assert_not_called()
