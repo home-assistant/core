@@ -1,7 +1,6 @@
 """Test the Blink config flow."""
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.blink import DOMAIN
-from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
@@ -65,7 +64,6 @@ async def test_form_invalid_auth(hass):
 
 async def test_options_flow(hass):
     """Test config flow options."""
-    assert await async_setup_component(hass, DOMAIN, {})
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -78,19 +76,15 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.blink.Blink",
-        return_value=Mock(
-            login_handler=True,
-            setup_params=Mock(return_value=True),
-            setup_post_verify=Mock(return_value=True),
-        ),
-    ):
+    mock_blink = Mock(
+        login_handler=True,
+        setup_params=Mock(return_value=True),
+        setup_post_verify=Mock(return_value=True),
+    )
+
+    with patch("homeassistant.components.blink.Blink", return_value=mock_blink):
         await hass.config_entries.async_setup(config_entry.entry_id)
-
-    await hass.async_block_till_done()
-
-    blink = hass.data[DOMAIN][config_entry.entry_id]
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context={"show_advanced_options": False}
@@ -105,4 +99,4 @@ async def test_options_flow(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {"scan_interval": 5}
-    assert blink.refresh_rate == 5
+    assert mock_blink.refresh_rate == 5
