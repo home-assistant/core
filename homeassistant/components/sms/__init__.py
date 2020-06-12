@@ -44,10 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device = entry.data[CONF_DEVICE]
     config = {"Device": device, "Connection": "at"}
     gateway = await create_sms_gateway(config, hass)
-    if gateway:
-        hass.data[DOMAIN][SMS_GATEWAY] = gateway
-        return True
-    return False
+    if not gateway:
+        return False
+    hass.data[DOMAIN][SMS_GATEWAY] = gateway
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
