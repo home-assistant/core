@@ -122,13 +122,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.data.update({"station": self.stations[user_input[CONF_STATION]]})
 
-        # get station information
-        station_information = await self.hub.gti.stationInformation(
-            {"station": self.data[CONF_STATION]}
-        )
-
-        self.data.update({"stationInformation": station_information})
-
         title = self.data[CONF_STATION]["name"]
 
         return self.async_create_entry(title=title, data=self.data)
