@@ -8,13 +8,14 @@ from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, STATE_U
 import homeassistant.util.dt as dt_util
 
 from .const import HOST, PORT
-from .helpers import make_timestamp
+from .helpers import future_timestamp, static_datetime
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_async_setup_entry(hass):
+@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
+async def test_async_setup_entry(mock_now, hass):
     """Test async_setup_entry."""
     entry = MockConfigEntry(
         domain="cert_expiry",
@@ -22,7 +23,7 @@ async def test_async_setup_entry(hass):
         unique_id=f"{HOST}:{PORT}",
     )
 
-    timestamp = make_timestamp(100)
+    timestamp = future_timestamp(100)
 
     with patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
@@ -101,7 +102,8 @@ async def test_async_setup_entry_host_unavailable(hass):
     assert state is None
 
 
-async def test_update_sensor(hass):
+@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
+async def test_update_sensor(mock_now, hass):
     """Test async_update for sensor."""
     entry = MockConfigEntry(
         domain="cert_expiry",
@@ -109,7 +111,7 @@ async def test_update_sensor(hass):
         unique_id=f"{HOST}:{PORT}",
     )
 
-    timestamp = make_timestamp(100)
+    timestamp = future_timestamp(100)
 
     with patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
@@ -133,7 +135,7 @@ async def test_update_sensor(hass):
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
-    timestamp2 = make_timestamp(99)
+    timestamp2 = future_timestamp(99)
 
     next_update = dt_util.utcnow() + timedelta(hours=12)
     async_fire_time_changed(hass, next_update)
@@ -159,7 +161,8 @@ async def test_update_sensor(hass):
     assert state.attributes.get("is_valid")
 
 
-async def test_update_sensor_network_errors(hass):
+@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
+async def test_update_sensor_network_errors(mock_now, hass):
     """Test async_update for sensor."""
     entry = MockConfigEntry(
         domain="cert_expiry",
@@ -167,7 +170,7 @@ async def test_update_sensor_network_errors(hass):
         unique_id=f"{HOST}:{PORT}",
     )
 
-    timestamp = make_timestamp(100)
+    timestamp = future_timestamp(100)
 
     with patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
@@ -208,7 +211,7 @@ async def test_update_sensor_network_errors(hass):
 
     with patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=make_timestamp(99),
+        return_value=future_timestamp(99),
     ):
         await hass.async_block_till_done()
 

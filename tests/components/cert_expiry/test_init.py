@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .const import HOST, PORT
-from .helpers import make_timestamp
+from .helpers import future_timestamp, static_datetime
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -31,11 +31,10 @@ async def test_setup_with_config(hass):
     async_fire_time_changed(hass, next_update)
 
     with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp",
-        return_value=make_timestamp(100),
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=make_timestamp(100),
+        return_value=future_timestamp(1),
     ):
         await hass.async_block_till_done()
 
@@ -54,7 +53,7 @@ async def test_update_unique_id(hass):
 
     with patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=make_timestamp(100),
+        return_value=future_timestamp(1),
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_block_till_done()
@@ -63,7 +62,8 @@ async def test_update_unique_id(hass):
     assert entry.unique_id == f"{HOST}:{PORT}"
 
 
-async def test_unload_config_entry(hass):
+@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
+async def test_unload_config_entry(mock_now, hass):
     """Test unloading a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -78,7 +78,7 @@ async def test_unload_config_entry(hass):
 
     with patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=make_timestamp(100),
+        return_value=future_timestamp(100),
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_block_till_done()

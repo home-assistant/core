@@ -7,7 +7,7 @@ from homeassistant.components.cert_expiry.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from .const import HOST, PORT
-from .helpers import make_timestamp
+from .helpers import future_timestamp
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -69,7 +69,7 @@ async def test_import_host_only(hass):
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=make_timestamp(1),
+        return_value=future_timestamp(1),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data={CONF_HOST: HOST}
@@ -89,7 +89,7 @@ async def test_import_host_and_port(hass):
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=make_timestamp(1),
+        return_value=future_timestamp(1),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -111,7 +111,7 @@ async def test_import_non_default_port(hass):
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=make_timestamp(1),
+        return_value=future_timestamp(1),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data={CONF_HOST: HOST, CONF_PORT: 888}
@@ -131,7 +131,7 @@ async def test_import_with_name(hass):
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=make_timestamp(1),
+        return_value=future_timestamp(1),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
