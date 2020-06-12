@@ -114,7 +114,6 @@ class SmappeeActuator(SwitchEntity):
             self._service_location.set_actuator_state(
                 self._actuator_id, state=self._actuator_state_option
             )
-        self._state = self._service_location.actuators.get(self._actuator_id).state
 
     def turn_off(self, **kwargs):
         """Turn off Comport Plug."""
@@ -126,7 +125,6 @@ class SmappeeActuator(SwitchEntity):
             self._service_location.set_actuator_state(
                 self._actuator_id, state="PLACEHOLDER", api=False
             )
-        self._state = self._service_location.actuators.get(self._actuator_id).state
 
     @property
     def available(self):
