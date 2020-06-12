@@ -107,7 +107,7 @@ IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INE
 # Taken from last version of "glances" integration before they moved to
 # a generic temperature sensor logic.
 # https://github.com/home-assistant/core/blob/5e15675593ba94a2c11f9f929cdad317e27ce190/homeassistant/components/glances/sensor.py#L199
-CPU_SENSOR_PREFIXES = (
+CPU_SENSOR_PREFIXES = [
     "amdgpu 1",
     "aml_thermal",
     "Core 0",
@@ -122,7 +122,7 @@ CPU_SENSOR_PREFIXES = (
     "radeon 1",
     "soc-thermal 1",
     "soc_thermal 1",
-)
+]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
