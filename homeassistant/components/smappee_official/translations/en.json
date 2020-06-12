@@ -1,17 +1,10 @@
 {
     "config": {
         "step": {
-            "pick_implementation": {
-                "title": "Pick Authentication Method"
-            }
         },
         "abort": {
-            "already_setup": "Smappee account already configured.",
-            "authorize_url_timeout": "Timeout generating authorize url.",
-            "missing_configuration": "The Smappee component is not configured."
-        },
-        "create_entry": {
-            "default": "Successfully authenticated with Smappee."
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "missing_configuration": "The component is not configured. Please follow the documentation."
         }
     }
 }
