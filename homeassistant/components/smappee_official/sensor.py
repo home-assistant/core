@@ -25,10 +25,10 @@ TREND_SENSORS = {
     ],
     "alwayson": [
         "Always on - Active power",
-        "mdi:sleep",
+        None,
         POWER_WATT,
         "alwayson",
-        None,
+        DEVICE_CLASS_POWER,
     ],
     "power_today": [
         "Total consumption - Today",
@@ -62,7 +62,7 @@ TREND_SENSORS = {
 SOLAR_SENSORS = {
     "solar_power": [
         "Total production - Active power",
-        "mdi:white-balance-sunny",
+        None,
         POWER_WATT,
         "solar_power",
         DEVICE_CLASS_POWER,
