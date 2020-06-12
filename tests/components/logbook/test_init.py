@@ -1352,6 +1352,71 @@ async def test_logbook_describe_event(hass, hass_client):
     assert event["domain"] == "test_domain"
 
 
+async def test_exclude_described_event(hass, hass_client):
+    """Test exclusions of events that are described by another integration."""
+    name = "My Automation Rule"
+    entity_id = "automation.excluded_rule"
+    entity_id2 = "automation.included_rule"
+    entity_id3 = "sensor.excluded_domain"
+
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    assert await async_setup_component(
+        hass,
+        logbook.DOMAIN,
+        {
+            logbook.DOMAIN: {
+                logbook.CONF_EXCLUDE: {
+                    logbook.CONF_DOMAINS: ["sensor"],
+                    logbook.CONF_ENTITIES: [entity_id],
+                }
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.utcnow() - timedelta(seconds=5),
+    ):
+        hass.bus.async_fire(
+            "some_automation_event",
+            {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id},
+        )
+        hass.bus.async_fire(
+            "some_automation_event",
+            {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id2},
+        )
+        hass.bus.async_fire(
+            "some_event", {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id3}
+        )
+        await hass.async_block_till_done()
+        await hass.async_add_executor_job(
+            hass.data[recorder.DATA_INSTANCE].block_till_done
+        )
+
+    def _describe(event):
+        """Describe an event."""
+        return {
+            "name": "Test Name",
+            "message": "tested a message",
+            "entity_id": event.data.get(ATTR_ENTITY_ID),
+        }
+
+    hass.components.logbook.async_describe_event(
+        "automation", "some_automation_event", _describe
+    )
+    hass.components.logbook.async_describe_event("sensor", "some_event", _describe)
+
+    client = await hass_client()
+    response = await client.get("/api/logbook")
+    results = await response.json()
+    assert len(results) == 1
+    event = results[0]
+    assert event["name"] == "Test Name"
+    assert event["message"] == "tested a message"
+    assert event["domain"] == "automation"
+    assert event["entity_id"] == "automation.included_rule"
+
+
 async def test_logbook_view_end_time_entity(hass, hass_client):
     """Test the logbook view with end_time and entity."""
     await hass.async_add_executor_job(init_recorder_component, hass)
