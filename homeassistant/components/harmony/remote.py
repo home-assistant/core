@@ -28,6 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ACTIVITY_POWER_OFF,
+    ATTR_ACTIVITY_NOTIFY,
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
     SERVICE_CHANGE_CHANNEL,
@@ -162,10 +163,11 @@ class HarmonyRemote(remote.RemoteEntity):
         if ATTR_ACTIVITY in data:
             self.default_activity = data[ATTR_ACTIVITY]
 
-    async def async_added_to_hass(self):
-        """Complete the initialization."""
-        _LOGGER.debug("%s: Harmony Hub added", self._name)
-        # Register the callbacks
+        if ATTR_ACTIVITY_NOTIFY in data:
+            self._activity_notify = data[ATTR_ACTIVITY_NOTIFY]
+            self._update_callbacks()
+
+    def _update_callbacks(self):
         callbacks = {
             "config_updated": self.new_config,
             "connect": self.got_connected,
@@ -178,6 +180,12 @@ class HarmonyRemote(remote.RemoteEntity):
         else:
             callbacks["new_activity"] = self.new_activity
         self._client.callbacks = ClientCallbackType(**callbacks)
+
+    async def async_added_to_hass(self):
+        """Complete the initialization."""
+        _LOGGER.debug("%s: Harmony Hub added", self._name)
+        # Register the callbacks
+        self._update_callbacks()
 
         self.async_on_remove(
             async_dispatcher_connect(
