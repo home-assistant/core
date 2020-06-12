@@ -170,6 +170,8 @@ class HarmonyRemote(remote.RemoteEntity):
             "config_updated": self.new_config,
             "connect": self.got_connected,
             "disconnect": self.got_disconnected,
+            "new_activity_starting": None,
+            "new_activity": None,
         }
         if self._activity_notify:
             callbacks["new_activity_starting"] = self.new_activity
