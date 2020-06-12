@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_CITY,
     COORDINATOR_ALERT,
+    COORDINATOR_ALERT_ADDED,
     COORDINATOR_FORECAST,
     COORDINATOR_RAIN,
     DOMAIN,
@@ -83,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         update_method=_async_update_data_forecast_forecast,
         update_interval=SCAN_INTERVAL,
     )
+    coordinator_rain = None
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator_forecast.async_refresh()
@@ -90,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     if not coordinator_forecast.last_update_success:
         raise ConfigEntryNotReady
 
-    # Check if rain forecast is availabe.
+    # Check if rain forecast is available.
     if coordinator_forecast.data.position.get("rain_product_available") == 1:
         coordinator_rain = DataUpdateCoordinator(
             hass,
@@ -103,11 +105,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
         if not coordinator_rain.last_update_success:
             raise ConfigEntryNotReady
-    else:
-        coordinator_rain = None
 
-    department = coordinator_forecast.data.position["dept"]
-    if department:
+    hass.data[DOMAIN][entry.entry_id] = {
+        COORDINATOR_FORECAST: coordinator_forecast,
+        COORDINATOR_RAIN: coordinator_rain,
+    }
+
+    department = coordinator_forecast.data.position.get("dept")
+    if department and not hass.data[DOMAIN].get(department):
         coordinator_alert = DataUpdateCoordinator(
             hass,
             _LOGGER,
@@ -120,14 +125,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
         if not coordinator_alert.last_update_success:
             raise ConfigEntryNotReady
-    else:
-        coordinator_alert = None
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR_FORECAST: coordinator_forecast,
-        COORDINATOR_RAIN: coordinator_rain,
-        COORDINATOR_ALERT: coordinator_alert,
-    }
+        hass.data[DOMAIN][department] = {
+            COORDINATOR_ALERT_ADDED: False,
+            COORDINATOR_ALERT: coordinator_alert,
+        }
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -154,27 +156,3 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
             hass.data.pop(DOMAIN)
 
     return unload_ok
-
-
-# class MeteoFranceDataUpdateCoordinator(DataUpdateCoordinator):
-#     """Define an object to hold Meteo-France data."""
-
-#     def __init__(self, hass, latitude, longitude):
-#         """Initialize."""
-#         self.latitude = latitude
-#         self.longitude = longitude
-
-#         auth = AuthMeteofrance()
-#         self.client = MeteofranceClient(auth)
-
-#         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-
-#     async def _async_update_data(self):
-#         """Update data via library."""
-#         with async_timeout.timeout(20):
-#             try:
-#                 return await self.hass.async_add_executor_job(
-#                     self.client.get_forecast, self.latitude, self.longitude
-#                 )
-#             except Exception as exp:  # pylint: disable=broad-except
-#                 raise UpdateFailed(exp)

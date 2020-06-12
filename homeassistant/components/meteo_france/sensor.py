@@ -2,15 +2,21 @@
 from datetime import datetime
 import logging
 
+from meteofrance.helpers import (
+    get_warning_text_status_from_indice_color,
+    readeable_phenomenoms_dict,
+)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-# from . import MeteoFranceDataUpdateCoordinator
 from .const import (  # COORDINATOR_ALERT,
     ATTRIBUTION,
+    COORDINATOR_ALERT,
+    COORDINATOR_ALERT_ADDED,
     COORDINATOR_FORECAST,
     COORDINATOR_RAIN,
     DOMAIN,
@@ -32,30 +38,32 @@ async def async_setup_entry(
     """Set up the Meteo-France sensor platform."""
     coordinator_forecast = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
     coordinator_rain = hass.data[DOMAIN][entry.entry_id][COORDINATOR_RAIN]
-    # coordinator_alert = hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]
 
     entities = []
     for sensor_type in SENSOR_TYPES:
         if sensor_type == "next_rain":
             if coordinator_rain:
                 entities.append(MeteoFranceRainSensor(sensor_type, coordinator_rain))
+
         elif sensor_type == "weather_alert":
-            print("alert")
-            # entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
+            coordinator_alert_data = hass.data[DOMAIN].get(
+                coordinator_forecast.data.position["dept"]
+            )
+            if coordinator_alert_data[COORDINATOR_ALERT_ADDED]:
+                continue
+            coordinator_alert_data[COORDINATOR_ALERT_ADDED] = True
+            entities.append(
+                MeteoFranceAlertSensor(
+                    sensor_type, coordinator_alert_data[COORDINATOR_ALERT]
+                )
+            )
+
         else:
             entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
 
     async_add_entities(
         entities, False,
     )
-    # async_add_entities(
-    #     [MeteoFranceRainSensor("next_rain", coordinator_rain)],
-    #     False,
-    # )
-    # async_add_entities(
-    #     [MeteoFranceAlertSensor("weather_alert", coordinator_alert)],
-    #     False,
-    # )
 
 
 class MeteoFranceSensor(Entity):
@@ -187,3 +195,23 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
 
 class MeteoFranceAlertSensor(MeteoFranceSensor):
     """Representation of a Meteo-France alert sensor."""
+
+    # pylint: disable=super-init-not-called
+    def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
+        """Initialize the Meteo-France sensor."""
+        self._type = sensor_type
+        self.coordinator = coordinator
+        dept_code = self.coordinator.data.domain_id
+        self._name = f"{dept_code} {SENSOR_TYPES[self._type][ENTITY_NAME]}"
+
+    @property
+    def state(self):
+        """Return the state."""
+        return get_warning_text_status_from_indice_color(
+            self.coordinator.data.get_domain_max_color()
+        )
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return readeable_phenomenoms_dict(self.coordinator.data.phenomenons_max_colors)
