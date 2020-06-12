@@ -1,10 +1,8 @@
 """The sms gateway to interact with a GSM modem."""
-from asyncio import get_running_loop
 import logging
 
 import gammu  # pylint: disable=import-error, no-member
-
-from .gammuasync import GammuAsyncWorker
+from gammu.asyncworker import GammuAsyncWorker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 class Gateway:
     """SMS gateway to interact with a GSM modem."""
 
-    def __init__(self, worker, loop, hass):
+    def __init__(self, worker, hass):
         """Initialize the sms gateway."""
         self._worker = worker
 
@@ -28,10 +26,10 @@ class Gateway:
 async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
-        worker = GammuAsyncWorker(get_running_loop())
+        worker = GammuAsyncWorker()
         worker.configure(config)
         await worker.init_async()
-        gateway = Gateway(worker, get_running_loop(), hass)
+        gateway = Gateway(worker, hass)
         return gateway
     except gammu.GSMError as exc:  # pylint: disable=no-member
         _LOGGER.error("Failed to initialize, error %s", exc)
