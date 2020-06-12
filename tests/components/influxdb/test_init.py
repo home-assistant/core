@@ -22,6 +22,7 @@ BASE_V2_CONFIG = {
     "token": "token",
 }
 
+
 @pytest.fixture(autouse=True)
 def mock_batch_timeout(hass, monkeypatch):
     """Mock the event bus listener and the batch timeout for tests."""
@@ -32,21 +33,22 @@ def mock_batch_timeout(hass, monkeypatch):
     )
 
 
-@pytest.fixture
-def mock_client(request):
+@pytest.fixture(name="mock_client")
+def mock_client_fixture(request):
     """Patch the InfluxDBClient object with mock for version under test."""
-    if request.param is influxdb.API_VERSION_2:
-        with patch("homeassistant.components.influxdb.InfluxDBClientV2") as client:
-            yield client
+    if request.param == influxdb.API_VERSION_2:
+        client_target = "homeassistant.components.influxdb.InfluxDBClientV2"
     else:
-        with patch("homeassistant.components.influxdb.InfluxDBClient") as client:
-            yield client
+        client_target = "homeassistant.components.influxdb.InfluxDBClient"
+
+    with patch(client_target) as client:
+        yield client
 
 
-@pytest.fixture
-def get_mock_call(request):
+@pytest.fixture(name="get_mock_call")
+def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
-    if request.param is influxdb.API_VERSION_2:
+    if request.param == influxdb.API_VERSION_2:
         return lambda body: call(bucket=influxdb.DEFAULT_BUCKET, record=body)
     # pylint: disable=unnecessary-lambda
     return lambda body: call(body)
@@ -88,7 +90,6 @@ def _get_write_api_mock_v2(mock_influx_client):
     ],
     indirect=["mock_client"],
 )
-# pylint: disable=redefined-outer-name
 async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
     """Test the setup with full configuration."""
     config = {
@@ -103,6 +104,7 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
     config["influxdb"].update(config_ext)
 
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
     assert hass.bus.listen.called
     assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
     assert get_write_api(mock_client).call_count == 1
@@ -116,13 +118,13 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
     ],
     indirect=["mock_client"],
 )
-# pylint: disable=redefined-outer-name
 async def test_setup_minimal_config(hass, mock_client, config_ext, get_write_api):
     """Test the setup with minimal configuration and defaults."""
     config = {"influxdb": {}}
     config["influxdb"].update(config_ext)
 
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
     assert hass.bus.listen.called
     assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
     assert get_write_api(mock_client).call_count == 1
@@ -152,7 +154,6 @@ async def test_setup_minimal_config(hass, mock_client, config_ext, get_write_api
     ],
     indirect=["mock_client"],
 )
-# pylint: disable=redefined-outer-name
 async def test_invalid_config(hass, mock_client, config_ext, get_write_api):
     """Test the setup with invalid config or config options specified for wrong version."""
     config = {"influxdb": {}}
@@ -171,6 +172,8 @@ async def _setup(hass, mock_influx_client, config_ext, get_write_api):
     }
     config["influxdb"].update(config_ext)
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    # A call is made to the write API during setup to test the connection.
+    # Therefore we reset the write API mock here before the test begins.
     get_write_api(mock_influx_client).reset_mock()
     return hass.bus.listen.call_args_list[0][0][1]
 
@@ -193,7 +196,6 @@ async def _setup(hass, mock_influx_client, config_ext, get_write_api):
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -280,7 +282,6 @@ async def test_event_listener(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_no_units(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -335,7 +336,6 @@ async def test_event_listener_no_units(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_inf(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -385,7 +385,6 @@ async def test_event_listener_inf(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_states(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -439,7 +438,6 @@ async def test_event_listener_states(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_blacklist(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -493,7 +491,6 @@ async def test_event_listener_blacklist(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_blacklist_domain(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -547,7 +544,6 @@ async def test_event_listener_blacklist_domain(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_whitelist(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -603,7 +599,6 @@ async def test_event_listener_whitelist(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_whitelist_domain(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -659,7 +654,6 @@ async def test_event_listener_whitelist_domain(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_whitelist_domain_and_entities(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -743,7 +737,6 @@ async def test_event_listener_whitelist_domain_and_entities(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_invalid_type(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -818,7 +811,6 @@ async def test_event_listener_invalid_type(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_default_measurement(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -865,7 +857,6 @@ async def test_event_listener_default_measurement(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_unit_of_measurement_field(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -917,7 +908,6 @@ async def test_event_listener_unit_of_measurement_field(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_tags_attributes(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -973,7 +963,6 @@ async def test_event_listener_tags_attributes(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_component_override_measurement(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -1040,7 +1029,6 @@ async def test_event_listener_component_override_measurement(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_scheduled_write(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -1094,7 +1082,6 @@ async def test_event_listener_scheduled_write(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
-# pylint: disable=redefined-outer-name
 async def test_event_listener_backlog_full(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
