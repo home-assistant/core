@@ -281,16 +281,6 @@ class SmappeeSensor(Entity):
         )
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attributes = {
-            "Service location name": self._service_location.service_location_name,
-            "Device serialnumber": self._service_location.device_serial_number,
-            "Sensor": self._sensor,
-        }
-        return attributes
-
-    @property
     def device_info(self):
         """Return the device info for this sensor."""
         return {
