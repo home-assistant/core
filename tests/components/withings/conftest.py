@@ -1,6 +1,7 @@
 """Fixtures for tests."""
 
-from mock import patch
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.core import HomeAssistant
