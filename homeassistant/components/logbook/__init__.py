@@ -25,7 +25,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
-    EVENT_SCRIPT_STARTED,
     EVENT_STATE_CHANGED,
     HTTP_BAD_REQUEST,
     STATE_NOT_HOME,
@@ -81,7 +80,6 @@ ALL_EVENT_TYPES = [
     EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_SCRIPT_STARTED,
 ]
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
@@ -323,17 +321,6 @@ def humanify(hass, events):
                     "context_user_id": event.context.user_id,
                 }
 
-            elif event.event_type == EVENT_SCRIPT_STARTED:
-                yield {
-                    "when": event.time_fired,
-                    "name": event.data.get(ATTR_NAME),
-                    "message": "started",
-                    "domain": "script",
-                    "entity_id": event.data.get(ATTR_ENTITY_ID),
-                    "context_id": event.context.id,
-                    "context_user_id": event.context.user_id,
-                }
-
 
 def _get_related_entity_ids(session, entity_filter):
     timer_start = time.perf_counter()
@@ -455,9 +442,6 @@ def _keep_event(hass, event, entities_filter):
 
     elif event.event_type == EVENT_LOGBOOK_ENTRY:
         domain = event.data.get(ATTR_DOMAIN)
-
-    elif event.event_type == EVENT_SCRIPT_STARTED:
-        domain = "script"
 
     elif not entity_id and event.event_type in hass.data.get(DOMAIN, {}):
         # If the entity_id isn't described, use the domain that describes

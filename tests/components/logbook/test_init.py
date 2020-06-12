@@ -13,10 +13,8 @@ from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_HIDDEN,
-    ATTR_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_SCRIPT_STARTED,
     EVENT_STATE_CHANGED,
     STATE_NOT_HOME,
     STATE_OFF,
@@ -301,45 +299,6 @@ class TestComponentLogbook(unittest.TestCase):
         self.assert_entry(
             entries[1], pointB, "blu", domain="sensor", entity_id=entity_id2
         )
-
-    def test_exclude_script_events(self):
-        """Test if script start can be excluded by entity_id."""
-        name = "My Script Rule"
-        domain = "script"
-        entity_id = "script.my_script"
-        entity_id2 = "script.my_script_2"
-        entity_id2 = "sensor.blu"
-
-        eventA = ha.Event(
-            logbook.EVENT_SCRIPT_STARTED,
-            {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id},
-        )
-        eventB = ha.Event(
-            logbook.EVENT_SCRIPT_STARTED,
-            {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id2},
-        )
-
-        config = logbook.CONFIG_SCHEMA(
-            {
-                ha.DOMAIN: {},
-                logbook.DOMAIN: {
-                    logbook.CONF_EXCLUDE: {logbook.CONF_ENTITIES: [entity_id]}
-                },
-            }
-        )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
-        events = [
-            e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
-            if logbook._keep_event(self.hass, e, entities_filter)
-        ]
-        entries = list(logbook.humanify(self.hass, events))
-
-        assert len(entries) == 2
-        self.assert_entry(
-            entries[0], name="Home Assistant", message="stopped", domain=ha.DOMAIN
-        )
-        self.assert_entry(entries[1], name=name, domain=domain, entity_id=entity_id2)
 
     def test_include_events_entity(self):
         """Test if events are filtered if entity is included in config."""
@@ -1291,35 +1250,6 @@ async def test_logbook_view_period_entity(hass, hass_client):
     json = await response.json()
     assert len(json) == 1
     assert json[0]["entity_id"] == entity_id_test
-
-
-async def test_humanify_script_started_event(hass):
-    """Test humanifying Script Run event."""
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                ha.Event(
-                    EVENT_SCRIPT_STARTED,
-                    {ATTR_ENTITY_ID: "script.hello", ATTR_NAME: "Hello Script"},
-                ),
-                ha.Event(
-                    EVENT_SCRIPT_STARTED,
-                    {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
-                ),
-            ],
-        )
-    )
-
-    assert event1["name"] == "Hello Script"
-    assert event1["domain"] == "script"
-    assert event1["message"] == "started"
-    assert event1["entity_id"] == "script.hello"
-
-    assert event2["name"] == "Bye Script"
-    assert event2["domain"] == "script"
-    assert event2["message"] == "started"
-    assert event2["entity_id"] == "script.bye"
 
 
 async def test_logbook_describe_event(hass, hass_client):
