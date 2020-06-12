@@ -60,6 +60,7 @@ SUPPORTED_LANGUAGES = [
     "th-TH",
     "tr-TR",
     "uk-UA",
+    "cmn-TW",
     "vi-VN",
 ]
 DEFAULT_LANG = "en-US"
