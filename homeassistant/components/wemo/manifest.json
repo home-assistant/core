@@ -11,6 +11,5 @@
   ],
   "homekit": {
     "models": ["Wemo"]
-  },
-  "codeowners": ["@sqldiablo"]
+  }
 }
