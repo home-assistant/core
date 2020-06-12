@@ -171,13 +171,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         queries = config[CONF_QUERIES]
 
-    dev = []
+    entities = []
     for query in queries:
         sensor = InfluxSensor(hass, influx_conf, query, use_v2_api)
         if sensor.connected:
-            dev.append(sensor)
+            entities.append(sensor)
 
-    add_entities(dev, True)
+    add_entities(entities, True)
 
 
 class InfluxSensor(Entity):
