@@ -1,8 +1,9 @@
 """The tests for the Xiaomi vacuum platform."""
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 from unittest import mock
 
 import pytest
+from pytz import utc
 
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -33,6 +34,7 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_FILTER_LEFT,
     ATTR_MAIN_BRUSH_LEFT,
     ATTR_SIDE_BRUSH_LEFT,
+    ATTR_TIMERS,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -60,6 +62,7 @@ STATUS_CALLS = [
     mock.call.consumable_status(),
     mock.call.clean_history(),
     mock.call.dnd_status(),
+    mock.call.timer(),
 ]
 
 
@@ -93,6 +96,18 @@ def mirobo_is_got_error_fixture():
     mock_vacuum.dnd_status().enabled = True
     mock_vacuum.dnd_status().start = time(hour=22, minute=0)
     mock_vacuum.dnd_status().end = time(hour=6, minute=0)
+
+    mock_timer_1 = mock.MagicMock()
+    mock_timer_1.enabled = True
+    mock_timer_1.cron = "5 5 1 8 1"
+    mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
+
+    mock_timer_2 = mock.MagicMock()
+    mock_timer_2.enabled = False
+    mock_timer_2.cron = "5 5 1 8 2"
+    mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
+
+    mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
     with mock.patch(
         "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
@@ -159,6 +174,18 @@ def mirobo_is_on_fixture():
     mock_vacuum.status().state = "Test Xiaomi Cleaning"
     mock_vacuum.status().state_code = 5
     mock_vacuum.dnd_status().enabled = False
+
+    mock_timer_1 = mock.MagicMock()
+    mock_timer_1.enabled = True
+    mock_timer_1.cron = "5 5 1 8 1"
+    mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
+
+    mock_timer_2 = mock.MagicMock()
+    mock_timer_2.enabled = False
+    mock_timer_2.cron = "5 5 1 8 2"
+    mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
+
+    mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
     with mock.patch(
         "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
@@ -241,6 +268,18 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     assert state.attributes.get(ATTR_CLEANING_COUNT) == 35
     assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 123
     assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 695
+    assert state.attributes.get(ATTR_TIMERS) == [
+        {
+            "enabled": True,
+            "cron": "5 5 1 8 1",
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+        },
+        {
+            "enabled": False,
+            "cron": "5 5 1 8 2",
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+        },
+    ]
 
     # Call services
     await hass.services.async_call(
@@ -341,6 +380,18 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     assert state.attributes.get(ATTR_CLEANING_COUNT) == 41
     assert state.attributes.get(ATTR_CLEANED_TOTAL_AREA) == 323
     assert state.attributes.get(ATTR_CLEANING_TOTAL_TIME) == 675
+    assert state.attributes.get(ATTR_TIMERS) == [
+        {
+            "enabled": True,
+            "cron": "5 5 1 8 1",
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+        },
+        {
+            "enabled": False,
+            "cron": "5 5 1 8 2",
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+        },
+    ]
 
     # Xiaomi vacuum specific services:
     await hass.services.async_call(
