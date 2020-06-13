@@ -22,7 +22,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback
 from homeassistant.helpers import condition
