@@ -62,10 +62,6 @@ class VeSyncDevice(ToggleEntity):
         """Return True if device is available."""
         return self.device.connection_status == "online"
 
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        self.device.turn_on()
-
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self.device.turn_off()

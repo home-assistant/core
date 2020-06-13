@@ -89,6 +89,10 @@ class VeSyncSwitchHA(VeSyncDevice, SwitchEntity):
         self.smartplug.update()
         self.smartplug.update_energy()
 
+    def turn_on(self, **kwargs):
+        """Turn the device on."""
+        self.device.turn_on()
+
 
 class VeSyncLightSwitch(VeSyncDevice, SwitchEntity):
     """Handle representation of VeSync Light Switch."""
@@ -97,3 +101,7 @@ class VeSyncLightSwitch(VeSyncDevice, SwitchEntity):
         """Initialize Light Switch device class."""
         super().__init__(switch)
         self.switch = switch
+
+    def turn_on(self, **kwargs):
+        """Turn the device on."""
+        self.device.turn_on()
