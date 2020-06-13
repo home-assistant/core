@@ -1577,3 +1577,198 @@ async def test_async_setup_update_entry(hass):
         assert len(entries) == 1
         assert entries[0].state == config_entries.ENTRY_STATE_LOADED
         assert entries[0].data == {"value": "updated"}
+
+
+async def test_flow_with_default_discovery(hass, manager):
+    """Test that a flow without discovery implementation uses default discovery."""
+    mock_integration(hass, MockModule("comp"))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_show_form(step_id="mock")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_ZEROCONF}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert (
+        flows[0]["context"]["unique_id"] == config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
+    )
+
+
+async def test_flow_with_default_discovery_with_unique_id(hass, manager):
+    """Test discovery flow using the default discovery is ignored when unique ID is set."""
+    mock_integration(hass, MockModule("comp"))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_discovery(self, user_input=None):
+            """Test discovery step."""
+            await self.async_set_unique_id("mock-unique-id")
+            # This call should make no difference, as a unique ID is set
+            await self.async_handle_discovery_without_unique_id()
+            return self.async_show_form(step_id="mock")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_DISCOVERY}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["unique_id"] == "mock-unique-id"
+
+
+async def test_default_discovery_abort_existing_entries(hass, manager):
+    """Test that a flow without discovery implementation aborts when a config entry exists."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(domain="comp", data={}, unique_id="mock-unique-id")
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("comp"))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_DISCOVERY}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_default_discovery_in_progress(hass, manager):
+    """Test that a flow using default discovery can only be triggered once."""
+    mock_integration(hass, MockModule("comp"))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_discovery(self, user_input=None):
+            """Test discovery step."""
+            await self.async_set_unique_id(user_input.get("unique_id"))
+            await self.async_handle_discovery_without_unique_id()
+            return self.async_show_form(step_id="mock")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data={"unique_id": "mock-unique-id"},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        # Second discovery without a unique ID
+        result2 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["unique_id"] == "mock-unique-id"
+
+
+async def test_default_discovery_abort_on_new_unique_flow(hass, manager):
+    """Test that a flow using default discovery is aborted when a second flow with unique ID is created."""
+    mock_integration(hass, MockModule("comp"))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_discovery(self, user_input=None):
+            """Test discovery step."""
+            await self.async_set_unique_id(user_input.get("unique_id"))
+            await self.async_handle_discovery_without_unique_id()
+            return self.async_show_form(step_id="mock")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # First discovery with default, no unique ID
+        result2 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        # Second discovery brings in a unique ID
+        result = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data={"unique_id": "mock-unique-id"},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    # Ensure the first one is cancelled and we end up with just the last one
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["unique_id"] == "mock-unique-id"
+
+
+async def test_finish_flow_removed_default_discovery_unique_id(hass, manager):
+    """Test that finishing a default discovery flow removes the unique ID in the entry."""
+    mock_integration(
+        hass, MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            if user_input is None:
+                return self.async_show_form(step_id="user")
+
+            return self.async_create_entry(title="yo", data={})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Create one to be in progress
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_SSDP}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+        assert (
+            flows[0]["context"]["unique_id"]
+            == config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
+        )
+
+        # Finish flow
+        result2 = await manager.flow.async_configure(
+            result["flow_id"], user_input={"fake": "data"}
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
+
+    entry = hass.config_entries.async_entries("comp")[0]
+    assert entry.title == "yo"
+    assert entry.unique_id is None
