@@ -32,7 +32,6 @@ from .common import (
     _LOGGER,
     WithingsLocalOAuth2Implementation,
     async_get_data_manager,
-    async_get_flow_for_user_id,
     async_remove_data_manager,
     get_data_manager_by_webhook_id,
     json_message_response,
@@ -128,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_webhook_handler,
     )
 
-    data_manager.start_polling()
+    data_manager.async_start_polling()
 
     # Perform first webhook subscription check.
     if data_manager.webhook_config.enabled:
@@ -152,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
     data_manager = await async_get_data_manager(hass, entry)
-    data_manager.stop_polling()
+    data_manager.async_stop_polling()
 
     async_unregister_webhook(hass, data_manager.webhook_config.id)
 
@@ -161,11 +160,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_forward_entry_unload(entry, BINARY_SENSOR_DOMAIN),
         hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN),
     )
-
-    # Remove any outstanding flows.
-    flows = async_get_flow_for_user_id(hass, data_manager.user_id)
-    for flow in flows:
-        hass.config_entries.flow.async_abort(flow["flow_id"])
 
     async_remove_data_manager(hass, entry)
 

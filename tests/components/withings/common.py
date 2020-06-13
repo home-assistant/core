@@ -1,10 +1,9 @@
 """Common data for for the withings component tests."""
-from typing import NamedTuple, Optional, Tuple, Union
+from typing import List, NamedTuple, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
 import arrow
-from mock import MagicMock
 import pytz
 from withings_api.common import (
     MeasureGetMeasResponse,
@@ -22,8 +21,8 @@ import homeassistant.components.webhook as webhook
 from homeassistant.components.withings import async_unload_entry
 from homeassistant.components.withings.common import (
     ConfigEntryWithingsApi,
-    async_get_flow_for_user_id,
-    get_data_manager_by_user_id,
+    DataManager,
+    get_all_data_managers,
 )
 import homeassistant.components.withings.const as const
 from homeassistant.config import async_process_ha_core_config
@@ -40,6 +39,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import MagicMock
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -289,7 +289,6 @@ class ComponentFactory:
         await self._hass.async_block_till_done()
 
         assert not get_data_manager_by_user_id(self._hass, profile.user_id)
-        assert not async_get_flow_for_user_id(self._hass, profile.user_id)
 
 
 def get_config_entries_for_user_id(
@@ -302,4 +301,29 @@ def get_config_entries_for_user_id(
             for config_entry in hass.config_entries.async_entries(const.DOMAIN)
             if config_entry.data.get("token", {}).get("userid") == user_id
         ]
+    )
+
+
+def async_get_flow_for_user_id(hass: HomeAssistant, user_id: int) -> List[dict]:
+    """Get a flow for a user id."""
+    return [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == const.DOMAIN and flow["context"].get("userid") == user_id
+    ]
+
+
+def get_data_manager_by_user_id(
+    hass: HomeAssistant, user_id: int
+) -> Optional[DataManager]:
+    """Get a data manager by the user id."""
+    return next(
+        iter(
+            [
+                data_manager
+                for data_manager in get_all_data_managers(hass)
+                if data_manager.user_id == user_id
+            ]
+        ),
+        None,
     )

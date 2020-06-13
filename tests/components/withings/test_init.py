@@ -5,22 +5,18 @@ import voluptuous as vol
 from withings_api.common import UnauthorizedException
 
 import homeassistant.components.http as http
-from homeassistant.components.withings import (
-    CONFIG_SCHEMA,
-    async_setup,
-    async_setup_entry,
-    const,
-)
-from homeassistant.components.withings.common import (
-    DataManager,
-    async_get_flow_for_user_id,
-    get_data_manager_by_user_id,
-)
+from homeassistant.components.withings import CONFIG_SCHEMA, DOMAIN, async_setup, const
+from homeassistant.components.withings.common import DataManager
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .common import ComponentFactory, new_profile_config
+from .common import (
+    ComponentFactory,
+    async_get_flow_for_user_id,
+    get_data_manager_by_user_id,
+    new_profile_config,
+)
 
 from tests.common import MockConfigEntry
 
@@ -242,7 +238,8 @@ async def test_set_config_unique_id(
     await component_factory.configure_component(profile_configs=(person0,))
 
     config_entry = MockConfigEntry(
-        data={"token": {"userid": "my_user_id"}, "profile": person0.profile}
+        domain=DOMAIN,
+        data={"token": {"userid": "my_user_id"}, "profile": person0.profile},
     )
 
     with patch("homeassistant.components.withings.async_get_data_manager") as mock:
@@ -254,5 +251,5 @@ async def test_set_config_unique_id(
         mock.return_value = data_manager
         config_entry.add_to_hass(hass)
 
-        assert await async_setup_entry(hass, config_entry) is True
+        await hass.config_entries.async_setup(config_entry.entry_id)
         assert config_entry.unique_id == "my_user_id"

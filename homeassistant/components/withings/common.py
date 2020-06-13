@@ -1,5 +1,6 @@
 """Common code for Withings."""
 import asyncio
+from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 from enum import Enum, IntEnum
@@ -73,7 +74,8 @@ class UpdateType(Enum):
     WEBHOOK = "webhook"
 
 
-class WithingsAttribute(NamedTuple):
+@dataclass
+class WithingsAttribute:
     """Immutable class for describing withings sensor data."""
 
     measurement: Measurement
@@ -589,7 +591,7 @@ class DataManager:
             self._hass, self._user_id
         )
         self._cancel_subscription_update: Optional[Callable[[], None]] = None
-        self._subscribe_webhook_runcount = 0
+        self._subscribe_webhook_run_count = 0
 
     @property
     def webhook_config(self) -> WebhookConfig:
@@ -606,9 +608,9 @@ class DataManager:
         """Get the profile."""
         return self._profile
 
-    def start_polling(self) -> None:
+    def async_start_polling(self) -> None:
         """Start polling webhook subscriptions (if enabled) to reconcile their setup."""
-        self.stop_polling()
+        self.async_stop_polling()
 
         def empty_listener() -> None:
             pass
@@ -618,7 +620,7 @@ class DataManager:
                 empty_listener
             )
 
-    def stop_polling(self) -> None:
+    def async_stop_polling(self) -> None:
         """Stop polling webhook subscriptions."""
         if self._cancel_subscription_update:
             self._cancel_subscription_update()
@@ -631,7 +633,7 @@ class DataManager:
         """
         exception = None
         for attempt in range(1, attempts + 1):
-            _LOGGER.debug("Attempt %s of %s.", attempt, attempts)
+            _LOGGER.debug("Attempt %s of %s", attempt, attempts)
             try:
                 return await func()
             except Exception as exception1:  # pylint: disable=broad-except
@@ -647,16 +649,16 @@ class DataManager:
         return await self._do_retry(self._async_subscribe_webhook)
 
     async def _async_subscribe_webhook(self) -> None:
-        _LOGGER.info("Configuring withings webhook.")
+        _LOGGER.debug("Configuring withings webhook.")
 
         # On first startup, perform a fresh re-subscribe. Withings stops pushing data
         # if the webhook fails enough times but they don't remove the old subscription
         # config. This ensures the subscription is setup correctly and they start
         # pushing again.
-        if self._subscribe_webhook_runcount == 0:
-            _LOGGER.info("Refreshing withing webook configs.")
+        if self._subscribe_webhook_run_count == 0:
+            _LOGGER.debug("Refreshing withings webhook configs.")
             await self.async_unsubscribe_webhook()
-        self._subscribe_webhook_runcount += 1
+        self._subscribe_webhook_run_count += 1
 
         # Get the current webhooks.
         response = await self._hass.async_add_executor_job(self._api.notify_list)
@@ -681,8 +683,8 @@ class DataManager:
 
         # Subscribe to each one.
         for appli in to_add_applis:
-            _LOGGER.info(
-                "Subscribing %s for %s in %s seconds.",
+            _LOGGER.debug(
+                "Subscribing %s for %s in %s seconds",
                 self._webhook_config.url,
                 appli,
                 self._notify_subscribe_delay.total_seconds(),
@@ -704,8 +706,8 @@ class DataManager:
 
         # Revoke subscriptions.
         for profile in response.profiles:
-            _LOGGER.info(
-                "Unsubscribing %s for %s. in %s seconds",
+            _LOGGER.debug(
+                "Unsubscribing %s for %s in %s seconds",
                 profile.callbackurl,
                 profile.appli,
                 self._notify_subscribe_delay.total_seconds(),
@@ -748,10 +750,6 @@ class DataManager:
                 await self._hass.config_entries.flow.async_init(
                     const.DOMAIN, context=context,
                 )
-                _LOGGER.error(
-                    "Withings auth tokens expired for profile %s, remove and re-add the integration.",
-                    self._profile,
-                )
                 return
 
             raise exception
@@ -765,7 +763,7 @@ class DataManager:
 
     async def async_get_measures(self) -> Dict[MeasureType, Any]:
         """Get the measures data."""
-        _LOGGER.info("Updating withings measures.")
+        _LOGGER.debug("Updating withings measures")
 
         response = await self._hass.async_add_executor_job(self._api.measure_get_meas)
 
@@ -783,7 +781,7 @@ class DataManager:
 
     async def async_get_sleep_summary(self) -> Dict[MeasureType, Any]:
         """Get the sleep summary data."""
-        _LOGGER.info("Updating withing sleep summary.")
+        _LOGGER.debug("Updating withing sleep summary")
         now = dt.utcnow()
         yesterday = now - datetime.timedelta(days=1)
         yesterday_noon = datetime.datetime(
@@ -852,7 +850,7 @@ class DataManager:
 
     async def async_webhook_data_updated(self, data_category: NotifyAppli) -> None:
         """Handle scenario when data is updated from a webook."""
-        _LOGGER.info("Withings webhook triggered.")
+        _LOGGER.debug("Withings webhook triggered")
         if data_category in {
             NotifyAppli.WEIGHT,
             NotifyAppli.CIRCULATORY,
@@ -936,15 +934,6 @@ class BaseWithingsSensor(Entity):
         return self._attribute.icon
 
     @property
-    def state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes.
-
-        Implemented by component base class. Convention for attribute names
-        is lowercase snake_case.
-        """
-        return {"friendly_name": self._attribute.friendly_name}
-
-    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._attribute.enabled_by_default
@@ -964,7 +953,7 @@ class BaseWithingsSensor(Entity):
     def _update_state_data(self, data: MeasurementData) -> None:
         """Update the state data."""
         self._state_data = data.get(self._attribute.measurement)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register update dispatcher."""
@@ -1016,22 +1005,6 @@ async def async_get_data_manager(
         )
 
     return config_entry_data[const.DATA_MANAGER]
-
-
-def get_data_manager_by_user_id(
-    hass: HomeAssistant, user_id: int
-) -> Optional[DataManager]:
-    """Get a data manager by the user id."""
-    return next(
-        iter(
-            [
-                data_manager
-                for data_manager in get_all_data_managers(hass)
-                if data_manager.user_id == user_id
-            ]
-        ),
-        None,
-    )
 
 
 def get_data_manager_by_webhook_id(
@@ -1090,15 +1063,6 @@ def get_platform_attributes(platform: str) -> Tuple[WithingsAttribute, ...]:
             if attribute.platform == platform
         ]
     )
-
-
-def async_get_flow_for_user_id(hass: HomeAssistant, user_id: int) -> List[dict]:
-    """Get a flow for a user id."""
-    return [
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["handler"] == const.DOMAIN and flow["context"].get("userid") == user_id
-    ]
 
 
 class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
