@@ -6,7 +6,7 @@ from aiohttp import ClientError
 from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
-from homeassistant.components.daikin.const import KEY_HOSTNAME, KEY_IP, KEY_MAC
+from homeassistant.components.daikin.const import KEY_IP, KEY_MAC
 from homeassistant.config_entries import (
     SOURCE_DISCOVERY,
     SOURCE_IMPORT,
@@ -25,7 +25,6 @@ from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
 HOST = "127.0.0.1"
-HOSTNAME = "DaikinUNIQUE.local"
 
 
 @pytest.fixture
@@ -40,6 +39,16 @@ def mock_daikin():
         type(Appliance).mac = PropertyMock(return_value="AABBCCDDEEFF")
         Appliance.factory.side_effect = mock_daikin_factory
         yield Appliance
+
+
+@pytest.fixture
+def mock_daikin_discovery():
+    """Mock pydaikin Discovery."""
+    with patch("homeassistant.components.daikin.config_flow.Discovery") as Discovery:
+        Discovery.poll = PropertyMock(
+            return_value={"127.0.01": {"mac": "AABBCCDDEEFF", "id": "test"}}
+        )
+        yield Discovery
 
 
 async def test_user(hass, mock_daikin):
@@ -113,10 +122,12 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
     "source, data, unique_id",
     [
         (SOURCE_DISCOVERY, {KEY_IP: HOST, KEY_MAC: MAC}, MAC),
-        (SOURCE_ZEROCONF, {CONF_HOST: HOST, KEY_HOSTNAME: HOSTNAME}, HOSTNAME),
+        (SOURCE_ZEROCONF, {CONF_HOST: HOST}, MAC),
     ],
 )
-async def test_discovery_zeroconf(hass, mock_daikin, source, data, unique_id):
+async def test_discovery_zeroconf(
+    hass, mock_daikin, mock_daikin_discovery, source, data, unique_id
+):
     """Test discovery/zeroconf step."""
     result = await hass.config_entries.flow.async_init(
         "daikin", context={"source": source}, data=data,
