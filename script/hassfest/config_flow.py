@@ -32,12 +32,22 @@ def validate_integration(config: Config, integration: Integration):
 
     config_flow = config_flow_file.read_text()
 
-    needs_unique_id = integration.domain not in UNIQUE_ID_IGNORE and (
-        "async_step_hassio" in config_flow
-        or any(
-            bool(integration.manifest.get(key))
-            for keys in DISCOVERY_INTEGRATIONS.values()
-            for key in keys
+    needs_unique_id = (
+        integration.domain not in UNIQUE_ID_IGNORE
+        and (
+            "async_step_hassio" in config_flow
+            or any(
+                bool(integration.manifest.get(key))
+                for keys in DISCOVERY_INTEGRATIONS.values()
+                for key in keys
+            )
+        )
+        and (
+            "async_step_discovery" in config_flow
+            or "async_step_hassio" in config_flow
+            or "async_step_homekit" in config_flow
+            or "async_step_ssdp" in config_flow
+            or "async_step_zeroconf" in config_flow
         )
     )
 
@@ -46,6 +56,7 @@ def validate_integration(config: Config, integration: Integration):
 
     has_unique_id = (
         "self.async_set_unique_id" in config_flow
+        or "self.async_handle_discovery_without_unique_id" in config_flow
         or "config_entry_flow.register_discovery_flow" in config_flow
         or "config_entry_oauth2_flow.AbstractOAuth2FlowHandler" in config_flow
     )
