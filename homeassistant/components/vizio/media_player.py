@@ -214,8 +214,8 @@ class VizioDevice(MediaPlayerEntity):
         self._state = STATE_ON
 
         if not self._setting_types:
-            self._setting_types = await self._device.get_setting_types_list(
-                log_api_exception=False
+            self._setting_types = sorted(
+                await self._device.get_setting_types_list(log_api_exception=False)
             )
 
         for setting_type in self._setting_types:
