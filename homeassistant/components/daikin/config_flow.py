@@ -6,12 +6,13 @@ from uuid import uuid4
 from aiohttp import ClientError, web_exceptions
 from async_timeout import timeout
 from pydaikin.daikin_base import Appliance
+from pydaikin.discovery import Discovery
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
-from .const import CONF_KEY, CONF_UUID, KEY_HOSTNAME, KEY_IP, KEY_MAC, TIMEOUT
+from .const import CONF_KEY, CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,7 +129,8 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf discovery_info: %s", discovery_info)
-        await self.async_set_unique_id(discovery_info[KEY_HOSTNAME])
+        devices = Discovery.poll(discovery_info[CONF_HOST])
+        await self.async_set_unique_id(next(iter(devices.values()))[KEY_MAC])
         self._abort_if_unique_id_configured()
         self.host = discovery_info[CONF_HOST]
         return await self.async_step_user()

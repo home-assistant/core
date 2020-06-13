@@ -147,7 +147,7 @@ async-upnp-client==0.14.13
 av==8.0.2
 
 # homeassistant.components.axis
-axis==29
+axis==30
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -321,7 +321,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200603.2
+home-assistant-frontend==20200603.3
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -545,7 +545,7 @@ pychromecast==6.0.0
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.1.1
+pydaikin==2.1.2
 
 # homeassistant.components.deconz
 pydeconz==71
