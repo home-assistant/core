@@ -1,0 +1,13 @@
+del /Q D:\ProcessedVideos\1\*.*
+del /Q D:\ProcessedVideos\3\*.*
+del /Q D:\ProcessedVideos\4\*.*
+del /Q D:\ProcessedVideos\5\*.*
+del /Q D:\ProcessedVideos\7\*.*
+del /Q D:\ProcessedVideos\9\*.*
+del /Q D:\ProcessedVideos\10\*.*
+del /Q D:\ProcessedVideos\11\*.*
+del /Q D:\ProcessedVideos\12\*.*
+del /Q D:\ProcessedVideos\13\*.*
+del /Q D:\ProcessedVideos\14\*.*
+del /Q D:\ProcessedVideos\16\*.*
+del /Q D:\ProcessedVideos\17\*.*
