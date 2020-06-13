@@ -150,7 +150,7 @@ av==8.0.2
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==29
+axis==30
 
 # homeassistant.components.homekit
 base36==0.1.1
