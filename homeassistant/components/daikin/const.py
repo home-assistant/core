@@ -64,6 +64,5 @@ CONF_UUID = "uuid"
 
 KEY_MAC = "mac"
 KEY_IP = "ip"
-KEY_HOSTNAME = "hostname"
 
 TIMEOUT = 60

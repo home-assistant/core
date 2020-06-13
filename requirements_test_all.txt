@@ -147,7 +147,7 @@ async-upnp-client==0.14.13
 av==8.0.2
 
 # homeassistant.components.axis
-axis==29
+axis==30
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -545,7 +545,7 @@ pychromecast==6.0.0
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.1.1
+pydaikin==2.1.2
 
 # homeassistant.components.deconz
 pydeconz==71
