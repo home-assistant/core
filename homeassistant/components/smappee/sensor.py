@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.const import (
     DEGREE,
+    ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     UNIT_PERCENTAGE,
@@ -26,7 +27,7 @@ SENSOR_TYPES = {
         POWER_WATT,
         "active_power",
     ],
-    "current": ["Current", "mdi:gauge", "local", "A", "current"],
+    "current": ["Current", "mdi:gauge", "local", ELECTRICAL_CURRENT_AMPERE, "current"],
     "voltage": ["Voltage", "mdi:gauge", "local", VOLT, "voltage"],
     "active_cosfi": [
         "Power Factor",

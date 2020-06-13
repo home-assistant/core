@@ -1661,7 +1661,21 @@ class AlexaDoorbellEventSource(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-doorbelleventsource.html
     """
 
-    supported_locales = {"en-US"}
+    supported_locales = {
+        "en-US",
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "fr-CA",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    }
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1789,6 +1803,13 @@ class AlexaEqualizerController(AlexaCapability):
     """
 
     supported_locales = {"en-US"}
+    VALID_SOUND_MODES = {
+        "MOVIE",
+        "MUSIC",
+        "NIGHT",
+        "SPORT",
+        "TV",
+    }
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1807,34 +1828,33 @@ class AlexaEqualizerController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         sound_mode = self.entity.attributes.get(media_player.ATTR_SOUND_MODE)
-        if sound_mode and sound_mode.upper() in (
-            "MOVIE",
-            "MUSIC",
-            "NIGHT",
-            "SPORT",
-            "TV",
-        ):
+        if sound_mode and sound_mode.upper() in self.VALID_SOUND_MODES:
             return sound_mode.upper()
 
         return None
 
     def configurations(self):
-        """Return the sound modes supported in the configurations object.
-
-        Valid Values for modes are: MOVIE, MUSIC, NIGHT, SPORT, TV.
-        """
+        """Return the sound modes supported in the configurations object."""
         configurations = None
-        sound_mode_list = self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
-        if sound_mode_list:
-            supported_sound_modes = [
-                {"name": sound_mode.upper()}
-                for sound_mode in sound_mode_list
-                if sound_mode.upper() in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV")
-            ]
-
+        supported_sound_modes = self.get_valid_inputs(
+            self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST, [])
+        )
+        if supported_sound_modes:
             configurations = {"modes": {"supported": supported_sound_modes}}
 
         return configurations
+
+    @classmethod
+    def get_valid_inputs(cls, sound_mode_list):
+        """Return list of supported inputs."""
+        input_list = []
+        for sound_mode in sound_mode_list:
+            sound_mode = sound_mode.upper()
+
+            if sound_mode in cls.VALID_SOUND_MODES:
+                input_list.append({"name": sound_mode})
+
+        return input_list
 
 
 class AlexaTimeHoldController(AlexaCapability):

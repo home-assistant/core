@@ -28,6 +28,7 @@ class TestLondonAirSensor(unittest.TestCase):
         """Test for operational tube_state sensor with proper attributes."""
         mock_req.get(URL, text=load_fixture("london_air.json"))
         assert setup_component(self.hass, "sensor", {"sensor": self.config})
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.merton")
         assert state.state == "Low"

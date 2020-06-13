@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "La configuraci\u00f3 de Tuya ja est\u00e0 en curs.",
             "auth_failed": "Autenticaci\u00f3 inv\u00e0lida",
             "conn_error": "No s'ha pogut connectar",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
@@ -15,6 +14,7 @@
                 "data": {
                     "country_code": "El teu codi de pa\u00eds (per exemple, 1 per l'EUA o 86 per la Xina)",
                     "password": "Contrasenya",
+                    "platform": "L\u2019aplicaci\u00f3 on es registra el vostre compte",
                     "username": "Nom d'usuari"
                 },
                 "description": "Introdueix la teva credencial de Tuya.",

@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato",
-            "no_local_user": "Nessun utente locale trovato, configura un account locale sul controller e riprova",
-            "user_privilege": "L'utente deve essere amministratore"
+            "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato"
         },
         "error": {
             "faulty_credentials": "Autenticazione non valida",
@@ -29,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Client controllati per l'accesso alla rete",
-                    "new_client": "Aggiungere un nuovo client per il controllo dell'accesso alla rete",
                     "poe_clients": "Consentire il controllo POE dei client"
                 },
                 "description": "Configurare i controlli client \n\nCreare interruttori per i numeri di serie dei quali si desidera controllare l'accesso alla rete.",

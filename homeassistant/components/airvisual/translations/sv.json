@@ -18,10 +18,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API-nyckel",
                     "cloud_api": "Geografisk Plats",
-                    "latitude": "Latitud",
-                    "longitude": "Longitud",
                     "type": "Integrationstyp"
                 }
             }

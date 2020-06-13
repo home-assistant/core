@@ -11,11 +11,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "[%key_id:common::config_flow::data::host%]",
+                    "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "port": "[%key_id:common::config_flow::data::port%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "title": "Konfiguracja klienta Transmission"
             }

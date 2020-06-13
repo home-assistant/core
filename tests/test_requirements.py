@@ -221,8 +221,10 @@ async def test_discovery_requirements_ssdp(hass):
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "ssdp_comp")
 
-    assert len(mock_process.mock_calls) == 1
+    assert len(mock_process.mock_calls) == 3
     assert mock_process.mock_calls[0][1][2] == ssdp.requirements
+    # Ensure zeroconf is a dep for ssdp
+    assert mock_process.mock_calls[1][1][1] == "zeroconf"
 
 
 @pytest.mark.parametrize(

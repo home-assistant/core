@@ -17,6 +17,7 @@
         "step": {
             "manual_setup": {
                 "data": {
+                    "host": "Hoszt",
                     "port": "Port",
                     "ssl": "Haszn\u00e1ljon SSL-t"
                 }
@@ -27,10 +28,6 @@
                 },
                 "description": "T\u00f6bb szerver el\u00e9rhet\u0151, v\u00e1lasszon egyet:",
                 "title": "Plex-kiszolg\u00e1l\u00f3 kiv\u00e1laszt\u00e1sa"
-            },
-            "start_website_auth": {
-                "description": "Folytassa az enged\u00e9lyez\u00e9st a plex.tv webhelyen.",
-                "title": "Plex-kiszolg\u00e1l\u00f3 csatlakoztat\u00e1sa"
             },
             "user": {
                 "title": "Plex Media Server"

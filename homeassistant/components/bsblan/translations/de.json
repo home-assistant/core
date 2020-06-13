@@ -6,10 +6,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Server oder IP-Adresse",
+                    "host": "Host",
                     "port": "Port Nummer"
                 }
             }
         }
-    }
+    },
+    "title": "BSB-Lan"
 }

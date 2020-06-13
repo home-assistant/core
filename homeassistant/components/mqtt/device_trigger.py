@@ -138,13 +138,17 @@ class Trigger:
         self.remove_signal = remove_signal
         self.type = config[CONF_TYPE]
         self.subtype = config[CONF_SUBTYPE]
-        self.topic = config[CONF_TOPIC]
         self.payload = config[CONF_PAYLOAD]
         self.qos = config[CONF_QOS]
+        topic_changed = self.topic != config[CONF_TOPIC]
+        self.topic = config[CONF_TOPIC]
 
-        # Unsubscribe+subscribe if this trigger is in use
-        for trig in self.trigger_instances:
-            await trig.async_attach_trigger()
+        # Unsubscribe+subscribe if this trigger is in use and topic has changed
+        # If topic is same unsubscribe+subscribe will execute in the wrong order
+        # because unsubscribe is done with help of async_create_task
+        if topic_changed:
+            for trig in self.trigger_instances:
+                await trig.async_attach_trigger()
 
     def detach_trigger(self):
         """Remove MQTT device trigger."""
