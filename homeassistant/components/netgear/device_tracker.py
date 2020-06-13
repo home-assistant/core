@@ -114,7 +114,6 @@ class NetgearDeviceEntity(ScannerEntity):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": self._manufacturer,
         }
