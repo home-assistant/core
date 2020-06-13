@@ -8,6 +8,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE
 
 from .const import DOMAIN  # pylint:disable=unused-import
+from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,17 +21,20 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     device = data[CONF_DEVICE]
-    gateway = gammu.StateMachine()  # pylint: disable=no-member
+    config = dict(Device=device, Connection="at")
+    gateway = await create_sms_gateway(config, hass)
+    imei = None
+    if not gateway:
+        raise CannotConnect
     try:
-        gateway.SetConfig(0, dict(Device=device, Connection="at"))
-        gateway.Init()
+        imei = await gateway.get_imei_async()
     except gammu.GSMError:  # pylint: disable=no-member
         raise CannotConnect
     finally:
-        gateway.Terminate()
+        await gateway.terminate_async()
 
     # Return info that you want to store in the config entry.
-    return {"title": device}
+    return imei
 
 
 class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -43,8 +47,9 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            imei = {}
             try:
-                info = await validate_input(self.hass, user_input)
+                imei = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -52,9 +57,9 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                await self.async_set_unique_id(user_input[CONF_DEVICE])
+                await self.async_set_unique_id(imei)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(title=imei, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

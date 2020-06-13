@@ -20,6 +20,10 @@ class Gateway:
         """Send sms message via the worker."""
         return await self._worker.send_sms_async(message)
 
+    async def get_imei_async(self):
+        """Get the IMEI of the device."""
+        return await self._worker.get_imei_async()
+
     async def terminate_async(self):
         """Terminate modem connection."""
         return await self._worker.terminate_async()
