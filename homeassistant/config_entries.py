@@ -955,11 +955,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
         # Abort if any other flow for this handler is already in progress
         assert self.hass is not None
-        if [
-            flw
-            for flw in self.hass.config_entries.flow.async_progress()
-            if flw["handler"] == self.handler
-        ]:
+        if self._async_in_progress():
             raise data_entry_flow.AbortFlow("already_in_progress")
 
     async def async_step_discovery(
