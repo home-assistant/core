@@ -1,12 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Esta entrada ya se ha configurado.",
             "updated_entry": "Esta entrada ya se configur\u00f3, pero el nombre, las aplicaciones o las opciones definidas en la configuraci\u00f3n no coinciden con la configuraci\u00f3n importada anteriormente, por lo que la entrada de configuraci\u00f3n se actualiz\u00f3 en consecuencia."
         },
         "error": {
-            "cant_connect": "No se pudo conectar al dispositivo. [Revise los documentos] (https://www.home-assistant.io/integrations/vizio/) y vuelva a verificar que: \n - El dispositivo est\u00e1 encendido \n - El dispositivo est\u00e1 conectado a la red. \n - Los valores que complet\u00f3 son precisos \n antes de intentar volver a enviar.",
-            "complete_pairing failed": "No se puede completar el emparejamiento. Aseg\u00farese de que el PIN que proporcion\u00f3 sea correcto y que el televisor siga encendido y conectado a la red antes de volver a enviarlo.",
             "host_exists": "Dispositivo VIZIO con el host especificado ya configurado.",
             "name_exists": "Dispositivo VIZIO con el nombre especificado ya configurado."
         },

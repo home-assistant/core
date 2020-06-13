@@ -2,14 +2,20 @@
 import asyncio
 import ipaddress
 import logging
+import os
 
 from aiohttp import web
 import voluptuous as vol
-from zeroconf import InterfaceChoice
 
 from homeassistant.components import zeroconf
-from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_MOTION,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+)
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -49,6 +55,7 @@ from .const import (
     ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_NAME,
+    BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
     CONF_AUTO_START,
     CONF_ENTITY_CONFIG,
@@ -56,13 +63,13 @@ from .const import (
     CONF_FILTER,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_MOTION_SENSOR,
     CONF_SAFE_MODE,
     CONF_ZEROCONF_DEFAULT_INTERFACE,
     CONFIG_OPTIONS,
     DEFAULT_AUTO_START,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
-    DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
     DOMAIN,
     EVENT_HOMEKIT_CHANGED,
     HOMEKIT,
@@ -104,23 +111,24 @@ def _has_all_unique_names_and_ports(bridges):
     return bridges
 
 
-BRIDGE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=BRIDGE_NAME): vol.All(
-            cv.string, vol.Length(min=3, max=25)
-        ),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(CONF_ADVERTISE_IP): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
-        vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
-        vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
-        vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
-        vol.Optional(
-            CONF_ZEROCONF_DEFAULT_INTERFACE, default=DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
-        ): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
+BRIDGE_SCHEMA = vol.All(
+    cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE),
+    vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=BRIDGE_NAME): vol.All(
+                cv.string, vol.Length(min=3, max=25)
+            ),
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
+            vol.Optional(CONF_ADVERTISE_IP): vol.All(ipaddress.ip_address, cv.string),
+            vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
+            vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
+            vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
+            vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+            vol.Optional(CONF_ZEROCONF_DEFAULT_INTERFACE): cv.boolean,
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -224,11 +232,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             },
         )
     )
-    interface_choice = (
-        InterfaceChoice.Default
-        if options.get(CONF_ZEROCONF_DEFAULT_INTERFACE)
-        else None
-    )
 
     homekit = HomeKit(
         hass,
@@ -239,11 +242,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entity_config,
         safe_mode,
         advertise_ip,
-        interface_choice,
         entry.entry_id,
     )
-    await hass.async_add_executor_job(homekit.setup)
-    await homekit.async_setup_zeroconf()
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+    await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -395,7 +397,6 @@ class HomeKit:
         entity_config,
         safe_mode,
         advertise_ip=None,
-        interface_choice=None,
         entry_id=None,
     ):
         """Initialize a HomeKit object."""
@@ -407,14 +408,13 @@ class HomeKit:
         self._config = entity_config
         self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
-        self._interface_choice = interface_choice
         self._entry_id = entry_id
         self.status = STATUS_READY
 
         self.bridge = None
         self.driver = None
 
-    def setup(self):
+    def setup(self, zeroconf_instance):
         """Set up bridge and accessory driver."""
         # pylint: disable=import-outside-toplevel
         from .accessories import HomeBridge, HomeDriver
@@ -431,19 +431,20 @@ class HomeKit:
             port=self._port,
             persist_file=persist_file,
             advertised_address=self._advertise_ip,
-            interface_choice=self._interface_choice,
+            zeroconf_instance=zeroconf_instance,
         )
+
+        # If we do not load the mac address will be wrong
+        # as pyhap uses a random one until state is restored
+        if os.path.exists(persist_file):
+            self.driver.load()
+        else:
+            self.driver.persist()
 
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
             _LOGGER.debug("Safe_mode selected for %s", self._name)
             self.driver.safe_mode = True
-
-    async def async_setup_zeroconf(self):
-        """Share the system zeroconf instance."""
-        # Replace the existing zeroconf instance.
-        await self.hass.async_add_executor_job(self.driver.advertiser.close)
-        self.driver.advertiser = await zeroconf.async_get_instance(self.hass)
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
@@ -513,8 +514,9 @@ class HomeKit:
 
         device_lookup = ent_reg.async_get_device_class_lookup(
             {
-                ("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING),
-                ("sensor", DEVICE_CLASS_BATTERY),
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING),
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION),
+                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY),
             }
         )
 
@@ -528,9 +530,7 @@ class HomeKit:
                 await self._async_set_device_info_attributes(
                     ent_reg_ent, dev_reg, state.entity_id
                 )
-                self._async_configure_linked_battery_sensors(
-                    ent_reg_ent, device_lookup, state
-                )
+                self._async_configure_linked_sensors(ent_reg_ent, device_lookup, state)
 
             bridged_states.append(state)
 
@@ -540,15 +540,44 @@ class HomeKit:
     @callback
     def _async_register_bridge(self, dev_reg):
         """Register the bridge as a device so homekit_controller and exclude it from discovery."""
+        formatted_mac = device_registry.format_mac(self.driver.state.mac)
+        # Connections and identifiers are both used here.
+        #
+        # connections exists so homekit_controller can know the
+        # virtual mac address of the bridge and know to not offer
+        # it via discovery.
+        #
+        # identifiers is used as well since the virtual mac may change
+        # because it will not survive manual pairing resets (deleting state file)
+        # which we have trained users to do over the past few years
+        # because this was the way you had to fix homekit when pairing
+        # failed.
+        #
+        connection = (device_registry.CONNECTION_NETWORK_MAC, formatted_mac)
+        identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
+        self._async_purge_old_bridges(dev_reg, identifier, connection)
         dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, self.driver.state.mac)
-            },
+            identifiers={identifier},
+            connections={connection},
             manufacturer=MANUFACTURER,
             name=self._name,
             model="Home Assistant HomeKit Bridge",
         )
+
+    @callback
+    def _async_purge_old_bridges(self, dev_reg, identifier, connection):
+        """Purge bridges that exist from failed pairing or manual resets."""
+        devices_to_purge = []
+        for entry in dev_reg.devices.values():
+            if self._entry_id in entry.config_entries and (
+                identifier not in entry.identifiers
+                or connection not in entry.connections
+            ):
+                devices_to_purge.append(entry.id)
+
+        for device_id in devices_to_purge:
+            dev_reg.async_remove_device(device_id)
 
     def _start(self, bridged_states):
         from . import (  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
@@ -591,9 +620,7 @@ class HomeKit:
         self.hass.add_job(self.driver.stop)
 
     @callback
-    def _async_configure_linked_battery_sensors(
-        self, ent_reg_ent, device_lookup, state
-    ):
+    def _async_configure_linked_sensors(self, ent_reg_ent, device_lookup, state):
         if (
             ent_reg_ent is None
             or ent_reg_ent.device_id is None
@@ -606,7 +633,7 @@ class HomeKit:
         if ATTR_BATTERY_CHARGING not in state.attributes:
             battery_charging_binary_sensor_entity_id = device_lookup[
                 ent_reg_ent.device_id
-            ].get(("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING))
+            ].get((BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING))
             if battery_charging_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -615,11 +642,20 @@ class HomeKit:
 
         if ATTR_BATTERY_LEVEL not in state.attributes:
             battery_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                ("sensor", DEVICE_CLASS_BATTERY)
+                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY)
             )
             if battery_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_BATTERY_SENSOR, battery_sensor_entity_id
+                )
+
+        if state.entity_id.startswith(f"{CAMERA_DOMAIN}."):
+            motion_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
+                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION)
+            )
+            if motion_binary_sensor_entity_id:
+                self._config.setdefault(state.entity_id, {}).setdefault(
+                    CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id,
                 )
 
     async def _async_set_device_info_attributes(self, ent_reg_ent, dev_reg, entity_id):

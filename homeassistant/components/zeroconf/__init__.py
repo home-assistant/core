@@ -1,4 +1,5 @@
 """Support for exposing Home Assistant via Zeroconf."""
+import asyncio
 import ipaddress
 import logging
 import socket
@@ -13,6 +14,7 @@ from zeroconf import (
     ServiceInfo,
     ServiceStateChange,
     Zeroconf,
+    log as zeroconf_log,
 )
 
 from homeassistant import util
@@ -97,7 +99,7 @@ class HaServiceBrowser(ServiceBrowser):
         # To avoid overwhemling the system we pre-filter here and only process
         # DNSPointers for the configured record name (type)
         #
-        if record.name != self.type or not isinstance(record, DNSPointer):
+        if record.name not in self.types or not isinstance(record, DNSPointer):
             return
         super().update_record(zc, now, record)
 
@@ -113,21 +115,30 @@ class HaZeroconf(Zeroconf):
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
+    # Zeroconf sets its log level to WARNING, reset it to allow filtering by the logger component.
+    zeroconf_log.setLevel(logging.NOTSET)
     zeroconf = hass.data[DOMAIN] = _get_instance(
         hass, config.get(DOMAIN, {}).get(CONF_DEFAULT_INTERFACE)
     )
-    zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
+
+    # Get instance UUID
+    uuid = asyncio.run_coroutine_threadsafe(
+        hass.helpers.instance_id.async_get(), hass.loop
+    ).result()
 
     params = {
+        "location_name": hass.config.location_name,
+        "uuid": uuid,
         "version": __version__,
-        "external_url": None,
-        "internal_url": None,
+        "external_url": "",
+        "internal_url": "",
         # Old base URL, for backward compatibility
-        "base_url": None,
+        "base_url": "",
         # Always needs authentication
         "requires_api_password": True,
     }
 
+    # Get instance URL's
     try:
         params["external_url"] = get_url(hass, allow_internal=False)
     except NoURLAvailableError:
@@ -150,8 +161,8 @@ def setup(hass, config):
 
     info = ServiceInfo(
         ZEROCONF_TYPE,
-        zeroconf_name,
-        None,
+        name=f"{hass.config.location_name}.{ZEROCONF_TYPE}",
+        server=f"{uuid}.local.",
         addresses=[host_ip_pton],
         port=hass.http.server_port,
         properties=params,
@@ -181,6 +192,7 @@ def setup(hass, config):
         if not service_info:
             # Prevent the browser thread from collapsing as
             # service_info can be None
+            _LOGGER.debug("Failed to get info for device %s", name)
             return
 
         info = info_from_service(service_info)
@@ -216,11 +228,12 @@ def setup(hass, config):
                 )
             )
 
-    for service in ZEROCONF:
-        HaServiceBrowser(zeroconf, service, handlers=[service_update])
+    types = list(ZEROCONF)
 
     if HOMEKIT_TYPE not in ZEROCONF:
-        HaServiceBrowser(zeroconf, HOMEKIT_TYPE, handlers=[service_update])
+        types.append(HOMEKIT_TYPE)
+
+    HaServiceBrowser(zeroconf, types, handlers=[service_update])
 
     return True
 

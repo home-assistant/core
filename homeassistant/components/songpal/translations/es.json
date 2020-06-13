@@ -5,20 +5,17 @@
             "not_songpal_device": "No es un dispositivo Songpal"
         },
         "error": {
-            "cannot_connect": "Error al conectar",
-            "connection": "Error de conexi\u00f3n: comprueba tu endpoint"
+            "cannot_connect": "No se pudo conectar"
         },
         "flow_title": "Sony Songpal {name} ({host})",
         "step": {
             "init": {
-                "description": "\u00bfQuieres configurar {name} ({host})?",
-                "title": "Sony Songpal"
+                "description": "\u00bfQuieres configurar {name} ({host})?"
             },
             "user": {
                 "data": {
                     "endpoint": "Endpoint"
-                },
-                "title": "Sony Songpal"
+                }
             }
         }
     }

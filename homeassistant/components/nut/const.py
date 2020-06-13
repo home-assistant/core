@@ -5,6 +5,8 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
 )
 from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRICAL_VOLT_AMPERE,
     FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -61,8 +63,8 @@ SENSOR_TYPES = {
     "ups.display.language": ["Language", "", "mdi:information-outline", None],
     "ups.contacts": ["External Contacts", "", "mdi:information-outline", None],
     "ups.efficiency": ["Efficiency", UNIT_PERCENTAGE, "mdi:gauge", None],
-    "ups.power": ["Current Apparent Power", "VA", "mdi:flash", None],
-    "ups.power.nominal": ["Nominal Power", "VA", "mdi:flash", None],
+    "ups.power": ["Current Apparent Power", ELECTRICAL_VOLT_AMPERE, "mdi:flash", None],
+    "ups.power.nominal": ["Nominal Power", ELECTRICAL_VOLT_AMPERE, "mdi:flash", None],
     "ups.realpower": [
         "Current Real Power",
         POWER_WATT,
@@ -107,8 +109,18 @@ SENSOR_TYPES = {
     "battery.voltage.low": ["Low Battery Voltage", VOLT, "mdi:flash", None],
     "battery.voltage.high": ["High Battery Voltage", VOLT, "mdi:flash", None],
     "battery.capacity": ["Battery Capacity", "Ah", "mdi:flash", None],
-    "battery.current": ["Battery Current", "A", "mdi:flash", None],
-    "battery.current.total": ["Total Battery Current", "A", "mdi:flash", None],
+    "battery.current": [
+        "Battery Current",
+        ELECTRICAL_CURRENT_AMPERE,
+        "mdi:flash",
+        None,
+    ],
+    "battery.current.total": [
+        "Total Battery Current",
+        ELECTRICAL_CURRENT_AMPERE,
+        "mdi:flash",
+        None,
+    ],
     "battery.temperature": [
         "Battery Temperature",
         TEMP_CELSIUS,
@@ -168,8 +180,13 @@ SENSOR_TYPES = {
         "mdi:information-outline",
         None,
     ],
-    "output.current": ["Output Current", "A", "mdi:flash", None],
-    "output.current.nominal": ["Nominal Output Current", "A", "mdi:flash", None],
+    "output.current": ["Output Current", ELECTRICAL_CURRENT_AMPERE, "mdi:flash", None],
+    "output.current.nominal": [
+        "Nominal Output Current",
+        ELECTRICAL_CURRENT_AMPERE,
+        "mdi:flash",
+        None,
+    ],
     "output.voltage": ["Output Voltage", VOLT, "mdi:flash", None],
     "output.voltage.nominal": ["Nominal Output Voltage", VOLT, "mdi:flash", None],
     "output.frequency": ["Output Frequency", FREQUENCY_HERTZ, "mdi:flash", None],

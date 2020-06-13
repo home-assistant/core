@@ -15,5 +15,5 @@
       "manufacturer": "Huawei"
     }
   ],
-  "codeowners": ["@scop"]
+  "codeowners": ["@scop", "@fphammerle"]
 }

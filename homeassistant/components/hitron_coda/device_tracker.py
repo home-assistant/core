@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def get_scanner(_hass, config):
-    """Validate the configuration and return a Nmap scanner."""
+    """Validate the configuration and return a Hitron CODA-4582U scanner."""
     scanner = HitronCODADeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None

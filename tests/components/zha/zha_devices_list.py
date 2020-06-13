@@ -813,7 +813,7 @@ DEVICES = [
                 "entity_id": "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_power",
             }
         },
-        "event_channels": ["1:0x0006", "1:0x0008", "1:0x0019"],
+        "event_channels": ["1:0x0006", "1:0x0008", "1:0x0019", "1:0x0102"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI on/off switch",
         "node_descriptor": b"\x02@\x80|\x11RR\x00\x00,R\x00\x00",
@@ -1036,16 +1036,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1094,16 +1094,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -1152,16 +1152,16 @@ DEVICES = [
             }
         },
         "entities": [
-            "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
+            "cover.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_temperature",
         ],
         "entity_map": {
-            ("light", "00:11:22:33:44:55:66:77-1"): {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["level", "on_off"],
-                "entity_class": "Light",
-                "entity_id": "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
+                "entity_class": "KeenVent",
+                "entity_id": "cover.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
@@ -3100,10 +3100,16 @@ DEVICES = [
             },
         },
         "entities": [
+            "climate.sinope_technologies_th1123zb_77665544_thermostat",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement",
             "sensor.sinope_technologies_th1123zb_77665544_temperature",
         ],
         "entity_map": {
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat"],
+                "entity_class": "Thermostat",
+                "entity_id": "climate.sinope_technologies_th1123zb_77665544_thermostat",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 "channels": ["temperature"],
                 "entity_class": "Temperature",
@@ -3142,8 +3148,14 @@ DEVICES = [
         "entities": [
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement",
             "sensor.sinope_technologies_th1124zb_77665544_temperature",
+            "climate.sinope_technologies_th1124zb_77665544_thermostat",
         ],
         "entity_map": {
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat"],
+                "entity_class": "Thermostat",
+                "entity_id": "climate.sinope_technologies_th1124zb_77665544_thermostat",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
                 "channels": ["temperature"],
                 "entity_class": "Temperature",
@@ -3326,7 +3338,7 @@ DEVICES = [
             }
         },
         "entities": [
-            "fan.zen_within_zen_01_77665544_fan",
+            "climate.zen_within_zen_01_77665544_fan_thermostat",
             "sensor.zen_within_zen_01_77665544_power",
         ],
         "entity_map": {
@@ -3335,10 +3347,10 @@ DEVICES = [
                 "entity_class": "Battery",
                 "entity_id": "sensor.zen_within_zen_01_77665544_power",
             },
-            ("fan", "00:11:22:33:44:55:66:77-1-514"): {
-                "channels": ["fan"],
-                "entity_class": "ZhaFan",
-                "entity_id": "fan.zen_within_zen_01_77665544_fan",
+            ("climate", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["thermostat", "fan"],
+                "entity_class": "ZenWithinThermostat",
+                "entity_id": "climate.zen_within_zen_01_77665544_fan_thermostat",
             },
         },
         "event_channels": ["1:0x0019"],
@@ -3539,5 +3551,29 @@ DEVICES = [
         "manufacturer": "sengled",
         "model": "Z01-A19NAE26",
         "node_descriptor": b"\x02@\x8c`\x11RR\x00\x00\x00R\x00\x00",
+    },
+    {
+        "device_no": 97,
+        "endpoints": {
+            1: {
+                "device_type": 512,
+                "endpoint_id": 1,
+                "in_clusters": [0, 3, 4, 5, 6, 8, 10, 21, 256, 64544, 64545],
+                "out_clusters": [3, 64544],
+                "profile_id": 260,
+            }
+        },
+        "entities": ["cover.unk_manufacturer_unk_model_77665544_level_on_off_shade"],
+        "entity_map": {
+            ("cover", "00:11:22:33:44:55:66:77-1"): {
+                "channels": ["level", "on_off", "shade"],
+                "entity_class": "Shade",
+                "entity_id": "cover.unk_manufacturer_unk_model_77665544_level_on_off_shade",
+            }
+        },
+        "event_channels": [],
+        "manufacturer": "unk_manufacturer",
+        "model": "unk_model",
+        "node_descriptor": b"\x01@\x8e\x10\x11RR\x00\x00\x00R\x00\x00",
     },
 ]

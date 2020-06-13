@@ -1,3 +1,7 @@
 {
-    "title": "Arcam FMJ"
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} zostanie poproszony o w\u0142\u0105czenie"
+        }
+    }
 }

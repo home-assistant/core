@@ -1,8 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u6b64\u4e9b\u5ea7\u6a19\u5df2\u8a3b\u518a\u3002"
+        },
         "error": {
             "identifier_exists": "\u8a72\u5ea7\u6a19\u5df2\u8a3b\u518a",
-            "invalid_api_key": "API \u5bc6\u78bc\u7121\u6548"
+            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548"
         },
         "step": {
             "user": {

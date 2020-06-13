@@ -27,6 +27,17 @@ def mock_controller_client_1():
         yield service_mock
 
 
+@pytest.fixture(autouse=True)
+def mock_setup():
+    """Prevent setup."""
+    with patch(
+        "homeassistant.components.meteo_france.async_setup", return_value=True,
+    ), patch(
+        "homeassistant.components.meteo_france.async_setup_entry", return_value=True,
+    ):
+        yield
+
+
 @pytest.fixture(name="client_2")
 def mock_controller_client_2():
     """Mock a successful client."""
