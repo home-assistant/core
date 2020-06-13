@@ -4,12 +4,13 @@ import logging
 import uuid
 
 from homeassistant.components import http
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
 from homeassistant.core import callback
 from homeassistant.helpers import template
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    API_PASSWORD,
     ATTR_MAIN_TEXT,
     ATTR_REDIRECTION_URL,
     ATTR_STREAM_URL,
@@ -18,6 +19,7 @@ from .const import (
     ATTR_UPDATE_DATE,
     CONF_AUDIO,
     CONF_DISPLAY_URL,
+    CONF_PASSWORD,
     CONF_TEXT,
     CONF_TITLE,
     CONF_UID,
@@ -39,6 +41,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
     """Handle Alexa Flash Briefing skill requests."""
 
     url = FLASH_BRIEFINGS_API_ENDPOINT
+    requires_auth = False
     name = "api:alexa:flash_briefings"
 
     def __init__(self, hass, flash_briefings):
@@ -52,10 +55,23 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
         """Handle Alexa Flash Briefing request."""
         _LOGGER.debug("Received Alexa flash briefing request for: %s", briefing_id)
 
-        if self.flash_briefings.get(briefing_id) is None:
+        if (
+            briefing_id == CONF_PASSWORD
+            or self.flash_briefings.get(briefing_id) is None
+        ):
             err = "No configured Alexa flash briefing was found for: %s"
             _LOGGER.error(err, briefing_id)
             return b"", HTTP_NOT_FOUND
+
+        if request.query.get(API_PASSWORD) is None:
+            err = "No password provided for Alexa flash briefing: %s"
+            _LOGGER.error(err, briefing_id)
+            return b"", HTTP_UNAUTHORIZED
+
+        if request.query[API_PASSWORD] != self.flash_briefings.get(CONF_PASSWORD):
+            err = "Wrong password for Alexa flash briefing: %s"
+            _LOGGER.error(err, briefing_id)
+            return b"", HTTP_UNAUTHORIZED
 
         briefing = []
 
