@@ -615,6 +615,7 @@ VOLUME: str = "volume"
 TEMPERATURE: str = "temperature"
 SPEED_MS: str = "speed_ms"
 ILLUMINANCE: str = "illuminance"
+DATA_SIZE: str = "data size"
 
 WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
