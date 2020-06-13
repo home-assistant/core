@@ -101,11 +101,6 @@ class MeteoFranceSensor(Entity):
         return data[path[1]]
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return SENSOR_TYPES[self._type][ENTITY_UNIT]
@@ -126,6 +121,11 @@ class MeteoFranceSensor(Entity):
         return SENSOR_TYPES[self._type][ENTITY_ENABLE]
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    @property
     def available(self):
         """Return if state is available."""
         return self.coordinator.last_update_success
@@ -141,6 +141,12 @@ class MeteoFranceSensor(Entity):
             return
 
         await self.coordinator.async_request_refresh()
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
 
 class MeteoFranceRainSensor(MeteoFranceSensor):
@@ -203,4 +209,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return readeable_phenomenoms_dict(self.coordinator.data.phenomenons_max_colors)
+        return {
+            **readeable_phenomenoms_dict(self.coordinator.data.phenomenons_max_colors),
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
