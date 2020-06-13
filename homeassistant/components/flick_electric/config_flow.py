@@ -55,7 +55,7 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             return token is not None
 
-    async def async_step_user(self, user_input):
+    async def async_step_user(self, user_input=None):
         """Handle gathering login info."""
         errors = {}
         if user_input is not None:
