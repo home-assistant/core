@@ -24,6 +24,7 @@ class TestRandomSensor(unittest.TestCase):
         config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test")
 
@@ -37,6 +38,7 @@ class TestRandomSensor(unittest.TestCase):
         config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
         assert setup_component(self.hass, "binary_sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test")
 

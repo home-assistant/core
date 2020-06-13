@@ -75,7 +75,9 @@ def patch_cluster(cluster):
     cluster.read_attributes = AsyncMock(return_value=[{}, {}])
     cluster.read_attributes_raw = Mock()
     cluster.unbind = AsyncMock(return_value=[0])
-    cluster.write_attributes = AsyncMock(return_value=[0])
+    cluster.write_attributes = AsyncMock(
+        return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]]
+    )
     if cluster.cluster_id == 4:
         cluster.add = AsyncMock(return_value=[0])
 
@@ -173,10 +175,10 @@ def async_find_group_entity_id(hass, domain, group):
     return None
 
 
-async def async_enable_traffic(hass, zha_devices):
+async def async_enable_traffic(hass, zha_devices, enabled=True):
     """Allow traffic to flow through the gateway and the zha device."""
     for zha_device in zha_devices:
-        zha_device.update_available(True)
+        zha_device.update_available(enabled)
     await hass.async_block_till_done()
 
 

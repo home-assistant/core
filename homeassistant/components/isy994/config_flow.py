@@ -7,7 +7,8 @@ from pyisy.connection import Connection
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components import ssdp
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (
@@ -21,21 +22,25 @@ from .const import (
     DEFAULT_SENSOR_STRING,
     DEFAULT_TLS_VERSION,
     DEFAULT_VAR_SENSOR_STRING,
+    ISY_URL_POSTFIX,
+    UDN_UUID_PREFIX,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_TLS_VER, default=DEFAULT_TLS_VERSION): vol.In([1.1, 1.2]),
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+def _data_schema(schema_input):
+    """Generate schema with defaults."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=schema_input.get(CONF_HOST, "")): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Optional(CONF_TLS_VER, default=DEFAULT_TLS_VERSION): vol.In([1.1, 1.2]),
+        },
+        extra=vol.ALLOW_EXTRA,
+    )
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -70,6 +75,9 @@ async def validate_input(hass: core.HomeAssistant, data):
         host.path,
     )
 
+    if not isy_conf or "name" not in isy_conf or not isy_conf["name"]:
+        raise CannotConnect
+
     # Return info that you want to store in the config entry.
     return {"title": f"{isy_conf['name']} ({host.hostname})", "uuid": isy_conf["uuid"]}
 
@@ -101,6 +109,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    def __init__(self):
+        """Initialize the isy994 config flow."""
+        self.discovered_conf = {}
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -124,18 +136,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if "base" not in errors:
-                await self.async_set_unique_id(info["uuid"])
+            if not errors:
+                await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=_data_schema(self.discovered_conf),
+            errors=errors,
         )
 
     async def async_step_import(self, user_input):
         """Handle import."""
         return await self.async_step_user(user_input)
+
+    async def async_step_ssdp(self, discovery_info):
+        """Handle a discovered isy994."""
+        friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        url = discovery_info[ssdp.ATTR_SSDP_LOCATION]
+        mac = discovery_info[ssdp.ATTR_UPNP_UDN]
+        if mac.startswith(UDN_UUID_PREFIX):
+            mac = mac[len(UDN_UUID_PREFIX) :]
+        if url.endswith(ISY_URL_POSTFIX):
+            url = url[: -len(ISY_URL_POSTFIX)]
+
+        await self.async_set_unique_id(mac)
+        self._abort_if_unique_id_configured()
+
+        self.discovered_conf = {
+            CONF_NAME: friendly_name,
+            CONF_HOST: url,
+        }
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = self.discovered_conf
+        return await self.async_step_user()
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

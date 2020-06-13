@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Falha ao conectar, tente novamente"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Cont\u00ednuo",
+                    "delay": "Atraso"
+                },
+                "description": "Atualmente, a recupera\u00e7\u00e3o do BLID e da senha \u00e9 um processo manual. Siga as etapas descritas na documenta\u00e7\u00e3o em: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Conecte-se ao dispositivo"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Cont\u00ednuo",
+                    "delay": "Atraso"
+                }
+            }
+        }
+    }
+}

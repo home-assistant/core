@@ -11,6 +11,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    ELECTRICAL_CURRENT_AMPERE,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
     VOLT,
@@ -84,7 +85,7 @@ SENSOR_TYPES = {
     "voltage": ["voltage", VOLT],
     "voltage_VAD": ["voltage", VOLT],
     "voltage_VDD": ["voltage", VOLT],
-    "current": ["current", "A"],
+    "current": ["current", ELECTRICAL_CURRENT_AMPERE],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

@@ -118,29 +118,37 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
         "async_set_preset_mode",
+        [SUPPORT_PRESET_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_AUX_HEAT,
         {vol.Required(ATTR_AUX_HEAT): cv.boolean},
         async_service_aux_heat,
+        [SUPPORT_AUX_HEAT],
     )
     component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set,
+        SERVICE_SET_TEMPERATURE,
+        SET_TEMPERATURE_SCHEMA,
+        async_service_temperature_set,
+        [SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_RANGE],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
         {vol.Required(ATTR_HUMIDITY): vol.Coerce(float)},
         "async_set_humidity",
+        [SUPPORT_TARGET_HUMIDITY],
     )
     component.async_register_entity_service(
         SERVICE_SET_FAN_MODE,
         {vol.Required(ATTR_FAN_MODE): cv.string},
         "async_set_fan_mode",
+        [SUPPORT_FAN_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_SWING_MODE,
         {vol.Required(ATTR_SWING_MODE): cv.string},
         "async_set_swing_mode",
+        [SUPPORT_SWING_MODE],
     )
 
     return True

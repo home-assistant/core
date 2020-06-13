@@ -2,8 +2,6 @@
 
 import logging
 
-from turbojpeg import TurboJPEG
-
 SUPPORTED_SCALING_FACTORS = [(7, 8), (3, 4), (5, 8), (1, 2), (3, 8), (1, 4), (1, 8)]
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +52,12 @@ class TurboJPEGSingleton:
     def __init__(self):
         """Try to create TurboJPEG only once."""
         try:
+            # TurboJPEG checks for libturbojpeg
+            # when its created, but it imports
+            # numpy which may or may not work so
+            # we have to guard the import here.
+            from turbojpeg import TurboJPEG  # pylint: disable=import-outside-toplevel
+
             TurboJPEGSingleton.__instance = TurboJPEG()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(

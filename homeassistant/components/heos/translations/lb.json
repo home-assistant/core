@@ -9,7 +9,6 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Apparat",
                     "host": "Apparat"
                 },
                 "description": "Gitt den Numm oder IP-Adress vun engem Heos-Apparat an (am beschten iwwer Kabel mam Reseau verbonnen).",

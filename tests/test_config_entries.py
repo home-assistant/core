@@ -365,6 +365,28 @@ async def test_remove_entry_if_not_loaded(hass, manager):
     assert len(mock_unload_entry.mock_calls) == 0
 
 
+async def test_remove_entry_if_integration_deleted(hass, manager):
+    """Test that we can remove an entry when the integration is deleted."""
+    mock_unload_entry = AsyncMock(return_value=True)
+
+    MockConfigEntry(domain="test", entry_id="test1").add_to_manager(manager)
+    MockConfigEntry(domain="comp", entry_id="test2").add_to_manager(manager)
+    MockConfigEntry(domain="test", entry_id="test3").add_to_manager(manager)
+
+    assert [item.entry_id for item in manager.async_entries()] == [
+        "test1",
+        "test2",
+        "test3",
+    ]
+
+    result = await manager.async_remove("test2")
+
+    assert result == {"require_restart": False}
+    assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
+
+    assert len(mock_unload_entry.mock_calls) == 0
+
+
 async def test_add_entry_calls_setup_entry(hass, manager):
     """Test we call setup_config_entry."""
     mock_setup_entry = AsyncMock(return_value=True)

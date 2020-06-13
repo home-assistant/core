@@ -2,6 +2,7 @@
 import asyncio
 from ipaddress import ip_network
 
+import aiohttp
 from hass_nabucasa import thingtalk
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
@@ -277,6 +278,17 @@ async def test_forgot_password_view_unknown_error(mock_cognito, cloud_client):
         "/api/cloud/forgot_password", json={"email": "hello@bla.com"}
     )
     assert req.status == 502
+
+
+async def test_forgot_password_view_aiohttp_error(mock_cognito, cloud_client):
+    """Test unknown error while logging out."""
+    mock_cognito.initiate_forgot_password.side_effect = aiohttp.ClientResponseError(
+        Mock(), Mock()
+    )
+    req = await cloud_client.post(
+        "/api/cloud/forgot_password", json={"email": "hello@bla.com"}
+    )
+    assert req.status == 500
 
 
 async def test_resend_confirm_view(mock_cognito, cloud_client):

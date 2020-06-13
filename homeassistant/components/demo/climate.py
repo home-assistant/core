@@ -309,12 +309,12 @@ class DemoClimate(ClimateEntity):
         self._preset = preset_mode
         self.async_write_ha_state()
 
-    def turn_aux_heat_on(self):
+    async def async_turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
         self._aux = True
         self.async_write_ha_state()
 
-    def turn_aux_heat_off(self):
+    async def async_turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
         self._aux = False
         self.async_write_ha_state()

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "auth_failed": "Ogiltig anv\u00e4ndarinformation"
+        },
+        "flow_title": "Tuya-konfiguration",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Landskod f\u00f6r ditt konto (t.ex. 1 f\u00f6r USA eller 86 f\u00f6r Kina)",
+                    "password": "L\u00f6senord",
+                    "platform": "Appen d\u00e4r ditt konto registreras",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "Ange dina Tuya anv\u00e4ndaruppgifter.",
+                "title": "Tuya"
+            }
+        }
+    }
+}
