@@ -157,6 +157,11 @@ class MeteoFranceWeather(WeatherEntity):
         return forecast_data
 
     @property
+    def attribution(self):
+        """Return the attribution."""
+        return ATTRIBUTION
+
+    @property
     def available(self):
         """Return if state is available."""
         return self.coordinator.last_update_success
@@ -173,7 +178,8 @@ class MeteoFranceWeather(WeatherEntity):
 
         await self.coordinator.async_request_refresh()
 
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )

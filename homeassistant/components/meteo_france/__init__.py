@@ -25,7 +25,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL_RAIN = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
 CITY_SCHEMA = vol.Schema({vol.Required(CONF_CITY): cv.string})
@@ -97,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             _LOGGER,
             name=f"Météo-France rain for city {entry.title}",
             update_method=_async_update_data_rain,
-            update_interval=SCAN_INTERVAL,
+            update_interval=SCAN_INTERVAL_RAIN,
         )
         await coordinator_rain.async_refresh()
 
