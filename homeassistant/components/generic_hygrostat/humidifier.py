@@ -6,13 +6,13 @@ import voluptuous as vol
 
 from homeassistant.components.humidifier import PLATFORM_SCHEMA, HumidifierEntity
 from homeassistant.components.humidifier.const import (
-    ATTR_MODE,
     ATTR_HUMIDITY,
+    ATTR_MODE,
     DEVICE_CLASS_DEHUMIDIFIER,
     DEVICE_CLASS_HUMIDIFIER,
-    SUPPORT_MODES,
-    MODE_NORMAL,
     MODE_AWAY,
+    MODE_NORMAL,
+    SUPPORT_MODES,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
