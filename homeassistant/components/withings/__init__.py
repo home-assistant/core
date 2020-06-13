@@ -15,15 +15,11 @@ from homeassistant.components import webhook
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_STARTED,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow, const
@@ -127,16 +123,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_webhook_handler,
     )
 
-    data_manager.async_start_polling()
-
     # Perform first webhook subscription check.
     if data_manager.webhook_config.enabled:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED,
-            lambda *args: hass.async_create_task(
+        data_manager.async_start_polling_webhook_subscriptions()
+
+        def call_later_callback(now) -> None:
+            hass.async_create_task(
                 data_manager.subscription_update_coordinator.async_refresh()
-            ),
-        )
+            )
+
+        # Start subscription check in the background, outside this component's setup.
+        async_call_later(hass, 1, call_later_callback)
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, BINARY_SENSOR_DOMAIN)
@@ -151,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
     data_manager = await async_get_data_manager(hass, entry)
-    data_manager.async_stop_polling()
+    data_manager.async_stop_polling_webhook_subscriptions()
 
     async_unregister_webhook(hass, data_manager.webhook_config.id)
 

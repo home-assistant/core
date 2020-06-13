@@ -566,6 +566,7 @@ class DataManager:
         self._profile = profile
         self._webhook_config = webhook_config
         self._notify_subscribe_delay = datetime.timedelta(seconds=5)
+        self._notify_unsubscribe_delay = datetime.timedelta(seconds=1)
 
         self._is_available = True
         self._cancel_interval_update_interval: Optional[CALLBACK_TYPE] = None
@@ -611,19 +612,18 @@ class DataManager:
         """Get the profile."""
         return self._profile
 
-    def async_start_polling(self) -> None:
+    def async_start_polling_webhook_subscriptions(self) -> None:
         """Start polling webhook subscriptions (if enabled) to reconcile their setup."""
-        self.async_stop_polling()
+        self.async_stop_polling_webhook_subscriptions()
 
         def empty_listener() -> None:
             pass
 
-        if self._webhook_config.enabled:
-            self._cancel_subscription_update = self.poll_data_update_coordinator.async_add_listener(
-                empty_listener
-            )
+        self._cancel_subscription_update = self.subscription_update_coordinator.async_add_listener(
+            empty_listener
+        )
 
-    def async_stop_polling(self) -> None:
+    def async_stop_polling_webhook_subscriptions(self) -> None:
         """Stop polling webhook subscriptions."""
         if self._cancel_subscription_update:
             self._cancel_subscription_update()
@@ -713,7 +713,7 @@ class DataManager:
                 "Unsubscribing %s for %s in %s seconds",
                 profile.callbackurl,
                 profile.appli,
-                self._notify_subscribe_delay.total_seconds(),
+                self._notify_unsubscribe_delay.total_seconds(),
             )
             # Quick calls to Withings can result in the service returning errors. Give them
             # some time to cool down.
@@ -1038,7 +1038,7 @@ def get_all_data_managers(hass: HomeAssistant) -> Tuple[DataManager, ...]:
 
 
 def async_remove_data_manager(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Stop and remove a data manager for a config entry."""
+    """Remove a data manager for a config entry."""
     del hass.data[const.DOMAIN][config_entry.entry_id][const.DATA_MANAGER]
 
 
