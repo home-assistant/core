@@ -12,7 +12,11 @@ import voluptuous as vol
 
 from homeassistant.components import recorder
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder.models import DB_TIMEZONE, States
+from homeassistant.components.recorder.models import (
+    DB_TIMEZONE,
+    States,
+    process_timestamp,
+)
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_HIDDEN,
@@ -304,6 +308,10 @@ def _sorted_states_to_json(
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
+    # Called in a tight loop so cache the function
+    # here
+    _process_timestamp = process_timestamp
+
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):
         domain = split_entity_id(ent_id)[0]
@@ -347,7 +355,7 @@ def _sorted_states_to_json(
             ent_results.append(
                 {
                     STATE_KEY: db_state.state,
-                    LAST_CHANGED_KEY: f"{str(db_state.last_changed).replace(' ','T').split('.')[0]}{DB_TIMEZONE}",
+                    LAST_CHANGED_KEY: f"{str(_process_timestamp(db_state.last_changed)).replace(' ','T').split('.')[0]}{DB_TIMEZONE}",
                 }
             )
             prev_state = db_state
