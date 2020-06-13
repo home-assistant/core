@@ -16,7 +16,7 @@ async def test_subscription_registry(hass: HomeAssistant) -> None:
     subscription_registry.poll_server_once = poll_server_once_mock = MagicMock()
 
     poll_server_once_mock.return_value = True
-    subscription_registry.start()
+    await hass.async_add_executor_job(subscription_registry.start)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     poll_server_once_mock.assert_called_once()
@@ -42,7 +42,7 @@ async def test_subscription_registry(hass: HomeAssistant) -> None:
     poll_server_once_mock.assert_called_once()
 
     poll_server_once_mock.reset_mock()
-    subscription_registry.stop()
+    await hass.async_add_executor_job(subscription_registry.stop)
 
     # Assert no further polling is performed.
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=65))

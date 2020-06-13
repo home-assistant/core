@@ -6,7 +6,7 @@ import pyvera as pv
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import call_later
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,9 +49,10 @@ class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
         """Stop polling for data."""
         if self._cancel_poll:
             self._cancel_poll()
+            self._cancel_poll = None
 
     def _schedule_poll(self, delay: float) -> None:
-        self._cancel_poll = async_call_later(self._hass, delay, self._run_poll_server)
+        self._cancel_poll = call_later(self._hass, delay, self._run_poll_server)
 
     def _run_poll_server(self, now) -> None:
         delay = 1
