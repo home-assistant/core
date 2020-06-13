@@ -18,6 +18,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import (  # COORDINATOR_ALERT,
     ATTRIBUTION,
+    ATTR_NEXT_RAIN_SUMMARY,
+    ATTR_NEXT_RAIN_1_HOUR_FORECAST,
     COORDINATOR_ALERT,
     COORDINATOR_ALERT_ADDED,
     COORDINATOR_FORECAST,
@@ -200,7 +202,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
             rain_text_summary = "Pas de pluie dans la prochaine heure."
 
         return {
-            "1 hour forecast": [
+            ATTR_NEXT_RAIN_1_HOUR_FORECAST: [
                 {
                     dt_util.as_local(
                         self.coordinator.data.timestamp_to_locale_time(item["dt"])
@@ -208,7 +210,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
                 }
                 for item in self.coordinator.data.forecast
             ],
-            "summary": rain_text_summary,
+            ATTR_NEXT_RAIN_SUMMARY: rain_text_summary,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
