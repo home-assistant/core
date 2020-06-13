@@ -591,10 +591,10 @@ class LazyEventPartialState:
         """Event data."""
 
         if not self._event_data:
-            if len(self._row.event_data) > 2:
-                self._event_data = json.loads(self._row.event_data)
-            else:
+            if self._row.event_data == "{}":
                 self._event_data = {}
+            else:
+                self._event_data = json.loads(self._row.event_data)
         return self._event_data
 
     @property
