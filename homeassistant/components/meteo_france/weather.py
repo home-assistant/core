@@ -17,7 +17,6 @@ from homeassistant.const import CONF_MODE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-# from . import MeteoFranceDataUpdateCoordinator
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -114,7 +113,7 @@ class MeteoFranceWeather(WeatherEntity):
             for forecast in self.coordinator.data.forecast:
                 # Can have data of yesterday
                 if forecast["dt"] < today:
-                    _LOGGER.error("remove_forecast %s %s", self._mode, forecast)
+                    _LOGGER.debug("remove_forecast %s %s", self._mode, forecast)
                     continue
                 forecast_data.append(
                     {
@@ -137,7 +136,7 @@ class MeteoFranceWeather(WeatherEntity):
             for forecast in self.coordinator.data.daily_forecast:
                 # Can have data of yesterday
                 if forecast["dt"] < today:
-                    _LOGGER.error("remove_forecast %s %s", self._mode, forecast)
+                    _LOGGER.debug("remove_forecast %s %s", self._mode, forecast)
                     continue
                 # stop when we don't have a weather condition (can happen around last days of forcast, max 14)
                 if not forecast.get("weather12H"):

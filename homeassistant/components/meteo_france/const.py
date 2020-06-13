@@ -4,7 +4,6 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    TIME_MINUTES,
     UNIT_PERCENTAGE,
 )
 
@@ -65,7 +64,7 @@ SENSOR_TYPES = {
         ENTITY_API_DATA_PATH: "probability_forecast:freezing",
     },
     "wind_speed": {
-        ENTITY_NAME: "Wind Speed",
+        ENTITY_NAME: "Wind speed",
         ENTITY_UNIT: SPEED_KILOMETERS_PER_HOUR,
         ENTITY_ICON: "mdi:weather-windy",
         ENTITY_CLASS: None,
@@ -97,7 +96,7 @@ SENSOR_TYPES = {
         ENTITY_API_DATA_PATH: "daily_forecast:uv",
     },
     "weather_alert": {
-        ENTITY_NAME: "Weather Alert",
+        ENTITY_NAME: "Weather alert",
         ENTITY_UNIT: None,
         ENTITY_ICON: "mdi:weather-cloudy-alert",
         ENTITY_CLASS: None,
@@ -105,7 +104,7 @@ SENSOR_TYPES = {
         ENTITY_API_DATA_PATH: "forecast:T:value",
     },
     "precipitation": {
-        ENTITY_NAME: "Daily Precipitation",
+        ENTITY_NAME: "Daily precipitation",
         ENTITY_UNIT: "mm",
         ENTITY_ICON: "mdi:cup-water",
         ENTITY_CLASS: None,
@@ -113,7 +112,7 @@ SENSOR_TYPES = {
         ENTITY_API_DATA_PATH: "daily_forecast:precipitation:24h",
     },
     "cloud": {
-        ENTITY_NAME: "Cloud Cover",
+        ENTITY_NAME: "Cloud cover",
         ENTITY_UNIT: UNIT_PERCENTAGE,
         ENTITY_ICON: "mdi:weather-partly-cloudy",
         ENTITY_CLASS: None,
