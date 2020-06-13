@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from . import CONF_RECEIVER
 from .config_flow import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ SUPPORT_MEDIA_MODES = (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
-    receiver = hass.data[DOMAIN][config_entry.entry_id]
+    receiver = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
     for receiver_zone in receiver.zones.values():
         receiver_device_id = config_entry.unique_id
         unique_id = f"{receiver_device_id}-{receiver_zone.zone}"

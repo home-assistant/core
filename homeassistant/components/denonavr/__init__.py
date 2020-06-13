@@ -22,6 +22,8 @@ from .config_flow import (
 )
 from .receiver import ConnectDenonAVR
 
+CONF_RECEIVER = "receiver"
+UNDO_UPDATE_LISTENER = "undo_update_listener"
 SERVICE_GET_COMMAND = "get_command"
 ATTR_COMMAND = "command"
 
@@ -69,9 +71,12 @@ async def async_setup_entry(
         raise ConfigEntryNotReady
     receiver = connect_denonavr.receiver
 
-    hass.data[DOMAIN][entry.entry_id] = receiver
+    undo_listener = entry.add_update_listener(update_listener)
 
-    entry.add_update_listener(update_listener)
+    hass.data[DOMAIN][entry.entry_id] = {
+        CONF_RECEIVER: receiver,
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
 
     device_registry = await dr.async_get_registry(hass)
     if entry.data[CONF_MAC] is not None:
@@ -106,6 +111,9 @@ async def async_unload_entry(
     unload_ok = await hass.config_entries.async_forward_entry_unload(
         entry, "media_player"
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
