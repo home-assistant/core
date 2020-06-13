@@ -107,7 +107,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for entry in self._async_current_entries()
             )
 
-            if not configured:
+            model = device[CONF_ID].split("-")[0]
+            supported = MODELS.get(model)
+
+            if supported and not configured:
                 self._devices.append(device)
 
         _LOGGER.debug("Discovered Shelly devices %s", pformat(self._devices))

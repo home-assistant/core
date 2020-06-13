@@ -31,13 +31,17 @@ DISCOVERY = [
         "fw_ver": "20200601-122823/v1.7.0@d7961837",
     },
     {
-        "id": "shellyswitch25-C929CC",
+        "id": "unsupported-C929CC",
         "mac": "C929CC",
         "ip": "192.168.1.1",
         "new_fw": False,
         "fw_ver": "20200601-122823/v1.7.0@d7961837",
     },
 ]
+
+
+SUPPORTED_COUNT = 2
+
 
 MOCK_TOPIC = "shellies/shelly1-A929CC"
 
@@ -149,7 +153,10 @@ async def test_flow(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "device"
-        assert len(result["data_schema"].schema[CONF_DEVICE_ID].container) == 3
+        assert (
+            len(result["data_schema"].schema[CONF_DEVICE_ID].container)
+            == SUPPORTED_COUNT
+        )
 
         device_id = DISCOVERY[0]["id"]
         result = await hass.config_entries.flow.async_configure(
@@ -199,7 +206,10 @@ async def test_form_with_failed_validation(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "device"
-        assert len(result["data_schema"].schema[CONF_DEVICE_ID].container) == 3
+        assert (
+            len(result["data_schema"].schema[CONF_DEVICE_ID].container)
+            == SUPPORTED_COUNT
+        )
 
         device_id = DISCOVERY[0]["id"]
         result = await hass.config_entries.flow.async_configure(
@@ -240,7 +250,10 @@ async def test_form_with_invalid_topic(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "device"
-        assert len(result["data_schema"].schema[CONF_DEVICE_ID].container) == 3
+        assert (
+            len(result["data_schema"].schema[CONF_DEVICE_ID].container)
+            == SUPPORTED_COUNT
+        )
 
         device_id = DISCOVERY[0]["id"]
         result = await hass.config_entries.flow.async_configure(
