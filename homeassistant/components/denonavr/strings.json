@@ -9,14 +9,9 @@
           "host": "IP address"
         }
       },
-      "settings": {
+      "confirm": {
         "title": "Denon AVR Network Receivers",
-        "description": "Specify optional settings",
-        "data": {
-          "show_all_sources": "Show all sources",
-          "zone2": "Set up Zone 2",
-          "zone3": "Set up Zone 3"
-        }
+        "description": "Please confirm adding the receiver"
       },
       "select": {
         "title": "Select the receiver that you wish to connect",
@@ -36,6 +31,19 @@
       "not_denonavr_manufacturer": "Not a Denon AVR Network Receiver, discovered manafucturer did not match",
       "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete",
       "no_mac": "Could not retrieve the MAC address from the IP address"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Denon AVR Network Receivers",
+        "description": "Specify optional settings, a restart is required to apply the settings",
+        "data": {
+          "show_all_sources": "Show all sources",
+          "zone2": "Set up Zone 2",
+          "zone3": "Set up Zone 3"
+        }
+      }
     }
   }
 }

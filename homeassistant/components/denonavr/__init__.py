@@ -14,7 +14,10 @@ from .config_flow import (
     CONF_TYPE,
     CONF_ZONE2,
     CONF_ZONE3,
+    DEFAULT_SHOW_SOURCES,
     DEFAULT_TIMEOUT,
+    DEFAULT_ZONE2,
+    DEFAULT_ZONE3,
     DOMAIN,
 )
 from .receiver import ConnectDenonAVR
@@ -58,15 +61,17 @@ async def async_setup_entry(
         hass,
         entry.data[CONF_HOST],
         DEFAULT_TIMEOUT,
-        entry.data[CONF_SHOW_ALL_SOURCES],
-        entry.data[CONF_ZONE2],
-        entry.data[CONF_ZONE3],
+        entry.options.get(CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES),
+        entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
+        entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
     )
     if not await connect_denonavr.async_connect_receiver():
         raise ConfigEntryNotReady
     receiver = connect_denonavr.receiver
 
     hass.data[DOMAIN][entry.entry_id] = receiver
+
+    entry.add_update_listener(update_listener)
 
     device_registry = await dr.async_get_registry(hass)
     if entry.data[CONF_MAC] is not None:
@@ -105,3 +110,8 @@ async def async_unload_entry(
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def update_listener(hass: core.HomeAssistant, entry: config_entries.ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)

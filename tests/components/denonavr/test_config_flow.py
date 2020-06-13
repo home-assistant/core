@@ -1,7 +1,7 @@
 """Test the DenonAVR config flow."""
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
@@ -10,14 +10,12 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     CONF_ZONE2,
     CONF_ZONE3,
-    DEFAULT_SHOW_SOURCES,
-    DEFAULT_ZONE2,
-    DEFAULT_ZONE3,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_MAC = "ab:cd:ef:gh"
@@ -91,19 +89,11 @@ async def test_config_flow_manual_host_success(hass):
         result["flow_id"], {CONF_HOST: TEST_HOST},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
-
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_MAC: TEST_MAC,
-        CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
-        CONF_ZONE2: DEFAULT_ZONE2,
-        CONF_ZONE3: DEFAULT_ZONE3,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -126,19 +116,11 @@ async def test_config_flow_manual_discover_1_success(hass):
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
-
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_MAC: TEST_MAC,
-        CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
-        CONF_ZONE2: DEFAULT_ZONE2,
-        CONF_ZONE3: DEFAULT_ZONE3,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -169,19 +151,11 @@ async def test_config_flow_manual_discover_2_success(hass):
         result["flow_id"], {"select_host": TEST_HOST2},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
-
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST2,
         CONF_MAC: TEST_MAC,
-        CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
-        CONF_ZONE2: DEFAULT_ZONE2,
-        CONF_ZONE3: DEFAULT_ZONE3,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -209,42 +183,6 @@ async def test_config_flow_manual_discover_error(hass):
     assert result["errors"] == {"base": "discovery_error"}
 
 
-async def test_config_flow_settings(hass):
-    """Test a successful config flow manually initialized by the user with the host specified and non default settings specified."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SHOW_ALL_SOURCES: True, CONF_ZONE2: True, CONF_ZONE3: True},
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_MAC: TEST_MAC,
-        CONF_SHOW_ALL_SOURCES: True,
-        CONF_ZONE2: True,
-        CONF_ZONE3: True,
-        CONF_MODEL: TEST_MODEL,
-        CONF_TYPE: TEST_RECEIVER_TYPE,
-        CONF_MANUFACTURER: TEST_MANUFACTURER,
-    }
-
-
 async def test_config_flow_manual_host_no_serial(hass):
     """Test a successful config flow manually initialized by the user with the host specified and an error getting the serial number but backup mac address success."""
     result = await hass.config_entries.flow.async_init(
@@ -255,27 +193,19 @@ async def test_config_flow_manual_host_no_serial(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
     with patch(
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
         None,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_MAC: TEST_MAC,
-        CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
-        CONF_ZONE2: DEFAULT_ZONE2,
-        CONF_ZONE3: DEFAULT_ZONE3,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -292,27 +222,19 @@ async def test_config_flow_manual_host_no_mac(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
     with patch(
         "homeassistant.components.denonavr.config_flow.get_mac_address",
         return_value=None,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_MAC: None,
-        CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
-        CONF_ZONE2: DEFAULT_ZONE2,
-        CONF_ZONE3: DEFAULT_ZONE3,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -329,13 +251,6 @@ async def test_config_flow_manual_host_no_serial_no_mac(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
     with patch(
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
         None,
@@ -343,7 +258,9 @@ async def test_config_flow_manual_host_no_serial_no_mac(hass):
         "homeassistant.components.denonavr.config_flow.get_mac_address",
         return_value=None,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST},
+        )
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_mac"
@@ -359,13 +276,6 @@ async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
     with patch(
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
         None,
@@ -373,7 +283,9 @@ async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
         "homeassistant.components.denonavr.config_flow.get_mac_address",
         side_effect=OSError,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST},
+        )
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_mac"
@@ -389,13 +301,6 @@ async def test_config_flow_manual_host_connection_error(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
     with patch(
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.get_device_info",
         side_effect=ConnectionError,
@@ -403,7 +308,9 @@ async def test_config_flow_manual_host_connection_error(hass):
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.receiver_type",
         None,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST},
+        )
 
     assert result["type"] == "abort"
     assert result["reason"] == "connection_error"
@@ -419,18 +326,13 @@ async def test_config_flow_manual_host_no_device_info(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
     with patch(
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.receiver_type",
         None,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST},
+        )
 
     assert result["type"] == "abort"
     assert result["reason"] == "connection_error"
@@ -450,7 +352,7 @@ async def test_config_flow_ssdp(hass):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "settings"
+    assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
 
@@ -459,9 +361,6 @@ async def test_config_flow_ssdp(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_MAC: TEST_MAC,
-        CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
-        CONF_ZONE2: DEFAULT_ZONE2,
-        CONF_ZONE3: DEFAULT_ZONE3,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -498,3 +397,40 @@ async def test_config_flow_ssdp_missing_info(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "not_denonavr_missing"
+
+
+async def test_options_flow(hass):
+    """Test specifying non default settings using options flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_MAC: TEST_MAC,
+            CONF_MODEL: TEST_MODEL,
+            CONF_TYPE: TEST_RECEIVER_TYPE,
+            CONF_MANUFACTURER: TEST_MANUFACTURER,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SHOW_ALL_SOURCES: True, CONF_ZONE2: True, CONF_ZONE3: True},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_SHOW_ALL_SOURCES: True,
+        CONF_ZONE2: True,
+        CONF_ZONE3: True,
+    }
