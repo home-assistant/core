@@ -1245,12 +1245,13 @@ async def test_no_restore_state(hass):
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "target_humidity": 42,
+                "away_humidity": 35,
             }
         },
     )
 
     state = hass.states.get("humidifier.test_hygrostat")
-    assert state.attributes[ATTR_HUMIDITY] == 42
+    assert state.attributes[ATTR_HUMIDITY] == 40
     assert state.state == STATE_OFF
 
 
