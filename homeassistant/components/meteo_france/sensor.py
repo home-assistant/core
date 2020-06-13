@@ -1,6 +1,4 @@
 """Support for Meteo-France raining forecast sensor."""
-from datetime import datetime
-
 import logging
 
 from meteofrance.helpers import (
@@ -15,11 +13,10 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-
-from .const import (  # COORDINATOR_ALERT,
-    ATTRIBUTION,
-    ATTR_NEXT_RAIN_SUMMARY,
+from .const import (
     ATTR_NEXT_RAIN_1_HOUR_FORECAST,
+    ATTR_NEXT_RAIN_SUMMARY,
+    ATTRIBUTION,
     COORDINATOR_ALERT,
     COORDINATOR_ALERT_ADDED,
     COORDINATOR_FORECAST,
@@ -119,23 +116,6 @@ class MeteoFranceSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        # Attributes for next_rain sensor.
-        if self._type == "next_rain":
-            return {
-                # **{STATE_ATTR_FORECAST: self._data["rain_forecast"]},
-                # **self._data["next_rain_intervals"],
-                **{ATTR_ATTRIBUTION: ATTRIBUTION},
-            }
-
-        # Attributes for weather_alert sensor.
-        if self._type == "weather_alert":
-            return {
-                # **{STATE_ATTR_BULLETIN_TIME: self._alert_watcher.bulletin_date},
-                # **self._alert_watcher.alerts_list,
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-            }
-
-        # Attributes for all other sensors.
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
