@@ -45,21 +45,21 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
             title=f"{DEFAULT_NAME} ({host})", data={CONF_HOST: host, CONF_PORT: port},
         )
 
-    async def async_step_user(self, user_info=None):
+    async def async_step_user(self, user_input=None):
         """Handle a discovered device."""
         errors = {}
 
-        if user_info is not None:
+        if user_input is not None:
             uuid = await get_uniqueid_from_host(
-                async_get_clientsession(self.hass), user_info[CONF_HOST]
+                async_get_clientsession(self.hass), user_input[CONF_HOST]
             )
             if uuid:
                 await self._async_set_unique_id_and_update(
-                    user_info[CONF_HOST], user_info[CONF_PORT], uuid
+                    user_input[CONF_HOST], user_input[CONF_PORT], uuid
                 )
 
             return await self._async_check_and_create(
-                user_info[CONF_HOST], user_info[CONF_PORT]
+                user_input[CONF_HOST], user_input[CONF_PORT]
             )
 
         fields = {
