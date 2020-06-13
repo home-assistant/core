@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     vicare_api = hass.data[VICARE_DOMAIN][VICARE_API]
     heating_type = hass.data[VICARE_DOMAIN][VICARE_HEATING_TYPE]
 
-    sensors = SENSORS_GENERIC
+    sensors = SENSORS_GENERIC.copy()
 
     if heating_type != HeatingType.generic:
         sensors.extend(SENSORS_BY_HEATINGTYPE[heating_type])
@@ -78,25 +78,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ViCareBinarySensor(BinarySensorDevice):
     """Representation of a ViCare sensor."""
 
-    def __init__(self, name, api, sensortype):
+    def __init__(self, name, api, sensor_type):
         """Initialize the sensor."""
-        self._sensor = SENSOR_TYPES[sensortype]
+        self._sensor = SENSOR_TYPES[sensor_type]
         self._name = f"{name} {self._sensor[CONF_NAME]}"
         self._api = api
-        self._sensortype = sensortype
+        self._sensor_type = sensor_type
         self._state = None
 
     @property
     def available(self):
         """Return True if entity is available."""
-        if self._state is not None and self._state != PYVICARE_ERROR:
-            return True
-        return False
+        return self._state is not None and self._state != PYVICARE_ERROR
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._api.service.id}-{self._sensortype}"
+        return f"{self._api.service.id}-{self._sensor_type}"
 
     @property
     def name(self):

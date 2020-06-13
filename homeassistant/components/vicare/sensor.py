@@ -4,9 +4,12 @@ import logging
 import requests
 
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -55,94 +58,109 @@ SENSOR_COMPRESSOR_HOURS = "compressor_hours"
 SENSOR_TYPES = {
     SENSOR_OUTSIDE_TEMPERATURE: {
         CONF_NAME: "Outside Temperature",
-        CONF_ICON: "mdi:thermometer",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         CONF_GETTER: lambda api: api.getOutsideTemperature(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
     },
     SENSOR_SUPPLY_TEMPERATURE: {
         CONF_NAME: "Supply Temperature",
-        CONF_ICON: "mdi:thermometer",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         CONF_GETTER: lambda api: api.getSupplyTemperature(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
     },
     # gas sensors
     SENSOR_BOILER_TEMPERATURE: {
         CONF_NAME: "Boiler Temperature",
-        CONF_ICON: "mdi:thermometer",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         CONF_GETTER: lambda api: api.getBoilerTemperature(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
     },
     SENSOR_BURNER_MODULATION: {
         CONF_NAME: "Burner modulation",
         CONF_ICON: "mdi:percent",
         CONF_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
         CONF_GETTER: lambda api: api.getBurnerModulation(),
+        CONF_DEVICE_CLASS: None,
     },
     SENSOR_DHW_GAS_CONSUMPTION_TODAY: {
         CONF_NAME: "Hot water gas consumption today",
-        CONF_ICON: "mdi:power",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         CONF_GETTER: lambda api: api.getGasConsumptionDomesticHotWaterToday(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
     SENSOR_DHW_GAS_CONSUMPTION_THIS_WEEK: {
         CONF_NAME: "Hot water gas consumption this week",
-        CONF_ICON: "mdi:power",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         CONF_GETTER: lambda api: api.getGasConsumptionDomesticHotWaterThisWeek(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
     SENSOR_DHW_GAS_CONSUMPTION_THIS_MONTH: {
         CONF_NAME: "Hot water gas consumption this month",
-        CONF_ICON: "mdi:power",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         CONF_GETTER: lambda api: api.getGasConsumptionDomesticHotWaterThisMonth(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
     SENSOR_DHW_GAS_CONSUMPTION_THIS_YEAR: {
         CONF_NAME: "Hot water gas consumption this year",
-        CONF_ICON: "mdi:power",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         CONF_GETTER: lambda api: api.getGasConsumptionDomesticHotWaterThisYear(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
     SENSOR_GAS_CONSUMPTION_TODAY: {
         CONF_NAME: "Heating gas consumption today",
-        CONF_ICON: "mdi:power",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         CONF_GETTER: lambda api: api.getGasConsumptionHeatingToday(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
     SENSOR_GAS_CONSUMPTION_THIS_WEEK: {
         CONF_NAME: "Heating gas consumption this week",
-        CONF_ICON: "mdi:power",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         CONF_GETTER: lambda api: api.getGasConsumptionHeatingThisWeek(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
     SENSOR_GAS_CONSUMPTION_THIS_MONTH: {
         CONF_NAME: "Heating gas consumption this month",
-        CONF_ICON: "mdi:power",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         CONF_GETTER: lambda api: api.getGasConsumptionHeatingThisMonth(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
     SENSOR_GAS_CONSUMPTION_THIS_YEAR: {
         CONF_NAME: "Heating gas consumption this year",
-        CONF_ICON: "mdi:power",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         CONF_GETTER: lambda api: api.getGasConsumptionHeatingThisYear(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
     SENSOR_BURNER_STARTS: {
         CONF_NAME: "Burner Starts",
         CONF_ICON: "mdi:counter",
         CONF_UNIT_OF_MEASUREMENT: None,
         CONF_GETTER: lambda api: api.getBurnerStarts(),
+        CONF_DEVICE_CLASS: None,
     },
     SENSOR_BURNER_HOURS: {
         CONF_NAME: "Burner Hours",
         CONF_ICON: "mdi:counter",
         CONF_UNIT_OF_MEASUREMENT: None,
         CONF_GETTER: lambda api: api.getBurnerHours(),
+        CONF_DEVICE_CLASS: None,
     },
     SENSOR_BURNER_POWER: {
         CONF_NAME: "Burner Current Power",
-        CONF_ICON: "mdi:power",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: POWER_WATT,
         CONF_GETTER: lambda api: api.getCurrentPower(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
     # heatpump sensors
     SENSOR_COMPRESSOR_STARTS: {
@@ -150,18 +168,21 @@ SENSOR_TYPES = {
         CONF_ICON: "mdi:counter",
         CONF_UNIT_OF_MEASUREMENT: None,
         CONF_GETTER: lambda api: api.getCompressorStarts(),
+        CONF_DEVICE_CLASS: None,
     },
     SENSOR_COMPRESSOR_HOURS: {
         CONF_NAME: "Compressor Hours",
         CONF_ICON: "mdi:counter",
         CONF_UNIT_OF_MEASUREMENT: None,
         CONF_GETTER: lambda api: api.getCompressorHours(),
+        CONF_DEVICE_CLASS: None,
     },
     SENSOR_RETURN_TEMPERATURE: {
         CONF_NAME: "Return Temperature",
-        CONF_ICON: "mdi:thermometer",
+        CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         CONF_GETTER: lambda api: api.getReturnTemperature(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
     },
 }
 
@@ -199,7 +220,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     vicare_api = hass.data[VICARE_DOMAIN][VICARE_API]
     heating_type = hass.data[VICARE_DOMAIN][VICARE_HEATING_TYPE]
 
-    sensors = SENSORS_GENERIC
+    sensors = SENSORS_GENERIC.copy()
 
     if heating_type != HeatingType.generic:
         sensors.extend(SENSORS_BY_HEATINGTYPE[heating_type])
@@ -215,25 +236,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ViCareSensor(Entity):
     """Representation of a ViCare sensor."""
 
-    def __init__(self, name, api, sensortype):
+    def __init__(self, name, api, sensor_type):
         """Initialize the sensor."""
-        self._sensor = SENSOR_TYPES[sensortype]
+        self._sensor = SENSOR_TYPES[sensor_type]
         self._name = f"{name} {self._sensor[CONF_NAME]}"
         self._api = api
-        self._sensortype = sensortype
+        self._sensor_type = sensor_type
         self._state = None
 
     @property
     def available(self):
         """Return True if entity is available."""
-        if self._state is not None and self._state != PYVICARE_ERROR:
-            return True
-        return False
+        return self._state is not None and self._state != PYVICARE_ERROR
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._api.service.id}-{self._sensortype}"
+        return f"{self._api.service.id}-{self._sensor_type}"
 
     @property
     def name(self):
@@ -254,6 +273,11 @@ class ViCareSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor[CONF_UNIT_OF_MEASUREMENT]
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._sensor[CONF_DEVICE_CLASS]
 
     def update(self):
         """Update state of sensor."""
