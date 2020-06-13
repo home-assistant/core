@@ -255,11 +255,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         await _async_startup(None)  # init the sensor
 
     @property
-    def state(self):
-        """Return unknown state on sensor error."""
-        if self._state is None:
-            return STATE_UNKNOWN
-        return super().state
+    def available(self):
+        """Return True if entity is available."""
+        return self._state is not None
 
     @property
     def state_attributes(self):
