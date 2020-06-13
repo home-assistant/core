@@ -2,7 +2,9 @@
 import logging
 
 import gammu  # pylint: disable=import-error, no-member
-from gammu.asyncworker import GammuAsyncWorker
+from gammu.asyncworker import (  # pylint: disable=import-error, no-member
+    GammuAsyncWorker,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
