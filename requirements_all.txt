@@ -132,7 +132,7 @@ adafruit-circuitpython-mcp230xx==2.2.2
 adb-shell==0.1.3
 
 # homeassistant.components.alarmdecoder
-adext==0.2
+adext==0.3
 
 # homeassistant.components.adguard
 adguardhome==0.4.2
