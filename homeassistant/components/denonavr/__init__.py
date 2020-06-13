@@ -78,24 +78,17 @@ async def async_setup_entry(
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    device_registry = await dr.async_get_registry(hass)
+    device_info = {
+        "config_entry_id": entry.entry_id,
+        "identifiers": {(DOMAIN, entry.unique_id)},
+        "manufacturer": entry.data[CONF_MANUFACTURER],
+        "name": entry.title,
+        "model": f"{entry.data[CONF_MODEL]}-{entry.data[CONF_TYPE]}",
+    }
     if entry.data[CONF_MAC] is not None:
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])},
-            identifiers={(DOMAIN, entry.unique_id)},
-            manufacturer=entry.data[CONF_MANUFACTURER],
-            name=entry.title,
-            model=f"{entry.data[CONF_MODEL]}-{entry.data[CONF_TYPE]}",
-        )
-    else:
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, entry.unique_id)},
-            manufacturer=entry.data[CONF_MANUFACTURER],
-            name=entry.title,
-            model=f"{entry.data[CONF_MODEL]}-{entry.data[CONF_TYPE]}",
-        )
+        device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])}
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(**device_info)
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "media_player")
