@@ -16,7 +16,7 @@
                     "name": "Nazwa certyfikatu",
                     "port": "Port"
                 },
-                "title": "Zdefiniuj certyfikat do przetestowania"
+                "title": "Zdefiniuj certyfikat do sprawdzenia"
             }
         }
     },
