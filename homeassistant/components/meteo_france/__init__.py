@@ -59,8 +59,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
-    # coordinator = MeteoFranceDataUpdateCoordinator(hass, latitude, longitude)
-
     client = MeteoFranceClient()
 
     async def _async_update_data_forecast_forecast():

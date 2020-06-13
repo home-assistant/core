@@ -37,7 +37,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:gauge",
         ENTITY_CLASS: "pressure",
         ENTITY_ENABLE: False,
-        ENTITY_API_DATA_PATH: "forecast:sea_level",
+        ENTITY_API_DATA_PATH: "current_forecast:sea_level",
     },
     "rain_chance": {
         ENTITY_NAME: "Rain chance",
@@ -69,7 +69,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:weather-windy",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
-        ENTITY_API_DATA_PATH: "forecast:wind:speed",
+        ENTITY_API_DATA_PATH: "current_forecast:wind:speed",
     },
     "next_rain": {
         ENTITY_NAME: "Next rain",
@@ -77,7 +77,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:weather-pouring",
         ENTITY_CLASS: "timestamp",
         ENTITY_ENABLE: True,
-        ENTITY_API_DATA_PATH: "forecast:T:value",
+        ENTITY_API_DATA_PATH: "current_forecast:T:value",
     },
     "temperature": {
         ENTITY_NAME: "Temperature",
@@ -85,7 +85,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:thermometer",
         ENTITY_CLASS: "temperature",
         ENTITY_ENABLE: False,
-        ENTITY_API_DATA_PATH: "forecast:T:value",
+        ENTITY_API_DATA_PATH: "current_forecast:T:value",
     },
     "uv": {
         ENTITY_NAME: "UV",
@@ -93,7 +93,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:sunglasses",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
-        ENTITY_API_DATA_PATH: "daily_forecast:uv",
+        ENTITY_API_DATA_PATH: "today_forecast:uv",
     },
     "weather_alert": {
         ENTITY_NAME: "Weather alert",
@@ -101,7 +101,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:weather-cloudy-alert",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
-        ENTITY_API_DATA_PATH: "forecast:T:value",
+        ENTITY_API_DATA_PATH: "current_forecast:T:value",
     },
     "precipitation": {
         ENTITY_NAME: "Daily precipitation",
@@ -109,7 +109,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:cup-water",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
-        ENTITY_API_DATA_PATH: "daily_forecast:precipitation:24h",
+        ENTITY_API_DATA_PATH: "today_forecast:precipitation:24h",
     },
     "cloud": {
         ENTITY_NAME: "Cloud cover",
@@ -117,7 +117,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:weather-partly-cloudy",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
-        ENTITY_API_DATA_PATH: "forecast:clouds",
+        ENTITY_API_DATA_PATH: "current_forecast:clouds",
     },
 }
 
