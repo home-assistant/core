@@ -56,7 +56,6 @@ SENSOR_TYPES = {
     "wind_speed": [
         "Wind Speed",
         None,
-        None,
         SPEED_MILES_PER_HOUR,
         "mdi:weather-windy",
         True,
@@ -163,7 +162,9 @@ class MetOfficeCurrentSensor(Entity):
         value = SENSOR_TYPES[self._type][3]
         if self._type == "weather":
             value = self.state
-            if value == "partlycloudy":
+            if value is None:
+                value = "sunny"
+            elif value == "partlycloudy":
                 value = "partly-cloudy"
             value = f"mdi:weather-{value}"
 

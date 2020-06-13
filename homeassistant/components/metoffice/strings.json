@@ -7,8 +7,7 @@
         "data": {
           "api_key": "Met Office DataPoint API key",
           "latitude": "Latitude",
-          "longitude": "Longitude",
-          "name": "Friendly name"
+          "longitude": "Longitude"
         }
       }
     },

@@ -68,7 +68,6 @@ class MetOfficeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
             },
-            extra=vol.ALLOW_EXTRA,
         )
 
         return self.async_show_form(
