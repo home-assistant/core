@@ -8,6 +8,7 @@
             "connect_error": "[%key::common::config_flow::error::cannot_connect%]",
             "no_device_selected": "No hi ha cap dispositiu seleccionat, selecciona'n un."
         },
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "gateway": {
                 "data": {

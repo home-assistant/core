@@ -306,7 +306,7 @@ avea==1.4
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==29
+axis==30
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -735,7 +735,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200603.2
+home-assistant-frontend==20200613.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -784,6 +784,9 @@ ihcsdk==2.7.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.4.0
+
+# homeassistant.components.influxdb
+influxdb-client==1.6.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
@@ -1270,7 +1273,7 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.1.1
+pydaikin==2.1.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1502,7 +1505,7 @@ pynut2==2.1.2
 pynws==0.10.4
 
 # homeassistant.components.nx584
-pynx584==0.4
+pynx584==0.5
 
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
@@ -1703,7 +1706,7 @@ python-juicenet==1.0.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.0.1
+python-miio==0.5.1
 
 # homeassistant.components.mpd
 python-mpd2==1.0.0
@@ -1797,7 +1800,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.7
+pyvera==0.3.9
 
 # homeassistant.components.versasense
 pyversasense==0.0.6

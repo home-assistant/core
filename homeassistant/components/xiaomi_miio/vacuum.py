@@ -28,6 +28,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.util.dt import as_utc
 
 from .const import (
     SERVICE_CLEAN_ZONE,
@@ -72,6 +73,7 @@ ATTR_RC_VELOCITY = "velocity"
 ATTR_STATUS = "status"
 ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
+ATTR_TIMERS = "timers"
 
 SUPPORT_XIAOMI = (
     SUPPORT_STATE
@@ -216,6 +218,8 @@ class MiroboVacuum(StateVacuumEntity):
         self._fan_speeds = None
         self._fan_speeds_reverse = None
 
+        self._timers = None
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -263,6 +267,18 @@ class MiroboVacuum(StateVacuumEntity):
         return list(self._fan_speeds) if self._fan_speeds else []
 
     @property
+    def timers(self):
+        """Get the list of added timers of the vacuum cleaner."""
+        return [
+            {
+                "enabled": timer.enabled,
+                "cron": timer.cron,
+                "next_schedule": as_utc(timer.next_schedule),
+            }
+            for timer in self._timers
+        ]
+
+    @property
     def device_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
         attrs = {}
@@ -307,6 +323,9 @@ class MiroboVacuum(StateVacuumEntity):
 
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
+
+            if self.timers:
+                attrs[ATTR_TIMERS] = self.timers
         return attrs
 
     @property
@@ -441,6 +460,8 @@ class MiroboVacuum(StateVacuumEntity):
             self.clean_history = self._vacuum.clean_history()
             self.last_clean = self._vacuum.last_clean_details()
             self.dnd_state = self._vacuum.dnd_status()
+
+            self._timers = self._vacuum.timer()
 
             self._available = True
         except OSError as exc:

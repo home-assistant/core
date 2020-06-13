@@ -128,7 +128,7 @@ class Metering(ZigbeeChannel):
             "demand_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
 
-        r_digits = fmting & 0x07  # digits to the right of decimal point
+        r_digits = int(fmting & 0x07)  # digits to the right of decimal point
         l_digits = (fmting >> 3) & 0x0F  # digits to the left of decimal point
         if l_digits == 0:
             l_digits = 15

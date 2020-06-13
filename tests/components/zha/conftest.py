@@ -7,6 +7,7 @@ import zigpy.config
 import zigpy.group
 import zigpy.types
 
+from homeassistant.components.zha import DOMAIN
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.setup import async_setup_component
@@ -140,11 +141,27 @@ def zha_device_joined(hass, setup_zha):
 
 
 @pytest.fixture
-def zha_device_restored(hass, zigpy_app_controller, setup_zha):
+def zha_device_restored(hass, zigpy_app_controller, setup_zha, hass_storage):
     """Return a restored ZHA device."""
 
-    async def _zha_device(zigpy_dev):
+    async def _zha_device(zigpy_dev, last_seen=None):
         zigpy_app_controller.devices[zigpy_dev.ieee] = zigpy_dev
+
+        if last_seen is not None:
+            hass_storage[f"{DOMAIN}.storage"] = {
+                "key": f"{DOMAIN}.storage",
+                "version": 1,
+                "data": {
+                    "devices": [
+                        {
+                            "ieee": str(zigpy_dev.ieee),
+                            "last_seen": last_seen,
+                            "name": f"{zigpy_dev.manufacturer} {zigpy_dev.model}",
+                        }
+                    ],
+                },
+            }
+
         await setup_zha()
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         return zha_gateway.get_device(zigpy_dev.ieee)
