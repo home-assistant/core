@@ -16,6 +16,8 @@ SWITCH_TYPES = {
     "lights": "Lights",
     "filter": "Filter",
     "filter_low_speed": "Filter Low Speed",
+    "pool": "Pool",
+    "spa": "Spa",
     "aux_1": "Aux 1",
     "aux_2": "Aux 2",
     "aux_3": "Aux 3",
@@ -32,7 +34,7 @@ SWITCH_TYPES = {
     "aux_14": "Aux 14",
     "valve_3": "Valve 3",
     "valve_4": "Valve 4",
-    "heater_1": "Heater 1",
+    "heater_auto_mode": "Heater Auto Mode",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -66,6 +68,8 @@ class AquaLogicSwitch(SwitchEntity):
             "lights": States.LIGHTS,
             "filter": States.FILTER,
             "filter_low_speed": States.FILTER_LOW_SPEED,
+            "pool": States.POOL,
+            "spa": States.SPA,
             "aux_1": States.AUX_1,
             "aux_2": States.AUX_2,
             "aux_3": States.AUX_3,
@@ -82,7 +86,7 @@ class AquaLogicSwitch(SwitchEntity):
             "aux_14": States.AUX_14,
             "valve_3": States.VALVE_3,
             "valve_4": States.VALVE_4,
-            "heater_1": States.HEATER_1,
+            "heater_auto_mode": States.HEATER_AUTO_MODE,
             "service": States.SERVICE,
         }[switch_type]
 
@@ -95,6 +99,11 @@ class AquaLogicSwitch(SwitchEntity):
     def should_poll(self):
         """Return the polling state."""
         return False
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return SWITCH_TYPES[self._type][2]
 
     @property
     def is_on(self):

@@ -269,7 +269,7 @@ apprise==0.8.5
 aprslib==0.6.46
 
 # homeassistant.components.aqualogic
-aqualogic==2.2
+aqualogic==2.5
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==0.4.6

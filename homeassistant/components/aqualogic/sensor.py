@@ -7,6 +7,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     POWER_WATT,
+    STATE_OFF,
+    STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
@@ -37,6 +39,12 @@ SENSOR_TYPES = {
     "pump_speed": ["Pump Speed", PERCENT_UNITS, "mdi:speedometer"],
     "pump_power": ["Pump Power", WATT_UNITS, "mdi:gauge"],
     "status": ["Status", NO_UNITS, "mdi:alert"],
+    "is_heater_enabled": ["Heater", NO_UNITS, "mdi:radiator"],
+    "is_super_chlorinate_enabled": [
+        "Super Chlorinate",
+        NO_UNITS,
+        "mdi:bottle-tonic-plus",
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -111,5 +119,9 @@ class AquaLogicSensor(Entity):
         """Update callback."""
         panel = self._processor.panel
         if panel is not None:
-            self._state = getattr(panel, self._type)
+            state = getattr(panel, self._type)
+            if isinstance(state, bool):
+                self._state = STATE_ON if state is True else STATE_OFF
+            else:
+                self._state = state
             self.async_write_ha_state()
