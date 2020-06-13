@@ -34,7 +34,6 @@ CONF_ZONES = "zones"
 CONF_RELAY_ADDR = "relayaddr"
 CONF_RELAY_CHAN = "relaychan"
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
-CONF_ALT_NIGHT_MODE = "alt_night_mode"
 
 DEFAULT_DEVICE_TYPE = "socket"
 DEFAULT_DEVICE_HOST = "localhost"
@@ -45,7 +44,6 @@ DEFAULT_DEVICE_BAUD = 115200
 DEFAULT_AUTO_BYPASS = False
 DEFAULT_PANEL_DISPLAY = False
 DEFAULT_CODE_ARM_REQUIRED = True
-DEFAULT_ALT_NIGHT_MODE = False
 
 DEFAULT_ZONE_TYPE = "opening"
 
@@ -112,9 +110,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_CODE_ARM_REQUIRED, default=DEFAULT_CODE_ARM_REQUIRED
                 ): cv.boolean,
-                vol.Optional(
-                    CONF_ALT_NIGHT_MODE, default=DEFAULT_ALT_NIGHT_MODE
-                ): cv.boolean,
                 vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
             }
         )
@@ -132,7 +127,6 @@ def setup(hass, config):
     display = conf[CONF_PANEL_DISPLAY]
     auto_bypass = conf[CONF_AUTO_BYPASS]
     code_arm_required = conf[CONF_CODE_ARM_REQUIRED]
-    alt_night_mode = conf[CONF_ALT_NIGHT_MODE]
     zones = conf.get(CONF_ZONES)
 
     device_type = device[CONF_DEVICE_TYPE]
@@ -221,11 +215,7 @@ def setup(hass, config):
         hass,
         "alarm_control_panel",
         DOMAIN,
-        {
-            CONF_AUTO_BYPASS: auto_bypass,
-            CONF_CODE_ARM_REQUIRED: code_arm_required,
-            CONF_ALT_NIGHT_MODE: alt_night_mode,
-        },
+        {CONF_AUTO_BYPASS: auto_bypass, CONF_CODE_ARM_REQUIRED: code_arm_required},
         config,
     )
 

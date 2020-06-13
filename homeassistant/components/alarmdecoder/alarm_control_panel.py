@@ -22,7 +22,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from . import (
-    CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED,
     DATA_AD,
@@ -47,8 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     auto_bypass = discovery_info[CONF_AUTO_BYPASS]
     code_arm_required = discovery_info[CONF_CODE_ARM_REQUIRED]
-    alt_night_mode = discovery_info[CONF_ALT_NIGHT_MODE]
-    entity = AlarmDecoderAlarmPanel(auto_bypass, code_arm_required, alt_night_mode)
+    entity = AlarmDecoderAlarmPanel(auto_bypass, code_arm_required)
     add_entities([entity])
 
     def alarm_toggle_chime_handler(service):
@@ -79,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, auto_bypass, code_arm_required, alt_night_mode):
+    def __init__(self, auto_bypass, code_arm_required):
         """Initialize the alarm panel."""
         self._display = ""
         self._name = "Alarm Panel"
@@ -95,7 +93,6 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self._zone_bypassed = None
         self._auto_bypass = auto_bypass
         self._code_arm_required = code_arm_required
-        self._alt_night_mode = alt_night_mode
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -184,7 +181,6 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self.hass.data[DATA_AD].arm_away(
             code=code,
             code_arm_required=self._code_arm_required,
-            alt_night_mode=self._alt_night_mode,
             auto_bypass=self._auto_bypass,
         )
 
@@ -193,7 +189,6 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self.hass.data[DATA_AD].arm_home(
             code=code,
             code_arm_required=self._code_arm_required,
-            alt_night_mode=self._alt_night_mode,
             auto_bypass=self._auto_bypass,
         )
 
@@ -202,7 +197,6 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self.hass.data[DATA_AD].arm_night(
             code=code,
             code_arm_required=self._code_arm_required,
-            alt_night_mode=self._alt_night_mode,
             auto_bypass=self._auto_bypass,
         )
 
