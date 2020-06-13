@@ -52,9 +52,7 @@ VALID_UNITS_IEC = [
 ]
 
 
-def convert(
-    value: float, unit_input: str, unit_output: str, precision: int = 2
-) -> float:
+def convert(value: float, unit_input: str, unit_output: str) -> float:
     """Convert one unit of measurement to another."""
 
     # Check if provided units are valid in this context
@@ -92,4 +90,4 @@ def convert(
 
         result /= factor
 
-    return float(round(result, precision))
+    return result

@@ -73,8 +73,10 @@ class Filesize(Entity):
 
     @property
     def state(self):
-        """Return the size of the file in MB."""
-        return data_size.convert(self._size, DATA_BYTES, self._unit_of_measurement)
+        """Return the size of the file."""
+        return round(
+            data_size.convert(self._size, DATA_BYTES, self._unit_of_measurement), 2
+        )
 
     @property
     def icon(self):
