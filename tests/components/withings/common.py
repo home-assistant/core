@@ -1,5 +1,6 @@
 """Common data for for the withings component tests."""
-from typing import List, NamedTuple, Optional, Tuple, Union
+from dataclasses import dataclass
+from typing import List, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
@@ -43,7 +44,8 @@ from tests.async_mock import MagicMock
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-class ProfileConfig(NamedTuple):
+@dataclass
+class ProfileConfig:
     """Data representing a user profile."""
 
     profile: str
@@ -92,7 +94,8 @@ def new_profile_config(
     )
 
 
-class WebhookResponse(NamedTuple):
+@dataclass
+class WebhookResponse:
     """Response data from a webhook."""
 
     message: str

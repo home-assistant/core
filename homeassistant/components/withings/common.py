@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import Enum, IntEnum
 import logging
 import re
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from aiohttp.web import Response
 import requests
@@ -88,14 +88,16 @@ class WithingsAttribute:
     update_type: UpdateType
 
 
-class WithingsData(NamedTuple):
+@dataclass
+class WithingsData:
     """Represents value and meta-data from the withings service."""
 
     attribute: WithingsAttribute
     value: Any
 
 
-class WebhookConfig(NamedTuple):
+@dataclass
+class WebhookConfig:
     """Config for a webhook."""
 
     id: str
@@ -103,7 +105,8 @@ class WebhookConfig(NamedTuple):
     enabled: bool
 
 
-class StateData(NamedTuple):
+@dataclass
+class StateData:
     """State data held by data manager for retrieval by entities."""
 
     unique_id: str
