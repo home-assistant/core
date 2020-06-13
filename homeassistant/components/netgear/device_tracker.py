@@ -64,7 +64,8 @@ class NetgearDeviceEntity(ScannerEntity):
         self._active = True
         self._attrs = {}
 
-    async def async_update(self) -> None:
+    @callback
+    def update_device(self) -> None:
         """Update the Netgear device."""
         device = self._router.devices[self._mac]
         self._active = device["active"]
@@ -76,8 +77,7 @@ class NetgearDeviceEntity(ScannerEntity):
         if not self._active:
             self._attrs = {}
 
-        if self.entity_id:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @property
     def unique_id(self) -> str:
@@ -128,7 +128,7 @@ class NetgearDeviceEntity(ScannerEntity):
         """Register state update callback."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self._router.signal_device_update, self.async_update,
+                self.hass, self._router.signal_device_update, self.update_device,
             )
         )
 
