@@ -93,22 +93,9 @@ class MeteoFranceSensor(Entity):
         """Return the state."""
         path = SENSOR_TYPES[self._type][ENTITY_API_DATA_PATH].split(":")
         data = getattr(self.coordinator.data, path[0])
-        if path[0] == "forecast":
-            data = data[2]
-        else:
+        if path[0] == "probability_forecast":
             data = data[0]
-        # _LOGGER.info("-"*80)
-        # _LOGGER.warning(self._type)
-        # _LOGGER.error(path)
-        # _LOGGER.error(data)
 
-        # # if len(path) == 3:
-        # #     _LOGGER.warning(data[path[1]][path[2]])
-        # #     _LOGGER.warning("OK-2")
-        # # _LOGGER.warning(data[path[1]])
-        # # _LOGGER.warning("OK")
-
-        # _LOGGER.info("-"*80)
         if len(path) == 3:
             return data[path[1]][path[2]]
         return data[path[1]]
