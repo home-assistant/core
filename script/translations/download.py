@@ -74,23 +74,13 @@ def get_component_path(lang, component):
 
 def get_platform_path(lang, component, platform):
     """Get the platform translation path."""
-    if os.path.isdir(os.path.join("homeassistant", "components", component, platform)):
-        return os.path.join(
-            "homeassistant",
-            "components",
-            component,
-            platform,
-            "translations",
-            f"{lang}.json",
-        )
-    else:
-        return os.path.join(
-            "homeassistant",
-            "components",
-            component,
-            "translations",
-            f"{platform}.{lang}.json",
-        )
+    return os.path.join(
+        "homeassistant",
+        "components",
+        component,
+        "translations",
+        f"{platform}.{lang}.json",
+    )
 
 
 def get_component_translations(translations):
@@ -111,9 +101,12 @@ def save_language_translations(lang, translations):
             os.makedirs(os.path.dirname(path), exist_ok=True)
             save_json(path, base_translations)
 
-        for platform, platform_translations in component_translations.get(
-            "platform", {}
-        ).items():
+        if "platform" not in component_translations:
+            continue
+
+        for platform, platform_translations in component_translations[
+            "platform"
+        ].items():
             path = get_platform_path(lang, component, platform)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             save_json(path, platform_translations)
