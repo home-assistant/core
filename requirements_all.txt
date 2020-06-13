@@ -785,6 +785,9 @@ ihcsdk==2.7.0
 incomfort-client==0.4.0
 
 # homeassistant.components.influxdb
+influxdb-client==1.6.0
+
+# homeassistant.components.influxdb
 influxdb==5.2.3
 
 # homeassistant.components.iperf3
@@ -1269,7 +1272,7 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.1.1
+pydaikin==2.1.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1501,7 +1504,7 @@ pynut2==2.1.2
 pynws==0.10.4
 
 # homeassistant.components.nx584
-pynx584==0.4
+pynx584==0.5
 
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
@@ -1702,7 +1705,7 @@ python-juicenet==1.0.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.0.1
+python-miio==0.5.1
 
 # homeassistant.components.mpd
 python-mpd2==1.0.0

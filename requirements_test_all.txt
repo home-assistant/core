@@ -346,6 +346,9 @@ huawei-lte-api==1.4.12
 iaqualink==0.3.4
 
 # homeassistant.components.influxdb
+influxdb-client==1.6.0
+
+# homeassistant.components.influxdb
 influxdb==5.2.3
 
 # homeassistant.components.rest
@@ -551,7 +554,7 @@ pycoolmasternet==0.0.4
 pycountry==19.8.18
 
 # homeassistant.components.daikin
-pydaikin==2.1.1
+pydaikin==2.1.2
 
 # homeassistant.components.deconz
 pydeconz==71
@@ -654,7 +657,7 @@ pynut2==2.1.2
 pynws==0.10.4
 
 # homeassistant.components.nx584
-pynx584==0.4
+pynx584==0.5
 
 # homeassistant.components.openuv
 pyopenuv==1.0.9
@@ -717,7 +720,7 @@ python-izone==1.1.2
 python-juicenet==1.0.1
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.0.1
+python-miio==0.5.1
 
 # homeassistant.components.nest
 python-nest==4.1.0
