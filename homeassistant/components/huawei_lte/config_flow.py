@@ -206,7 +206,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        title = await self.hass.async_add_executor_job(get_router_title, conn)
+        title = self.context.get("title_placeholders", {}).get(
+            CONF_NAME
+        ) or await self.hass.async_add_executor_job(get_router_title, conn)
         await self.hass.async_add_executor_job(logout)
 
         return self.async_create_entry(title=title, data=user_input)
@@ -235,6 +237,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
+        self.context["title_placeholders"] = {
+            CONF_NAME: discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+        }
         return await self._async_show_user_form(user_input)
 
 
