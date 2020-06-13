@@ -32,11 +32,13 @@ SENSOR_TYPES = {
         CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
         CONF_GETTER: lambda api: api.getCirculationPumpActive(),
     },
+    # gas sensors
     SENSOR_BURNER_ACTIVE: {
         CONF_NAME: "Burner active",
         CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
         CONF_GETTER: lambda api: api.getBurnerActive(),
     },
+    # heatpump sensors
     SENSOR_COMPRESSOR_ACTIVE: {
         CONF_NAME: "Compressor active",
         CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
