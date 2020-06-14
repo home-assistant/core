@@ -37,13 +37,6 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         if not (service_types or homekit_models):
             continue
 
-        if not (integration.path / "config_flow.py").exists():
-            integration.add_error(
-                "zeroconf",
-                "Zeroconf info in a manifest requires a config flow to exist",
-            )
-            continue
-
         for service_type in service_types:
             service_type_dict[service_type].append(domain)
 
