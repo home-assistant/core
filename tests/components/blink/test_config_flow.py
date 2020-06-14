@@ -53,7 +53,9 @@ async def test_import(hass):
             key_required=False,
             login_response={},
         ),
-    ):
+    ), patch(
+        "homeassistant.components.blink.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -73,6 +75,8 @@ async def test_import(hass):
         "scan_interval": 10,
         "login_response": {},
     }
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_2fa(hass):
@@ -93,9 +97,7 @@ async def test_form_2fa(hass):
         "homeassistant.components.blink.config_flow.Blink", return_value=mock_blink
     ), patch(
         "homeassistant.components.blink.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.blink.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "blink@example.com", "password": "example"}
         )
