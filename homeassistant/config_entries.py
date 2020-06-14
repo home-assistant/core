@@ -935,7 +935,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Handle a flow initiated by the user."""
         return self.async_abort(reason="not_implemented")
 
-    async def async_handle_discovery_without_unique_id(self) -> None:
+    async def _async_handle_discovery_without_unique_id(self) -> None:
         """Mark this flow discovered, without a unique identifier.
 
         If a flow initiated by discovery, doesn't have a unique ID, this can
@@ -964,7 +964,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, user_input: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
-        await self.async_handle_discovery_without_unique_id()
+        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
 
     async_step_ssdp = async_step_discovery
