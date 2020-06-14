@@ -10,7 +10,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     ATTR_HUMIDITY,
     ATTR_MODE,
-    ATTR_AVAILABLE_MODES,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,

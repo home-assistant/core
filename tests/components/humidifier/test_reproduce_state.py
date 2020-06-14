@@ -34,7 +34,10 @@ async def test_reproducing_on_off_states(hass, caplog):
 
     # These calls should do nothing as entities already in desired state
     await hass.helpers.state.async_reproduce_state(
-        [State(ENTITY_1, "off", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45}), State(ENTITY_2, "on", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})],
+        [
+            State(ENTITY_1, "off", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45}),
+            State(ENTITY_2, "on", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45}),
+        ],
     )
 
     assert len(turn_on_calls) == 0
@@ -83,7 +86,9 @@ async def test_multiple_attrs(hass):
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
     humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
 
-    await async_reproduce_states(hass, [State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})])
+    await async_reproduce_states(
+        hass, [State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})]
+    )
 
     await hass.async_block_till_done()
 
@@ -105,7 +110,9 @@ async def test_turn_off_multiple_attrs(hass):
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
     humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
 
-    await async_reproduce_states(hass, [State(ENTITY_1, STATE_OFF, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})])
+    await async_reproduce_states(
+        hass, [State(ENTITY_1, STATE_OFF, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})]
+    )
 
     await hass.async_block_till_done()
 
@@ -189,7 +196,9 @@ async def test_state_with_context(hass):
     context = Context()
 
     await async_reproduce_states(
-        hass, [State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_ECO, ATTR_HUMIDITY: 45})], context=context
+        hass,
+        [State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_AWAY, ATTR_HUMIDITY: 45})],
+        context=context,
     )
 
     await hass.async_block_till_done()
@@ -199,7 +208,7 @@ async def test_state_with_context(hass):
     assert turn_on_calls[0].context == context
     assert len(turn_off_calls) == 0
     assert len(mode_calls) == 1
-    assert mode_calls[0].data == {"entity_id": ENTITY_1, "mode": MODE_ECO}
+    assert mode_calls[0].data == {"entity_id": ENTITY_1, "mode": "away"}
     assert mode_calls[0].context == context
     assert len(humidity_calls) == 1
     assert humidity_calls[0].data == {"entity_id": ENTITY_1, "humidity": 45}
