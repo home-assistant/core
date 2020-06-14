@@ -210,7 +210,7 @@ def _get_states_with_session(
         if run is None:
             return []
 
-    query = session.query(States)
+    query = session.query(*QUERY_STATES)
 
     if entity_ids and len(entity_ids) == 1:
         # Use an entirely different (and extremely fast) query if we only
@@ -271,7 +271,7 @@ def _get_states_with_session(
 
     return [
         state
-        for state in execute(query)
+        for state in (States.to_native(row) for row in execute(query, to_native=False))
         if not state.attributes.get(ATTR_HIDDEN, False)
     ]
 
