@@ -6,5 +6,6 @@
     "sensor",
     "switch"
   ],
-  "codeowners": ["@Shulyaka"]
+  "codeowners": ["@Shulyaka"],
+  "quality_scale": "internal"
 }
