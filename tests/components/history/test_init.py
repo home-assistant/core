@@ -222,11 +222,8 @@ class TestComponentHistory(unittest.TestCase):
         # will happen with encoding a native state
         input_state = states["media_player.test"][1]
         orig_last_changed = json.dumps(
-            process_timestamp(input_state.last_changed.replace(microsecond=0)),
-            cls=JSONEncoder,
+            process_timestamp(input_state.last_changed), cls=JSONEncoder,
         ).replace('"', "")
-        if orig_last_changed.endswith("+00:00"):
-            orig_last_changed = f"{orig_last_changed[:-6]}{recorder.models.DB_TIMEZONE}"
         orig_state = input_state.state
         states["media_player.test"][1] = {
             "last_changed": orig_last_changed,
