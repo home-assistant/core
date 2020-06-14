@@ -199,7 +199,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     platform.async_register_entity_service(
         SERVICE_CLEAN_SEGMENT,
-        {vol.Required("segments"): vol.Any(vol.Coerce(int), list)},
+        {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])},
         MiroboVacuum.async_clean_segment.__name__,
     )
 

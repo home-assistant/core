@@ -433,12 +433,12 @@ async def test_xiaomi_vacuum_clean_segment_service(hass, caplog, mock_mirobo_is_
     entity_name = "test_vacuum_cleaner_2"
     entity_id = await setup_component(hass, entity_name)
 
-    data = {"entity_id": entity_id, "segments": [1, 2]}
+    data = {"entity_id": entity_id, "segments": ["1", "2"]}
     await hass.services.async_call(
         XIAOMI_DOMAIN, SERVICE_CLEAN_SEGMENT, data, blocking=True
     )
     mock_mirobo_is_on.segment_clean.assert_has_calls(
-        [mock.call(segments=data["segments"])], any_order=True
+        [mock.call(segments=[int(i) for i in data["segments"]])], any_order=True
     )
     mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
 
