@@ -41,7 +41,7 @@ def get_controller_data(hass: HomeAssistant, config_unique_id: str) -> Controlle
 
 
 def set_controller_data(
-        hass: HomeAssistant, config_unique_id: str, data: ControllerData
+    hass: HomeAssistant, config_unique_id: str, data: ControllerData
 ) -> None:
     """Set controller data in hass data."""
     hass.data.setdefault(DOMAIN, {})[config_unique_id] = data
