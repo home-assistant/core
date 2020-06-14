@@ -1499,3 +1499,8 @@ class MockLazyEventPartialState(ha.Event):
     def time_fired_minute(self):
         """Minute the event was fired."""
         return self.time_fired.minute
+
+    @property
+    def context_user_id(self):
+        """Context user id of event."""
+        return self.context.user_id
