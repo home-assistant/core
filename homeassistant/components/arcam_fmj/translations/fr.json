@@ -1,4 +1,23 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil \u00e9tait d\u00e9j\u00e0 configur\u00e9.",
+            "unable_to_connect": "Impossible de se connecter au p\u00e9riph\u00e9rique."
+        },
+        "error": {
+            "one": "Vide",
+            "other": "Vide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port"
+                },
+                "description": "Veuillez saisir le nom d\u2019h\u00f4te ou l\u2019adresse IP du p\u00e9riph\u00e9rique."
+            }
+        }
+    },
     "device_automation": {
         "trigger_type": {
             "turn_on": "Il a \u00e9t\u00e9 demand\u00e9 \u00e0 {nom_de_l'entit\u00e9} de s'allumer"
