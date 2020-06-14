@@ -1,0 +1,19 @@
+press_button:
+  description: Press (and hold) a button on a keypad
+  fields:
+    button:
+      description: The button ID
+      example: stairs.family_room
+release_button:
+  description: Release a button on a keypad
+  fields:
+    button:
+      description: The button ID
+      example: stairs.family_room
+tap_button:
+  description: Press and Release a button on a keypad
+  fields:
+    button:
+      description: The button ID
+      example: stairs.family_room
+

@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, base_config):
     """Set up the Lutron component."""
-    hass.data[LUTRON_BUTTONS] = []
+    hass.data[LUTRON_BUTTONS] = {}
     hass.data[LUTRON_CONTROLLER] = None
     hass.data[LUTRON_DEVICES] = {
         "light": [],
@@ -84,9 +84,9 @@ def setup(hass, base_config):
                         (area.name, keypad.name, button, led)
                     )
 
-                hass.data[LUTRON_BUTTONS].append(
-                    LutronButton(hass, area.name, keypad, button)
-                )
+                hass_button = LutronButton(hass, area.name, keypad, button)
+                _LOGGER.debug("Adding Button %s", hass_button.id)
+                hass.data[LUTRON_BUTTONS][hass_button.id] = hass_button
         if area.occupancy_group is not None:
             hass.data[LUTRON_DEVICES]["binary_sensor"].append(
                 (area.name, area.occupancy_group)
@@ -94,7 +94,41 @@ def setup(hass, base_config):
 
     for component in ("light", "cover", "switch", "scene", "binary_sensor"):
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+
+    setup_services(hass)
     return True
+
+
+ATTR_NAME = "button"
+
+
+def setup_services(hass):
+    """Create Lutron specific services."""
+
+    def handle_press_button(call):
+        """Handle a press button service call."""
+        button_id = call.data.get(ATTR_NAME)
+        button = hass.data[LUTRON_BUTTONS].get(button_id, None)
+        if button:
+            button.press()
+
+    def handle_release_button(call):
+        """Handle a press button service call."""
+        button_id = call.data.get(ATTR_NAME)
+        button = hass.data[LUTRON_BUTTONS].get(button_id, None)
+        if button:
+            button.release()
+
+    def handle_tap_button(call):
+        """Handle a press button service call."""
+        button_id = call.data.get(ATTR_NAME)
+        button = hass.data[LUTRON_BUTTONS].get(button_id, None)
+        if button:
+            button.tap()
+
+    hass.services.register(DOMAIN, "press_button", handle_press_button)
+    hass.services.register(DOMAIN, "release_button", handle_release_button)
+    hass.services.register(DOMAIN, "tap_button", handle_tap_button)
 
 
 class LutronDevice(Entity):
@@ -126,13 +160,26 @@ class LutronDevice(Entity):
         """No polling needed."""
         return False
 
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        # Note: At this time, occupancy sensors don't generate unique IDs.
+        _LOGGER.debug(
+            f"Unique ID for {self.name} is {self._lutron_device._lutron.guid}_{self._lutron_device.uuid}"
+        )
+        return f"{self._lutron_device._lutron.guid}_{self._lutron_device.uuid}"
+
 
 class LutronButton:
     """Representation of a button on a Lutron keypad.
 
     This is responsible for firing events as keypad buttons are pressed
     (and possibly released, depending on the button type). It is not
-    represented as an entity; it simply fires events.
+    represented as an entity.
+
+    In addition to firing events, it supports button events.  This is most
+    useful for Alarm style buttons where the system will stay in an alarm
+    state while a button is pressed and reset once the button is released.
     """
 
     def __init__(self, hass, area_name, keypad, button):
@@ -151,6 +198,23 @@ class LutronButton:
         self._full_id = slugify(f"{area_name} {keypad.name}: {button.name}")
 
         button.subscribe(self.button_callback, None)
+
+    @property
+    def id(self):
+        """ID of the button."""
+        return self._id
+
+    def press(self):
+        """Press (and hold) a button."""
+        self._button.press()
+
+    def release(self):
+        """Release a button."""
+        self._button.release()
+
+    def tap(self):
+        """Press and release a button."""
+        self._button.tap()
 
     def button_callback(self, button, context, event, params):
         """Fire an event about a button being pressed or released."""
