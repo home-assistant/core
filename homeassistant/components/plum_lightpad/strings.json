@@ -1,0 +1,17 @@
+{
+  "title": "Plum Lightpad",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fill in your Plum Cloud login information",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_per_username_allowed": "Only one config entry per unique username is supported"
+    }
+  }
+}

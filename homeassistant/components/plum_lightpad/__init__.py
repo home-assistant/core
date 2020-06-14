@@ -1,16 +1,16 @@
 """Support for Plum Lightpad devices."""
-import asyncio
+from copy import deepcopy
 import logging
 
-from plumlightpad import Plum
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import discovery
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
+from .utils import load_plum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,56 +26,41 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = ["light"]
 
-async def async_setup(hass, config):
+
+async def async_setup(hass: HomeAssistant, config: dict):
     """Plum Lightpad Platform initialization."""
+    if DOMAIN not in config:
+        return True
 
     conf = config[DOMAIN]
-    plum = Plum(conf[CONF_USERNAME], conf[CONF_PASSWORD])
 
-    hass.data[DOMAIN] = plum
-
-    def cleanup(event):
-        """Clean up resources."""
-        plum.cleanup()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
-
-    cloud_web_sesison = async_get_clientsession(hass, verify_ssl=True)
-    await plum.loadCloudData(cloud_web_sesison)
-
-    async def new_load(device):
-        """Load light and sensor platforms when LogicalLoad is detected."""
-        await asyncio.wait(
-            [
-                hass.async_create_task(
-                    discovery.async_load_platform(
-                        hass, "light", DOMAIN, discovered=device, hass_config=conf
-                    )
-                )
-            ]
-        )
-
-    async def new_lightpad(device):
-        """Load light and binary sensor platforms when Lightpad detected."""
-        await asyncio.wait(
-            [
-                hass.async_create_task(
-                    discovery.async_load_platform(
-                        hass, "light", DOMAIN, discovered=device, hass_config=conf
-                    )
-                )
-            ]
-        )
-
-    device_web_session = async_get_clientsession(hass, verify_ssl=False)
+    _LOGGER.info("Found Plum Lightpad configuration in config, importing...")
     hass.async_create_task(
-        plum.discover(
-            hass.loop,
-            loadListener=new_load,
-            lightpadListener=new_lightpad,
-            websession=device_web_session,
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
         )
     )
 
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Plum Lightpad from a config entry."""
+    _LOGGER.info("Setting up config entry with ID = %s", entry.unique_id)
+
+    username = entry.data.get(CONF_USERNAME)
+    password = entry.data.get(CONF_PASSWORD)
+    plum = await load_plum(username, password, hass)
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = plum
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, lambda: plum.cleanup())
     return True

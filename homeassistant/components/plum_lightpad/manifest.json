@@ -2,6 +2,12 @@
   "domain": "plum_lightpad",
   "name": "Plum Lightpad",
   "documentation": "https://www.home-assistant.io/integrations/plum_lightpad",
-  "requirements": ["plumlightpad==0.0.11"],
-  "codeowners": ["@ColinHarrington"]
+  "requirements": [
+    "plumlightpad==0.0.11"
+  ],
+  "codeowners": [
+    "@ColinHarrington",
+    "@prystupa"
+  ],
+  "config_flow": true
 }
