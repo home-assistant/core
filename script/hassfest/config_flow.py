@@ -2,8 +2,6 @@
 import json
 from typing import Dict
 
-from homeassistant.requirements import DISCOVERY_INTEGRATIONS
-
 from .model import Config, Integration
 
 BASE = """
@@ -32,23 +30,12 @@ def validate_integration(config: Config, integration: Integration):
 
     config_flow = config_flow_file.read_text()
 
-    needs_unique_id = (
-        integration.domain not in UNIQUE_ID_IGNORE
-        and (
-            "async_step_hassio" in config_flow
-            or any(
-                bool(integration.manifest.get(key))
-                for keys in DISCOVERY_INTEGRATIONS.values()
-                for key in keys
-            )
-        )
-        and (
-            "async_step_discovery" in config_flow
-            or "async_step_hassio" in config_flow
-            or "async_step_homekit" in config_flow
-            or "async_step_ssdp" in config_flow
-            or "async_step_zeroconf" in config_flow
-        )
+    needs_unique_id = integration.domain not in UNIQUE_ID_IGNORE and (
+        "async_step_discovery" in config_flow
+        or "async_step_hassio" in config_flow
+        or "async_step_homekit" in config_flow
+        or "async_step_ssdp" in config_flow
+        or "async_step_zeroconf" in config_flow
     )
 
     if not needs_unique_id:
