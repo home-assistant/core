@@ -1372,8 +1372,6 @@ DEVICES = [
             },
         },
         "entities": [
-            "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
-            "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
         ],
@@ -1387,16 +1385,6 @@ DEVICES = [
                 "channels": ["electrical_measurement"],
                 "entity_class": "ElectricalMeasurement",
                 "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             },
         },
         "event_channels": ["1:0x0019"],
@@ -1426,7 +1414,6 @@ DEVICES = [
         "entities": [
             "light.lumi_lumi_relay_c2acn01_77665544_on_off",
             "light.lumi_lumi_relay_c2acn01_77665544_on_off_2",
-            "sensor.lumi_lumi_relay_c2acn01_77665544_analog_input",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement",
         ],
         "entity_map": {
@@ -1434,11 +1421,6 @@ DEVICES = [
                 "channels": ["on_off"],
                 "entity_class": "Light",
                 "entity_id": "light.lumi_lumi_relay_c2acn01_77665544_on_off",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_relay_c2acn01_77665544_analog_input",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 "channels": ["electrical_measurement"],
@@ -1482,32 +1464,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input",
-            "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_2",
-            "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_3",
-            "sensor.lumi_lumi_remote_b186acn01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_remote_b186acn01_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_2",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input_3",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -1541,32 +1503,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input",
-            "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_2",
-            "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_3",
-            "sensor.lumi_lumi_remote_b286acn01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_remote_b286acn01_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_3",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input_2",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -1897,32 +1839,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input",
-            "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_2",
-            "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_3",
-            "sensor.lumi_lumi_sensor_86sw1_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sensor_86sw1_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_3",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input_2",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -1956,26 +1878,12 @@ DEVICES = [
                 "profile_id": 260,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_analog_input",
-            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_multistate_input",
-            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_multistate_input",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_analog_input",
             },
         },
         "event_channels": ["1:0x0005", "1:0x0019", "2:0x0005", "3:0x0005"],
@@ -2161,8 +2069,6 @@ DEVICES = [
         },
         "entities": [
             "binary_sensor.lumi_lumi_sensor_smoke_77665544_ias_zone",
-            "sensor.lumi_lumi_sensor_smoke_77665544_analog_input",
-            "sensor.lumi_lumi_sensor_smoke_77665544_multistate_input",
             "sensor.lumi_lumi_sensor_smoke_77665544_power",
         ],
         "entity_map": {
@@ -2170,16 +2076,6 @@ DEVICES = [
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_smoke_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-12"): {
-                "channels": ["analog_input"],
-                "entity_class": "AnalogInput",
-                "entity_id": "sensor.lumi_lumi_sensor_smoke_77665544_analog_input",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_smoke_77665544_multistate_input",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 "channels": ["ias_zone"],
@@ -2254,20 +2150,12 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "sensor.lumi_lumi_sensor_switch_aq3_77665544_multistate_input",
-            "sensor.lumi_lumi_sensor_switch_aq3_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sensor_switch_aq3_77665544_power"],
         "entity_map": {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.lumi_lumi_sensor_switch_aq3_77665544_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-18"): {
-                "channels": ["multistate_input"],
-                "entity_class": "Text",
-                "entity_id": "sensor.lumi_lumi_sensor_switch_aq3_77665544_multistate_input",
             },
         },
         "event_channels": ["1:0x0006"],

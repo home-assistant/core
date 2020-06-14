@@ -4,18 +4,17 @@ import unittest
 
 import pytest
 
-from homeassistant.components import script
-from homeassistant.components.script import DOMAIN
+from homeassistant.components import logbook, script
+from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    EVENT_SCRIPT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import Context, callback, split_entity_id
+from homeassistant.core import Context, Event, callback, split_entity_id
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
@@ -468,3 +467,34 @@ async def test_config(hass):
     test_script = hass.states.get("script.test_script")
     assert test_script.name == "Script Name"
     assert test_script.attributes["icon"] == "mdi:party"
+
+
+async def test_logbook_humanify_script_started_event(hass):
+    """Test humanifying script started event."""
+    await async_setup_component(hass, DOMAIN, {})
+
+    event1, event2 = list(
+        logbook.humanify(
+            hass,
+            [
+                Event(
+                    EVENT_SCRIPT_STARTED,
+                    {ATTR_ENTITY_ID: "script.hello", ATTR_NAME: "Hello Script"},
+                ),
+                Event(
+                    EVENT_SCRIPT_STARTED,
+                    {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
+                ),
+            ],
+        )
+    )
+
+    assert event1["name"] == "Hello Script"
+    assert event1["domain"] == "script"
+    assert event1["message"] == "started"
+    assert event1["entity_id"] == "script.hello"
+
+    assert event2["name"] == "Bye Script"
+    assert event2["domain"] == "script"
+    assert event2["message"] == "started"
+    assert event2["entity_id"] == "script.bye"

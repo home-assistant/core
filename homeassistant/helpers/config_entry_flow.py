@@ -59,6 +59,9 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
             for flow in in_progress:
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         return self.async_create_entry(title=self._title, data={})
 
     async def async_step_discovery(self, discovery_info):
@@ -76,8 +79,13 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, _):
         """Handle a flow initialized by import."""
-        if self._async_in_progress() or self._async_current_entries():
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        # Cancel other flows.
+        in_progress = self._async_in_progress()
+        for flow in in_progress:
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
         return self.async_create_entry(title=self._title, data={})
 

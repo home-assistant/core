@@ -9,6 +9,7 @@ from plexwebsocket import PlexWebsocket
 import requests.exceptions
 import voluptuous as vol
 
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -64,6 +65,11 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_SERVER_IDENTIFIER]
         )
+
+    if MP_DOMAIN not in entry.options:
+        options = dict(entry.options)
+        options.setdefault(MP_DOMAIN, {})
+        hass.config_entries.async_update_entry(entry, options=options)
 
     plex_server = PlexServer(
         hass, server_config, entry.data[CONF_SERVER_IDENTIFIER], entry.options

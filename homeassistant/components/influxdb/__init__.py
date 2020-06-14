@@ -5,12 +5,17 @@ import queue
 import re
 import threading
 import time
+from typing import Dict
 
 from influxdb import InfluxDBClient, exceptions
+from influxdb_client import InfluxDBClient as InfluxDBClientV2
+from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
+from influxdb_client.rest import ApiException
 import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -20,6 +25,8 @@ from homeassistant.const import (
     CONF_PATH,
     CONF_PORT,
     CONF_SSL,
+    CONF_TOKEN,
+    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
@@ -34,6 +41,8 @@ from homeassistant.helpers.entity_values import EntityValues
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DB_NAME = "database"
+CONF_BUCKET = "bucket"
+CONF_ORG = "organization"
 CONF_TAGS = "tags"
 CONF_DEFAULT_MEASUREMENT = "default_measurement"
 CONF_OVERRIDE_MEASUREMENT = "override_measurement"
@@ -44,9 +53,14 @@ CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_RETRY_COUNT = "max_retries"
 
 DEFAULT_DATABASE = "home_assistant"
+DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
+DEFAULT_SSL_V2 = True
+DEFAULT_BUCKET = "Home Assistant"
 DEFAULT_VERIFY_SSL = True
-DOMAIN = "influxdb"
+DEFAULT_API_VERSION = "1"
 
+DOMAIN = "influxdb"
+API_VERSION_2 = "2"
 TIMEOUT = 5
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
@@ -55,62 +69,122 @@ RETRY_INTERVAL = 60  # seconds
 BATCH_TIMEOUT = 1
 BATCH_BUFFER_SIZE = 100
 
-COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
-    {vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string}
+DB_CONNECTION_FAILURE_MSG = ()
+
+
+def create_influx_url(conf: Dict) -> Dict:
+    """Build URL used from config inputs and default when necessary."""
+    if conf[CONF_API_VERSION] == API_VERSION_2:
+        if CONF_SSL not in conf:
+            conf[CONF_SSL] = DEFAULT_SSL_V2
+        if CONF_HOST not in conf:
+            conf[CONF_HOST] = DEFAULT_HOST_V2
+
+        url = conf[CONF_HOST]
+        if conf[CONF_SSL]:
+            url = f"https://{url}"
+        else:
+            url = f"http://{url}"
+
+        if CONF_PORT in conf:
+            url = f"{url}:{conf[CONF_PORT]}"
+
+        if CONF_PATH in conf:
+            url = f"{url}{conf[CONF_PATH]}"
+
+        conf[CONF_URL] = url
+
+    return conf
+
+
+def validate_version_specific_config(conf: Dict) -> Dict:
+    """Ensure correct config fields are provided based on API version used."""
+    if conf[CONF_API_VERSION] == API_VERSION_2:
+        if CONF_TOKEN not in conf:
+            raise vol.Invalid(
+                f"{CONF_TOKEN} and {CONF_BUCKET} are required when {CONF_API_VERSION} is {API_VERSION_2}"
+            )
+
+        if CONF_USERNAME in conf:
+            raise vol.Invalid(
+                f"{CONF_USERNAME} and {CONF_PASSWORD} are only allowed when {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
+            )
+
+    else:
+        if CONF_TOKEN in conf:
+            raise vol.Invalid(
+                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when {CONF_API_VERSION} is {API_VERSION_2}"
+            )
+
+    return conf
+
+
+COMPONENT_CONFIG_SCHEMA_CONNECTION = {
+    # Connection config for V1 and V2 APIs.
+    vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
+        vol.Coerce(str), vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
+    ),
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_PATH): cv.string,
+    vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_SSL): cv.boolean,
+    # Connection config for V1 API only.
+    vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+    vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    # Connection config for V2 API only.
+    vol.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
+    vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
+    vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
+}
+
+_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string})
+
+_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
+            {
+                vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        ),
+        vol.Optional(CONF_INCLUDE, default={}): vol.Schema(
+            {
+                vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        ),
+        vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
+        vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
+        vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
+        vol.Optional(CONF_TAGS, default={}): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
+            {cv.entity_id: _CONFIG_SCHEMA_ENTRY}
+        ),
+        vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema(
+            {cv.string: _CONFIG_SCHEMA_ENTRY}
+        ),
+        vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
+            {cv.string: _CONFIG_SCHEMA_ENTRY}
+        ),
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            vol.Schema(
-                {
-                    vol.Optional(CONF_HOST): cv.string,
-                    vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-                    vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-                    vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
-                        {
-                            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                            vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                                cv.ensure_list, [cv.string]
-                            ),
-                        }
-                    ),
-                    vol.Optional(CONF_INCLUDE, default={}): vol.Schema(
-                        {
-                            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                            vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                                cv.ensure_list, [cv.string]
-                            ),
-                        }
-                    ),
-                    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
-                    vol.Optional(CONF_PATH): cv.string,
-                    vol.Optional(CONF_PORT): cv.port,
-                    vol.Optional(CONF_SSL): cv.boolean,
-                    vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
-                    vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
-                    vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
-                    vol.Optional(CONF_TAGS, default={}): vol.Schema(
-                        {cv.string: cv.string}
-                    ),
-                    vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(
-                        CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-                    ): cv.boolean,
-                    vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
-                        {cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY}
-                    ),
-                    vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema(
-                        {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
-                    ),
-                    vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
-                        {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
-                    ),
-                }
-            )
-        )
+            _CONFIG_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION),
+            validate_version_specific_config,
+            create_influx_url,
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -119,34 +193,65 @@ RE_DIGIT_TAIL = re.compile(r"^[^\.]*\d+\.?\d+[^\.]*$")
 RE_DECIMAL = re.compile(r"[^\d.]+")
 
 
+def get_influx_connection(client_kwargs, bucket):
+    """Create and check the correct influx connection for the API version."""
+    if bucket is not None:
+        # Test connection by synchronously writing nothing.
+        # If config is valid this will generate a `Bad Request` exception but not make anything.
+        # If config is invalid we will output an error.
+        # Hopefully a better way to test connection is added in the future.
+        try:
+            influx = InfluxDBClientV2(**client_kwargs)
+            influx.write_api(write_options=SYNCHRONOUS).write(bucket=bucket)
+
+        except ApiException as exc:
+            # 400 is the success state since it means we can write we just gave a bad point.
+            if exc.status != 400:
+                raise exc
+
+    else:
+        influx = InfluxDBClient(**client_kwargs)
+        influx.write_points([])
+
+    return influx
+
+
 def setup(hass, config):
     """Set up the InfluxDB component."""
-
     conf = config[DOMAIN]
-
+    use_v2_api = conf[CONF_API_VERSION] == API_VERSION_2
+    bucket = None
     kwargs = {
-        "database": conf[CONF_DB_NAME],
-        "verify_ssl": conf[CONF_VERIFY_SSL],
         "timeout": TIMEOUT,
     }
 
-    if CONF_HOST in conf:
-        kwargs["host"] = conf[CONF_HOST]
+    if use_v2_api:
+        kwargs["url"] = conf[CONF_URL]
+        kwargs["token"] = conf[CONF_TOKEN]
+        kwargs["org"] = conf[CONF_ORG]
+        bucket = conf[CONF_BUCKET]
 
-    if CONF_PATH in conf:
-        kwargs["path"] = conf[CONF_PATH]
+    else:
+        kwargs["database"] = conf[CONF_DB_NAME]
+        kwargs["verify_ssl"] = conf[CONF_VERIFY_SSL]
 
-    if CONF_PORT in conf:
-        kwargs["port"] = conf[CONF_PORT]
+        if CONF_USERNAME in conf:
+            kwargs["username"] = conf[CONF_USERNAME]
 
-    if CONF_USERNAME in conf:
-        kwargs["username"] = conf[CONF_USERNAME]
+        if CONF_PASSWORD in conf:
+            kwargs["password"] = conf[CONF_PASSWORD]
 
-    if CONF_PASSWORD in conf:
-        kwargs["password"] = conf[CONF_PASSWORD]
+        if CONF_HOST in conf:
+            kwargs["host"] = conf[CONF_HOST]
 
-    if CONF_SSL in conf:
-        kwargs["ssl"] = conf[CONF_SSL]
+        if CONF_PATH in conf:
+            kwargs["path"] = conf[CONF_PATH]
+
+        if CONF_PORT in conf:
+            kwargs["port"] = conf[CONF_PORT]
+
+        if CONF_SSL in conf:
+            kwargs["ssl"] = conf[CONF_SSL]
 
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
@@ -166,14 +271,26 @@ def setup(hass, config):
     max_tries = conf.get(CONF_RETRY_COUNT)
 
     try:
-        influx = InfluxDBClient(**kwargs)
-        influx.write_points([])
+        influx = get_influx_connection(kwargs, bucket)
+        if use_v2_api:
+            write_api = influx.write_api(write_options=ASYNCHRONOUS)
     except (exceptions.InfluxDBClientError, requests.exceptions.ConnectionError) as exc:
-        _LOGGER.warning(
+        _LOGGER.error(
             "Database host is not accessible due to '%s', please "
             "check your entries in the configuration file (host, "
             "port, etc.) and verify that the database exists and is "
             "READ/WRITE. Retrying again in %s seconds.",
+            exc,
+            RETRY_INTERVAL,
+        )
+        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
+        return True
+    except ApiException as exc:
+        _LOGGER.error(
+            "Bucket is not accessible due to '%s', please "
+            "check your entries in the configuration file (url, org, "
+            "bucket, etc.) and verify that the org and bucket exist and the "
+            "provided token has WRITE access. Retrying again in %s seconds.",
             exc,
             RETRY_INTERVAL,
         )
@@ -270,7 +387,15 @@ def setup(hass, config):
 
         return json
 
-    instance = hass.data[DOMAIN] = InfluxThread(hass, influx, event_to_json, max_tries)
+    if use_v2_api:
+        instance = hass.data[DOMAIN] = InfluxThread(
+            hass, None, bucket, write_api, event_to_json, max_tries
+        )
+    else:
+        instance = hass.data[DOMAIN] = InfluxThread(
+            hass, influx, None, None, event_to_json, max_tries
+        )
+
     instance.start()
 
     def shutdown(event):
@@ -287,11 +412,13 @@ def setup(hass, config):
 class InfluxThread(threading.Thread):
     """A threaded event handler class."""
 
-    def __init__(self, hass, influx, event_to_json, max_tries):
+    def __init__(self, hass, influx, bucket, write_api, event_to_json, max_tries):
         """Initialize the listener."""
         threading.Thread.__init__(self, name="InfluxDB")
         self.queue = queue.Queue()
         self.influx = influx
+        self.bucket = bucket
+        self.write_api = write_api
         self.event_to_json = event_to_json
         self.max_tries = max_tries
         self.write_errors = 0
@@ -346,10 +473,12 @@ class InfluxThread(threading.Thread):
 
     def write_to_influxdb(self, json):
         """Write preprocessed events to influxdb, with retry."""
-
         for retry in range(self.max_tries + 1):
             try:
-                self.influx.write_points(json)
+                if self.write_api is not None:
+                    self.write_api.write(bucket=self.bucket, record=json)
+                else:
+                    self.influx.write_points(json)
 
                 if self.write_errors:
                     _LOGGER.error("Resumed, lost %d events", self.write_errors)
@@ -361,6 +490,7 @@ class InfluxThread(threading.Thread):
                 exceptions.InfluxDBClientError,
                 exceptions.InfluxDBServerError,
                 OSError,
+                ApiException,
             ) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
