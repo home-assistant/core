@@ -451,7 +451,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         if template is None:
             template = await hass.async_add_executor_job(self.get_template)
 
-        return web.Response(
+        response = web.Response(
             text=template.render(
                 theme_color=MANIFEST_JSON["theme_color"],
                 extra_urls=hass.data[DATA_EXTRA_HTML_URL],
@@ -460,6 +460,8 @@ class IndexView(web_urldispatcher.AbstractResource):
             ),
             content_type="text/html",
         )
+        response.enable_compression()
+        return response
 
     def __len__(self) -> int:
         """Return length of resource."""
@@ -481,7 +483,9 @@ class ManifestJSONView(HomeAssistantView):
     def get(self, request):  # pylint: disable=no-self-use
         """Return the manifest.json."""
         msg = json.dumps(MANIFEST_JSON, sort_keys=True)
-        return web.Response(text=msg, content_type="application/manifest+json")
+        response = web.Response(text=msg, content_type="application/manifest+json")
+        response.enable_compression()
+        return response
 
 
 @callback
