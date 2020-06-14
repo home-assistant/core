@@ -15,7 +15,7 @@ To update, run python3 -m script.hassfest
 FLOWS = {}
 """.strip()
 
-UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard", "tellduslive"}
+UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
 
 
 def validate_integration(config: Config, integration: Integration):
