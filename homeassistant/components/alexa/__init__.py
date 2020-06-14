@@ -69,7 +69,7 @@ CONFIG_SCHEMA = vol.Schema(
                             vol.Optional(CONF_DISPLAY_URL): cv.template,
                         }
                     ],
-                )
+                ),
             },
             # vol.Optional here would mean we couldn't distinguish between an empty
             # smart_home: and none at all.
