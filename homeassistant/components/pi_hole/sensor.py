@@ -17,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the pi-hole sensor."""
+    """Set up the Pi-hole sensor."""
     name = entry.data[CONF_NAME]
     hole_data = hass.data[PIHOLE_DOMAIN][name]
     sensors = [
@@ -94,7 +94,7 @@ class PiHoleSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the Pi-Hole."""
+        """Return the state attributes of the Pi-hole."""
         return {ATTR_BLOCKED_DOMAINS: self.api.data["domains_being_blocked"]}
 
     @property

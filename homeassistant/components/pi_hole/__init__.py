@@ -58,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up the pi_hole integration."""
+    """Set up the Pi_hole integration."""
 
     service_disable_schema = vol.Schema(
         vol.All(
@@ -99,12 +99,12 @@ async def async_setup(hass, config):
         return api
 
     async def disable_service_handler(call):
-        """Handle the service call to disable a single Pi-Hole or all configured Pi-Holes."""
+        """Handle the service call to disable a single Pi-hole or all configured Pi-holes."""
         duration = call.data[SERVICE_DISABLE_ATTR_DURATION].total_seconds()
         name = call.data.get(SERVICE_DISABLE_ATTR_NAME)
 
         async def do_disable(name):
-            """Disable the named Pi-Hole."""
+            """Disable the named Pi-hole."""
             api = get_api_from_name(name)
             if api is None:
                 return
@@ -121,12 +121,12 @@ async def async_setup(hass, config):
                 await do_disable(name)
 
     async def enable_service_handler(call):
-        """Handle the service call to enable a single Pi-Hole or all configured Pi-Holes."""
+        """Handle the service call to enable a single Pi-hole or all configured Pi-holes."""
 
         name = call.data.get(SERVICE_ENABLE_ATTR_NAME)
 
         async def do_enable(name):
-            """Enable the named Pi-Hole."""
+            """Enable the named Pi-hole."""
             api = get_api_from_name(name)
             if api is None:
                 return
