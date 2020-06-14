@@ -243,6 +243,7 @@ def humanify(hass, events, prev_states=None):
                 data = describe_event(event)
                 data["when"] = event.time_fired
                 data["domain"] = domain
+                data["context_user_id"] = event.context_user_id
                 yield data
 
             if event.event_type == EVENT_STATE_CHANGED:
@@ -276,6 +277,7 @@ def humanify(hass, events, prev_states=None):
                     ),
                     "domain": domain,
                     "entity_id": entity_id,
+                    "context_user_id": event.context_user_id,
                 }
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
@@ -287,6 +289,7 @@ def humanify(hass, events, prev_states=None):
                     "name": "Home Assistant",
                     "message": "started",
                     "domain": HA_DOMAIN,
+                    "context_user_id": event.context_user_id,
                 }
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
@@ -300,6 +303,7 @@ def humanify(hass, events, prev_states=None):
                     "name": "Home Assistant",
                     "message": action,
                     "domain": HA_DOMAIN,
+                    "context_user_id": event.context_user_id,
                 }
 
             elif event.event_type == EVENT_LOGBOOK_ENTRY:
@@ -389,6 +393,7 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
                 Events.event_type,
                 Events.event_data,
                 Events.time_fired,
+                Events.context_user_id,
                 States.state,
                 States.entity_id,
                 States.domain,
@@ -563,6 +568,11 @@ class LazyEventPartialState:
     def event_type(self):
         """Type of event."""
         return self._row.event_type
+
+    @property
+    def context_user_id(self):
+        """Context user id of event."""
+        return self._row.context_user_id
 
     @property
     def data(self):
