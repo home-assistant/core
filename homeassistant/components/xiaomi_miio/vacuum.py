@@ -382,7 +382,6 @@ class MiroboVacuum(StateVacuumEntity):
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send raw command."""
-        _LOGGER.debug()
         await self._try_command(
             "Unable to send command to the vacuum: %s",
             self._vacuum.raw_command,
