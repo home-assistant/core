@@ -117,9 +117,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        await self.async_set_unique_id(user_input[CONF_URL])
-        self._abort_if_unique_id_configured()
-
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
