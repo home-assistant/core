@@ -34,6 +34,7 @@ def get_configured_platforms(controller_data: ControllerData) -> Set[str]:
 
     return set(platforms)
 
+
 def get_controller_data(hass: HomeAssistant, config_unique_id: str) -> ControllerData:
     """Get controller data from hass data."""
     return hass.data.setdefault(DOMAIN, {})[config_unique_id]

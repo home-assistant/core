@@ -27,7 +27,8 @@ from homeassistant.util.dt import utc_from_timestamp
 
 from .common import (
     ControllerData,
-   SubscriptionRegistry, get_configured_platforms,
+    SubscriptionRegistry,
+    get_configured_platforms,
     get_controller_data,
     set_controller_data,
 )
