@@ -217,7 +217,7 @@ async def test_state_with_context(hass):
 
 @pytest.mark.parametrize(
     "service,attribute",
-    [(SERVICE_SET_MODE, ATTR_MODE), (SERVICE_SET_HUMIDITY, ATTR_HUMIDITY),],
+    [(SERVICE_SET_MODE, ATTR_MODE), (SERVICE_SET_HUMIDITY, ATTR_HUMIDITY)],
 )
 async def test_attribute(hass, service, attribute):
     """Test that service call is made for each attribute."""
