@@ -967,9 +967,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
 
+    async_step_hassio = async_step_discovery
+    async_step_homekit = async_step_discovery
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
-    async_step_homekit = async_step_discovery
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):
