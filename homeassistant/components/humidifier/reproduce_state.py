@@ -3,7 +3,7 @@ import asyncio
 import logging
 from typing import Any, Dict, Iterable, Optional
 
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
 

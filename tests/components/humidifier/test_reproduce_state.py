@@ -6,9 +6,9 @@ from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_MODE,
     DOMAIN,
-    MODE_NORMAL,
-    MODE_ECO,
     MODE_AWAY,
+    MODE_ECO,
+    MODE_NORMAL,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
