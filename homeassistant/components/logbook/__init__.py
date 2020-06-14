@@ -43,7 +43,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import generate_filter
+from homeassistant.helpers.entityfilter import (
+    ALT_BASE_FILTER_SCHEMA,
+    convert_filter_alt,
+)
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
@@ -60,32 +63,7 @@ DOMAIN = "logbook"
 GROUP_BY_MINUTES = 15
 
 EMPTY_JSON_OBJECT = "{}"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                CONF_EXCLUDE: vol.Schema(
-                    {
-                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                    }
-                ),
-                CONF_INCLUDE: vol.Schema(
-                    {
-                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                    }
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: ALT_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 HOMEASSISTANT_EVENTS = [
     EVENT_HOMEASSISTANT_START,
@@ -362,23 +340,7 @@ def _get_related_entity_ids(session, entity_filter):
 
 
 def _generate_filter_from_config(config):
-    excluded_entities = []
-    excluded_domains = []
-    included_entities = []
-    included_domains = []
-
-    exclude = config.get(CONF_EXCLUDE)
-    if exclude:
-        excluded_entities = exclude.get(CONF_ENTITIES, [])
-        excluded_domains = exclude.get(CONF_DOMAINS, [])
-    include = config.get(CONF_INCLUDE)
-    if include:
-        included_entities = include.get(CONF_ENTITIES, [])
-        included_domains = include.get(CONF_DOMAINS, [])
-
-    return generate_filter(
-        included_domains, included_entities, excluded_domains, excluded_entities
-    )
+    return convert_filter_alt(config)
 
 
 def _all_entities_filter(_):

@@ -362,14 +362,18 @@ async def test_websocket_status(
         },
         "alexa_entities": {
             "include_domains": [],
+            "include_entities_glob": [],
             "include_entities": ["light.kitchen", "switch.ac"],
             "exclude_domains": [],
+            "exclude_entities_glob": [],
             "exclude_entities": [],
         },
         "google_entities": {
             "include_domains": ["light"],
+            "include_entities_glob": [],
             "include_entities": [],
             "exclude_domains": [],
+            "exclude_entities_glob": [],
             "exclude_entities": [],
         },
         "remote_domain": None,

@@ -99,8 +99,10 @@ def test_filter_schema():
     """Test filter schema."""
     conf = {
         "include_domains": ["light"],
+        "include_entities_glob": ["sensor.kitchen_*"],
         "include_entities": ["switch.kitchen"],
         "exclude_domains": ["cover"],
+        "exclude_entities_glob": ["sensor.weather_*"],
         "exclude_entities": ["light.kitchen"],
     }
     filt = FILTER_SCHEMA(conf)

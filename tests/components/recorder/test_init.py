@@ -16,6 +16,7 @@ from homeassistant.components.recorder.models import Events, RecorderRuns, State
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, callback
+from homeassistant.helpers.entityfilter import convert_filter_alt
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -212,8 +213,8 @@ def test_recorder_setup_failure():
             uri="sqlite://",
             db_max_retries=10,
             db_retry_wait=3,
-            include={},
-            exclude={},
+            entity_filter=convert_filter_alt({}),
+            exclude_t=[],
         )
         rec.start()
         rec.join()
@@ -228,15 +229,15 @@ async def test_defaults_set(hass):
     async def mock_setup(hass, config):
         """Mock setup."""
         nonlocal recorder_config
-        recorder_config = config["recorder"]
+        recorder_config = config["recorder"].config
         return True
 
     with patch("homeassistant.components.recorder.async_setup", side_effect=mock_setup):
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
-    assert recorder_config["auto_purge"]
-    assert recorder_config["purge_keep_days"] == 10
+    assert recorder_config.get("auto_purge")
+    assert recorder_config.get("purge_keep_days") == 10
 
 
 def test_auto_purge(hass_recorder):
