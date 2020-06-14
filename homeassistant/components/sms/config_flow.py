@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE): str})
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def get_imei_from_config(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -49,7 +49,7 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             imei = {}
             try:
-                imei = await validate_input(self.hass, user_input)
+                imei = await get_imei_from_config(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -67,7 +67,8 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        await self.async_set_unique_id(user_input[CONF_DEVICE])
+        imei = await get_imei_from_config(self.hass, user_input)
+        await self.async_set_unique_id(imei)
         self._abort_if_unique_id_configured()
 
         return await self.async_step_user(user_input)
