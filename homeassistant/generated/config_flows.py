@@ -70,6 +70,7 @@ FLOWS = [
     "huawei_lte",
     "hue",
     "hunterdouglas_powerview",
+    "hvv_departures",
     "iaqualink",
     "icloud",
     "ifttt",
