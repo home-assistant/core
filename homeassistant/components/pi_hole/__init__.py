@@ -85,6 +85,7 @@ async def async_setup(hass, config):
             )
 
     def get_api_from_name(name):
+        """Get Pi-hole API object from user configured name."""
         hole_data = hass.data[DOMAIN].get(name)
         if hole_data is None:
             _LOGGER.error("Unknown Pi-hole name %s", name)
