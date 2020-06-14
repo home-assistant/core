@@ -1,4 +1,8 @@
 """The test for the Template sensor platform."""
+from asyncio import sleep
+from unittest.mock import patch
+
+from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
@@ -436,6 +440,36 @@ class TestTemplateSensor:
             self.hass.states.get("sensor.test_template_sensor").state
             == STATE_UNAVAILABLE
         )
+
+
+async def test_creating_sensor_loads_group(hass):
+    """Test setting up template sensor loads group component first."""
+    order = []
+
+    def register_setup(domain):
+        async def async_setup(hass, config):
+            if domain == "group":
+                # Make sure group takes longer to load, so that it won't
+                # be loaded first by chance
+                await sleep(0.1)
+
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    with patch(
+        "homeassistant.components.group.async_setup", new=register_setup("group"),
+    ):
+        with patch(
+            "homeassistant.components.sensor.async_setup", new=register_setup("sensor"),
+        ):
+            await async_from_config_dict(
+                {"sensor": {"platform": "template", "sensors": {}}, "group": {}}, hass
+            )
+            await hass.async_block_till_done()
+
+    assert ["group", "sensor"] == order
 
 
 async def test_available_template_with_entities(hass):
