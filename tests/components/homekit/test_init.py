@@ -1,5 +1,4 @@
 """Test HomeKit initialization."""
-from homeassistant import core as ha
 from homeassistant.components import logbook
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -11,6 +10,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_SERVICE
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
 async def test_humanify_homekit_changed_event(hass, hk_driver):
@@ -22,7 +22,7 @@ async def test_humanify_homekit_changed_event(hass, hk_driver):
         logbook.humanify(
             hass,
             [
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_HOMEKIT_CHANGED,
                     {
                         ATTR_ENTITY_ID: "lock.front_door",
@@ -30,7 +30,7 @@ async def test_humanify_homekit_changed_event(hass, hk_driver):
                         ATTR_SERVICE: "lock",
                     },
                 ),
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_HOMEKIT_CHANGED,
                     {
                         ATTR_ENTITY_ID: "cover.window",
