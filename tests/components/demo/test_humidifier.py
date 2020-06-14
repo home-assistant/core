@@ -16,6 +16,7 @@ from homeassistant.components.humidifier.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -142,3 +143,24 @@ async def test_turn_off(hass):
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_OFF
+
+
+async def test_toggle(hass):
+    """Test toggle device."""
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
+    )
+    state = hass.states.get(ENTITY_DEHUMIDIFIER)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
+    )
+    state = hass.states.get(ENTITY_DEHUMIDIFIER)
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
+    )
+    state = hass.states.get(ENTITY_DEHUMIDIFIER)
+    assert state.state == STATE_ON
