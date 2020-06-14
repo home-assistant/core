@@ -150,7 +150,7 @@ av==8.0.2
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==29
+axis==30
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -324,7 +324,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200603.2
+home-assistant-frontend==20200613.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -344,6 +344,9 @@ huawei-lte-api==1.4.12
 
 # homeassistant.components.iaqualink
 iaqualink==0.3.4
+
+# homeassistant.components.influxdb
+influxdb-client==1.6.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
@@ -551,7 +554,7 @@ pycoolmasternet==0.0.4
 pycountry==19.8.18
 
 # homeassistant.components.daikin
-pydaikin==2.1.1
+pydaikin==2.1.2
 
 # homeassistant.components.deconz
 pydeconz==71
@@ -654,7 +657,7 @@ pynut2==2.1.2
 pynws==0.10.4
 
 # homeassistant.components.nx584
-pynx584==0.4
+pynx584==0.5
 
 # homeassistant.components.openuv
 pyopenuv==1.0.9
@@ -753,7 +756,7 @@ pytraccar==0.9.0
 pytradfri[async]==6.4.0
 
 # homeassistant.components.vera
-pyvera==0.3.7
+pyvera==0.3.9
 
 # homeassistant.components.vesync
 pyvesync==1.1.0

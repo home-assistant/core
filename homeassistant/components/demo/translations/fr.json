@@ -1,6 +1,12 @@
 {
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "one": "Vide",
+                    "other": "Vide"
+                }
+            },
             "options_1": {
                 "data": {
                     "bool": "Bool\u00e9en facultatif",

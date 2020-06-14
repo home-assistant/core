@@ -27,7 +27,7 @@ from homeassistant.util.dt import utc_from_timestamp
 
 from .common import (
     ControllerData,
-    get_configured_platforms,
+   SubscriptionRegistry, get_configured_platforms,
     get_controller_data,
     set_controller_data,
 )
@@ -102,12 +102,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
 
     # Initialize the Vera controller.
-    controller = veraApi.VeraController(base_url)
-    controller.start()
+    subscription_registry = SubscriptionRegistry(hass)
+    controller = veraApi.VeraController(base_url, subscription_registry)
+    await hass.async_add_executor_job(controller.start)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda event: controller.stop()
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.stop)
 
     try:
         all_devices = await hass.async_add_executor_job(controller.get_devices)
@@ -153,12 +152,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
-    controller_data = get_controller_data(hass, config_entry.unique_id)
+    controller_data: ControllerData = get_controller_data(hass, config_entry.unique_id)
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, platform)
         for platform in get_configured_platforms(controller_data)
     ]
+    tasks.append(hass.async_add_executor_job(controller_data.controller.stop))
     await asyncio.gather(*tasks)
 
     return True
