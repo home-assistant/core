@@ -98,7 +98,9 @@ class PjLinkDevice(MediaPlayerEntity):
     def projector(self):
         """Create PJLink Projector instance."""
 
-        projector = Projector.from_address(self._host, self._port, self._encoding, self._timeout)
+        projector = Projector.from_address(
+            self._host, self._port, self._encoding, self._timeout
+        )
         projector.authenticate(self._password)
         return projector
 
