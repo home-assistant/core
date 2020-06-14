@@ -5,7 +5,8 @@
   "documentation": "https://github.com/asantaga/wiserHomeAssistantPlatform/blob/master/Readme.Md",
   "dependencies": [],
   "codeowners": [
-    "@asantaga"
+    "@asantaga",
+    "@msp1974"
   ],
   "requirements": [
     "wiser-heating-api==1.0.8"
