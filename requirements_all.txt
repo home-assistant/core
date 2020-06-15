@@ -131,6 +131,9 @@ adafruit-circuitpython-mcp230xx==2.2.2
 # homeassistant.components.androidtv
 adb-shell==0.1.3
 
+# homeassistant.components.alarmdecoder
+adext==0.3
+
 # homeassistant.components.adguard
 adguardhome==0.4.2
 
@@ -234,9 +237,6 @@ airly==0.0.2
 
 # homeassistant.components.aladdin_connect
 aladdin_connect==0.3
-
-# homeassistant.components.alarmdecoder
-alarmdecoder==1.13.2
 
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.2.0
