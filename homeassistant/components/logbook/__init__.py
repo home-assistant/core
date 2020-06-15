@@ -205,7 +205,7 @@ def humanify(hass, events, prev_states=None):
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
-        events, lambda event: event.time_fired.minute // GROUP_BY_MINUTES
+        events, lambda event: event.time_fired_minute // GROUP_BY_MINUTES
     ):
 
         events_batch = list(g_events)
@@ -224,16 +224,16 @@ def humanify(hass, events, prev_states=None):
                     last_sensor_event[event.entity_id] = event
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
-                if event.time_fired.minute in start_stop_events:
+                if event.time_fired_minute in start_stop_events:
                     continue
 
-                start_stop_events[event.time_fired.minute] = 1
+                start_stop_events[event.time_fired_minute] = 1
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
-                if event.time_fired.minute not in start_stop_events:
+                if event.time_fired_minute not in start_stop_events:
                     continue
 
-                start_stop_events[event.time_fired.minute] = 2
+                start_stop_events[event.time_fired_minute] = 2
 
         # Yield entries
         external_events = hass.data.get(DOMAIN, {})
@@ -283,7 +283,7 @@ def humanify(hass, events, prev_states=None):
                 }
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
-                if start_stop_events.get(event.time_fired.minute) == 2:
+                if start_stop_events.get(event.time_fired_minute) == 2:
                     continue
 
                 yield {
@@ -296,7 +296,7 @@ def humanify(hass, events, prev_states=None):
                 }
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
-                if start_stop_events.get(event.time_fired.minute) == 2:
+                if start_stop_events.get(event.time_fired_minute) == 2:
                     action = "restarted"
                 else:
                     action = "stopped"
@@ -596,6 +596,11 @@ class LazyEventPartialState:
             else:
                 self._event_data = json.loads(self._row.event_data)
         return self._event_data
+
+    @property
+    def time_fired_minute(self):
+        """Minute the event was fired not converted."""
+        return self._row.time_fired.minute
 
     @property
     def time_fired(self):

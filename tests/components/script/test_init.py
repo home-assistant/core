@@ -14,7 +14,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import Context, Event, callback, split_entity_id
+from homeassistant.core import Context, callback, split_entity_id
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
@@ -22,6 +22,7 @@ from homeassistant.setup import async_setup_component, setup_component
 
 from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 ENTITY_ID = "script.test"
 
@@ -477,11 +478,11 @@ async def test_logbook_humanify_script_started_event(hass):
         logbook.humanify(
             hass,
             [
-                Event(
+                MockLazyEventPartialState(
                     EVENT_SCRIPT_STARTED,
                     {ATTR_ENTITY_ID: "script.hello", ATTR_NAME: "Hello Script"},
                 ),
-                Event(
+                MockLazyEventPartialState(
                     EVENT_SCRIPT_STARTED,
                     {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
                 ),
