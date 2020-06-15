@@ -44,7 +44,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.components.dyson import climate as dyson
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
@@ -409,8 +408,6 @@ async def test_purehotcool_component_setup_only_once(devices, login, hass):
     config = _get_config()
     await async_setup_component(hass, dyson_parent.DOMAIN, config)
     await hass.async_block_till_done()
-    discovery.load_platform(hass, "climate", dyson_parent.DOMAIN, {}, config)
-    await hass.async_block_till_done()
 
     climate_devices = [
         device
@@ -430,8 +427,6 @@ async def test_purehotcoollink_component_setup_only_once(devices, login, hass):
     """Test if entities are created only once."""
     config = _get_config()
     await async_setup_component(hass, dyson_parent.DOMAIN, config)
-    await hass.async_block_till_done()
-    discovery.load_platform(hass, "climate", dyson_parent.DOMAIN, {}, config)
     await hass.async_block_till_done()
 
     climate_devices = [
