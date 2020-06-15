@@ -48,8 +48,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-SOUND_MODE_LIST = ["Dummy Music", "Dummy Movie"]
-DEFAULT_SOUND_MODE = "Dummy Music"
+SOUND_MODE_LIST = ["Music", "Movie"]
+DEFAULT_SOUND_MODE = "Music"
 
 YOUTUBE_PLAYER_SUPPORT = (
     SUPPORT_PAUSE
@@ -393,7 +393,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
 
     def __init__(self):
         """Initialize the demo device."""
-        super().__init__("Lounge room")
+        super().__init__("TV")
         self._cur_episode = 1
         self._episode_count = 13
         self._source = "dvd"
@@ -447,6 +447,11 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     def source(self):
         """Return the current input source."""
         return self._source
+
+    @property
+    def device_class(self):
+        """Return the current input source."""
+        return "tv"
 
     @property
     def supported_features(self):
