@@ -51,6 +51,18 @@ NEED_ATTRIBUTE_DOMAINS = {"climate", "water_heater", "thermostat", "script"}
 SCRIPT_DOMAIN = "script"
 ATTR_CAN_CANCEL = "can_cancel"
 
+QUERY_STATES = [
+    States.domain,
+    States.entity_id,
+    States.state,
+    States.attributes,
+    States.last_changed,
+    States.last_updated,
+    States.created,
+    States.context_id,
+    States.context_user_id,
+]
+
 
 def get_significant_states(hass, *args, **kwargs):
     """Wrap _get_significant_states with a sql session."""
@@ -79,7 +91,7 @@ def _get_significant_states(
     timer_start = time.perf_counter()
 
     if significant_changes_only:
-        query = session.query(States).filter(
+        query = session.query(*QUERY_STATES).filter(
             (
                 States.domain.in_(SIGNIFICANT_DOMAINS)
                 | (States.last_changed == States.last_updated)
@@ -87,7 +99,7 @@ def _get_significant_states(
             & (States.last_updated > start_time)
         )
     else:
-        query = session.query(States).filter(States.last_updated > start_time)
+        query = session.query(*QUERY_STATES).filter(States.last_updated > start_time)
 
     if filters:
         query = filters.apply(query, entity_ids)
@@ -119,7 +131,7 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
     """Return states changes during UTC period start_time - end_time."""
 
     with session_scope(hass=hass) as session:
-        query = session.query(States).filter(
+        query = session.query(*QUERY_STATES).filter(
             (States.last_changed == States.last_updated)
             & (States.last_updated > start_time)
         )
@@ -145,7 +157,9 @@ def get_last_state_changes(hass, number_of_states, entity_id):
     start_time = dt_util.utcnow()
 
     with session_scope(hass=hass) as session:
-        query = session.query(States).filter(States.last_changed == States.last_updated)
+        query = session.query(*QUERY_STATES).filter(
+            States.last_changed == States.last_updated
+        )
 
         if entity_id is not None:
             query = query.filter_by(entity_id=entity_id.lower())
@@ -196,7 +210,7 @@ def _get_states_with_session(
         if run is None:
             return []
 
-    query = session.query(States)
+    query = session.query(*QUERY_STATES)
 
     if entity_ids and len(entity_ids) == 1:
         # Use an entirely different (and extremely fast) query if we only
@@ -257,7 +271,7 @@ def _get_states_with_session(
 
     return [
         state
-        for state in execute(query)
+        for state in (States.to_native(row) for row in execute(query, to_native=False))
         if not state.attributes.get(ATTR_HIDDEN, False)
     ]
 
@@ -316,7 +330,9 @@ def _sorted_states_to_json(
             ent_results.extend(
                 [
                     native_state
-                    for native_state in (db_state.to_native() for db_state in group)
+                    for native_state in (
+                        States.to_native(db_state) for db_state in group
+                    )
                     if (
                         domain != SCRIPT_DOMAIN
                         or native_state.attributes.get(ATTR_CAN_CANCEL)
@@ -331,16 +347,16 @@ def _sorted_states_to_json(
         # in-between only provide the "state" and the
         # "last_changed".
         if not ent_results:
-            ent_results.append(next(group).to_native())
+            ent_results.append(States.to_native(next(group)))
 
         initial_state = ent_results[-1]
         prev_state = ent_results[-1]
         initial_state_count = len(ent_results)
 
         for db_state in group:
-            if ATTR_HIDDEN in db_state.attributes and db_state.to_native().attributes.get(
-                ATTR_HIDDEN, False
-            ):
+            if ATTR_HIDDEN in db_state.attributes and States.to_native(
+                db_state
+            ).attributes.get(ATTR_HIDDEN, False):
                 continue
 
             # With minimal response we do not care about attribute
@@ -366,7 +382,7 @@ def _sorted_states_to_json(
             # There was at least one state change
             # replace the last minimal state with
             # a full state
-            ent_results[-1] = prev_state.to_native()
+            ent_results[-1] = States.to_native(prev_state)
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
