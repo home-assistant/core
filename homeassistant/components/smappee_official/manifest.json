@@ -3,6 +3,7 @@
   "name": "Smappee Official",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smappee_official",
+  "dependencies": ["http"],
   "requirements": [
     "pysmappee==0.1.0"
   ],
