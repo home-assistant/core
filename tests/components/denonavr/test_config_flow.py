@@ -6,6 +6,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
     CONF_MODEL,
+    CONF_SERIAL_NUMBER,
     CONF_SHOW_ALL_SOURCES,
     CONF_TYPE,
     CONF_ZONE2,
@@ -97,6 +98,7 @@ async def test_config_flow_manual_host_success(hass):
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
 
 
@@ -124,6 +126,7 @@ async def test_config_flow_manual_discover_1_success(hass):
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
 
 
@@ -159,6 +162,7 @@ async def test_config_flow_manual_discover_2_success(hass):
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
 
 
@@ -209,6 +213,7 @@ async def test_config_flow_manual_host_no_serial(hass):
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: None,
     }
 
 
@@ -238,6 +243,7 @@ async def test_config_flow_manual_host_no_mac(hass):
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
 
 
@@ -262,8 +268,16 @@ async def test_config_flow_manual_host_no_serial_no_mac(hass):
             result["flow_id"], {CONF_HOST: TEST_HOST},
         )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "no_mac"
+    assert result["type"] == "create_entry"
+    assert result["title"] == TEST_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_MAC: None,
+        CONF_MODEL: TEST_MODEL,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: None,
+    }
 
 
 async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
@@ -287,8 +301,16 @@ async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
             result["flow_id"], {CONF_HOST: TEST_HOST},
         )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "no_mac"
+    assert result["type"] == "create_entry"
+    assert result["title"] == TEST_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_MAC: None,
+        CONF_MODEL: TEST_MODEL,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: None,
+    }
 
 
 async def test_config_flow_manual_host_connection_error(hass):
@@ -364,6 +386,7 @@ async def test_config_flow_ssdp(hass):
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
 
 
@@ -410,6 +433,7 @@ async def test_options_flow(hass):
             CONF_MODEL: TEST_MODEL,
             CONF_TYPE: TEST_RECEIVER_TYPE,
             CONF_MANUFACTURER: TEST_MANUFACTURER,
+            CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
         },
         title=TEST_NAME,
     )
