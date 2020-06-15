@@ -54,7 +54,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Netdata sensor."""
 
@@ -169,16 +168,16 @@ class NetdataAlarms(Entity):
         return self._state
 
     @property
-    def entity_picture(self):
+    def icon(self):
         """Status symbol if type is symbol."""
         if self._state == "ok":
-            return "https://cdn2.iconfinder.com/data/icons/function_icon_set/circle_green.png"
+            return "mdi:check"
         elif self._state == "warning":
-            return "https://cdn2.iconfinder.com/data/icons/function_icon_set/warning_48.png"
+            return "mdi:alert-outline"
         elif self._state == "critical":
-            return "https://cdn2.iconfinder.com/data/icons/function_icon_set/circle_red.png"
+            return "mdi:alert"
         else:
-            return "https://cdn2.iconfinder.com/data/icons/function_icon_set/refresh_48.png"
+            return "mdi:crosshairs-question"
 
     @property
     def available(self):
