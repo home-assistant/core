@@ -304,7 +304,7 @@ class WemoHumidifier(FanEntity):
         else:
             self.set_speed(speed)
 
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
@@ -314,8 +314,7 @@ class WemoHumidifier(FanEntity):
             _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
             self._available = False
 
-        self._update()
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     def set_speed(self, speed: str) -> None:
         """Set the fan_mode of the Humidifier."""
@@ -327,8 +326,7 @@ class WemoHumidifier(FanEntity):
             )
             self._available = False
 
-        self._update()
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     def set_humidity(self, humidity: float) -> None:
         """Set the target humidity level for the Humidifier."""
@@ -351,8 +349,7 @@ class WemoHumidifier(FanEntity):
             )
             self._available = False
 
-        self._update()
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     def reset_filter_life(self) -> None:
         """Reset the filter life to 100%."""
@@ -364,5 +361,4 @@ class WemoHumidifier(FanEntity):
             )
             self._available = False
 
-        self._update()
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)

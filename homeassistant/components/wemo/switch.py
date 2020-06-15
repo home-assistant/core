@@ -198,7 +198,7 @@ class WemoSwitch(SwitchEntity):
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
 
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
@@ -209,7 +209,7 @@ class WemoSwitch(SwitchEntity):
             _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
             self._available = False
 
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Wemo switch added to Home Assistant."""
