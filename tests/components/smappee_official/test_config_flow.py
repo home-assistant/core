@@ -37,7 +37,9 @@ async def test_abort_if_existing_entry(hass):
     flow.hass = hass
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
 
