@@ -21,6 +21,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_MAC,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     STATE_OFF,
@@ -28,10 +29,11 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import CONF_RECEIVER
-from .config_flow import DOMAIN
+from .config_flow import CONF_MANUFACTURER, CONF_MODEL, CONF_TYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,9 +63,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     receiver = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
     for receiver_zone in receiver.zones.values():
-        receiver_device_id = config_entry.unique_id
-        unique_id = f"{receiver_device_id}-{receiver_zone.zone}"
-        entities.append(DenonDevice(receiver_zone, unique_id, receiver_device_id))
+        unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
+        entities.append(DenonDevice(receiver_zone, unique_id, config_entry))
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )
@@ -73,12 +74,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
-    def __init__(self, receiver, unique_id, receiver_device_id):
+    def __init__(self, receiver, unique_id, config_entry):
         """Initialize the device."""
         self._receiver = receiver
         self._name = self._receiver.name
         self._unique_id = unique_id
-        self._receiver_device_id = receiver_device_id
+        self._config_entry = config_entry
         self._muted = self._receiver.muted
         self._volume = self._receiver.volume
         self._current_source = self._receiver.input_func
@@ -158,9 +159,19 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return the device info of the receiver."""
-        return {
-            "identifiers": {(DOMAIN, self._receiver_device_id)},
+        device_info = {
+            "config_entry_id": self._config_entry.entry_id,
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+            "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
+            "name": self._config_entry.title,
+            "model": f"{self._config_entry.data[CONF_MODEL]}-{self._config_entry.data[CONF_TYPE]}",
         }
+        if self._config_entry.data[CONF_MAC] is not None:
+            device_info["connections"] = {
+                (dr.CONNECTION_NETWORK_MAC, self._config_entry.data[CONF_MAC])
+            }
+
+        return device_info
 
     @property
     def name(self):
