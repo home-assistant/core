@@ -136,6 +136,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered nut device."""
         self.discovery_info = discovery_info
+        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
 
     async def async_step_import(self, user_input=None):

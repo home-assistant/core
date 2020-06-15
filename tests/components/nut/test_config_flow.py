@@ -40,6 +40,52 @@ async def test_form_zeroconf(hass):
     assert defaults["host"] == "192.168.1.5"
     assert defaults["port"] == 1234
 
+    mock_pynut = _get_mock_pynutclient(
+        list_vars={"battery.voltage": "voltage", "ups.status": "OL"}, list_ups=["ups1"]
+    )
+
+    with patch(
+        "homeassistant.components.nut.PyNUTClient", return_value=mock_pynut,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+                "port": 2222,
+            },
+        )
+
+    assert result2["step_id"] == "resources"
+    assert result2["type"] == "form"
+
+    with patch(
+        "homeassistant.components.nut.PyNUTClient", return_value=mock_pynut,
+    ), patch(
+        "homeassistant.components.nut.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.nut.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"resources": ["battery.voltage", "ups.status", "ups.status.display"]},
+        )
+
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "1.1.1.1:2222"
+    assert result3["data"] == {
+        "host": "1.1.1.1",
+        "password": "test-password",
+        "port": 2222,
+        "resources": ["battery.voltage", "ups.status", "ups.status.display"],
+        "username": "test-username",
+    }
+    assert result3["result"].unique_id is None
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 async def test_form_user_one_ups(hass):
     """Test we get the form."""
