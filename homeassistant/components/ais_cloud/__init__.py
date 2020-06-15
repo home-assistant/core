@@ -1,5 +1,4 @@
 """Component to manage the AIS Cloud."""
-import asyncio
 import json
 import logging
 import os
@@ -8,6 +7,7 @@ import async_timeout
 import requests
 
 from homeassistant.components.ais_dom import ais_global
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -42,6 +42,9 @@ def get_player_data(player_name):
 
 
 async def async_setup(hass, config):
+    """Set up the get backup view."""
+    hass.http.register_view(GetAisBackupsView())
+
     """Initialize the radio station list."""
     data = hass.data[DOMAIN] = AisColudData(hass)
     await data.async_get_types()
@@ -1877,4 +1880,57 @@ class AisColudData:
             "ais_ai_service",
             "say_it",
             {"text": "Parowanie z bramką za pomocą PIN włączone"},
+        )
+
+
+async def async_handle_get_gates_info(hass, message):
+    """Handle a AIS get gates info message."""
+    login = message.get("username", "")
+    password = message.get("password", "")
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    rest_url = "https://powiedz.co/ords/dom/dom/gates_info"
+    try:
+        # during the system start lot of things is done 300 sec should be enough
+        cloud_ws_token = ais_global.get_sercure_android_id_dom()
+        cloud_ws_header = {"Authorization": f"{cloud_ws_token}"}
+        payload = {"login": login, "password": password}
+        with async_timeout.timeout(300):
+            ws_resp = await web_session.post(
+                rest_url, json=payload, headers=cloud_ws_header
+            )
+            return await ws_resp.json()
+    except Exception as e:
+        _LOGGER.error("Couldn't fetch data about gates: " + str(e))
+        # import traceback
+        # traceback.print_exc()
+        return {"error": str(e)}
+
+
+class GetAisBackupsView(HomeAssistantView):
+    """Return the ais gates info."""
+
+    requires_auth = False
+    url = "/api/onboarding/ais_gates_info"
+    name = "api:onboarding:ais_gates_info"
+
+    def __init__(self):
+        """Initialize the onboarding view."""
+        pass
+
+    async def post(self, request):
+        """Handle user login to get gates info."""
+        hass = request.app["hass"]
+        message = await request.json()
+
+        _LOGGER.debug("Received AIS get gates info request: %s", message)
+
+        response = await async_handle_get_gates_info(hass, message)
+        state = "invalid" if "error" in response else "valid"
+
+        return self.json(
+            {
+                "result": state,
+                "error": response.get("error", ""),
+                "gates": response.get("gates", []),
+            }
         )
