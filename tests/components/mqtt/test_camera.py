@@ -30,11 +30,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_mock_mqtt_component,
-)
+from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
 
 DEFAULT_CONFIG = {
     camera.DOMAIN: {"platform": "mqtt", "name": "test", "topic": "test_topic"}
@@ -155,7 +151,7 @@ async def test_discovery_removal_camera(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     """Test update of discovered camera."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await async_start(hass, "homeassistant", entry)
 
     data1 = '{ "name": "Beer",' '  "topic": "test_topic"}'
@@ -169,7 +165,7 @@ async def test_discovery_update_camera(hass, mqtt_mock, caplog):
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await async_start(hass, "homeassistant", entry)
 
     data1 = '{ "name": "Beer" }'
