@@ -52,27 +52,6 @@ async def metoffice_data_update_listener(hass, entry):
         await hass_data[METOFFICE_COORDINATOR].async_refresh()
 
 
-def find_value_in_config_entry(entry: ConfigEntry, key: str, default: str = None):
-    """Find the configured key/value in the held config_entry."""
-    if key in entry.options:
-        return entry.options[key]
-    if key in entry.data:
-        return entry.data[key]
-
-    return default
-
-
-async def metoffice_data_update_listener(hass, entry):
-    """Handle options update."""
-    _LOGGER.debug(
-        "Updating %s update mode to %s", entry.data[CONF_NAME], entry.options[CONF_MODE]
-    )
-    hass_data = hass.data[DOMAIN][entry.entry_id]
-    if entry.options[CONF_MODE] != hass_data[METOFFICE_DATA].mode:
-        hass_data[METOFFICE_DATA].mode = entry.options[CONF_MODE]
-        await hass_data[METOFFICE_COORDINATOR].async_refresh()
-
-
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Met Office weather component."""
     return True

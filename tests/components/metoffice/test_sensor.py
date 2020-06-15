@@ -1,14 +1,14 @@
-"""The tests for the Met Office sensor component."""
+"""The data tests for the Met Office weather component."""
 from datetime import datetime, timezone
 import json
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 
 from .const import (
+    CONFIG_KINGSLYNN_3HOURLY,
+    CONFIG_WAVERTREE_3HOURLY,
     DATETIME_FORMAT,
     KINGSLYNN_SENSOR_RESULTS,
-    METOFFICE_CONFIG_KINGSLYNN,
-    METOFFICE_CONFIG_WAVERTREE,
     TEST_DATETIME_STRING,
     TEST_SITE_NAME_KINGSLYNN,
     TEST_SITE_NAME_WAVERTREE,
@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry, load_fixture
     "datapoint.Forecast.datetime.datetime",
     Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
 )
-async def test_one_sensor_site_running(hass, requests_mock):
+async def test_one_sensor_site_running_3hourly(hass, requests_mock):
     """Test the Met Office sensor platform."""
 
     # all metoffice test data encapsulated in here
@@ -36,7 +36,7 @@ async def test_one_sensor_site_running(hass, requests_mock):
         "/public/data/val/wxfcs/all/json/354107?res=3hourly", text=wavertree_hourly,
     )
 
-    entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE,)
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_WAVERTREE_3HOURLY,)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -62,7 +62,7 @@ async def test_one_sensor_site_running(hass, requests_mock):
     "datapoint.Forecast.datetime.datetime",
     Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
 )
-async def test_two_sensor_sites_running(hass, requests_mock):
+async def test_two_sensor_sites_running_3hourly(hass, requests_mock):
     """Test we handle two sets of sensors running for two different sites."""
 
     # all metoffice test data encapsulated in here
@@ -79,10 +79,10 @@ async def test_two_sensor_sites_running(hass, requests_mock):
         "/public/data/val/wxfcs/all/json/322380?res=3hourly", text=kingslynn_hourly
     )
 
-    entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE,)
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_WAVERTREE_3HOURLY,)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    entry2 = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_KINGSLYNN,)
+    entry2 = MockConfigEntry(domain=DOMAIN, data=CONFIG_KINGSLYNN_3HOURLY,)
     entry2.add_to_hass(hass)
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
@@ -93,7 +93,10 @@ async def test_two_sensor_sites_running(hass, requests_mock):
         sensor = hass.states.get(running_id)
         sensor_id = sensor.attributes.get("sensor_id")
         if sensor.attributes.get("site_id") == "354107":
-            sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
+            (
+                sensor_name,  # pylint: disable=unused-variable
+                sensor_value,
+            ) = WAVERTREE_SENSOR_RESULTS[sensor_id]
             assert sensor.state == sensor_value
             assert (
                 sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)

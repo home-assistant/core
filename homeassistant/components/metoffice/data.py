@@ -27,11 +27,12 @@ class MetOfficeData:
         self._hass = hass
         self._datapoint = datapoint.connection(api_key=api_key)
 
-        # Drives the site, which determines the weather data
-        self._latitude = latitude
-        self._longitude = longitude
-        self._mode = make_api_mode(mode)
+        # Public attributes
+        self.latitude = latitude
+        self.longitude = longitude
 
+        # Private attributes, as they drive the data retrieval
+        self._mode = make_api_mode(mode)
         self._datapoint = datapoint.connection(api_key=api_key)
         self._site = None
 
@@ -40,16 +41,6 @@ class MetOfficeData:
         self.site_name = None
         self.now = None
         self.all = None
-
-    @property
-    def latitude(self):
-        """Return the stored latitude value."""
-        return self._latitude
-
-    @property
-    def longitude(self):
-        """Return the stored longitude value."""
-        return self._longitude
 
     @property
     def mode(self):
@@ -73,7 +64,7 @@ class MetOfficeData:
         """Return the stored DataPoint Site (will retrieve an updated one if the latitude/longitude have been updated)."""
         try:
             new_site = self._datapoint.get_nearest_forecast_site(
-                latitude=self._latitude, longitude=self._longitude
+                latitude=self.latitude, longitude=self.longitude
             )
             if self._site is None or self._site.id != new_site.id:
                 self._site = new_site

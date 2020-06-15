@@ -1,4 +1,5 @@
 """Test the Met Office weather integration config flow."""
+from datetime import datetime, timezone
 import json
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -7,7 +8,6 @@ from homeassistant.const import CONF_MODE
 
 from .const import (
     CONFIG_WAVERTREE_3HOURLY,
-    CONFIG_WAVERTREE_DAILY,
     TEST_API_KEY,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
@@ -16,10 +16,14 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry, load_fixture
 
 
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_form(hass, requests_mock):
     """Test we get the form."""
     hass.config.latitude = TEST_LATITUDE_WAVERTREE
@@ -60,6 +64,10 @@ async def test_form(hass, requests_mock):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_form_already_configured(hass, requests_mock):
     """Test we handle duplicate entries."""
     hass.config.latitude = TEST_LATITUDE_WAVERTREE
@@ -67,7 +75,6 @@ async def test_form_already_configured(hass, requests_mock):
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
-
     all_sites = json.dumps(mock_json["all_sites"])
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
@@ -91,6 +98,10 @@ async def test_form_already_configured(hass, requests_mock):
     assert result["reason"] == "already_configured"
 
 
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_form_cannot_connect(hass, requests_mock):
     """Test we handle cannot connect error."""
     hass.config.latitude = TEST_LATITUDE_WAVERTREE
@@ -110,6 +121,10 @@ async def test_form_cannot_connect(hass, requests_mock):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_form_unknown_error(hass, managerfail_mock):
     """Test we handle unknown error."""
     mock_instance = managerfail_mock.return_value
@@ -127,6 +142,10 @@ async def test_form_unknown_error(hass, managerfail_mock):
     assert result2["errors"] == {"base": "unknown"}
 
 
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    Mock(now=Mock(return_value=datetime(2020, 4, 25, 12, tzinfo=timezone.utc))),
+)
 async def test_form_options_flow(hass, requests_mock):
     """Test we handle changing the data update mode."""
 
