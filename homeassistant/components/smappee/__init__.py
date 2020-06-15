@@ -1,4 +1,4 @@
-"""The Smappee Official integration."""
+"""The Smappee integration."""
 import asyncio
 
 from pysmappee import Smappee
@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Smappee Official component."""
+    """Set up the Smappee component."""
     hass.data[DOMAIN] = {}
 
     if DOMAIN not in config:
@@ -56,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Smappee Official from a config entry."""
+    """Set up Smappee from a config entry."""
     implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
         hass, entry
     )

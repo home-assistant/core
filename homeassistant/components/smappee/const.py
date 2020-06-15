@@ -1,4 +1,4 @@
-"""Constants for the Smappee Official integration."""
+"""Constants for the Smappee integration."""
 
 from datetime import timedelta
 

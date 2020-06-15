@@ -1,4 +1,4 @@
-"""Test the Smappee Official config flow."""
+"""Test the Smappee config flow."""
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.smappee.const import AUTHORIZE_URL, DOMAIN, TOKEN_URL
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET

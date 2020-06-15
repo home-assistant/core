@@ -1,1 +1,1 @@
-"""Tests for the Smappee Official integration."""
+"""Tests for the Smappee integration."""
