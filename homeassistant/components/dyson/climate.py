@@ -233,11 +233,6 @@ class DysonPureHotCoolLinkEntity(ClimateEntity):
         """Return the maximum temperature."""
         return 37
 
-    @property
-    def serial(self):
-        """Return fan's serial number."""
-        return self._device.serial
-
 
 class DysonPureHotCoolEntity(ClimateEntity):
     """Representation of a Dyson climate hot+cool fan."""
@@ -395,8 +390,3 @@ class DysonPureHotCoolEntity(ClimateEntity):
     def max_temp(self):
         """Return the maximum temperature."""
         return 37
-
-    @property
-    def serial(self):
-        """Return fan's serial number."""
-        return self._device.serial
