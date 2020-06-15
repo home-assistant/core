@@ -73,7 +73,9 @@ from .const import (
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
+    SERVICE_NET_MODE,
     SERVICE_REBOOT,
+    SERVICE_REGISTER,
     SERVICE_RESUME_INTEGRATION,
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_OPTIONS_SIGNAL,
@@ -120,6 +122,22 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
+
+SERVICE_SCHEMA_NET_MODE = SERVICE_SCHEMA.extend(
+    {
+        vol.Required("networkmode"): cv.string,
+        vol.Optional("networkband"): cv.string,
+        vol.Optional("lteband"): cv.string,
+    }
+)
+
+SERVICE_SCHEMA_REGISTER = SERVICE_SCHEMA.extend(
+    {
+        vol.Required("mode"): cv.string,
+        vol.Optional("plmn"): cv.string,
+        vol.Optional("rat"): cv.string,
+    }
+)
 
 CONFIG_ENTRY_PLATFORMS = (
     BINARY_SENSOR_DOMAIN,
@@ -495,11 +513,31 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
                 return
             result = router.client.monitoring.set_clear_traffic()
             _LOGGER.debug("%s: %s", service.service, result)
+        elif service.service == SERVICE_NET_MODE:
+            if router.suspended:
+                _LOGGER.debug("%s: ignored, integration suspended", service.service)
+                return
+            networkmode = service.data.get("networkmode", "00")
+            networkband = service.data.get("networkband", "3FFFFFFF")
+            lteband = service.data.get("lteband", "7FFFFFFFFFFFFFFF")
+            result = router.client.net.set_net_mode(
+                networkmode=networkmode, networkband=networkband, lteband=lteband
+            )
+            _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_REBOOT:
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return
             result = router.client.device.reboot()
+            _LOGGER.debug("%s: %s", service.service, result)
+        elif service.service == SERVICE_REGISTER:
+            if router.suspended:
+                _LOGGER.debug("%s: ignored, integration suspended", service.service)
+                return
+            mode = service.data.get("mode", "0")
+            plmn = service.data.get("plmn", "")
+            rat = service.data.get("rat", "")
+            result = router.client.net.set_register(mode=mode, plmn=plmn, rat=rat)
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
@@ -513,8 +551,13 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
             _LOGGER.error("%s: unsupported service", service.service)
 
     for service in ADMIN_SERVICES:
+        schema = SERVICE_SCHEMA
+        if service == SERVICE_NET_MODE:
+            schema = SERVICE_SCHEMA_NET_MODE
+        elif service == SERVICE_REGISTER:
+            schema = SERVICE_SCHEMA_REGISTER
         hass.helpers.service.async_register_admin_service(
-            DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
+            DOMAIN, service, service_handler, schema=schema,
         )
 
     for url, router_config in domain_config.items():
