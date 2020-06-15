@@ -38,9 +38,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Configure Gammu state machine."""
 
-    entry_id = entry.entry_id
-    hass.data[DOMAIN].setdefault(entry_id, {})
-
     device = entry.data[CONF_DEVICE]
     config = {"Device": device, "Connection": "at"}
     gateway = await create_sms_gateway(config, hass)
