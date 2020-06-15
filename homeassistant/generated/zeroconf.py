@@ -19,6 +19,9 @@ ZEROCONF = {
     "_dkapi._tcp.local.": [
         "daikin"
     ],
+    "_ecobee._tcp.local.": [
+        "ecobee"
+    ],
     "_elg._tcp.local.": [
         "elgato"
     ],
