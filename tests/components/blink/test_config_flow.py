@@ -58,7 +58,7 @@ async def test_import(hass):
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": config_entries.SOURCE_IMPORT},
             data={
                 "username": "blink@example.com",
                 "password": "example",
