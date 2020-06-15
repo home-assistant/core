@@ -18,6 +18,7 @@ PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
+# The WEMO_ constants below come from pywemo itself
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_SWITCH_MODE = "switch_mode"
 ATTR_CURRENT_STATE_DETAIL = "state_detail"
@@ -192,7 +193,7 @@ class WemoSwitch(SwitchEntity):
         """Turn the switch on."""
         try:
             if self.wemo.on():
-                self._state = 1
+                self._state = WEMO_ON
         except ActionException as err:
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
@@ -203,7 +204,7 @@ class WemoSwitch(SwitchEntity):
         """Turn the switch off."""
         try:
             if self.wemo.off():
-                self._state = 0
+                self._state = WEMO_OFF
         except ActionException as err:
             _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
             self._available = False

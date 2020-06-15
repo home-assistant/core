@@ -32,6 +32,10 @@ SUPPORT_WEMO = (
     SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
 )
 
+# The WEMO_ constants below come from pywemo itself
+WEMO_ON = 1
+WEMO_OFF = 0
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo lights."""
@@ -176,7 +180,7 @@ class WemoLight(LightEntity):
                 self.wemo.set_temperature(mireds=color_temp, transition=transition_time)
 
             if self.wemo.turn_on(**turn_on_kwargs):
-                self._state = 1
+                self._state["onoff"] = WEMO_ON
         except ActionException as err:
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
@@ -189,12 +193,12 @@ class WemoLight(LightEntity):
 
         try:
             if self.wemo.turn_off(transition=transition_time):
-                self._state = 0
+                self._state["onoff"] = WEMO_OFF
         except ActionException as err:
             _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
             self._available = False
 
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     def _update(self, force_update=True):
         """Synchronize state with bridge."""
@@ -206,7 +210,7 @@ class WemoLight(LightEntity):
             self._available = False
             self.wemo.reconnect_with_device()
         else:
-            self._is_on = self._state.get("onoff") != 0
+            self._is_on = self._state.get("onoff") != WEMO_OFF
             self._brightness = self._state.get("level", 255)
             self._color_temp = self._state.get("temperature_mireds")
             self._available = True
@@ -362,7 +366,7 @@ class WemoDimmer(LightEntity):
 
         try:
             if self.wemo.on():
-                self._state = 1
+                self._state = WEMO_ON
 
             self.wemo.set_brightness(brightness)
         except ActionException as err:
@@ -375,7 +379,7 @@ class WemoDimmer(LightEntity):
         """Turn the dimmer off."""
         try:
             if self.wemo.off():
-                self._state = 0
+                self._state = WEMO_OFF
         except ActionException as err:
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
