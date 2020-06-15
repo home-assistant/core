@@ -42,7 +42,8 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         already_registered = await self.async_set_unique_id(username)
         if already_registered:
             _LOGGER.warning(
-                "Config entry with ID = %s is already registered, skipping...",
+                "Config entry with Domain/ID = %s/%s is already registered, skipping...",
+                DOMAIN,
                 self.unique_id,
             )
             return self.async_abort(reason="single_instance_per_username_allowed")

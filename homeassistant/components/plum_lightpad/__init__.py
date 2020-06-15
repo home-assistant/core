@@ -62,5 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, lambda: plum.cleanup())
+    def cleanup(event):
+        """Clean up resources."""
+        plum.cleanup()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
     return True
