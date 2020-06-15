@@ -1,9 +1,5 @@
 """Test the Smappee Official config flow."""
-
-import pytest
-
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.smappee_official import config_flow
 from homeassistant.components.smappee_official.const import (
     AUTHORIZE_URL,
     DOMAIN,
@@ -17,18 +13,6 @@ from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
-
-
-@pytest.fixture()
-async def mock_impl(hass):
-    """Mock implementation."""
-    await setup.async_setup_component(hass, "http", {})
-
-    impl = config_entry_oauth2_flow.LocalOAuth2Implementation(
-        hass, DOMAIN, CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL,
-    )
-    config_flow.SmappeeFlowHandler.async_register_implementation(hass, impl)
-    return impl
 
 
 async def test_abort_if_existing_entry(hass):
