@@ -56,7 +56,7 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if "base" not in errors:
+            if not errors:
                 await self.async_set_unique_id(imei)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=imei, data=user_input)
