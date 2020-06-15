@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "L'appareil \u00e9tait d\u00e9j\u00e0 configur\u00e9.",
+            "already_in_progress": "Le flux de configuration de l'appareil est d\u00e9j\u00e0 en cours.",
             "unable_to_connect": "Impossible de se connecter au p\u00e9riph\u00e9rique."
         },
         "error": {
