@@ -1,9 +1,7 @@
 """Test the Dyson fan component."""
 import json
 import unittest
-from unittest import mock
 
-import asynctest
 from libpurecool.const import (
     FanPower,
     FanSpeed,
@@ -48,7 +46,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
 
-from tests.async_mock import patch
+from tests.async_mock import MagicMock, Mock, patch
 from tests.common import get_test_home_assistant
 
 
@@ -76,7 +74,7 @@ def _get_config():
 
 def _get_dyson_purehotcool_device():
     """Return a valid device as provided by the Dyson web services."""
-    device = mock.Mock(spec=DysonPureHotCool)
+    device = Mock(spec=DysonPureHotCool)
     load_mock_device(device)
     device.name = "Living room"
     device.state.heat_target = "0000"
@@ -89,7 +87,7 @@ def _get_dyson_purehotcool_device():
 
 def _get_device_with_no_state():
     """Return a device with no state."""
-    device = mock.Mock(spec=DysonPureHotCoolLink)
+    device = Mock(spec=DysonPureHotCoolLink)
     load_mock_device(device)
     device.state = None
     device.environmental_state = None
@@ -98,14 +96,14 @@ def _get_device_with_no_state():
 
 def _get_device_off():
     """Return a device with state off."""
-    device = mock.Mock(spec=DysonPureHotCoolLink)
+    device = Mock(spec=DysonPureHotCoolLink)
     load_mock_device(device)
     return device
 
 
 def _get_device_focus():
     """Return a device with fan state of focus mode."""
-    device = mock.Mock(spec=DysonPureHotCoolLink)
+    device = Mock(spec=DysonPureHotCoolLink)
     load_mock_device(device)
     device.state.focus_mode = FocusMode.FOCUS_ON.value
     return device
@@ -113,7 +111,7 @@ def _get_device_focus():
 
 def _get_device_diffuse():
     """Return a device with fan state of diffuse mode."""
-    device = mock.Mock(spec=DysonPureHotCoolLink)
+    device = Mock(spec=DysonPureHotCoolLink)
     load_mock_device(device)
     device.state.focus_mode = FocusMode.FOCUS_OFF.value
     return device
@@ -121,7 +119,7 @@ def _get_device_diffuse():
 
 def _get_device_cool():
     """Return a device with state of cooling."""
-    device = mock.Mock(spec=DysonPureHotCoolLink)
+    device = Mock(spec=DysonPureHotCoolLink)
     load_mock_device(device)
     device.state.focus_mode = FocusMode.FOCUS_OFF.value
     device.state.heat_target = HeatTarget.celsius(12)
@@ -132,7 +130,7 @@ def _get_device_cool():
 
 def _get_device_heat_off():
     """Return a device with state of heat reached target."""
-    device = mock.Mock(spec=DysonPureHotCoolLink)
+    device = Mock(spec=DysonPureHotCoolLink)
     load_mock_device(device)
     device.state.heat_mode = HeatMode.HEAT_ON.value
     device.state.heat_state = HeatState.HEAT_STATE_OFF.value
@@ -141,7 +139,7 @@ def _get_device_heat_off():
 
 def _get_device_heat_on():
     """Return a device with state of heating."""
-    device = mock.Mock(spec=DysonPureHotCoolLink)
+    device = Mock(spec=DysonPureHotCoolLink)
     load_mock_device(device)
     device.serial = "YY-YYYYY-YY"
     device.state.heat_target = HeatTarget.celsius(23)
@@ -166,7 +164,7 @@ class DysonTest(unittest.TestCase):
     def test_setup_component_without_devices(self):
         """Test setup component with no devices."""
         self.hass.data[dyson.DYSON_DEVICES] = []
-        add_devices = mock.MagicMock()
+        add_devices = MagicMock()
         dyson.setup_platform(self.hass, None, add_devices)
         add_devices.assert_not_called()
 
@@ -178,7 +176,7 @@ class DysonTest(unittest.TestCase):
             _get_device_heat_on(),
         ]
         self.hass.data[dyson.DYSON_DEVICES] = devices
-        add_devices = mock.MagicMock()
+        add_devices = MagicMock()
         dyson.setup_platform(self.hass, None, add_devices, discovery_info={})
         assert add_devices.called
 
@@ -234,7 +232,7 @@ class DysonTest(unittest.TestCase):
         device = _get_device_cool()
         device.temp_unit = TEMP_CELSIUS
         entity = dyson.DysonPureHotCoolLinkEntity(device)
-        entity.schedule_update_ha_state = mock.Mock()
+        entity.schedule_update_ha_state = Mock()
 
         kwargs = {ATTR_TEMPERATURE: 23}
         entity.set_temperature(**kwargs)
@@ -338,7 +336,7 @@ class DysonTest(unittest.TestCase):
         """Test when message is received."""
         device = _get_device_heat_on()
         entity = dyson.DysonPureHotCoolLinkEntity(device)
-        entity.schedule_update_ha_state = mock.Mock()
+        entity.schedule_update_ha_state = Mock()
         entity.on_message(MockDysonState())
         entity.schedule_update_ha_state.assert_called_with()
 
@@ -399,8 +397,8 @@ async def test_setup_component_with_parent_discovery(
     assert len(entity_ids) == 2
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
@@ -416,8 +414,8 @@ async def test_purehotcool_component_setup_only_once(devices, login, hass):
     assert state.name == "Living room"
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_device_off()],
 )
@@ -433,8 +431,8 @@ async def test_purehotcoollink_component_setup_only_once(devices, login, hass):
     assert state.name == "Temp Name"
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
@@ -487,8 +485,8 @@ async def test_purehotcool_update_state(devices, login, hass):
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
@@ -506,8 +504,8 @@ async def test_purehotcool_empty_env_attributes(devices, login, hass):
     assert ATTR_CURRENT_HUMIDITY not in attributes
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
@@ -524,8 +522,8 @@ async def test_purehotcool_fan_state_off(devices, login, hass):
     assert attributes[ATTR_FAN_MODE] == FAN_OFF
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
@@ -542,8 +540,8 @@ async def test_purehotcool_hvac_action_cool(devices, login, hass):
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
@@ -561,8 +559,8 @@ async def test_purehotcool_hvac_action_idle(devices, login, hass):
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
@@ -612,8 +610,8 @@ async def test_purehotcool_set_temperature(devices, login, hass):
     device.set_heat_target.assert_called_with(HeatTarget.celsius(max_temp))
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
@@ -676,8 +674,8 @@ async def test_purehotcool_set_fan_mode(devices, login, hass):
     device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_AUTO)
 
 
-@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+@patch(
     "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
