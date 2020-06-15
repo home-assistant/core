@@ -38,12 +38,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Configure Gammu state machine."""
 
-    if SMS_GATEWAY in hass.data[DOMAIN]:
-        _LOGGER.error(
-            "Only one SMS gateway allowed, cannot initialize a second instance"
-        )
-        return False
-
     entry_id = entry.entry_id
     hass.data[DOMAIN].setdefault(entry_id, {})
 
