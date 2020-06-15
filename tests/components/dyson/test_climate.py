@@ -46,7 +46,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
 
-from tests.async_mock import MagicMock, Mock, patch
+from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
 
 
@@ -165,30 +165,6 @@ class DysonTest(unittest.TestCase):
     def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
-
-    def test_setup_component_with_devices(self):
-        """Test setup component with valid devices."""
-        devices = [
-            _get_device_with_no_state(),
-            _get_device_off(),
-            _get_device_heat_on(),
-        ]
-        self.hass.data[dyson.DYSON_DEVICES] = devices
-        add_devices = MagicMock()
-        dyson.setup_platform(self.hass, None, add_devices, discovery_info={})
-        assert add_devices.called
-
-    def test_setup_component(self):
-        """Test setup component with devices."""
-        device_fan = _get_device_heat_on()
-        device_non_fan = _get_device_off()
-
-        def _add_device(devices):
-            assert len(devices) == 1
-            assert devices[0].name == "Device_name"
-
-        self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
-        dyson.setup_platform(self.hass, None, _add_device)
 
     def test_dyson_set_temperature(self):
         """Test set climate temperature."""
