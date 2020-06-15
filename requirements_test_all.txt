@@ -66,7 +66,7 @@ aio_georss_gdacs==0.3
 aioambient==1.1.1
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.2.5
+aioasuswrt==1.2.6
 
 # homeassistant.components.aws
 aiobotocore==0.11.1
@@ -201,6 +201,9 @@ coronavirus==1.1.1
 
 # homeassistant.components.datadog
 datadog==0.15.0
+
+# homeassistant.components.metoffice
+datapoint==0.9.5
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -588,6 +591,9 @@ pyfttt==0.3
 # homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.5
 
+# homeassistant.components.hvv_departures
+pygti==0.6.0
+
 # homeassistant.components.version
 pyhaversion==3.3.0
 
@@ -934,7 +940,7 @@ ya_ma==0.3.8
 zeroconf==0.27.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.39
+zha-quirks==0.0.40
 
 # homeassistant.components.zha
 zigpy-cc==0.4.4

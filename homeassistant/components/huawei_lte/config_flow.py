@@ -213,6 +213,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle SSDP initiated config flow."""
+        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
+        self._abort_if_unique_id_configured()
+
         # Attempt to distinguish from other non-LTE Huawei router devices, at least
         # some ones we are interested in have "Mobile Wi-Fi" friendlyName.
         if "mobile" not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower():
