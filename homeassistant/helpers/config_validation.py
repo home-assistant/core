@@ -858,7 +858,7 @@ STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
-            vol.Required(CONF_STATE): str,
+            vol.Required(CONF_STATE): vol.Any(str, [str]),
             vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
@@ -906,7 +906,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "zone",
         vol.Required(CONF_ENTITY_ID): entity_ids,
-        "zone": entity_id,
+        "zone": entity_ids,
         # To support use_trigger_value in automation
         # Deprecated 2016/04/25
         vol.Optional("event"): vol.Any("enter", "leave"),
