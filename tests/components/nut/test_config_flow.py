@@ -1,4 +1,6 @@
 """Test the Network UPS Tools (NUT) config flow."""
+import voluptuous as vol
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import CONF_RESOURCES, CONF_SCAN_INTERVAL
@@ -14,6 +16,29 @@ VALID_CONFIG = {
     "name": "name",
     "resources": ["battery.charge"],
 }
+
+
+async def test_form_zeroconf(hass):
+    """Test we can setup from zeroconf."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data={"host": "192.168.1.5", "port": 1234},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    schema = result["data_schema"].schema
+    defaults = {}
+    for key, _ in schema.items():
+        if (
+            isinstance(key, (vol.Required, vol.Optional))
+            and key.default is not vol.UNDEFINED
+        ):
+            defaults[key] = key.default()
+
+    assert defaults["host"] == "192.168.1.5"
+    assert defaults["port"] == 1234
 
 
 async def test_form_user_one_ups(hass):

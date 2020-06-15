@@ -46,6 +46,22 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
+def _base_schema(discovery_info):
+    """Generate base schema."""
+    return vol.Schema(
+        {
+            vol.Optional(
+                CONF_HOST, default=discovery_info.get(CONF_HOST, DEFAULT_HOST)
+            ): str,
+            vol.Optional(
+                CONF_PORT, default=int(discovery_info.get(CONF_PORT, DEFAULT_PORT))
+            ): int,
+            vol.Optional(CONF_USERNAME): str,
+            vol.Optional(CONF_PASSWORD): str,
+        }
+    )
+
+
 def _resource_schema_base(available_resources, selected_resources):
     """Resource selection schema."""
 
@@ -113,8 +129,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the nut config flow."""
         self.nut_config = {}
         self.available_resources = {}
+        self.discovery_info = {}
         self.ups_list = None
         self.title = None
+
+    async def async_step_zeroconf(self, discovery_info):
+        """Prepare configuration for a discovered nut device."""
+        self.discovery_info = discovery_info
+        return await self.async_step_user()
 
     async def async_step_import(self, user_input=None):
         """Handle the import."""
@@ -129,7 +151,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=_base_schema({}), errors=errors
         )
 
     async def async_step_user(self, user_input=None):
@@ -150,7 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_resources()
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=_base_schema(self.discovery_info), errors=errors
         )
 
     async def async_step_ups(self, user_input=None):
