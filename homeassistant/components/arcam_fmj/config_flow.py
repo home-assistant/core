@@ -88,7 +88,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
             step_id="confirm", description_placeholders=placeholders
         )
 
-    async def async_step_ssdp(self, discovery_info=None):
+    async def async_step_ssdp(self, discovery_info):
         """Handle a discovered device."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         port = DEFAULT_PORT

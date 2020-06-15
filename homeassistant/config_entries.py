@@ -961,7 +961,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             raise data_entry_flow.AbortFlow("already_in_progress")
 
     async def async_step_discovery(
-        self, user_input: Optional[Dict[str, Any]] = None
+        self, discovery_info: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
         await self._async_handle_discovery_without_unique_id()

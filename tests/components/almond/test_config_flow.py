@@ -82,7 +82,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_setup"
 
-    result = await flow.async_step_hassio()
+    result = await flow.async_step_hassio({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_setup"
 

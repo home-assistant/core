@@ -70,7 +70,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(title=self._title, data={})
 
     async def async_step_discovery(
-        self, user_input: Optional[Dict[str, Any]] = None
+        self, discovery_info: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():

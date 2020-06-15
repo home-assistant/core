@@ -554,9 +554,9 @@ async def test_discovery_notification(hass):
 
             VERSION = 5
 
-            async def async_step_discovery(self, user_input=None):
+            async def async_step_discovery(self, discovery_info):
                 """Test discovery step."""
-                if user_input is not None:
+                if discovery_info is not None:
                     return self.async_create_entry(
                         title="Test Title", data={"token": "abcd"}
                     )
@@ -589,7 +589,7 @@ async def test_discovery_notification_not_created(hass):
 
         VERSION = 5
 
-        async def async_step_discovery(self, user_input=None):
+        async def async_step_discovery(self, discovery_info):
             """Test discovery step."""
             return self.async_abort(reason="test")
 
@@ -1447,7 +1447,7 @@ async def test_partial_flows_hidden(hass, manager):
 
         VERSION = 1
 
-        async def async_step_discovery(self, user_input):
+        async def async_step_discovery(self, discovery_info):
             """Test discovery step."""
             discovery_started.set()
             await pause_discovery.wait()
@@ -1646,7 +1646,7 @@ async def test_flow_with_default_discovery_with_unique_id(hass, manager):
 
         VERSION = 1
 
-        async def async_step_discovery(self, user_input=None):
+        async def async_step_discovery(self, discovery_info):
             """Test discovery step."""
             await self.async_set_unique_id("mock-unique-id")
             # This call should make no difference, as a unique ID is set
@@ -1696,9 +1696,9 @@ async def test_default_discovery_in_progress(hass, manager):
 
         VERSION = 1
 
-        async def async_step_discovery(self, user_input=None):
+        async def async_step_discovery(self, discovery_info):
             """Test discovery step."""
-            await self.async_set_unique_id(user_input.get("unique_id"))
+            await self.async_set_unique_id(discovery_info.get("unique_id"))
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
 
@@ -1731,9 +1731,9 @@ async def test_default_discovery_abort_on_new_unique_flow(hass, manager):
 
         VERSION = 1
 
-        async def async_step_discovery(self, user_input=None):
+        async def async_step_discovery(self, discovery_info):
             """Test discovery step."""
-            await self.async_set_unique_id(user_input.get("unique_id"))
+            await self.async_set_unique_id(discovery_info.get("unique_id"))
             await self._async_handle_discovery_without_unique_id()
             return self.async_show_form(step_id="mock")
 

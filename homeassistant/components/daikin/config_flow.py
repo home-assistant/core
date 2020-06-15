@@ -118,19 +118,19 @@ class FlowHandler(config_entries.ConfigFlow):
             return await self.async_step_user()
         return await self._create_device(host)
 
-    async def async_step_discovery(self, user_input=None):
+    async def async_step_discovery(self, discovery_info):
         """Initialize step from discovery."""
-        _LOGGER.debug("Discovered device: %s", user_input)
-        await self.async_set_unique_id(user_input[KEY_MAC])
+        _LOGGER.debug("Discovered device: %s", discovery_info)
+        await self.async_set_unique_id(discovery_info[KEY_MAC])
         self._abort_if_unique_id_configured()
-        self.host = user_input[KEY_IP]
+        self.host = discovery_info[KEY_IP]
         return await self.async_step_user()
 
-    async def async_step_zeroconf(self, user_input=None):
+    async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered Daikin device."""
-        _LOGGER.debug("Zeroconf user_input: %s", user_input)
-        devices = Discovery.poll(user_input[CONF_HOST])
+        _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
+        devices = Discovery.poll(discovery_info[CONF_HOST])
         await self.async_set_unique_id(next(iter(devices.values()))[KEY_MAC])
         self._abort_if_unique_id_configured()
-        self.host = user_input[CONF_HOST]
+        self.host = discovery_info[CONF_HOST]
         return await self.async_step_user()
