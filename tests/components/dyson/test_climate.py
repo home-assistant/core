@@ -395,7 +395,8 @@ async def test_setup_component_with_parent_discovery(
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
 
-    assert len(hass.data[dyson.DYSON_DEVICES]) == 2
+    entity_ids = hass.states.async_entity_ids("climate")
+    assert len(entity_ids) == 2
 
 
 @asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
@@ -409,14 +410,10 @@ async def test_purehotcool_component_setup_only_once(devices, login, hass):
     await async_setup_component(hass, dyson_parent.DOMAIN, config)
     await hass.async_block_till_done()
 
-    climate_devices = [
-        device
-        for device in hass.data[DOMAIN].entities
-        if device.platform.platform_name == dyson_parent.DOMAIN
-    ]
-
-    assert len(climate_devices) == 1
-    assert climate_devices[0].serial == "XX-XXXXX-XX"
+    entity_ids = hass.states.async_entity_ids("climate")
+    assert len(entity_ids) == 1
+    state = hass.states.get(entity_ids[0])
+    assert state.name == "Living room"
 
 
 @asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
@@ -429,14 +426,10 @@ async def test_purehotcoollink_component_setup_only_once(devices, login, hass):
     await async_setup_component(hass, dyson_parent.DOMAIN, config)
     await hass.async_block_till_done()
 
-    climate_devices = [
-        device
-        for device in hass.data[DOMAIN].entities
-        if device.platform.platform_name == dyson_parent.DOMAIN
-    ]
-
-    assert len(climate_devices) == 1
-    assert climate_devices[0].serial == "XX-XXXXX-XX"
+    entity_ids = hass.states.async_entity_ids("climate")
+    assert len(entity_ids) == 1
+    state = hass.states.get(entity_ids[0])
+    assert state.name == "Temp Name"
 
 
 @asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
@@ -486,8 +479,8 @@ async def test_purehotcool_update_state(devices, login, hass):
             callback(device.state)
 
     await hass.async_block_till_done()
-    device_state = hass.states.get("climate.living_room")
-    attributes = device_state.attributes
+    state = hass.states.get("climate.living_room")
+    attributes = state.attributes
 
     assert attributes[ATTR_TEMPERATURE] == 25
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
@@ -506,8 +499,8 @@ async def test_purehotcool_empty_env_attributes(devices, login, hass):
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
 
-    device_state = hass.states.get("climate.living_room")
-    attributes = device_state.attributes
+    state = hass.states.get("climate.living_room")
+    attributes = state.attributes
 
     assert ATTR_CURRENT_HUMIDITY not in attributes
 
@@ -524,8 +517,8 @@ async def test_purehotcool_fan_state_off(devices, login, hass):
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
 
-    device_state = hass.states.get("climate.living_room")
-    attributes = device_state.attributes
+    state = hass.states.get("climate.living_room")
+    attributes = state.attributes
 
     assert attributes[ATTR_FAN_MODE] == FAN_OFF
 
@@ -542,8 +535,8 @@ async def test_purehotcool_hvac_action_cool(devices, login, hass):
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
 
-    device_state = hass.states.get("climate.living_room")
-    attributes = device_state.attributes
+    state = hass.states.get("climate.living_room")
+    attributes = state.attributes
 
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
 
@@ -561,8 +554,8 @@ async def test_purehotcool_hvac_action_idle(devices, login, hass):
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
 
-    device_state = hass.states.get("climate.living_room")
-    attributes = device_state.attributes
+    state = hass.states.get("climate.living_room")
+    attributes = state.attributes
 
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
@@ -577,8 +570,8 @@ async def test_purehotcool_set_temperature(devices, login, hass):
     device = devices.return_value[0]
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
-    device_state = hass.states.get("climate.living_room")
-    attributes = device_state.attributes
+    state = hass.states.get("climate.living_room")
+    attributes = state.attributes
     min_temp = attributes["min_temp"]
     max_temp = attributes["max_temp"]
 
