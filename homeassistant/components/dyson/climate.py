@@ -348,6 +348,9 @@ class DysonPureHotCoolEntity(ClimateEntity):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
+        if target_temp is None:
+            _LOGGER.error("Missing target temperature %s", kwargs)
+            return
         target_temp = int(target_temp)
         _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
         # Limit the target temperature into acceptable range.
