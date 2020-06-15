@@ -166,20 +166,6 @@ class DysonTest(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_dyson_set_temperature_when_cooling_mode(self):
-        """Test set climate temperature when heating is off."""
-        device = _get_device_cool()
-        device.temp_unit = TEMP_CELSIUS
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        entity.schedule_update_ha_state = Mock()
-
-        kwargs = {ATTR_TEMPERATURE: 23}
-        entity.set_temperature(**kwargs)
-        set_config = device.set_configuration
-        set_config.assert_called_with(
-            heat_mode=HeatMode.HEAT_ON, heat_target=HeatTarget.celsius(23)
-        )
-
     def test_dyson_set_fan_mode(self):
         """Test set fan mode."""
         device = _get_device_heat_on()
@@ -396,6 +382,34 @@ async def test_dyson_set_temperature(mocked_login, mocked_devices, hass):
     set_config = device.set_configuration
     assert set_config.call_args == call(
         heat_mode=HeatMode.HEAT_ON, heat_target=HeatTarget.celsius(1)
+    )
+
+
+@patch(
+    "homeassistant.components.dyson.DysonAccount.devices",
+    return_value=[_get_device_cool()],
+)
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+async def test_dyson_set_temperature_when_cooling_mode(
+    mocked_login, mocked_devices, hass
+):
+    """Test set climate temperature when heating is off."""
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
+
+    device = mocked_devices.return_value[0]
+    device.temp_unit = TEMP_CELSIUS
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.temp_name", ATTR_TEMPERATURE: 23},
+        True,
+    )
+
+    set_config = device.set_configuration
+    assert set_config.call_args == call(
+        heat_mode=HeatMode.HEAT_ON, heat_target=HeatTarget.celsius(23)
     )
 
 
