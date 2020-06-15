@@ -244,6 +244,7 @@ homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/met/* @danielhiversen
 homeassistant/components/meteo_france/* @victorcerutti @oncleben31 @Quentame
 homeassistant/components/meteoalarm/* @rolfberkenbosch
+homeassistant/components/metoffice/* @MrHarcombe
 homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel
 homeassistant/components/mikrotik/* @engrbm87
 homeassistant/components/mill/* @danielhiversen
