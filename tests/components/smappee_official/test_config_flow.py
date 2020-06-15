@@ -1,5 +1,9 @@
 """Test the Smappee Official config flow."""
-from homeassistant import config_entries, setup
+
+import pytest
+
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.smappee_official import config_flow
 from homeassistant.components.smappee_official.const import (
     AUTHORIZE_URL,
     DOMAIN,
@@ -9,9 +13,33 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+
+@pytest.fixture()
+async def mock_impl(hass):
+    """Mock implementation."""
+    await setup.async_setup_component(hass, "http", {})
+
+    impl = config_entry_oauth2_flow.LocalOAuth2Implementation(
+        hass, DOMAIN, CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL,
+    )
+    config_flow.SmappeeFlowHandler.async_register_implementation(hass, impl)
+    return impl
+
+
+async def test_abort_if_existing_entry(hass):
+    """Check flow abort when an entry already exist."""
+    flow = config_flow.SmappeeFlowHandler()
+    flow.hass = hass
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+
+    result = await flow.async_step_user()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock):
