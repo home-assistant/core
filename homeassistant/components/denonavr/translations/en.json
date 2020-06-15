@@ -37,7 +37,7 @@
     "step": {
       "init": {
         "title": "Denon AVR Network Receivers",
-        "description": "Specify optional settings, a restart is required to apply the settings",
+        "description": "Specify optional settings",
         "data": {
           "show_all_sources": "Show all sources",
           "zone2": "Set up Zone 2",
