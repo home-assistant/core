@@ -41,11 +41,7 @@ from .test_common import (
 )
 
 from tests.async_mock import patch
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-)
+from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_CONFIG = {
     binary_sensor.DOMAIN: {
@@ -527,7 +523,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     hass, mqtt_mock, caplog
 ):
     """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await async_start(hass, "homeassistant", entry)
 
     config = {
