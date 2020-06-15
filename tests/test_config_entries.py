@@ -556,11 +556,13 @@ async def test_discovery_notification(hass):
 
             async def async_step_discovery(self, discovery_info):
                 """Test discovery step."""
-                if discovery_info is not None:
-                    return self.async_create_entry(
-                        title="Test Title", data={"token": "abcd"}
-                    )
-                return self.async_show_form(step_id="discovery")
+                return self.async_show_form(step_id="discovery_confirm")
+
+            async def async_step_discovery_confirm(self, discovery_info):
+                """Test discovery confirm step."""
+                return self.async_create_entry(
+                    title="Test Title", data={"token": "abcd"}
+                )
 
         result = await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_DISCOVERY}
