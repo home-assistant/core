@@ -384,10 +384,10 @@ class DysonTest(unittest.TestCase):
 
 
 @patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_device_heat_on(), _get_device_cool()],
 )
-@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 async def test_setup_component_with_parent_discovery(
     mocked_login, mocked_devices, hass
 ):
@@ -399,9 +399,9 @@ async def test_setup_component_with_parent_discovery(
     assert len(entity_ids) == 2
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
 async def test_purehotcool_component_setup_only_once(devices, login, hass):
@@ -416,9 +416,10 @@ async def test_purehotcool_component_setup_only_once(devices, login, hass):
     assert state.name == "Living room"
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices", return_value=[_get_device_off()],
+    "homeassistant.components.dyson.DysonAccount.devices",
+    return_value=[_get_device_off()],
 )
 async def test_purehotcoollink_component_setup_only_once(devices, login, hass):
     """Test if entities are created only once."""
@@ -432,9 +433,9 @@ async def test_purehotcoollink_component_setup_only_once(devices, login, hass):
     assert state.name == "Temp Name"
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
 async def test_purehotcool_update_state(devices, login, hass):
@@ -486,9 +487,9 @@ async def test_purehotcool_update_state(devices, login, hass):
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
 async def test_purehotcool_empty_env_attributes(devices, login, hass):
@@ -505,9 +506,9 @@ async def test_purehotcool_empty_env_attributes(devices, login, hass):
     assert ATTR_CURRENT_HUMIDITY not in attributes
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
 async def test_purehotcool_fan_state_off(devices, login, hass):
@@ -523,9 +524,9 @@ async def test_purehotcool_fan_state_off(devices, login, hass):
     assert attributes[ATTR_FAN_MODE] == FAN_OFF
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
 async def test_purehotcool_hvac_action_cool(devices, login, hass):
@@ -541,9 +542,9 @@ async def test_purehotcool_hvac_action_cool(devices, login, hass):
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
 async def test_purehotcool_hvac_action_idle(devices, login, hass):
@@ -560,9 +561,9 @@ async def test_purehotcool_hvac_action_idle(devices, login, hass):
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
 async def test_purehotcool_set_temperature(devices, login, hass):
@@ -611,9 +612,9 @@ async def test_purehotcool_set_temperature(devices, login, hass):
     device.set_heat_target.assert_called_with(HeatTarget.celsius(max_temp))
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
 async def test_purehotcool_set_fan_mode(devices, login, hass):
@@ -675,9 +676,9 @@ async def test_purehotcool_set_fan_mode(devices, login, hass):
     device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_AUTO)
 
 
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
 @asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
 async def test_purehotcool_set_hvac_mode(devices, login, hass):
