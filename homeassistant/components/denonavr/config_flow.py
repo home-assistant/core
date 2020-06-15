@@ -168,18 +168,14 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.serial_number is not None:
             unique_id = self.construct_unique_id(self.model_name, self.serial_number)
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
         else:
             _LOGGER.error(
                 "Could not get serial number of host %s, "
-                "using the mac_address as identification",
+                "unique_id's will not be available",
                 self.host,
             )
-            if not mac_address:
-                return self.async_abort(reason="no_mac")
-            unique_id = self.construct_unique_id(self.model_name, mac_address)
-
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=receiver.name,
