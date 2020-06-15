@@ -1,7 +1,7 @@
 """Support gathering system information of hosts which are running netdata."""
 from datetime import timedelta
+import json
 import logging
-from typing import Any, Dict, Optional
 
 from netdata import Netdata
 from netdata.exceptions import NetdataError
@@ -169,11 +169,6 @@ class NetdataAlarms(Entity):
         return self._state
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
-        """Return host information, e.g. the url to netdata dashboard."""
-        return {"url": f"http://{self._host}:{self._port}"}
-
-    @property
     def entity_picture(self):
         """Status symbol if type is symbol."""
         if self._state == "ok":
@@ -192,14 +187,12 @@ class NetdataAlarms(Entity):
 
     async def async_update(self):
         """Get the latest alarms from Netdata REST API."""
-        import json
-
         await self.netdata.async_update()
         info = json.loads(self.netdata.api.alarms)
-        self._state = "unknown"
+        self._state = None
         number_of_alarms = len(info["alarms"])
 
-        _LOGGER.debug(f"Host {self.name} has {number_of_alarms} alarms")
+        _LOGGER.debug("Host %s has %s alarms", self.name, number_of_alarms)
 
         alarms = info["alarms"]
         n = number_of_alarms
