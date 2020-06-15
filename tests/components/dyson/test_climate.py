@@ -58,7 +58,6 @@ class MockDysonState(DysonPureHotCoolState):
 
     def __init__(self):
         """Create new Mock Dyson State."""
-        pass
 
 
 def _get_config():
@@ -200,7 +199,7 @@ class DysonTest(unittest.TestCase):
         """Test set climate temperature."""
         device = _get_device_heat_on()
         device.temp_unit = TEMP_CELSIUS
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert not entity.should_poll
 
         # Without target temp.
@@ -235,7 +234,7 @@ class DysonTest(unittest.TestCase):
         """Test set climate temperature when heating is off."""
         device = _get_device_cool()
         device.temp_unit = TEMP_CELSIUS
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         entity.schedule_update_ha_state = mock.Mock()
 
         kwargs = {ATTR_TEMPERATURE: 23}
@@ -248,7 +247,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_set_fan_mode(self):
         """Test set fan mode."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert not entity.should_poll
 
         entity.set_fan_mode(dyson.FAN_FOCUS)
@@ -262,7 +261,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_fan_modes(self):
         """Test get fan list."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert len(entity.fan_modes) == 2
         assert dyson.FAN_FOCUS in entity.fan_modes
         assert dyson.FAN_DIFFUSE in entity.fan_modes
@@ -270,19 +269,19 @@ class DysonTest(unittest.TestCase):
     def test_dyson_fan_mode_focus(self):
         """Test fan focus mode."""
         device = _get_device_focus()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.fan_mode == dyson.FAN_FOCUS
 
     def test_dyson_fan_mode_diffuse(self):
         """Test fan diffuse mode."""
         device = _get_device_diffuse()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.fan_mode == dyson.FAN_DIFFUSE
 
     def test_dyson_set_hvac_mode(self):
         """Test set operation mode."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert not entity.should_poll
 
         entity.set_hvac_mode(dyson.HVAC_MODE_HEAT)
@@ -296,7 +295,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_operation_list(self):
         """Test get operation list."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert len(entity.hvac_modes) == 2
         assert dyson.HVAC_MODE_HEAT in entity.hvac_modes
         assert dyson.HVAC_MODE_COOL in entity.hvac_modes
@@ -304,7 +303,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_heat_off(self):
         """Test turn off heat."""
         device = _get_device_heat_off()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         entity.set_hvac_mode(dyson.HVAC_MODE_COOL)
         set_config = device.set_configuration
         set_config.assert_called_with(heat_mode=HeatMode.HEAT_OFF)
@@ -312,7 +311,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_heat_on(self):
         """Test turn on heat."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         entity.set_hvac_mode(dyson.HVAC_MODE_HEAT)
         set_config = device.set_configuration
         set_config.assert_called_with(heat_mode=HeatMode.HEAT_ON)
@@ -320,26 +319,26 @@ class DysonTest(unittest.TestCase):
     def test_dyson_heat_value_on(self):
         """Test get heat value on."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.hvac_mode == dyson.HVAC_MODE_HEAT
 
     def test_dyson_heat_value_off(self):
         """Test get heat value off."""
         device = _get_device_cool()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.hvac_mode == dyson.HVAC_MODE_COOL
 
     def test_dyson_heat_value_idle(self):
         """Test get heat value idle."""
         device = _get_device_heat_off()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.hvac_mode == dyson.HVAC_MODE_HEAT
         assert entity.hvac_action == dyson.CURRENT_HVAC_IDLE
 
     def test_on_message(self):
         """Test when message is received."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         entity.schedule_update_ha_state = mock.Mock()
         entity.on_message(MockDysonState())
         entity.schedule_update_ha_state.assert_called_with()
@@ -347,7 +346,7 @@ class DysonTest(unittest.TestCase):
     def test_general_properties(self):
         """Test properties of entity."""
         device = _get_device_with_no_state()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.should_poll is False
         assert entity.supported_features == dyson.SUPPORT_FLAGS
         assert entity.temperature_unit == TEMP_CELSIUS
@@ -355,33 +354,33 @@ class DysonTest(unittest.TestCase):
     def test_property_current_humidity(self):
         """Test properties of current humidity."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.current_humidity == 53
 
     def test_property_current_humidity_with_invalid_env_state(self):
         """Test properties of current humidity with invalid env state."""
         device = _get_device_off()
         device.environmental_state.humidity = 0
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.current_humidity is None
 
     def test_property_current_humidity_without_env_state(self):
         """Test properties of current humidity without env state."""
         device = _get_device_with_no_state()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.current_humidity is None
 
     def test_property_current_temperature(self):
         """Test properties of current temperature."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         # Result should be in celsius, hence then subtraction of 273.
         assert entity.current_temperature == 289 - 273
 
     def test_property_target_temperature(self):
         """Test properties of target temperature."""
         device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.target_temperature == 23
 
 
@@ -488,7 +487,7 @@ async def test_purehotcool_update_state(devices, login, hass):
 
     for call in device.add_message_listener.call_args_list:
         callback = call[0][0]
-        if type(callback.__self__) == dyson.DysonPureHotCoolDevice:
+        if type(callback.__self__) == dyson.DysonPureHotCoolEntity:
             callback(device.state)
 
     await hass.async_block_till_done()
