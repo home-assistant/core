@@ -33,8 +33,6 @@ async def mock_impl(hass):
 
 async def test_abort_if_existing_entry(hass):
     """Check flow abort when an entry already exist."""
-    flow = config_flow.SmappeeFlowHandler()
-    flow.hass = hass
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
