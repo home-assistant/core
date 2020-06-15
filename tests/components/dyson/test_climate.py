@@ -46,7 +46,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import Mock, call, patch
 from tests.common import get_test_home_assistant
 
 
@@ -165,41 +165,6 @@ class DysonTest(unittest.TestCase):
     def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
-
-    def test_dyson_set_temperature(self):
-        """Test set climate temperature."""
-        device = _get_device_heat_on()
-        device.temp_unit = TEMP_CELSIUS
-        entity = dyson.DysonPureHotCoolLinkEntity(device)
-        assert not entity.should_poll
-
-        # Without target temp.
-        kwargs = {}
-        entity.set_temperature(**kwargs)
-        set_config = device.set_configuration
-        set_config.assert_not_called()
-
-        kwargs = {ATTR_TEMPERATURE: 23}
-        entity.set_temperature(**kwargs)
-        set_config = device.set_configuration
-        set_config.assert_called_with(
-            heat_mode=HeatMode.HEAT_ON, heat_target=HeatTarget.celsius(23)
-        )
-
-        # Should clip the target temperature between 1 and 37 inclusive.
-        kwargs = {ATTR_TEMPERATURE: 50}
-        entity.set_temperature(**kwargs)
-        set_config = device.set_configuration
-        set_config.assert_called_with(
-            heat_mode=HeatMode.HEAT_ON, heat_target=HeatTarget.celsius(37)
-        )
-
-        kwargs = {ATTR_TEMPERATURE: -5}
-        entity.set_temperature(**kwargs)
-        set_config = device.set_configuration
-        set_config.assert_called_with(
-            heat_mode=HeatMode.HEAT_ON, heat_target=HeatTarget.celsius(1)
-        )
 
     def test_dyson_set_temperature_when_cooling_mode(self):
         """Test set climate temperature when heating is off."""
@@ -370,6 +335,72 @@ async def test_setup_component_without_devices(mocked_login, mocked_devices, has
 
 @patch(
     "homeassistant.components.dyson.DysonAccount.devices",
+    return_value=[_get_device_heat_on()],
+)
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+async def test_dyson_set_temperature(mocked_login, mocked_devices, hass):
+    """Test set climate temperature."""
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
+
+    device = mocked_devices.return_value[0]
+    device.temp_unit = TEMP_CELSIUS
+
+    # Without correct target temp.
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.temp_name",
+            "target_temp_high": 25.0,
+            "target_temp_low": 15.0,
+        },
+        True,
+    )
+
+    set_config = device.set_configuration
+    assert set_config.call_count == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.temp_name", ATTR_TEMPERATURE: 23},
+        True,
+    )
+
+    set_config = device.set_configuration
+    assert set_config.call_args == call(
+        heat_mode=HeatMode.HEAT_ON, heat_target=HeatTarget.celsius(23)
+    )
+
+    # Should clip the target temperature between 1 and 37 inclusive.
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.temp_name", ATTR_TEMPERATURE: 50},
+        True,
+    )
+
+    set_config = device.set_configuration
+    assert set_config.call_args == call(
+        heat_mode=HeatMode.HEAT_ON, heat_target=HeatTarget.celsius(37)
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.temp_name", ATTR_TEMPERATURE: -5},
+        True,
+    )
+
+    set_config = device.set_configuration
+    assert set_config.call_args == call(
+        heat_mode=HeatMode.HEAT_ON, heat_target=HeatTarget.celsius(1)
+    )
+
+
+@patch(
+    "homeassistant.components.dyson.DysonAccount.devices",
     return_value=[_get_device_heat_on(), _get_device_cool()],
 )
 @patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
@@ -459,8 +490,8 @@ async def test_purehotcool_update_state(devices, login, hass):
     }
     device.state = DysonPureHotCoolV2State(json.dumps(event))
 
-    for call in device.add_message_listener.call_args_list:
-        callback = call[0][0]
+    for add_call in device.add_message_listener.call_args_list:
+        callback = add_call[0][0]
         if type(callback.__self__) == dyson.DysonPureHotCoolEntity:
             callback(device.state)
 
