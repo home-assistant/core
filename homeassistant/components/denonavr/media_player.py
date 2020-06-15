@@ -33,7 +33,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import CONF_RECEIVER
-from .config_flow import CONF_MANUFACTURER, CONF_MODEL, CONF_TYPE, DOMAIN
+from .config_flow import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
+    CONF_TYPE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +69,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     receiver = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
     for receiver_zone in receiver.zones.values():
-        unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
+        if config_entry.data[CONF_SERIAL_NUMBER] is not None:
+            unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
+        else:
+            unique_id = None
         entities.append(DenonDevice(receiver_zone, unique_id, config_entry))
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
@@ -159,6 +168,9 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return the device info of the receiver."""
+        if self._config_entry.data[CONF_SERIAL_NUMBER] is None:
+            return None
+
         device_info = {
             "config_entry_id": self._config_entry.entry_id,
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},

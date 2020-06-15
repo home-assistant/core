@@ -27,6 +27,7 @@ CONF_ZONE3 = "zone3"
 CONF_TYPE = "type"
 CONF_MODEL = "model"
 CONF_MANUFACTURER = "manufacturer"
+CONF_SERIAL_NUMBER = "serial_number"
 
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 5
@@ -185,6 +186,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_TYPE: receiver.receiver_type,
                 CONF_MODEL: self.model_name,
                 CONF_MANUFACTURER: receiver.manufacturer,
+                CONF_SERIAL_NUMBER: self.serial_number,
             },
         )
 
