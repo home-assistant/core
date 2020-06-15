@@ -67,10 +67,6 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        imei = await get_imei_from_config(self.hass, user_input)
-        await self.async_set_unique_id(imei)
-        self._abort_if_unique_id_configured()
-
         return await self.async_step_user(user_input)
 
 
