@@ -167,7 +167,11 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config({})
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -198,7 +202,11 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config({})
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -226,7 +234,11 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config({})
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -260,7 +272,11 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -295,8 +311,8 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (
-                ha.Event(EVENT_HOMEASSISTANT_START),
-                ha.Event(EVENT_ALEXA_SMART_HOME),
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
+                MockLazyEventPartialState(EVENT_ALEXA_SMART_HOME),
                 eventA,
                 eventB,
             )
@@ -333,7 +349,11 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -354,7 +374,7 @@ class TestComponentLogbook(unittest.TestCase):
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
 
-        event_alexa = ha.Event(
+        event_alexa = MockLazyEventPartialState(
             EVENT_ALEXA_SMART_HOME,
             {"request": {"namespace": "Alexa.Discovery", "name": "Discover"}},
         )
@@ -373,7 +393,12 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_START), event_alexa, eventA, eventB,)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
+                event_alexa,
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -420,7 +445,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (
-                ha.Event(EVENT_HOMEASSISTANT_START),
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
                 eventA1,
                 eventA2,
                 eventA3,
@@ -491,8 +516,8 @@ class TestComponentLogbook(unittest.TestCase):
             logbook.humanify(
                 self.hass,
                 (
-                    ha.Event(EVENT_HOMEASSISTANT_STOP),
-                    ha.Event(EVENT_HOMEASSISTANT_START),
+                    MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                    MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
                 ),
             )
         )
@@ -511,7 +536,7 @@ class TestComponentLogbook(unittest.TestCase):
             logbook.humanify(
                 self.hass,
                 (
-                    ha.Event(EVENT_HOMEASSISTANT_START),
+                    MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
                     self.create_state_changed_event(pointA, entity_id, 10),
                 ),
             )
@@ -1129,7 +1154,7 @@ class TestComponentLogbook(unittest.TestCase):
             logbook.humanify(
                 self.hass,
                 (
-                    ha.Event(
+                    MockLazyEventPartialState(
                         logbook.EVENT_LOGBOOK_ENTRY,
                         {
                             logbook.ATTR_NAME: name,
@@ -1465,3 +1490,12 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
     json = await response.json()
     assert len(json) == 1
     assert json[0]["entity_id"] == entity_id_test
+
+
+class MockLazyEventPartialState(ha.Event):
+    """Minimal mock of a Lazy event."""
+
+    @property
+    def time_fired_minute(self):
+        """Minute the event was fired."""
+        return self.time_fired.minute
