@@ -29,8 +29,7 @@
       "already_in_progress": "Config flow for this Denon AVR is already in progress",
       "connection_error": "Failed to connect, please try again",
       "not_denonavr_manufacturer": "Not a Denon AVR Network Receiver, discovered manafucturer did not match",
-      "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete",
-      "no_mac": "Could not retrieve the MAC address from the IP address"
+      "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete"
     }
   },
   "options": {
