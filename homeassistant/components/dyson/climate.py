@@ -234,7 +234,9 @@ class DysonPureHotCoolEntity(ClimateEntity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_executor_job(self._device.add_message_listener, self.on_message)
+        self.hass.async_add_executor_job(
+            self._device.add_message_listener, self.on_message
+        )
 
     def on_message(self, message):
         """Call when new messages received from the climate device."""
