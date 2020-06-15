@@ -46,7 +46,6 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            imei = {}
             try:
                 imei = await get_imei_from_config(self.hass, user_input)
             except CannotConnect:
