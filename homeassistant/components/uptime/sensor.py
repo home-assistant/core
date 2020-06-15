@@ -72,6 +72,8 @@ class UptimeSensor(Entity):
             div_factor *= 24
         elif self.unit_of_measurement == "minutes":
             div_factor /= 60
+        elif self.unit_of_measurement == "seconds":
+            div_factor /= 3600
 
         delta = delta.total_seconds() / div_factor
         self._state = round(delta, 2)
