@@ -295,13 +295,11 @@ def state_from_config(
     if config_validation:
         config = cv.STATE_CONDITION_SCHEMA(config)
     entity_ids = config.get(CONF_ENTITY_ID, [])
-    req_states = config.get(CONF_STATE, [])
+    req_states: Union[str, List[str]] = config.get(CONF_STATE, [])
     for_period = config.get("for")
 
     if not isinstance(req_states, list):
         req_states = [req_states]
-
-    req_states = [cast(str, req_state) for req_state in req_states]
 
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
