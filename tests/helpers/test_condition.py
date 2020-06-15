@@ -295,6 +295,32 @@ async def test_state_multiple_entities(hass):
     assert not test(hass)
 
 
+async def test_multiple_states(hass):
+    """Test with multiple states in condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "and",
+            "conditions": [
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.temperature",
+                    "state": ["100", "200"],
+                },
+            ],
+        },
+    )
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 200)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 42)
+    assert not test(hass)
+
+
 async def test_numeric_state_multiple_entities(hass):
     """Test with multiple entities in condition."""
     test = await condition.async_from_config(
@@ -379,6 +405,55 @@ async def test_zone_multiple_entities(hass):
         "device_tracker.person_2",
         "home",
         {"friendly_name": "person_2", "latitude": 20.1, "longitude": 10.1},
+    )
+    assert not test(hass)
+
+
+async def test_multiple_zones(hass):
+    """Test with multiple entities in condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "and",
+            "conditions": [
+                {
+                    "condition": "zone",
+                    "entity_id": "device_tracker.person",
+                    "zone": ["zone.home", "zone.work"],
+                },
+            ],
+        },
+    )
+
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+    hass.states.async_set(
+        "zone.work",
+        "zoning",
+        {"name": "work", "latitude": 20.1, "longitude": 10.1, "radius": 10},
+    )
+
+    hass.states.async_set(
+        "device_tracker.person",
+        "home",
+        {"friendly_name": "person", "latitude": 2.1, "longitude": 1.1},
+    )
+    assert test(hass)
+
+    hass.states.async_set(
+        "device_tracker.person",
+        "home",
+        {"friendly_name": "person", "latitude": 20.1, "longitude": 10.1},
+    )
+    assert test(hass)
+
+    hass.states.async_set(
+        "device_tracker.person",
+        "home",
+        {"friendly_name": "person", "latitude": 50.1, "longitude": 20.1},
     )
     assert not test(hass)
 
