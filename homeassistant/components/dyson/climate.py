@@ -48,6 +48,20 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 DYSON_KNOWN_CLIMATE_DEVICES = "dyson_known_climate_devices"
 
+SPEED_MAP = {
+    FanSpeed.FAN_SPEED_1.value: FAN_LOW,
+    FanSpeed.FAN_SPEED_2.value: FAN_LOW,
+    FanSpeed.FAN_SPEED_3.value: FAN_LOW,
+    FanSpeed.FAN_SPEED_4.value: FAN_LOW,
+    FanSpeed.FAN_SPEED_AUTO.value: FAN_AUTO,
+    FanSpeed.FAN_SPEED_5.value: FAN_MEDIUM,
+    FanSpeed.FAN_SPEED_6.value: FAN_MEDIUM,
+    FanSpeed.FAN_SPEED_7.value: FAN_MEDIUM,
+    FanSpeed.FAN_SPEED_8.value: FAN_HIGH,
+    FanSpeed.FAN_SPEED_9.value: FAN_HIGH,
+    FanSpeed.FAN_SPEED_10.value: FAN_HIGH,
+}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
@@ -329,21 +343,7 @@ class DysonPureHotCoolEntity(ClimateEntity):
         if self._device.state.fan_state == FanState.FAN_OFF.value:
             return FAN_OFF
 
-        speed_map = {
-            FanSpeed.FAN_SPEED_1.value: FAN_LOW,
-            FanSpeed.FAN_SPEED_2.value: FAN_LOW,
-            FanSpeed.FAN_SPEED_3.value: FAN_LOW,
-            FanSpeed.FAN_SPEED_4.value: FAN_LOW,
-            FanSpeed.FAN_SPEED_AUTO.value: FAN_AUTO,
-            FanSpeed.FAN_SPEED_5.value: FAN_MEDIUM,
-            FanSpeed.FAN_SPEED_6.value: FAN_MEDIUM,
-            FanSpeed.FAN_SPEED_7.value: FAN_MEDIUM,
-            FanSpeed.FAN_SPEED_8.value: FAN_HIGH,
-            FanSpeed.FAN_SPEED_9.value: FAN_HIGH,
-            FanSpeed.FAN_SPEED_10.value: FAN_HIGH,
-        }
-
-        return speed_map[self._device.state.speed]
+        return SPEED_MAP[self._device.state.speed]
 
     @property
     def fan_modes(self):
