@@ -23,7 +23,6 @@ async def get_imei_from_config(hass: core.HomeAssistant, data):
     device = data[CONF_DEVICE]
     config = dict(Device=device, Connection="at")
     gateway = await create_sms_gateway(config, hass)
-    imei = None
     if not gateway:
         raise CannotConnect
     try:
