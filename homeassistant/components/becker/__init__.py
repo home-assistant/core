@@ -86,7 +86,7 @@ async def async_setup(hass, config):
 
 
 class BeckerConnection:
-    """Keep the Daikin instance in one place and centralize the update."""
+    """Keep the Becker instance in one place and centralize the update."""
 
     def __init__(self, centronic_path=None):
         """Create a new instance of Becker Connection."""
