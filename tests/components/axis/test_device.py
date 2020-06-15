@@ -7,6 +7,7 @@ import axis as axislib
 from axis.api_discovery import URL as API_DISCOVERY_URL
 from axis.basic_device_info import URL as BASIC_DEVICE_INFO_URL
 from axis.event_stream import OPERATION_INITIALIZED
+from axis.light_control import URL as LIGHT_CONTROL_URL
 from axis.mqtt import URL_CLIENT as MQTT_CLIENT_URL
 from axis.param_cgi import (
     BRAND as BRAND_URL,
@@ -82,7 +83,6 @@ API_DISCOVERY_PORT_MANAGEMENT = {
     "name": "IO Port Management",
 }
 
-
 BASIC_DEVICE_INFO_RESPONSE = {
     "apiVersion": "1.1",
     "data": {
@@ -92,6 +92,27 @@ BASIC_DEVICE_INFO_RESPONSE = {
             "SerialNumber": "00408C12345",
             "Version": "9.80.1",
         }
+    },
+}
+
+LIGHT_CONTROL_RESPONSE = {
+    "apiVersion": "1.1",
+    "method": "getLightInformation",
+    "data": {
+        "items": [
+            {
+                "lightID": "led0",
+                "lightType": "IR",
+                "enabled": True,
+                "synchronizeDayNightMode": True,
+                "lightState": False,
+                "automaticIntensityMode": False,
+                "automaticAngleOfIlluminationMode": False,
+                "nrOfLEDs": 1,
+                "error": False,
+                "errorInfo": "",
+            }
+        ]
     },
 }
 
@@ -167,6 +188,8 @@ def vapix_session_request(session, url, **kwargs):
         return json.dumps(API_DISCOVERY_RESPONSE)
     if BASIC_DEVICE_INFO_URL in url:
         return json.dumps(BASIC_DEVICE_INFO_RESPONSE)
+    if LIGHT_CONTROL_URL in url:
+        return json.dumps(LIGHT_CONTROL_RESPONSE)
     if MQTT_CLIENT_URL in url:
         return json.dumps(MQTT_CLIENT_RESPONSE)
     if PORT_MANAGEMENT_URL in url:
@@ -217,10 +240,11 @@ async def test_device_setup(hass):
 
     entry = device.config_entry
 
-    assert len(forward_entry_setup.mock_calls) == 3
+    assert len(forward_entry_setup.mock_calls) == 4
     assert forward_entry_setup.mock_calls[0][1] == (entry, "binary_sensor")
     assert forward_entry_setup.mock_calls[1][1] == (entry, "camera")
-    assert forward_entry_setup.mock_calls[2][1] == (entry, "switch")
+    assert forward_entry_setup.mock_calls[2][1] == (entry, "light")
+    assert forward_entry_setup.mock_calls[3][1] == (entry, "switch")
 
     assert device.host == ENTRY_CONFIG[CONF_HOST]
     assert device.model == ENTRY_CONFIG[CONF_MODEL]
