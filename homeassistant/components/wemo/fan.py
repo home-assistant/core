@@ -304,7 +304,6 @@ class WemoHumidifier(FanEntity):
         else:
             self.set_speed(speed)
 
-        self._update()
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
