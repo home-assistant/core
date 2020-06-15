@@ -31,6 +31,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
+    PRESET_BOOST,
     PRESET_NONE,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
@@ -557,6 +558,61 @@ class SinopeTechnologiesThermostat(Thermostat):
         )
 
         self.debug("set occupancy to %s. Status: %s", 0 if is_away else 1, res)
+        return res
+
+
+@STRICT_MATCH(
+    channel_names={CHANNEL_THERMOSTAT}, manufacturers="Eurotronic",
+)
+class EurotronicSpiritZigbeeThermostat(Thermostat):
+    """Eurotronic Spirit Zigbee Thermostat."""
+
+    manufacturer = 0x1037
+    HOST_FLAGS_ATTR = 0x4008
+    BOOST_FLAG = 0b00000100
+    OFF_MODE_FLAG = (
+        0b00010000  # if this flag is set, off mode enabled. set also disables.
+    )
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Initialize ZHA Thermostat instance."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._presets = [PRESET_BOOST, PRESET_NONE]
+        self._supported_flags |= SUPPORT_PRESET_MODE
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to Hass."""
+        await super().async_added_to_hass()
+
+    async def async_preset_handler_boost(self, boost: bool = False) -> bool:
+        """Set boost mode."""
+
+        mfg_code = self._zha_device.manufacturer_code
+        host_flags_raw, err = await self._thrm._cluster.read_attributes(
+            ["host_flags"], manufacturer=mfg_code
+        )
+
+        if host_flags_raw is not None and "host_flags" in host_flags_raw:
+            host_flags = host_flags_raw["host_flags"]
+        else:
+            host_flags = 1
+
+        _LOGGER.debug("current host_flags: %s", host_flags)
+
+        new_host_flags = (
+            host_flags | self.BOOST_FLAG if boost else host_flags & ~self.BOOST_FLAG
+        )
+
+        res = await self._thrm.write_attributes(
+            {"host_flags": new_host_flags}, manufacturer=mfg_code
+        )
+
+        # poll temperature, because it could take a while for the report to come in
+        await self._thrm._cluster.read_attributes(
+            ["occupied_heating_setpoint"], manufacturer=mfg_code
+        )
+
+        self.debug("set boost to %s. Status: %s", 1 if boost else 0, res)
         return res
 
 
