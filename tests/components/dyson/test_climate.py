@@ -166,13 +166,6 @@ class DysonTest(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_component_without_devices(self):
-        """Test setup component with no devices."""
-        self.hass.data[dyson.DYSON_DEVICES] = []
-        add_devices = MagicMock()
-        dyson.setup_platform(self.hass, None, add_devices)
-        add_devices.assert_not_called()
-
     def test_setup_component_with_devices(self):
         """Test setup component with valid devices."""
         devices = [
@@ -384,6 +377,19 @@ class DysonTest(unittest.TestCase):
         device = _get_device_heat_on()
         entity = dyson.DysonPureHotCoolLinkEntity(device)
         assert entity.target_temperature == 23
+
+
+@patch(
+    "homeassistant.components.dyson.DysonAccount.devices", return_value=[],
+)
+@patch("homeassistant.components.dyson.DysonAccount.login", return_value=True)
+async def test_setup_component_without_devices(mocked_login, mocked_devices, hass):
+    """Test setup component with no devices."""
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
+
+    entity_ids = hass.states.async_entity_ids("climate")
+    assert not entity_ids
 
 
 @patch(
