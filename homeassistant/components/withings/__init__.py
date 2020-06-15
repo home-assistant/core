@@ -14,16 +14,18 @@ from withings_api.common import NotifyAppli, enum_or_raise
 from homeassistant.components import webhook
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.webhook import (
+    async_unregister as async_unregister_webhook,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow, const
-from ..webhook import async_unregister as async_unregister_webhook
 from .common import (
     _LOGGER,
     WithingsLocalOAuth2Implementation,
@@ -127,6 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if data_manager.webhook_config.enabled:
         data_manager.async_start_polling_webhook_subscriptions()
 
+        @callback
         def call_later_callback(now) -> None:
             hass.async_create_task(
                 data_manager.subscription_update_coordinator.async_refresh()
