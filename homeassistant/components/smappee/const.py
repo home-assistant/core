@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-DOMAIN = "smappee_official"
+DOMAIN = "smappee"
 DATA_CLIENT = "smappee_data"
 
 BASE = "BASE"
