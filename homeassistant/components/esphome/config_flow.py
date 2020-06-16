@@ -29,7 +29,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None, error: Optional[str] = None
-    ):
+    ):  # pylint: disable=arguments-differ
         """Handle a flow initialized by the user."""
         if user_input is not None:
             return await self._async_authenticate_or_add(user_input)

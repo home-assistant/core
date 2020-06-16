@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, Event, State
+from homeassistant.core import Context, CoreState, State
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -30,6 +30,7 @@ from tests.common import (
     mock_restore_cache,
 )
 from tests.components.automation import common
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
 @pytest.fixture
@@ -1044,11 +1045,11 @@ async def test_logbook_humanify_automation_triggered_event(hass):
         logbook.humanify(
             hass,
             [
-                Event(
+                MockLazyEventPartialState(
                     EVENT_AUTOMATION_TRIGGERED,
                     {ATTR_ENTITY_ID: "automation.hello", ATTR_NAME: "Hello Automation"},
                 ),
-                Event(
+                MockLazyEventPartialState(
                     EVENT_AUTOMATION_TRIGGERED,
                     {ATTR_ENTITY_ID: "automation.bye", ATTR_NAME: "Bye Automation"},
                 ),
