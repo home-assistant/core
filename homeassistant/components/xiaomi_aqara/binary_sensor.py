@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
-from . import PY_XIAOMI_GATEWAY, XiaomiDevice
+from . import PY_XIAOMI_GATEWAY, XiaomiDevice, MOTION_SENSOR_NO_MOTION_TIMEOUT, MOTION_SENSOR_HARDWARE_MODIFIED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,6 +177,9 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         self._hass = hass
         self._no_motion_since = 0
         self._unsub_set_no_motion = None
+        _LOGGER.debug("Motion_Timeout %s", MOTION_SENSOR_NO_MOTION_TIMEOUT)
+        _LOGGER.debug("Motion_Hardware_Modified %s", MOTION_SENSOR_HARDWARE_MODIFIED)
+
         if "proto" not in device or int(device["proto"][0:1]) == 1:
             data_key = "status"
         else:
@@ -241,11 +244,11 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             return False
 
         if value == MOTION:
-            if self._data_key == "motion_status":
+            if self._data_key == "motion_status" or MOTION_SENSOR_HARDWARE_MODIFIED:
                 if self._unsub_set_no_motion:
                     self._unsub_set_no_motion()
                 self._unsub_set_no_motion = async_call_later(
-                    self._hass, 120, self._async_set_no_motion
+                    self._hass, MOTION_SENSOR_NO_MOTION_TIMEOUT, self._async_set_no_motion
                 )
 
             if self.entity_id is not None:
