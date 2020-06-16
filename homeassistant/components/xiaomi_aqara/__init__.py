@@ -34,9 +34,15 @@ CONF_INTERFACE = "interface"
 CONF_KEY = "key"
 CONF_DISABLE = "disable"
 
+CONF_MOTION_SENSOR_NO_MOTION_TIMEOUT = "no_motion_after_sec"
+CONF_MOTION_SENSOR_HARDWARE_MODIFIED = "hardware_modified"
+
 DOMAIN = "xiaomi_aqara"
 
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
+
+MOTION_SENSOR_NO_MOTION_TIMEOUT = None
+MOTION_SENSOR_HARDWARE_MODIFIED = None
 
 TIME_TILL_UNAVAILABLE = timedelta(minutes=150)
 
@@ -110,6 +116,8 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_INTERFACE, default="any"): cv.string,
                 vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int,
+                vol.Optional(CONF_MOTION_SENSOR_NO_MOTION_TIMEOUT, default=120): vol.All(cv.positive_int, vol.Range(min=5)),
+                vol.Optional(CONF_MOTION_SENSOR_HARDWARE_MODIFIED, default=False): cv.boolean,
             }
         )
     },
@@ -126,6 +134,10 @@ def setup(hass, config):
         gateways = config[DOMAIN][CONF_GATEWAYS]
         interface = config[DOMAIN][CONF_INTERFACE]
         discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
+        global MOTION_SENSOR_NO_MOTION_TIMEOUT
+        MOTION_SENSOR_NO_MOTION_TIMEOUT = config[DOMAIN][CONF_MOTION_SENSOR_NO_MOTION_TIMEOUT]
+        global MOTION_SENSOR_HARDWARE_MODIFIED
+        MOTION_SENSOR_HARDWARE_MODIFIED = config[DOMAIN][CONF_MOTION_SENSOR_HARDWARE_MODIFIED]
 
     async def xiaomi_gw_discovered(service, discovery_info):
         """Perform action when Xiaomi Gateway device(s) has been found."""
@@ -255,7 +267,7 @@ class XiaomiDevice(Entity):
         """Start unavailability tracking."""
         self._xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
         self._async_track_unavailable()
-
+    
     @property
     def name(self):
         """Return the name of the device."""
