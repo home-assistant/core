@@ -222,17 +222,17 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return GATEWAY_SENSOR_TYPES.get(self._data_key).icon
+        return GATEWAY_SENSOR_TYPES[self._data_key].icon
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return GATEWAY_SENSOR_TYPES.get(self._data_key).unit
+        return GATEWAY_SENSOR_TYPES[self._data_key].unit
 
     @property
     def device_class(self):
         """Return the device class of this entity."""
-        return GATEWAY_SENSOR_TYPES.get(self._data_key).device_class
+        return GATEWAY_SENSOR_TYPES[self._data_key].device_class
 
     @property
     def state(self):
