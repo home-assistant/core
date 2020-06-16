@@ -1,12 +1,17 @@
 {
   "config": {
+    "flow_title": "Withings: {profile}",
     "step": {
       "profile": {
         "title": "User Profile.",
         "description": "Which profile did you select on the Withings website? It's important the profiles match, otherwise data will be mis-labeled.",
         "data": { "profile": "Profile" }
       },
-      "pick_implementation": { "title": "Pick Authentication Method" }
+      "pick_implementation": { "title": "Pick Authentication Method" },
+      "reauth": {
+        "title": "Re-authenticate {profile}",
+        "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."
+      }
     },
     "abort": {
       "authorize_url_timeout": "Timeout generating authorize url.",
