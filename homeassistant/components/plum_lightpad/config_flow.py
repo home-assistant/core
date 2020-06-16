@@ -36,8 +36,7 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input[CONF_PASSWORD]
 
         # load Plum just so we know username/password work
-        plum = await load_plum(username, password, self.hass)
-        plum.cleanup()
+        await load_plum(username, password, self.hass)
 
         already_registered = await self.async_set_unique_id(username)
         if already_registered:
