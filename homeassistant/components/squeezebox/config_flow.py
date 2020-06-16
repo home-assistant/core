@@ -5,7 +5,7 @@ import logging
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant import config_entries, core, data_entry_flow, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -30,29 +30,6 @@ DATA_SCHEMA = vol.Schema(
 )
 
 TIMEOUT = 5
-
-
-async def validate_input(hass: core.HomeAssistant, data):
-    """
-    Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-    server = Server(
-        async_get_clientsession(hass),
-        data[CONF_HOST],
-        data[CONF_PORT],
-        data.get(CONF_USERNAME),
-        data.get(CONF_PASSWORD),
-    )
-
-    status = await server.async_query("serverstatus")
-    if not status:
-        if server.http_status == HTTP_UNAUTHORIZED:
-            raise InvalidAuth
-        raise CannotConnect
-
-    return status
 
 
 class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -119,6 +96,35 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+    async def _validate_input(self, data):
+        """
+        Validate the user input allows us to connect.
+
+        Retrieve unique id and abort if already configured.
+
+        Data has the keys from DATA_SCHEMA with values provided by the user.
+        """
+        server = Server(
+            async_get_clientsession(self.hass),
+            data[CONF_HOST],
+            data[CONF_PORT],
+            data.get(CONF_USERNAME),
+            data.get(CONF_PASSWORD),
+        )
+
+        try:
+            status = await server.async_query("serverstatus")
+            if not status:
+                if server.http_status == HTTP_UNAUTHORIZED:
+                    return "invalid_auth"
+                return "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            return "unknown"
+
+        if "uuid" in status:
+            await self.async_set_unique_id(status["uuid"])
+            self._abort_if_unique_id_configured()
+
     async def async_step_user(self, user_input=None, errors=None):
         """Handle a flow initialized by the user."""
         if user_input and CONF_HOST in user_input:
@@ -158,18 +164,13 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Edit a discovered or manually inputted server."""
         errors = {}
         if user_input:
-            try:
-                info = await validate_input(self.hass, user_input)
-                if "uuid" in info:
-                    await self.async_set_unique_id(info["uuid"])
-                    self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info.get("ip"), data=user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                errors["base"] = "unknown"
+            error = await self._validate_input(user_input)
+            if error:
+                errors["base"] = error
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
 
         return self.async_show_form(
             step_id="edit", data_schema=self.data_schema, errors=errors
@@ -177,61 +178,37 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config, errors=None):
         """Import a config flow from configuration."""
-        try:
-            DATA_SCHEMA(config)
-            info = await validate_input(self.hass, config)
-            if "uuid" in info:
-                await self.async_set_unique_id(info["uuid"])
-                # update with info from configuration.yaml
-                self._abort_if_unique_id_configured(info)
-            return self.async_create_entry(title=info.get("ip"), data=config)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except InvalidAuth:
-            return self.async_abort(reason="invalid_auth")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
+        DATA_SCHEMA(config)
+        error = await self._validate_input(config)
+        if error:
+            return self.async_abort(reason=error)
+        return self.async_create_entry(title=config[CONF_HOST], data=config)
 
     async def async_step_discovery(self, discovery_info):
         """Handle discovery."""
         _LOGGER.debug("Reached discovery flow with info: %s", discovery_info)
-        if "uuid" not in discovery_info:
-            DATA_SCHEMA(discovery_info)
-            try:
-                info = await validate_input(self.hass, discovery_info)
-                discovery_info.update(info)
-            except CannotConnect:
-                return self.async_abort(reason="cannot_connect")
-            except InvalidAuth:
-                return self.async_abort(reason="invalid_auth")
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason="unknown")
-        if "uuid" in discovery_info:
-            try:
-                await self.async_set_unique_id(discovery_info["uuid"])
-                self._abort_if_unique_id_configured()
-            except data_entry_flow.AbortFlow as error:
-                return self.async_abort(reason=error.reason)
+        DATA_SCHEMA(discovery_info)
+        error = await self._validate_input(discovery_info)
+        if error:
+            return self.async_abort(reason=error)
 
-            # update schema with suggested values from discovery
-            self.data_schema = vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST,
-                        description={"suggested_value": discovery_info.get(CONF_HOST)},
-                    ): str,
-                    vol.Required(
-                        CONF_PORT,
-                        default=DEFAULT_PORT,
-                        description={"suggested_value": discovery_info.get(CONF_PORT)},
-                    ): int,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                }
-            )
-            return await self.async_step_edit()
+        # update schema with suggested values from discovery
+        self.data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOST,
+                    description={"suggested_value": discovery_info.get(CONF_HOST)},
+                ): str,
+                vol.Required(
+                    CONF_PORT,
+                    default=DEFAULT_PORT,
+                    description={"suggested_value": discovery_info.get(CONF_PORT)},
+                ): int,
+                vol.Optional(CONF_USERNAME): str,
+                vol.Optional(CONF_PASSWORD): str,
+            }
+        )
+        return await self.async_step_edit()
 
     async def async_step_unignore(self, user_input):
         """Set up previously ignored Logitech Media Server."""
