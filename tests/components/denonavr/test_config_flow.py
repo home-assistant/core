@@ -77,7 +77,11 @@ def denonavr_connect_fixture():
 
 
 async def test_config_flow_manual_host_success(hass):
-    """Test a successful config flow manually initialized by the user with the host specified."""
+    """
+    Successful flow manually initialized by the user.
+
+    Host specified.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -103,7 +107,11 @@ async def test_config_flow_manual_host_success(hass):
 
 
 async def test_config_flow_manual_discover_1_success(hass):
-    """Test a successful config flow manually initialized by the user without the host specified and 1 receiver discovered."""
+    """
+    Successful flow manually initialized by the user.
+
+    Without the host specified and 1 receiver discovered.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -131,7 +139,11 @@ async def test_config_flow_manual_discover_1_success(hass):
 
 
 async def test_config_flow_manual_discover_2_success(hass):
-    """Test a successful config flow manually initialized by the user without the host specified and 2 receivers discovered."""
+    """
+    Successful flow manually initialized by the user.
+
+    Without the host specified and 2 receiver discovered.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -167,7 +179,11 @@ async def test_config_flow_manual_discover_2_success(hass):
 
 
 async def test_config_flow_manual_discover_error(hass):
-    """Test a failed config flow manually initialized by the user without the host specified and no receivers discovered."""
+    """
+    Failed flow manually initialized by the user.
+
+    Without the host specified and no receiver discovered.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -188,7 +204,11 @@ async def test_config_flow_manual_discover_error(hass):
 
 
 async def test_config_flow_manual_host_no_serial(hass):
-    """Test a successful config flow manually initialized by the user with the host specified and an error getting the serial number."""
+    """
+    Successful flow manually initialized by the user.
+
+    Host specified and an error getting the serial number.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -218,7 +238,11 @@ async def test_config_flow_manual_host_no_serial(hass):
 
 
 async def test_config_flow_manual_host_no_mac(hass):
-    """Test a successful config flow manually initialized by the user with the host specified and an error getting the mac address."""
+    """
+    Successful flow manually initialized by the user.
+
+    Host specified and an error getting the mac address.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -248,7 +272,11 @@ async def test_config_flow_manual_host_no_mac(hass):
 
 
 async def test_config_flow_manual_host_no_serial_no_mac(hass):
-    """Test a failed config flow manually initialized by the user with the host specified and an error getting the serial number and mac address."""
+    """
+    Successful flow manually initialized by the user.
+
+    Host specified and an error getting the serial number and mac address.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -281,7 +309,11 @@ async def test_config_flow_manual_host_no_serial_no_mac(hass):
 
 
 async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
-    """Test a failed config flow manually initialized by the user with the host specified and an error getting the serial number and exception getting mac address."""
+    """
+    Successful flow manually initialized by the user.
+
+    Host specified and an error getting the serial number and exception getting mac address.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -314,7 +346,11 @@ async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
 
 
 async def test_config_flow_manual_host_connection_error(hass):
-    """Test a failed config flow manually initialized by the user with the host specified and a connection error."""
+    """
+    Failed flow manually initialized by the user.
+
+    Host specified and a connection error.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -339,7 +375,11 @@ async def test_config_flow_manual_host_connection_error(hass):
 
 
 async def test_config_flow_manual_host_no_device_info(hass):
-    """Test a failed config flow manually initialized by the user with the host specified and no device info (due to receiver power off)."""
+    """
+    Failed flow manually initialized by the user.
+
+    Host specified and no device info (due to receiver power off).
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -361,7 +401,7 @@ async def test_config_flow_manual_host_no_device_info(hass):
 
 
 async def test_config_flow_ssdp(hass):
-    """Test a successful config flow initialized by ssdp discovery."""
+    """Successful flow initialized by ssdp discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -391,7 +431,11 @@ async def test_config_flow_ssdp(hass):
 
 
 async def test_config_flow_ssdp_not_denon(hass):
-    """Test a failed config flow initialized by ssdp discovery with a not supported manufacturer."""
+    """
+    Failed flow initialized by ssdp discovery.
+
+    Not supported manufacturer.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -408,7 +452,11 @@ async def test_config_flow_ssdp_not_denon(hass):
 
 
 async def test_config_flow_ssdp_missing_info(hass):
-    """Test a failed config flow initialized by ssdp discovery with missing information."""
+    """
+    Failed flow initialized by ssdp discovery.
+
+    Missing information.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -461,7 +509,11 @@ async def test_options_flow(hass):
 
 
 async def test_config_flow_manual_host_no_serial_double_config(hass):
-    """Test a failed config flow manually initialized by the user twice with the host specified and an error getting the serial number."""
+    """
+    Failed flow manually initialized by the user twice.
+
+    Host specified and an error getting the serial number.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
