@@ -20,16 +20,40 @@ from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-    }
-)
-
 TIMEOUT = 5
+
+
+def _base_schema(discovery_info=None):
+    """Generate base schema."""
+    base_schema = {}
+    if discovery_info and CONF_HOST in discovery_info:
+        base_schema.update(
+            {
+                vol.Required(
+                    CONF_HOST,
+                    description={"suggested_value": discovery_info[CONF_HOST]},
+                ): str,
+            }
+        )
+    else:
+        base_schema.update({vol.Required(CONF_HOST): str})
+
+    if discovery_info and CONF_PORT in discovery_info:
+        base_schema.update(
+            {
+                vol.Required(
+                    CONF_PORT,
+                    default=DEFAULT_PORT,
+                    description={"suggested_value": discovery_info[CONF_PORT]},
+                ): int,
+            }
+        )
+    else:
+        base_schema.update({vol.Required(CONF_PORT, default=DEFAULT_PORT): int})
+    base_schema.update(
+        {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
+    )
+    return vol.Schema(base_schema)
 
 
 class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -40,7 +64,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize an instance of the squeezebox config flow."""
-        self.data_schema = DATA_SCHEMA
+        self.data_schema = _base_schema()
         self.discovery_info = None
 
     async def _discover(self, uuid=None):
@@ -101,8 +125,6 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Validate the user input allows us to connect.
 
         Retrieve unique id and abort if already configured.
-
-        Data has the keys from DATA_SCHEMA with values provided by the user.
         """
         server = Server(
             async_get_clientsession(self.hass),
@@ -178,7 +200,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config, errors=None):
         """Import a config flow from configuration."""
-        DATA_SCHEMA(config)
+        _base_schema()(config)
         error = await self._validate_input(config)
         if error:
             return self.async_abort(reason=error)
@@ -187,27 +209,14 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_discovery(self, discovery_info):
         """Handle discovery."""
         _LOGGER.debug("Reached discovery flow with info: %s", discovery_info)
-        DATA_SCHEMA(discovery_info)
+        _base_schema()(discovery_info)
         error = await self._validate_input(discovery_info)
         if error:
             return self.async_abort(reason=error)
 
         # update schema with suggested values from discovery
-        self.data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_HOST,
-                    description={"suggested_value": discovery_info.get(CONF_HOST)},
-                ): str,
-                vol.Required(
-                    CONF_PORT,
-                    default=DEFAULT_PORT,
-                    description={"suggested_value": discovery_info.get(CONF_PORT)},
-                ): int,
-                vol.Optional(CONF_USERNAME): str,
-                vol.Optional(CONF_PASSWORD): str,
-            }
-        )
+        self.data_schema = _base_schema(discovery_info)
+
         return await self.async_step_edit()
 
     async def async_step_unignore(self, user_input):
