@@ -185,7 +185,7 @@ class WemoLight(LightEntity):
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
 
-        self.schedule_update_ha_state(True)
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
@@ -198,7 +198,7 @@ class WemoLight(LightEntity):
             _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
             self._available = False
 
-        self.schedule_update_ha_state(True)
+        self.schedule_update_ha_state()
 
     def _update(self, force_update=True):
         """Synchronize state with bridge."""
@@ -373,7 +373,7 @@ class WemoDimmer(LightEntity):
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
 
-        self.schedule_update_ha_state(True)
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the dimmer off."""
@@ -384,7 +384,7 @@ class WemoDimmer(LightEntity):
             _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
             self._available = False
 
-        self.schedule_update_ha_state(True)
+        self.schedule_update_ha_state()
 
     @property
     def available(self):
