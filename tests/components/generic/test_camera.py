@@ -104,6 +104,7 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
                 "name": "config_test",
                 "platform": "generic",
                 "still_image_url": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
                 "limit_refetch_to_url_change": True,
             }
         },
