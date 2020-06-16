@@ -67,7 +67,7 @@ async def test_user_form_timeout(hass):
     with patch(
         "homeassistant.components.squeezebox.config_flow.async_discover",
         mock_failed_discover,
-    ):
+    ), patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
