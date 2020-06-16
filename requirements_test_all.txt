@@ -161,6 +161,9 @@ bellows==0.17.0
 # homeassistant.components.blebox
 blebox_uniapi==1.3.2
 
+# homeassistant.components.blink
+blinkpy==0.15.0
+
 # homeassistant.components.bom
 bomradarloop==0.1.4
 
