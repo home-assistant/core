@@ -3,10 +3,11 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 
 from .const import DOMAIN, SMS_GATEWAY
 from .gateway import create_sms_gateway
@@ -23,6 +24,7 @@ async def async_setup(hass, config):
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
     sms_config = config.get(DOMAIN, {})
+    hass.data[DOMAIN][NOTIFY_DOMAIN] = config
     if not sms_config:
         return True
 
@@ -44,6 +46,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not gateway:
         return False
     hass.data[DOMAIN][SMS_GATEWAY] = gateway
+
+    # Notify doesn't support config entry setup yet, load with discovery for now
+    hass_config = hass.data[DOMAIN][NOTIFY_DOMAIN]
+    notify_configs = hass.data[DOMAIN][NOTIFY_DOMAIN].get(NOTIFY_DOMAIN, {})
+    for notify_config in notify_configs:
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, NOTIFY_DOMAIN, DOMAIN, notify_config, hass_config,
+            )
+        )
+
     return True
 
 
