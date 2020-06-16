@@ -4,7 +4,6 @@ import pytest
 import voluptuous as vol
 from withings_api.common import UnauthorizedException
 
-import homeassistant.components.http as http
 from homeassistant.components.withings import CONFIG_SCHEMA, DOMAIN, async_setup, const
 from homeassistant.components.withings.common import DataManager
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -23,7 +22,7 @@ from tests.common import MockConfigEntry
 
 def config_schema_validate(withings_config) -> dict:
     """Assert a schema config succeeds."""
-    hass_config = {http.DOMAIN: {}, const.DOMAIN: withings_config}
+    hass_config = {const.DOMAIN: withings_config}
 
     return CONFIG_SCHEMA(hass_config)
 

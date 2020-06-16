@@ -23,8 +23,8 @@ from withings_api.common import (
     query_measure_groups,
 )
 
-from homeassistant.components import http
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -501,7 +501,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
 
 def json_message_response(message: str, message_code: int) -> Response:
     """Produce common json output."""
-    return http.HomeAssistantView.json({"message": message, "code": message_code}, 200)
+    return HomeAssistantView.json({"message": message, "code": message_code}, 200)
 
 
 class WebhookAvailability(IntEnum):

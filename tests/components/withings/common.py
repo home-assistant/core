@@ -17,7 +17,6 @@ from withings_api.common import (
 from homeassistant import data_entry_flow
 import homeassistant.components.api as api
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-import homeassistant.components.http as http
 import homeassistant.components.webhook as webhook
 from homeassistant.components.withings import async_unload_entry
 from homeassistant.components.withings.common import (
@@ -138,7 +137,6 @@ class ComponentFactory:
                 CONF_EXTERNAL_URL: "http://127.0.0.1:8080/",
             },
             api.DOMAIN: {},
-            http.DOMAIN: {"server_port": 8080},
             const.DOMAIN: {
                 CONF_CLIENT_ID: self._client_id,
                 CONF_CLIENT_SECRET: self._client_secret,
