@@ -1,0 +1,15 @@
+{
+  "domain": "crownstone",
+  "name": "Crownstone",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/crownstone",
+  "requirements": [
+    "crownstone-uart",
+    "crownstone-cloud",
+    "crownstone-sse"
+  ],
+  "codeowners": [
+    "@Crownstone",
+    "@RicArch97"
+  ]
+}

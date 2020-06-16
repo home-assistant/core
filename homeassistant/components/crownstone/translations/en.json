@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This account is already configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again.",
+      "account_not_verified": "Account not verified. Please go to your email and verify your account.",
+      "invalid_auth": "Invalid email / password.",
+      "auth_input_none": "Field for email or password is empty. Please fill in both fields and try again.",
+      "unknown_error": "Unexpected error.",
+      "sphere_not_exist": "Sphere does not exist."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "description": "Enter your email and password for Crownstone.\n\n If you don't have a Crownstone account, please go to https://my.crownstone.rocks, and sign up.",
+        "title": "Crownstone"
+      },
+      "sphere": {
+	"data": {
+	  "sphere": "Sphere name"
+	},
+	"description": "Enter a sphere name.\n\n To see what spheres have been configured in your account, open the Crownstone app on your phone.\n If you do not have the Crownstone app, please download the app from the Google Play Store or the App Store, and set up a sphere with crownstones.\n\n Note that sphere names are case sensitive.",
+	"title": "Sphere"
+      }
+    },
+    "title": "Crownstone"
+  }
+}
