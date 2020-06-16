@@ -59,11 +59,11 @@ class ConnectXiaomiGateway:
 class XiaomiGatewayDevice(Entity):
     """Representation of a base Xiaomi Gateway Device."""
 
-    def __init__(self, subdevice):
+    def __init__(self, sub_device):
         """Initialize the Xiaomi Gateway Device."""
-        self._subdevice = subdevice
-        self._unique_id = subdevice.sid
-        self._name = subdevice.sid
+        self._sub_device = sub_device
+        self._unique_id = sub_device.sid
+        self._name = sub_device.sid
         self._available = None
 
     @property
