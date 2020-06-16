@@ -249,9 +249,19 @@ async def async_setup(hass, config):
 
     await hassio.update_hass_api(config.get("http", {}), refresh_token)
 
+    last_timezone = None
+
     async def push_config(_):
         """Push core config to Hass.io."""
-        await hassio.update_hass_timezone(str(hass.config.time_zone))
+        nonlocal last_timezone
+
+        new_timezone = str(hass.config.time_zone)
+
+        if new_timezone == last_timezone:
+            return
+
+        last_timezone = new_timezone
+        await hassio.update_hass_timezone(new_timezone)
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
 
