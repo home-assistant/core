@@ -147,8 +147,9 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(status["uuid"])
             self._abort_if_unique_id_configured()
 
-    async def async_step_user(self, user_input=None, errors=None):
+    async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
+        errors = {}
         if user_input and CONF_HOST in user_input:
             # update with host provided by user
             self.data_schema = vol.Schema(
@@ -198,7 +199,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="edit", data_schema=self.data_schema, errors=errors
         )
 
-    async def async_step_import(self, config, errors=None):
+    async def async_step_import(self, config):
         """Import a config flow from configuration."""
         _base_schema()(config)
         error = await self._validate_input(config)
