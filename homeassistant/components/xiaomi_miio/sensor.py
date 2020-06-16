@@ -1,5 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
-from collections import namedtuple
+from dataclasses import dataclass
 import logging
 
 from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
@@ -51,7 +51,16 @@ ATTR_MODEL = "model"
 
 SUCCESS = ["ok"]
 
-SensorType = namedtuple("SensorType", ["unit", "icon", "device_class"])
+
+@dataclass
+class SensorType:
+    """Class that holds device specific info for a xiaomi aqara sensor."""
+
+    unit: str = None
+    icon: str = None
+    device_class: str = None
+
+
 GATEWAY_SENSOR_TYPES = {
     "temperature": SensorType(
         unit=TEMP_CELSIUS, icon=None, device_class=DEVICE_CLASS_TEMPERATURE
@@ -59,7 +68,9 @@ GATEWAY_SENSOR_TYPES = {
     "humidity": SensorType(
         unit=UNIT_PERCENTAGE, icon=None, device_class=DEVICE_CLASS_HUMIDITY
     ),
-    "pressure": SensorType(unit=PRESSURE_HPA, icon=None, device_class=DEVICE_CLASS_PRESSURE),
+    "pressure": SensorType(
+        unit=PRESSURE_HPA, icon=None, device_class=DEVICE_CLASS_PRESSURE
+    ),
 }
 
 
