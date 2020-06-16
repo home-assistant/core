@@ -80,7 +80,7 @@ class XiaomiGatewayDevice(Entity):
     def device_info(self):
         """Return the device info of the gateway."""
         return {
-            "identifiers": {(DOMAIN, self._subdevice.sid)},
+            "identifiers": {(DOMAIN, self._sub_device.sid)},
         }
 
     @property
