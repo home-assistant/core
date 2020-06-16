@@ -22,6 +22,40 @@ def get_mock_device(device=const.DEFAULT_CONF_USB_STICK_PATH):
     return mock_device
 
 
+async def test_user_input_successful(hass):
+    """Test a successful connection."""
+    flow = await hass.config_entries.flow.async_init(
+        "becker", context={"source": "user"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {const.CONF_DEVICE: const.DEFAULT_CONF_USB_STICK_PATH}
+    )
+    assert result["type"] == "create_entry"
+    assert result["result"].data == {
+        const.CONF_DEVICE: const.DEFAULT_CONF_USB_STICK_PATH
+    }
+
+
+async def test_user_already_configured(hass):
+    """Test duplicated config."""
+    flow = await hass.config_entries.flow.async_init(
+        "becker", context={"source": "user"}
+    )
+
+    MockConfigEntry(
+        domain="becker",
+        unique_id="aabbccddeeff",
+        data={"device": const.DEFAULT_CONF_USB_STICK_PATH},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {const.CONF_DEVICE: const.DEFAULT_CONF_USB_STICK_PATH}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "one_instance_only"
+
+
 async def test_import_with_no_config(hass):
     """Test importing a host without an existing config file."""
     result = await hass.config_entries.flow.async_init(
@@ -29,7 +63,6 @@ async def test_import_with_no_config(hass):
         context={"source": "import"},
         data={const.CONF_DEVICE: const.DEFAULT_CONF_USB_STICK_PATH},
     )
-
     assert result["type"] == "create_entry"
     assert result["data"][const.CONF_DEVICE] == const.DEFAULT_CONF_USB_STICK_PATH
 
