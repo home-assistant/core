@@ -177,6 +177,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "unique_id's will not be available",
                 self.host,
             )
+            for entry in self._async_current_entries():
+                if entry.data.get(CONF_HOST) == self.host:
+                    return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(
             title=receiver.name,

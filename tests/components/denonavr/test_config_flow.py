@@ -188,7 +188,7 @@ async def test_config_flow_manual_discover_error(hass):
 
 
 async def test_config_flow_manual_host_no_serial(hass):
-    """Test a successful config flow manually initialized by the user with the host specified and an error getting the serial number but backup mac address success."""
+    """Test a successful config flow manually initialized by the user with the host specified and an error getting the serial number."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -218,7 +218,7 @@ async def test_config_flow_manual_host_no_serial(hass):
 
 
 async def test_config_flow_manual_host_no_mac(hass):
-    """Test a successful config flow manually initialized by the user with the host specified and an error getting the mac address but backup serial number success."""
+    """Test a successful config flow manually initialized by the user with the host specified and an error getting the mac address."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -458,3 +458,52 @@ async def test_options_flow(hass):
         CONF_ZONE2: True,
         CONF_ZONE3: True,
     }
+
+
+async def test_config_flow_manual_host_no_serial_double_config(hass):
+    """Test a failed config flow manually initialized by the user twice with the host specified and an error getting the serial number."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
+        None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TEST_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_MAC: TEST_MAC,
+        CONF_MODEL: TEST_MODEL,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: None,
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
+        None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
