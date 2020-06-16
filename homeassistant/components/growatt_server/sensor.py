@@ -34,12 +34,7 @@ SCAN_INTERVAL = datetime.timedelta(minutes=5)
 TOTAL_SENSOR_TYPES = {
     "total_money_today": ("Total money today", "€", "plantMoneyText", {}),
     "total_money_total": ("Money lifetime", "€", "totalMoneyText", {}),
-    "total_energy_today": (
-        "Energy Today",
-        ENERGY_KILO_WATT_HOUR,
-        "todayEnergy",
-        {"device_class": "power"},
-    ),
+    "total_energy_today": ("Energy Today", ENERGY_KILO_WATT_HOUR, "todayEnergy", {},),
     "total_output_power": (
         "Output Power",
         POWER_WATT,
@@ -50,7 +45,7 @@ TOTAL_SENSOR_TYPES = {
         "Lifetime energy output",
         ENERGY_KILO_WATT_HOUR,
         "totalEnergy",
-        {"device_class": "power"},
+        {},
     ),
     "total_maximum_output": (
         "Maximum power",
@@ -61,17 +56,12 @@ TOTAL_SENSOR_TYPES = {
 }
 
 INVERTER_SENSOR_TYPES = {
-    "inverter_energy_today": (
-        "Energy today",
-        ENERGY_KILO_WATT_HOUR,
-        "e_today",
-        {"device_class": "power"},
-    ),
+    "inverter_energy_today": ("Energy today", ENERGY_KILO_WATT_HOUR, "e_today", {},),
     "inverter_energy_total": (
         "Lifetime energy output",
         ENERGY_KILO_WATT_HOUR,
         "e_total",
-        {"device_class": "power"},
+        {},
     ),
     "inverter_voltage_input_1": ("Input 1 voltage", VOLT, "vpv1", {}),
     "inverter_amperage_input_1": (
@@ -145,43 +135,43 @@ STORAGE_SENSOR_TYPES = {
         "Storage production today",
         ENERGY_KILO_WATT_HOUR,
         "eBatDisChargeToday",
-        {"device_class": "power"},
+        {},
     ),
     "storage_storage_production_lifetime": (
         "Lifetime Storage production",
         ENERGY_KILO_WATT_HOUR,
         "eBatDisChargeTotal",
-        {"device_class": "power"},
+        {},
     ),
     "storage_grid_discharge_today": (
         "Grid discharged today",
         ENERGY_KILO_WATT_HOUR,
         "eacDisChargeToday",
-        {"device_class": "power"},
+        {},
     ),
     "storage_load_consumption_today": (
         "Load consumption today",
         ENERGY_KILO_WATT_HOUR,
         "eopDischrToday",
-        {"device_class": "power"},
+        {},
     ),
     "storage_load_consumption_lifetime": (
         "Lifetime load consumption",
         ENERGY_KILO_WATT_HOUR,
         "eopDischrTotal",
-        {"device_class": "power"},
+        {},
     ),
     "storage_grid_charged_today": (
         "Grid charged today",
         ENERGY_KILO_WATT_HOUR,
         "eacChargeToday",
-        {"device_class": "power"},
+        {},
     ),
     "storage_charge_storage_lifetime": (
         "Lifetime storaged charged",
         ENERGY_KILO_WATT_HOUR,
         "eChargeTotal",
-        {"device_class": "power"},
+        {},
     ),
     "storage_solar_production": (
         "Solar power production",
@@ -211,7 +201,7 @@ STORAGE_SENSOR_TYPES = {
         "Charge today",
         ENERGY_KILO_WATT_HOUR,
         "eChargeToday",
-        {"device_class": "power"},
+        {},
     ),
     "storage_import_from_grid": (
         "Import from grid",
@@ -223,13 +213,13 @@ STORAGE_SENSOR_TYPES = {
         "Import from grid today",
         ENERGY_KILO_WATT_HOUR,
         "eToUserToday",
-        {"device_class": "power"},
+        {},
     ),
     "storage_import_from_grid_total": (
         "Import from grid total",
         ENERGY_KILO_WATT_HOUR,
         "eToUserTotal",
-        {"device_class": "power"},
+        {},
     ),
     "storage_load_consumption": (
         "Load consumption",
