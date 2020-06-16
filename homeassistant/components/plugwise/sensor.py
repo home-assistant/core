@@ -334,9 +334,6 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
         if data.get("cooling_state") is not None:
             self._cooling_state = data["cooling_state"]
 
-        if CUSTOM_ICONS.get(self._sensor) is not None:
-            self._icon = CUSTOM_ICONS.get(self._sensor)
-
         self._state = "idle"
         self._icon = IDLE_ICON
         if self._heating_state:
@@ -345,6 +342,9 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
         if self._cooling_state:
             self._state = "cooling"
             self._icon = COOL_ICON
+
+        if CUSTOM_ICONS.get(self._sensor) is not None:
+            self._icon = CUSTOM_ICONS.get(self._sensor)
 
         self.async_write_ha_state()
 
