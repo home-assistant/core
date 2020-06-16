@@ -63,11 +63,11 @@ async def async_setup(hass, config):
     if conf is None:
         conf = {}
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][CONF_COVERS] = {}
 
     # User has configured covers
     if CONF_COVERS not in conf:
         return True
+    hass.data[DOMAIN][CONF_COVERS] = {}
     covers = conf[CONF_COVERS]
 
     if CONF_DEVICE in conf:
