@@ -1,0 +1,33 @@
+{
+  "title": "Crownstone",
+  "config": {
+    "abort": {
+      "already_configured": "Dit account is reeds geconfigureerd."
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de Crownstone Cloud. Controleer uw internetverbinding",
+      "account_not_verified": "Account is niet geverifieerd. Activeer uw account via de activatie mail van Crownstone.",
+      "invalid_auth": "Email of wachtwoord klopt niet",
+      "auth_input_none": "Het veld voor het wachtwoord is niet ingevuld. Vul beide velden in en probeer opnieuw.",
+      "unknown_error": "Overwachte fout opgetreden.",
+      "sphere_not_exist": "Sphere bestaat niet."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Wachtwoord",
+          "username": "Email"
+        },
+        "description": "Voer uw email en wachtwoord in voor Crownstone.\n\n Als u geen Crownstone account heeft, ga naar https://my.crownstone.rocks, and maak er een aan.",
+        "title": "Crownstone"
+      },
+      "sphere": {
+	    "data": {
+	      "sphere": "Sphere naam"
+	    },
+	    "description": "Voer een sphere naam in.\n\n Om te zien welke spheres u geconfigureerd heeft, gaat u naar de Crownstone app op uw telefoon.\n Als u de Crownstone app niet heeft, download deze dan van de Google Play store of de App store.\n\n Sphere namen zijn hoofdletter gevoelig.",
+	    "title": "Sphere"
+      }
+    }
+  }
+}

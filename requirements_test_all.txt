@@ -235,6 +235,15 @@ coronavirus==1.1.1
 # homeassistant.scripts.credstash
 # credstash==1.15.0
 
+# homeassistant.components.crownstone
+crownstone-cloud==1.1.3
+
+# homeassistant.components.crownstone
+crownstone-sse==1.1.1
+
+# homeassistant.components.crownstone
+crownstone-uart==0.7.2
+
 # homeassistant.components.datadog
 datadog==0.15.0
 

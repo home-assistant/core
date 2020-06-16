@@ -1,5 +1,4 @@
-""" Config flow for Crownstone integration """
-
+"""Flow handler for Crownstone."""
 import logging
 from typing import Optional
 
@@ -26,6 +25,7 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
+        """Initialize the flow."""
         self.cloud: Optional[CrownstoneCloud] = None
         self.login_info = None
 
@@ -36,7 +36,7 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
-                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str,}
+                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str, }
                 ),
             )
 
@@ -68,17 +68,18 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str,}
+                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str, }
             ),
             errors=errors,
         )
 
     async def async_step_sphere(self, user_input=None):
+        """Handle the step for selecting a sphere."""
         errors = {}
         if user_input is None:
             return self.async_show_form(
                 step_id="sphere",
-                data_schema=vol.Schema({vol.Required(CONF_SPHERE): str,}),
+                data_schema=vol.Schema({vol.Required(CONF_SPHERE): str, }),
             )
         # get the spheres for the user
         await self.cloud.spheres.update()
@@ -108,6 +109,6 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(
                 step_id="sphere",
-                data_schema=vol.Schema({vol.Required(CONF_SPHERE): str,}),
+                data_schema=vol.Schema({vol.Required(CONF_SPHERE): str, }),
                 errors=errors,
             )

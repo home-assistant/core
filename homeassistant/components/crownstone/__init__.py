@@ -1,4 +1,4 @@
-"""The Crownstone integration."""
+"""Integration for Crownstone."""
 import logging
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Initiate the Crownstone component"""
+    """Initiate the Crownstone component."""
     conf = config.get(DOMAIN)
     hass.data[DOMAIN] = {}
     # check if config already exists for domain
@@ -26,7 +26,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Initiate the Crownstone API login from a config entry"""
+    """Initiate the Crownstone API login from a config entry."""
     crownstone_hub = CrownstoneHub(hass, entry)
 
     if not await crownstone_hub.async_setup():

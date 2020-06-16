@@ -1,4 +1,4 @@
-"""Platform for stone integration."""
+"""Support for presence detection of Crownstone."""
 import logging
 from typing import Any, Dict, Optional
 
@@ -57,22 +57,22 @@ class Presence(Entity):
 
     @property
     def name(self) -> str:
-        """Return the name of this presence holder"""
+        """Return the name of this presence holder."""
         return self.presence_holder.name
 
     @property
     def icon(self) -> Optional[str]:
-        """Return the icon"""
+        """Return the icon."""
         return self._icon
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID"""
+        """Return the unique ID."""
         return self.presence_holder.unique_id
 
     @property
     def cloud_id(self) -> str:
-        """Return the cloud id of this presence holder"""
+        """Return the cloud id of this presence holder."""
         return self.presence_holder.cloud_id
 
     @property
@@ -104,8 +104,16 @@ class Presence(Entity):
         return attributes
 
     @property
+    def available(self) -> bool:
+        """Return if the presence sensor is available."""
+        if self.hub.sse.state == "running":
+            return True
+        else:
+            return False
+
+    @property
     def device_info(self) -> Dict[str, Any]:
-        """Return device information"""
+        """Return device information."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
