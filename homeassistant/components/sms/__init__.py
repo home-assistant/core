@@ -3,11 +3,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, SMS_GATEWAY
 from .gateway import create_sms_gateway
@@ -22,51 +19,13 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Configure Gammu state machine."""
-    hass.data.setdefault(DOMAIN, {})
-    sms_config = config.get(DOMAIN, {})
-    hass.data[DOMAIN][NOTIFY_DOMAIN] = config
-    if not sms_config:
-        return True
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=sms_config,
-        )
-    )
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Configure Gammu state machine."""
-
-    device = entry.data[CONF_DEVICE]
-    config = {"Device": device, "Connection": "at"}
-    gateway = await create_sms_gateway(config, hass)
+    sms_config = config[DOMAIN]
+    device = sms_config.get(CONF_DEVICE)
+    gammu_config = {"Device": device, "Connection": "at"}
+    gateway = await create_sms_gateway(gammu_config, hass)
     if not gateway:
         return False
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][SMS_GATEWAY] = gateway
-
-    # Notify doesn't support config entry setup yet, load with discovery for now
-    hass_config = hass.data[DOMAIN][NOTIFY_DOMAIN]
-    notify_configs = hass.data[DOMAIN][NOTIFY_DOMAIN].get(NOTIFY_DOMAIN, {})
-    for notify_config in notify_configs:
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, NOTIFY_DOMAIN, DOMAIN, notify_config, hass_config,
-            )
-        )
-
     return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
-
-    if SMS_GATEWAY in hass.data[DOMAIN]:
-        gateway = hass.data[DOMAIN][SMS_GATEWAY]
-        hass.data[DOMAIN].pop(SMS_GATEWAY)
-        await gateway.terminate_async()
-        return True
-
-    return False

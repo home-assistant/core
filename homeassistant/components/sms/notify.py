@@ -25,12 +25,7 @@ def get_service(hass, config, discovery_info=None):
         return
 
     gateway = hass.data[DOMAIN][SMS_GATEWAY]
-
-    if discovery_info is None:
-        number = config[CONF_RECIPIENT]
-    else:
-        number = discovery_info[CONF_RECIPIENT]
-
+    number = config[CONF_RECIPIENT]
     return SMSNotificationService(gateway, number)
 
 
