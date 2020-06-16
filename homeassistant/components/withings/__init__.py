@@ -130,13 +130,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data_manager.async_start_polling_webhook_subscriptions()
 
         @callback
-        def call_later_callback(now) -> None:
+        def async_call_later_callback(now) -> None:
             hass.async_create_task(
                 data_manager.subscription_update_coordinator.async_refresh()
             )
 
         # Start subscription check in the background, outside this component's setup.
-        async_call_later(hass, 1, call_later_callback)
+        async_call_later(hass, 1, async_call_later_callback)
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, BINARY_SENSOR_DOMAIN)
