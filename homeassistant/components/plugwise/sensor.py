@@ -278,6 +278,7 @@ class PwThermostatSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
+        self._icon = None
         self._model = sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
         self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
@@ -299,6 +300,7 @@ class PwThermostatSensor(SmileSensor, Entity):
             if self._unit_of_measurement == UNIT_PERCENTAGE:
                 measurement = int(measurement)
             self._state = measurement
+            self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()
 
@@ -343,8 +345,6 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
             self._state = "cooling"
             self._icon = COOL_ICON
 
-        self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
-
         self.async_write_ha_state()
 
 
@@ -355,6 +355,7 @@ class PwPowerSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
+        self._icon = None
         self._model = model
         if model is None:
             self._model = sensor_type[SENSOR_MAP_MODEL]
@@ -380,8 +381,6 @@ class PwPowerSensor(SmileSensor, Entity):
             if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
                 measurement = int(measurement / 1000)
             self._state = measurement
-
-        if CUSTOM_ICONS.get(self._sensor) is not None:
-            self._icon = CUSTOM_ICONS.get(self._sensor)
+            self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()
