@@ -212,12 +212,12 @@ class XiaomiAirQualityMonitor(Entity):
 class XiaomiGatewaySensor(XiaomiGatewayDevice):
     """Representation of a XiaomiGatewaySensor."""
 
-    def __init__(self, subdevice, data_key):
+    def __init__(self, sub_device, data_key):
         """Initialize the XiaomiSensor."""
-        XiaomiGatewayDevice.__init__(self, subdevice)
+        super().__init__(sub_device)
         self._data_key = data_key
-        self._unique_id = f"{subdevice.sid}-{data_key}"
-        self._name = f"{subdevice.sid}-{data_key}"
+        self._unique_id = f"{sub_device.sid}-{data_key}"
+        self._name = f"{sub_device.sid}-{data_key}"
 
     @property
     def icon(self):
