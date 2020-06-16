@@ -36,30 +36,22 @@ SENSOR_DICT = {
     for sensor_id, sensor_spec in SENSOR_TYPES.items()
 }
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-    }
-)
-
 
 def _base_schema(discovery_info):
     """Generate base schema."""
-    return vol.Schema(
-        {
-            vol.Optional(
-                CONF_HOST, default=discovery_info.get(CONF_HOST, DEFAULT_HOST)
-            ): str,
-            vol.Optional(
-                CONF_PORT, default=int(discovery_info.get(CONF_PORT, DEFAULT_PORT))
-            ): int,
-            vol.Optional(CONF_USERNAME): str,
-            vol.Optional(CONF_PASSWORD): str,
-        }
+    base_schema = {}
+    if not discovery_info:
+        base_schema.update(
+            {
+                vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+            }
+        )
+    base_schema.update(
+        {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
     )
+
+    return vol.Schema(base_schema)
 
 
 def _resource_schema_base(available_resources, selected_resources):
@@ -91,7 +83,7 @@ def _ups_schema(ups_list):
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
+    Data has the keys from _base_schema with values provided by the user.
     """
 
     host = data[CONF_HOST]
@@ -137,6 +129,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered nut device."""
         self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {
+            CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_HOST),
+            CONF_HOST: discovery_info[CONF_HOST],
+        }
         return await self.async_step_user()
 
     async def async_step_import(self, user_input=None):
@@ -159,6 +156,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the user input."""
         errors = {}
         if user_input is not None:
+            if self.discovery_info:
+                user_input.update(
+                    {
+                        CONF_HOST: self.discovery_info[CONF_HOST],
+                        CONF_PORT: self.discovery_info.get(CONF_PORT, DEFAULT_PORT),
+                    }
+                )
             info, errors = await self._async_validate_or_error(user_input)
 
             if not errors:

@@ -1,5 +1,4 @@
 """Test the Network UPS Tools (NUT) config flow."""
-import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nut.const import DOMAIN
@@ -28,17 +27,6 @@ async def test_form_zeroconf(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-    schema = result["data_schema"].schema
-    defaults = {}
-    for key, _ in schema.items():
-        if (
-            isinstance(key, (vol.Required, vol.Optional))
-            and key.default is not vol.UNDEFINED
-        ):
-            defaults[key] = key.default()
-
-    assert defaults["host"] == "192.168.1.5"
-    assert defaults["port"] == 1234
 
     mock_pynut = _get_mock_pynutclient(
         list_vars={"battery.voltage": "voltage", "ups.status": "OL"}, list_ups=["ups1"]
@@ -49,12 +37,7 @@ async def test_form_zeroconf(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-                "port": 2222,
-            },
+            {"username": "test-username", "password": "test-password"},
         )
 
     assert result2["step_id"] == "resources"
@@ -73,11 +56,11 @@ async def test_form_zeroconf(hass):
         )
 
     assert result3["type"] == "create_entry"
-    assert result3["title"] == "1.1.1.1:2222"
+    assert result3["title"] == "192.168.1.5:1234"
     assert result3["data"] == {
-        "host": "1.1.1.1",
+        "host": "192.168.1.5",
         "password": "test-password",
-        "port": 2222,
+        "port": 1234,
         "resources": ["battery.voltage", "ups.status", "ups.status.display"],
         "username": "test-username",
     }
