@@ -61,13 +61,3 @@ async def test_valid_credentials(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-def invalid_credentials(*args):
-    """Test we handle invalid credentials."""
-    return False
-
-
-def valid_credentials(*args):
-    """Test we handle valid credentials."""
-    return True
