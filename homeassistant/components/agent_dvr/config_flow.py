@@ -23,13 +23,13 @@ class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Agent config flow."""
         self.device_config = {}
 
-    async def async_step_user(self, info=None):
+    async def async_step_user(self, user_input=None):
         """Handle an Agent config flow."""
         errors = {}
 
-        if info is not None:
-            host = info[CONF_HOST]
-            port = info[CONF_PORT]
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
 
             server_origin = generate_url(host, port)
             agent_client = Agent(server_origin, async_get_clientsession(self.hass))
@@ -48,8 +48,8 @@ class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 self._abort_if_unique_id_configured(
                     updates={
-                        CONF_HOST: info[CONF_HOST],
-                        CONF_PORT: info[CONF_PORT],
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
                         SERVER_URL: server_origin,
                     }
                 )

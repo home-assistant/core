@@ -1,7 +1,9 @@
 """The tests for the logbook component."""
 # pylint: disable=protected-access,invalid-name
+import collections
 from datetime import datetime, timedelta
 from functools import partial
+import json
 import logging
 import unittest
 
@@ -21,6 +23,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
+from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
@@ -152,14 +155,23 @@ class TestComponentLogbook(unittest.TestCase):
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
 
-        eventA = self.create_state_changed_event(pointA, entity_id, 10)
+        state_on = ha.State(
+            entity_id, "on", {"brightness": 200}, pointA, pointA
+        ).as_dict()
+
+        eventA = self.create_state_changed_event_from_old_new(
+            entity_id, pointA, None, state_on
+        )
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
-        eventA.data["old_state"] = None
 
         entities_filter = logbook._generate_filter_from_config({})
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -179,14 +191,22 @@ class TestComponentLogbook(unittest.TestCase):
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
 
-        eventA = self.create_state_changed_event(pointA, entity_id, 10)
+        state_on = ha.State(
+            entity_id, "on", {"brightness": 200}, pointA, pointA
+        ).as_dict()
+        eventA = self.create_state_changed_event_from_old_new(
+            None, pointA, state_on, None,
+        )
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
-        eventA.data["new_state"] = None
 
         entities_filter = logbook._generate_filter_from_config({})
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -214,7 +234,11 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config({})
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -248,7 +272,11 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -283,8 +311,8 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (
-                ha.Event(EVENT_HOMEASSISTANT_START),
-                ha.Event(EVENT_ALEXA_SMART_HOME),
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
+                MockLazyEventPartialState(EVENT_ALEXA_SMART_HOME),
                 eventA,
                 eventB,
             )
@@ -321,7 +349,11 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -342,7 +374,7 @@ class TestComponentLogbook(unittest.TestCase):
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
 
-        event_alexa = ha.Event(
+        event_alexa = MockLazyEventPartialState(
             EVENT_ALEXA_SMART_HOME,
             {"request": {"namespace": "Alexa.Discovery", "name": "Discover"}},
         )
@@ -361,7 +393,12 @@ class TestComponentLogbook(unittest.TestCase):
         entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
         events = [
             e
-            for e in (ha.Event(EVENT_HOMEASSISTANT_START), event_alexa, eventA, eventB,)
+            for e in (
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
+                event_alexa,
+                eventA,
+                eventB,
+            )
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
@@ -408,7 +445,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (
-                ha.Event(EVENT_HOMEASSISTANT_START),
+                MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
                 eventA1,
                 eventA2,
                 eventA3,
@@ -436,28 +473,6 @@ class TestComponentLogbook(unittest.TestCase):
             entries[4], pointB, "blu", domain="sensor", entity_id=entity_id2
         )
 
-    def test_exclude_auto_groups(self):
-        """Test if events of automatically generated groups are filtered."""
-        entity_id = "switch.bla"
-        entity_id2 = "group.switches"
-        pointA = dt_util.utcnow()
-
-        eventA = self.create_state_changed_event(pointA, entity_id, 10)
-        eventB = self.create_state_changed_event(pointA, entity_id2, 20, {"auto": True})
-
-        entities_filter = logbook._generate_filter_from_config({})
-        events = [
-            e
-            for e in (eventA, eventB)
-            if logbook._keep_event(self.hass, e, entities_filter)
-        ]
-        entries = list(logbook.humanify(self.hass, events))
-
-        assert len(entries) == 1
-        self.assert_entry(
-            entries[0], pointA, "bla", domain="switch", entity_id=entity_id
-        )
-
     def test_exclude_attribute_changes(self):
         """Test if events of attribute changes are filtered."""
         pointA = dt_util.utcnow()
@@ -472,23 +487,11 @@ class TestComponentLogbook(unittest.TestCase):
             "light.kitchen", "on", {"brightness": 200}, pointB, pointC
         ).as_dict()
 
-        eventA = ha.Event(
-            EVENT_STATE_CHANGED,
-            {
-                "entity_id": "light.kitchen",
-                "old_state": state_off,
-                "new_state": state_100,
-            },
-            time_fired=pointB,
+        eventA = self.create_state_changed_event_from_old_new(
+            "light.kitchen", pointB, state_off, state_100
         )
-        eventB = ha.Event(
-            EVENT_STATE_CHANGED,
-            {
-                "entity_id": "light.kitchen",
-                "old_state": state_100,
-                "new_state": state_200,
-            },
-            time_fired=pointC,
+        eventB = self.create_state_changed_event_from_old_new(
+            "light.kitchen", pointC, state_100, state_200
         )
 
         entities_filter = logbook._generate_filter_from_config({})
@@ -513,8 +516,8 @@ class TestComponentLogbook(unittest.TestCase):
             logbook.humanify(
                 self.hass,
                 (
-                    ha.Event(EVENT_HOMEASSISTANT_STOP),
-                    ha.Event(EVENT_HOMEASSISTANT_START),
+                    MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
+                    MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
                 ),
             )
         )
@@ -533,7 +536,7 @@ class TestComponentLogbook(unittest.TestCase):
             logbook.humanify(
                 self.hass,
                 (
-                    ha.Event(EVENT_HOMEASSISTANT_START),
+                    MockLazyEventPartialState(EVENT_HOMEASSISTANT_START),
                     self.create_state_changed_event(pointA, entity_id, 10),
                 ),
             )
@@ -547,7 +550,7 @@ class TestComponentLogbook(unittest.TestCase):
             entries[1], pointA, "bla", domain="switch", entity_id=entity_id
         )
 
-    def test_entry_message_from_state_device(self):
+    def test_entry_message_from_event_device(self):
         """Test if logbook message is correctly created for switches.
 
         Especially test if the special handling for turn on/off events is done.
@@ -556,23 +559,26 @@ class TestComponentLogbook(unittest.TestCase):
 
         # message for a device state change
         eventA = self.create_state_changed_event(pointA, "switch.bla", 10)
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "changed to 10"
 
         # message for a switch turned on
         eventA = self.create_state_changed_event(pointA, "switch.bla", STATE_ON)
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "turned on"
 
         # message for a switch turned off
         eventA = self.create_state_changed_event(pointA, "switch.bla", STATE_OFF)
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "turned off"
 
-    def test_entry_message_from_state_device_tracker(self):
+    def test_entry_message_from_event_device_tracker(self):
         """Test if logbook message is correctly created for device tracker."""
         pointA = dt_util.utcnow()
 
@@ -580,33 +586,37 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "device_tracker.john", STATE_NOT_HOME
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is away"
 
         # message for a device tracker "home" state
         eventA = self.create_state_changed_event(pointA, "device_tracker.john", "work")
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is at work"
 
-    def test_entry_message_from_state_person(self):
+    def test_entry_message_from_event_person(self):
         """Test if logbook message is correctly created for a person."""
         pointA = dt_util.utcnow()
 
         # message for a device tracker "not home" state
         eventA = self.create_state_changed_event(pointA, "person.john", STATE_NOT_HOME)
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is away"
 
         # message for a device tracker "home" state
         eventA = self.create_state_changed_event(pointA, "person.john", "work")
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is at work"
 
-    def test_entry_message_from_state_sun(self):
+    def test_entry_message_from_event_sun(self):
         """Test if logbook message is correctly created for sun."""
         pointA = dt_util.utcnow()
 
@@ -614,19 +624,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "sun.sun", sun.STATE_ABOVE_HORIZON
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "has risen"
 
         # message for a sun set
         eventA = self.create_state_changed_event(
             pointA, "sun.sun", sun.STATE_BELOW_HORIZON
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "has set"
 
-    def test_entry_message_from_state_binary_sensor_battery(self):
+    def test_entry_message_from_event_binary_sensor_battery(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "battery"}
@@ -635,19 +647,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.battery", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is low"
 
         # message for a binary_sensor battery "normal" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.battery", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is normal"
 
-    def test_entry_message_from_state_binary_sensor_connectivity(self):
+    def test_entry_message_from_event_binary_sensor_connectivity(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "connectivity"}
@@ -656,19 +670,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.connectivity", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is connected"
 
         # message for a binary_sensor connectivity "disconnected" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.connectivity", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is disconnected"
 
-    def test_entry_message_from_state_binary_sensor_door(self):
+    def test_entry_message_from_event_binary_sensor_door(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "door"}
@@ -677,19 +693,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.door", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is opened"
 
         # message for a binary_sensor door "closed" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.door", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is closed"
 
-    def test_entry_message_from_state_binary_sensor_garage_door(self):
+    def test_entry_message_from_event_binary_sensor_garage_door(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "garage_door"}
@@ -698,19 +716,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.garage_door", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is opened"
 
         # message for a binary_sensor garage_door "closed" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.garage_door", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is closed"
 
-    def test_entry_message_from_state_binary_sensor_opening(self):
+    def test_entry_message_from_event_binary_sensor_opening(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "opening"}
@@ -719,19 +739,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.opening", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is opened"
 
         # message for a binary_sensor opening "closed" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.opening", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is closed"
 
-    def test_entry_message_from_state_binary_sensor_window(self):
+    def test_entry_message_from_event_binary_sensor_window(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "window"}
@@ -740,19 +762,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.window", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is opened"
 
         # message for a binary_sensor window "closed" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.window", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is closed"
 
-    def test_entry_message_from_state_binary_sensor_lock(self):
+    def test_entry_message_from_event_binary_sensor_lock(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "lock"}
@@ -761,19 +785,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.lock", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is unlocked"
 
         # message for a binary_sensor lock "locked" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.lock", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is locked"
 
-    def test_entry_message_from_state_binary_sensor_plug(self):
+    def test_entry_message_from_event_binary_sensor_plug(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "plug"}
@@ -782,19 +808,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.plug", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is plugged in"
 
         # message for a binary_sensor plug "pluged" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.plug", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is unplugged"
 
-    def test_entry_message_from_state_binary_sensor_presence(self):
+    def test_entry_message_from_event_binary_sensor_presence(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "presence"}
@@ -803,19 +831,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.presence", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is at home"
 
         # message for a binary_sensor presence "away" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.presence", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is away"
 
-    def test_entry_message_from_state_binary_sensor_safety(self):
+    def test_entry_message_from_event_binary_sensor_safety(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "safety"}
@@ -824,19 +854,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.safety", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is unsafe"
 
         # message for a binary_sensor safety "safe" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.safety", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "is safe"
 
-    def test_entry_message_from_state_binary_sensor_cold(self):
+    def test_entry_message_from_event_binary_sensor_cold(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "cold"}
@@ -845,19 +877,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.cold", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected cold"
 
         # message for a binary_sensori cold "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.cold", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no cold detected)"
 
-    def test_entry_message_from_state_binary_sensor_gas(self):
+    def test_entry_message_from_event_binary_sensor_gas(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "gas"}
@@ -866,19 +900,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.gas", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected gas"
 
         # message for a binary_sensori gas "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.gas", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no gas detected)"
 
-    def test_entry_message_from_state_binary_sensor_heat(self):
+    def test_entry_message_from_event_binary_sensor_heat(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "heat"}
@@ -887,19 +923,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.heat", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected heat"
 
         # message for a binary_sensori heat "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.heat", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no heat detected)"
 
-    def test_entry_message_from_state_binary_sensor_light(self):
+    def test_entry_message_from_event_binary_sensor_light(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "light"}
@@ -908,19 +946,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.light", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected light"
 
         # message for a binary_sensori light "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.light", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no light detected)"
 
-    def test_entry_message_from_state_binary_sensor_moisture(self):
+    def test_entry_message_from_event_binary_sensor_moisture(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "moisture"}
@@ -929,19 +969,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.moisture", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected moisture"
 
         # message for a binary_sensori moisture "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.moisture", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no moisture detected)"
 
-    def test_entry_message_from_state_binary_sensor_motion(self):
+    def test_entry_message_from_event_binary_sensor_motion(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "motion"}
@@ -950,19 +992,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.motion", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected motion"
 
         # message for a binary_sensori motion "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.motion", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no motion detected)"
 
-    def test_entry_message_from_state_binary_sensor_occupancy(self):
+    def test_entry_message_from_event_binary_sensor_occupancy(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "occupancy"}
@@ -971,19 +1015,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.occupancy", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected occupancy"
 
         # message for a binary_sensori occupancy "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.occupancy", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no occupancy detected)"
 
-    def test_entry_message_from_state_binary_sensor_power(self):
+    def test_entry_message_from_event_binary_sensor_power(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "power"}
@@ -992,19 +1038,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.power", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected power"
 
         # message for a binary_sensori power "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.power", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no power detected)"
 
-    def test_entry_message_from_state_binary_sensor_problem(self):
+    def test_entry_message_from_event_binary_sensor_problem(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "problem"}
@@ -1013,19 +1061,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.problem", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected problem"
 
         # message for a binary_sensori problem "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.problem", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no problem detected)"
 
-    def test_entry_message_from_state_binary_sensor_smoke(self):
+    def test_entry_message_from_event_binary_sensor_smoke(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "smoke"}
@@ -1034,19 +1084,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.smoke", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected smoke"
 
         # message for a binary_sensori smoke "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.smoke", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no smoke detected)"
 
-    def test_entry_message_from_state_binary_sensor_sound(self):
+    def test_entry_message_from_event_binary_sensor_sound(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "sound"}
@@ -1055,19 +1107,21 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.sound", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected sound"
 
         # message for a binary_sensori sound "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.sound", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no sound detected)"
 
-    def test_entry_message_from_state_binary_sensor_vibration(self):
+    def test_entry_message_from_event_binary_sensor_vibration(self):
         """Test if logbook message is correctly created for a binary_sensor."""
         pointA = dt_util.utcnow()
         attributes = {"device_class": "vibration"}
@@ -1076,16 +1130,18 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.vibration", STATE_ON, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "detected vibration"
 
         # message for a binary_sensori vibration "cleared" state
         eventA = self.create_state_changed_event(
             pointA, "binary_sensor.vibration", STATE_OFF, attributes
         )
-        to_state = ha.State.from_dict(eventA.data.get("new_state"))
-        message = logbook._entry_message_from_state(to_state.domain, to_state)
+        message = logbook._entry_message_from_event(
+            self.hass, eventA.entity_id, eventA.domain, eventA
+        )
         assert message == "cleared (no vibration detected)"
 
     def test_process_custom_logbook_entries(self):
@@ -1098,7 +1154,7 @@ class TestComponentLogbook(unittest.TestCase):
             logbook.humanify(
                 self.hass,
                 (
-                    ha.Event(
+                    MockLazyEventPartialState(
                         logbook.EVENT_LOGBOOK_ENTRY,
                         {
                             logbook.ATTR_NAME: name,
@@ -1151,11 +1207,42 @@ class TestComponentLogbook(unittest.TestCase):
             entity_id, state, attributes, last_changed, last_updated
         ).as_dict()
 
-        return ha.Event(
-            EVENT_STATE_CHANGED,
-            {"entity_id": entity_id, "old_state": old_state, "new_state": new_state},
-            time_fired=event_time_fired,
+        return self.create_state_changed_event_from_old_new(
+            entity_id, event_time_fired, old_state, new_state
         )
+
+    def create_state_changed_event_from_old_new(
+        self, entity_id, event_time_fired, old_state, new_state
+    ):
+        """Create a state changed event from a old and new state."""
+        event_data_json = json.dumps(
+            {"entity_id": entity_id, "old_state": old_state, "new_state": new_state},
+            cls=JSONEncoder,
+        )
+        row = collections.namedtuple(
+            "Row",
+            [
+                "event_type"
+                "event_data"
+                "time_fired"
+                "context_id"
+                "context_user_id"
+                "state"
+                "entity_id"
+                "domain"
+            ],
+        )
+
+        row.event_type = EVENT_STATE_CHANGED
+        row.event_data = event_data_json
+        row.time_fired = event_time_fired
+        row.state = new_state and new_state.get("state")
+        row.entity_id = entity_id
+        row.domain = entity_id and ha.split_entity_id(entity_id)[0]
+        row.context_id = None
+        row.context_user_id = None
+
+        return logbook.LazyEventPartialState(row)
 
 
 async def test_logbook_view(hass, hass_client):
@@ -1403,3 +1490,17 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
     json = await response.json()
     assert len(json) == 1
     assert json[0]["entity_id"] == entity_id_test
+
+
+class MockLazyEventPartialState(ha.Event):
+    """Minimal mock of a Lazy event."""
+
+    @property
+    def time_fired_minute(self):
+        """Minute the event was fired."""
+        return self.time_fired.minute
+
+    @property
+    def context_user_id(self):
+        """Context user id of event."""
+        return self.context.user_id

@@ -844,7 +844,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_CONDITION): "numeric_state",
-            vol.Required(CONF_ENTITY_ID): entity_id,
+            vol.Required(CONF_ENTITY_ID): entity_ids,
             CONF_BELOW: vol.Coerce(float),
             CONF_ABOVE: vol.Coerce(float),
             vol.Optional(CONF_VALUE_TEMPLATE): template,
@@ -857,8 +857,8 @@ STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_CONDITION): "state",
-            vol.Required(CONF_ENTITY_ID): entity_id,
-            vol.Required(CONF_STATE): str,
+            vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Required(CONF_STATE): vol.Any(str, [str]),
             vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
@@ -905,8 +905,8 @@ TIME_CONDITION_SCHEMA = vol.All(
 ZONE_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "zone",
-        vol.Required(CONF_ENTITY_ID): entity_id,
-        "zone": entity_id,
+        vol.Required(CONF_ENTITY_ID): entity_ids,
+        "zone": entity_ids,
         # To support use_trigger_value in automation
         # Deprecated 2016/04/25
         vol.Optional("event"): vol.Any("enter", "leave"),

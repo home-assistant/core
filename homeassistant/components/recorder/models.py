@@ -200,6 +200,6 @@ def process_timestamp(ts):
     if ts is None:
         return None
     if ts.tzinfo is None:
-        return dt_util.UTC.localize(ts)
+        return ts.replace(tzinfo=dt_util.UTC)
 
     return dt_util.as_utc(ts)
