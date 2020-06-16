@@ -3,7 +3,6 @@ from asynctest import patch
 from pysqueezebox import Server
 
 from homeassistant import config_entries
-from homeassistant.components.squeezebox.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.squeezebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
@@ -25,8 +24,8 @@ async def mock_failed_discover(_discovery_callback):
 async def test_user_form(hass):
     """Test user-initiated flow, including discovery and the edit step."""
     with patch(
-        "homeassistant.components.squeezebox.config_flow.validate_input",
-        return_value={"uuid": UUID, CONF_HOST: HOST, CONF_PORT: PORT, "ip": HOST},
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
+        return_value=None,
     ), patch(
         "homeassistant.components.squeezebox.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -83,8 +82,8 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.squeezebox.config_flow.validate_input",
-        side_effect=InvalidAuth,
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
+        return_value="invalid_auth",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -107,8 +106,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.squeezebox.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
+        return_value="cannot_connect",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -127,8 +126,8 @@ async def test_form_cannot_connect(hass):
 async def test_discovery(hass):
     """Test handling of discovered server."""
     with patch(
-        "homeassistant.components.squeezebox.config_flow.validate_input",
-        return_value={"uuid": UUID, CONF_HOST: HOST, CONF_PORT: PORT, "ip": HOST},
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -142,8 +141,8 @@ async def test_discovery(hass):
 async def test_import_bad_host(hass):
     """Test handling of configuration imported with bad host."""
     with patch(
-        "homeassistant.components.squeezebox.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
+        return_value="cannot_connect",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -157,8 +156,8 @@ async def test_import_bad_host(hass):
 async def test_import_bad_auth(hass):
     """Test handling of configuration import with bad authentication."""
     with patch(
-        "homeassistant.components.squeezebox.config_flow.validate_input",
-        side_effect=InvalidAuth,
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
+        return_value="invalid_auth",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
