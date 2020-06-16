@@ -181,12 +181,9 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             DATA_SCHEMA(config)
             info = await validate_input(self.hass, config)
             if "uuid" in info:
-                try:
-                    await self.async_set_unique_id(info["uuid"])
-                    # update with info from configuration.yaml
-                    self._abort_if_unique_id_configured(info)
-                except data_entry_flow.AbortFlow as error:
-                    return self.async_abort(reason=error.reason)
+                await self.async_set_unique_id(info["uuid"])
+                # update with info from configuration.yaml
+                self._abort_if_unique_id_configured(info)
             return self.async_create_entry(title=info.get("ip"), data=config)
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
