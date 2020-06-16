@@ -127,7 +127,7 @@ async def test_action(hass):
     hass.states.async_set(
         "humidifier.entity",
         STATE_ON,
-        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY],},
+        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
     )
 
     assert await async_setup_component(
@@ -256,7 +256,7 @@ async def test_capabilities(hass):
     hass.states.async_set(
         "humidifier.entity",
         STATE_ON,
-        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY],},
+        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
     )
 
     # Set humidity
@@ -274,7 +274,7 @@ async def test_capabilities(hass):
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "humidity", "required": True, "type": "integer",}]
+    ) == [{"name": "humidity", "required": True, "type": "integer"}]
 
     # Set mode
     capabilities = await device_action.async_get_action_capabilities(
