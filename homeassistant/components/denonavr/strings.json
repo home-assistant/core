@@ -1,0 +1,48 @@
+{
+  "config": {
+    "flow_title": "Denon AVR Network Receiver: {name}",
+    "step": {
+      "user": {
+        "title": "Denon AVR Network Receivers",
+        "description": "Connect to your receiver, if the IP address is not set, auto-discovery is used",
+        "data": {
+          "host": "IP address"
+        }
+      },
+      "confirm": {
+        "title": "Denon AVR Network Receivers",
+        "description": "Please confirm adding the receiver"
+      },
+      "select": {
+        "title": "Select the receiver that you wish to connect",
+        "description": "Run the setup again if you want to connect additional receivers",
+        "data": {
+          "select_host": "Receiver IP"
+        }
+      }
+    },
+    "error": {
+      "discovery_error": "Failed to discover a Denon AVR Network Receiver"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "Config flow for this Denon AVR is already in progress",
+      "connection_error": "Failed to connect, please try again",
+      "not_denonavr_manufacturer": "Not a Denon AVR Network Receiver, discovered manafucturer did not match",
+      "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Denon AVR Network Receivers",
+        "description": "Specify optional settings",
+        "data": {
+          "show_all_sources": "Show all sources",
+          "zone2": "Set up Zone 2",
+          "zone3": "Set up Zone 3"
+        }
+      }
+    }
+  }
+}
