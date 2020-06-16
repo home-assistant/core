@@ -8,13 +8,11 @@ from homeassistant.components.denonavr import ATTR_COMMAND, SERVICE_GET_COMMAND
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
     CONF_MODEL,
-    CONF_SHOW_ALL_SOURCES,
+    CONF_SERIAL_NUMBER,
     CONF_TYPE,
-    CONF_ZONE2,
-    CONF_ZONE3,
     DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC, CONF_TIMEOUT
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +21,7 @@ TEST_MAC = "ab:cd:ef:gh"
 TEST_NAME = "Test_Receiver"
 TEST_MODEL = "model5"
 TEST_SERIALNUMBER = "123456789"
-TEST_MANAFACTURER = "Denon"
+TEST_MANUFACTURER = "Denon"
 TEST_RECEIVER_TYPE = "avr-x"
 TEST_ZONE = "Main"
 TEST_UNIQUE_ID = f"{TEST_MODEL}-{TEST_SERIALNUMBER}"
@@ -45,7 +43,7 @@ def client_fixture():
         mock_client_class.return_value.name = TEST_NAME
         mock_client_class.return_value.model_name = TEST_MODEL
         mock_client_class.return_value.serial_number = TEST_SERIALNUMBER
-        mock_client_class.return_value.manufacturer = TEST_MANAFACTURER
+        mock_client_class.return_value.manufacturer = TEST_MANUFACTURER
         mock_client_class.return_value.receiver_type = TEST_RECEIVER_TYPE
         mock_client_class.return_value.zone = TEST_ZONE
         mock_client_class.return_value.input_func_list = []
@@ -59,13 +57,10 @@ async def setup_denonavr(hass):
     entry_data = {
         CONF_HOST: TEST_HOST,
         CONF_MAC: TEST_MAC,
-        CONF_TIMEOUT: TEST_TIMEOUT,
-        CONF_SHOW_ALL_SOURCES: TEST_SHOW_ALL_SOURCES,
-        CONF_ZONE2: TEST_ZONE2,
-        CONF_ZONE3: TEST_ZONE3,
-        CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MODEL: TEST_MODEL,
-        CONF_MANUFACTURER: TEST_MANAFACTURER,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MANUFACTURER: TEST_MANUFACTURER,
+        CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
 
     mock_entry = MockConfigEntry(
