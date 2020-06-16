@@ -1,0 +1,18 @@
+{
+  "title": "Humidifier",
+  "device_automation": {
+    "action_type": {
+      "set_humidity": "Set humidity for {entity_name}",
+      "set_mode": "Change mode on {entity_name}",
+      "toggle": "Toggle {entity_name}",
+      "turn_on": "Turn on {entity_name}",
+      "turn_off": "Turn off {entity_name}"
+    }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
+    }
+  }
+}
