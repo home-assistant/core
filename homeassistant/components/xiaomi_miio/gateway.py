@@ -38,7 +38,7 @@ class ConnectXiaomiGateway:
             self._gateway_info = await self._hass.async_add_executor_job(
                 self._gateway_device.info
             )
-            # get the connected subdevices
+            # get the connected sub devices
             await self._hass.async_add_executor_job(
                 self._gateway_device.discover_devices
             )
@@ -89,7 +89,7 @@ class XiaomiGatewayDevice(Entity):
         return self._available
 
     async def async_update(self):
-        """Fetch state from the subdevice."""
+        """Fetch state from the sub device."""
         try:
             await self.hass.async_add_executor_job(self._sub_device.update)
             self._available = True

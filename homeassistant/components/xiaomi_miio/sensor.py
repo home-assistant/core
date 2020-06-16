@@ -67,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Xiaomi sensor from a config entry."""
     entities = []
 
-    # Gateway subdevices
+    # Gateway sub devices
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id]
         sub_devices = gateway.devices
@@ -237,4 +237,4 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._subdevice.status[self._data_key]
+        return self._sub_device.status[self._data_key]
