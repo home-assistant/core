@@ -27,7 +27,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CHINA,
     CONF_AQI_COUNTRY,
-    CONF_FORECAST_FREQUENCY,
+    CONF_FORECAST_INTERVAL,
     CURRENT,
     DAILY,
     DEFAULT_NAME,
@@ -47,7 +47,7 @@ SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Inclusive(CONF_LATITUDE, "location"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "location"): cv.longitude,
-        vol.Optional(CONF_FORECAST_FREQUENCY, default=DAILY): vol.In(
+        vol.Optional(CONF_FORECAST_INTERVAL, default=DAILY): vol.In(
             (DISABLE_FORECASTS, DAILY, HOURLY)
         ),
         vol.Optional(CONF_AQI_COUNTRY, default=USA): vol.In((USA, CHINA)),
@@ -167,7 +167,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._config_entry = config_entry
         self._api = api
-        self._forecast_frequency = config_entry.data.get(CONF_FORECAST_FREQUENCY)
+        self._forecast_interval = config_entry.data.get(CONF_FORECAST_INTERVAL)
         self.name = config_entry.data[CONF_NAME]
         self.data = {CURRENT: {}, FORECASTS: []}
 
@@ -186,14 +186,14 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                 self._api.availabile_fields(REALTIME)
             )
 
-            if self._forecast_frequency == HOURLY.lower():
+            if self._forecast_interval == HOURLY.lower():
                 data[FORECASTS] = await self._api.forecast_hourly(
                     self._api.availabile_fields(FORECAST_HOURLY),
                     None,
                     timedelta(hours=90),
                 )
 
-            if self._forecast_frequency == DAILY.lower():
+            if self._forecast_interval == DAILY.lower():
                 data[FORECASTS] = await self._api.forecast_daily(
                     self._api.availabile_fields(FORECAST_DAILY),
                     None,

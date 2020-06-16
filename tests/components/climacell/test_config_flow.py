@@ -12,7 +12,7 @@ from homeassistant.components.climacell import SCHEMA
 from homeassistant.components.climacell.config_flow import _get_config_schema
 from homeassistant.components.climacell.const import (
     CONF_AQI_COUNTRY,
-    CONF_FORECAST_FREQUENCY,
+    CONF_FORECAST_INTERVAL,
     DAILY,
     DEFAULT_NAME,
     DOMAIN,
@@ -47,7 +47,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistantType) -> None:
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_FORECAST_FREQUENCY] == DAILY
+    assert result["data"][CONF_FORECAST_INTERVAL] == DAILY
     assert result["data"][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LONGITUDE] == hass.config.longitude
     assert result["data"][CONF_AQI_COUNTRY] == USA
@@ -148,7 +148,7 @@ async def test_import_flow_minimum_fields(hass: HomeAssistantType) -> None:
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_FORECAST_FREQUENCY] == DAILY
+    assert result["data"][CONF_FORECAST_INTERVAL] == DAILY
     assert CONF_LATITUDE not in result["data"]
     assert CONF_LONGITUDE not in result["data"]
     assert result["data"][CONF_AQI_COUNTRY] == USA
@@ -183,7 +183,7 @@ async def test_import_flow_update_entry(hass: HomeAssistantType) -> None:
     ).add_to_hass(hass)
 
     config = MIN_CONFIG.copy()
-    config[CONF_FORECAST_FREQUENCY] = HOURLY
+    config[CONF_FORECAST_INTERVAL] = HOURLY
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=SCHEMA(config),
     )

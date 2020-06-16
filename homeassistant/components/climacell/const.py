@@ -1,5 +1,5 @@
 """Constants for the ClimaCell integration."""
-CONF_FORECAST_FREQUENCY = "forecast_frequency"
+CONF_FORECAST_INTERVAL = "forecast_interval"
 CONF_AQI_COUNTRY = "aqi_country"
 
 DISABLE_FORECASTS = "disable"

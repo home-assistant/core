@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CHINA,
     CONF_AQI_COUNTRY,
-    CONF_FORECAST_FREQUENCY,
+    CONF_FORECAST_INTERVAL,
     DAILY,
     DEFAULT_NAME,
     DISABLE_FORECASTS,
@@ -59,8 +59,8 @@ def _get_config_schema(
                 default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
             ): cv.longitude,
             vol.Optional(
-                CONF_FORECAST_FREQUENCY,
-                default=input_dict.get(CONF_FORECAST_FREQUENCY, DAILY),
+                CONF_FORECAST_INTERVAL,
+                default=input_dict.get(CONF_FORECAST_INTERVAL, DAILY),
             ): vol.In((DISABLE_FORECASTS, DAILY, HOURLY)),
             vol.Optional(
                 CONF_AQI_COUNTRY, default=input_dict.get(CONF_AQI_COUNTRY, USA),
