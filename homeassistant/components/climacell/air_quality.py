@@ -3,12 +3,12 @@ import logging
 from typing import Callable, List
 
 from homeassistant.components.air_quality import AirQualityEntity
-from homeassistant.components.climacell import ClimaCellDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
+from . import ClimaCellDataUpdateCoordinator
 from .const import AQI_FIELD_LOOKUP, ATTRIBUTION, CONF_AQI_COUNTRY, CURRENT, DOMAIN
 
 # mypy: allow-untyped-defs, no-check-untyped-defs

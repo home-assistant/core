@@ -2,7 +2,6 @@
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
-from homeassistant.components.climacell import ClimaCellDataUpdateCoordinator
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
@@ -32,6 +31,7 @@ from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
 from homeassistant.util.temperature import convert as temp_convert
 
+from . import ClimaCellDataUpdateCoordinator
 from .const import (
     ATTR_WEATHER_CLOUD_COVER,
     ATTR_WEATHER_DEWPOINT,
