@@ -104,7 +104,7 @@ async def test_hassio_discovery_startup_done(hass, aioclient_mock, hassio_client
         await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
-        assert aioclient_mock.call_count == 3
+        assert aioclient_mock.call_count == 2
         assert mock_mqtt.called
         mock_mqtt.assert_called_with(
             {
