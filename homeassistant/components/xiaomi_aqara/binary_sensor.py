@@ -5,7 +5,12 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
-from . import PY_XIAOMI_GATEWAY, XiaomiDevice, MOTION_SENSOR_NO_MOTION_TIMEOUT, MOTION_SENSOR_HARDWARE_MODIFIED
+from . import (
+    PY_XIAOMI_GATEWAY,
+    XiaomiDevice,
+    MOTION_SENSOR_NO_MOTION_TIMEOUT,
+    MOTION_SENSOR_HARDWARE_MODIFIED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -225,6 +230,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             'cmd': 'heartbeat', 'data': '{"voltage":3005}'}
 
         """
+        _LOGGER.error("Motion Sensor Data %s", data)
         if raw_data["cmd"] == "heartbeat":
             _LOGGER.debug(
                 "Skipping heartbeat of the motion sensor. "
@@ -248,7 +254,9 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 if self._unsub_set_no_motion:
                     self._unsub_set_no_motion()
                 self._unsub_set_no_motion = async_call_later(
-                    self._hass, MOTION_SENSOR_NO_MOTION_TIMEOUT, self._async_set_no_motion
+                    self._hass,
+                    MOTION_SENSOR_NO_MOTION_TIMEOUT,
+                    self._async_set_no_motion,
                 )
 
             if self.entity_id is not None:
