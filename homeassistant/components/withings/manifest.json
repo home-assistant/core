@@ -4,6 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/withings",
   "requirements": ["withings-api==2.1.6"],
-  "dependencies": ["webhook", "http"],
+  "dependencies": ["http", "webhook"],
   "codeowners": ["@vangorra"]
 }
