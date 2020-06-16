@@ -317,8 +317,6 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        if CUSTOM_ICONS.get(self._sensor) is not None:
-            self._icon = CUSTOM_ICONS.get(self._sensor)
         return self._icon
 
     @callback
@@ -335,6 +333,9 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
             self._heating_state = data["heating_state"]
         if data.get("cooling_state") is not None:
             self._cooling_state = data["cooling_state"]
+
+        if CUSTOM_ICONS.get(self._sensor) is not None:
+            self._icon = CUSTOM_ICONS.get(self._sensor)
 
         self._state = "idle"
         self._icon = IDLE_ICON
@@ -380,5 +381,8 @@ class PwPowerSensor(SmileSensor, Entity):
             if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
                 measurement = int(measurement / 1000)
             self._state = measurement
+
+        if CUSTOM_ICONS.get(self._sensor) is not None:
+            self._icon = CUSTOM_ICONS.get(self._sensor)
 
         self.async_write_ha_state()
