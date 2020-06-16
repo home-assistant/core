@@ -95,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if config:
         conf = {
-            CONF_HOST: config.get(CONF_HOST),
+            CONF_HOST: config[CONF_HOST],
             CONF_PORT: config.get(CONF_PORT) if config.get(CONF_PORT) else DEFAULT_PORT,
         }
         for attr in [CONF_USERNAME, CONF_PASSWORD]:
