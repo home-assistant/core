@@ -116,8 +116,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     host = config[CONF_HOST]
     port = config.get(CONF_PORT)
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     known_servers = hass.data[DOMAIN].get(KNOWN_SERVERS)
     if known_servers is None:
