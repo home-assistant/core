@@ -19,7 +19,9 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: Optional[ConfigType]) -> Dict[str, Any]:
+    async def async_step_user(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
         """Handle a flow initialized by the user or redirected to by import."""
         if not user_input:
             return self.async_show_form(
