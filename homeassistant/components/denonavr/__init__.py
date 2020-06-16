@@ -104,7 +104,7 @@ async def async_unload_entry(
     for entry in entries:
         if entry.unique_id == zone2_id and not config_entry.options.get(CONF_ZONE2):
             entity_registry.async_remove(entry.entity_id)
-            _LOGGER.info("removing zone2 from DenonAvr")
+            _LOGGER.debug("Removing zone2 from DenonAvr")
         if entry.unique_id == zone3_id and not config_entry.options.get(CONF_ZONE3):
             entity_registry.async_remove(entry.entity_id)
             _LOGGER.info("removing zone3 from DenonAvr")
