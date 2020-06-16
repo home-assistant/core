@@ -28,7 +28,7 @@ async def validate_input(hass: core.HomeAssistant, auth):
         await hass.async_add_executor_job(auth.startup)
     except (LoginError, TokenRefreshFailed):
         raise InvalidAuth
-    if auth.check_key_required:
+    if await hass.async_add_executor_job(auth.check_key_required):
         raise Require2FA
 
 
@@ -36,10 +36,7 @@ def _send_blink_2fa_pin(auth, pin):
     """Send 2FA pin to blink servers."""
     blink = Blink()
     blink.auth = auth
-    try:
-        blink.setup_urls()
-    except BlinkSetupError:
-        return False
+    blink.setup_urls()
     return auth.send_auth_key(blink, pin)
 
 
@@ -95,18 +92,27 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_2fa(self, user_input=None):
         """Handle 2FA step."""
+        errors = {}
         if user_input is not None:
             pin = user_input.get(CONF_PIN)
-            if await self.hass.async_add_executor_job(
-                _send_blink_2fa_pin, self.auth, pin
-            ):
-                return await self.async_step_user(user_input=self.data)
+            try:
+                if await self.hass.async_add_executor_job(
+                    _send_blink_2fa_pin, self.auth, pin
+                ):
+                    return await self.async_step_user(user_input=self.data)
+                errors["base"] = "invalid_access_token"
+            except BlinkSetupError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="2fa",
             data_schema=vol.Schema(
                 {vol.Optional("pin"): vol.All(str, vol.Length(min=1))}
             ),
+            errors=errors,
         )
 
 
