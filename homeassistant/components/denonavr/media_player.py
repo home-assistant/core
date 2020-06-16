@@ -172,7 +172,6 @@ class DenonDevice(MediaPlayerEntity):
             return None
 
         device_info = {
-            "config_entry_id": self._config_entry.entry_id,
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},
             "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
             "name": self._config_entry.title,
