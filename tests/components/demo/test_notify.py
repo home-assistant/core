@@ -1,6 +1,5 @@
 """The tests for the notify demo platform."""
 import unittest
-from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -11,6 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.notify import common
 
@@ -32,8 +32,9 @@ class TestNotifyDemo(unittest.TestCase):
             self.events.append(event)
 
         self.hass.bus.listen(demo.EVENT_NOTIFY, record_event)
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

@@ -2,11 +2,11 @@
 import os
 import tempfile
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.notify as notify
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -16,8 +16,9 @@ class TestCommandLine(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

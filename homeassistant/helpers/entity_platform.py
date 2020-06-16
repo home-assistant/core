@@ -4,7 +4,7 @@ from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, cast
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import CALLBACK_TYPE, callback, split_entity_id, valid_entity_id
@@ -240,12 +240,9 @@ class EntityPlatform:
     ) -> None:
         """Schedule adding entities for a single platform async."""
         self._tasks.append(
-            cast(
-                asyncio.Future,
-                self.hass.async_add_job(
-                    self.async_add_entities(  # type: ignore
-                        new_entities, update_before_add=update_before_add
-                    ),
+            self.hass.async_create_task(
+                self.async_add_entities(
+                    new_entities, update_before_add=update_before_add
                 ),
             )
         )
@@ -322,6 +319,8 @@ class EntityPlatform:
                 await entity.async_device_update(warning=False)
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("%s: Error on device update!", self.platform_name)
+                entity.hass = None
+                entity.platform = None
                 return
 
         suggested_object_id = None
@@ -353,6 +352,7 @@ class EntityPlatform:
                     "model",
                     "name",
                     "sw_version",
+                    "entry_type",
                     "via_device",
                 ):
                     if key in device_info:
@@ -393,6 +393,8 @@ class EntityPlatform:
                     or entity.name
                     or f'"{self.platform_name} {entity.unique_id}"',
                 )
+                entity.hass = None
+                entity.platform = None
                 return
 
         # We won't generate an entity ID if the platform has already set one
@@ -418,6 +420,8 @@ class EntityPlatform:
 
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):
+            entity.hass = None
+            entity.platform = None
             raise HomeAssistantError(f"Invalid entity id: {entity.entity_id}")
 
         already_exists = entity.entity_id in self.entities
@@ -433,6 +437,8 @@ class EntityPlatform:
             if entity.unique_id is not None:
                 msg += f". Platform {self.platform_name} does not generate unique IDs"
             self.logger.error(msg)
+            entity.hass = None
+            entity.platform = None
             return
 
         entity_id = entity.entity_id
@@ -544,7 +550,7 @@ class EntityPlatform:
             for entity in self.entities.values():
                 if not entity.should_poll:
                     continue
-                tasks.append(entity.async_update_ha_state(True))  # type: ignore
+                tasks.append(entity.async_update_ha_state(True))
 
             if tasks:
                 await asyncio.gather(*tasks)

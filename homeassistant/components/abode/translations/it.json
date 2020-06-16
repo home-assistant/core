@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Indirizzo email"
+                    "username": "E-mail"
                 },
                 "title": "Inserisci le tue informazioni di accesso Abode"
             }

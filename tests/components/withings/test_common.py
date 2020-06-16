@@ -1,6 +1,5 @@
 """Tests for the Withings component."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 from withings_api import WithingsApi
@@ -13,7 +12,7 @@ from homeassistant.components.withings.common import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import dt
 
-from tests.async_mock import MagicMock
+from tests.async_mock import MagicMock, patch
 
 
 @pytest.fixture(name="withings_api")

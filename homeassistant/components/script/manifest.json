@@ -2,6 +2,7 @@
   "domain": "script",
   "name": "Scripts",
   "documentation": "https://www.home-assistant.io/integrations/script",
+  "after_dependencies": ["logbook"],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

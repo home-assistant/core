@@ -1,6 +1,5 @@
 """The tests for the MQTT eventstream component."""
 import json
-from unittest.mock import ANY, patch
 
 import pytest
 
@@ -11,6 +10,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import ANY, patch
 from tests.common import (
     fire_mqtt_message,
     fire_time_changed,

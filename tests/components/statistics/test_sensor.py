@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 import statistics
 import unittest
-from unittest.mock import patch
 
 import pytest
 
@@ -12,6 +11,7 @@ from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CE
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     fire_time_changed,
     get_test_home_assistant,
@@ -57,6 +57,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -82,6 +83,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -121,6 +123,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -150,6 +153,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -197,6 +201,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -238,6 +243,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -291,6 +297,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -342,6 +349,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -407,6 +415,7 @@ class TestStatisticsSensor(unittest.TestCase):
             )
             self.hass.block_till_done()
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 

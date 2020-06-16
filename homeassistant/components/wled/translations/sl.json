@@ -13,8 +13,7 @@
                 "data": {
                     "host": "Gostitelj ali IP naslov"
                 },
-                "description": "Nastavite svoj WLED za integracijo s Home Assistant.",
-                "title": "Pove\u017eite svoj WLED"
+                "description": "Nastavite svoj WLED za integracijo s Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Ali \u017eelite dodati WLED z imenom `{name}` v Home Assistant?",

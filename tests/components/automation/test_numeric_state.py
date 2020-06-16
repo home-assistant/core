@@ -1,6 +1,5 @@
 """The tests for numeric state automation."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -11,6 +10,7 @@ from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,

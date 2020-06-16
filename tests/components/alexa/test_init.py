@@ -1,8 +1,9 @@
 """Tests for alexa."""
 from homeassistant.components import logbook
 from homeassistant.components.alexa.const import EVENT_ALEXA_SMART_HOME
-import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
+
+from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
 async def test_humanify_alexa_event(hass):
@@ -14,11 +15,11 @@ async def test_humanify_alexa_event(hass):
         logbook.humanify(
             hass,
             [
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_ALEXA_SMART_HOME,
                     {"request": {"namespace": "Alexa.Discovery", "name": "Discover"}},
                 ),
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_ALEXA_SMART_HOME,
                     {
                         "request": {
@@ -28,7 +29,7 @@ async def test_humanify_alexa_event(hass):
                         }
                     },
                 ),
-                ha.Event(
+                MockLazyEventPartialState(
                     EVENT_ALEXA_SMART_HOME,
                     {
                         "request": {

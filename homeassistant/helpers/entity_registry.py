@@ -34,7 +34,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
@@ -429,6 +428,12 @@ class EntityRegistry:
 
         if data is not None:
             for entity in data["entities"]:
+                # Some old installations can have some bad entities.
+                # Filter them out as they cause errors down the line.
+                # Can be removed in Jan 2021
+                if not valid_entity_id(entity["entity_id"]):
+                    continue
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     entity_id=entity["entity_id"],
                     config_entry_id=entity.get("config_entry_id"),
@@ -491,7 +496,6 @@ class EntityRegistry:
             self.async_remove(entity_id)
 
 
-@bind_hass
 @singleton(DATA_REGISTRY)
 async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
     """Create entity registry."""

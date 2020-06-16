@@ -8,7 +8,7 @@ from homeassistant.components.light import (
 )
 import homeassistant.util.color as color_util
 
-from . import PLUM_DATA
+from .const import DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -16,7 +16,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    plum = hass.data[PLUM_DATA]
+    plum = hass.data[DOMAIN]
 
     entities = []
 
@@ -53,6 +53,11 @@ class PlumLight(LightEntity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def unique_id(self):
+        """Combine logical load ID with .light to guarantee it is unique."""
+        return f"{self._load.llid}.light"
 
     @property
     def name(self):
@@ -129,6 +134,11 @@ class GlowRing(LightEntity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def unique_id(self):
+        """Combine LightPad ID with .glow to guarantee it is unique."""
+        return f"{self._lightpad.lpid}.glow"
 
     @property
     def name(self):

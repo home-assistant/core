@@ -259,6 +259,9 @@ class HueLight(LightEntity):
         else:
             bri = self.light.state.get("bri")
 
+        if bri is None:
+            return bri
+
         return hue_brightness_to_hass(bri)
 
     @property
@@ -293,18 +296,29 @@ class HueLight(LightEntity):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        if self.is_group or "ct" not in self.light.controlcapabilities:
+        if self.is_group:
             return super().min_mireds
 
-        return self.light.controlcapabilities["ct"]["min"]
+        min_mireds = self.light.controlcapabilities.get("ct", {}).get("min")
+
+        # We filter out '0' too, which can be incorrectly reported by 3rd party buls
+        if not min_mireds:
+            return super().min_mireds
+
+        return min_mireds
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        if self.is_group or "ct" not in self.light.controlcapabilities:
+        if self.is_group:
             return super().max_mireds
 
-        return self.light.controlcapabilities["ct"]["max"]
+        max_mireds = self.light.controlcapabilities.get("ct", {}).get("max")
+
+        if not max_mireds:
+            return super().max_mireds
+
+        return max_mireds
 
     @property
     def is_on(self):

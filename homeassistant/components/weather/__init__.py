@@ -114,7 +114,7 @@ class WeatherEntity(Entity):
 
     @property
     def precision(self):
-        """Return the forecast."""
+        """Return the precision of the temperature value."""
         return (
             PRECISION_TENTHS
             if self.temperature_unit == TEMP_CELSIUS

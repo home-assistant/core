@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Wemo?",
-                "title": "Wemo"
+                "description": "Czy chcesz skonfigurowa\u0107 Wemo?"
             }
         }
     }

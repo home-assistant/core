@@ -16,15 +16,12 @@
             },
             "user": {
                 "data": {
-                    "host": "V\u00e6rt",
                     "password": "Adgangskode",
-                    "port": "Port",
                     "ssl": "AdGuard Home bruger et SSL-certifikat",
                     "username": "Brugernavn",
                     "verify_ssl": "AdGuard Home bruger et korrekt certifikat"
                 },
-                "description": "Konfigurer din AdGuard Home-instans for at tillade overv\u00e5gning og kontrol.",
-                "title": "Forbind din AdGuard Home."
+                "description": "Konfigurer din AdGuard Home-instans for at tillade overv\u00e5gning og kontrol."
             }
         }
     }
