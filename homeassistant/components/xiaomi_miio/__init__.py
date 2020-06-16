@@ -66,15 +66,15 @@ async def async_setup_gateway_entry(
         sw_version=gateway_info.firmware_version,
     )
 
-    for sub_device in sub_devices:
+    for sub_device in sub_devices.values():
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, sub_device.sid)},
             via_device=(DOMAIN, gateway_id),
             manufacturer="Xiaomi",
-            name=f"{sub_device.device_type}-{sub_device.sid}",
-            model=sub_device.device_type,
-            sw_version=sub_device._fw_ver,
+            name=sub_device.name,
+            model=sub_device.model,
+            sw_version=sub_device.firmware_version,
         )
 
     for component in GATEWAY_PLATFORMS:

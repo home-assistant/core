@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id]
         sub_devices = gateway.devices
-        for sub_device in sub_devices:
+        for sub_device in sub_devices.values():
             if (
                 sub_device.type == DeviceType.AqaraHT
                 or sub_device.type == DeviceType.SensorHT
