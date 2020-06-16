@@ -1,6 +1,5 @@
 """Support gathering system information of hosts which are running netdata."""
 from datetime import timedelta
-import json
 import logging
 
 from netdata import Netdata
@@ -187,14 +186,12 @@ class NetdataAlarms(Entity):
     async def async_update(self):
         """Get the latest alarms from Netdata REST API."""
         await self.netdata.async_update()
-        info = json.loads(self.netdata.api.alarms)
+        alarms = self.netdata.api.alarms["alarms"]
         self._state = None
-        number_of_alarms = len(info["alarms"])
+        number_of_alarms = len(alarms)
+        n = number_of_alarms
 
         _LOGGER.debug("Host %s has %s alarms", self.name, number_of_alarms)
-
-        alarms = info["alarms"]
-        n = number_of_alarms
 
         for alarm in alarms:
             if alarms[alarm]["recipient"] == "silent":
@@ -217,14 +214,10 @@ class NetdataData:
     async def async_update(self):
         """Get the latest data from the Netdata REST API."""
 
-        original_endpoint = self.api.endpoint
         try:
             await self.api.get_allmetrics()
-            # Overwrite endpoint to receive alarms and later restore it again.
-            self.api.endpoint = "alarms?format=json"
             await self.api.get_alarms()
             self.available = True
         except NetdataError:
             _LOGGER.error("Unable to retrieve data from Netdata")
             self.available = False
-        self.api.endpoint = original_endpoint
