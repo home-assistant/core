@@ -6,6 +6,12 @@ from hydrawiser.core import Hydrawiser
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOISTURE,
+)
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.switch import DEVICE_CLASS_SWITCH
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_ACCESS_TOKEN,
@@ -35,17 +41,16 @@ DEFAULT_WATERING_TIME = 15
 
 DEVICE_MAP_INDEX = [
     "KEY_INDEX",
-    "ICON_INDEX",
     "DEVICE_CLASS_INDEX",
     "UNIT_OF_MEASURE_INDEX",
 ]
 DEVICE_MAP = {
-    "auto_watering": ["Automatic Watering", "mdi:autorenew", "switch", ""],
-    "is_watering": ["Watering", "", "moisture", ""],
-    "manual_watering": ["Manual Watering", "mdi:water-pump", "switch", ""],
-    "next_cycle": ["Next Cycle", "mdi:calendar-clock", "timestamp", ""],
-    "status": ["Status", "", "connectivity", ""],
-    "watering_time": ["Watering Time", "mdi:water-pump", "", TIME_MINUTES],
+    "auto_watering": ["Automatic Watering", DEVICE_CLASS_SWITCH, ""],
+    "is_watering": ["Watering", DEVICE_CLASS_MOISTURE, ""],
+    "manual_watering": ["Manual Watering", DEVICE_CLASS_SWITCH, ""],
+    "next_cycle": ["Next Cycle", DEVICE_CLASS_TIMESTAMP, ""],
+    "status": ["Status", DEVICE_CLASS_CONNECTIVITY, ""],
+    "watering_time": ["Watering Time", "None", TIME_MINUTES],
 }
 
 BINARY_SENSORS = ["is_watering", "status"]
@@ -155,8 +160,3 @@ class HydrawiseEntity(Entity):
         return DEVICE_MAP[self._sensor_type][
             DEVICE_MAP_INDEX.index("DEVICE_CLASS_INDEX")
         ]
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index("ICON_INDEX")]

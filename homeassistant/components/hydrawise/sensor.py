@@ -1,12 +1,12 @@
 """Support for Hydrawise sprinkler sensors."""
 import logging
-import time
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import dt
 
 from . import DATA_HYDRAWISE, SENSORS, HydrawiseEntity
 
@@ -21,6 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 TWO_YEAR_SECONDS = 60 * 60 * 24 * 365 * 2
+WATERING_TIME_ICON = "mdi:water-pump"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -56,4 +57,12 @@ class HydrawiseSensor(HydrawiseEntity):
         else:  # _sensor_type == 'next_cycle'
             next_cycle = min(relay_data["time"], TWO_YEAR_SECONDS)
             _LOGGER.debug("New cycle time: %s", next_cycle)
-            self._state = time.asctime(time.localtime(time.time() + next_cycle))
+            self._state = dt.as_local(
+                dt.utc_from_timestamp(dt.as_timestamp(dt.now()) + next_cycle)
+            ).isoformat()
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        if self._sensor_type == "watering_time":
+            return WATERING_TIME_ICON
