@@ -263,11 +263,11 @@ class HomeAssistant:
         This method is a coroutine.
         """
         _LOGGER.info("Starting Home Assistant")
-        self.state = CoreState.starting
-
         setattr(self.loop, "_thread_ident", threading.get_ident())
-        self.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+        self.state = CoreState.starting
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
@@ -293,8 +293,9 @@ class HomeAssistant:
             return
 
         self.state = CoreState.running
-        _async_create_timer(self)
+        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        _async_create_timer(self)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.
