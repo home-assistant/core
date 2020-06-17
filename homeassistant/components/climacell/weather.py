@@ -10,6 +10,10 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
+    ATTR_WEATHER_HUMIDITY,
+    ATTR_WEATHER_OZONE,
+    ATTR_WEATHER_PRESSURE,
+    ATTR_WEATHER_VISIBILITY,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -84,11 +88,15 @@ def _forecast_dict(
     time: str,
     wind_direction: Optional[float],
     wind_speed: Optional[float],
+    humidity: Optional[float],
+    ozone: Optional[float],
+    pressure: Optional[float],
+    visibility: Optional[float],
 ) -> Dict[str, Any]:
     """Return formatted Forecast dict from ClimaCell forecast data."""
     wind_bearing = _translate_wind_direction(wind_direction) if wind_direction else None
     translated_condition = _translate_condition(hass, condition) if condition else None
-    return {
+    data = {
         ATTR_FORECAST_CONDITION: translated_condition,
         ATTR_FORECAST_PRECIPITATION: precipitation,
         ATTR_FORECAST_TEMP: temp,
@@ -96,7 +104,13 @@ def _forecast_dict(
         ATTR_FORECAST_TIME: time,
         ATTR_FORECAST_WIND_BEARING: wind_bearing,
         ATTR_FORECAST_WIND_SPEED: wind_speed,
+        ATTR_WEATHER_HUMIDITY: humidity,
+        ATTR_WEATHER_OZONE: ozone,
+        ATTR_WEATHER_PRESSURE: pressure,
+        ATTR_WEATHER_VISIBILITY: visibility,
     }
+
+    return {k: v for k, v in data.items() if v is not None}
 
 
 async def async_setup_entry(
@@ -216,6 +230,13 @@ class ClimaCellWeatherEntity(WeatherEntity):
         )
 
     @property
+    def ozone(self):
+        """Return the O3 (ozone) level."""
+        if "o3" not in self._coordinator.data[CURRENT]:
+            return None
+        return self._coordinator.data[CURRENT]["o3"]["value"]
+
+    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
@@ -324,10 +345,14 @@ class ClimaCellWeatherEntity(WeatherEntity):
                     _forecast_dict(
                         self.hass,
                         forecast["weather_code"]["value"],
-                        forecast["precipitation"][0]["max"]["value"],
+                        forecast["precipitation_accumulation"]["value"],
                         temp_max,
                         temp_min,
                         forecast["observation_time"]["value"],
+                        None,
+                        None,
+                        None,
+                        None,
                         None,
                         None,
                     )
@@ -349,6 +374,10 @@ class ClimaCellWeatherEntity(WeatherEntity):
                         forecast["observation_time"]["value"],
                         forecast["wind_direction"]["value"],
                         forecast["wind_speed"]["value"],
+                        forecast["humidity"]["value"],
+                        forecast["o3"]["value"],
+                        forecast["baro_pressure"]["value"],
+                        forecast["visibility"]["value"],
                     )
                 )
             return forecasts
