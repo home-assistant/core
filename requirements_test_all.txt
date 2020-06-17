@@ -150,7 +150,7 @@ av==8.0.2
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==30
+axis==31
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -331,7 +331,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200613.0
+home-assistant-frontend==20200617.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -516,7 +516,7 @@ pyHS100==0.3.5
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.4.6
+pyMetno==0.5.1
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.25
