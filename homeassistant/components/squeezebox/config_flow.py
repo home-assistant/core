@@ -5,7 +5,7 @@ import logging
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -187,11 +187,3 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update({"title_placeholders": {"host": discovery_info[CONF_HOST]}})
 
         return await self.async_step_edit()
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
