@@ -7,6 +7,7 @@
         "create_entry": {
             "default": "Successfully authenticated with Withings."
         },
+        "flow_title": "Withings: {profile}",
         "step": {
             "pick_implementation": {
                 "title": "Pick Authentication Method"
@@ -17,6 +18,10 @@
                 },
                 "description": "Which profile did you select on the Withings website? It's important the profiles match, otherwise data will be mis-labeled.",
                 "title": "User Profile."
+            },
+            "reauth": {
+                "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data.",
+                "title": "Re-authenticate {profile}"
             }
         }
     }

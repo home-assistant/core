@@ -10,9 +10,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Numm oder IP Adresse",
+                    "host": "Host",
                     "passkey": "Passkey Zeechefolleg",
-                    "port": "Port Nummer"
+                    "port": "Port"
                 },
                 "description": "BSB-Lan Apparat ariichten fir d'Integratioun mam Home Assistant.",
                 "title": "Mam BSB-Lan Apparat verbannen"

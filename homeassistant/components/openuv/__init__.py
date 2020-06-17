@@ -4,9 +4,7 @@ import logging
 
 from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -26,7 +24,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service import verify_domain_control
 
-from .config_flow import configured_instances
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,54 +52,14 @@ TYPE_SAFE_EXPOSURE_TIME_4 = "safe_exposure_time_type_4"
 TYPE_SAFE_EXPOSURE_TIME_5 = "safe_exposure_time_type_5"
 TYPE_SAFE_EXPOSURE_TIME_6 = "safe_exposure_time_type_6"
 
+PLATFORMS = ["binary_sensor", "sensor"]
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_ELEVATION): float,
-                vol.Optional(CONF_LATITUDE): cv.latitude,
-                vol.Optional(CONF_LONGITUDE): cv.longitude,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.115")
 
 
 async def async_setup(hass, config):
     """Set up the OpenUV component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_OPENUV_CLIENT] = {}
-    hass.data[DOMAIN][DATA_OPENUV_LISTENER] = {}
-
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    identifier = (
-        f"{conf.get(CONF_LATITUDE, hass.config.latitude)}, "
-        f"{conf.get(CONF_LONGITUDE, hass.config.longitude)}"
-    )
-    if identifier in configured_instances(hass):
-        return True
-
-    data = {CONF_API_KEY: conf[CONF_API_KEY]}
-    if CONF_LATITUDE in conf:
-        data[CONF_LATITUDE] = conf[CONF_LATITUDE]
-    if CONF_LONGITUDE in conf:
-        data[CONF_LONGITUDE] = conf[CONF_LONGITUDE]
-    if CONF_ELEVATION in conf:
-        data[CONF_ELEVATION] = conf[CONF_ELEVATION]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
-
+    hass.data[DOMAIN] = {DATA_OPENUV_CLIENT: {}, DATA_OPENUV_LISTENER: {}}
     return True
 
 
@@ -127,7 +84,7 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady
 
-    for component in ("binary_sensor", "sensor"):
+    for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
@@ -139,16 +96,12 @@ async def async_setup_entry(hass, config_entry):
         await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    hass.services.async_register(DOMAIN, "update_data", update_data)
-
     @_verify_domain_control
     async def update_uv_index_data(service):
         """Refresh OpenUV UV index data."""
         _LOGGER.debug("Refreshing OpenUV UV index data")
         await openuv.async_update_uv_index_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
-
-    hass.services.async_register(DOMAIN, "update_uv_index_data", update_uv_index_data)
 
     @_verify_domain_control
     async def update_protection_data(service):
@@ -157,25 +110,30 @@ async def async_setup_entry(hass, config_entry):
         await openuv.async_update_protection_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    hass.services.async_register(
-        DOMAIN, "update_protection_data", update_protection_data
-    )
+    for service, method in [
+        ("update_data", update_data),
+        ("update_uv_index_data", update_uv_index_data),
+        ("update_protection_data", update_protection_data),
+    ]:
+        hass.services.async_register(DOMAIN, service, method)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
-    hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
 
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(config_entry, component)
-        for component in ("binary_sensor", "sensor")
-    ]
-
-    await asyncio.gather(*tasks)
-
-    return True
+    return unload_ok
 
 
 async def async_migrate_entry(hass, config_entry):

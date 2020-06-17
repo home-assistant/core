@@ -3,6 +3,10 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "2fa": {
                 "data": {

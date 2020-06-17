@@ -1,12 +1,12 @@
 {
     "config": {
         "error": {
-            "unknown": "Erreur inattendue"
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer"
         },
         "step": {
             "user": {
                 "data": {
-                    "certificate": "Certificat",
+                    "blid": "BLID",
                     "continuous": "En continu",
                     "delay": "D\u00e9lai",
                     "host": "Nom d'h\u00f4te ou adresse IP",

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6b64\u96fb\u8996\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+            "already_configured": "\u6b64\u96fb\u8996\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002",
+            "no_ip_control": "\u96fb\u8996\u4e0a\u7684 IP \u5df2\u95dc\u9589\u6216\u4e0d\u652f\u63f4\u6b64\u6b3e\u96fb\u8996\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u7121\u6548\u7684\u4e3b\u6a5f\u540d\u7a31\u6216 PIN \u78bc\u3002",

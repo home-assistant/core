@@ -5,7 +5,7 @@ import pyitachip2ir
 import voluptuous as vol
 
 from homeassistant.components import remote
-from homeassistant.components.remote import PLATFORM_SCHEMA
+from homeassistant.components.remote import ATTR_NUM_REPEATS, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -106,19 +106,22 @@ class ITachIP2IRRemote(remote.RemoteEntity):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         self._power = True
-        self.itachip2ir.send(self._name, "ON", 1)
+        num_repeats = kwargs.get(ATTR_NUM_REPEATS, 1)
+        self.itachip2ir.send(self._name, "ON", num_repeats)
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._power = False
-        self.itachip2ir.send(self._name, "OFF", 1)
+        num_repeats = kwargs.get(ATTR_NUM_REPEATS, 1)
+        self.itachip2ir.send(self._name, "OFF", num_repeats)
         self.schedule_update_ha_state()
 
     def send_command(self, command, **kwargs):
         """Send a command to one device."""
+        num_repeats = kwargs.get(ATTR_NUM_REPEATS, 1)
         for single_command in command:
-            self.itachip2ir.send(self._name, single_command, 1)
+            self.itachip2ir.send(self._name, single_command, num_repeats)
 
     def update(self):
         """Update the device."""

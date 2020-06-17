@@ -23,8 +23,7 @@
                     "username": "Benutzername",
                     "verify_ssl": "AdGuard Home verwendet ein richtiges Zertifikat"
                 },
-                "description": "Richte deine AdGuard Home-Instanz ein um sie zu \u00dcberwachen und zu Steuern.",
-                "title": "Verkn\u00fcpfe AdGuard Home."
+                "description": "Richte deine AdGuard Home-Instanz ein um sie zu \u00dcberwachen und zu Steuern."
             }
         }
     }
