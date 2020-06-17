@@ -1,7 +1,7 @@
-"""Platform for light integration."""
+"""Platform for switch integration."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -29,8 +29,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloSwitch(SwitchDevice):
-    """Representation of an Awesome Light."""
+class DevoloSwitch(SwitchEntity):
+    """Representation of a switch."""
 
     def __init__(self, homecontrol, device_instance, element_uid):
         """Initialize an devolo Switch."""
@@ -116,12 +116,12 @@ class DevoloSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Switch on the device."""
         self._is_on = True
-        self._binary_switch_property.set_binary_switch(state=True)
+        self._binary_switch_property.set(state=True)
 
     def turn_off(self, **kwargs):
         """Switch off the device."""
         self._is_on = False
-        self._binary_switch_property.set_binary_switch(state=False)
+        self._binary_switch_property.set(state=False)
 
     def sync(self, message=None):
         """Update the binary switch state and consumption."""

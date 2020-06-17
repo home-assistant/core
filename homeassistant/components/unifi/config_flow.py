@@ -32,12 +32,7 @@ from .const import (
     LOGGER,
 )
 from .controller import get_controller
-from .errors import (
-    AlreadyConfigured,
-    AuthenticationRequired,
-    CannotConnect,
-    NoLocalUser,
-)
+from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
@@ -134,8 +129,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 for site in self.sites.values():
                     if desc == site["desc"]:
-                        if "role" not in site:
-                            raise NoLocalUser
                         self.config[CONF_SITE_ID] = site["name"]
                         break
 
@@ -153,9 +146,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
             except AlreadyConfigured:
                 return self.async_abort(reason="already_configured")
-
-            except NoLocalUser:
-                return self.async_abort(reason="no_local_user")
 
         if len(self.sites) == 1:
             self.desc = next(iter(self.sites.values()))["desc"]
@@ -240,6 +230,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 wlan["name"]
                 for ap in self.controller.api.devices.values()
                 for wlan in ap.wlan_overrides
+                if "name" in wlan
             }
         )
         ssid_filter = {ssid: ssid for ssid in sorted(list(ssids))}

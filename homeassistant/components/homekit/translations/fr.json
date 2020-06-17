@@ -29,6 +29,12 @@
                 "description": "Ces param\u00e8tres ne doivent \u00eatre ajust\u00e9s que si le pont HomeKit n'est pas fonctionnel.",
                 "title": "Configuration avanc\u00e9e"
             },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Cam\u00e9ras prenant en charge les flux H.264 natifs"
+                },
+                "title": "S\u00e9lectionnez le codec vid\u00e9o de la cam\u00e9ra."
+            },
             "exclude": {
                 "data": {
                     "exclude_entities": "Entit\u00e9s \u00e0 exclure"

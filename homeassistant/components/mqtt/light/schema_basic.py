@@ -71,6 +71,8 @@ CONF_EFFECT_VALUE_TEMPLATE = "effect_value_template"
 CONF_HS_COMMAND_TOPIC = "hs_command_topic"
 CONF_HS_STATE_TOPIC = "hs_state_topic"
 CONF_HS_VALUE_TEMPLATE = "hs_value_template"
+CONF_MAX_MIREDS = "max_mireds"
+CONF_MIN_MIREDS = "min_mireds"
 CONF_RGB_COMMAND_TEMPLATE = "rgb_command_template"
 CONF_RGB_COMMAND_TOPIC = "rgb_command_topic"
 CONF_RGB_STATE_TOPIC = "rgb_state_topic"
@@ -116,6 +118,8 @@ PLATFORM_SCHEMA_BASIC = (
             vol.Optional(CONF_HS_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_HS_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
+            vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
@@ -563,6 +567,16 @@ class MqttLight(
     def color_temp(self):
         """Return the color temperature in mired."""
         return self._color_temp
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._config.get(CONF_MIN_MIREDS, super().min_mireds)
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._config.get(CONF_MAX_MIREDS, super().max_mireds)
 
     @property
     def white_value(self):

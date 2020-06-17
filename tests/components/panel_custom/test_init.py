@@ -151,16 +151,42 @@ async def test_module_webcomponent(hass):
     assert panel.sidebar_title == "Sidebar Title"
 
 
+async def test_latest_and_es5_build(hass):
+    """Test specifying an es5 and latest build."""
+    config = {
+        "panel_custom": {
+            "name": "todo-mvc",
+            "js_url": "/local/es5.js",
+            "module_url": "/local/latest.js",
+            "url_path": "nice_url",
+        }
+    }
+
+    assert await setup.async_setup_component(hass, "panel_custom", config)
+
+    panels = hass.data.get(frontend.DATA_PANELS, {})
+
+    assert panels
+    assert "nice_url" in panels
+
+    panel = panels["nice_url"]
+
+    assert panel.config == {
+        "_panel_custom": {
+            "name": "todo-mvc",
+            "js_url": "/local/es5.js",
+            "module_url": "/local/latest.js",
+            "embed_iframe": False,
+            "trust_external": False,
+        },
+    }
+    assert panel.frontend_url_path == "nice_url"
+
+
 async def test_url_option_conflict(hass):
     """Test config with multiple url options."""
     to_try = [
-        {
-            "panel_custom": {
-                "name": "todo-mvc",
-                "module_url": "/local/bla.js",
-                "js_url": "/local/bla.js",
-            }
-        },
+        {"panel_custom": {"name": "todo-mvc"}},
         {
             "panel_custom": {
                 "name": "todo-mvc",

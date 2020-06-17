@@ -13,6 +13,7 @@ from homeassistant.components.tellduslive import (
     SCAN_INTERVAL,
     config_flow,
 )
+from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry, mock_coro
@@ -73,6 +74,7 @@ async def test_abort_if_already_setup(hass):
 async def test_full_flow_implementation(hass, mock_tellduslive):
     """Test registering an implementation and finishing flow works."""
     flow = init_config_flow(hass)
+    flow.context = {"source": SOURCE_DISCOVERY}
     result = await flow.async_step_discovery(["localhost", "tellstick"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -166,6 +168,7 @@ async def test_step_import_load_json(hass, mock_tellduslive):
 async def test_step_disco_no_local_api(hass, mock_tellduslive):
     """Test that we trigger when configuring from discovery, not supporting local api."""
     flow = init_config_flow(hass)
+    flow.context = {"source": SOURCE_DISCOVERY}
 
     result = await flow.async_step_discovery(["localhost", "tellstick"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -242,7 +245,7 @@ async def test_discovery_already_configured(hass, mock_tellduslive):
     """Test abort if already configured fires from discovery."""
     MockConfigEntry(domain="tellduslive", data={"host": "some-host"}).add_to_hass(hass)
     flow = init_config_flow(hass)
+    flow.context = {"source": SOURCE_DISCOVERY}
 
-    result = await flow.async_step_discovery(["some-host", ""])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    with pytest.raises(data_entry_flow.AbortFlow):
+        result = await flow.async_step_discovery(["some-host", ""])

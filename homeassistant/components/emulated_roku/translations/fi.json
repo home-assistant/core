@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "name_exists": "Nimi on jo olemassa"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "Mainosta IP-osoitetta",
+                    "host_ip": "Palvelimen IP-osoite",
+                    "listen_port": "Kuuntele porttia"
+                },
+                "title": "M\u00e4\u00e4rit\u00e4 palvelimen asetukset"
+            }
+        }
+    }
+}

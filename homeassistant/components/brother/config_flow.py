@@ -69,16 +69,18 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_zeroconf(self, user_input=None):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
-        if user_input is None:
+        if discovery_info is None:
             return self.async_abort(reason="connection_error")
 
-        if not user_input.get("name") or not user_input["name"].startswith("Brother"):
+        if not discovery_info.get("name") or not discovery_info["name"].startswith(
+            "Brother"
+        ):
             return self.async_abort(reason="not_brother_printer")
 
         # Hostname is format: brother.local.
-        self.host = user_input["hostname"].rstrip(".")
+        self.host = discovery_info["hostname"].rstrip(".")
 
         self.brother = Brother(self.host)
         try:

@@ -288,28 +288,20 @@ def test_gamut():
     assert not color_util.check_valid_gamut(GAMUT_INVALID_4)
 
 
-def test_should_return_25000_kelvin_when_input_is_40_mired():
-    """Function should return 25000K if given 40 mired."""
-    kelvin = color_util.color_temperature_mired_to_kelvin(40)
-    assert kelvin == 25000
+def test_color_temperature_mired_to_kelvin():
+    """Test color_temperature_mired_to_kelvin."""
+    assert color_util.color_temperature_mired_to_kelvin(40) == 25000
+    assert color_util.color_temperature_mired_to_kelvin(200) == 5000
+    with pytest.raises(ZeroDivisionError):
+        assert color_util.color_temperature_mired_to_kelvin(0)
 
 
-def test_should_return_5000_kelvin_when_input_is_200_mired():
-    """Function should return 5000K if given 200 mired."""
-    kelvin = color_util.color_temperature_mired_to_kelvin(200)
-    assert kelvin == 5000
-
-
-def test_should_return_40_mired_when_input_is_25000_kelvin():
-    """Function should return 40 mired when given 25000 Kelvin."""
-    mired = color_util.color_temperature_kelvin_to_mired(25000)
-    assert mired == 40
-
-
-def test_should_return_200_mired_when_input_is_5000_kelvin():
-    """Function should return 200 mired when given 5000 Kelvin."""
-    mired = color_util.color_temperature_kelvin_to_mired(5000)
-    assert mired == 200
+def test_color_temperature_kelvin_to_mired():
+    """Test color_temperature_kelvin_to_mired."""
+    assert color_util.color_temperature_kelvin_to_mired(25000) == 40
+    assert color_util.color_temperature_kelvin_to_mired(5000) == 200
+    with pytest.raises(ZeroDivisionError):
+        assert color_util.color_temperature_kelvin_to_mired(0)
 
 
 def test_returns_same_value_for_any_two_temperatures_below_1000():

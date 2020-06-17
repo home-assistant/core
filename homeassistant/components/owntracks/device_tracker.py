@@ -154,4 +154,5 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     def update_data(self, data):
         """Mark the device as seen."""
         self._data = data
-        self.async_write_ha_state()
+        if self.hass:
+            self.async_write_ha_state()

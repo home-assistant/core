@@ -7,6 +7,7 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -59,6 +60,7 @@ async def test_controlling_state_via_topic(hass, mock_publish):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
@@ -97,6 +99,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
                 }
             },
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_ON
@@ -137,6 +140,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mock_publish):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
@@ -150,6 +154,13 @@ async def test_controlling_state_via_topic_and_json_message(hass, mock_publish):
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_availability_without_topic(hass, mqtt_mock):
@@ -213,6 +224,7 @@ async def test_custom_state_payload(hass, mock_publish):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF

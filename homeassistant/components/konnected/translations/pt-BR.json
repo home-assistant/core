@@ -1,0 +1,65 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Por favor, digite as informa\u00e7\u00f5es do host para o seu Painel Konnected."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "N\u00e3o \u00e9 um dispositivo Konnected.io reconhecido"
+        },
+        "error": {
+            "bad_host": "URL de host da API de substitui\u00e7\u00e3o inv\u00e1lido"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Inverter o estado aberto/fechado",
+                    "name": "Nome (opcional)",
+                    "type": "Tipo de sensor bin\u00e1rio"
+                },
+                "description": "Selecione as op\u00e7\u00f5es para o sensor bin\u00e1rio conectado a {zone}",
+                "title": "Configurar sensor bin\u00e1rio"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Nome (opcional)",
+                    "poll_interval": "Intervalo de vota\u00e7\u00e3o (minutos) (opcional)",
+                    "type": "Tipo de sensor"
+                },
+                "description": "Selecione as op\u00e7\u00f5es para o sensor digital conectado a {zone}",
+                "title": "Configurar sensor digital"
+            },
+            "options_io": {
+                "data": {
+                    "1": "Zona 1",
+                    "2": "Zona 2",
+                    "3": "Zona 3",
+                    "4": "Zona 4",
+                    "5": "Zona 5",
+                    "6": "Zona 6",
+                    "7": "Zona 7",
+                    "out": "SA\u00cdDA"
+                },
+                "title": "Configurar I/O"
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Zona 10",
+                    "11": "Zona 11",
+                    "12": "Zona 12",
+                    "8": "Zona 8",
+                    "9": "Zona 9"
+                }
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "Substituir URL do host da API (opcional)",
+                    "override_api_host": "Substituir o URL padr\u00e3o do painel do host da API do Home Assistant"
+                }
+            }
+        }
+    }
+}

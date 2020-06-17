@@ -48,6 +48,9 @@ class FakeEndpoint:
         patch_cluster(cluster)
         self.out_clusters[cluster_id] = cluster
 
+    reply = AsyncMock(return_value=[0])
+    request = AsyncMock(return_value=[0])
+
     @property
     def __class__(self):
         """Fake being Zigpy endpoint."""
@@ -72,7 +75,9 @@ def patch_cluster(cluster):
     cluster.read_attributes = AsyncMock(return_value=[{}, {}])
     cluster.read_attributes_raw = Mock()
     cluster.unbind = AsyncMock(return_value=[0])
-    cluster.write_attributes = AsyncMock(return_value=[0])
+    cluster.write_attributes = AsyncMock(
+        return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]]
+    )
     if cluster.cluster_id == 4:
         cluster.add = AsyncMock(return_value=[0])
 
@@ -136,6 +141,7 @@ async def send_attributes_report(hass, cluster: int, attributes: dict):
     """
     attrs = [make_attribute(attrid, value) for attrid, value in attributes.items()]
     hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    hdr.frame_control.disable_default_response = True
     cluster.handle_message(hdr, [attrs])
     await hass.async_block_till_done()
 
@@ -169,10 +175,10 @@ def async_find_group_entity_id(hass, domain, group):
     return None
 
 
-async def async_enable_traffic(hass, zha_devices):
+async def async_enable_traffic(hass, zha_devices, enabled=True):
     """Allow traffic to flow through the gateway and the zha device."""
     for zha_device in zha_devices:
-        zha_device.update_available(True)
+        zha_device.update_available(enabled)
     await hass.async_block_till_done()
 
 

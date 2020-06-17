@@ -2,10 +2,21 @@
 
 from datetime import timedelta
 
-from axis.event_stream import CLASS_INPUT, CLASS_OUTPUT
+from axis.event_stream import (
+    CLASS_INPUT,
+    CLASS_LIGHT,
+    CLASS_MOTION,
+    CLASS_OUTPUT,
+    CLASS_SOUND,
+)
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_TRIGGER_TIME
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SOUND,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -13,6 +24,13 @@ from homeassistant.util.dt import utcnow
 
 from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
+
+DEVICE_CLASS = {
+    CLASS_INPUT: DEVICE_CLASS_CONNECTIVITY,
+    CLASS_LIGHT: DEVICE_CLASS_LIGHT,
+    CLASS_MOTION: DEVICE_CLASS_MOTION,
+    CLASS_SOUND: DEVICE_CLASS_SOUND,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -22,13 +40,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_sensor(event_id):
         """Add binary sensor from Axis device."""
-        event = device.api.event.events[event_id]
+        event = device.api.event[event_id]
 
         if event.CLASS != CLASS_OUTPUT:
             async_add_entities([AxisBinarySensor(event, device)], True)
 
     device.listeners.append(
-        async_dispatcher_connect(hass, device.event_new_sensor, async_add_sensor)
+        async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)
     )
 
 
@@ -38,7 +56,7 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
     def __init__(self, event, device):
         """Initialize the Axis binary sensor."""
         super().__init__(event, device)
-        self.remove_timer = None
+        self.cancel_scheduled_update = None
 
     @callback
     def update_callback(self, no_delay=False):
@@ -46,24 +64,25 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
 
         Parameter no_delay is True when device_event_reachable is sent.
         """
-        delay = self.device.config_entry.options[CONF_TRIGGER_TIME]
 
-        if self.remove_timer is not None:
-            self.remove_timer()
-            self.remove_timer = None
+        @callback
+        def scheduled_update(now):
+            """Timer callback for sensor update."""
+            self.cancel_scheduled_update = None
+            self.async_write_ha_state()
 
-        if self.is_on or delay == 0 or no_delay:
+        if self.cancel_scheduled_update is not None:
+            self.cancel_scheduled_update()
+            self.cancel_scheduled_update = None
+
+        if self.is_on or self.device.option_trigger_time == 0 or no_delay:
             self.async_write_ha_state()
             return
 
-        @callback
-        def _delay_update(now):
-            """Timer callback for sensor update."""
-            self.async_write_ha_state()
-            self.remove_timer = None
-
-        self.remove_timer = async_track_point_in_utc_time(
-            self.hass, _delay_update, utcnow() + timedelta(seconds=delay)
+        self.cancel_scheduled_update = async_track_point_in_utc_time(
+            self.hass,
+            scheduled_update,
+            utcnow() + timedelta(seconds=self.device.option_trigger_time),
         )
 
     @property
@@ -84,3 +103,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             )
 
         return super().name
+
+    @property
+    def device_class(self):
+        """Return the class of the sensor."""
+        return DEVICE_CLASS.get(self.event.CLASS)

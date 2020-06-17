@@ -1,7 +1,8 @@
 {
   "domain": "tile",
   "name": "Tile",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tile",
-  "requirements": ["pytile==3.0.1"],
+  "requirements": ["pytile==3.0.6"],
   "codeowners": ["@bachya"]
 }

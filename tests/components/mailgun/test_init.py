@@ -6,11 +6,10 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import mailgun, webhook
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock
 
 API_KEY = "abc123"
 
@@ -31,7 +30,9 @@ async def webhook_id_with_api_key(hass):
         {mailgun.DOMAIN: {CONF_API_KEY: API_KEY, CONF_DOMAIN: "example.com"}},
     )
 
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
     result = await hass.config_entries.flow.async_init(
         "mailgun", context={"source": "user"}
     )
@@ -48,7 +49,9 @@ async def webhook_id_without_api_key(hass):
     """Initialize the Mailgun component and get the webhook_id w/o API key."""
     await async_setup_component(hass, mailgun.DOMAIN, {})
 
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
     result = await hass.config_entries.flow.async_init(
         "mailgun", context={"source": "user"}
     )
