@@ -20,7 +20,12 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import DATA_SETUP, DATA_SETUP_STARTED, async_setup_component
+from homeassistant.setup import (
+    DATA_SETUP,
+    DATA_SETUP_STARTED,
+    async_set_domains_to_be_loaded,
+    async_setup_component,
+)
 from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
@@ -366,6 +371,7 @@ async def _async_set_up_integrations(
             )
 
     domains = _get_domains(hass, config)
+    async_set_domains_to_be_loaded(hass, domains)
 
     # Start up debuggers. Start these first in case they want to wait.
     debuggers = domains & DEBUGGER_INTEGRATIONS
@@ -391,6 +397,23 @@ async def _async_set_up_integrations(
     # setup components
     logging_domains = domains & LOGGING_INTEGRATIONS
     stage_1_domains = domains & STAGE_1_INTEGRATIONS
+
+    # Load all stage 1 domains and add their after_deps to stage 1
+    for int_or_exc in await asyncio.gather(
+        *(loader.async_get_integration(hass, domain) for domain in stage_1_domains),
+        return_exceptions=True,
+    ):
+        # Exceptions are handled in async_setup_component.
+        if (
+            not isinstance(int_or_exc, loader.Integration)
+            or not int_or_exc.after_dependencies
+        ):
+            continue
+
+        for domain in int_or_exc.after_dependencies:
+            if domain in domains:
+                stage_1_domains.add(domain)
+
     stage_2_domains = domains - logging_domains - stage_1_domains
 
     if logging_domains:
@@ -410,43 +433,7 @@ async def _async_set_up_integrations(
 
         await async_setup_multi_components(stage_1_domains)
 
-    # Load all integrations
-    after_dependencies: Dict[str, Set[str]] = {}
-
-    for int_or_exc in await asyncio.gather(
-        *(loader.async_get_integration(hass, domain) for domain in stage_2_domains),
-        return_exceptions=True,
-    ):
-        # Exceptions are handled in async_setup_component.
-        if isinstance(int_or_exc, loader.Integration) and int_or_exc.after_dependencies:
-            after_dependencies[int_or_exc.domain] = set(int_or_exc.after_dependencies)
-
-    last_load = None
-    while stage_2_domains:
-        domains_to_load = set()
-
-        for domain in stage_2_domains:
-            after_deps = after_dependencies.get(domain)
-            # Load if integration has no after_dependencies or they are
-            # all loaded
-            if not after_deps or not after_deps - hass.config.components:
-                domains_to_load.add(domain)
-
-        if not domains_to_load or domains_to_load == last_load:
-            break
-
-        _LOGGER.debug("Setting up %s", domains_to_load)
-
-        await async_setup_multi_components(domains_to_load)
-
-        last_load = domains_to_load
-        stage_2_domains -= domains_to_load
-
-    # These are stage 2 domains that never have their after_dependencies
-    # satisfied.
     if stage_2_domains:
-        _LOGGER.debug("Final set up: %s", stage_2_domains)
-
         await async_setup_multi_components(stage_2_domains)
 
     # Wrap up startup
