@@ -177,3 +177,28 @@ async def test_set_config_unique_id(
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         assert config_entry.unique_id == "my_user_id"
+
+
+async def test_set_convert_unique_id_to_string(
+    hass: HomeAssistant, component_factory: ComponentFactory
+) -> None:
+    """Test upgrading configs to use a unique id."""
+    person0 = new_profile_config("person0", 0)
+
+    await component_factory.configure_component(profile_configs=(person0,))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={"token": {"userid": 1234}, "profile": person0.profile},
+    )
+
+    with patch("homeassistant.components.withings.async_get_data_manager") as mock:
+        data_manager: DataManager = MagicMock(spec=DataManager)
+        data_manager.poll_data_update_coordinator = MagicMock(
+            spec=DataUpdateCoordinator
+        )
+        data_manager.poll_data_update_coordinator.last_update_success = True
+        mock.return_value = data_manager
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert config_entry.unique_id == "1234"

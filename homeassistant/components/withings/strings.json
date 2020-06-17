@@ -4,14 +4,17 @@
     "step": {
       "profile": {
         "title": "User Profile.",
-        "description": "Provide a unique profile name for this data. Typically this is the name of profile you selected in the previous step. Note: It's important the name is unique across all Withings integrations, otherwise data will be mis-labeled and you will have to recreate the integration.",
+        "description": "Provide a unique profile name for this data. Typically this is the name of the profile you selected in the previous step.",
         "data": { "profile": "Profile Name" }
       },
       "pick_implementation": { "title": "Pick Authentication Method" },
       "reauth": {
-        "title": "Re-authenticate {profile}",
+        "title": "Re-authenticate Profile",
         "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."
       }
+    },
+    "error": {
+      "profile_exists": "User profile is already configured. Please provide a unique profile name."
     },
     "abort": {
       "authorize_url_timeout": "Timeout generating authorize url.",

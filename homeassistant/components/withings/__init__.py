@@ -81,8 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config_updates = {}
 
     # Add a unique id if it's an older config entry.
-    if entry.unique_id != entry.data["token"]["userid"]:
-        config_updates["unique_id"] = entry.data["token"]["userid"]
+    if entry.unique_id != entry.data["token"]["userid"] or not isinstance(
+        entry.unique_id, str
+    ):
+        config_updates["unique_id"] = str(entry.data["token"]["userid"])
 
     # Add the webhook configuration.
     if CONF_WEBHOOK_ID not in entry.data:
