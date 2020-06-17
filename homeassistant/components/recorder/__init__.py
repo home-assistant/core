@@ -397,6 +397,7 @@ class Recorder(threading.Thread):
                     dbstate = States.from_event(event)
                     dbstate.old_state_id = self._get_old_state_id(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
+                    dbstate.event_data = "{}"
                     self.event_session.add(dbstate)
                     self.event_session.flush()
                 except (TypeError, ValueError):
