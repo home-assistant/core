@@ -366,6 +366,7 @@ homeassistant/components/sinch/* @bendikrb
 homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
+homeassistant/components/smappee/* @bsmappee
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 homeassistant/components/smarty/* @z0mbieprocess

@@ -1609,6 +1609,9 @@ pysignalclirestapi==0.3.4
 # homeassistant.components.sma
 pysma==0.3.5
 
+# homeassistant.components.smappee
+pysmappee==0.1.0
+
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
 
@@ -1963,9 +1966,6 @@ sleepyq==0.7
 
 # homeassistant.components.xmpp
 slixmpp==1.5.1
-
-# homeassistant.components.smappee
-smappy==0.2.16
 
 # homeassistant.components.smarthab
 smarthab==0.20
