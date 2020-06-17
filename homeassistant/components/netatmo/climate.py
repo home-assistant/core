@@ -264,7 +264,12 @@ class NetatmoThermostat(ClimateEntity, NetatmoBase):
             for room in home["rooms"]:
                 if data["event_type"] == "set_point":
                     if self._room_id == room["id"]:
-                        self._target_temperature = room["therm_setpoint_temperature"]
+                        if room["therm_setpoint_mode"] == "off":
+                            self._hvac_mode = HVAC_MODE_OFF
+                        else:
+                            self._target_temperature = room[
+                                "therm_setpoint_temperature"
+                            ]
                         self.schedule_update_ha_state()
                         break
 
