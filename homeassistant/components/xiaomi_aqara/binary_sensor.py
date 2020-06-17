@@ -230,7 +230,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             'cmd': 'heartbeat', 'data': '{"voltage":3005}'}
 
         """
-        _LOGGER.error("Motion Sensor Data %s", data)
+        _LOGGER.debug("Motion Sensor Data %s", data)
         if raw_data["cmd"] == "heartbeat":
             _LOGGER.debug(
                 "Skipping heartbeat of the motion sensor. "
