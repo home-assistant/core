@@ -6,6 +6,7 @@ import logging
 import time
 
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import aliased
 import voluptuous as vol
 
 from homeassistant.components import sun
@@ -390,18 +391,23 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
         else:
             entity_ids = None
 
+        old_state = aliased(States, name="old_state")
+
         query = (
             session.query(
                 Events.event_type,
                 Events.event_data,
                 Events.time_fired,
                 Events.context_user_id,
+                States.state_id,
                 States.state,
                 States.entity_id,
                 States.domain,
+                old_state.state_id,
             )
             .order_by(Events.time_fired)
             .outerjoin(States, (Events.event_id == States.event_id))
+            .outerjoin(old_state, (States.old_state_id == old_state.state_id))
             .filter(
                 Events.event_type.in_(ALL_EVENT_TYPES + list(hass.data.get(DOMAIN, {})))
             )
