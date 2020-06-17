@@ -47,15 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
     hass.data[DOMAIN][SMS_GATEWAY] = gateway
 
-    # Notify doesn't support config entry setup yet, load with discovery for now
-    hass_config = hass.data[DOMAIN][NOTIFY_DOMAIN]
-    notify_configs = hass.data[DOMAIN][NOTIFY_DOMAIN].get(NOTIFY_DOMAIN, {})
-    for notify_config in notify_configs:
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, NOTIFY_DOMAIN, DOMAIN, notify_config, hass_config,
-            )
-        )
 
     return True
 
