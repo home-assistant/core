@@ -32,6 +32,7 @@ from .const import (
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
@@ -257,6 +258,9 @@ class PlexServer:
         def process_device(source, device):
             self._known_idle.discard(device.machineIdentifier)
             available_clients.setdefault(device.machineIdentifier, {"device": device})
+            available_clients[device.machineIdentifier].setdefault(
+                PLAYER_SOURCE, source
+            )
 
             if device.machineIdentifier not in ignored_clients:
                 if self.option_ignore_plexweb_clients and device.product == "Plex Web":
@@ -275,11 +279,14 @@ class PlexServer:
             ):
                 new_clients.add(device.machineIdentifier)
                 _LOGGER.debug(
-                    "New %s %s: %s", device.product, source, device.machineIdentifier
+                    "New %s from %s: %s",
+                    device.product,
+                    source,
+                    device.machineIdentifier,
                 )
 
         for device in devices:
-            process_device("device", device)
+            process_device("PMS", device)
 
         def connect_to_resource(resource):
             """Connect to a plex.tv resource and return a Plex client."""
@@ -303,7 +310,7 @@ class PlexServer:
                     connect_to_resource, plextv_client
                 )
                 if device:
-                    process_device("resource", device)
+                    process_device("plex.tv", device)
 
         for session in sessions:
             if session.TYPE == "photo":
