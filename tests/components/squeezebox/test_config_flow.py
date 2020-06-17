@@ -4,16 +4,27 @@ from pysqueezebox import Server
 
 from homeassistant import config_entries
 from homeassistant.components.squeezebox.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 HOST = "1.1.1.1"
 HOST2 = "2.2.2.2"
 PORT = 9000
 UUID = "test-uuid"
+UNKNOWN_ERROR = "1234"
 
 
-class mock_entry:
+class MockEntry:
     """Mock a config_entry."""
 
     unique_id = UUID
@@ -55,7 +66,7 @@ async def test_user_form(hass):
             result["flow_id"],
             {CONF_HOST: HOST, CONF_PORT: PORT, CONF_USERNAME: "", CONF_PASSWORD: ""},
         )
-        assert result["type"] == "create_entry"
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == {
             CONF_HOST: HOST,
@@ -99,7 +110,7 @@ async def test_user_form_duplicate(hass):
         "homeassistant.components.squeezebox.config_flow.async_discover", mock_discover,
     ), patch(
         "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._async_current_entries",
-        return_value=[mock_entry],
+        return_value=[MockEntry],
     ), patch(
         "homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1
     ):
@@ -116,10 +127,11 @@ async def test_form_invalid_auth(hass):
         DOMAIN, context={"source": "edit"}
     )
 
-    with patch(
-        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
-        return_value="invalid_auth",
-    ):
+    async def patch_async_query(self, *args):
+        self.http_status = HTTP_UNAUTHORIZED
+        return False
+
+    with patch("pysqueezebox.Server.async_query", new=patch_async_query):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -140,10 +152,11 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": "edit"}
     )
 
-    with patch(
-        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
-        return_value="cannot_connect",
-    ):
+    async def patch_async_query(self, *args):
+        self.http_status = UNKNOWN_ERROR
+        return False
+
+    with patch("pysqueezebox.Server.async_query", new=patch_async_query):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -167,10 +180,47 @@ async def test_discovery(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DISCOVERY},
+            data={CONF_HOST: HOST, CONF_PORT: PORT, "uuid": UUID},
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "edit"
+
+
+async def test_discovery_no_uuid(hass):
+    """Test handling of discovered server with unavailable uuid."""
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
+        return_value="invalid_auth",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT},
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "edit"
+
+
+async def test_import(hass):
+    """Test handling of configuration imported."""
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._validate_input",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.squeezebox.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.squeezebox.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: HOST, CONF_PORT: PORT},
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_bad_host(hass):

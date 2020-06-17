@@ -1,6 +1,7 @@
 {
   "title": "Logitech Squeezebox",
   "config": {
+    "flow_title": "Logitech Squeezebox: {host}",
     "step": {
       "user": {
 	"title": "Configure Logitech Media Server",

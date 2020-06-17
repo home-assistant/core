@@ -68,26 +68,16 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_info = None
 
     async def _discover(self, uuid=None):
-        """
-        Discover an unconfigured LMS server.
-
-        Parameters:
-            uuid: search for this uuid (optional)
-        """
+        """Discover an unconfigured LMS server."""
         self.discovery_info = None
         discovery_event = asyncio.Event()
 
         def _discovery_callback(server):
             if server.uuid:
-                if uuid:
-                    # ignore non-matching uuid
-                    if server.uuid != uuid:
+                # ignore already configured uuids
+                for entry in self._async_current_entries():
+                    if entry.unique_id == server.uuid:
                         return
-                else:
-                    # ignore already configured uuids
-                    for entry in self._async_current_entries():
-                        if entry.unique_id == server.uuid:
-                            return
                 self.discovery_info = {
                     CONF_HOST: server.host,
                     CONF_PORT: server.port,
@@ -173,7 +163,6 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config):
         """Import a config flow from configuration."""
-        _base_schema()(config)
         error = await self._validate_input(config)
         if error:
             return self.async_abort(reason=error)
@@ -182,26 +171,22 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_discovery(self, discovery_info):
         """Handle discovery."""
         _LOGGER.debug("Reached discovery flow with info: %s", discovery_info)
-        _base_schema()(discovery_info)
-        error = await self._validate_input(discovery_info)
-        if error:
-            return self.async_abort(reason=error)
+        if "uuid" in discovery_info:
+            await self.async_set_unique_id(discovery_info.pop("uuid"))
+            self._abort_if_unique_id_configured()
+        else:
+            # attempt to connect to server and determine uuid. will fail if password required
+            error = await self._validate_input(discovery_info)
+            if error:
+                await self._async_handle_discovery_without_unique_id()
 
         # update schema with suggested values from discovery
         self.data_schema = _base_schema(discovery_info)
 
-        return await self.async_step_edit()
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context.update({"title_placeholders": {"host": discovery_info[CONF_HOST]}})
 
-    async def async_step_unignore(self, user_input):
-        """Set up previously ignored Logitech Media Server."""
-        unique_id = user_input["unique_id"]
-        await self.async_set_unique_id(unique_id)
-        # see if we can discover an unconfigured LMS server matching uuid
-        try:
-            await asyncio.wait_for(self._discover(unique_id), timeout=TIMEOUT)
-            return await self.async_step_edit()
-        except asyncio.TimeoutError:
-            return self.async_abort(reason="no_server_found")
+        return await self.async_step_edit()
 
 
 class CannotConnect(exceptions.HomeAssistantError):

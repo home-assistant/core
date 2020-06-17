@@ -1,6 +1,5 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
 import logging
-import socket
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -29,15 +28,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_START,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
@@ -89,6 +85,30 @@ SQUEEZEBOX_MODE = {
 }
 
 
+async def start_server_discovery(hass):
+    """Start a server discovery task."""
+
+    def _discovered_server(server):
+        hass.loop.create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_DISCOVERY},
+                data={
+                    CONF_HOST: server.host,
+                    CONF_PORT: int(server.port),
+                    "uuid": server.uuid,
+                },
+            )
+        )
+
+    hass.data.setdefault(DOMAIN, {})
+    if DISCOVERY_TASK not in hass.data[DOMAIN]:
+        _LOGGER.debug("Adding server discovery task for squeezebox")
+        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_task(
+            async_discover(_discovered_server)
+        )
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
     _LOGGER.warning("Loading Squeezebox via platform config is deprecated.")
@@ -118,27 +138,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     hass.data.setdefault(DOMAIN, {})
 
-    known_servers = hass.data[DOMAIN].get(KNOWN_SERVERS)
-    if known_servers is None:
-        hass.data[DOMAIN][KNOWN_SERVERS] = known_servers = set()
-
     known_players = hass.data[DOMAIN].get(KNOWN_PLAYERS)
     if known_players is None:
         hass.data[DOMAIN][KNOWN_PLAYERS] = known_players = []
 
-    # Get IP of host, to prevent duplication of same host (different DNS names)
-    try:
-        ipaddr = await hass.async_add_executor_job(socket.gethostbyname, host)
-    except OSError as error:
-        _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
-        raise PlatformNotReady from error
-
-    if ipaddr in known_servers:
-        return
-
-    _LOGGER.debug("Creating LMS object for %s", ipaddr)
+    _LOGGER.debug("Creating LMS object for %s", host)
     lms = Server(async_get_clientsession(hass), host, port, username, password)
-    known_servers.add(ipaddr)
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -170,42 +175,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
 
-    _LOGGER.debug("Adding player discovery job for LMS server: %s", ipaddr)
+    _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
     hass.async_add_job(_discovery)
-
-    @callback
-    async def start_server_discovery():
-        """Start a server discovery task."""
-
-        @callback
-        async def _discovered_server(server):
-            if server.host not in hass.data[DOMAIN][KNOWN_SERVERS]:
-                conf = {
-                    CONF_HOST: server.host,
-                    CONF_PORT: server.port,
-                    "uuid": server.uuid,
-                }
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": config_entries.SOURCE_DISCOVERY},
-                        data=conf,
-                    )
-                )
-
-        if DOMAIN not in hass.data:
-            hass.data[DOMAIN] = {}
-
-        if DISCOVERY_TASK not in hass.data[DOMAIN]:
-            _LOGGER.debug("Adding server discovery task for squeezebox")
-            hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_task(
-                async_discover(_discovered_server)
-            )
-
-    if hass.is_running:
-        await start_server_discovery()
-    else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server_discovery())
 
     # Register entity services
     platform = entity_platform.current_platform.get()
