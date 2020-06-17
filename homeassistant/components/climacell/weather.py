@@ -43,9 +43,12 @@ from .const import (
     ATTRIBUTION,
     CLEAR_CONDITIONS,
     CONDITIONS,
+    CONF_FORECAST_INTERVAL,
     CURRENT,
+    DAILY,
     DOMAIN,
     FORECASTS,
+    HOURLY,
     WIND_DIRECTIONS,
 )
 
@@ -67,7 +70,7 @@ def _translate_condition(
     return CONDITIONS[condition]
 
 
-def _translate_wind_direction(direction: Optional[int]) -> Optional[str]:
+def _translate_wind_direction(direction: Optional[float]) -> Optional[str]:
     """Translate ClimaCell wind direction in degrees to a bearing."""
     return WIND_DIRECTIONS.get(int(direction * 16 / 360))
 
@@ -79,8 +82,8 @@ def _forecast_dict(
     temp: float,
     temp_low: Optional[float],
     time: str,
-    wind_direction: Optional[int],
-    wind_speed: Optional[int],
+    wind_direction: Optional[float],
+    wind_speed: Optional[float],
 ) -> Dict[str, Any]:
     """Return formatted Forecast dict from ClimaCell forecast data."""
     wind_bearing = _translate_wind_direction(wind_direction) if wind_direction else None
@@ -303,31 +306,54 @@ class ClimaCellWeatherEntity(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
-        if not self._coordinator.data[FORECASTS]:
-            return None
-
         forecasts = []
-        for forecast in self._coordinator.data[FORECASTS]:
-            temp_max = None
-            temp_min = None
-            for item in forecast["temp"]:
-                if "max" in item:
-                    temp_max = item["max"]["value"]
-                if "min" in item:
-                    temp_min = item["min"]["value"]
-            forecasts.append(
-                _forecast_dict(
-                    self.hass,
-                    forecast["weather_code"]["value"],
-                    forecast["precipitation"][0]["max"]["value"],
-                    temp_max,
-                    temp_min,
-                    forecast["observation_time"]["value"],
-                    None,
-                    None,
+
+        if (
+            self._config_entry.data[CONF_FORECAST_INTERVAL] == DAILY
+            and self._coordinator.data[FORECASTS]
+        ):
+            for forecast in self._coordinator.data[FORECASTS]:
+                temp_max = None
+                temp_min = None
+                for item in forecast["temp"]:
+                    if "max" in item:
+                        temp_max = item["max"]["value"]
+                    if "min" in item:
+                        temp_min = item["min"]["value"]
+                forecasts.append(
+                    _forecast_dict(
+                        self.hass,
+                        forecast["weather_code"]["value"],
+                        forecast["precipitation"][0]["max"]["value"],
+                        temp_max,
+                        temp_min,
+                        forecast["observation_time"]["value"],
+                        None,
+                        None,
+                    )
                 )
-            )
-        return forecasts
+            return forecasts
+
+        if (
+            self._config_entry.data[CONF_FORECAST_INTERVAL] == HOURLY
+            and self._coordinator.data[FORECASTS]
+        ):
+            for forecast in self._coordinator.data[FORECASTS]:
+                forecasts.append(
+                    _forecast_dict(
+                        self.hass,
+                        forecast["weather_code"]["value"],
+                        forecast["precipitation"]["value"],
+                        forecast["temp"]["value"],
+                        None,
+                        forecast["observation_time"]["value"],
+                        forecast["wind_direction"]["value"],
+                        forecast["wind_speed"]["value"],
+                    )
+                )
+            return forecasts
+
+        return None
 
     @property
     def device_state_attributes(self):

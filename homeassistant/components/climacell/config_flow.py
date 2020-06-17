@@ -63,7 +63,7 @@ def _get_config_schema(
                 default=input_dict.get(CONF_FORECAST_INTERVAL, DAILY),
             ): vol.In((DISABLE_FORECASTS, DAILY, HOURLY)),
             vol.Optional(
-                CONF_AQI_COUNTRY, default=input_dict.get(CONF_AQI_COUNTRY, USA),
+                CONF_AQI_COUNTRY, default=input_dict.get(CONF_AQI_COUNTRY, USA)
             ): vol.In((USA, CHINA)),
         },
         extra=vol.REMOVE_EXTRA,
@@ -83,8 +83,7 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             await self.async_set_unique_id(
-                unique_id=f"{cv.slugify(user_input[CONF_NAME])}",
-                raise_on_progress=True,
+                unique_id=f"{cv.slugify(user_input[CONF_NAME])}", raise_on_progress=True
             )
             self._abort_if_unique_id_configured()
 
