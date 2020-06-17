@@ -114,7 +114,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config[CONF_HOST]
-    port = config.get(CONF_PORT)
+    port = config[CONF_PORT]
 
     hass.data.setdefault(DOMAIN, {})
 
