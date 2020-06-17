@@ -93,6 +93,7 @@ FLOWS = [
     "melcloud",
     "met",
     "meteo_france",
+    "meteoclimatic",
     "mikrotik",
     "mill",
     "minecraft_server",

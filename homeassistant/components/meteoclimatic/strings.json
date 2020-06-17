@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Meteoclimatic",
+        "description": "Enter the Meteoclimatic station code (e.g. ESCAT4300000043206B)",
+        "data": {
+          "code": "Station code"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Station already configured",
+      "not_found": "Station code did not return any data. Check that the code belongs to a station and it is in the right format (e.g. ESCAT4300000043206B)",
+      "unknown": "Unknown error: please retry later"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La estaci\u00f3n ya est\u00e1 configurada",
+            "not_found": "El c\u00f3digo de estaci\u00f3n no ha retornado ning\u00fan valor. Por favor, comprueba que el c\u00f3digo pertenece a una estaci\u00f3n y que el formato sea correcto (p.ej. ESCAT4300000043206B)",
+            "unknown": "Error desconocido: por favor, vuelva a intentarlo m\u00e1s tarde"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "C\u00f3digo de estaci\u00f3n"
+                },
+                "description": "Introduzca el c\u00f3digo de la estaci\u00f3n Meteoclimatic (p.ej. ESCAT4300000043206B)",
+                "title": "Meteoclimatic"
+            }
+        }
+    }
+}

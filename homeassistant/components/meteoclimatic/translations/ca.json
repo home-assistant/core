@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Estació ja configurada",
+            "not_found": "El codi d'estaci\u00f3 no ha retornat cap dada. Comprova que el codi pertanyi a una estació i que el format sigui correcte (per exemple ESCAT4300000043206B)",
+            "unknown": "Error desconegut: torna-ho a provar m\u00e9s tard"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Codi d'estaci\u00f3"
+                },
+                "description": "Introdueix el codi d'estaci\u00f3 Meteoclimatic (per exemple ESCAT4300000043206B)",
+                "title": "Meteoclimatic"
+            }
+        }
+    }
+}
