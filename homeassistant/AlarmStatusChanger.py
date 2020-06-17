@@ -54,7 +54,7 @@ class DBAccess:
 class AlarmStatusChanger:
 
     def __init__(self):
-        self.theDB = DBAccess('C:/Users/dlavr/Desktop/myProjectA/SQLLiteDB/TrackedObjects.db')
+        self.theDB = DBAccess('C:/Users/dlavr/Desktop/HAGitHub/Guard/SQLLiteDB/TrackedObjects.db')
 
     def clear(self,ID):
         self.theDB.setState(ID,1)
