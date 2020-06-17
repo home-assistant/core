@@ -43,6 +43,9 @@ DEVICE_CLASS_GARAGE_DOOR = "garage_door"
 # On means gas detected, Off means no gas (clear)
 DEVICE_CLASS_GAS = "gas"
 
+# On means open, Off means closed
+DEVICE_CLASS_GATE = "gate"
+
 # On means hot, Off means normal
 DEVICE_CLASS_HEAT = "heat"
 
@@ -102,6 +105,7 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_GARAGE_DOOR,
     DEVICE_CLASS_GAS,
+    DEVICE_CLASS_GATE,
     DEVICE_CLASS_HEAT,
     DEVICE_CLASS_LIGHT,
     DEVICE_CLASS_LOCK,
