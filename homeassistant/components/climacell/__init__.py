@@ -85,7 +85,8 @@ def _set_update_interval(
 
     if len(other_instance_entry_ids) > 0:
         for entry_id in other_instance_entry_ids:
-            hass.data[DOMAIN][entry_id].update_interval = interval
+            if entry_id in hass.data[DOMAIN]:
+                hass.data[DOMAIN][entry_id].update_interval = interval
 
     return interval
 

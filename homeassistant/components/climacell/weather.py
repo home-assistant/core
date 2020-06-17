@@ -174,16 +174,11 @@ class ClimaCellWeatherEntity(WeatherEntity):
         """Return the platform temperature."""
         if "temp" not in self._coordinator.data[CURRENT]:
             return None
-        temperature = self._coordinator.data[CURRENT]["temp"]["value"]
-        if self.hass.config.units.is_metric:
-            return temp_convert(temperature, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-        return temperature
+        return self._coordinator.data[CURRENT]["temp"]["value"]
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self.hass.config.units.is_metric:
-            return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
     @property
