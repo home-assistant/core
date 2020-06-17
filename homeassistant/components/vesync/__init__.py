@@ -1,4 +1,4 @@
-"""Etekcity VeSync integration."""
+"""VeSync integration."""
 import logging
 
 from pyvesync import VeSync

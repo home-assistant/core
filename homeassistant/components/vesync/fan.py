@@ -1,4 +1,4 @@
-"""Support for Etekcity VeSync fans."""
+"""Support for VeSync fans."""
 import logging
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
