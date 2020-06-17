@@ -397,7 +397,7 @@ class Recorder(threading.Thread):
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
                     dbstate = States.from_event(event)
-                    dbstate.old_state_id = self._get_old_state_id(dbstate.entity_id)
+                    dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
