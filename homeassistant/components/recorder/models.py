@@ -43,7 +43,7 @@ class Events(Base):  # type: ignore
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
-    # context_parent_id = Column(String(36), index=True)
+    context_parent_id = Column(String(36), index=True)
 
     @staticmethod
     def from_event(event):
@@ -55,7 +55,7 @@ class Events(Base):  # type: ignore
             time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
-            # context_parent_id=event.context.parent_id,
+            context_parent_id=event.context.parent_id,
         )
 
     def to_native(self):
