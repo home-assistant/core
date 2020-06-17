@@ -212,6 +212,44 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
         }
 
 
+async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
+    """Test that without stream source option."""
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "https://example.com",
+                "limit_refetch_to_url_change": True,
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.components.camera.request_stream",
+        return_value="http://home.assistant/playlist.m3u8",
+    ) as mock_request_stream:
+        # Request playlist through WebSocket
+        client = await hass_ws_client(hass)
+
+        await client.send_json(
+            {"id": 3, "type": "camera/stream", "entity_id": "camera.config_test"}
+        )
+        msg = await client.receive_json()
+
+        # Assert the websocket error message
+        assert mock_request_stream.call_count == 0
+        assert msg["id"] == 3
+        assert msg["type"] == TYPE_RESULT
+        assert msg["success"] is False
+        assert msg["error"] == {
+            "code": "start_stream_failed",
+            "message": "camera.config_test does not support play stream service",
+        }
+
+
 async def test_camera_content_type(aioclient_mock, hass, hass_client):
     """Test generic camera with custom content_type."""
     svg_image = "<some image>"
