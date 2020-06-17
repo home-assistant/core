@@ -71,6 +71,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _abort_if_configured(self, access_token: str):
         """Abort if this access_token has been set up."""
-        unique_id = f"awair-{access_token}"
+        unique_id = access_token
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
