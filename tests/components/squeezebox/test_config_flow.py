@@ -8,8 +8,15 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 HOST = "1.1.1.1"
+HOST2 = "2.2.2.2"
 PORT = 9000
 UUID = "test-uuid"
+
+
+class mock_entry:
+    """Mock a config_entry."""
+
+    unique_id = UUID
 
 
 async def mock_discover(_discovery_callback):
@@ -67,7 +74,35 @@ async def test_user_form_timeout(hass):
     with patch(
         "homeassistant.components.squeezebox.config_flow.async_discover",
         mock_failed_discover,
-    ), patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0):
+    ), patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "no_server_found"}
+
+        # simulate manual input of host
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: HOST2}
+        )
+        assert result2["type"] == RESULT_TYPE_FORM
+        assert result2["step_id"] == "edit"
+        assert CONF_HOST in result2["data_schema"].schema
+        for key in result2["data_schema"].schema:
+            if key == CONF_HOST:
+                assert key.description == {"suggested_value": HOST2}
+
+
+async def test_user_form_duplicate(hass):
+    """Test duplicate discovered servers are skipped."""
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.async_discover", mock_discover,
+    ), patch(
+        "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._async_current_entries",
+        return_value=[mock_entry],
+    ), patch(
+        "homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )

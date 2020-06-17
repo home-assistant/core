@@ -104,21 +104,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovery_task.cancel()  # stop searching as soon as we find server
 
         # update with suggested values from discovery
-        self.data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_HOST,
-                    description={"suggested_value": self.discovery_info[CONF_HOST]},
-                ): str,
-                vol.Required(
-                    CONF_PORT,
-                    default=DEFAULT_PORT,
-                    description={"suggested_value": self.discovery_info[CONF_PORT]},
-                ): int,
-                vol.Optional(CONF_USERNAME): str,
-                vol.Optional(CONF_PASSWORD): str,
-            }
-        )
+        self.data_schema = _base_schema(self.discovery_info)
 
     async def _validate_input(self, data):
         """
@@ -152,17 +138,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input and CONF_HOST in user_input:
             # update with host provided by user
-            self.data_schema = vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST,
-                        description={"suggested_value": user_input.get(CONF_HOST)},
-                    ): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT,): int,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                }
-            )
+            self.data_schema = _base_schema(user_input)
             return await self.async_step_edit()
 
         # no host specified, see if we can discover an unconfigured LMS server
