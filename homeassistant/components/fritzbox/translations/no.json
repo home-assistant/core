@@ -9,15 +9,14 @@
         "error": {
             "auth_failed": "Brukernavn og/eller passord er feil."
         },
-        "flow_title": "",
+        "flow_title": "AVM FRITZ!Box: {name}",
         "step": {
             "confirm": {
                 "data": {
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Vil du sette opp {name} ?",
-                "title": ""
+                "description": "Vil du sette opp {name} ?"
             },
             "user": {
                 "data": {
@@ -25,8 +24,7 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Skriv inn AVM FRITZ!Box informasjonen.",
-                "title": ""
+                "description": "Fyll inn AVM FRITZ!Box informasjonen."
             }
         }
     }

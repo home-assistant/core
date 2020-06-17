@@ -18,12 +18,21 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "username": "Brukernavn"
                 },
                 "title": "Sett opp Axis enhet"
             }
         }
     },
-    "title": "Axis enhet"
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Velg str\u00f8mprofil som skal brukes"
+                },
+                "title": "Axis videostr\u00f8m alternativer"
+            }
+        }
+    }
 }

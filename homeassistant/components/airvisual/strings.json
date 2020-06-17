@@ -5,7 +5,7 @@
         "title": "Configure a Geography",
         "description": "Use the AirVisual cloud API to monitor a geographical location.",
         "data": {
-          "api_key": "API Key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "Latitude",
           "longitude": "Longitude"
         }
@@ -15,7 +15,7 @@
         "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
         "data": {
           "ip_address": "Unit IP Address/Hostname",
-          "password": "Unit Password"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "user": {

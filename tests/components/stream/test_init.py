@@ -1,6 +1,4 @@
 """The tests for stream."""
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from homeassistant.components.stream.const import (
@@ -14,7 +12,7 @@ from homeassistant.const import CONF_FILENAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock
+from tests.async_mock import AsyncMock, MagicMock, patch
 
 
 async def test_record_service_invalid_file(hass):

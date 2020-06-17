@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo ONVIF j\u00e1 est\u00e1 configurado.",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o para o dispositivo ONVIF j\u00e1 est\u00e1 em andamento.",
+            "no_h264": "N\u00e3o existem fluxos H264 dispon\u00edveis.  Verifique a configura\u00e7\u00e3o de perfil no seu dispositivo.",
+            "no_mac": "N\u00e3o foi poss\u00edvel configurar o ID unico para o dispositivo ONVIF.",
+            "onvif_error": "Erro ao configurar o dispositivo ONVIF. Verifique os logs para obter mais informa\u00e7\u00f5es."
+        },
+        "error": {
+            "connection_failed": "N\u00e3o foi poss\u00edvel ligar ao servi\u00e7o ONVIF com as credenciais fornecidas."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Utilizador"
+                },
+                "title": "Configurar autentica\u00e7\u00e3o"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Criar entidade da c\u00e2mara"
+                },
+                "description": "Criar entidade de c\u00e2mera para {profile} com resolu\u00e7\u00e3o {resolution} ?",
+                "title": "Configurar Perfis"
+            },
+            "device": {
+                "data": {
+                    "host": "Selecione o dispositivo ONVIF descoberto"
+                },
+                "title": "Selecione o dispositivo ONVIF"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Servidor",
+                    "port": "Porta"
+                },
+                "title": "Configurar dispositivo ONVIF"
+            },
+            "user": {
+                "description": "Ao clickar submeter, iremos procurar na sua rede por dispositivos ONVIF que suportem o Perfil S.\n\nAlguns fabricantes come\u00e7aram a desabilitar o ONVIF por omiss\u00e3o. Por favor verifique que o ONVIF est\u00e1 activo na configura\u00e7\u00e3o da sua c\u00e2mara.",
+                "title": "Configura\u00e7\u00e3o do dispositivo ONVIF"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "Argumentos FFMPEG extras",
+                    "rtsp_transport": "Mecanismo de transporte RTSP"
+                },
+                "title": "Op\u00e7\u00f5es do dispositivo ONVIF"
+            }
+        }
+    }
+}

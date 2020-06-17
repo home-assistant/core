@@ -1,8 +1,17 @@
 """All constants related to the ZHA component."""
 import enum
 import logging
+from typing import List
+
+import bellows.zigbee.application
+from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
+import zigpy_cc.zigbee.application
+import zigpy_deconz.zigbee.application
+import zigpy_xbee.zigbee.application
+import zigpy_zigate.zigbee.application
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
@@ -10,6 +19,8 @@ from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
+
+from .typing import CALLABLE_T
 
 ATTR_ARGS = "args"
 ATTR_ATTRIBUTE = "attribute"
@@ -75,8 +86,10 @@ CHANNEL_OCCUPANCY = "occupancy"
 CHANNEL_ON_OFF = "on_off"
 CHANNEL_POWER_CONFIGURATION = "power"
 CHANNEL_PRESSURE = "pressure"
+CHANNEL_SHADE = "shade"
 CHANNEL_SMARTENERGY_METERING = "smartenergy_metering"
 CHANNEL_TEMPERATURE = "temperature"
+CHANNEL_THERMOSTAT = "thermostat"
 CHANNEL_ZDO = "zdo"
 CHANNEL_ZONE = ZONE = "ias_zone"
 
@@ -86,15 +99,26 @@ CLUSTER_COMMANDS_SERVER = "server_commands"
 CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
-COMPONENTS = (BINARY_SENSOR, COVER, DEVICE_TRACKER, FAN, LIGHT, LOCK, SENSOR, SWITCH)
+COMPONENTS = (
+    BINARY_SENSOR,
+    CLIMATE,
+    COVER,
+    DEVICE_TRACKER,
+    FAN,
+    LIGHT,
+    LOCK,
+    SENSOR,
+    SWITCH,
+)
 
 CONF_BAUDRATE = "baudrate"
 CONF_DATABASE = "database_path"
 CONF_DEVICE_CONFIG = "device_config"
 CONF_ENABLE_QUIRKS = "enable_quirks"
+CONF_FLOWCONTROL = "flow_control"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
-CONTROLLER = "controller"
+CONF_ZIGPY = "zigpy_config"
 
 DATA_DEVICE_CONFIG = "zha_device_config"
 DATA_ZHA = "zha"
@@ -145,16 +169,54 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
-    deconz = "deconz"
-    ezsp = "ezsp"
-    ti_cc = "ti_cc"
-    xbee = "xbee"
-    zigate = "zigate"
+    ezsp = (
+        "EZSP = Silicon Labs EmberZNet protocol: Elelabs, HUSBZB-1, Telegesis",
+        bellows.zigbee.application.ControllerApplication,
+    )
+    deconz = (
+        "deCONZ = dresden elektronik deCONZ protocol: ConBee I/II, RaspBee I/II",
+        zigpy_deconz.zigbee.application.ControllerApplication,
+    )
+    ti_cc = (
+        "TI_CC = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
+        zigpy_cc.zigbee.application.ControllerApplication,
+    )
+    zigate = (
+        "ZiGate = ZiGate Zigbee radios: PiZiGate, ZiGate USB-TTL, ZiGate WiFi",
+        zigpy_zigate.zigbee.application.ControllerApplication,
+    )
+    xbee = (
+        "XBee = Digi XBee Zigbee radios: Digi XBee Series 2, 2C, 3",
+        zigpy_xbee.zigbee.application.ControllerApplication,
+    )
 
     @classmethod
-    def list(cls):
-        """Return list of enum's values."""
-        return [e.value for e in RadioType]
+    def list(cls) -> List[str]:
+        """Return a list of descriptions."""
+        return [e.description for e in RadioType]
+
+    @classmethod
+    def get_by_description(cls, description: str) -> str:
+        """Get radio by description."""
+        for radio in cls:
+            if radio.description == description:
+                return radio.name
+        raise ValueError
+
+    def __init__(self, description: str, controller_cls: CALLABLE_T):
+        """Init instance."""
+        self._desc = description
+        self._ctrl_cls = controller_cls
+
+    @property
+    def controller(self) -> CALLABLE_T:
+        """Return controller class."""
+        return self._ctrl_cls
+
+    @property
+    def description(self) -> str:
+        """Return radio type description."""
+        return self._desc
 
 
 REPORT_CONFIG_MAX_INT = 900
@@ -258,8 +320,6 @@ ZHA_GW_MSG_GROUP_REMOVED = "group_removed"
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
-ZHA_GW_RADIO = "radio"
-ZHA_GW_RADIO_DESCRIPTION = "radio_description"
 
 EFFECT_BLINK = 0x00
 EFFECT_BREATHE = 0x01

@@ -2,6 +2,6 @@
   "domain": "solax",
   "name": "SolaX Power",
   "documentation": "https://www.home-assistant.io/integrations/solax",
-  "requirements": ["solax==0.2.2"],
+  "requirements": ["solax==0.2.3"],
   "codeowners": ["@squishykid"]
 }

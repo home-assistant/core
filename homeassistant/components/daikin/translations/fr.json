@@ -1,14 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
-            "device_fail": "Erreur inattendue lors de la cr\u00e9ation du p\u00e9riph\u00e9rique.",
-            "device_timeout": "D\u00e9lai de connexion au p\u00e9riph\u00e9rique expir\u00e9."
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "device_fail": "Erreur inattendue",
+            "device_timeout": "Echec de la connexion",
+            "forbidden": "Authentification invalide"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "H\u00f4te"
+                    "host": "H\u00f4te",
+                    "key": "Cl\u00e9 d'authentification (utilis\u00e9e uniquement par les appareils BRP072C/Zena)",
+                    "password": "Mot de passe de l'appareil (utilis\u00e9 uniquement par les appareils SKYFi)"
                 },
                 "description": "Entrez l'adresse IP de votre Daikin AC.",
                 "title": "Configurer Daikin AC"

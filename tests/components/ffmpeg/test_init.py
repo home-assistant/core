@@ -1,6 +1,4 @@
 """The tests for Home Assistant ffmpeg."""
-from unittest.mock import MagicMock
-
 import homeassistant.components.ffmpeg as ffmpeg
 from homeassistant.components.ffmpeg import (
     DOMAIN,
@@ -12,6 +10,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import MagicMock
 from tests.common import assert_setup_component, get_test_home_assistant
 
 

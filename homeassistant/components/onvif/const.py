@@ -4,18 +4,14 @@ import logging
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "onvif"
-ONVIF_DATA = "onvif"
-ENTITIES = "entities"
 
 DEFAULT_NAME = "ONVIF Camera"
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "888888"
 DEFAULT_ARGUMENTS = "-pred 1"
-DEFAULT_PROFILE = 0
 
 CONF_DEVICE_ID = "deviceid"
-CONF_PROFILE = "profile"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
 
 RTSP_TRANS_PROTOCOLS = ["tcp", "udp", "udp_multicast", "http"]
@@ -44,4 +40,3 @@ ABSOLUTE_MOVE = "AbsoluteMove"
 GOTOPRESET_MOVE = "GotoPreset"
 
 SERVICE_PTZ = "ptz"
-ENTITIES = "entities"

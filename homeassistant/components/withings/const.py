@@ -1,19 +1,19 @@
 """Constants used by the Withings component."""
 import homeassistant.const as const
 
+DOMAIN = "withings"
+
+CONF_PROFILES = "profiles"
+
 DATA_MANAGER = "data_manager"
 
 BASE_URL = "base_url"
-CLIENT_ID = "client_id"
-CLIENT_SECRET = "client_secret"
 CODE = "code"
 CONFIG = "config"
 CREDENTIALS = "credentials"
-DOMAIN = "withings"
 LOG_NAMESPACE = "homeassistant.components.withings"
 MEASURES = "measures"
 PROFILE = "profile"
-PROFILES = "profiles"
 
 AUTH_CALLBACK_PATH = "/api/withings/authorize"
 AUTH_CALLBACK_NAME = "withings:authorize"

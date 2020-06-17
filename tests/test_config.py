@@ -28,6 +28,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import async_get_integration
@@ -178,6 +179,8 @@ def test_core_config_schema():
         {"time_zone": "non-exist"},
         {"latitude": "91"},
         {"longitude": -181},
+        {"external_url": "not an url"},
+        {"internal_url": "not an url"},
         {"customize": "bla"},
         {"customize": {"light.sensor": 100}},
         {"customize": {"entity_id": []}},
@@ -190,6 +193,8 @@ def test_core_config_schema():
             "name": "Test name",
             "latitude": "-23.45",
             "longitude": "123.45",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             "customize": {"sensor.temperature": {"hidden": True}},
         }
@@ -342,6 +347,8 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
             "unit_system": "metric",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
         },
         "key": "core.config",
         "version": 1,
@@ -356,6 +363,8 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
+    assert hass.config.external_url == "https://www.example.com"
+    assert hass.config.internal_url == "http://example.local"
     assert len(hass.config.whitelist_external_dirs) == 2
     assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == SOURCE_STORAGE
@@ -371,6 +380,8 @@ async def test_updating_configuration(hass, hass_storage):
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
             "unit_system": "metric",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
         },
         "key": "core.config",
         "version": 1,
@@ -428,6 +439,8 @@ async def test_loading_configuration(hass):
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             "time_zone": "America/New_York",
             "whitelist_external_dirs": "/etc",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
         },
     )
 
@@ -437,6 +450,8 @@ async def test_loading_configuration(hass):
     assert hass.config.location_name == "Huis"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
     assert hass.config.time_zone.zone == "America/New_York"
+    assert hass.config.external_url == "https://www.example.com"
+    assert hass.config.internal_url == "http://example.local"
     assert len(hass.config.whitelist_external_dirs) == 2
     assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
@@ -453,6 +468,8 @@ async def test_loading_configuration_temperature_unit(hass):
             "name": "Huis",
             CONF_TEMPERATURE_UNIT: "C",
             "time_zone": "America/New_York",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
         },
     )
 
@@ -462,6 +479,8 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.location_name == "Huis"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "America/New_York"
+    assert hass.config.external_url == "https://www.example.com"
+    assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
@@ -476,6 +495,8 @@ async def test_loading_configuration_from_packages(hass):
             "name": "Huis",
             CONF_TEMPERATURE_UNIT: "C",
             "time_zone": "Europe/Madrid",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
             "packages": {
                 "package_1": {"wake_on_lan": None},
                 "package_2": {
@@ -1009,6 +1030,7 @@ async def test_component_config_exceptions(hass, caplog):
         ("non_existing", vol.Schema({"zone": int}), None),
         ("zone", vol.Schema({}), None),
         ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),
+        ("openuv", cv.deprecated("openuv", invalidation_version="0.115"), None),
     ],
 )
 def test_identify_config_schema(domain, schema, expected):

@@ -1,11 +1,11 @@
 """The tests for the wake on lan switch platform."""
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.switch as switch
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, mock_service
 from tests.components.switch import common
 
@@ -35,10 +35,7 @@ class TestWolSwitch(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
     @patch("subprocess.call", new=call)
@@ -57,6 +54,7 @@ class TestWolSwitch(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         state = self.hass.states.get("switch.wake_on_lan")
         assert STATE_OFF == state.state
@@ -93,6 +91,7 @@ class TestWolSwitch(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         state = self.hass.states.get("switch.wake_on_lan")
         assert STATE_OFF == state.state
@@ -127,9 +126,11 @@ class TestWolSwitch(unittest.TestCase):
                     "platform": "wake_on_lan",
                     "mac": "00-01-02-03-04-05",
                     "broadcast_address": "255.255.255.255",
+                    "broadcast_port": 999,
                 }
             },
         )
+        self.hass.block_till_done()
 
         state = self.hass.states.get("switch.wake_on_lan")
         assert STATE_OFF == state.state
@@ -155,6 +156,7 @@ class TestWolSwitch(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         calls = mock_service(self.hass, "shell_command", "turn_off_target")
 
         state = self.hass.states.get("switch.wake_on_lan")
@@ -196,6 +198,7 @@ class TestWolSwitch(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
 
         state = self.hass.states.get("switch.wake_on_lan")
         assert STATE_OFF == state.state

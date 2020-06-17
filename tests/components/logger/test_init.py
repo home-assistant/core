@@ -1,123 +1,120 @@
 """The tests for the Logger component."""
 from collections import namedtuple
 import logging
-import unittest
 
 from homeassistant.components import logger
-from homeassistant.setup import setup_component
-
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 RECORD = namedtuple("record", ("name", "levelno"))
 
 NO_DEFAULT_CONFIG = {"logger": {}}
 NO_LOGS_CONFIG = {"logger": {"default": "info"}}
-TEST_CONFIG = {"logger": {"default": "warning", "logs": {"test": "info"}}}
+TEST_CONFIG = {
+    "logger": {
+        "default": "warning",
+        "logs": {"test": "info", "test.child": "debug", "test.child.child": "warning"},
+    }
+}
 
 
-class TestUpdater(unittest.TestCase):
-    """Test logger component."""
+async def async_setup_logger(hass, config):
+    """Set up logger and save log filter."""
+    await async_setup_component(hass, logger.DOMAIN, config)
+    return logging.root.handlers[-1].filters[0]
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.log_filter = None
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        del logging.root.handlers[-1]
-        self.hass.stop()
+async def test_logger_setup(hass):
+    """Use logger to create a logging filter."""
+    await async_setup_logger(hass, TEST_CONFIG)
 
-    def setup_logger(self, config):
-        """Set up logger and save log filter."""
-        setup_component(self.hass, logger.DOMAIN, config)
-        self.log_filter = logging.root.handlers[-1].filters[0]
+    assert len(logging.root.handlers) > 0
+    handler = logging.root.handlers[-1]
 
-    def assert_logged(self, name, level):
-        """Assert that a certain record was logged."""
-        assert self.log_filter.filter(RECORD(name, level))
+    assert len(handler.filters) == 1
 
-    def assert_not_logged(self, name, level):
-        """Assert that a certain record was not logged."""
-        assert not self.log_filter.filter(RECORD(name, level))
 
-    def test_logger_setup(self):
-        """Use logger to create a logging filter."""
-        self.setup_logger(TEST_CONFIG)
+async def test_logger_test_filters(hass):
+    """Test resulting filter operation."""
+    log_filter = await async_setup_logger(hass, TEST_CONFIG)
 
-        assert len(logging.root.handlers) > 0
-        handler = logging.root.handlers[-1]
+    # Blocked default record
+    assert not log_filter.filter(RECORD("asdf", logging.DEBUG))
 
-        assert len(handler.filters) == 1
-        log_filter = handler.filters[0].logfilter
+    # Allowed default record
+    assert log_filter.filter(RECORD("asdf", logging.WARNING))
 
-        assert log_filter["default"] == logging.WARNING
-        assert log_filter["logs"]["test"] == logging.INFO
+    # Blocked named record
+    assert not log_filter.filter(RECORD("test", logging.DEBUG))
 
-    def test_logger_test_filters(self):
-        """Test resulting filter operation."""
-        self.setup_logger(TEST_CONFIG)
+    # Allowed named record
+    assert log_filter.filter(RECORD("test", logging.INFO))
 
-        # Blocked default record
-        self.assert_not_logged("asdf", logging.DEBUG)
+    # Allowed named record child
+    assert log_filter.filter(RECORD("test.child", logging.INFO))
 
-        # Allowed default record
-        self.assert_logged("asdf", logging.WARNING)
+    # Allowed named record child
+    assert log_filter.filter(RECORD("test.child", logging.DEBUG))
 
-        # Blocked named record
-        self.assert_not_logged("test", logging.DEBUG)
+    # Blocked named record child of child
+    assert not log_filter.filter(RECORD("test.child.child", logging.DEBUG))
 
-        # Allowed named record
-        self.assert_logged("test", logging.INFO)
+    # Allowed named record child of child
+    assert log_filter.filter(RECORD("test.child.child", logging.WARNING))
 
-    def test_set_filter_empty_config(self):
-        """Test change log level from empty configuration."""
-        self.setup_logger(NO_LOGS_CONFIG)
 
-        self.assert_not_logged("test", logging.DEBUG)
+async def test_set_filter_empty_config(hass):
+    """Test change log level from empty configuration."""
+    log_filter = await async_setup_logger(hass, NO_LOGS_CONFIG)
 
-        self.hass.services.call(logger.DOMAIN, "set_level", {"test": "debug"})
-        self.hass.block_till_done()
+    assert not log_filter.filter(RECORD("test", logging.DEBUG))
 
-        self.assert_logged("test", logging.DEBUG)
+    await hass.services.async_call(logger.DOMAIN, "set_level", {"test": "debug"})
+    await hass.async_block_till_done()
 
-    def test_set_filter(self):
-        """Test change log level of existing filter."""
-        self.setup_logger(TEST_CONFIG)
+    assert log_filter.filter(RECORD("test", logging.DEBUG))
 
-        self.assert_not_logged("asdf", logging.DEBUG)
-        self.assert_logged("dummy", logging.WARNING)
 
-        self.hass.services.call(
-            logger.DOMAIN, "set_level", {"asdf": "debug", "dummy": "info"}
-        )
-        self.hass.block_till_done()
+async def test_set_filter(hass):
+    """Test change log level of existing filter."""
+    log_filter = await async_setup_logger(hass, TEST_CONFIG)
 
-        self.assert_logged("asdf", logging.DEBUG)
-        self.assert_logged("dummy", logging.WARNING)
+    assert not log_filter.filter(RECORD("asdf", logging.DEBUG))
+    assert log_filter.filter(RECORD("dummy", logging.WARNING))
 
-    def test_set_default_filter_empty_config(self):
-        """Test change default log level from empty configuration."""
-        self.setup_logger(NO_DEFAULT_CONFIG)
+    await hass.services.async_call(
+        logger.DOMAIN, "set_level", {"asdf": "debug", "dummy": "info"}
+    )
+    await hass.async_block_till_done()
 
-        self.assert_logged("test", logging.DEBUG)
+    assert log_filter.filter(RECORD("asdf", logging.DEBUG))
+    assert log_filter.filter(RECORD("dummy", logging.WARNING))
 
-        self.hass.services.call(
-            logger.DOMAIN, "set_default_level", {"level": "warning"}
-        )
-        self.hass.block_till_done()
 
-        self.assert_not_logged("test", logging.DEBUG)
+async def test_set_default_filter_empty_config(hass):
+    """Test change default log level from empty configuration."""
+    log_filter = await async_setup_logger(hass, NO_DEFAULT_CONFIG)
 
-    def test_set_default_filter(self):
-        """Test change default log level with existing default."""
-        self.setup_logger(TEST_CONFIG)
+    assert log_filter.filter(RECORD("test", logging.DEBUG))
 
-        self.assert_not_logged("asdf", logging.DEBUG)
-        self.assert_logged("dummy", logging.WARNING)
+    await hass.services.async_call(
+        logger.DOMAIN, "set_default_level", {"level": "warning"}
+    )
+    await hass.async_block_till_done()
 
-        self.hass.services.call(logger.DOMAIN, "set_default_level", {"level": "debug"})
-        self.hass.block_till_done()
+    assert not log_filter.filter(RECORD("test", logging.DEBUG))
 
-        self.assert_logged("asdf", logging.DEBUG)
-        self.assert_logged("dummy", logging.WARNING)
+
+async def test_set_default_filter(hass):
+    """Test change default log level with existing default."""
+    log_filter = await async_setup_logger(hass, TEST_CONFIG)
+
+    assert not log_filter.filter(RECORD("asdf", logging.DEBUG))
+    assert log_filter.filter(RECORD("dummy", logging.WARNING))
+
+    await hass.services.async_call(
+        logger.DOMAIN, "set_default_level", {"level": "debug"}
+    )
+    await hass.async_block_till_done()
+
+    assert log_filter.filter(RECORD("asdf", logging.DEBUG))
+    assert log_filter.filter(RECORD("dummy", logging.WARNING))

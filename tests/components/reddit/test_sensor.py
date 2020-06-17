@@ -1,7 +1,6 @@
 """The tests for the Reddit platform."""
 import copy
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components.reddit.sensor import (
     ATTR_BODY,
@@ -16,16 +15,23 @@ from homeassistant.components.reddit.sensor import (
     CONF_SORT_BY,
     DOMAIN,
 )
-from homeassistant.const import CONF_MAXIMUM, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_MAXIMUM,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 VALID_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],
@@ -35,8 +41,8 @@ VALID_CONFIG = {
 VALID_LIMITED_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],
@@ -48,8 +54,8 @@ VALID_LIMITED_CONFIG = {
 INVALID_SORT_BY_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
-        "client_id": "test_client_id",
-        "client_secret": "test_client_secret",
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],
@@ -151,8 +157,9 @@ class TestRedditSetup(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -160,6 +167,7 @@ class TestRedditSetup(unittest.TestCase):
     def test_setup_with_valid_config(self):
         """Test the platform setup with Reddit configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.reddit_worldnews")
         assert int(state.state) == MOCK_RESULTS_LENGTH

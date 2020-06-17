@@ -15,7 +15,8 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Ingrese sus credenciales."
+                "description": "Ingrese sus credenciales.",
+                "title": "Garmin Connect"
             }
         }
     }

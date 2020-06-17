@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -64,7 +65,7 @@ class SecuritySystem(HomeAccessory):
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
-        self.update_state(state)
+        self.async_update_state(state)
 
     def set_security_state(self, value):
         """Move security state to value if call came from HomeKit."""
@@ -77,7 +78,8 @@ class SecuritySystem(HomeAccessory):
             params[ATTR_CODE] = self._alarm_code
         self.call_service(DOMAIN, service, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update security state after state changed."""
         hass_state = new_state.state
         if hass_state in HASS_TO_HOMEKIT:

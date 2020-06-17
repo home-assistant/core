@@ -9,7 +9,6 @@ import asyncio
 import datetime
 from decimal import Decimal
 from itertools import chain, repeat
-from unittest.mock import DEFAULT, Mock
 
 import pytest
 
@@ -18,6 +17,7 @@ from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, TIME_HOURS, VOLUME_CUBIC_METERS
 
 import tests.async_mock
+from tests.async_mock import DEFAULT, Mock
 from tests.common import assert_setup_component
 
 
@@ -75,6 +75,7 @@ async def test_default_setup(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -171,6 +172,7 @@ async def test_v4_meter(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -215,6 +217,7 @@ async def test_v5_meter(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -259,6 +262,7 @@ async def test_belgian_meter(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -292,6 +296,7 @@ async def test_belgian_meter_low(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -315,6 +320,7 @@ async def test_tcp(hass, mock_connection_factory):
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     assert connection_factory.call_args_list[0][0][0] == "localhost"
     assert connection_factory.call_args_list[0][0][1] == "1234"

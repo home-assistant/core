@@ -15,8 +15,7 @@
                 "data": {
                     "password": "Heslo"
                 },
-                "description": "Zadejte heslo, kter\u00e9 jste nastavili ve va\u0161\u00ed konfiguraci pro {name} .",
-                "title": "Zadejte heslo"
+                "description": "Zadejte heslo, kter\u00e9 jste nastavili ve va\u0161\u00ed konfiguraci pro {name} ."
             },
             "discovery_confirm": {
                 "description": "Chcete do domovsk\u00e9ho asistenta p\u0159idat uzel ESPHome `{name}`?",
@@ -27,8 +26,7 @@
                     "host": "Adresa uzlu",
                     "port": "Port"
                 },
-                "description": "Zadejte pros\u00edm nastaven\u00ed p\u0159ipojen\u00ed va\u0161eho [ESPHome](https://esphomelib.com/) uzlu.",
-                "title": "[%key:component::esphome::title%]"
+                "description": "Zadejte pros\u00edm nastaven\u00ed p\u0159ipojen\u00ed va\u0161eho [ESPHome](https://esphomelib.com/) uzlu."
             }
         }
     }

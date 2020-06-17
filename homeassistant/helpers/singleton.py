@@ -4,6 +4,7 @@ import functools
 from typing import Awaitable, Callable, TypeVar, cast
 
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import bind_hass
 
 T = TypeVar("T")
 
@@ -19,6 +20,7 @@ def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
     def wrapper(func: FUNC) -> FUNC:
         """Wrap a function with caching logic."""
 
+        @bind_hass
         @functools.wraps(func)
         async def wrapped(hass: HomeAssistant) -> T:
             obj_or_evt = hass.data.get(data_key)

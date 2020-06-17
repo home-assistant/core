@@ -95,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
+        {vol.Required(ATTR_VALUE): vol.Coerce(Decimal)},
         "async_calibrate",
     )
 
@@ -222,7 +222,7 @@ class UtilityMeterSensor(RestoreEntity):
     async def async_calibrate(self, value):
         """Calibrate the Utility Meter with a given value."""
         _LOGGER.debug("Calibrate %s = %s", self._name, value)
-        self._state = Decimal(value)
+        self._state = value
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):

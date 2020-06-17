@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 from collections import OrderedDict
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.group as group
 from homeassistant.const import (
@@ -17,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.group import common
 
@@ -28,11 +28,7 @@ class TestComponentsGroup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_group_with_mixed_groupable_states(self):
         """Try to set up a group with mixed groupable states."""

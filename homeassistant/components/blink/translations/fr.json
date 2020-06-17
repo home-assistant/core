@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "P\u00e9riph\u00e9rique d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Code \u00e0 deux facteurs"
+                },
+                "description": "Saisissez le code envoy\u00e9 \u00e0 votre adresse \u00e9lectronique. Si l'e-mail ne contient pas de code PIN, laissez vide",
+                "title": "Authentification \u00e0 deux facteurs"
+            },
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Identifiant"
+                },
+                "title": "Connectez-vous avec un compte Blink"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Intervalle de balayage (secondes)"
+                },
+                "title": "Options de clignotement"
+            }
+        }
+    }
+}
