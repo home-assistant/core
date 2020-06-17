@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                },
+                "description": "La latitud i la longitud s'utilitzaran per trobar l'estaci\u00f3 meteorol\u00f2gica m\u00e9s propera."
+            }
+        }
+    }
+}
