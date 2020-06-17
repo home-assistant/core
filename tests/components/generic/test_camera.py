@@ -1,9 +1,11 @@
 """The tests for generic camera component."""
 import asyncio
-from unittest import mock
 
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR, HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 
 async def test_fetching_url(aioclient_mock, hass, hass_client):
@@ -104,7 +106,6 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
                 "name": "config_test",
                 "platform": "generic",
                 "still_image_url": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
                 "limit_refetch_to_url_change": True,
             }
         },
@@ -116,7 +117,7 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
 
     hass.states.async_set("sensor.temp", "5")
 
-    with mock.patch("async_timeout.timeout", side_effect=asyncio.TimeoutError()):
+    with patch("async_timeout.timeout", side_effect=asyncio.TimeoutError()):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert aioclient_mock.call_count == 0
         assert resp.status == HTTP_INTERNAL_SERVER_ERROR
@@ -151,6 +152,64 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
     assert resp.status == 200
     body = await resp.text()
     assert body == "hello planet"
+
+
+async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
+    """Test that the stream source is rendered."""
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "https://example.com",
+                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+                "limit_refetch_to_url_change": True,
+            }
+        },
+    )
+
+    hass.states.async_set("sensor.temp", "5")
+
+    with patch(
+        "homeassistant.components.camera.request_stream",
+        return_value="http://home.assistant/playlist.m3u8",
+    ) as mock_request_stream:
+        # Request playlist through WebSocket
+        client = await hass_ws_client(hass)
+
+        await client.send_json(
+            {"id": 1, "type": "camera/stream", "entity_id": "camera.config_test"}
+        )
+        msg = await client.receive_json()
+
+        # Assert WebSocket response
+        assert mock_request_stream.call_count == 1
+        assert mock_request_stream.call_args[0][1] == "http://example.com/5a"
+        assert msg["id"] == 1
+        assert msg["type"] == TYPE_RESULT
+        assert msg["success"]
+        assert msg["result"]["url"][-13:] == "playlist.m3u8"
+
+        # Cause a template render error
+        hass.states.async_remove("sensor.temp")
+
+        await client.send_json(
+            {"id": 2, "type": "camera/stream", "entity_id": "camera.config_test"}
+        )
+        msg = await client.receive_json()
+
+        # Assert that no new call to the stream request should have been made
+        assert mock_request_stream.call_count == 1
+        # Assert the websocket error message
+        assert msg["id"] == 2
+        assert msg["type"] == TYPE_RESULT
+        assert msg["success"] is False
+        assert msg["error"] == {
+            "code": "start_stream_failed",
+            "message": "camera.config_test does not support play stream service",
+        }
 
 
 async def test_camera_content_type(aioclient_mock, hass, hass_client):
