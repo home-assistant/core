@@ -23,8 +23,7 @@
                     "username": "[%key::common::config_flow::data::username%]",
                     "verify_ssl": "AdGuard Home utilitza un certificat adequat"
                 },
-                "description": "Configuraci\u00f3 de la inst\u00e0ncia d'AdGuard Home, permet el control i la monitoritzaci\u00f3.",
-                "title": "Enlla\u00e7ar AdGuard Home."
+                "description": "Configuraci\u00f3 de la inst\u00e0ncia d'AdGuard Home, permet el control i la monitoritzaci\u00f3."
             }
         }
     }

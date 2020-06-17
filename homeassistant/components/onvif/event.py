@@ -62,7 +62,8 @@ class EventManager:
     @callback
     def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
         """Remove data update."""
-        self._listeners.remove(update_callback)
+        if update_callback in self._listeners:
+            self._listeners.remove(update_callback)
 
         if not self._listeners and self._unsub_refresh:
             self._unsub_refresh()
@@ -93,6 +94,8 @@ class EventManager:
 
     async def async_stop(self) -> None:
         """Unsubscribe from events."""
+        self._listeners = []
+
         if not self._subscription:
             return
 
@@ -104,7 +107,9 @@ class EventManager:
         if not self._subscription:
             return
 
-        termination_time = (dt_util.utcnow() + dt.timedelta(minutes=30)).isoformat()
+        termination_time = (
+            (dt_util.utcnow() + dt.timedelta(days=1)).replace(microsecond=0).isoformat()
+        )
         await self._subscription.Renew(termination_time)
 
     async def async_pull_messages(self, _now: dt = None) -> None:
@@ -116,8 +121,10 @@ class EventManager:
             req.Timeout = dt.timedelta(seconds=60)
             response = await pullpoint.PullMessages(req)
 
-            # Renew subscription if less than 60 seconds left
-            if (response.TerminationTime - dt_util.utcnow()).total_seconds() < 60:
+            # Renew subscription if less than two hours is left
+            if (
+                dt_util.as_utc(response.TerminationTime) - dt_util.utcnow()
+            ).total_seconds() < 7200:
                 await self.async_renew()
 
             # Parse response
@@ -144,6 +151,10 @@ class EventManager:
     async def async_parse_messages(self, messages) -> None:
         """Parse notification message."""
         for msg in messages:
+            # Guard against empty message
+            if not msg.Topic:
+                continue
+
             topic = msg.Topic._value_1
             parser = PARSERS.get(topic)
             if not parser:

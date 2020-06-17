@@ -42,10 +42,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         data_file = self.hass.config.path(f"{feedreader.DOMAIN}.pickle")
         if exists(data_file):
             remove(data_file)
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_one_feed(self):
         """Test the general setup of this component."""

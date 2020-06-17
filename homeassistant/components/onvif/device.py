@@ -100,16 +100,6 @@ class ONVIFDevice:
             if self.capabilities.ptz:
                 self.device.create_ptz_service()
 
-            if self._dt_diff_seconds > 300 and self.capabilities.events:
-                self.capabilities.events = False
-                LOGGER.warning(
-                    "The system clock on '%s' is more than 5 minutes off. "
-                    "Although this device supports events, they will be "
-                    "disabled until the device clock is fixed as we will "
-                    "not be able to renew the subscription.",
-                    self.name,
-                )
-
             if self.capabilities.events:
                 self.events = EventManager(
                     self.hass, self.device, self.config_entry.unique_id
@@ -148,12 +138,12 @@ class ONVIFDevice:
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
         LOGGER.debug("Setting up the ONVIF device management service")
-        devicemgmt = self.device.create_devicemgmt_service()
+        device_mgmt = self.device.create_devicemgmt_service()
 
         LOGGER.debug("Retrieving current device date/time")
         try:
             system_date = dt_util.utcnow()
-            device_time = await devicemgmt.GetSystemDateAndTime()
+            device_time = await device_mgmt.GetSystemDateAndTime()
             if not device_time:
                 LOGGER.debug(
                     """Couldn't get device '%s' date/time.
@@ -212,13 +202,32 @@ class ONVIFDevice:
 
     async def async_get_device_info(self) -> DeviceInfo:
         """Obtain information about this device."""
-        devicemgmt = self.device.create_devicemgmt_service()
-        device_info = await devicemgmt.GetDeviceInformation()
+        device_mgmt = self.device.create_devicemgmt_service()
+        device_info = await device_mgmt.GetDeviceInformation()
+
+        # Grab the last MAC address for backwards compatibility
+        mac = None
+        try:
+            network_interfaces = await device_mgmt.GetNetworkInterfaces()
+            for interface in network_interfaces:
+                if interface.Enabled:
+                    mac = interface.Info.HwAddress
+        except Fault as fault:
+            if "not implemented" not in fault.message:
+                raise fault
+
+            LOGGER.debug(
+                "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                self.name,
+                fault,
+            )
+
         return DeviceInfo(
             device_info.Manufacturer,
             device_info.Model,
             device_info.FirmwareVersion,
-            self.config_entry.unique_id,
+            device_info.SerialNumber,
+            mac,
         )
 
     async def async_get_capabilities(self):
@@ -228,7 +237,7 @@ class ONVIFDevice:
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
-        except (ONVIFError, Fault):
+        except (ONVIFError, Fault, ServerDisconnectedError):
             pass
 
         pullpoint = False
@@ -288,7 +297,7 @@ class ONVIFDevice:
                 try:
                     ptz_service = self.device.create_ptz_service()
                     presets = await ptz_service.GetPresets(profile.token)
-                    profile.ptz.presets = [preset.token for preset in presets]
+                    profile.ptz.presets = [preset.token for preset in presets if preset]
                 except (Fault, ServerDisconnectedError):
                     # It's OK if Presets aren't supported
                     profile.ptz.presets = []
@@ -415,7 +424,7 @@ class ONVIFDevice:
                         "PTZ preset '%s' does not exist on device '%s'. Available Presets: %s",
                         preset_val,
                         self.name,
-                        profile.ptz.presets.join(", "),
+                        ", ".join(profile.ptz.presets),
                     )
                     return
 

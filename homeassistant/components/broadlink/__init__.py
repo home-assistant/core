@@ -2,18 +2,17 @@
 import asyncio
 from base64 import b64decode, b64encode
 from binascii import unhexlify
-from datetime import timedelta
 import logging
 import re
 
-from broadlink.exceptions import BroadlinkException, ReadError
+from broadlink.exceptions import BroadlinkException, ReadError, StorageError
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-from .const import CONF_PACKET, DOMAIN, SERVICE_LEARN, SERVICE_SEND
+from .const import CONF_PACKET, DOMAIN, LEARNING_TIMEOUT, SERVICE_LEARN, SERVICE_SEND
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,11 +83,12 @@ async def async_setup_service(hass, host, device):
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
-        while (utcnow() - start_time) < timedelta(seconds=20):
+        while (utcnow() - start_time) < LEARNING_TIMEOUT:
+            await asyncio.sleep(1)
             try:
                 packet = await device.async_request(device.api.check_data)
-            except ReadError:
-                await asyncio.sleep(1)
+            except (ReadError, StorageError):
+                continue
             except BroadlinkException as err_msg:
                 _LOGGER.error("Failed to learn: %s", err_msg)
                 return

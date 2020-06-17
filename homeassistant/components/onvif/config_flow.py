@@ -169,10 +169,16 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.onvif_config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
             return await self.async_step_profiles()
 
+        # Password is optional and default empty due to some cameras not
+        # allowing you to change ONVIF user settings.
+        # See https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(
             step_id="auth",
             data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD, default=""): str,
+                }
             ),
         )
 
@@ -195,15 +201,31 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await device.update_xaddrs()
 
         try:
+            device_mgmt = device.create_devicemgmt_service()
+
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
-                devicemgmt = device.create_devicemgmt_service()
-                network_interfaces = await devicemgmt.GetNetworkInterfaces()
-                for interface in network_interfaces:
-                    if interface.Enabled:
-                        self.device_id = interface.Info.HwAddress
+                try:
+                    network_interfaces = await device_mgmt.GetNetworkInterfaces()
+                    for interface in network_interfaces:
+                        if interface.Enabled:
+                            self.device_id = interface.Info.HwAddress
+                except Fault as fault:
+                    if "not implemented" not in fault.message:
+                        raise fault
 
-            if self.device_id is None:
+                    LOGGER.debug(
+                        "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                        self.onvif_config[CONF_NAME],
+                        fault,
+                    )
+
+            # If no network interfaces are exposed, fallback to serial number
+            if not self.device_id:
+                device_info = await device_mgmt.GetDeviceInformation()
+                self.device_id = device_info.SerialNumber
+
+            if not self.device_id:
                 return self.async_abort(reason="no_mac")
 
             await self.async_set_unique_id(self.device_id, raise_on_progress=False)

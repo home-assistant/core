@@ -42,7 +42,7 @@ async def device_switch(hass, zigpy_device_mock, zha_device_joined):
         ieee=IEEE_SWITCH_DEVICE,
     )
     zha_device = await zha_device_joined(zigpy_device)
-    zha_device.set_available(True)
+    zha_device.available = True
     return zha_device
 
 
@@ -65,7 +65,7 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
         ieee=IEEE_GROUPABLE_DEVICE,
     )
     zha_device = await zha_device_joined(zigpy_device)
-    zha_device.set_available(True)
+    zha_device.available = True
     return zha_device
 
 
@@ -266,7 +266,7 @@ async def test_list_groupable_devices(zha_client, device_groupable):
 
     # Make sure there are no groupable devices when the device is unavailable
     # Make device unavailable
-    device_groupable.set_available(False)
+    device_groupable.available = False
 
     await zha_client.send_json({ID: 11, TYPE: "zha/devices/groupable"})
 
