@@ -82,7 +82,6 @@ class AwairSensor(Entity):
         self, kind: str, device: AwairDevice, coordinator: AwairDataUpdateCoordinator,
     ) -> None:
         """Set up an individual AwairSensor."""
-        LOGGER.debug("Setting up %s: %s", kind, device.uuid)
         self._kind = kind
         self._device = device
         self._coordinator = coordinator
