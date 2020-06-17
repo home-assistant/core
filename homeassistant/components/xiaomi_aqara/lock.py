@@ -25,10 +25,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][config_entry.entry_id]
-    for entity in gateway.devices["lock"]:
-        model = entity["model"]
+    for device in gateway.devices["lock"]:
+        model = device["model"]
         if model == "lock.aq1":
-            entities.append(XiaomiAqaraLock(entity, "Lock", gateway, config_entry))
+            entities.append(XiaomiAqaraLock(device, "Lock", gateway, config_entry))
     async_add_entities(entities)
 
 

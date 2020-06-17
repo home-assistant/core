@@ -18,7 +18,7 @@ TEST_KEY = "1234567890123456"
 TEST_PORT = 1234
 TEST_NAME = "Test_Aqara_Gateway"
 TEST_SID = "abcdefghijkl"
-TEST_PROTECOL = "1.1.1"
+TEST_PROTOCOL = "1.1.1"
 TEST_MAC = "ab:cd:ef:gh:ij:kl"
 TEST_GATEWAY_ID = TEST_MAC
 TEST_ZEROCONF_NAME = "lumi-gateway-v3_miio12345678._miio._udp.local."
@@ -52,7 +52,7 @@ def get_mock_discovery(host_list):
         gateway.ip_adress = host
         gateway.port = TEST_PORT
         gateway.sid = TEST_SID
-        gateway.proto = TEST_PROTECOL
+        gateway.proto = TEST_PROTOCOL
 
         gateway_dict[host] = gateway
 
@@ -96,7 +96,7 @@ async def test_config_flow_user_success(hass):
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
         const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
-        const.CONF_PROTOCOL: TEST_PROTECOL,
+        const.CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
@@ -151,7 +151,7 @@ async def test_config_flow_user_multiple_success(hass):
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
         const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
-        const.CONF_PROTOCOL: TEST_PROTECOL,
+        const.CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
@@ -259,7 +259,7 @@ async def test_zeroconf_success(hass):
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
         const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
-        const.CONF_PROTOCOL: TEST_PROTECOL,
+        const.CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }

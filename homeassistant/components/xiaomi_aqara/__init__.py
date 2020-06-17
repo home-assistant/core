@@ -132,8 +132,7 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the xiaomi aqara components from a config entry."""
-    if hass.data.get(DOMAIN) is None:
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     # Connect to Xiaomi Aqara Gateway
     xiaomi_gateway = await hass.async_add_executor_job(
@@ -166,7 +165,7 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
 
     hass.data[DOMAIN]["Listener"].gateways[entry.data[CONF_HOST]] = xiaomi_gateway
-    _LOGGER.info(
+    _LOGGER.debug(
         "Gateway with host '%s' connected, listening for broadcasts",
         entry.data[CONF_HOST],
     )
@@ -206,7 +205,7 @@ async def async_unload_entry(
 
     if len(hass.data[DOMAIN]) == 1:
         # only the listener is left, Stop Xiaomi Socket
-        _LOGGER.info("Shutting down Xiaomi Gateway Listener")
+        _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
         hass.data[DOMAIN]["Listener"].stop_listen()
         hass.data[DOMAIN].pop("Listener")
 
@@ -222,7 +221,7 @@ class XiaomiDevice(Entity):
         self._is_available = True
         self._sid = device["sid"]
         self._model = device["model"]
-        self._protecol = device["proto"]
+        self._protocol = device["proto"]
         self._name = f"{device_type}_{self._sid}"
         self._device_name = f"{self._model}_{self._sid}"
         self._type = device_type
@@ -289,7 +288,7 @@ class XiaomiDevice(Entity):
                 "manufacturer": "Xiaomi Aqara",
                 "model": self._model,
                 "name": self._device_name,
-                "sw_version": self._protecol,
+                "sw_version": self._protocol,
                 "via_device": (DOMAIN, self._gateway_id),
             }
 

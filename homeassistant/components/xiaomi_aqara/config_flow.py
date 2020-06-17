@@ -94,7 +94,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.selected_gateway = self.gateways[ip_adress]
             return await self.async_step_settings()
 
-        select_scheme = vol.Schema(
+        select_schema = vol.Schema(
             {
                 vol.Required("select_ip"): vol.In(
                     [gateway.ip_adress for gateway in self.gateways.values()]
@@ -103,7 +103,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="select", data_schema=select_scheme, errors=errors
+            step_id="select", data_schema=select_schema, errors=errors
         )
 
     async def async_step_zeroconf(self, discovery_info):

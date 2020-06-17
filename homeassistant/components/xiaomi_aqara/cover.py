@@ -18,15 +18,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][config_entry.entry_id]
-    for entity in gateway.devices["cover"]:
-        model = entity["model"]
+    for device in gateway.devices["cover"]:
+        model = device["model"]
         if model in ["curtain", "curtain.aq2", "curtain.hagl04"]:
-            if "proto" not in entity or int(entity["proto"][0:1]) == 1:
+            if "proto" not in device or int(device["proto"][0:1]) == 1:
                 data_key = DATA_KEY_PROTO_V1
             else:
                 data_key = DATA_KEY_PROTO_V2
             entities.append(
-                XiaomiGenericCover(entity, "Curtain", data_key, gateway, config_entry)
+                XiaomiGenericCover(device, "Curtain", data_key, gateway, config_entry)
             )
     async_add_entities(entities)
 
@@ -38,7 +38,7 @@ class XiaomiGenericCover(XiaomiDevice, CoverEntity):
         """Initialize the XiaomiGenericCover."""
         self._data_key = data_key
         self._pos = 0
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub, config_entry)
+        super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
     def current_cover_position(self):

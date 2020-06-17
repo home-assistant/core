@@ -22,11 +22,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][config_entry.entry_id]
-    for entity in gateway.devices["light"]:
-        model = entity["model"]
+    for device in gateway.devices["light"]:
+        model = device["model"]
         if model in ["gateway", "gateway.v3"]:
             entities.append(
-                XiaomiGatewayLight(entity, "Gateway Light", gateway, config_entry)
+                XiaomiGatewayLight(device, "Gateway Light", gateway, config_entry)
             )
     async_add_entities(entities)
 
@@ -40,7 +40,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
         self._hs = (0, 0)
         self._brightness = 100
 
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub, config_entry)
+        super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
     def is_on(self):
