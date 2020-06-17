@@ -397,7 +397,7 @@ class Recorder(threading.Thread):
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
                     dbstate = States.from_event(event)
-                    dbstate.old_state_id = self._get_old_state_id(dbstate.entity_id)
+                    dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
@@ -421,21 +421,6 @@ class Recorder(threading.Thread):
                 self._commit_event_session_or_retry()
 
             self.queue.task_done()
-
-    def _get_old_state_id(self, entity_id):
-        """Find the last state_id for an entity_id in memory cache or the database."""
-        if entity_id in self._old_state_ids:
-            return self._old_state_ids[entity_id]
-        query = (
-            self.event_session.query(States.state_id)
-            .filter(States.entity_id == entity_id)
-            .order_by(States.last_updated.desc())
-            .limit(1)
-        )
-        old_db_state = query.one_or_none()
-        if old_db_state:
-            return old_db_state.state_id
-        return None
 
     def _send_keep_alive(self):
         try:
