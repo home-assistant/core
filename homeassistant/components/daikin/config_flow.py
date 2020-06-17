@@ -129,7 +129,7 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
-        devices = Discovery.poll(discovery_info[CONF_HOST])
+        devices = Discovery().poll(ip=discovery_info[CONF_HOST])
         await self.async_set_unique_id(next(iter(devices.values()))[KEY_MAC])
         self._abort_if_unique_id_configured()
         self.host = discovery_info[CONF_HOST]
