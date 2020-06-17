@@ -111,7 +111,6 @@ async def start_server_discovery(hass):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
-    _LOGGER.warning("Loading Squeezebox via platform config is deprecated.")
 
     if config:
         conf = {
