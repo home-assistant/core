@@ -41,16 +41,17 @@ DEFAULT_WATERING_TIME = 15
 
 DEVICE_MAP_INDEX = [
     "KEY_INDEX",
+    "ICON_INDEX",
     "DEVICE_CLASS_INDEX",
     "UNIT_OF_MEASURE_INDEX",
 ]
 DEVICE_MAP = {
-    "auto_watering": ["Automatic Watering", DEVICE_CLASS_SWITCH, ""],
-    "is_watering": ["Watering", DEVICE_CLASS_MOISTURE, ""],
-    "manual_watering": ["Manual Watering", DEVICE_CLASS_SWITCH, ""],
-    "next_cycle": ["Next Cycle", DEVICE_CLASS_TIMESTAMP, ""],
-    "status": ["Status", DEVICE_CLASS_CONNECTIVITY, ""],
-    "watering_time": ["Watering Time", "None", TIME_MINUTES],
+    "auto_watering": ["Automatic Watering", None, DEVICE_CLASS_SWITCH, None],
+    "is_watering": ["Watering", None, DEVICE_CLASS_MOISTURE, None],
+    "manual_watering": ["Manual Watering", None, DEVICE_CLASS_SWITCH, None],
+    "next_cycle": ["Next Cycle", None, DEVICE_CLASS_TIMESTAMP, None],
+    "status": ["Status", None, DEVICE_CLASS_CONNECTIVITY, None],
+    "watering_time": ["Watering Time", "mdi:water-pump", None, TIME_MINUTES],
 }
 
 BINARY_SENSORS = ["is_watering", "status"]
@@ -160,3 +161,8 @@ class HydrawiseEntity(Entity):
         return DEVICE_MAP[self._sensor_type][
             DEVICE_MAP_INDEX.index("DEVICE_CLASS_INDEX")
         ]
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index("ICON_INDEX")]
