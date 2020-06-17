@@ -213,7 +213,7 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
 
 
 async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
-    """Test that without stream source option."""
+    """Test a stream request without stream source option set."""
     assert await async_setup_component(
         hass,
         "camera",
