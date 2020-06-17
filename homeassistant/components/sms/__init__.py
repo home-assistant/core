@@ -54,10 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
 
-    if SMS_GATEWAY in hass.data[DOMAIN]:
-        gateway = hass.data[DOMAIN][SMS_GATEWAY]
-        hass.data[DOMAIN].pop(SMS_GATEWAY)
-        await gateway.terminate_async()
-        return True
-
-    return False
+    gateway = hass.data[DOMAIN].pop(SMS_GATEWAY)
+    await gateway.terminate_async()
+    return True
