@@ -169,6 +169,7 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     hass.states.async_set("sensor.temp", "5")
 
@@ -226,6 +227,7 @@ async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_clien
             }
         },
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.camera.request_stream",
