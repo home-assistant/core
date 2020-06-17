@@ -942,6 +942,7 @@ pyserial-asyncio==0.5
 # homeassistant.components.acer_projector
 # homeassistant.components.zha
 pyserial==3.4
+
 # homeassistant.components.sia
 pysiaalarm==0.2.0
 
