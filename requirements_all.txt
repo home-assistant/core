@@ -457,13 +457,13 @@ coronavirus==1.1.1
 crimereports==1.0.1
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.1.3
+crownstone-cloud==1.1.5
 
 # homeassistant.components.crownstone
-crownstone-sse==1.1.1
+crownstone-sse==1.1.2
 
 # homeassistant.components.crownstone
-crownstone-uart==0.7.2
+crownstone-uart==0.7.4
 
 # homeassistant.components.datadog
 datadog==0.15.0
