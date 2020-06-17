@@ -24,7 +24,6 @@ async def async_setup(hass, config):
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
     sms_config = config.get(DOMAIN, {})
-    hass.data[DOMAIN][NOTIFY_DOMAIN] = config
     if not sms_config:
         return True
 
