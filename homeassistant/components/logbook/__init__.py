@@ -403,7 +403,8 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
                 States.state,
                 States.entity_id,
                 States.domain,
-                old_state.state_id,
+                States.attributes,
+                old_state.state_id.label("old_state_id"),
             )
             .order_by(Events.time_fired)
             .outerjoin(States, (Events.event_id == States.event_id))
@@ -435,7 +436,7 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
 def _get_attribute(hass, entity_id, event, attribute):
     current_state = hass.states.get(entity_id)
     if not current_state:
-        return event.data.get("new_state", {}).get("attributes", {}).get(attribute)
+        return event.attributes.get(attribute)
     return current_state.attributes.get(attribute, None)
 
 
@@ -572,6 +573,7 @@ class LazyEventPartialState:
         "_row",
         "_event_data",
         "_time_fired",
+        "_attributes",
         "event_type",
         "entity_id",
         "state",
@@ -583,6 +585,7 @@ class LazyEventPartialState:
         self._row = row
         self._event_data = None
         self._time_fired = None
+        self._attributes = None
         self.event_type = self._row.event_type
         self.entity_id = self._row.entity_id
         self.state = self._row.state
@@ -592,6 +595,16 @@ class LazyEventPartialState:
     def context_user_id(self):
         """Context user id of event."""
         return self._row.context_user_id
+
+    @property
+    def attributes(self):
+        """State attributes."""
+        if not self._attributes:
+            if self._row.attributes is None or self._row.attributes == "{}":
+                self._attributes = {}
+            else:
+                self._attributes = json.loads(self._row.attributes)
+        return self._attributes
 
     @property
     def data(self):
@@ -621,6 +634,9 @@ class LazyEventPartialState:
     @property
     def has_old_and_new_state(self):
         """Check the json data to see if new_state and old_state is present without decoding."""
+        if self._row.event_data == "{}":
+            return self._row.state_id is not None and self._row.old_state_id is not None
+
         return (
             '"old_state": {' in self._row.event_data
             and '"new_state": {' in self._row.event_data
@@ -629,10 +645,6 @@ class LazyEventPartialState:
     @property
     def hidden(self):
         """Check the json to see if hidden."""
-        if '"hidden":' in self._row.event_data:
-            return (
-                self.data.get("new_state", {})
-                .get("attributes", {})
-                .get(ATTR_HIDDEN, False)
-            )
+        if '"hidden":' in self._row.attributes:
+            return self.attributes.get(ATTR_HIDDEN, False)
         return False
