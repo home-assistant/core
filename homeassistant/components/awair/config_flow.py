@@ -31,7 +31,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         if not conf[CONF_ACCESS_TOKEN]:
             return self.async_abort(reason="auth")
 
-        await self.__abort_if_configured(conf[CONF_ACCESS_TOKEN])
+        await self._abort_if_configured(conf[CONF_ACCESS_TOKEN])
 
         return self.async_create_entry(
             title="Awair (imported from configuration.yaml",
@@ -58,7 +58,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._errors["base"] = "unknown"
 
             if not self._errors:
-                await self.__abort_if_configured(user_input[CONF_ACCESS_TOKEN])
+                await self._abort_if_configured(user_input[CONF_ACCESS_TOKEN])
 
                 title = f"{user.email} ({user.user_id})"
                 return self.async_create_entry(title=title, data=user_input)
@@ -69,7 +69,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def __abort_if_configured(self, access_token: str):
+    async def _abort_if_configured(self, access_token: str):
         """Abort if this access_token has been set up."""
         unique_id = f"awair-{access_token}"
         await self.async_set_unique_id(unique_id)

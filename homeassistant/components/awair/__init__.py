@@ -66,7 +66,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, access_token, session) -> None:
         """Set up the AwairDataUpdateCoordinator class."""
-        self.__awair = Awair(access_token=access_token, session=session)
+        self._awair = Awair(access_token=access_token, session=session)
 
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
@@ -75,10 +75,10 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
         with timeout(API_TIMEOUT):
             try:
                 LOGGER.debug("Fetching users and devices")
-                user = await self.__awair.user()
+                user = await self._awair.user()
                 devices = await user.devices()
                 results = await gather(
-                    *[self.__fetch_air_data(device) for device in devices]
+                    *[self._fetch_air_data(device) for device in devices]
                 )
                 return {result.device.uuid: result for result in results}
             except RatelimitError as err:
@@ -98,7 +98,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
             except Exception as err:
                 raise UpdateFailed(err)
 
-    async def __fetch_air_data(self, device):
+    async def _fetch_air_data(self, device):
         """Fetch latest air quality data."""
         LOGGER.debug("Fetching data for %s", device.uuid)
         air_data = await device.air_data_latest()
