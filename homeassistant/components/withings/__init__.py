@@ -44,12 +44,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
                 vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Length(min=1)),
                 vol.Optional(const.CONF_USE_WEBHOOK, default=False): cv.boolean,
-                vol.Required(const.CONF_PROFILES): vol.All(
-                    cv.ensure_list,
-                    vol.Unique(),
-                    vol.Length(min=1),
-                    [vol.All(cv.string, vol.Length(min=1))],
-                ),
             }
         )
     },

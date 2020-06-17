@@ -4,8 +4,8 @@
     "step": {
       "profile": {
         "title": "User Profile.",
-        "description": "Which profile did you select on the Withings website? It's important the profiles match, otherwise data will be mis-labeled.",
-        "data": { "profile": "Profile" }
+        "description": "Provide a unique profile name for this data. Typically this is the name of profile you selected in the previous step. Note: It's important the name is unique across all Withings integrations, otherwise data will be mis-labeled and you will have to recreate the integration.",
+        "data": { "profile": "Profile Name" }
       },
       "pick_implementation": { "title": "Pick Authentication Method" },
       "reauth": {

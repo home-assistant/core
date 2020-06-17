@@ -43,71 +43,40 @@ def test_config_schema_basic_config() -> None:
             CONF_CLIENT_ID: "my_client_id",
             CONF_CLIENT_SECRET: "my_client_secret",
             const.CONF_USE_WEBHOOK: True,
-            const.CONF_PROFILES: ["Person 1", "Person 2"],
         }
     )
 
 
 def test_config_schema_client_id() -> None:
     """Test schema."""
+    config_schema_assert_fail({CONF_CLIENT_SECRET: "my_client_secret"})
     config_schema_assert_fail(
-        {
-            CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_PROFILES: ["Person 1", "Person 2"],
-        }
-    )
-    config_schema_assert_fail(
-        {
-            CONF_CLIENT_SECRET: "my_client_secret",
-            CONF_CLIENT_ID: "",
-            const.CONF_PROFILES: ["Person 1"],
-        }
+        {CONF_CLIENT_SECRET: "my_client_secret", CONF_CLIENT_ID: ""}
     )
     config_schema_validate(
-        {
-            CONF_CLIENT_SECRET: "my_client_secret",
-            CONF_CLIENT_ID: "my_client_id",
-            const.CONF_PROFILES: ["Person 1"],
-        }
+        {CONF_CLIENT_SECRET: "my_client_secret", CONF_CLIENT_ID: "my_client_id"}
     )
 
 
 def test_config_schema_client_secret() -> None:
     """Test schema."""
-    config_schema_assert_fail(
-        {CONF_CLIENT_ID: "my_client_id", const.CONF_PROFILES: ["Person 1"]}
-    )
-    config_schema_assert_fail(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "",
-            const.CONF_PROFILES: ["Person 1"],
-        }
-    )
+    config_schema_assert_fail({CONF_CLIENT_ID: "my_client_id"})
+    config_schema_assert_fail({CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: ""})
     config_schema_validate(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_PROFILES: ["Person 1"],
-        }
+        {CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: "my_client_secret"}
     )
 
 
 def test_config_schema_use_webhook() -> None:
     """Test schema."""
     config_schema_validate(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_PROFILES: ["Person 1"],
-        }
+        {CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: "my_client_secret"}
     )
     config = config_schema_validate(
         {
             CONF_CLIENT_ID: "my_client_id",
             CONF_CLIENT_SECRET: "my_client_secret",
             const.CONF_USE_WEBHOOK: True,
-            const.CONF_PROFILES: ["Person 1"],
         }
     )
     assert config[const.DOMAIN][const.CONF_USE_WEBHOOK] is True
@@ -116,7 +85,6 @@ def test_config_schema_use_webhook() -> None:
             CONF_CLIENT_ID: "my_client_id",
             CONF_CLIENT_SECRET: "my_client_secret",
             const.CONF_USE_WEBHOOK: False,
-            const.CONF_PROFILES: ["Person 1"],
         }
     )
     assert config[const.DOMAIN][const.CONF_USE_WEBHOOK] is False
@@ -125,49 +93,6 @@ def test_config_schema_use_webhook() -> None:
             CONF_CLIENT_ID: "my_client_id",
             CONF_CLIENT_SECRET: "my_client_secret",
             const.CONF_USE_WEBHOOK: "A",
-            const.CONF_PROFILES: ["Person 1"],
-        }
-    )
-
-
-def test_config_schema_profiles() -> None:
-    """Test schema."""
-    config_schema_assert_fail(
-        {CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: "my_client_secret"}
-    )
-    config_schema_assert_fail(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_PROFILES: "",
-        }
-    )
-    config_schema_assert_fail(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_PROFILES: [],
-        }
-    )
-    config_schema_assert_fail(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_PROFILES: ["Person 1", "Person 1"],
-        }
-    )
-    config_schema_validate(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_PROFILES: ["Person 1"],
-        }
-    )
-    config_schema_validate(
-        {
-            CONF_CLIENT_ID: "my_client_id",
-            CONF_CLIENT_SECRET: "my_client_secret",
-            const.CONF_PROFILES: ["Person 1", "Person 2"],
         }
     )
 

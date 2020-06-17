@@ -53,10 +53,9 @@ class WithingsFlowHandler(
             self._current_data = None
             return await self.async_step_finish(new_data)
 
-        profiles = self.hass.data[const.DOMAIN][const.CONFIG][const.CONF_PROFILES]
         return self.async_show_form(
             step_id="profile",
-            data_schema=vol.Schema({vol.Required(const.PROFILE): vol.In(profiles)}),
+            data_schema=vol.Schema({vol.Required(const.PROFILE): str}),
         )
 
     async def async_step_reauth(self, data: dict) -> dict:
