@@ -59,30 +59,6 @@ def mock_mqtt():
         yield mock_mqtt
 
 
-async def async_mock_mqtt_client(hass, config=None):
-    """Mock the MQTT paho client."""
-    if config is None:
-        config = {mqtt.CONF_BROKER: "mock-broker"}
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect.return_value = 0
-        mock_client().subscribe.return_value = (0, 0)
-        mock_client().unsubscribe.return_value = (0, 0)
-        mock_client().publish.return_value = (0, 0)
-        result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
-        assert result
-        await hass.async_block_till_done()
-        return mock_client()
-
-
-@pytest.fixture
-def mqtt_client_mock(loop, hass):
-    """Fixture to mock MQTT."""
-    client = loop.run_until_complete(async_mock_mqtt_client(hass))
-    client.reset_mock()
-    return client
-
-
 @pytest.fixture
 def calls():
     """Fixture to record calls."""
@@ -101,10 +77,9 @@ def record_calls(calls):
     return record_calls
 
 
-async def test_mqtt_connects_on_home_assistant_mqtt_setup(hass):
+async def test_mqtt_connects_on_home_assistant_mqtt_setup(hass, mqtt_mock):
     """Test if client is connected after mqtt init on bootstrap."""
-    await async_mock_mqtt_client(hass)
-    assert hass.data["mqtt"]._mqttc.connect.call_count == 1
+    assert mqtt_mock._mqttc.connect.call_count == 1
 
 
 async def test_mqtt_disconnects_on_home_assistant_stop(hass, mqtt_mock):
@@ -112,7 +87,7 @@ async def test_mqtt_disconnects_on_home_assistant_stop(hass, mqtt_mock):
     hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert hass.data["mqtt"].async_disconnect.called
+    assert mqtt_mock.async_disconnect.called
 
 
 async def test_publish_calls_service(hass, mqtt_mock, calls, record_calls):
@@ -135,7 +110,7 @@ async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):
         {ATTR_DOMAIN: mqtt.DOMAIN, ATTR_SERVICE: mqtt.SERVICE_PUBLISH},
     )
     await hass.async_block_till_done()
-    assert not hass.data["mqtt"].async_publish.called
+    assert not mqtt_mock.async_publish.called
 
 
 async def test_service_call_with_template_payload_renders_template(hass, mqtt_mock):
@@ -145,8 +120,8 @@ async def test_service_call_with_template_payload_renders_template(hass, mqtt_mo
     """
     mqtt.async_publish_template(hass, "test/topic", "{{ 1+1 }}")
     await hass.async_block_till_done()
-    assert hass.data["mqtt"].async_publish.called
-    assert hass.data["mqtt"].async_publish.call_args[0][1] == "2"
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == "2"
 
 
 async def test_service_call_with_payload_doesnt_render_template(hass, mqtt_mock):
@@ -167,7 +142,7 @@ async def test_service_call_with_payload_doesnt_render_template(hass, mqtt_mock)
             },
             blocking=True,
         )
-    assert not hass.data["mqtt"].async_publish.called
+    assert not mqtt_mock.async_publish.called
 
 
 async def test_service_call_with_ascii_qos_retain_flags(hass, mqtt_mock):
@@ -186,9 +161,9 @@ async def test_service_call_with_ascii_qos_retain_flags(hass, mqtt_mock):
         },
         blocking=True,
     )
-    assert hass.data["mqtt"].async_publish.called
-    assert hass.data["mqtt"].async_publish.call_args[0][2] == 2
-    assert not hass.data["mqtt"].async_publish.call_args[0][3]
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][2] == 2
+    assert not mqtt_mock.async_publish.call_args[0][3]
 
 
 def test_validate_topic():
@@ -310,7 +285,7 @@ def test_entity_device_info_schema():
 
 
 async def test_receiving_non_utf8_message_gets_logged(
-    hass, mqtt_client_mock, calls, record_calls, caplog
+    hass, mqtt_mock, calls, record_calls, caplog
 ):
     """Test receiving a non utf8 encoded message."""
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
@@ -324,7 +299,7 @@ async def test_receiving_non_utf8_message_gets_logged(
 
 
 async def test_all_subscriptions_run_when_decode_fails(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test all other subscriptions still run when decode fails for one."""
     await mqtt.async_subscribe(hass, "test-topic", record_calls, encoding="ascii")
@@ -336,7 +311,7 @@ async def test_all_subscriptions_run_when_decode_fails(
     assert len(calls) == 1
 
 
-async def test_subscribe_topic(hass, mqtt_client_mock, calls, record_calls):
+async def test_subscribe_topic(hass, mqtt_mock, calls, record_calls):
     """Test the subscription of a topic."""
     unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
 
@@ -355,7 +330,7 @@ async def test_subscribe_topic(hass, mqtt_client_mock, calls, record_calls):
     assert len(calls) == 1
 
 
-async def test_subscribe_deprecated(hass, mqtt_client_mock):
+async def test_subscribe_deprecated(hass, mqtt_mock):
     """Test the subscription of a topic using deprecated callback signature."""
     calls = []
 
@@ -381,7 +356,7 @@ async def test_subscribe_deprecated(hass, mqtt_client_mock):
     assert len(calls) == 1
 
 
-async def test_subscribe_deprecated_async(hass, mqtt_client_mock):
+async def test_subscribe_deprecated_async(hass, mqtt_mock):
     """Test the subscription of a topic using deprecated callback signature."""
     calls = []
 
@@ -407,7 +382,7 @@ async def test_subscribe_deprecated_async(hass, mqtt_client_mock):
     assert len(calls) == 1
 
 
-async def test_subscribe_topic_not_match(hass, mqtt_client_mock, calls, record_calls):
+async def test_subscribe_topic_not_match(hass, mqtt_mock, calls, record_calls):
     """Test if subscribed topic is not a match."""
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
 
@@ -417,9 +392,7 @@ async def test_subscribe_topic_not_match(hass, mqtt_client_mock, calls, record_c
     assert len(calls) == 0
 
 
-async def test_subscribe_topic_level_wildcard(
-    hass, mqtt_client_mock, calls, record_calls
-):
+async def test_subscribe_topic_level_wildcard(hass, mqtt_mock, calls, record_calls):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "test-topic/+/on", record_calls)
 
@@ -432,7 +405,7 @@ async def test_subscribe_topic_level_wildcard(
 
 
 async def test_subscribe_topic_level_wildcard_no_subtree_match(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "test-topic/+/on", record_calls)
@@ -444,7 +417,7 @@ async def test_subscribe_topic_level_wildcard_no_subtree_match(
 
 
 async def test_subscribe_topic_level_wildcard_root_topic_no_subtree_match(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "test-topic/#", record_calls)
@@ -456,7 +429,7 @@ async def test_subscribe_topic_level_wildcard_root_topic_no_subtree_match(
 
 
 async def test_subscribe_topic_subtree_wildcard_subtree_topic(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "test-topic/#", record_calls)
@@ -470,7 +443,7 @@ async def test_subscribe_topic_subtree_wildcard_subtree_topic(
 
 
 async def test_subscribe_topic_subtree_wildcard_root_topic(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "test-topic/#", record_calls)
@@ -484,7 +457,7 @@ async def test_subscribe_topic_subtree_wildcard_root_topic(
 
 
 async def test_subscribe_topic_subtree_wildcard_no_match(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "test-topic/#", record_calls)
@@ -496,7 +469,7 @@ async def test_subscribe_topic_subtree_wildcard_no_match(
 
 
 async def test_subscribe_topic_level_wildcard_and_wildcard_root_topic(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "+/test-topic/#", record_calls)
@@ -510,7 +483,7 @@ async def test_subscribe_topic_level_wildcard_and_wildcard_root_topic(
 
 
 async def test_subscribe_topic_level_wildcard_and_wildcard_subtree_topic(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "+/test-topic/#", record_calls)
@@ -524,7 +497,7 @@ async def test_subscribe_topic_level_wildcard_and_wildcard_subtree_topic(
 
 
 async def test_subscribe_topic_level_wildcard_and_wildcard_level_no_match(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "+/test-topic/#", record_calls)
@@ -536,7 +509,7 @@ async def test_subscribe_topic_level_wildcard_and_wildcard_level_no_match(
 
 
 async def test_subscribe_topic_level_wildcard_and_wildcard_no_match(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of wildcard topics."""
     await mqtt.async_subscribe(hass, "+/test-topic/#", record_calls)
@@ -547,7 +520,7 @@ async def test_subscribe_topic_level_wildcard_and_wildcard_no_match(
     assert len(calls) == 0
 
 
-async def test_subscribe_topic_sys_root(hass, mqtt_client_mock, calls, record_calls):
+async def test_subscribe_topic_sys_root(hass, mqtt_mock, calls, record_calls):
     """Test the subscription of $ root topics."""
     await mqtt.async_subscribe(hass, "$test-topic/subtree/on", record_calls)
 
@@ -560,7 +533,7 @@ async def test_subscribe_topic_sys_root(hass, mqtt_client_mock, calls, record_ca
 
 
 async def test_subscribe_topic_sys_root_and_wildcard_topic(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of $ root and wildcard topics."""
     await mqtt.async_subscribe(hass, "$test-topic/#", record_calls)
@@ -574,7 +547,7 @@ async def test_subscribe_topic_sys_root_and_wildcard_topic(
 
 
 async def test_subscribe_topic_sys_root_and_wildcard_subtree_topic(
-    hass, mqtt_client_mock, calls, record_calls
+    hass, mqtt_mock, calls, record_calls
 ):
     """Test the subscription of $ root and wildcard subtree topics."""
     await mqtt.async_subscribe(hass, "$test-topic/subtree/#", record_calls)
@@ -587,9 +560,7 @@ async def test_subscribe_topic_sys_root_and_wildcard_subtree_topic(
     assert calls[0][0].payload == "test-payload"
 
 
-async def test_subscribe_special_characters(
-    hass, mqtt_client_mock, calls, record_calls
-):
+async def test_subscribe_special_characters(hass, mqtt_mock, calls, record_calls):
     """Test the subscription to topics with special characters."""
     topic = "/test-topic/$(.)[^]{-}"
     payload = "p4y.l[]a|> ?"
@@ -603,17 +574,17 @@ async def test_subscribe_special_characters(
     assert calls[0][0].payload == payload
 
 
-async def test_retained_message_on_subscribe_received(hass, mqtt_client_mock):
+async def test_retained_message_on_subscribe_received(hass, mqtt_mock):
     """Test every subscriber receives retained message on subscribe."""
 
     def side_effect(*args):
         async_fire_mqtt_message(hass, "test/state", "online")
         return 0, 0
 
-    hass.data["mqtt"]._mqttc.subscribe.side_effect = side_effect
+    mqtt_mock._mqttc.subscribe.side_effect = side_effect
 
     # Fake that the client is connected
-    hass.data["mqtt"].connected = True
+    mqtt_mock.connected = True
 
     calls_a = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_a)
@@ -626,42 +597,42 @@ async def test_retained_message_on_subscribe_received(hass, mqtt_client_mock):
     assert calls_b.called
 
 
-async def test_not_calling_unsubscribe_with_active_subscribers(hass, mqtt_client_mock):
+async def test_not_calling_unsubscribe_with_active_subscribers(hass, mqtt_mock):
     """Test not calling unsubscribe() when other subscribers are active."""
     # Fake that the client is connected
-    hass.data["mqtt"].connected = True
+    mqtt_mock.connected = True
 
     unsub = await mqtt.async_subscribe(hass, "test/state", None)
     await mqtt.async_subscribe(hass, "test/state", None)
     await hass.async_block_till_done()
-    assert hass.data["mqtt"]._mqttc.subscribe.called
+    assert mqtt_mock._mqttc.subscribe.called
 
     unsub()
     await hass.async_block_till_done()
-    assert not hass.data["mqtt"]._mqttc.unsubscribe.called
+    assert not mqtt_mock._mqttc.unsubscribe.called
 
 
-async def test_restore_subscriptions_on_reconnect(hass, mqtt_client_mock):
+async def test_restore_subscriptions_on_reconnect(hass, mqtt_mock):
     """Test subscriptions are restored on reconnect."""
     # Fake that the client is connected
-    hass.data["mqtt"].connected = True
+    mqtt_mock.connected = True
 
     await mqtt.async_subscribe(hass, "test/state", None)
     await hass.async_block_till_done()
-    assert hass.data["mqtt"]._mqttc.subscribe.call_count == 1
+    assert mqtt_mock._mqttc.subscribe.call_count == 1
 
-    hass.data["mqtt"]._mqtt_on_disconnect(None, None, 0)
-    hass.data["mqtt"]._mqtt_on_connect(None, None, None, 0)
+    mqtt_mock._mqtt_on_disconnect(None, None, 0)
+    mqtt_mock._mqtt_on_connect(None, None, None, 0)
     await hass.async_block_till_done()
-    assert hass.data["mqtt"]._mqttc.subscribe.call_count == 2
+    assert mqtt_mock._mqttc.subscribe.call_count == 2
 
 
-async def test_restore_all_active_subscriptions_on_reconnect(hass, mqtt_client_mock):
+async def test_restore_all_active_subscriptions_on_reconnect(hass, mqtt_mock):
     """Test active subscriptions are restored correctly on reconnect."""
     # Fake that the client is connected
-    hass.data["mqtt"].connected = True
+    mqtt_mock.connected = True
 
-    hass.data["mqtt"]._mqttc.subscribe.side_effect = (
+    mqtt_mock._mqttc.subscribe.side_effect = (
         (0, 1),
         (0, 2),
         (0, 3),
@@ -678,18 +649,18 @@ async def test_restore_all_active_subscriptions_on_reconnect(hass, mqtt_client_m
         call("test/state", 0),
         call("test/state", 1),
     ]
-    assert hass.data["mqtt"]._mqttc.subscribe.mock_calls == expected
+    assert mqtt_mock._mqttc.subscribe.mock_calls == expected
 
     unsub()
     await hass.async_block_till_done()
-    assert hass.data["mqtt"]._mqttc.unsubscribe.call_count == 0
+    assert mqtt_mock._mqttc.unsubscribe.call_count == 0
 
-    hass.data["mqtt"]._mqtt_on_disconnect(None, None, 0)
-    hass.data["mqtt"]._mqtt_on_connect(None, None, None, 0)
+    mqtt_mock._mqtt_on_disconnect(None, None, 0)
+    mqtt_mock._mqtt_on_connect(None, None, None, 0)
     await hass.async_block_till_done()
 
     expected.append(call("test/state", 1))
-    assert hass.data["mqtt"]._mqttc.subscribe.mock_calls == expected
+    assert mqtt_mock._mqttc.subscribe.mock_calls == expected
 
 
 async def test_setup_embedded_starts_with_no_config(hass):
@@ -700,7 +671,7 @@ async def test_setup_embedded_starts_with_no_config(hass):
         "homeassistant.components.mqtt.server.async_start",
         return_value=(True, client_config),
     ) as _start:
-        await async_mock_mqtt_client(hass, {})
+        await async_mock_mqtt_component(hass, {})
         assert _start.call_count == 1
 
 
@@ -712,7 +683,7 @@ async def test_setup_embedded_with_embedded(hass):
         "homeassistant.components.mqtt.server.async_start",
         return_value=(True, client_config),
     ) as _start:
-        await async_mock_mqtt_client(hass, {"embedded": None})
+        await async_mock_mqtt_component(hass, {"embedded": None})
         assert _start.call_count == 1
 
 
@@ -815,7 +786,7 @@ async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass, moc
 
 async def test_birth_message(hass):
     """Test sending birth message."""
-    mqtt_client = await async_mock_mqtt_client(
+    mqtt_mock = await async_mock_mqtt_component(
         hass,
         {
             mqtt.CONF_BROKER: "mock-broker",
@@ -826,29 +797,31 @@ async def test_birth_message(hass):
         },
     )
     calls = []
-    mqtt_client.publish.side_effect = lambda *args: calls.append(args)
-    hass.data["mqtt"]._mqtt_on_connect(None, None, 0, 0)
+    mqtt_mock._mqttc.publish.side_effect = lambda *args: calls.append(args)
+    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
     assert calls[-1] == ("birth", "birth", 0, False)
 
 
 async def test_mqtt_subscribes_topics_on_connect(hass):
     """Test subscription to topic on connect."""
-    mqtt_client = await async_mock_mqtt_client(hass)
+    mqtt_mock = await async_mock_mqtt_component(hass)
 
-    hass.data["mqtt"].subscriptions = [
-        mqtt.Subscription("topic/test", None),
-        mqtt.Subscription("home/sensor", None, 2),
-        mqtt.Subscription("still/pending", None),
-        mqtt.Subscription("still/pending", None, 1),
-    ]
+    await mqtt.async_subscribe(hass, "topic/test", None)
+    await mqtt.async_subscribe(hass, "home/sensor", None, 2)
+    await mqtt.async_subscribe(hass, "still/pending", None)
+    await mqtt.async_subscribe(hass, "still/pending", None, 1)
 
     hass.add_job = MagicMock()
-    hass.data["mqtt"]._mqtt_on_connect(None, None, 0, 0)
+    mqtt_mock._mqtt_on_connect(None, None, 0, 0)
 
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    assert mqtt_client.disconnect.call_count == 0
+    assert mqtt_mock._mqttc.disconnect.call_count == 0
 
     expected = {"topic/test": 0, "home/sensor": 2, "still/pending": 1}
     calls = {call[1][1]: call[1][2] for call in hass.add_job.mock_calls}
