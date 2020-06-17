@@ -21,7 +21,7 @@ async def get_imei_from_config(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     device = data[CONF_DEVICE]
-    config = dict(Device=device, Connection="at")
+    config = {"Device": device, "Connection": "at"}
     gateway = await create_sms_gateway(config, hass)
     if not gateway:
         raise CannotConnect
