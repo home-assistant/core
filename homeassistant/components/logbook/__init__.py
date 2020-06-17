@@ -375,13 +375,6 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
     entities_filter = _generate_filter_from_config(config)
 
-    def yield_events(query):
-        """Yield Events that are not filtered away."""
-        for row in query.yield_per(1000):
-            event = LazyEventPartialState(row)
-            if _keep_event(hass, event, entities_filter):
-                yield event
-
     with session_scope(hass=hass) as session:
         if entity_id is not None:
             entity_ids = [entity_id.lower()]
@@ -423,7 +416,17 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
             )
 
         prev_states = {}
-        return list(humanify(hass, yield_events(query), prev_states))
+        return list(
+            humanify(
+                hass,
+                [
+                    event
+                    for event in (LazyEventPartialState(row) for row in query.all())
+                    if _keep_event(hass, event, entities_filter)
+                ],
+                prev_states,
+            )
+        )
 
 
 def _get_attribute(hass, entity_id, event, attribute):
