@@ -256,7 +256,7 @@ async def test_ignore_plex_web_client(hass):
 
     server_id = mock_plex_server.machineIdentifier
 
-    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
+    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount(players=0)):
         async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
         await hass.async_block_till_done()
 

@@ -74,6 +74,7 @@ class PlexServer:
         self._owner_username = None
         self._plextv_clients = None
         self._plextv_client_timestamp = 0
+        self._plextv_device_cache = {}
         self._version = None
         self.async_update_platforms = Debouncer(
             hass,
@@ -282,12 +283,18 @@ class PlexServer:
 
         def connect_to_resource(resource):
             """Connect to a plex.tv resource and return a Plex client."""
+            client_id = resource.clientIdentifier
+            if client_id in self._plextv_device_cache:
+                return self._plextv_device_cache[client_id]
+
             client = None
             try:
                 client = resource.connect(timeout=3)
                 _LOGGER.debug("plex.tv resource connection successful: %s", client)
             except NotFound:
                 _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+
+            self._plextv_device_cache[client_id] = client
             return client
 
         for plextv_client in plextv_clients:
@@ -336,6 +343,7 @@ class PlexServer:
         for client_id in idle_clients:
             self.async_refresh_entity(client_id, None, None)
             self._known_idle.add(client_id)
+            self._plextv_device_cache.pop(client_id, None)
 
         if new_entity_configs:
             async_dispatcher_send(
