@@ -50,6 +50,7 @@ class FreeboxRouter:
         self.devices: Dict[str, any] = {}
         self.sensors_temperature: Dict[str, int] = {}
         self.sensors_connection: Dict[str, float] = {}
+        self.call_list: [Dict[str, any]] = []
 
         self.listeners = []
 
@@ -134,6 +135,8 @@ class FreeboxRouter:
             "serial": syst_datas["serial"],
         }
 
+        self.call_list = await self._api.call.get_call_list()
+
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
     async def reboot(self) -> None:
@@ -173,8 +176,8 @@ class FreeboxRouter:
         return f"{DOMAIN}-{self._host}-sensor-update"
 
     @property
-    def sensors(self) -> Wifi:
-        """Return the wifi."""
+    def sensors(self) -> Dict[str, any]:
+        """Return sensors."""
         return {**self.sensors_temperature, **self.sensors_connection}
 
     @property

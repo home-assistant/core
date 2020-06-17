@@ -1,6 +1,8 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
-import logging
+from datetime import datetime
 from typing import Dict
+
+from pytz import timezone
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
@@ -9,6 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    CALL_SENSORS,
     CONNECTION_SENSORS,
     DOMAIN,
     SENSOR_DEVICE_CLASS,
@@ -19,7 +22,7 @@ from .const import (
 )
 from .router import FreeboxRouter
 
-_LOGGER = logging.getLogger(__name__)
+TIMEZONE = timezone("Europe/Paris")
 
 
 async def async_setup_entry(
@@ -43,6 +46,9 @@ async def async_setup_entry(
             FreeboxSensor(router, sensor_key, CONNECTION_SENSORS[sensor_key])
         )
 
+    for sensor_key in CALL_SENSORS:
+        entities.append(FreeboxCallSensor(router, sensor_key, CALL_SENSORS[sensor_key]))
+
     async_add_entities(entities, True)
 
 
@@ -61,8 +67,6 @@ class FreeboxSensor(Entity):
         self._icon = sensor[SENSOR_ICON]
         self._device_class = sensor[SENSOR_DEVICE_CLASS]
         self._unique_id = f"{self._router.mac} {self._name}"
-
-        self._unsub_dispatcher = None
 
     def update(self) -> None:
         """Update the Freebox sensor."""
@@ -118,10 +122,40 @@ class FreeboxSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, self._router.signal_sensor_update, self.async_on_demand_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._router.signal_sensor_update,
+                self.async_on_demand_update,
+            )
         )
 
-    async def async_will_remove_from_hass(self):
-        """Clean up after entity before removal."""
-        self._unsub_dispatcher()
+
+class FreeboxCallSensor(FreeboxSensor):
+    """Representation of a Freebox call sensor."""
+
+    def __init__(
+        self, router: FreeboxRouter, sensor_type: str, sensor: Dict[str, any]
+    ) -> None:
+        """Initialize a Freebox call sensor."""
+        self._call_list_for_type = []
+        super().__init__(router, sensor_type, sensor)
+
+    def update(self) -> None:
+        """Update the Freebox call sensor."""
+        self._call_list_for_type = []
+        for call in self._router.call_list:
+            if not call["new"]:
+                continue
+            if call["type"] == self._sensor_type:
+                self._call_list_for_type.append(call)
+
+        self._state = len(self._call_list_for_type)
+
+    @property
+    def device_state_attributes(self) -> Dict[str, any]:
+        """Return device specific state attributes."""
+        return {
+            str(datetime.fromtimestamp(call["datetime"], TIMEZONE)): call["name"]
+            for call in self._call_list_for_type
+        }
