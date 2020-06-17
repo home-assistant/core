@@ -244,3 +244,5 @@ class AwairSensor(Entity):
         )
         if result:
             return result.air_data
+        else:
+            return None
