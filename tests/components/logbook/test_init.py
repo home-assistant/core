@@ -1215,10 +1215,10 @@ class TestComponentLogbook(unittest.TestCase):
         self, entity_id, event_time_fired, old_state, new_state
     ):
         """Create a state changed event from a old and new state."""
-        event_data_json = json.dumps(
-            {"entity_id": entity_id, "old_state": old_state, "new_state": new_state},
-            cls=JSONEncoder,
-        )
+        attributes = {}
+        if new_state is not None:
+            attributes = new_state.get("attributes")
+        attributes_json = json.dumps(attributes, cls=JSONEncoder)
         row = collections.namedtuple(
             "Row",
             [
@@ -1230,18 +1230,23 @@ class TestComponentLogbook(unittest.TestCase):
                 "state"
                 "entity_id"
                 "domain"
+                "attributes"
+                "state_id",
+                "old_state_id",
             ],
         )
 
         row.event_type = EVENT_STATE_CHANGED
-        row.event_data = event_data_json
+        row.event_data = "{}"
+        row.attributes = attributes_json
         row.time_fired = event_time_fired
         row.state = new_state and new_state.get("state")
         row.entity_id = entity_id
         row.domain = entity_id and ha.split_entity_id(entity_id)[0]
         row.context_id = None
         row.context_user_id = None
-
+        row.old_state_id = old_state and 1
+        row.state_id = new_state and 1
         return logbook.LazyEventPartialState(row)
 
 
