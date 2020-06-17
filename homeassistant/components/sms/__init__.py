@@ -3,11 +3,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, SMS_GATEWAY
 from .gateway import create_sms_gateway
@@ -45,7 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not gateway:
         return False
     hass.data[DOMAIN][SMS_GATEWAY] = gateway
-
 
     return True
 
