@@ -24,7 +24,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class Events(Base):  # type: ignore
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
-    # context_parent_id = Column(String(36), index=True)
+    context_parent_id = Column(String(36), index=True)
 
     @staticmethod
     def from_event(event):
@@ -55,7 +55,7 @@ class Events(Base):  # type: ignore
             time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
-            # context_parent_id=event.context.parent_id,
+            context_parent_id=event.context.parent_id,
         )
 
     def to_native(self):
@@ -90,7 +90,8 @@ class States(Base):  # type: ignore
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
-    # context_parent_id = Column(String(36), index=True)
+    context_parent_id = Column(String(36), index=True)
+    old_state_id = Column(Integer)
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
@@ -108,7 +109,7 @@ class States(Base):  # type: ignore
             entity_id=entity_id,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
-            # context_parent_id=event.context.parent_id,
+            context_parent_id=event.context.parent_id,
         )
 
         # State got deleted

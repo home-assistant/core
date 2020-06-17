@@ -6,6 +6,7 @@ import logging
 import time
 
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import aliased
 import voluptuous as vol
 
 from homeassistant.components import sun
@@ -377,7 +378,7 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
 
     def yield_events(query):
         """Yield Events that are not filtered away."""
-        for row in query.yield_per(500):
+        for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
             if _keep_event(hass, event, entities_filter):
                 yield event
@@ -385,8 +386,12 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
     with session_scope(hass=hass) as session:
         if entity_id is not None:
             entity_ids = [entity_id.lower()]
-        else:
+        elif config.get(CONF_EXCLUDE) or config.get(CONF_INCLUDE):
             entity_ids = _get_related_entity_ids(session, entities_filter)
+        else:
+            entity_ids = None
+
+        old_state = aliased(States, name="old_state")
 
         query = (
             session.query(
@@ -394,24 +399,35 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
                 Events.event_data,
                 Events.time_fired,
                 Events.context_user_id,
+                States.state_id,
                 States.state,
                 States.entity_id,
                 States.domain,
+                States.attributes,
+                old_state.state_id.label("old_state_id"),
             )
             .order_by(Events.time_fired)
             .outerjoin(States, (Events.event_id == States.event_id))
+            .outerjoin(old_state, (States.old_state_id == old_state.state_id))
             .filter(
                 Events.event_type.in_(ALL_EVENT_TYPES + list(hass.data.get(DOMAIN, {})))
             )
             .filter((Events.time_fired > start_day) & (Events.time_fired < end_day))
-            .filter(
+        )
+
+        if entity_ids:
+            query = query.filter(
                 (
                     (States.last_updated == States.last_changed)
                     & States.entity_id.in_(entity_ids)
                 )
                 | (States.state_id.is_(None))
             )
-        )
+        else:
+            query = query.filter(
+                (States.last_updated == States.last_changed)
+                | (States.state_id.is_(None))
+            )
 
         prev_states = {}
         return list(humanify(hass, yield_events(query), prev_states))
@@ -420,12 +436,11 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
 def _get_attribute(hass, entity_id, event, attribute):
     current_state = hass.states.get(entity_id)
     if not current_state:
-        return event.data.get("new_state", {}).get("attributes", {}).get(attribute)
+        return event.attributes.get(attribute)
     return current_state.attributes.get(attribute, None)
 
 
 def _keep_event(hass, event, entities_filter):
-    entity_id = None
 
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.entity_id
@@ -444,20 +459,18 @@ def _keep_event(hass, event, entities_filter):
     elif event.event_type == EVENT_LOGBOOK_ENTRY:
         event_data = event.data
         domain = event_data.get(ATTR_DOMAIN)
-
+        entity_id = None
     elif event.event_type in hass.data.get(DOMAIN, {}) and not event.data.get(
         "entity_id"
     ):
         # If the entity_id isn't described, use the domain that describes
         # the event for filtering.
         domain = hass.data[DOMAIN][event.event_type][0]
-
+        entity_id = None
     else:
         event_data = event.data
         domain = event_data.get(ATTR_DOMAIN)
         entity_id = event_data.get("entity_id")
-        if entity_id:
-            domain = split_entity_id(entity_id)[0]
 
     if not entity_id and domain:
         entity_id = f"{domain}."
@@ -556,23 +569,42 @@ def _entry_message_from_event(hass, entity_id, domain, event):
 class LazyEventPartialState:
     """A lazy version of core Event with limited State joined in."""
 
-    __slots__ = ["_row", "_event_data", "_time_fired"]
+    __slots__ = [
+        "_row",
+        "_event_data",
+        "_time_fired",
+        "_attributes",
+        "event_type",
+        "entity_id",
+        "state",
+        "domain",
+    ]
 
     def __init__(self, row):
         """Init the lazy event."""
         self._row = row
         self._event_data = None
         self._time_fired = None
-
-    @property
-    def event_type(self):
-        """Type of event."""
-        return self._row.event_type
+        self._attributes = None
+        self.event_type = self._row.event_type
+        self.entity_id = self._row.entity_id
+        self.state = self._row.state
+        self.domain = self._row.domain
 
     @property
     def context_user_id(self):
         """Context user id of event."""
         return self._row.context_user_id
+
+    @property
+    def attributes(self):
+        """State attributes."""
+        if not self._attributes:
+            if self._row.attributes is None or self._row.attributes == "{}":
+                self._attributes = {}
+            else:
+                self._attributes = json.loads(self._row.attributes)
+        return self._attributes
 
     @property
     def data(self):
@@ -602,6 +634,9 @@ class LazyEventPartialState:
     @property
     def has_old_and_new_state(self):
         """Check the json data to see if new_state and old_state is present without decoding."""
+        if self._row.event_data == "{}":
+            return self._row.state_id is not None and self._row.old_state_id is not None
+
         return (
             '"old_state": {' in self._row.event_data
             and '"new_state": {' in self._row.event_data
@@ -610,25 +645,6 @@ class LazyEventPartialState:
     @property
     def hidden(self):
         """Check the json to see if hidden."""
-        if '"hidden":' in self._row.event_data:
-            return (
-                self.data.get("new_state", {})
-                .get("attributes", {})
-                .get(ATTR_HIDDEN, False)
-            )
+        if '"hidden":' in self._row.attributes:
+            return self.attributes.get(ATTR_HIDDEN, False)
         return False
-
-    @property
-    def entity_id(self):
-        """Entity id that changed state."""
-        return self._row.entity_id
-
-    @property
-    def domain(self):
-        """Domain of the entity_id that changed state."""
-        return self._row.domain
-
-    @property
-    def state(self):
-        """State of the entity_id that changed state."""
-        return self._row.state
