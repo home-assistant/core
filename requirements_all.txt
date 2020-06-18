@@ -463,7 +463,7 @@ crownstone-cloud==1.1.5
 crownstone-sse==1.1.2
 
 # homeassistant.components.crownstone
-crownstone-uart==0.7.4
+crownstone-uart==0.7.5
 
 # homeassistant.components.datadog
 datadog==0.15.0

@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/crownstone",
   "requirements": [
-    "crownstone-uart==0.7.4",
+    "crownstone-uart==0.7.5",
     "crownstone-cloud==1.1.5",
     "crownstone-sse==1.1.2"
   ],
