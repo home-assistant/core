@@ -430,21 +430,6 @@ class Recorder(threading.Thread):
 
             self.queue.task_done()
 
-    def _get_old_state_id(self, entity_id):
-        """Find the last state_id for an entity_id in memory cache or the database."""
-        if entity_id in self._old_state_ids:
-            return self._old_state_ids[entity_id]
-        query = (
-            self.event_session.query(States.state_id)
-            .filter(States.entity_id == entity_id)
-            .order_by(States.last_updated.desc())
-            .limit(1)
-        )
-        old_db_state = query.one_or_none()
-        if old_db_state:
-            return old_db_state.state_id
-        return None
-
     def _send_keep_alive(self):
         try:
             _LOGGER.debug("Sending keepalive")
