@@ -16,7 +16,10 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
+    ATTR_ICON,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -59,6 +62,8 @@ DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
 KEEPALIVE_TIME = 30
+
+DISPLAY_ATTRIBUTES = [ATTR_ICON, ATTR_ATTRIBUTION, ATTR_ENTITY_PICTURE]
 
 CONF_AUTO_PURGE = "auto_purge"
 CONF_DB_URL = "db_url"
@@ -399,6 +404,7 @@ class Recorder(threading.Thread):
                     dbstate = States.from_event(event)
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
+                    _remove_display_attributes_from_state(dbstate)
                     self.event_session.add(dbstate)
                     self.event_session.flush()
                 except (TypeError, ValueError):
@@ -594,3 +600,9 @@ class Recorder(threading.Thread):
             self.event_session.close()
 
         self.run_info = None
+
+
+def _remove_display_attributes_from_state(dbstate):
+    for attribute in DISPLAY_ATTRIBUTES:
+        if attribute in dbstate.attributes:
+            del dbstate.attributes[attribute]
