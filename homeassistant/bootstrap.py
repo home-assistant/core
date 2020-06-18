@@ -388,13 +388,8 @@ async def _async_set_up_integrations(
         return_exceptions=True,
     ):
         # Exceptions are handled in async_setup_component.
-        if (
-            not isinstance(int_or_exc, loader.Integration)
-            or int_or_exc.all_dependencies_resolved
-        ):
-            continue
-
-        integrations_to_process.append(int_or_exc)
+        if isinstance(int_or_exc, loader.Integration):
+            integrations_to_process.append(int_or_exc)
 
     to_resolve = [
         itg.resolve_dependencies()
