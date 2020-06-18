@@ -7,6 +7,7 @@
         "create_entry": {
             "default": "\u5df2\u6210\u529f\u8a8d\u8b49 Withings \u8a2d\u5099\u3002"
         },
+        "flow_title": "Withings\uff1a{profile}",
         "step": {
             "pick_implementation": {
                 "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
@@ -17,6 +18,10 @@
                 },
                 "description": "\u65bc Withings \u7db2\u7ad9\u6240\u9078\u64c7\u7684\u500b\u4eba\u8a2d\u5b9a\u70ba\u4f55\uff1f\u5047\u5982\u500b\u4eba\u8a2d\u5b9a\u4e0d\u7b26\u5408\u7684\u8a71\uff0c\u8cc7\u6599\u5c07\u6703\u6a19\u793a\u932f\u8aa4\u3002",
                 "title": "\u500b\u4eba\u8a2d\u5b9a\u3002"
+            },
+            "reauth": {
+                "description": "\"{profile}\" \u8a2d\u5b9a\u6a94\u9700\u8981\u91cd\u65b0\u8a8d\u8b49\u4ee5\u4fdd\u6301\u63a5\u6536 Withings \u8cc7\u6599\u3002",
+                "title": "\u91cd\u4fe1\u8a8d\u8b49 {profile}"
             }
         }
     }

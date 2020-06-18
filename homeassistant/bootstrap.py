@@ -124,8 +124,12 @@ async def async_setup_hass(
                 await hass.async_block_till_done()
 
         safe_mode = True
+        old_config = hass.config
         hass = core.HomeAssistant()
-        hass.config.config_dir = config_dir
+        hass.config.skip_pip = old_config.skip_pip
+        hass.config.internal_url = old_config.internal_url
+        hass.config.external_url = old_config.external_url
+        hass.config.config_dir = old_config.config_dir
 
     if safe_mode:
         _LOGGER.info("Starting in safe mode")

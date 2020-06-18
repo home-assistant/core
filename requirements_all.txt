@@ -14,7 +14,7 @@ pip>=8.0.3
 python-slugify==4.0.0
 pytz>=2020.1
 pyyaml==5.3.1
-requests==2.23.0
+requests==2.24.0
 ruamel.yaml==0.15.100
 voluptuous==0.11.7
 voluptuous-serialize==2.3.0
