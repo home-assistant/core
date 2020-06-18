@@ -1,14 +1,22 @@
 """Tests for the Withings component."""
-from asynctest import MagicMock, patch
 import pytest
 import voluptuous as vol
 from withings_api.common import UnauthorizedException
 
+import homeassistant.components.webhook as webhook
 from homeassistant.components.withings import CONFIG_SCHEMA, DOMAIN, async_setup, const
-from homeassistant.components.withings.common import DataManager
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.core import HomeAssistant
+from homeassistant.components.withings.common import ConfigEntryWithingsApi, DataManager
+from homeassistant.config import async_process_ha_core_config
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_EXTERNAL_URL,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_METRIC,
+)
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.setup import async_setup_component
 
 from .common import (
     ComponentFactory,
@@ -17,7 +25,7 @@ from .common import (
     new_profile_config,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MagicMock, MockConfigEntry, patch
 
 
 def config_schema_validate(withings_config) -> dict:
@@ -179,26 +187,38 @@ async def test_set_config_unique_id(
         assert config_entry.unique_id == "my_user_id"
 
 
-async def test_set_convert_unique_id_to_string(
-    hass: HomeAssistant, component_factory: ComponentFactory
-) -> None:
+async def test_set_convert_unique_id_to_string(hass: HomeAssistant) -> None:
     """Test upgrading configs to use a unique id."""
-    person0 = new_profile_config("person0", 0)
-
-    await component_factory.configure_component(profile_configs=(person0,))
-
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={"token": {"userid": 1234}, "profile": person0.profile},
+        domain=DOMAIN,
+        data={
+            "token": {"userid": 1234},
+            "auth_implementation": "withings",
+            "profile": "person0",
+        },
     )
+    config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.withings.async_get_data_manager") as mock:
-        data_manager: DataManager = MagicMock(spec=DataManager)
-        data_manager.poll_data_update_coordinator = MagicMock(
-            spec=DataUpdateCoordinator
-        )
-        data_manager.poll_data_update_coordinator.last_update_success = True
-        mock.return_value = data_manager
-        config_entry.add_to_hass(hass)
+    hass_config = {
+        HA_DOMAIN: {
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            CONF_EXTERNAL_URL: "http://127.0.0.1:8080/",
+        },
+        const.DOMAIN: {
+            CONF_CLIENT_ID: "my_client_id",
+            CONF_CLIENT_SECRET: "my_client_secret",
+            const.CONF_USE_WEBHOOK: False,
+        },
+    }
 
-        await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch(
+        "homeassistant.components.withings.common.ConfigEntryWithingsApi",
+        spec=ConfigEntryWithingsApi,
+    ):
+        await async_process_ha_core_config(hass, hass_config.get(HA_DOMAIN))
+        assert await async_setup_component(hass, HA_DOMAIN, {})
+        assert await async_setup_component(hass, webhook.DOMAIN, hass_config)
+        assert await async_setup_component(hass, const.DOMAIN, hass_config)
+        await hass.async_block_till_done()
+
         assert config_entry.unique_id == "1234"
