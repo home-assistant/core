@@ -600,4 +600,5 @@ def _remove_display_attributes_from_state(state):
         return
     state.attributes = dict(state.attributes)
     for attribute in DISPLAY_ATTRIBUTES:
-        state.attributes.pop(attribute, None)
+        if attribute in state.attributes:
+            del state.attributes[attribute]
