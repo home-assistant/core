@@ -100,7 +100,7 @@ class States(Base):  # type: ignore
     )
 
     @staticmethod
-    def from_event_with_state(event, state):
+    def from_event_with_attributes(event, state, attributes):
         """Create object from a state_changed event with a state."""
         entity_id = event.data["entity_id"]
 
@@ -130,7 +130,13 @@ class States(Base):  # type: ignore
     @staticmethod
     def from_event(event):
         """Create object from a state_changed event."""
-        return States.from_event_with_state(event, event.data.get("new_state"))
+        new_state = event.data.get("new_state")
+        if new_state:
+            return States.from_event_with_attributes(
+                event, new_state, new_state.attributes
+            )
+
+        return States.from_event_with_attributes(event, None, None)
 
     def to_native(self):
         """Convert to an HA state object."""
