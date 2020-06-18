@@ -206,8 +206,8 @@ async def async_unload_entry(
     if len(hass.data[DOMAIN]) == 1:
         # only the listener is left, Stop Xiaomi Socket
         _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
-        hass.data[DOMAIN]["Listener"].stop_listen()
-        hass.data[DOMAIN].pop("Listener")
+        gateway_discovery = hass.data[DOMAIN].pop(GATEWAY_DISCOVERY)
+        await hass.async_add_executor_job(gateway_discovery.stop_listen)
 
     return unload_ok
 
