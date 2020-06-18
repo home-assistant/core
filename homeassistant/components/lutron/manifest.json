@@ -1,6 +1,7 @@
 {
   "domain": "lutron",
   "name": "Lutron",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lutron",
   "requirements": ["pylutron==0.2.6"],
   "codeowners": ["@JonGilmore"]

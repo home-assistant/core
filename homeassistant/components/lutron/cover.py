@@ -10,19 +10,17 @@ from homeassistant.components.cover import (
 )
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Lutron shades."""
-    devs = []
-    for (area_name, device) in hass.data[LUTRON_DEVICES]["cover"]:
-        dev = LutronCover(area_name, device, hass.data[LUTRON_CONTROLLER])
-        devs.append(dev)
-
-    add_entities(devs, True)
-    return True
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up covers for a single Lutron deployment."""
+    async_add_entities(
+        LutronCover(area, device, hass.data[DOMAIN][entry.entry_id][LUTRON_CONTROLLER],)
+        for (area, device) in hass.data[DOMAIN][entry.entry_id][LUTRON_DEVICES]["cover"]
+    )
 
 
 class LutronCover(LutronDevice, CoverEntity):

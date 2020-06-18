@@ -4,13 +4,14 @@ import logging
 from pylutron import Button, Lutron
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import discovery
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-DOMAIN = "lutron"
+from .const import CONF_ENABLE_AREAS, DEFAULT_ENABLE_AREAS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,36 +37,74 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, base_config):
+async def async_setup(hass, base_config):
     """Set up the Lutron component."""
-    hass.data[LUTRON_BUTTONS] = {}
-    hass.data[LUTRON_CONTROLLER] = None
-    hass.data[LUTRON_DEVICES] = {
-        "light": [],
-        "cover": [],
-        "switch": [],
-        "scene": [],
-        "binary_sensor": [],
-    }
-
+    hass.data.setdefault(DOMAIN, {})
     config = base_config.get(DOMAIN)
-    hass.data[LUTRON_CONTROLLER] = Lutron(
+
+    if config is not None:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+            )
+        )
+    return True
+
+
+class DummyArea:
+    """Fake area object.
+
+    This is used to tell all the lutron entities the names of the area they
+    belong to when we don't want to force the creation of those areas.
+    """
+
+    def __init__(self, name):
+        """Initialize the area."""
+        self.name = name
+        self.id = None
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a single Lutron deployment."""
+    if not entry.data:
+        return False
+
+    config = entry.data
+    device_registry = await dr.async_get_registry(hass)
+    area_registry = await ar.async_get_registry(hass)
+    hass_data = {
+        LUTRON_BUTTONS: {},
+        LUTRON_CONTROLLER: None,
+        LUTRON_DEVICES: {
+            "light": [],
+            "cover": [],
+            "switch": [],
+            "scene": [],
+            "binary_sensor": [],
+        },
+    }
+    hass.data[DOMAIN][entry.entry_id] = hass_data
+    hass_data[LUTRON_CONTROLLER] = Lutron(
         config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD]
     )
 
-    hass.data[LUTRON_CONTROLLER].load_xml_db()
-    hass.data[LUTRON_CONTROLLER].connect()
+    await hass.async_add_executor_job(hass_data[LUTRON_CONTROLLER].load_xml_db)
+    hass_data[LUTRON_CONTROLLER].connect()
     _LOGGER.info("Connected to main repeater at %s", config[CONF_HOST])
 
     # Sort our devices into types
-    for area in hass.data[LUTRON_CONTROLLER].areas:
+    for area in hass_data[LUTRON_CONTROLLER].areas:
+        if entry.options.get(CONF_ENABLE_AREAS, DEFAULT_ENABLE_AREAS):
+            hass_area = area_registry.async_get_or_create(area.name)
+        else:
+            hass_area = DummyArea(area.name)
         for output in area.outputs:
             if output.type == "SYSTEM_SHADE":
-                hass.data[LUTRON_DEVICES]["cover"].append((area.name, output))
+                hass_data[LUTRON_DEVICES]["cover"].append((hass_area, output))
             elif output.is_dimmable:
-                hass.data[LUTRON_DEVICES]["light"].append((area.name, output))
+                hass_data[LUTRON_DEVICES]["light"].append((hass_area, output))
             else:
-                hass.data[LUTRON_DEVICES]["switch"].append((area.name, output))
+                hass_data[LUTRON_DEVICES]["switch"].append((hass_area, output))
         for keypad in area.keypads:
             for button in keypad.buttons:
                 # If the button has a function assigned to it, add it as a scene
@@ -80,65 +119,82 @@ def setup(hass, base_config):
                         (led for led in keypad.leds if led.number == button.number),
                         None,
                     )
-                    hass.data[LUTRON_DEVICES]["scene"].append(
-                        (area.name, keypad.name, button, led)
+                    hass_data[LUTRON_DEVICES]["scene"].append(
+                        (hass_area, keypad, button, led)
                     )
 
-                hass_button = LutronButton(hass, area.name, keypad, button)
+                hass_button = LutronButton(hass, hass_area, keypad, button)
                 _LOGGER.debug("Adding Button %s", hass_button.id)
-                hass.data[LUTRON_BUTTONS][hass_button.id] = hass_button
+                hass_data[LUTRON_BUTTONS][hass_button.id] = hass_button
         if area.occupancy_group is not None:
-            hass.data[LUTRON_DEVICES]["binary_sensor"].append(
-                (area.name, area.occupancy_group)
+            hass_data[LUTRON_DEVICES]["binary_sensor"].append(
+                (hass_area, area.occupancy_group)
             )
 
-    for component in ("light", "cover", "switch", "scene", "binary_sensor"):
-        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        # connections={(dr.CONNECTION_NETWORK_MAC, config.mac)},
+        identifiers={(DOMAIN, hass_data[LUTRON_CONTROLLER].guid)},
+        manufacturer="Lutron",
+        # TODO: Use a getter once pylutron is updated
+        name=hass_data[LUTRON_CONTROLLER]._name,
+        # model=config.modelid,
+        # sw_version=config.swversion,
+    )
 
-    setup_services(hass)
+    _LOGGER.debug("Loading Components")
+    for component in ("light", "cover", "switch", "scene", "binary_sensor"):
+        _LOGGER.debug("Loading %s", component)
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    _LOGGER.debug("Setup Services!!!")
+    setup_services(hass, hass_data)
+    _LOGGER.debug("Setup Entry returning true...")
     return True
 
 
 ATTR_NAME = "button"
 
 
-def setup_services(hass):
+def setup_services(hass, hass_data):
     """Create Lutron specific services."""
 
     def handle_press_button(call):
         """Handle a press button service call."""
         button_id = call.data.get(ATTR_NAME)
-        button = hass.data[LUTRON_BUTTONS].get(button_id, None)
+        button = hass_data[LUTRON_BUTTONS].get(button_id, None)
         if button:
             button.press()
 
     def handle_release_button(call):
         """Handle a press button service call."""
         button_id = call.data.get(ATTR_NAME)
-        button = hass.data[LUTRON_BUTTONS].get(button_id, None)
+        button = hass_data[LUTRON_BUTTONS].get(button_id, None)
         if button:
             button.release()
 
     def handle_tap_button(call):
         """Handle a press button service call."""
         button_id = call.data.get(ATTR_NAME)
-        button = hass.data[LUTRON_BUTTONS].get(button_id, None)
+        button = hass_data[LUTRON_BUTTONS].get(button_id, None)
         if button:
             button.tap()
 
-    hass.services.register(DOMAIN, "press_button", handle_press_button)
-    hass.services.register(DOMAIN, "release_button", handle_release_button)
-    hass.services.register(DOMAIN, "tap_button", handle_tap_button)
+    hass.services.async_register(DOMAIN, "press_button", handle_press_button)
+    hass.services.async_register(DOMAIN, "release_button", handle_release_button)
+    hass.services.async_register(DOMAIN, "tap_button", handle_tap_button)
 
 
 class LutronDevice(Entity):
     """Representation of a Lutron device entity."""
 
-    def __init__(self, area_name, lutron_device, controller):
+    def __init__(self, area, lutron_device, controller):
         """Initialize the device."""
         self._lutron_device = lutron_device
         self._controller = controller
-        self._area_name = area_name
+        self._area = area
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -153,7 +209,7 @@ class LutronDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{self._area_name} {self._lutron_device.name}"
+        return f"{self._area.name} {self._lutron_device.name}"
 
     @property
     def should_poll(self):
@@ -164,10 +220,25 @@ class LutronDevice(Entity):
     def unique_id(self):
         """Return a unique ID."""
         # Note: At this time, occupancy sensors don't generate unique IDs.
-        _LOGGER.debug(
-            f"Unique ID for {self.name} is {self._lutron_device._lutron.guid}_{self._lutron_device.uuid}"
-        )
-        return f"{self._lutron_device._lutron.guid}_{self._lutron_device.uuid}"
+        return f"{self._controller.guid}_{self._lutron_device.uuid}"
+
+    @property
+    def device_info(self):
+        """Return key information on the device."""
+        device_info = {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id)
+            },
+            "name": self.name,
+            "manufacturer": "Lutron",
+            # "model": self.light.productname,
+            # "sw_version": self.light.swversion,
+            "via_device": (DOMAIN, self._controller.guid),
+        }
+        if self._area.id:
+            device_info["area_id"] = self._area.id
+        return device_info
 
 
 class LutronButton:
@@ -182,7 +253,7 @@ class LutronButton:
     state while a button is pressed and reset once the button is released.
     """
 
-    def __init__(self, hass, area_name, keypad, button):
+    def __init__(self, hass, area, keypad, button):
         """Register callback for activity on the button."""
         name = f"{keypad.name}: {button.name}"
         self._hass = hass
@@ -191,11 +262,11 @@ class LutronButton:
         )
         self._id = slugify(name)
         self._keypad = keypad
-        self._area_name = area_name
+        self._area = area
         self._button_name = button.name
         self._button = button
         self._event = "lutron_event"
-        self._full_id = slugify(f"{area_name} {keypad.name}: {button.name}")
+        self._full_id = slugify(f"{area.name} {keypad.name}: {button.name}")
 
         button.subscribe(self.button_callback, None)
 

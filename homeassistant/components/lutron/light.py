@@ -8,18 +8,17 @@ from homeassistant.components.light import (
 )
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Lutron lights."""
-    devs = []
-    for (area_name, device) in hass.data[LUTRON_DEVICES]["light"]:
-        dev = LutronLight(area_name, device, hass.data[LUTRON_CONTROLLER])
-        devs.append(dev)
-
-    add_entities(devs, True)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up lights for a Lutron deployment."""
+    async_add_entities(
+        LutronLight(area, device, hass.data[DOMAIN][entry.entry_id][LUTRON_CONTROLLER],)
+        for (area, device) in hass.data[DOMAIN][entry.entry_id][LUTRON_DEVICES]["light"]
+    )
 
 
 def to_lutron_level(level):
@@ -35,10 +34,10 @@ def to_hass_level(level):
 class LutronLight(LutronDevice, LightEntity):
     """Representation of a Lutron Light, including dimmable."""
 
-    def __init__(self, area_name, lutron_device, controller):
+    def __init__(self, area, lutron_device, controller):
         """Initialize the light."""
         self._prev_brightness = None
-        super().__init__(area_name, lutron_device, controller)
+        super().__init__(area, lutron_device, controller)
 
     @property
     def supported_features(self):
