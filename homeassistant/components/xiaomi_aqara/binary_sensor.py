@@ -6,7 +6,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
 from . import XiaomiDevice
-from .config_flow import DOMAIN
+from .const import DOMAIN, GATEWAYS_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ ATTR_DENSITY = "Density"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
     entities = []
-    gateway = hass.data[DOMAIN][config_entry.entry_id]
+    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for entity in gateway.devices["binary_sensor"]:
         model = entity["model"]
         if model in ["motion", "sensor_motion", "sensor_motion.aq2"]:

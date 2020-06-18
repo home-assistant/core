@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 
 from . import XiaomiDevice
-from .config_flow import DOMAIN
+from .const import DOMAIN, GATEWAYS_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ DATA_KEY_PROTO_V2 = "curtain_status"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
     entities = []
-    gateway = hass.data[DOMAIN][config_entry.entry_id]
+    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for device in gateway.devices["cover"]:
         model = device["model"]
         if model in ["curtain", "curtain.aq2", "curtain.hagl04"]:

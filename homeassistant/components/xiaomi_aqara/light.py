@@ -13,7 +13,7 @@ from homeassistant.components.light import (
 import homeassistant.util.color as color_util
 
 from . import XiaomiDevice
-from .config_flow import DOMAIN
+from .const import DOMAIN, GATEWAYS_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
     entities = []
-    gateway = hass.data[DOMAIN][config_entry.entry_id]
+    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for device in gateway.devices["light"]:
         model = device["model"]
         if model in ["gateway", "gateway.v3"]:

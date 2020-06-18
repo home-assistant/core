@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 
 from . import XiaomiDevice
-from .config_flow import DOMAIN
+from .const import DOMAIN, GATEWAYS_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ IN_USE = "inuse"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
     entities = []
-    gateway = hass.data[DOMAIN][config_entry.entry_id]
+    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for device in gateway.devices["switch"]:
         model = device["model"]
         if model == "plug":

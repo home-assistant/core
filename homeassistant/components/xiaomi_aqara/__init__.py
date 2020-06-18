@@ -30,6 +30,8 @@ from .const import (
     CONF_PROTOCOL,
     CONF_SID,
     DOMAIN,
+    GATEWAYS_KEY,
+    LISTENER_KEY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,6 +135,7 @@ async def async_setup_entry(
 ):
     """Set up the xiaomi aqara components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(GATEWAYS_KEY, {})
 
     # Connect to Xiaomi Aqara Gateway
     xiaomi_gateway = await hass.async_add_executor_job(
@@ -145,15 +148,16 @@ async def async_setup_entry(
         entry.data[CONF_INTERFACE],
         entry.data[CONF_PROTOCOL],
     )
-    hass.data[DOMAIN][entry.entry_id] = xiaomi_gateway
+    hass.data[DOMAIN][GATEWAYS_KEY][entry.entry_id] = xiaomi_gateway
 
     gateway_discovery = hass.data[DOMAIN].setdefault(
-        GATEWAY_DISCOVERY, XiaomiGatewayDiscovery(
+        LISTENER_KEY, XiaomiGatewayDiscovery(
             hass.add_job, [], entry.data[CONF_INTERFACE]
         )
     )
 
-        # start listining for local pushes
+    if len(hass.data[DOMAIN][GATEWAYS_KEY]) == 1:
+        # start listining for local pushes (only once)
         await hass.async_add_executor_job(gateway_discovery.listen)
 
         # register stop callback to shutdown listining for local pushes
@@ -201,12 +205,13 @@ async def async_unload_entry(
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    if len(hass.data[DOMAIN]) == 1:
-        # only the listener is left, Stop Xiaomi Socket
+        hass.data[DOMAIN][GATEWAYS_KEY].pop(entry.entry_id)
+    
+    if len(hass.data[DOMAIN][GATEWAYS_KEY]) == 0:
+        # No gateways left, stop Xiaomi socket
+        hass.data[DOMAIN].pop(GATEWAYS_KEY)
         _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
-        gateway_discovery = hass.data[DOMAIN].pop(GATEWAY_DISCOVERY)
+        gateway_discovery = hass.data[DOMAIN].pop(LISTENER_KEY)
         await hass.async_add_executor_job(gateway_discovery.stop_listen)
 
     return unload_ok
@@ -369,7 +374,7 @@ def _add_gateway_to_schema(hass, schema):
         """Convert sid to a gateway."""
         sid = str(sid).replace(":", "").lower()
 
-        for gateway in hass.data[DOMAIN].values():
+        for gateway in hass.data[DOMAIN][GATEWAYS_KEY].values():
             if gateway.sid == sid:
                 return gateway
 
@@ -378,7 +383,7 @@ def _add_gateway_to_schema(hass, schema):
     kwargs = {}
     xiaomi_data = hass.data.get(DOMAIN)
     if xiaomi_data is not None:
-        gateways = list(xiaomi_data.values())
+        gateways = list(xiaomi_data[GATEWAYS_KEY].values())
 
         # If the user has only 1 gateway, make it the default for services.
         if len(gateways) == 1:

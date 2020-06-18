@@ -2,6 +2,9 @@
 
 DOMAIN = "xiaomi_aqara"
 
+GATEWAYS_KEY = "gateways"
+LISTENER_KEY = "listener"
+
 ZEROCONF_GATEWAY = "lumi-gateway"
 
 CONF_DISCOVERY_RETRY = "discovery_retry"
