@@ -1594,6 +1594,9 @@ pyrecswitch==1.0.2
 # homeassistant.components.repetier
 pyrepetier==3.0.5
 
+# homeassistant.components.risco
+pyrisco==0.1.0
+
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.0
 

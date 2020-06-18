@@ -142,6 +142,7 @@ FLOWS = [
     "rachio",
     "rainmachine",
     "ring",
+    "risco",
     "roku",
     "roomba",
     "roon",

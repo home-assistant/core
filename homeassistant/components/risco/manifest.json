@@ -1,0 +1,16 @@
+{
+  "domain": "risco",
+  "name": "Risco",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/risco",
+  "requirements": [
+    "pyrisco==0.1.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@OnFreund"
+  ]
+}
