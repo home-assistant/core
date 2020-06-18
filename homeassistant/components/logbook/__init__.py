@@ -46,6 +46,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     ALT_BASE_FILTER_SCHEMA,
     convert_filter_alt,
+    generate_filter,
 )
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util

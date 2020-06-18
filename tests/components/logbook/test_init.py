@@ -19,6 +19,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_HIDDEN,
     ATTR_NAME,
+    CONF_DOMAINS,
+    CONF_ENTITIES,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
@@ -27,6 +29,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
+from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
@@ -278,9 +281,7 @@ class TestComponentLogbook(unittest.TestCase):
         config = logbook.CONFIG_SCHEMA(
             {
                 ha.DOMAIN: {},
-                logbook.DOMAIN: {
-                    logbook.CONF_EXCLUDE: {logbook.CONF_ENTITIES: [entity_id]}
-                },
+                logbook.DOMAIN: {logbook.CONF_EXCLUDE: {CONF_ENTITIES: [entity_id]}},
             }
         )
         entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
@@ -303,22 +304,28 @@ class TestComponentLogbook(unittest.TestCase):
             entries[1], pointB, "blu", domain="sensor", entity_id=entity_id2
         )
 
-    def test_exclude_events_domain(self):
-        """Test if events are filtered if domain is excluded in config."""
+    def test_exclude_events_domain_glob(self):
+        """Test if events are filtered if domain or glob is excluded in config."""
         entity_id = "switch.bla"
         entity_id2 = "sensor.blu"
+        entity_id3 = "sensor.excluded"
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+        pointC = pointB + timedelta(minutes=logbook.GROUP_BY_MINUTES)
         entity_attr_cache = logbook.EntityAttributeCache(self.hass)
 
         eventA = self.create_state_changed_event(pointA, entity_id, 10)
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
+        eventC = self.create_state_changed_event(pointC, entity_id3, 30)
 
         config = logbook.CONFIG_SCHEMA(
             {
                 ha.DOMAIN: {},
                 logbook.DOMAIN: {
-                    logbook.CONF_EXCLUDE: {logbook.CONF_DOMAINS: ["switch", "alexa"]}
+                   logbook.CONF_EXCLUDE: {
+                        CONF_DOMAINS: ["switch", "alexa"],
+                        CONF_ENTITY_GLOBS: "*.excluded",
+                    }
                 },
             }
         )
@@ -330,6 +337,7 @@ class TestComponentLogbook(unittest.TestCase):
                 MockLazyEventPartialState(EVENT_ALEXA_SMART_HOME),
                 eventA,
                 eventB,
+                eventC,
             )
             if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
         ]
@@ -359,8 +367,8 @@ class TestComponentLogbook(unittest.TestCase):
                 ha.DOMAIN: {},
                 logbook.DOMAIN: {
                     logbook.CONF_INCLUDE: {
-                        logbook.CONF_DOMAINS: ["homeassistant"],
-                        logbook.CONF_ENTITIES: [entity_id2],
+                        CONF_DOMAINS: ["homeassistant"],
+                        CONF_ENTITIES: [entity_id2],
                     }
                 },
             }
@@ -385,13 +393,15 @@ class TestComponentLogbook(unittest.TestCase):
             entries[1], pointB, "blu", domain="sensor", entity_id=entity_id2
         )
 
-    def test_include_events_domain(self):
-        """Test if events are filtered if domain is included in config."""
+    def test_include_events_domain_glob(self):
+        """Test if events are filtered if domain or glob is included in config."""
         assert setup_component(self.hass, "alexa", {})
         entity_id = "switch.bla"
         entity_id2 = "sensor.blu"
+        entity_id3 = "switch.included"
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+        pointC = pointB + timedelta(minutes=logbook.GROUP_BY_MINUTES)
         entity_attr_cache = logbook.EntityAttributeCache(self.hass)
 
         event_alexa = MockLazyEventPartialState(
@@ -401,13 +411,15 @@ class TestComponentLogbook(unittest.TestCase):
 
         eventA = self.create_state_changed_event(pointA, entity_id, 10)
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
+        eventC = self.create_state_changed_event(pointC, entity_id3, 30)
 
         config = logbook.CONFIG_SCHEMA(
             {
                 ha.DOMAIN: {},
                 logbook.DOMAIN: {
                     logbook.CONF_INCLUDE: {
-                        logbook.CONF_DOMAINS: ["homeassistant", "sensor", "alexa"]
+                        CONF_DOMAINS: ["homeassistant", "sensor", "alexa"],
+                        CONF_ENTITY_GLOBS: ["*.included"],
                     }
                 },
             }
@@ -420,12 +432,13 @@ class TestComponentLogbook(unittest.TestCase):
                 event_alexa,
                 eventA,
                 eventB,
+                eventC,
             )
             if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
-        assert len(entries) == 3
+        assert len(entries) == 4
         self.assert_entry(
             entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
         )
@@ -433,14 +446,21 @@ class TestComponentLogbook(unittest.TestCase):
         self.assert_entry(
             entries[2], pointB, "blu", domain="sensor", entity_id=entity_id2
         )
+        self.assert_entry(
+            entries[3], pointC, "included", domain="switch", entity_id=entity_id3
+        )
 
     def test_include_exclude_events(self):
         """Test if events are filtered if include and exclude is configured."""
         entity_id = "switch.bla"
         entity_id2 = "sensor.blu"
         entity_id3 = "sensor.bli"
+        entity_id4 = "light.included"
+        entity_id5 = "switch.included"
+        entity_id6 = "sensor.excluded"
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+        pointC = pointB + timedelta(minutes=logbook.GROUP_BY_MINUTES)
         entity_attr_cache = logbook.EntityAttributeCache(self.hass)
 
         eventA1 = self.create_state_changed_event(pointA, entity_id, 10)
@@ -448,18 +468,23 @@ class TestComponentLogbook(unittest.TestCase):
         eventA3 = self.create_state_changed_event(pointA, entity_id3, 10)
         eventB1 = self.create_state_changed_event(pointB, entity_id, 20)
         eventB2 = self.create_state_changed_event(pointB, entity_id2, 20)
+        eventC1 = self.create_state_changed_event(pointC, entity_id4, 30)
+        eventC2 = self.create_state_changed_event(pointC, entity_id5, 30)
+        eventC3 = self.create_state_changed_event(pointC, entity_id6, 30)
 
         config = logbook.CONFIG_SCHEMA(
             {
                 ha.DOMAIN: {},
                 logbook.DOMAIN: {
                     logbook.CONF_INCLUDE: {
-                        logbook.CONF_DOMAINS: ["sensor", "homeassistant"],
-                        logbook.CONF_ENTITIES: ["switch.bla"],
+                        CONF_DOMAINS: ["sensor", "homeassistant"],
+                        CONF_ENTITIES: ["switch.bla"],
+                        CONF_ENTITY_GLOBS: ["*.included"],
                     },
-                    logbook.CONF_EXCLUDE: {
-                        logbook.CONF_DOMAINS: ["switch"],
-                        logbook.CONF_ENTITIES: ["sensor.bli"],
+                   logbook.CONF_EXCLUDE: {
+                        CONF_DOMAINS: ["switch"],
+                        CONF_ENTITY_GLOBS: ["*.excluded"],
+                        CONF_ENTITIES: ["sensor.bli"],
                     },
                 },
             }
@@ -474,12 +499,15 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA3,
                 eventB1,
                 eventB2,
+                eventC1,
+                eventC2,
+                eventC3,
             )
             if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
         ]
         entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
 
-        assert len(entries) == 5
+        assert len(entries) == 6
         self.assert_entry(
             entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
         )
@@ -494,6 +522,9 @@ class TestComponentLogbook(unittest.TestCase):
         )
         self.assert_entry(
             entries[4], pointB, "blu", domain="sensor", entity_id=entity_id2
+        )
+        self.assert_entry(
+            entries[5], pointC, "included", domain="light", entity_id=entity_id4
         )
 
     def test_exclude_attribute_changes(self):
@@ -1442,10 +1473,7 @@ async def test_exclude_described_event(hass, hass_client):
         logbook.DOMAIN,
         {
             logbook.DOMAIN: {
-                logbook.CONF_EXCLUDE: {
-                    logbook.CONF_DOMAINS: ["sensor"],
-                    logbook.CONF_ENTITIES: [entity_id],
-                }
+               logbook.CONF_EXCLUDE: {CONF_DOMAINS: ["sensor"], CONF_ENTITIES: [entity_id]}
             }
         },
     )

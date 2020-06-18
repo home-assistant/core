@@ -88,7 +88,6 @@ def debounce_patcher():
 
 async def test_setup_min(hass):
     """Test async_setup with min config options."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
@@ -413,6 +412,47 @@ async def test_homekit_entity_filter(hass):
         assert mock_get_acc.called is False
 
 
+async def test_homekit_entity_glob_filter(hass):
+    """Test the entity filter."""
+    entry = await async_init_integration(hass)
+
+    entity_filter = generate_filter(
+        ["cover"], ["demo.test"], [], [], ["*.included_*"], ["*.excluded_*"]
+    )
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        entity_filter,
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        entry_id=entry.entry_id,
+    )
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
+
+    with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
+        mock_get_acc.return_value = None
+
+        homekit.add_bridge_accessory(State("cover.test", "open"))
+        assert mock_get_acc.called is True
+        mock_get_acc.reset_mock()
+
+        homekit.add_bridge_accessory(State("demo.test", "on"))
+        assert mock_get_acc.called is True
+        mock_get_acc.reset_mock()
+
+        homekit.add_bridge_accessory(State("cover.excluded_test", "open"))
+        assert mock_get_acc.called is False
+        mock_get_acc.reset_mock()
+
+        homekit.add_bridge_accessory(State("light.included_test", "light"))
+        assert mock_get_acc.called is True
+        mock_get_acc.reset_mock()
+
+
 async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -587,7 +627,6 @@ async def test_homekit_stop(hass):
 
 async def test_homekit_reset_accessories(hass):
     """Test adding too many accessories to HomeKit."""
-
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -818,7 +857,6 @@ async def test_setup_imported(hass):
 
 async def test_yaml_updates_update_config_entry_for_name(hass):
     """Test async_setup with imported config."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_IMPORT,
@@ -858,7 +896,6 @@ async def test_yaml_updates_update_config_entry_for_name(hass):
 
 async def test_raise_config_entry_not_ready(hass):
     """Test async_setup when the port is not available."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},

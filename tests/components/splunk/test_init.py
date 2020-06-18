@@ -37,6 +37,7 @@ class TestSplunk(unittest.TestCase):
                 "name": "hostname",
                 "filter": {
                     "exclude_domains": ["fake"],
+                    "exclude_entity_globs": ["*.excluded_*"],
                     "exclude_entities": ["fake.entity"],
                 },
             }
@@ -124,6 +125,7 @@ class TestSplunk(unittest.TestCase):
                 "port": 8088,
                 "filter": {
                     "exclude_domains": ["excluded_domain"],
+                    "exclude_entity_globs": ["*.skip_*"],
                     "exclude_entities": ["other_domain.excluded_entity"],
                 },
             }
@@ -140,6 +142,7 @@ class TestSplunk(unittest.TestCase):
             {"entity_id": "other_domain.other_entity", "filter_expected": False},
             {"entity_id": "other_domain.excluded_entity", "filter_expected": True},
             {"entity_id": "excluded_domain.other_entity", "filter_expected": True},
+            {"entity_id": "test.skip_me", "filter_expected": True},
         ]
 
         for test in testdata:

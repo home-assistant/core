@@ -1,7 +1,7 @@
 """Helper class to implement include/exclude of entities and domains."""
 import fnmatch
 import re
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Pattern
 
 import voluptuous as vol
 
@@ -10,13 +10,13 @@ from homeassistant.core import split_entity_id
 from homeassistant.helpers import config_validation as cv
 
 CONF_INCLUDE_DOMAINS = "include_domains"
-CONF_INCLUDE_ENTITIES_GLOB = "include_entities_glob"
+CONF_INCLUDE_ENTITY_GLOBS = "include_entity_globs"
 CONF_INCLUDE_ENTITIES = "include_entities"
 CONF_EXCLUDE_DOMAINS = "exclude_domains"
-CONF_EXCLUDE_ENTITIES_GLOB = "exclude_entities_glob"
+CONF_EXCLUDE_ENTITY_GLOBS = "exclude_entity_globs"
 CONF_EXCLUDE_ENTITIES = "exclude_entities"
 
-CONF_ENTITIES_GLOB = "entities_glob"
+CONF_ENTITY_GLOBS = "entity_globs"
 
 
 def convert_filter(config: Dict[str, List[str]]) -> Callable[[str], bool]:
@@ -26,8 +26,8 @@ def convert_filter(config: Dict[str, List[str]]) -> Callable[[str], bool]:
         config[CONF_INCLUDE_ENTITIES],
         config[CONF_EXCLUDE_DOMAINS],
         config[CONF_EXCLUDE_ENTITIES],
-        config.get(CONF_INCLUDE_ENTITIES_GLOB, []),
-        config.get(CONF_EXCLUDE_ENTITIES_GLOB, []),
+        config.get(CONF_INCLUDE_ENTITY_GLOBS, []),
+        config.get(CONF_EXCLUDE_ENTITY_GLOBS, []),
     )
     setattr(filt, "config", config)
     setattr(filt, "empty_filter", sum(len(val) for val in config.values()) == 0)
@@ -39,14 +39,14 @@ BASE_FILTER_SCHEMA = vol.Schema(
         vol.Optional(CONF_EXCLUDE_DOMAINS, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_EXCLUDE_ENTITIES_GLOB, default=[]): vol.All(
+        vol.Optional(CONF_EXCLUDE_ENTITY_GLOBS, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
         vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): cv.entity_ids,
         vol.Optional(CONF_INCLUDE_DOMAINS, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
-        vol.Optional(CONF_INCLUDE_ENTITIES_GLOB, default=[]): vol.All(
+        vol.Optional(CONF_INCLUDE_ENTITY_GLOBS, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
         vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
@@ -67,8 +67,8 @@ def convert_filter_alt(
         include.get(CONF_ENTITIES, []),
         exclude.get(CONF_DOMAINS, []),
         exclude.get(CONF_ENTITIES, []),
-        include.get(CONF_ENTITIES_GLOB, []),
-        exclude.get(CONF_ENTITIES_GLOB, []),
+        include.get(CONF_ENTITY_GLOBS, []),
+        exclude.get(CONF_ENTITY_GLOBS, []),
     )
     total_filters = sum(len(val) for val in include.values()) + sum(
         len(val) for val in exclude.values()
@@ -81,7 +81,7 @@ def convert_filter_alt(
 ALT_FILTER_SCHEMA_INNER = vol.Schema(
     {
         vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_ENTITIES_GLOB, default=[]): vol.All(
+        vol.Optional(CONF_ENTITY_GLOBS, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
         vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
@@ -102,6 +102,11 @@ ALT_BASE_FILTER_SCHEMA = vol.Schema(
 ALT_FILTER_SCHEMA = vol.All(ALT_BASE_FILTER_SCHEMA, convert_filter_alt)
 
 
+def _glob_to_re(glob: str) -> Pattern:
+    """Translate and compile glob string into pattern."""
+    return re.compile(fnmatch.translate(glob))
+
+
 # It's safe since we don't modify it. And None causes typing warnings
 # pylint: disable=dangerous-default-value
 def generate_filter(
@@ -109,44 +114,34 @@ def generate_filter(
     include_entities: List[str],
     exclude_domains: List[str],
     exclude_entities: List[str],
-    include_entities_glob: List[str] = [],
-    exclude_entities_glob: List[str] = [],
+    include_entity_globs: List[str] = [],
+    exclude_entity_globs: List[str] = [],
 ) -> Callable[[str], bool]:
     """Return a function that will filter entities based on the args."""
     include_d = set(include_domains)
     include_e = set(include_entities)
     exclude_d = set(exclude_domains)
     exclude_e = set(exclude_entities)
-    has_include_eg = bool(include_entities_glob)
-    has_exclude_eg = bool(exclude_entities_glob)
+    include_eg = set(map(_glob_to_re, include_entity_globs))
+    exclude_eg = set(map(_glob_to_re, exclude_entity_globs))
 
-    if has_include_eg:
-        include_eg_re = "|".join(map(fnmatch.translate, include_entities_glob))
-        include_eg = re.compile(f"^(?:{include_eg_re})$")
-
-    if has_exclude_eg:
-        exclude_eg_re = "|".join(map(fnmatch.translate, exclude_entities_glob))
-        exclude_eg = re.compile(f"^(?:{exclude_eg_re})$")
-
-    have_exclude = bool(exclude_e or exclude_d or has_exclude_eg)
-    have_include = bool(include_e or include_d or has_include_eg)
+    have_exclude = bool(exclude_e or exclude_d or exclude_eg)
+    have_include = bool(include_e or include_d or include_eg)
 
     def entity_included(domain: str, entity_id: str) -> bool:
         """Return true if entity matches inclusion filters."""
-        return bool(
+        return (
             entity_id in include_e
             or domain in include_d
-            or has_include_eg
-            and include_eg.match(entity_id)
+            or any(glob_re.match(entity_id) for glob_re in include_eg)
         )
 
     def entity_excluded(domain: str, entity_id: str) -> bool:
         """Return true if entity matches exclusion filters."""
-        return bool(
+        return (
             entity_id in exclude_e
             or domain in exclude_d
-            or has_exclude_eg
-            and exclude_eg.match(entity_id)
+            or any(glob_re.match(entity_id) for glob_re in exclude_eg)
         )
 
     # Case 1 - no includes or excludes - pass all entities
@@ -191,10 +186,9 @@ def generate_filter(
             if domain in include_d:
                 return not (
                     entity_id in exclude_e
-                    or has_exclude_eg
-                    and exclude_eg.match(entity_id)
+                    or any(glob_re.match(entity_id) for glob_re in exclude_eg)
                 )
-            if include_eg and include_eg.match(entity_id):
+            if any(glob_re.match(entity_id) for glob_re in include_eg):
                 return not entity_excluded(domain, entity_id)
 
             return False
@@ -213,7 +207,9 @@ def generate_filter(
         def entity_filter_4b(entity_id: str) -> bool:
             """Return filter function for case 4b."""
             domain = split_entity_id(entity_id)[0]
-            if domain in exclude_d or exclude_eg and exclude_eg.match(entity_id):
+            if domain in exclude_d or any(
+                glob_re.match(entity_id) for glob_re in exclude_eg
+            ):
                 return entity_id in include_e
             return entity_id not in exclude_e
 
