@@ -63,7 +63,7 @@ DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
 KEEPALIVE_TIME = 30
 
-DISPLAY_ATTRIBUTES = [ATTR_ICON, ATTR_ATTRIBUTION, ATTR_ENTITY_PICTURE]
+DISPLAY_ATTRIBUTES = {ATTR_ICON, ATTR_ATTRIBUTION, ATTR_ENTITY_PICTURE}
 
 CONF_AUTO_PURGE = "auto_purge"
 CONF_DB_URL = "db_url"
@@ -404,8 +404,13 @@ class Recorder(threading.Thread):
                     new_state = event.data.get("new_state")
                     if new_state:
                         # Do not store display attributes in the database
-                        _remove_display_attributes_from_state(new_state)
-                    dbstate = States.from_event_with_state(event, new_state)
+                        dbstate = States.from_event_with_attributes(
+                            event,
+                            new_state,
+                            _without_display_attributes(new_state.attributes),
+                        )
+                    else:
+                        dbstate = States.from_event(event)
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
@@ -589,17 +594,18 @@ class Recorder(threading.Thread):
         self.run_info = None
 
 
-def _remove_display_attributes_from_state(state):
+def _without_display_attributes(attributes):
     """Remove attributes that are primarily used for the display layer.
 
     These attributes are mostly static and
     take of a lot of space in the database
     and are not needed for any core functionality.
     """
-    if not any(k in state.attributes for k in DISPLAY_ATTRIBUTES):
-        return
-    attributes = dict(state.attributes)
-    for attribute in DISPLAY_ATTRIBUTES:
-        if attribute in attributes:
-            del attributes[attribute]
-    state.attributes = attributes
+    if DISPLAY_ATTRIBUTES.intersection(attributes):
+        return {
+            attr: value
+            for attr, value in attributes.items()
+            if attr not in DISPLAY_ATTRIBUTES
+        }
+
+    return attributes
