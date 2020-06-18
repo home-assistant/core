@@ -17,7 +17,21 @@
     },
     "abort": {
       "already_configured": "This Smile is already configured"
+<<<<<<< HEAD
     },
     "flow_title": "Smile: {name}"
+=======
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Adjust Plugwise Options",
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        }
+      }
+    }
+>>>>>>> Allow scan_interval adjustments using config_flow
   }
 }

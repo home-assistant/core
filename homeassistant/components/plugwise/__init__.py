@@ -10,6 +10,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -20,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -39,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = Smile(
-        host=entry.data["host"], password=entry.data["password"], websession=websession
+        host=entry.data[CONF_HOST],
+        password=entry.data[CONF_PASSWORD],
+        websession=websession,
     )
 
     try:
@@ -73,6 +76,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return True
         except Smile.XMLDataMissingError as err:
             raise UpdateFailed("Smile update failed") from err
+
+    update_interval = timedelta(
+        seconds=entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL["thermostat"]
+        )
+    )
+    if api.smile_type == "power":
+        update_interval = timedelta(
+            seconds=entry.options.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL["power"]
+            )
+        )
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -110,12 +125,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if single_master_thermostat is None:
         platforms = SENSOR_PLATFORMS
 
+    entry.add_update_listener(_update_listener)
+
     for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
     return True
+
+
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    coordinator.update_interval = timedelta(
+        seconds=entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL["thermostat"]
+        )
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

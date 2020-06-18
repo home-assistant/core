@@ -5,14 +5,16 @@ from Plugwise_Smile.Smile import Smile
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
+<<<<<<< HEAD
 ZEROCONF_MAP = {
     "smile": "P1 DSMR",
     "smile_thermo": "Climate (Anna)",
@@ -30,6 +32,12 @@ def _base_schema(discovery_info):
     base_schema[vol.Required(CONF_PASSWORD)] = str
 
     return vol.Schema(base_schema)
+=======
+DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_HOST): str, vol.Required(CONF_PASSWORD): str},
+    extra=vol.ALLOW_EXTRA,
+)
+>>>>>>> Allow scan_interval adjustments using config_flow
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -56,7 +64,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     return api
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Plugwise Smile."""
 
     VERSION = 1
@@ -113,8 +121,48 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=api.smile_name, data=user_input)
 
         return self.async_show_form(
+<<<<<<< HEAD
             step_id="user", data_schema=_base_schema(self.discovery_info), errors=errors
+=======
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {}
+>>>>>>> Allow scan_interval adjustments using config_flow
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return PlugwiseOptionsFlowHandler(config_entry)
+
+
+class PlugwiseOptionsFlowHandler(config_entries.OptionsFlow):
+    """Plugwise option flow."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Plugwise options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        api = self.hass.data[DOMAIN][self.config_entry.entry_id]["api"]
+        if api.smile_type == "power":
+            SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL["power"]
+        else:
+            SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL["thermostat"]
+
+        data = {
+            vol.Optional(
+                CONF_SCAN_INTERVAL,
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL, SCAN_INTERVAL
+                ),
+            ): int
+        }
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(data))
 
 
 class CannotConnect(exceptions.HomeAssistantError):
