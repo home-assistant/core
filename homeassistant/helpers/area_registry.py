@@ -49,6 +49,18 @@ class AreaRegistry:
         return self.areas.values()
 
     @callback
+    def async_get_or_create(self, name: str) -> AreaEntry:
+        """Get an area.  Create if it doesn't exist."""
+        if not name:
+            raise ValueError("Cannot have unnamed Areas")
+
+        area = self._async_is_registered(name)
+        if area:
+            return area
+
+        return self.async_create(name)
+
+    @callback
     def async_create(self, name: str) -> AreaEntry:
         """Create a new area."""
         if self._async_is_registered(name):
