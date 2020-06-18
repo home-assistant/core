@@ -18,7 +18,6 @@ from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_HIDDEN,
-    ATTR_NAME,
     CONF_DOMAINS,
     CONF_ENTITIES,
     EVENT_HOMEASSISTANT_START,
