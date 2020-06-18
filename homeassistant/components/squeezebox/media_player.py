@@ -1,11 +1,12 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
+import asyncio
 import logging
 
-from pysqueezebox import Server, async_discover
+from pysqueezebox import Server
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
@@ -67,9 +68,23 @@ SUPPORT_SQUEEZEBOX = (
     | SUPPORT_CLEAR_PLAYLIST
 )
 
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HOST),
+    cv.deprecated(CONF_PORT),
+    cv.deprecated(CONF_PASSWORD),
+    cv.deprecated(CONF_USERNAME),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_USERNAME): cv.string,
+        }
+    ),
+)
+
 KNOWN_PLAYERS = "known_players"
 KNOWN_SERVERS = "known_servers"
-DISCOVERY_TASK = "discovery_task"
 ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
 
@@ -83,30 +98,6 @@ SQUEEZEBOX_MODE = {
     "play": STATE_PLAYING,
     "stop": STATE_IDLE,
 }
-
-
-async def start_server_discovery(hass):
-    """Start a server discovery task."""
-
-    def _discovered_server(server):
-        asyncio.create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
-                data={
-                    CONF_HOST: server.host,
-                    CONF_PORT: int(server.port),
-                    "uuid": server.uuid,
-                },
-            )
-        )
-
-    hass.data.setdefault(DOMAIN, {})
-    if DISCOVERY_TASK not in hass.data[DOMAIN]:
-        _LOGGER.debug("Adding server discovery task for squeezebox")
-        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_task(
-            async_discover(_discovered_server)
-        )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -128,7 +119,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up an LMS Server from a config entry."""
     config = config_entry.data
-    _LOGGER.debug("Reached async_setup_entry, config=%s", config)
+    _LOGGER.debug("Reached async_setup_entry for host=%s", config[CONF_HOST])
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -144,7 +135,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     _LOGGER.debug("Creating LMS object for %s", host)
     lms = Server(async_get_clientsession(hass), host, port, username, password)
 
-    async def _discovery(now=None):
+    async def _discovery():
         """Discover squeezebox players by polling server."""
 
         async def _discovered_player(player):
@@ -175,7 +166,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
-    hass.async_add_job(_discovery)
+    asyncio.create_task(_discovery())
 
     # Register entity services
     platform = entity_platform.current_platform.get()
