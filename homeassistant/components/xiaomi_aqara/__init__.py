@@ -159,9 +159,8 @@ async def async_setup_entry(
         # register stop callback to shutdown listining for local pushes
         def stop_xiaomi(event):
             """Stop Xiaomi Socket."""
-            if hass.data[DOMAIN].get("Listener") is not None:
-                _LOGGER.info("Shutting down Xiaomi Gateway Listener")
-                hass.data[DOMAIN]["Listener"].stop_listen()
+            _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
+            gateway_discovery.stop_listen()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
 
