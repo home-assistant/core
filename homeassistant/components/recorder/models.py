@@ -121,7 +121,7 @@ class States(Base):  # type: ignore
         else:
             dbstate.domain = state.domain
             dbstate.state = state.state
-            dbstate.attributes = json.dumps(dict(state.attributes), cls=JSONEncoder)
+            dbstate.attributes = json.dumps(dict(attributes), cls=JSONEncoder)
             dbstate.last_changed = state.last_changed
             dbstate.last_updated = state.last_updated
 
