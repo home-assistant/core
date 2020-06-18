@@ -613,7 +613,8 @@ def _remove_display_attributes_from_state(state):
     """
     if not any(k in state.attributes for k in DISPLAY_ATTRIBUTES):
         return
-    state.attributes = dict(state.attributes)
+    attributes = dict(state.attributes)
     for attribute in DISPLAY_ATTRIBUTES:
-        if attribute in state.attributes:
-            del state.attributes[attribute]
+        if attribute in attributes:
+            del attributes[attribute]
+    state.attributes = attributes
