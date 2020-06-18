@@ -250,6 +250,11 @@ class MockPlexSession:
         return 10000000
 
     @property
+    def librarySectionID(self):
+        """Mock the librarySectionID attribute."""
+        return 1
+
+    @property
     def ratingKey(self):
         """Mock the ratingKey attribute."""
         return 123
