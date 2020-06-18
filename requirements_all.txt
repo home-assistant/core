@@ -950,7 +950,7 @@ netdata==0.1.2
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.7.0
+netdisco==2.7.1
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
