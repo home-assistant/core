@@ -92,7 +92,7 @@ async def test_lights(hass):
             blocking=True,
         )
         mock_activate.not_called()
-        mock_set_intensity.assert_called_once()
+        mock_set_intensity.assert_called_once_with("led0", 29)
 
     # Turn off
     with patch(
