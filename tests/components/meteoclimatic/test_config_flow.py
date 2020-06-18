@@ -1,7 +1,6 @@
 """Tests for the Meteoclimatic config flow."""
-import pytest
-
 from meteoclimatic.exceptions import MeteoclimaticError, StationNotFound
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.meteoclimatic.const import CONF_STATION_CODE, DOMAIN
