@@ -28,6 +28,11 @@ VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 _LOGGER = logging.getLogger(__name__)
 
 
+@pytest.fixture(autouse=True)
+def apply_mock_storage(hass_storage):
+    """Apply the storage mock."""
+
+
 @patch("homeassistant.bootstrap.async_enable_logging", Mock())
 async def test_home_assistant_core_config_validation(hass):
     """Test if we pass in wrong information for HA conf."""
@@ -456,7 +461,14 @@ async def test_setup_safe_mode_if_no_frontend(
 
     with patch(
         "homeassistant.config.async_hass_config_yaml",
-        return_value={"map": {}, "person": {"invalid": True}},
+        return_value={
+            "homeassistant": {
+                "internal_url": "http://192.168.1.100:8123",
+                "external_url": "https://abcdef.ui.nabu.casa",
+            },
+            "map": {},
+            "person": {"invalid": True},
+        },
     ), patch("homeassistant.components.http.start_http_server_and_save_config"):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
@@ -469,3 +481,7 @@ async def test_setup_safe_mode_if_no_frontend(
         )
 
     assert "safe_mode" in hass.config.components
+    assert hass.config.config_dir == get_test_config_dir()
+    assert hass.config.skip_pip
+    assert hass.config.internal_url == "http://192.168.1.100:8123"
+    assert hass.config.external_url == "https://abcdef.ui.nabu.casa"
