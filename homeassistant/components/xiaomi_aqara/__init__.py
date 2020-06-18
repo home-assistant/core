@@ -151,9 +151,8 @@ async def async_setup_entry(
     hass.data[DOMAIN][GATEWAYS_KEY][entry.entry_id] = xiaomi_gateway
 
     gateway_discovery = hass.data[DOMAIN].setdefault(
-        LISTENER_KEY, XiaomiGatewayDiscovery(
-            hass.add_job, [], entry.data[CONF_INTERFACE]
-        )
+        LISTENER_KEY,
+        XiaomiGatewayDiscovery(hass.add_job, [], entry.data[CONF_INTERFACE]),
     )
 
     if len(hass.data[DOMAIN][GATEWAYS_KEY]) == 1:
@@ -206,7 +205,7 @@ async def async_unload_entry(
     )
     if unload_ok:
         hass.data[DOMAIN][GATEWAYS_KEY].pop(entry.entry_id)
-    
+
     if len(hass.data[DOMAIN][GATEWAYS_KEY]) == 0:
         # No gateways left, stop Xiaomi socket
         hass.data[DOMAIN].pop(GATEWAYS_KEY)

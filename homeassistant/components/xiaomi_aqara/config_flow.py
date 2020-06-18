@@ -16,7 +16,6 @@ from .const import (
     CONF_KEY,
     CONF_PROTOCOL,
     CONF_SID,
-    DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
     ZEROCONF_GATEWAY,
 )
