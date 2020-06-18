@@ -115,9 +115,6 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not name or not self.host or not mac_address:
             return self.async_abort(reason="not_xiaomi_aqara")
 
-        # format mac (include semicolns and make uppercase)
-        mac_address = format_mac(mac_address)
-
         # Check if the discovered device is an xiaomi aqara gateway.
         if not name.startswith(ZEROCONF_GATEWAY):
             _LOGGER.debug(
@@ -126,6 +123,9 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.host,
             )
             return self.async_abort(reason="not_xiaomi_aqara")
+
+        # format mac (include semicolns and make uppercase)
+        mac_address = format_mac(mac_address)
 
         unique_id = mac_address
         await self.async_set_unique_id(unique_id)
