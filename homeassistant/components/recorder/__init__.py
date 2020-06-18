@@ -403,28 +403,25 @@ class Recorder(threading.Thread):
                 try:
                     new_state = event.data.get("new_state")
                     if new_state:
-                        new_state = _remove_display_attributes_from_state(
-                            dict(new_state)
-                        )
+                        # Do not store display attributes in the database
+                        _remove_display_attributes_from_state(new_state)
                     dbstate = States.from_event_with_state(event, new_state)
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
-                except (TypeError, ValueError) as ex:
+                    if "new_state" in event.data:
+                        self._old_state_ids[dbstate.entity_id] = dbstate.state_id
+                    elif dbstate.entity_id in self._old_state_ids:
+                        del self._old_state_ids[dbstate.entity_id]
+                except (TypeError, ValueError):
                     _LOGGER.warning(
-                        "State is not JSON serializable: %s (%s)",
+                        "State is not JSON serializable: %s",
                         event.data.get("new_state"),
-                        ex,
                     )
                 except Exception as err:  # pylint: disable=broad-except
                     # Must catch the exception to prevent the loop from collapsing
                     _LOGGER.exception("Error adding state change: %s", err)
-
-                if "new_state" in event.data:
-                    self._old_state_ids[dbstate.entity_id] = dbstate.state_id
-                elif dbstate.entity_id in self._old_state_ids:
-                    del self._old_state_ids[dbstate.entity_id]
 
             # If they do not have a commit interval
             # than we commit right away
@@ -608,7 +605,8 @@ class Recorder(threading.Thread):
 
 
 def _remove_display_attributes_from_state(state):
+    if not any(k in state.attributes for k in DISPLAY_ATTRIBUTES):
+        return
+    state.attributes = dict(state.attributes)
     for attribute in DISPLAY_ATTRIBUTES:
-        if attribute in state.attributes:
-            del state.attributes[attribute]
-    return state
+        state.attributes.pop(attribute, None)
