@@ -306,7 +306,7 @@ avea==1.4
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==30
+axis==31
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -1170,7 +1170,7 @@ pyHS100==0.3.5
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.4.6
+pyMetno==0.5.1
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.25
