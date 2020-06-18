@@ -80,12 +80,7 @@ async def test_config_flow_user_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            const.CONF_KEY: TEST_KEY,
-            const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
-            CONF_NAME: TEST_NAME,
-        },
+        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME,},
     )
 
     assert result["type"] == "create_entry"
@@ -95,7 +90,6 @@ async def test_config_flow_user_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
         const.CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
@@ -135,12 +129,7 @@ async def test_config_flow_user_multiple_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            const.CONF_KEY: TEST_KEY,
-            const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
-            CONF_NAME: TEST_NAME,
-        },
+        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME,},
     )
 
     assert result["type"] == "create_entry"
@@ -150,7 +139,6 @@ async def test_config_flow_user_multiple_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
         const.CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
@@ -205,12 +193,7 @@ async def test_config_flow_user_get_mac_error(hass):
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                const.CONF_KEY: TEST_KEY,
-                const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
-                CONF_NAME: TEST_NAME,
-            },
+            result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME,},
         )
 
     assert result["type"] == "form"
@@ -243,12 +226,7 @@ async def test_zeroconf_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            const.CONF_KEY: TEST_KEY,
-            const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
-            CONF_NAME: TEST_NAME,
-        },
+        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME,},
     )
 
     assert result["type"] == "create_entry"
@@ -258,7 +236,6 @@ async def test_zeroconf_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_DISCOVERY_RETRY: config_flow.DEFAULT_DISCOVERY_RETRY,
         const.CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
