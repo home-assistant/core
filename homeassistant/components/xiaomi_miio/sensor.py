@@ -90,7 +90,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 sensor_variables = ["temperature", "humidity", "pressure"]
                 entities.extend(
                     [
-                        XiaomiGatewaySensor(sub_device, variable)
+                        XiaomiGatewaySensor(sub_device, config_entry, variable)
                         for variable in sensor_variables
                     ]
                 )
@@ -223,9 +223,9 @@ class XiaomiAirQualityMonitor(Entity):
 class XiaomiGatewaySensor(XiaomiGatewayDevice):
     """Representation of a XiaomiGatewaySensor."""
 
-    def __init__(self, sub_device, data_key):
+    def __init__(self, sub_device, entry, data_key):
         """Initialize the XiaomiSensor."""
-        super().__init__(sub_device)
+        super().__init__(sub_device, entry)
         self._data_key = data_key
         self._unique_id = f"{sub_device.sid}-{data_key}"
         self._name = f"{sub_device.sid}-{data_key}"

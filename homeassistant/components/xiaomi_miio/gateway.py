@@ -59,9 +59,10 @@ class ConnectXiaomiGateway:
 class XiaomiGatewayDevice(Entity):
     """Representation of a base Xiaomi Gateway Device."""
 
-    def __init__(self, sub_device):
+    def __init__(self, sub_device, entry):
         """Initialize the Xiaomi Gateway Device."""
         self._sub_device = sub_device
+        self._entry = entry
         self._unique_id = sub_device.sid
         self._name = sub_device.sid
         self._available = None
@@ -81,6 +82,11 @@ class XiaomiGatewayDevice(Entity):
         """Return the device info of the gateway."""
         return {
             "identifiers": {(DOMAIN, self._sub_device.sid)},
+            "via_device": (DOMAIN, self._entry.unique_id),
+            "manufacturer": "Xiaomi",
+            "name": self._sub_device.name,
+            "model": self._sub_device.model,
+            "sw_version": self._sub_device.firmware_version,
         }
 
     @property
