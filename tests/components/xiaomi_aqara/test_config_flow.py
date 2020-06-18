@@ -80,7 +80,7 @@ async def test_config_flow_user_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME,},
+        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
     )
 
     assert result["type"] == "create_entry"
@@ -129,7 +129,7 @@ async def test_config_flow_user_multiple_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME,},
+        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
     )
 
     assert result["type"] == "create_entry"
@@ -193,7 +193,7 @@ async def test_config_flow_user_get_mac_error(hass):
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME,},
+            result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
         )
 
     assert result["type"] == "form"
@@ -226,7 +226,7 @@ async def test_zeroconf_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME,},
+        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
     )
 
     assert result["type"] == "create_entry"
