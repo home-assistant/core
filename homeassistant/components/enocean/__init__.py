@@ -1,5 +1,4 @@
 """Support for EnOcean devices."""
-import asyncio
 
 import voluptuous as vol
 
@@ -8,7 +7,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_DEVICE
 import homeassistant.helpers.config_validation as cv
 
-from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, PLATFORMS
+from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE
 from .dongle import EnOceanDongle
 
 CONFIG_SCHEMA = vol.Schema(
@@ -50,18 +49,9 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass, config_entry):
     """Unload ENOcean config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
 
-    if unload_ok:
-        enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
-        enocean_dongle.unload()
-        hass.data.pop(DATA_ENOCEAN)
+    enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
+    enocean_dongle.unload()
+    hass.data.pop(DATA_ENOCEAN)
 
     return True
