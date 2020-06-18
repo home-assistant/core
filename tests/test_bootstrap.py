@@ -129,44 +129,6 @@ async def test_setup_after_deps_all_present(hass, caplog):
     assert order == ["root", "first_dep", "second_dep"]
 
 
-async def test_setup_after_deps_in_stage_1(hass):
-    """Test after_dependencies set up via platform."""
-    # This test relies on this
-    assert "frontend" in bootstrap.STAGE_1_INTEGRATIONS
-    order = []
-
-    def gen_domain_setup(domain):
-        async def async_setup(hass, config):
-            order.append(domain)
-            return True
-
-        return async_setup
-
-    mock_integration(
-        hass,
-        MockModule(
-            domain="normal_integration",
-            async_setup=gen_domain_setup("normal_integration"),
-        ),
-    )
-    mock_integration(
-        hass,
-        MockModule(
-            domain="frontend",
-            async_setup=gen_domain_setup("frontend"),
-            partial_manifest={"after_dependencies": ["normal_integration"]},
-        ),
-    )
-
-    await bootstrap._async_set_up_integrations(
-        hass, {"frontend": {}, "normal_integration": {}}
-    )
-
-    assert "normal_integration" in hass.config.components
-    assert "frontend" in hass.config.components
-    assert order == ["normal_integration", "frontend"]
-
-
 async def test_setup_after_deps_via_platform(hass):
     """Test after_dependencies set up via platform."""
     order = []
