@@ -411,8 +411,6 @@ async def _async_set_up_integrations(
     # setup components
     logging_domains = domains & LOGGING_INTEGRATIONS
     stage_1_domains = domains & STAGE_1_INTEGRATIONS
-
-    # Calculate stage 2
     stage_2_domains = domains - logging_domains - stage_1_domains
 
     # Start setup
@@ -429,10 +427,10 @@ async def _async_set_up_integrations(
 
     if stage_1_domains:
         _LOGGER.info("Setting up %s", stage_1_domains)
-
         await async_setup_multi_components(hass, stage_1_domains, config, setup_started)
 
     if stage_2_domains:
+        # This will manage after_dependencies
         async_set_domains_to_be_loaded(hass, stage_2_domains)
         await async_setup_multi_components(hass, stage_2_domains, config, setup_started)
 
