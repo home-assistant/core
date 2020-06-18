@@ -385,21 +385,20 @@ async def _async_set_up_integrations(
     domains = _get_domains(hass, config)
 
     # Resolve all dependencies so we know all integrations that will be loaded
-    integrations_to_process = []
-
-    for int_or_exc in await asyncio.gather(
-        *(loader.async_get_integration(hass, domain) for domain in domains),
-        return_exceptions=True,
-    ):
-        # Exceptions are handled in async_setup_component.
-        if isinstance(int_or_exc, loader.Integration):
-            integrations_to_process.append(int_or_exc)
-
+    integrations_to_process = [
+        int_or_exc
+        for int_or_exc in await asyncio.gather(
+            *(loader.async_get_integration(hass, domain) for domain in domains),
+            return_exceptions=True,
+        )
+        if isinstance(int_or_exc, loader.Integration)
+    ]
     to_resolve = [
         itg.resolve_dependencies()
         for itg in integrations_to_process
         if not itg.all_dependencies_resolved
     ]
+
     if to_resolve:
         await asyncio.gather(*to_resolve)
 
