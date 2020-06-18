@@ -73,7 +73,7 @@ async def prepare_usb_device(hass, device_info):
     if device_info["id"] == G_ZIGBEE_ID:
         # Register the built-in zigbee panel
         hass.components.frontend.async_register_built_in_panel(
-            "lovelace/ais_zigbee",
+            "aiszigbee",
             require_admin=True,
             sidebar_title="Zigbee",
             sidebar_icon="mdi:zigbee",
@@ -120,7 +120,7 @@ async def remove_usb_device(hass, device_info):
 
     if device_info["id"] == G_ZIGBEE_ID:
         # Unregister the built-in zigbee panel
-        hass.components.frontend.async_remove_panel("lovelace/ais_zigbee")
+        hass.components.frontend.async_remove_panel("aiszigbee")
         # stop pm2 zigbee service
         await _run("pm2 delete zigbee")
         await hass.services.async_call(
