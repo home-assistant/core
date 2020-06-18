@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ONVIF ya est\u00e1 configurado.",
-            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ONVIF ya est\u00e1 en progreso.",
+            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ONVIF ya est\u00e1 en marcha.",
             "no_h264": "No hab\u00eda transmisiones H264 disponibles. Verifique la configuraci\u00f3n del perfil en su dispositivo.",
             "no_mac": "No se pudo configurar una identificaci\u00f3n \u00fanica para el dispositivo ONVIF.",
             "onvif_error": "Error de configuraci\u00f3n del dispositivo ONVIF.  Revise los registros para m\u00e1s informaci\u00f3n."

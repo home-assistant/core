@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Este televisor Samsung ya est\u00e1 configurado.",
-            "already_in_progress": "La configuraci\u00f3n del televisor Samsung ya est\u00e1 en progreso.",
+            "already_in_progress": "La configuraci\u00f3n del televisor Samsung ya est\u00e1 en marcha.",
             "auth_missing": "Home Assistant no est\u00e1 autenticado para conectarse a este televisor Samsung.",
             "not_successful": "No se puede conectar a este dispositivo Samsung TV.",
             "not_supported": "Esta televisi\u00f3n Samsung actualmente no es compatible."
