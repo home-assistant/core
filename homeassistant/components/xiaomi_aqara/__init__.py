@@ -154,7 +154,7 @@ async def async_setup_entry(
     )
 
         # start listining for local pushes
-        await hass.async_add_executor_job(hass.data[DOMAIN]["Listener"].listen)
+        await hass.async_add_executor_job(gateway_discovery.listen)
 
         # register stop callback to shutdown listining for local pushes
         def stop_xiaomi(event):
