@@ -605,9 +605,10 @@ class Recorder(threading.Thread):
 
 
 def _remove_display_attributes_from_state(state):
-    """Remove attributes that are only used for the display layer.
+    """Remove attributes that are primarily used for the display layer.
 
-    These attributes take of a lot of space in the database
+    These attributes are mostly static and
+    take of a lot of space in the database
     and are not needed for any core functionality.
     """
     if not any(k in state.attributes for k in DISPLAY_ATTRIBUTES):
