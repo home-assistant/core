@@ -147,10 +147,11 @@ async def async_setup_entry(
     )
     hass.data[DOMAIN][entry.entry_id] = xiaomi_gateway
 
-    if hass.data[DOMAIN].get("Listener") is None:
-        hass.data[DOMAIN]["Listener"] = XiaomiGatewayDiscovery(
+    gateway_discovery = hass.data[DOMAIN].setdefault(
+        GATEWAY_DISCOVERY, XiaomiGatewayDiscovery(
             hass.add_job, [], entry.data[CONF_INTERFACE]
         )
+    )
 
         # start listining for local pushes
         await hass.async_add_executor_job(hass.data[DOMAIN]["Listener"].listen)
