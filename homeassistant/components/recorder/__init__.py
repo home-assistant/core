@@ -242,6 +242,7 @@ class Recorder(threading.Thread):
 
         self._timechanges_seen = 0
         self._keepalive_count = 0
+        self._old_state_ids = {}
         self.event_session = None
         self.get_session = None
 
@@ -383,6 +384,8 @@ class Recorder(threading.Thread):
 
             try:
                 dbevent = Events.from_event(event)
+                if event.event_type == EVENT_STATE_CHANGED:
+                    dbevent.event_data = "{}"
                 self.event_session.add(dbevent)
                 self.event_session.flush()
             except (TypeError, ValueError):
@@ -394,8 +397,10 @@ class Recorder(threading.Thread):
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
                     dbstate = States.from_event(event)
+                    dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
+                    self.event_session.flush()
                 except (TypeError, ValueError):
                     _LOGGER.warning(
                         "State is not JSON serializable: %s",
@@ -404,6 +409,11 @@ class Recorder(threading.Thread):
                 except Exception as err:  # pylint: disable=broad-except
                     # Must catch the exception to prevent the loop from collapsing
                     _LOGGER.exception("Error adding state change: %s", err)
+
+                if "new_state" in event.data:
+                    self._old_state_ids[dbstate.entity_id] = dbstate.state_id
+                elif dbstate.entity_id in self._old_state_ids:
+                    del self._old_state_ids[dbstate.entity_id]
 
             # If they do not have a commit interval
             # than we commit right away
