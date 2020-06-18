@@ -79,7 +79,7 @@ async def _async_process_dependencies(
 
     to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
     for dep in integration.after_dependencies:
-        if dep in to_be_loaded:
+        if dep in to_be_loaded and dep not in hass.config.components:
             tasks.append(to_be_loaded[dep].wait())
 
     if not tasks:
@@ -124,22 +124,7 @@ async def _async_setup_component(
         return False
 
     # Validate all dependencies exist and there are no circular dependencies
-    try:
-        await loader.async_component_dependencies(hass, domain)
-    except loader.IntegrationNotFound as err:
-        _LOGGER.error(
-            "Not setting up %s because we are unable to resolve (sub)dependency %s",
-            domain,
-            err.domain,
-        )
-        return False
-    except loader.CircularDependency as err:
-        _LOGGER.error(
-            "Not setting up %s because it contains a circular dependency: %s -> %s",
-            domain,
-            err.from_domain,
-            err.to_domain,
-        )
+    if not await integration.resolve_dependencies():
         return False
 
     # Process requirements as soon as possible, so we can import the component

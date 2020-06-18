@@ -201,6 +201,8 @@ class Integration:
         self.hass = hass
         self.pkg_path = pkg_path
         self.file_path = file_path
+        self._all_dependencies_resolved: Optional[bool] = None
+        self.all_dependencies: Set[str] = set()
         self.manifest = manifest
         manifest["is_built_in"] = self.is_built_in
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
@@ -254,6 +256,39 @@ class Integration:
     def is_built_in(self) -> bool:
         """Test if package is a built-in integration."""
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
+
+    @property
+    def all_dependencies_resolved(self) -> bool:
+        """Return if all dependencies have been resolved."""
+        return self._all_dependencies_resolved is not None
+
+    async def resolve_dependencies(self) -> bool:
+        """Resolve all dependencies."""
+        if self._all_dependencies_resolved is not None:
+            return self._all_dependencies_resolved
+
+        try:
+            self.all_dependencies = await _async_component_dependencies(
+                self.hass, self.domain, set(), set()
+            )
+            self._all_dependencies_resolved = True
+        except IntegrationNotFound as err:
+            _LOGGER.error(
+                "Unable to resolve dependenceis for %s:  we are unable to resolve (sub)dependency %s",
+                self.domain,
+                err.domain,
+            )
+            self._all_dependencies_resolved = False
+        except CircularDependency as err:
+            _LOGGER.error(
+                "Unable to resolve dependenceis for %s:  it contains a circular dependency: %s -> %s",
+                self.domain,
+                err.from_domain,
+                err.to_domain,
+            )
+            self._all_dependencies_resolved = False
+
+        return self._all_dependencies_resolved
 
     def get_component(self) -> ModuleType:
         """Return the component."""
@@ -486,14 +521,6 @@ def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
     """Decorate function to indicate that first argument is hass."""
     setattr(func, "__bind_hass", True)
     return func
-
-
-async def async_component_dependencies(hass: "HomeAssistant", domain: str) -> Set[str]:
-    """Return all dependencies and subdependencies of components.
-
-    Raises CircularDependency if a circular dependency is found.
-    """
-    return await _async_component_dependencies(hass, domain, set(), set())
 
 
 async def _async_component_dependencies(
