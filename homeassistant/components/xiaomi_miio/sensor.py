@@ -228,7 +228,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice):
         super().__init__(sub_device, entry)
         self._data_key = data_key
         self._unique_id = f"{sub_device.sid}-{data_key}"
-        self._name = f"{sub_device.sid}-{data_key}"
+        self._name = f"{data_key} ({sub_device.sid})".capitalize()
 
     @property
     def icon(self):
