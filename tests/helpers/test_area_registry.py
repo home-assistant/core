@@ -53,6 +53,33 @@ async def test_create_area(hass, registry, update_events):
     assert update_events[0]["area_id"] == area.id
 
 
+async def test_get_or_create_area(hass, registry, update_events):
+    """Make sure that we can get or create an area."""
+    area1 = registry.async_get_or_create("mock")
+
+    assert area1.name == "mock"
+    assert len(registry.areas) == 1
+
+    area2 = registry.async_get_or_create("mock")
+
+    await hass.async_block_till_done()
+    assert area1 == area2
+    assert len(registry.areas) == 1
+
+    assert len(update_events) == 1
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["area_id"] == area1.id
+
+
+async def test_get_or_create_area_with_empty_name(hass, registry, update_events):
+    """Make sure that we can't get or create an unnamed area."""
+    with pytest.raises(ValueError) as e_info:
+        _ = registry.async_get_or_create("")
+        assert e_info == "Cannot have unnamed Areas"
+
+    assert len(update_events) == 0
+
+
 async def test_create_area_with_name_already_in_use(hass, registry, update_events):
     """Make sure that we can't create an area with a name already in use."""
     area1 = registry.async_create("mock")
