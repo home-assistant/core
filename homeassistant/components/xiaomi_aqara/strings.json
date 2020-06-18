@@ -14,7 +14,6 @@
         "description": "The key (password) can be retrieved using this tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. If the key is not provided only sensors will be accessible",
         "data": {
           "key": "The key of your gateway",
-          "discovery_retry": "Number of times that Home Assistant should try to discover subdevices of the gateway",
           "name": "Name of the Gateway"
         }
       },
