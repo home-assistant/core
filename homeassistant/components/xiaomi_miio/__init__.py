@@ -49,7 +49,6 @@ async def async_setup_gateway_entry(
     if not await gateway.async_connect_gateway(host, token):
         return False
     gateway_info = gateway.gateway_info
-    sub_devices = gateway.gateway_device.devices
 
     hass.data[DOMAIN][entry.entry_id] = gateway.gateway_device
 
