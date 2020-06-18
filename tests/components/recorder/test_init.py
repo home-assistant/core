@@ -258,3 +258,29 @@ def test_auto_purge(hass_recorder):
         assert len(purge_old_data.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
+
+
+def test_saving_sets_old_state(hass_recorder):
+    """Test saving sets old state."""
+    hass = hass_recorder()
+
+    hass.states.set("test.one", "on", {})
+    hass.states.set("test.two", "on", {})
+    wait_recording_done(hass)
+    hass.states.set("test.one", "off", {})
+    hass.states.set("test.two", "off", {})
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = list(session.query(States))
+        assert len(states) == 4
+
+        assert states[0].entity_id == "test.one"
+        assert states[1].entity_id == "test.two"
+        assert states[2].entity_id == "test.one"
+        assert states[3].entity_id == "test.two"
+
+        assert states[0].old_state_id is None
+        assert states[1].old_state_id is None
+        assert states[2].old_state_id == states[0].state_id
+        assert states[3].old_state_id == states[1].state_id
