@@ -77,7 +77,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:weather-pouring",
         ENTITY_CLASS: "timestamp",
         ENTITY_ENABLE: True,
-        ENTITY_API_DATA_PATH: "current_forecast:T:value",
+        ENTITY_API_DATA_PATH: None,
     },
     "temperature": {
         ENTITY_NAME: "Temperature",
@@ -101,7 +101,7 @@ SENSOR_TYPES = {
         ENTITY_ICON: "mdi:weather-cloudy-alert",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
-        ENTITY_API_DATA_PATH: "current_forecast:T:value",
+        ENTITY_API_DATA_PATH: None,
     },
     "precipitation": {
         ENTITY_NAME: "Daily precipitation",

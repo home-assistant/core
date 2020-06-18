@@ -1,5 +1,5 @@
 """Support for Meteo-France weather service."""
-from datetime import datetime
+import time
 import logging
 
 from homeassistant.components.weather import (
@@ -23,6 +23,7 @@ from .const import (
     COORDINATOR_FORECAST,
     DOMAIN,
     FORECAST_MODE_HOURLY,
+    FORECAST_MODE_DAILY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +44,17 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
 
     async_add_entities(
-        [MeteoFranceWeather(coordinator, entry.options.get(CONF_MODE))], True
+        [
+            MeteoFranceWeather(
+                coordinator, entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
+            )
+        ],
+        True,
+    )
+    _LOGGER.debug(
+        "Weather entity (%s) added for %s.",
+        entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
+        coordinator.data.position["name"],
     )
 
 
@@ -55,11 +66,12 @@ class MeteoFranceWeather(WeatherEntity):
         self.coordinator = coordinator
         self._city_name = self.coordinator.data.position["name"]
         self._mode = mode
+        self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return self._city_name
+        return self._unique_id
 
     @property
     def name(self):
@@ -69,12 +81,14 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return format_condition(self.coordinator.data.forecast[2]["weather"]["desc"])
+        return format_condition(
+            self.coordinator.data.current_forecast["weather"]["desc"]
+        )
 
     @property
     def temperature(self):
         """Return the temperature."""
-        return self.coordinator.data.forecast[2]["T"]["value"]
+        return self.coordinator.data.current_forecast["T"]["value"]
 
     @property
     def temperature_unit(self):
@@ -84,22 +98,23 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return self.coordinator.data.forecast[2]["sea_level"]
+        return self.coordinator.data.current_forecast["sea_level"]
 
     @property
     def humidity(self):
         """Return the humidity."""
-        return self.coordinator.data.forecast[2]["humidity"]
+        return self.coordinator.data.current_forecast["humidity"]
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self.coordinator.data.forecast[2]["wind"]["speed"]
+        # convert from API m/s to km/h
+        return round(self.coordinator.data.current_forecast["wind"]["speed"] * 3.6)
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        wind_bearing = self.coordinator.data.forecast[2]["wind"]["direction"]
+        wind_bearing = self.coordinator.data.current_forecast["wind"]["direction"]
         if wind_bearing != -1:
             return wind_bearing
 
@@ -109,11 +124,13 @@ class MeteoFranceWeather(WeatherEntity):
         forecast_data = []
 
         if self._mode == FORECAST_MODE_HOURLY:
-            today = datetime.now().timestamp()
+            today = time.time()
             for forecast in self.coordinator.data.forecast:
-                # Can have data of yesterday
+                # Can have data in the past
                 if forecast["dt"] < today:
-                    _LOGGER.debug("remove_forecast %s %s", self._mode, forecast)
+                    _LOGGER.debug(
+                        "remove forecast in the past: %s %s", self._mode, forecast
+                    )
                     continue
                 forecast_data.append(
                     {
@@ -132,12 +149,8 @@ class MeteoFranceWeather(WeatherEntity):
                     }
                 )
         else:
-            today = datetime.utcnow().timestamp()
             for forecast in self.coordinator.data.daily_forecast:
                 # Can have data of yesterday
-                if forecast["dt"] < today:
-                    _LOGGER.debug("remove_forecast %s %s", self._mode, forecast)
-                    continue
                 # stop when we don't have a weather condition (can happen around last days of forcast, max 14)
                 if not forecast.get("weather12H"):
                     break
