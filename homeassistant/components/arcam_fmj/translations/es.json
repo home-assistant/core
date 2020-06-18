@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado.",
-            "already_in_progress": "La configuraci\u00f3n del flujo para el dispositivo ya est\u00e1 en marcha.",
+            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ya est\u00e1 en marcha.",
             "unable_to_connect": "No se puede conectar con el dispositivo."
         },
         "flow_title": "Arcam FMJ en {host}",
