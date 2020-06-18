@@ -409,10 +409,11 @@ class Recorder(threading.Thread):
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
-                except (TypeError, ValueError):
+                except (TypeError, ValueError) as ex:
                     _LOGGER.warning(
-                        "State is not JSON serializable: %s",
+                        "State is not JSON serializable: %s (%s)",
                         event.data.get("new_state"),
+                        ex,
                     )
                 except Exception as err:  # pylint: disable=broad-except
                     # Must catch the exception to prevent the loop from collapsing
