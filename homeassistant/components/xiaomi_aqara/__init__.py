@@ -164,7 +164,7 @@ async def async_setup_entry(
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
 
-    hass.data[DOMAIN]["Listener"].gateways[entry.data[CONF_HOST]] = xiaomi_gateway
+    gateway_discovery.gateways[entry.data[CONF_HOST]] = xiaomi_gateway
     _LOGGER.debug(
         "Gateway with host '%s' connected, listening for broadcasts",
         entry.data[CONF_HOST],
