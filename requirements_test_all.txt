@@ -412,7 +412,7 @@ nessclient==0.9.15
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.7.0
+netdisco==2.7.1
 
 # homeassistant.components.nexia
 nexia==0.9.3
