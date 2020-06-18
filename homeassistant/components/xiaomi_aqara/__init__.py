@@ -24,11 +24,11 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    CONF_DISCOVERY_RETRY,
     CONF_INTERFACE,
     CONF_KEY,
     CONF_PROTOCOL,
     CONF_SID,
+    DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
     GATEWAYS_KEY,
     LISTENER_KEY,
@@ -144,7 +144,7 @@ async def async_setup_entry(
         entry.data[CONF_PORT],
         entry.data[CONF_SID],
         entry.data[CONF_KEY],
-        entry.data[CONF_DISCOVERY_RETRY],
+        DEFAULT_DISCOVERY_RETRY,
         entry.data[CONF_INTERFACE],
         entry.data[CONF_PROTOCOL],
     )

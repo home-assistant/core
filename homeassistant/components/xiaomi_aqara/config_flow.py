@@ -12,11 +12,11 @@ from homeassistant.helpers.device_registry import format_mac
 
 # pylint: disable=unused-import
 from .const import (
-    CONF_DISCOVERY_RETRY,
     CONF_INTERFACE,
     CONF_KEY,
     CONF_PROTOCOL,
     CONF_SID,
+    DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
     ZEROCONF_GATEWAY,
 )
@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GATEWAY_NAME = "Xiaomi Aqara Gateway"
 DEFAULT_INTERFACE = "any"
-DEFAULT_DISCOVERY_RETRY = 3
 
 
 GATEWAY_CONFIG = vol.Schema(
@@ -34,9 +33,6 @@ GATEWAY_CONFIG = vol.Schema(
 GATEWAY_SETTINGS = vol.Schema(
     {
         vol.Optional(CONF_KEY): vol.All(str, vol.Length(min=16, max=16)),
-        vol.Optional(CONF_DISCOVERY_RETRY, default=DEFAULT_DISCOVERY_RETRY): vol.All(
-            int, vol.Range(min=1)
-        ),
         vol.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
     }
 )
@@ -141,7 +137,6 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             # get all required data
-            discovery_retry = user_input[CONF_DISCOVERY_RETRY]
             name = user_input[CONF_NAME]
             key = user_input.get(CONF_KEY)
             ip_adress = self.selected_gateway.ip_adress
@@ -165,7 +160,6 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PORT: port,
                         CONF_MAC: mac_address,
                         CONF_INTERFACE: self.interface,
-                        CONF_DISCOVERY_RETRY: discovery_retry,
                         CONF_PROTOCOL: protocol,
                         CONF_KEY: key,
                         CONF_SID: sid,
