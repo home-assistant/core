@@ -46,22 +46,40 @@ async def async_setup_entry(
         if sensor_type == "next_rain":
             if coordinator_rain:
                 entities.append(MeteoFranceRainSensor(sensor_type, coordinator_rain))
+                _LOGGER.debug(
+                    "Next rain sensor added for %s.",
+                    coordinator_forecast.data.position["name"],
+                )
 
         elif sensor_type == "weather_alert":
             coordinator_alert_data = hass.data[DOMAIN].get(
                 coordinator_forecast.data.position["dept"]
             )
-            if coordinator_alert_data[COORDINATOR_ALERT_ADDED]:
-                continue
-            coordinator_alert_data[COORDINATOR_ALERT_ADDED] = True
-            entities.append(
-                MeteoFranceAlertSensor(
-                    sensor_type, coordinator_alert_data[COORDINATOR_ALERT]
+            if coordinator_alert_data:
+                if coordinator_alert_data[COORDINATOR_ALERT_ADDED]:
+                    _LOGGER.info(
+                        "Weather alert sensor skipped for department n°%s: already added.",
+                        coordinator_forecast.data.position["dept"],
+                    )
+                    continue
+                coordinator_alert_data[COORDINATOR_ALERT_ADDED] = True
+                entities.append(
+                    MeteoFranceAlertSensor(
+                        sensor_type, coordinator_alert_data[COORDINATOR_ALERT]
+                    )
                 )
-            )
+                _LOGGER.debug(
+                    "Weather alert sensor added for %s.",
+                    coordinator_forecast.data.position["dept"],
+                )
 
         else:
             entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
+            _LOGGER.debug(
+                "Sensor %s added for %s.",
+                sensor_type,
+                coordinator_forecast.data.position["name"],
+            )
 
     async_add_entities(
         entities, False,
@@ -77,11 +95,12 @@ class MeteoFranceSensor(Entity):
         self.coordinator = coordinator
         city_name = self.coordinator.data.position["name"]
         self._name = f"{city_name} {SENSOR_TYPES[self._type][ENTITY_NAME]}"
+        self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}_{self._type}"
 
     @property
     def unique_id(self):
         """Return the unique id."""
-        return self._name
+        return self._unique_id
 
     @property
     def name(self):
@@ -93,12 +112,20 @@ class MeteoFranceSensor(Entity):
         """Return the state."""
         path = SENSOR_TYPES[self._type][ENTITY_API_DATA_PATH].split(":")
         data = getattr(self.coordinator.data, path[0])
+
         if path[0] == "probability_forecast":
+            # TODO: return often 'null' with France cities. Need investigation
+            # TODO: "probability_forecast" not always available.
             data = data[0]
 
         if len(path) == 3:
-            return data[path[1]][path[2]]
-        return data[path[1]]
+            value = data[path[1]][path[2]]
+        value = data[path[1]]
+
+        if self._type == "wind_speed":
+            # convert API wind speed from m/s to km/h
+            value = round(value * 3.6)
+        return value
 
     @property
     def unit_of_measurement(self):
@@ -198,6 +225,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
         self.coordinator = coordinator
         dept_code = self.coordinator.data.domain_id
         self._name = f"{dept_code} {SENSOR_TYPES[self._type][ENTITY_NAME]}"
+        self._unique_id = self._name
 
     @property
     def state(self):

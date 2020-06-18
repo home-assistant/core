@@ -59,7 +59,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 places = await self.hass.async_add_executor_job(
                     client.search_places, city, latitude, longitude
                 )
-                _LOGGER.error(places)
+                _LOGGER.debug("places search result: %s", places)
                 return await self.async_step_cities(places=places)
         except Exception as exp:  # pylint: disable=broad-except
             _LOGGER.error(exp)
@@ -82,10 +82,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if places and len(places) > 1 and self.source != SOURCE_IMPORT:
             places_for_form = {}
             for place in places:
-                places_for_form[
-                    _build_place_key(place)
-                ] = f"{place.name} - {place.admin} - {place.country}"
-            _LOGGER.warning(places_for_form)
+                places_for_form[_build_place_key(place)] = f"{place}"
 
             return await self._show_cities_form(places_for_form)
         if places and not user_input:
