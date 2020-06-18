@@ -5,8 +5,8 @@ import logging
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_timestamp
 
 from .const import (
