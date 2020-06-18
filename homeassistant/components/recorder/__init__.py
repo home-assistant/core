@@ -403,7 +403,9 @@ class Recorder(threading.Thread):
                 try:
                     new_state = event.data.get("new_state")
                     if new_state:
-                        _remove_display_attributes_from_state(new_state)
+                        new_state = _remove_display_attributes_from_state(
+                            dict(new_state)
+                        )
                     dbstate = States.from_event_with_state(event, new_state)
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
@@ -605,7 +607,8 @@ class Recorder(threading.Thread):
         self.run_info = None
 
 
-def _remove_display_attributes_from_state(dbstate):
+def _remove_display_attributes_from_state(state):
     for attribute in DISPLAY_ATTRIBUTES:
-        if attribute in dbstate.attributes:
-            del dbstate.attributes[attribute]
+        if attribute in state.attributes:
+            del state.attributes[attribute]
+    return state
