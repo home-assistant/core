@@ -7,6 +7,7 @@
         "create_entry": {
             "default": "Autenticaci\u00f3 exitosa amb Withings."
         },
+        "flow_title": "Withings: {profile}",
         "step": {
             "pick_implementation": {
                 "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
@@ -17,6 +18,10 @@
                 },
                 "description": "Quin perfil has seleccionat al lloc web de Withings? \u00c9s important que els perfils coincideixin sin\u00f3, les dades no s'etiquetaran correctament.",
                 "title": "Perfil d'usuari."
+            },
+            "reauth": {
+                "description": "El perfil \"{profile}\" s'ha de tornar a autenticar per poder continuar rebent dades de Withings.",
+                "title": "Torna a autenticar {profile}"
             }
         }
     }
