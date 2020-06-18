@@ -401,10 +401,12 @@ class Recorder(threading.Thread):
 
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
-                    dbstate = States.from_event(event)
+                    new_state = event.data.get("new_state")
+                    if new_state:
+                        _remove_display_attributes_from_state(new_state)
+                    dbstate = States.from_event_with_state(event, new_state)
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
-                    _remove_display_attributes_from_state(dbstate)
                     self.event_session.add(dbstate)
                     self.event_session.flush()
                 except (TypeError, ValueError):
