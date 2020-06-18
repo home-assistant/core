@@ -201,10 +201,16 @@ class Integration:
         self.hass = hass
         self.pkg_path = pkg_path
         self.file_path = file_path
-        self._all_dependencies_resolved: Optional[bool] = None
-        self.all_dependencies: Set[str] = set()
         self.manifest = manifest
         manifest["is_built_in"] = self.is_built_in
+
+        if self.dependencies:
+            self._all_dependencies_resolved: Optional[bool] = None
+            self._all_dependencies: Optional[Set[str]] = None
+        else:
+            self._all_dependencies_resolved = True
+            self._all_dependencies = set()
+
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @property
@@ -258,6 +264,14 @@ class Integration:
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
 
     @property
+    def all_dependencies(self) -> Set[str]:
+        """Return all dependencies including sub-dependencies."""
+        if self._all_dependencies is None:
+            raise RuntimeError("Dependencies not resolved!")
+
+        return self._all_dependencies
+
+    @property
     def all_dependencies_resolved(self) -> bool:
         """Return if all dependencies have been resolved."""
         return self._all_dependencies_resolved is not None
@@ -268,20 +282,22 @@ class Integration:
             return self._all_dependencies_resolved
 
         try:
-            self.all_dependencies = await _async_component_dependencies(
-                self.hass, self.domain, set(), set()
+            dependencies = await _async_component_dependencies(
+                self.hass, self, set(), set()
             )
+            dependencies.discard(self.domain)
+            self._all_dependencies = dependencies
             self._all_dependencies_resolved = True
         except IntegrationNotFound as err:
             _LOGGER.error(
-                "Unable to resolve dependenceis for %s:  we are unable to resolve (sub)dependency %s",
+                "Unable to resolve dependencies for %s:  we are unable to resolve (sub)dependency %s",
                 self.domain,
                 err.domain,
             )
             self._all_dependencies_resolved = False
         except CircularDependency as err:
             _LOGGER.error(
-                "Unable to resolve dependenceis for %s:  it contains a circular dependency: %s -> %s",
+                "Unable to resolve dependencies for %s:  it contains a circular dependency: %s -> %s",
                 self.domain,
                 err.from_domain,
                 err.to_domain,
@@ -524,14 +540,13 @@ def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
 
 
 async def _async_component_dependencies(
-    hass: "HomeAssistant", domain: str, loaded: Set[str], loading: Set[str]
+    hass: "HomeAssistant", integration: Integration, loaded: Set[str], loading: Set[str]
 ) -> Set[str]:
     """Recursive function to get component dependencies.
 
     Async friendly.
     """
-    integration = await async_get_integration(hass, domain)
-
+    domain = integration.domain
     loading.add(domain)
 
     for dependency_domain in integration.dependencies:
@@ -543,8 +558,17 @@ async def _async_component_dependencies(
         if dependency_domain in loading:
             raise CircularDependency(domain, dependency_domain)
 
+        loaded.add(dependency_domain)
+
+        dep_integration = await async_get_integration(hass, dependency_domain)
+
+        # If this integration is already fully resolved, use that info
+        if dep_integration.all_dependencies_resolved:
+            loaded.update(dep_integration.all_dependencies)
+            continue
+
         dep_loaded = await _async_component_dependencies(
-            hass, dependency_domain, loaded, loading
+            hass, dep_integration, loaded, loading
         )
 
         loaded.update(dep_loaded)

@@ -90,6 +90,7 @@ class ImportCollector(ast.NodeVisitor):
 
 ALLOWED_USED_COMPONENTS = {
     # Internal integrations
+    "auth",
     "alert",
     "automation",
     "conversation",

@@ -78,7 +78,7 @@ async def test_core_failure_loads_safe_mode(hass, caplog):
     assert "group" not in hass.config.components
 
 
-async def test_setting_up_config(hass, caplog):
+async def test_setting_up_config(hass):
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
         hass, {"group hello": {}, "homeassistant": {}}
@@ -87,9 +87,8 @@ async def test_setting_up_config(hass, caplog):
     assert "group" in hass.config.components
 
 
-async def test_setup_after_deps_all_present(hass, caplog):
+async def test_setup_after_deps_all_present(hass):
     """Test after_dependencies when all present."""
-    caplog.set_level(logging.DEBUG)
     order = []
 
     def gen_domain_setup(domain):
