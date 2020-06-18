@@ -126,6 +126,7 @@ class TestWolSwitch(unittest.TestCase):
                     "platform": "wake_on_lan",
                     "mac": "00-01-02-03-04-05",
                     "broadcast_address": "255.255.255.255",
+                    "broadcast_port": 999,
                 }
             },
         )

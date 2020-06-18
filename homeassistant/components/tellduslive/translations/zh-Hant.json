@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "TelldusLive \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_setup": "TelldusLive \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "authorize_url_fail": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u767c\u751f\u672a\u77e5\u932f\u8aa4",
             "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642",

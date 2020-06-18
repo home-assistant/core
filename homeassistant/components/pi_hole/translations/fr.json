@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "duplicated_name": "Le nom existe d\u00e9j\u00e0"
+        },
         "step": {
             "user": {
                 "data": {

@@ -5,13 +5,15 @@
         },
         "error": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP-Adresse."
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "title": "Dune HD"
             }
         }
     }

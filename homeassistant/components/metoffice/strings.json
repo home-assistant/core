@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "The latitude and longitude will be used to find the closest weather station.",
+        "title": "Connect to the UK Met Office",
+        "data": {
+          "api_key": "Met Office DataPoint API key",
+          "latitude": "Latitude",
+          "longitude": "Longitude"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
