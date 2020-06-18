@@ -5,8 +5,8 @@ from meteoclimatic import Condition
 from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
