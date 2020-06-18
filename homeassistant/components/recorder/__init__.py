@@ -16,7 +16,10 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
+    ATTR_ICON,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -59,6 +62,8 @@ DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
 KEEPALIVE_TIME = 30
+
+DISPLAY_ATTRIBUTES = [ATTR_ICON, ATTR_ATTRIBUTION, ATTR_ENTITY_PICTURE]
 
 CONF_AUTO_PURGE = "auto_purge"
 CONF_DB_URL = "db_url"
@@ -396,11 +401,19 @@ class Recorder(threading.Thread):
 
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
-                    dbstate = States.from_event(event)
+                    new_state = event.data.get("new_state")
+                    if new_state:
+                        # Do not store display attributes in the database
+                        _remove_display_attributes_from_state(new_state)
+                    dbstate = States.from_event_with_state(event, new_state)
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
+                    if "new_state" in event.data:
+                        self._old_state_ids[dbstate.entity_id] = dbstate.state_id
+                    elif dbstate.entity_id in self._old_state_ids:
+                        del self._old_state_ids[dbstate.entity_id]
                 except (TypeError, ValueError):
                     _LOGGER.warning(
                         "State is not JSON serializable: %s",
@@ -410,17 +423,27 @@ class Recorder(threading.Thread):
                     # Must catch the exception to prevent the loop from collapsing
                     _LOGGER.exception("Error adding state change: %s", err)
 
-                if "new_state" in event.data:
-                    self._old_state_ids[dbstate.entity_id] = dbstate.state_id
-                elif dbstate.entity_id in self._old_state_ids:
-                    del self._old_state_ids[dbstate.entity_id]
-
             # If they do not have a commit interval
             # than we commit right away
             if not self.commit_interval:
                 self._commit_event_session_or_retry()
 
             self.queue.task_done()
+
+    def _get_old_state_id(self, entity_id):
+        """Find the last state_id for an entity_id in memory cache or the database."""
+        if entity_id in self._old_state_ids:
+            return self._old_state_ids[entity_id]
+        query = (
+            self.event_session.query(States.state_id)
+            .filter(States.entity_id == entity_id)
+            .order_by(States.last_updated.desc())
+            .limit(1)
+        )
+        old_db_state = query.one_or_none()
+        if old_db_state:
+            return old_db_state.state_id
+        return None
 
     def _send_keep_alive(self):
         try:
@@ -579,3 +602,17 @@ class Recorder(threading.Thread):
             self.event_session.close()
 
         self.run_info = None
+
+
+def _remove_display_attributes_from_state(state):
+    """Remove attributes that are primarily used for the display layer.
+
+    These attributes are mostly static and
+    take of a lot of space in the database
+    and are not needed for any core functionality.
+    """
+    if not any(k in state.attributes for k in DISPLAY_ATTRIBUTES):
+        return
+    state.attributes = dict(state.attributes)
+    for attribute in DISPLAY_ATTRIBUTES:
+        state.attributes.pop(attribute, None)
