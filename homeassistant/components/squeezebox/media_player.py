@@ -89,7 +89,7 @@ async def start_server_discovery(hass):
     """Start a server discovery task."""
 
     def _discovered_server(server):
-        hass.loop.create_task(
+        asyncio.create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_DISCOVERY},
