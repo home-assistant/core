@@ -119,6 +119,9 @@ play_media:
     media_content_type:
       description: The type of the content to play. Must be one of image, music, tvshow, video, episode, channel or playlist
       example: "music"
+    enqueue:
+      description: Add the content to play at the end of the playlist/queue. True/false
+      exemple: true
 
 select_source:
   description: Send the media player the command to change input source.
