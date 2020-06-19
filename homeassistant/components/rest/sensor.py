@@ -305,7 +305,7 @@ class RestData:
                 data=self._request_data,
                 timeout=self._timeout,
                 verify=self._verify_ssl,
-                proxies = self._proxies,
+                proxies=self._proxies,
             )
             self.data = response.text
             self.headers = response.headers
