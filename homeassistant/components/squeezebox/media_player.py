@@ -104,15 +104,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
 
     if config:
-        conf = {
-            CONF_HOST: config[CONF_HOST],
-            CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
-        }
-        for attr in [CONF_USERNAME, CONF_PASSWORD]:
-            if attr in config:
-                conf.update(attr, config.get(attr))
         await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
 
 
