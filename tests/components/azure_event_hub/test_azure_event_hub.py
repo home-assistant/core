@@ -8,38 +8,31 @@ from homeassistant.core import split_entity_id
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.setup import async_setup_component
 
-import tests.async_mock as mock
+from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 
 AZURE_EVENT_HUB_PATH = "homeassistant.components.azure_event_hub"
 
 
-@pytest.fixture(autouse=True, name="mock_client", scope="module")
+@pytest.fixture(autouse=True, name="mock_client")
 def mock_client_fixture():
     """Mock the azure event hub producer client."""
-    with mock.patch(f"{AZURE_EVENT_HUB_PATH}.EventHubProducerClient") as client:
-        setattr(
-            client,
-            "from_connection_string",
-            mock.MagicMock(return_value=mock.AsyncMock()),
-        )
+    with patch(f"{AZURE_EVENT_HUB_PATH}.EventHubProducerClient") as client:
         yield client
 
 
 @pytest.fixture(autouse=True, name="mock_event_data")
 def mock_event_data_fixture():
     """Mock the azure event data component."""
-    with mock.patch(f"{AZURE_EVENT_HUB_PATH}.EventData") as event_data:
+    with patch(f"{AZURE_EVENT_HUB_PATH}.EventData") as event_data:
         yield event_data
 
 
 @pytest.fixture(autouse=True)
 def mock_bus_and_json(hass, monkeypatch):
     """Mock the event bus listener and os component."""
-    hass.async_create_task = mock.AsyncMock()
-    hass.bus.aync_listen_once = mock.AsyncMock()
-    hass.bus.aync_listen = mock.AsyncMock()
+    hass.async_create_task = AsyncMock()
     monkeypatch.setattr(
-        f"{AZURE_EVENT_HUB_PATH}.json.dumps", mock.Mock(return_value=mock.MagicMock())
+        f"{AZURE_EVENT_HUB_PATH}.json.dumps", Mock(return_value=MagicMock())
     )
 
 
@@ -75,14 +68,14 @@ FilterTest = namedtuple("FilterTest", "id should_pass")
 def make_event(entity_id):
     """Make a mock event for test."""
     domain = split_entity_id(entity_id)[0]
-    state = mock.MagicMock(
+    state = MagicMock(
         state="not blank",
         domain=domain,
         entity_id=entity_id,
         object_id="entity",
         attributes={},
     )
-    return mock.MagicMock(data={"new_state": state}, time_fired=12345)
+    return MagicMock(data={"new_state": state}, time_fired=12345)
 
 
 async def _setup(hass, filter_config):
