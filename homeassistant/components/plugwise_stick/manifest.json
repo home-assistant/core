@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/plugwise_stick",
   "config_flow": true,
   "codeowners": ["@brefra"],
-  "requirements": ["python-plugwise==0.8"]
+  "requirements": ["python-plugwise==1.0.0"]
 }
