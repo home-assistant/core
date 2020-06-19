@@ -17,17 +17,13 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from tests.common import MockConfigEntry
+
 HOST = "1.1.1.1"
 HOST2 = "2.2.2.2"
 PORT = 9000
 UUID = "test-uuid"
 UNKNOWN_ERROR = "1234"
-
-
-class MockEntry:
-    """Mock a config_entry."""
-
-    unique_id = UUID
 
 
 async def mock_discover(_discovery_callback):
@@ -110,7 +106,7 @@ async def test_user_form_duplicate(hass):
         "homeassistant.components.squeezebox.config_flow.async_discover", mock_discover,
     ), patch(
         "homeassistant.components.squeezebox.config_flow.SqueezeboxConfigFlow._async_current_entries",
-        return_value=[MockEntry],
+        return_value=[MockConfigEntry(unique_id=UUID)],
     ), patch(
         "homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1
     ):
