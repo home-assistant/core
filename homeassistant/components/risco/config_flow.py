@@ -25,12 +25,12 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         await risco.login()
         return {"title": risco.site_id}
-    except UnauthorizedError as e:
+    except UnauthorizedError as error:
         _LOGGER.error("Unauthorized connection to Risco Cloud")
-        raise InvalidAuth from e
-    except CannotConnectError as e:
+        raise InvalidAuth from error
+    except CannotConnectError as error:
         _LOGGER.error("Error connecting to Risco Cloud")
-        raise CannotConnect from e
+        raise CannotConnect from error
     finally:
         await risco.close()
 
@@ -39,7 +39,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Risco."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):

@@ -1,7 +1,7 @@
 """Support for Risco alarms."""
 import logging
 
-import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
@@ -42,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, False)
 
 
-class RiscoAlarm(alarm.AlarmControlPanelEntity):
+class RiscoAlarm(AlarmControlPanelEntity):
     """Representation of a Risco partition."""
 
     def __init__(self, hass, risco, partition):
@@ -71,13 +71,13 @@ class RiscoAlarm(alarm.AlarmControlPanelEntity):
         """Return the state of the device."""
         if self._state.triggered:
             return STATE_ALARM_TRIGGERED
-        elif self._state.arming:
+        if self._state.arming:
             return STATE_ALARM_ARMING
-        elif self._state.armed:
+        if self._state.armed:
             return STATE_ALARM_ARMED_AWAY
-        elif self._state.partially_armed:
+        if self._state.partially_armed:
             return STATE_ALARM_ARMED_HOME
-        elif self._state.disarmed:
+        if self._state.disarmed:
             return STATE_ALARM_DISARMED
 
         return STATE_UNKNOWN
