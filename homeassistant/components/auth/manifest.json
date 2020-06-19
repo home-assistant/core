@@ -3,6 +3,7 @@
   "name": "Auth",
   "documentation": "https://www.home-assistant.io/integrations/auth",
   "dependencies": ["http"],
+  "after_dependencies": ["onboarding"],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }
