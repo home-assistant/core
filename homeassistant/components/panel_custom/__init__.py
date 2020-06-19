@@ -155,6 +155,8 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
+    seen = set()
+
     for panel in config[DOMAIN]:
         name = panel[CONF_COMPONENT_NAME]
 
@@ -176,6 +178,13 @@ async def async_setup(hass, config):
             kwargs["module_url"] = panel[CONF_MODULE_URL]
 
         if CONF_MODULE_URL not in panel and CONF_JS_URL not in panel:
+            if name in seen:
+                _LOGGER.warning(
+                    "Got HTML panel with duplicate name %s. Not registering", name
+                )
+                continue
+
+            seen.add(name)
             panel_path = panel.get(CONF_WEBCOMPONENT_PATH)
 
             if panel_path is None:
