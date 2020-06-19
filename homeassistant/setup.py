@@ -73,19 +73,21 @@ async def _async_process_dependencies(
     hass: core.HomeAssistant, config: ConfigType, integration: loader.Integration
 ) -> bool:
     """Ensure all dependencies are set up."""
-    tasks = [
-        async_setup_component(hass, dep, config) for dep in integration.dependencies
-    ]
+    tasks = {
+        dep: hass.loop.create_task(async_setup_component(hass, dep, config))
+        for dep in integration.dependencies
+    }
 
     to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
     for dep in integration.after_dependencies:
         if dep in to_be_loaded and dep not in hass.config.components:
-            tasks.append(to_be_loaded[dep].wait())
+            tasks[dep] = hass.loop.create_task(to_be_loaded[dep].wait())
 
     if not tasks:
         return True
 
-    results = await asyncio.gather(*tasks)
+    _LOGGER.debug("Dependency %s will wait for %s", integration.domain, list(tasks))
+    results = await asyncio.gather(*tasks.values())
 
     failed = [
         domain
