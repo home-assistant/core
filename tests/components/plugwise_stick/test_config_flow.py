@@ -147,6 +147,17 @@ async def test_timeout_exception(hass):
     assert result["errors"] == {"base": "network_timeout"}
 
 
+@patch("plugwise.stick.connect", MagicMock(return_value=None))
+@patch("plugwise.stick.initialize_stick", MagicMock(return_value=None))
+@patch("plugwise.stick.disconnect", MagicMock(return_value=None))
+async def test_successful_connection(hass):
+    """Test successful connection."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
+    )
+    assert result["errors"] == {}
+
+
 def test_get_serial_by_id_no_dir():
     """Test serial by id conversion if there's no /dev/serial/by-id."""
     p1 = patch("os.path.isdir", MagicMock(return_value=False))
