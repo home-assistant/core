@@ -35,7 +35,9 @@ def mock_event_data_fixture():
 @pytest.fixture(autouse=True)
 def mock_bus_and_json(hass, monkeypatch):
     """Mock the event bus listener and os component."""
-    hass.bus.listen = mock.MagicMock()
+    hass.async_create_task = mock.AsyncMock()
+    hass.bus.aync_listen_once = mock.AsyncMock()
+    hass.bus.aync_listen = mock.AsyncMock()
     monkeypatch.setattr(
         f"{AZURE_EVENT_HUB_PATH}.json.dumps", mock.Mock(return_value=mock.MagicMock())
     )
