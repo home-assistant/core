@@ -3,18 +3,20 @@
     "step": {
       "user": {
         "title": "Setup Dexcom integration",
-        "description": "Enter Dexcom Share credentials, note that Dexcom Share must be enabled on your Dexcom app.",
+        "description": "Enter Dexcom Share credentials",
         "data": {
-          "username": "Username",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "server": "Server",
+          "unit_of_measurement": "Unit of measurement"
         }
       }
     },
     "error": {
-      "session_error": "Failed to connect, please try again.",
-      "account_error": "Invalid authentication, please try again.",
-      "unknown": "Unexpected error occured."
+      "session_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "account_error": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": { "already_configured": "This Dexcom Share account has already been configured." }
+    "abort": { "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]" }
   }
 }
