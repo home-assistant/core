@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     stick.scan(discover_finished)
 
     def shutdown(event):
-        hass.async_create_task(hass.data[DOMAIN][entry.entry_id]["stick"].disconnect)
+        stick.disconnect()
 
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
