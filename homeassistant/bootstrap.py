@@ -431,6 +431,7 @@ async def _async_set_up_integrations(
     # Find all after dependencies of any dependency of any stage 1 integration
     # that we plan on loading and promote them to stage 1
     integration_cache = {itg.domain: itg for itg in integrations_to_process}
+    promote_stage_1 = set()
 
     for itg in integrations_to_process:
         if itg.domain not in stage_1_domains:
@@ -438,8 +439,8 @@ async def _async_set_up_integrations(
 
         # Promote all after dependencies of anything that
         # will be loaded during stage 1 to stage 1
-        stage_1_domains.update(itg.all_dependencies)
-        stage_1_domains.update(
+        promote_stage_1.update(itg.all_dependencies)
+        promote_stage_1.update(
             domain for domain in itg.after_dependencies if domain in domains
         )
 
@@ -450,10 +451,11 @@ async def _async_set_up_integrations(
                 dep_itg = await loader.async_get_integration(hass, dep_domain)
                 integration_cache[dep_itg.domain] = dep_itg
 
-            stage_1_domains.update(
+            promote_stage_1.update(
                 domain for domain in dep_itg.after_dependencies if domain in domains
             )
 
+    stage_1_domains.update(promote_stage_1)
     stage_2_domains = domains - logging_domains - debuggers - stage_1_domains
 
     # Kick off loading the registries. They don't need to be awaited.
