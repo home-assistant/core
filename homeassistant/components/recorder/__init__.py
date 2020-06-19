@@ -146,13 +146,13 @@ def run_information_with_session(session, point_in_time: Optional[datetime] = No
     """Return information about current run from the database."""
     recorder_runs = RecorderRuns
 
-    res = (
-        session.query(recorder_runs)
-        .filter(
+    query = session.query(recorder_runs)
+    if point_in_time:
+        query = query.filter(
             (recorder_runs.start < point_in_time) & (recorder_runs.end > point_in_time)
         )
-        .first()
-    )
+
+    res = query.first()
     if res:
         session.expunge(res)
     return res
@@ -245,6 +245,7 @@ class Recorder(threading.Thread):
         self._old_state_ids = {}
         self.event_session = None
         self.get_session = None
+        self._completed_database_setup = False
 
     @callback
     def async_initialize(self):
@@ -401,6 +402,10 @@ class Recorder(threading.Thread):
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
+                    if "new_state" in event.data:
+                        self._old_state_ids[dbstate.entity_id] = dbstate.state_id
+                    elif dbstate.entity_id in self._old_state_ids:
+                        del self._old_state_ids[dbstate.entity_id]
                 except (TypeError, ValueError):
                     _LOGGER.warning(
                         "State is not JSON serializable: %s",
@@ -409,11 +414,6 @@ class Recorder(threading.Thread):
                 except Exception as err:  # pylint: disable=broad-except
                     # Must catch the exception to prevent the loop from collapsing
                     _LOGGER.exception("Error adding state change: %s", err)
-
-                if "new_state" in event.data:
-                    self._old_state_ids[dbstate.entity_id] = dbstate.state_id
-                elif dbstate.entity_id in self._old_state_ids:
-                    del self._old_state_ids[dbstate.entity_id]
 
             # If they do not have a commit interval
             # than we commit right away
@@ -514,6 +514,9 @@ class Recorder(threading.Thread):
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
 
+            if self._completed_database_setup:
+                return
+
             # We do not import sqlite3 here so mysql/other
             # users do not have to pay for it to be loaded in
             # memory
@@ -524,6 +527,10 @@ class Recorder(threading.Thread):
                 cursor.execute("PRAGMA journal_mode=WAL")
                 cursor.close()
                 dbapi_connection.isolation_level = old_isolation
+                # WAL mode only needs to be setup once
+                # instead of every time we open the sqlite connection
+                # as its persistent and isn't free to call every time.
+                self._completed_database_setup = True
             elif self.db_url.startswith("mysql"):
                 cursor = dbapi_connection.cursor()
                 cursor.execute("SET session wait_timeout=28800")
