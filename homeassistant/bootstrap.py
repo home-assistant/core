@@ -387,7 +387,6 @@ async def _async_set_up_integrations(
     """Set up all the integrations."""
     setup_started = hass.data[DATA_SETUP_STARTED] = {}
     domains_to_setup = _get_domains(hass, config)
-    logging_domains = domains_to_setup & LOGGING_INTEGRATIONS
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
@@ -428,6 +427,8 @@ async def _async_set_up_integrations(
                 to_resolve.add(dep)
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
+
+    logging_domains = domains_to_setup & LOGGING_INTEGRATIONS
 
     # Load logging as soon as possible
     if logging_domains:

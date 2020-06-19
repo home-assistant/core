@@ -136,6 +136,51 @@ async def test_setup_after_deps_all_present(hass):
     assert order == ["logger", "root", "first_dep", "second_dep"]
 
 
+async def test_setup_after_deps_in_stage_1(hass):
+    """Test after_dependencies set up via platform."""
+    # This test relies on this
+    assert "cloud" in bootstrap.STAGE_1_INTEGRATIONS
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={"after_dependencies": ["an_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep", async_setup=gen_domain_setup("an_after_dep"),
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="cloud",
+            async_setup=gen_domain_setup("cloud"),
+            partial_manifest={"after_dependencies": ["normal_integration"]},
+        ),
+    )
+
+    await bootstrap._async_set_up_integrations(
+        hass, {"cloud": {}, "normal_integration": {}, "an_after_dep": {}}
+    )
+
+    assert "normal_integration" in hass.config.components
+    assert "cloud" in hass.config.components
+    assert order == ["an_after_dep", "normal_integration", "cloud"]
+
+
 async def test_setup_after_deps_via_platform(hass):
     """Test after_dependencies set up via platform."""
     order = []
