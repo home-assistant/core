@@ -323,7 +323,10 @@ class RestData:
             _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
             self.data = None
             self.headers = None
-        except Exception as err:
-            _LOGGER.warning("Unknown error: %s", err)
+        except (
+            requests.packages.urllib3.exceptions.ProxySchemeUnknown,
+            requests.packages.urllib3.exceptions.urllib3.exceptions.ProxyError,
+        ) as ex:
+            _LOGGER.warning("Proxy error: %s", ex)
             self.data = None
             self.headers = None
