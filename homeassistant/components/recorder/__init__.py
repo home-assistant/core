@@ -250,6 +250,7 @@ class Recorder(threading.Thread):
         self._old_state_ids = {}
         self.event_session = None
         self.get_session = None
+        self._completed_database_setup = False
 
     @callback
     def async_initialize(self):
@@ -542,6 +543,9 @@ class Recorder(threading.Thread):
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
 
+            if self._completed_database_setup:
+                return
+
             # We do not import sqlite3 here so mysql/other
             # users do not have to pay for it to be loaded in
             # memory
@@ -552,6 +556,10 @@ class Recorder(threading.Thread):
                 cursor.execute("PRAGMA journal_mode=WAL")
                 cursor.close()
                 dbapi_connection.isolation_level = old_isolation
+                # WAL mode only needs to be setup once
+                # instead of every time we open the sqlite connection
+                # as its persistent and isn't free to call every time.
+                self._completed_database_setup = True
             elif self.db_url.startswith("mysql"):
                 cursor = dbapi_connection.cursor()
                 cursor.execute("SET session wait_timeout=28800")
