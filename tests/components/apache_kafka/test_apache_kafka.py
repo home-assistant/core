@@ -25,7 +25,7 @@ def mock_client_fixture():
 @pytest.fixture(autouse=True)
 def mock_bus_and_json(hass, monkeypatch):
     """Mock the event bus listener and os component."""
-    hass.bus.listen = mock.MagicMock()
+    hass.bus.async_listen = mock.MagicMock()
     monkeypatch.setattr(
         f"{APACHE_KAFKA_PATH}.json.dumps", mock.Mock(return_value=mock.MagicMock())
     )
