@@ -103,8 +103,7 @@ async def test_async_setup_entry_host_unavailable(hass):
     assert state is None
 
 
-@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_update_sensor(mock_now, hass):
+async def test_update_sensor(hass):
     """Test async_update for sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -112,17 +111,18 @@ async def test_update_sensor(mock_now, hass):
         unique_id=f"{HOST}:{PORT}",
     )
 
+    starting_time = static_datetime()
     timestamp = future_timestamp(100)
 
-    with patch(
+    with patch("homeassistant.util.dt.utcnow", return_value=starting_time), patch(
+        "homeassistant.helpers.update_coordinator.utcnow", return_value=starting_time
+    ), patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
         return_value=timestamp,
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     state = hass.states.get("sensor.cert_expiry_example_com")
     assert state is not None
@@ -138,13 +138,15 @@ async def test_update_sensor(mock_now, hass):
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
-    timestamp2 = future_timestamp(99)
+    next_update = starting_time + timedelta(hours=24)
 
-    with patch(
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update), patch(
+        "homeassistant.helpers.update_coordinator.utcnow", return_value=next_update
+    ), patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=timestamp2,
+        return_value=timestamp,
     ):
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.cert_expiry_example_com")
@@ -157,13 +159,12 @@ async def test_update_sensor(mock_now, hass):
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == timestamp2.isoformat()
+    assert state.state == timestamp.isoformat()
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
 
-@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_update_sensor_network_errors(mock_now, hass):
+async def test_update_sensor_network_errors(hass):
     """Test async_update for sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -171,17 +172,18 @@ async def test_update_sensor_network_errors(mock_now, hass):
         unique_id=f"{HOST}:{PORT}",
     )
 
+    starting_time = static_datetime()
     timestamp = future_timestamp(100)
 
-    with patch(
+    with patch("homeassistant.util.dt.utcnow", return_value=starting_time), patch(
+        "homeassistant.helpers.update_coordinator.utcnow", return_value=starting_time
+    ), patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
         return_value=timestamp,
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     state = hass.states.get("sensor.cert_expiry_example_com")
     assert state is not None
@@ -197,35 +199,47 @@ async def test_update_sensor_network_errors(mock_now, hass):
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
-    with patch(
+    next_update = starting_time + timedelta(hours=24)
+
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update), patch(
+        "homeassistant.helpers.update_coordinator.utcnow", return_value=next_update
+    ), patch(
         "homeassistant.components.cert_expiry.helper.get_cert",
         side_effect=socket.gaierror,
     ):
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
+
+    next_update = starting_time + timedelta(hours=48)
 
     state = hass.states.get("sensor.cert_expiry_example_com")
     assert state.state == STATE_UNAVAILABLE
 
-    with patch(
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update), patch(
+        "homeassistant.helpers.update_coordinator.utcnow", return_value=next_update
+    ), patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=future_timestamp(99),
+        return_value=timestamp,
     ):
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.cert_expiry_example_com")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "99"
+    assert state.state == "98"
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
-    with patch(
+    next_update = starting_time + timedelta(hours=72)
+
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update), patch(
+        "homeassistant.helpers.update_coordinator.utcnow", return_value=next_update
+    ), patch(
         "homeassistant.components.cert_expiry.helper.get_cert",
         side_effect=ssl.SSLError("something bad"),
     ):
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.cert_expiry_example_com")
@@ -241,10 +255,14 @@ async def test_update_sensor_network_errors(mock_now, hass):
     assert state.attributes.get("error") == "something bad"
     assert not state.attributes.get("is_valid")
 
-    with patch(
+    next_update = starting_time + timedelta(hours=96)
+
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update), patch(
+        "homeassistant.helpers.update_coordinator.utcnow", return_value=next_update
+    ), patch(
         "homeassistant.components.cert_expiry.helper.get_cert", side_effect=Exception()
     ):
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.cert_expiry_example_com")
