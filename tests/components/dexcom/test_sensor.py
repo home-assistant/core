@@ -44,19 +44,12 @@ async def test_sensors(hass):
             },
         )
         await hass.async_block_till_done()
-    sensor_dexcom_test_username_glucose_value = hass.states.get(
-        "sensor.dexcom_test_username_glucose_value"
-    )
-    assert sensor_dexcom_test_username_glucose_value.state == str(
-        _mock_glucose_reading.mg_dl
-    )
-    sensor_dexcom_test_username_glucose_trend = hass.states.get(
+    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
+    assert test_username_glucose_value.state == str(_mock_glucose_reading.mg_dl)
+    test_username_glucose_trend = hass.states.get(
         "sensor.dexcom_test_username_glucose_trend"
     )
-    assert (
-        sensor_dexcom_test_username_glucose_trend.state
-        == _mock_glucose_reading.trend_description
-    )
+    assert test_username_glucose_trend.state == _mock_glucose_reading.trend_description
 
 
 async def test_sensors_unavailable(hass):
@@ -82,11 +75,7 @@ async def test_sensors_unavailable(hass):
             },
         )
         await hass.async_block_till_done()
-    sensor_dexcom_test_username_glucose_value = hass.states.get(
-        "sensor.dexcom_test_username_glucose_value"
-    )
-    assert sensor_dexcom_test_username_glucose_value.state == STATE_UNAVAILABLE
-    sensor_dexcom_test_username_glucose_trend = hass.states.get(
-        "sensor.dexcom_test_username_glucose_trend"
-    )
-    assert sensor_dexcom_test_username_glucose_trend.state == STATE_UNAVAILABLE
+    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
+    assert test_username_glucose_value.state == STATE_UNAVAILABLE
+    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
+    assert test_username_glucose_trend.state == STATE_UNAVAILABLE
