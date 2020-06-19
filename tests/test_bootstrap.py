@@ -123,14 +123,17 @@ async def test_setup_after_deps_all_present(hass):
         ),
     )
 
-    await bootstrap._async_set_up_integrations(
-        hass, {"root": {}, "first_dep": {}, "second_dep": {}}
-    )
+    with patch(
+        "homeassistant.components.logger.async_setup", gen_domain_setup("logger")
+    ):
+        await bootstrap._async_set_up_integrations(
+            hass, {"root": {}, "first_dep": {}, "second_dep": {}, "logger": {}}
+        )
 
     assert "root" in hass.config.components
     assert "first_dep" in hass.config.components
     assert "second_dep" in hass.config.components
-    assert order == ["root", "first_dep", "second_dep"]
+    assert order == ["logger", "root", "first_dep", "second_dep"]
 
 
 async def test_setup_after_deps_via_platform(hass):
