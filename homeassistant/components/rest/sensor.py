@@ -45,6 +45,7 @@ DEFAULT_TIMEOUT = 10
 
 CONF_JSON_ATTRS = "json_attributes"
 CONF_JSON_ATTRS_PATH = "json_attributes_path"
+CONF_PROXY_URL = "proxy_url"
 METHODS = ["POST", "GET"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -68,6 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_PROXY_URL): cv.string,
     }
 )
 
@@ -94,6 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
     force_update = config.get(CONF_FORCE_UPDATE)
     timeout = config.get(CONF_TIMEOUT)
+    proxy_url = config.get(CONF_PROXY_URL)
 
     if value_template is not None:
         value_template.hass = hass
@@ -109,7 +112,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
+    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout, proxy_url)
     rest.update()
     if rest.data is None:
         raise PlatformNotReady
@@ -262,7 +265,7 @@ class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(
-        self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
+        self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT, proxy_url=None
     ):
         """Initialize the data object."""
         self._method = method
@@ -273,6 +276,12 @@ class RestData:
         self._verify_ssl = verify_ssl
         self._timeout = timeout
         self._http_session = Session()
+
+        if proxy_url is not None:
+            self._proxies = {"http" : proxy_url, "https" : proxy_url}
+        else:
+            self._proxies = None
+
         self.data = None
         self.headers = None
 
@@ -296,6 +305,7 @@ class RestData:
                 data=self._request_data,
                 timeout=self._timeout,
                 verify=self._verify_ssl,
+                proxies = self._proxies,
             )
             self.data = response.text
             self.headers = response.headers
