@@ -20,8 +20,7 @@ from homeassistant.helpers.entity import Entity
 from .const import AVAILABLE_SENSOR_ID, CONF_USB_PATH, DOMAIN, SENSORS
 
 _LOGGER = logging.getLogger(__name__)
-
-
+CB_TYPE_NEW_NODE = "NEW_NODE"
 PLUGWISE_STICK_PLATFORMS = ["switch"]
 
 
@@ -34,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Establish connection with plugwise USB-stick."""
     hass.data.setdefault(DOMAIN, {})
 
-    def add_discovered_nodes(mac):
+    def add_discovered_node(mac):
         """Add plugwise node discovered after initialization."""
         _LOGGER.debug("Add new discovered Plugwise node: %s", mac)
         for platform in PLUGWISE_STICK_PLATFORMS:
@@ -70,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         stick.auto_update()
 
         # Subscribe callback for nodes discovered after initial scan
-        stick.subscribe_stick_callback(add_discovered_nodes, "NEW_NODE")
+        stick.subscribe_stick_callback(add_discovered_node, CB_TYPE_NEW_NODE)
 
     stick = plugwise.stick(config_entry.data[CONF_USB_PATH])
     try:
