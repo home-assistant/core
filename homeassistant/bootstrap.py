@@ -464,7 +464,6 @@ async def _async_set_up_integrations(
                 continue
 
             deps_promotion.update(dep_itg.all_dependencies)
-            deps_promotion.update(dep_itg.after_dependencies)
 
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
@@ -476,11 +475,12 @@ async def _async_set_up_integrations(
     )
 
     # Start setup
-    async_set_domains_to_be_loaded(hass, stage_1_domains | stage_2_domains)
-
     if stage_1_domains:
         _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
         await async_setup_multi_components(hass, stage_1_domains, config, setup_started)
+
+    # Enables after dependencies
+    async_set_domains_to_be_loaded(hass, stage_1_domains | stage_2_domains)
 
     if stage_2_domains:
         _LOGGER.info("Setting up stage 2: %s", stage_2_domains)

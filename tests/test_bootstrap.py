@@ -136,8 +136,8 @@ async def test_setup_after_deps_all_present(hass):
     assert order == ["logger", "root", "first_dep", "second_dep"]
 
 
-async def test_setup_after_deps_in_stage_1(hass):
-    """Test after_dependencies set up via platform."""
+async def test_setup_after_deps_in_stage_1_ignored(hass):
+    """Test after_dependencies are ignored in stage 1."""
     # This test relies on this
     assert "cloud" in bootstrap.STAGE_1_INTEGRATIONS
     order = []
@@ -178,7 +178,7 @@ async def test_setup_after_deps_in_stage_1(hass):
 
     assert "normal_integration" in hass.config.components
     assert "cloud" in hass.config.components
-    assert order == ["an_after_dep", "normal_integration", "cloud"]
+    assert order == ["cloud", "an_after_dep", "normal_integration"]
 
 
 async def test_setup_after_deps_via_platform(hass):
