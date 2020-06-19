@@ -313,3 +313,7 @@ class RestData:
             _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
             self.data = None
             self.headers = None
+        except Exception as err:
+            _LOGGER.warning("Unknown error: %s", err)
+            self.data = None
+            self.headers = None
