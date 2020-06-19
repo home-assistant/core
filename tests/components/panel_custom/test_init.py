@@ -186,7 +186,6 @@ async def test_latest_and_es5_build(hass):
 async def test_url_option_conflict(hass):
     """Test config with multiple url options."""
     to_try = [
-        {"panel_custom": {"name": "todo-mvc"}},
         {
             "panel_custom": {
                 "name": "todo-mvc",
