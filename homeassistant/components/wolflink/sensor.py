@@ -15,6 +15,7 @@ from homeassistant.components.wolflink.const import DOMAIN, STATES
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     PRESSURE_BAR,
     TEMP_CELSIUS,
     TIME_HOURS,
@@ -109,6 +110,11 @@ class WolfLinkHours(WolfLinkSensor):
     def icon(self):
         """Icon to display in the front end."""
         return "mdi:clock"
+
+    @property
+    def device_class(self):
+        """Return the device_class."""
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def unit_of_measurement(self):

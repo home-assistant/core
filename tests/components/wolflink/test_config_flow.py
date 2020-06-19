@@ -90,3 +90,18 @@ async def test_form_cannot_connect(hass):
 
     assert result["type"] == "form"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unknown_exception(hass):
+    """Test we handle cannot connect error."""
+    conf = {"username": "test-username", "password": "test-password"}
+
+    with patch(
+        "wolf_smartset.wolf_client.WolfClient.fetch_system_list", side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "unknown"}
