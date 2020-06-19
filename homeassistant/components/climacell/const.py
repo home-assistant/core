@@ -13,9 +13,7 @@ FORECASTS = "forecasts"
 
 DEFAULT_NAME = "climacell"
 DOMAIN = "climacell"
-ATTRIBUTION = (
-    "Powered by ClimaCell Weather API " "(https://www.climacell.co/weather-api/)"
-)
+ATTRIBUTION = "Powered by ClimaCell"
 
 MAX_REQUESTS_PER_DAY = 1000
 
