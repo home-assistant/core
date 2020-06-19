@@ -991,8 +991,6 @@ def mock_integration(hass, module):
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
     hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
 
-    return integration
-
 
 def mock_entity_platform(hass, platform_path, module):
     """Mock a entity platform.
