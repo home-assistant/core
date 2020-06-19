@@ -21,6 +21,7 @@ SCAN_INTERVAL = timedelta(seconds=180)
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up configured Dexcom."""
     hass.data[DOMAIN] = {}
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
