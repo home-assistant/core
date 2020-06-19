@@ -502,7 +502,7 @@ class Recorder(threading.Thread):
             """Dbapi specific connection settings."""
             if self._completed_database_setup:
                 return
-            
+
             # We do not import sqlite3 here so mysql/other
             # users do not have to pay for it to be loaded in
             # memory
