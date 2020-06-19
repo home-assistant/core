@@ -109,7 +109,7 @@ def _get_significant_states(
 
     query = query.order_by(States.entity_id, States.last_updated)
 
-    states = execute(query, to_native=False)
+    states = execute(query)
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
@@ -144,9 +144,7 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
 
         entity_ids = [entity_id] if entity_id is not None else None
 
-        states = execute(
-            query.order_by(States.entity_id, States.last_updated), to_native=False
-        )
+        states = execute(query.order_by(States.entity_id, States.last_updated))
 
         return _sorted_states_to_json(hass, session, states, start_time, entity_ids)
 
@@ -169,8 +167,7 @@ def get_last_state_changes(hass, number_of_states, entity_id):
         states = execute(
             query.order_by(States.entity_id, States.last_updated.desc()).limit(
                 number_of_states
-            ),
-            to_native=False,
+            )
         )
 
         return _sorted_states_to_json(
@@ -271,7 +268,9 @@ def _get_states_with_session(
 
     return [
         state
-        for state in (States.to_native(row) for row in execute(query, to_native=False))
+        for state in (
+            States.to_native(row, validate_entity_id=False) for row in execute(query)
+        )
         if not state.attributes.get(ATTR_HIDDEN, False)
     ]
 
@@ -331,7 +330,8 @@ def _sorted_states_to_json(
                 [
                     native_state
                     for native_state in (
-                        States.to_native(db_state) for db_state in group
+                        States.to_native(db_state, validate_entity_id=False)
+                        for db_state in group
                     )
                     if (
                         domain != SCRIPT_DOMAIN
@@ -347,7 +347,7 @@ def _sorted_states_to_json(
         # in-between only provide the "state" and the
         # "last_changed".
         if not ent_results:
-            ent_results.append(States.to_native(next(group)))
+            ent_results.append(States.to_native(next(group), validate_entity_id=False))
 
         initial_state = ent_results[-1]
         prev_state = ent_results[-1]
@@ -355,7 +355,7 @@ def _sorted_states_to_json(
 
         for db_state in group:
             if ATTR_HIDDEN in db_state.attributes and States.to_native(
-                db_state
+                db_state, validate_entity_id=False
             ).attributes.get(ATTR_HIDDEN, False):
                 continue
 
@@ -382,7 +382,7 @@ def _sorted_states_to_json(
             # There was at least one state change
             # replace the last minimal state with
             # a full state
-            ent_results[-1] = States.to_native(prev_state)
+            ent_results[-1] = States.to_native(prev_state, validate_entity_id=False)
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}

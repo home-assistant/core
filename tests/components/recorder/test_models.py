@@ -2,12 +2,14 @@
 from datetime import datetime
 import unittest
 
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from homeassistant.components.recorder.models import Base, Events, RecorderRuns, States
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
+from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt
 
 ENGINE = None
@@ -155,8 +157,11 @@ class TestRecorderRuns(unittest.TestCase):
 
 def test_states_from_native_invalid_entity_id():
     """Test loading a state from an invalid entity ID."""
-    event = States()
-    event.entity_id = "test.invalid__id"
-    event.attributes = "{}"
-    state = event.to_native()
+    state = States()
+    state.entity_id = "test.invalid__id"
+    state.attributes = "{}"
+    with pytest.raises(InvalidEntityFormatError):
+        state = state.to_native()
+
+    state = state.to_native(validate_entity_id=False)
     assert state.entity_id == "test.invalid__id"
