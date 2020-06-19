@@ -325,6 +325,6 @@ class RestData:
             self.data = None
             self.headers = None
         except (ProxyError, ProxySchemeUnknown) as ex:
-            _LOGGER.warning("Proxy error: %s", ex)
+            _LOGGER.error("Proxy error: %s", ex)
             self.data = None
             self.headers = None
