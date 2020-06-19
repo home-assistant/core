@@ -254,7 +254,14 @@ def validate(integrations: Dict[str, Integration], config):
             continue
 
         # check that all referenced dependencies exist
+        after_deps = integration.manifest.get("after_dependencies", [])
         for dep in integration.manifest.get("dependencies", []):
+            if dep in after_deps:
+                integration.add_error(
+                    "dependencies",
+                    f"Dependency {dep} is both in dependencies and after_dependencies",
+                )
+
             if dep not in integrations:
                 integration.add_error(
                     "dependencies", f"Dependency {dep} does not exist"
