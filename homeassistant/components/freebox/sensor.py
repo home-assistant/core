@@ -155,8 +155,6 @@ class FreeboxCallSensor(FreeboxSensor):
     def device_state_attributes(self) -> Dict[str, any]:
         """Return device specific state attributes."""
         return {
-            datetime.fromtimestamp(call["datetime"], TIMEZONE).strftime(
-                "%d/%m/%Y, %H:%M:%S"
-            ): call["name"]
+            datetime.fromtimestamp(call["datetime"], TIMEZONE).isoformat(): call["name"]
             for call in self._call_list_for_type
         }
