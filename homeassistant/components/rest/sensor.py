@@ -275,7 +275,7 @@ class RestData:
         data,
         verify_ssl,
         timeout=DEFAULT_TIMEOUT,
-        proxy_url=None
+        proxy_url=None,
     ):
         """Initialize the data object."""
         self._method = method
