@@ -36,6 +36,8 @@ from .const import (
     SERVERS,
 )
 
+LIVE_TV_SECTION = "-4"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -246,17 +248,23 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         if self._is_player_active and self.session is not None:
             self._session_type = self.session.type
-            self._media_duration = int(self.session.duration / 1000)
+            if self.session.duration:
+                self._media_duration = int(self.session.duration / 1000)
+            else:
+                self._media_duration = None
             #  title (movie name, tv episode name, music song name)
             self._media_summary = self.session.summary
             self._media_title = self.session.title
             # media type
             self._set_media_type()
-            self._app_name = (
-                self.session.section().title
-                if self.session.section() is not None
-                else ""
-            )
+            if self.session.librarySectionID == LIVE_TV_SECTION:
+                self._app_name = "Live TV"
+            else:
+                self._app_name = (
+                    self.session.section().title
+                    if self.session.section() is not None
+                    else ""
+                )
             self._set_media_image()
         else:
             self._session_type = None
@@ -267,7 +275,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.media_content_type is MEDIA_TYPE_TVSHOW
             and not self.plex_server.option_use_episode_art
         ):
-            thumb_url = self.session.url(self.session.grandparentThumb)
+            if self.session.librarySectionID == LIVE_TV_SECTION:
+                thumb_url = self.session.grandparentThumb
+            else:
+                thumb_url = self.session.url(self.session.grandparentThumb)
 
         if thumb_url is None:
             _LOGGER.debug(
@@ -301,7 +312,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self._media_series_title = self.session.grandparentTitle
             # episode number (00)
             if self.session.index is not None:
-                self._media_episode = str(self.session.index).zfill(2)
+                self._media_episode = self.session.index
 
         elif self._session_type == "movie":
             self._media_content_type = MEDIA_TYPE_MOVIE
