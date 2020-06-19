@@ -18,6 +18,9 @@ say:
     options:
       description: A dictionary containing platform-specific options. Optional depending on the platform.
       example: platform specific
+    enqueue:
+      description: Add the content to play at the end of the playlist/queue of the device. True/false
+      exemple: true
 
 clear_cache:
   description: Remove cache files and RAM cache.
