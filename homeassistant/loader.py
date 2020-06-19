@@ -283,7 +283,7 @@ class Integration:
 
         try:
             dependencies = await _async_component_dependencies(
-                self.hass, self, set(), set()
+                self.hass, self.domain, self, set(), set()
             )
             dependencies.discard(self.domain)
             self._all_dependencies = dependencies
@@ -540,7 +540,11 @@ def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
 
 
 async def _async_component_dependencies(
-    hass: "HomeAssistant", integration: Integration, loaded: Set[str], loading: Set[str]
+    hass: "HomeAssistant",
+    start_domain: str,
+    integration: Integration,
+    loaded: Set[str],
+    loading: Set[str],
 ) -> Set[str]:
     """Recursive function to get component dependencies.
 
@@ -562,13 +566,16 @@ async def _async_component_dependencies(
 
         dep_integration = await async_get_integration(hass, dependency_domain)
 
+        if start_domain in dep_integration.after_dependencies:
+            raise CircularDependency(start_domain, dependency_domain)
+
         # If this integration is already fully resolved, use that info
         if dep_integration.all_dependencies_resolved:
             loaded.update(dep_integration.all_dependencies)
             continue
 
         dep_loaded = await _async_component_dependencies(
-            hass, dep_integration, loaded, loading
+            hass, start_domain, dep_integration, loaded, loading
         )
 
         loaded.update(dep_loaded)
