@@ -48,12 +48,9 @@ class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        if getattr(self._node, SENSORS[CURRENT_POWER_SENSOR_ID]["state"])():
-            return float(
-                round(
-                    getattr(self._node, SENSORS[CURRENT_POWER_SENSOR_ID]["state"])(), 2
-                )
-            )
+        current_power = getattr(self._node, SENSORS[CURRENT_POWER_SENSOR_ID]["state"])()
+        if current_power:
+            return float(round(current_power, 2))
         return None
 
     @property
@@ -79,14 +76,9 @@ class PlugwiseSwitch(PlugwiseNodeEntity, SwitchEntity):
     @property
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
-        if getattr(self._node, SENSORS[TODAY_ENERGY_SENSOR_ID]["state"])():
-            return float(
-                round(
-                    getattr(self._node, SENSORS[TODAY_ENERGY_SENSOR_ID]["state"])()
-                    / 1000,
-                    3,
-                )
-            )
+        today_energy = getattr(self._node, SENSORS[TODAY_ENERGY_SENSOR_ID]["state"])()
+        if today_energy:
+            return float(round(today_energy / 1000, 3))
         return None
 
     def turn_off(self, **kwargs):
