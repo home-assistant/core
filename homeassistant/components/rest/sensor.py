@@ -278,7 +278,7 @@ class RestData:
         self._http_session = Session()
 
         if proxy_url is not None:
-            self._proxies = {"http" : proxy_url, "https" : proxy_url}
+            self._proxies = {"http": proxy_url, "https": proxy_url}
         else:
             self._proxies = None
 
