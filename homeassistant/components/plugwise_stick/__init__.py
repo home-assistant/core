@@ -85,15 +85,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         raise ConfigEntryNotReady
     except StickInitError:
         _LOGGER.error("Initializing of Plugwise USBstick communication failed")
+        await hass.async_add_executor_job(stick.disconnect)
         raise ConfigEntryNotReady
     except NetworkDown:
         _LOGGER.warning("Plugwise zigbee network down")
+        await hass.async_add_executor_job(stick.disconnect)
         raise ConfigEntryNotReady
     except CirclePlusError:
         _LOGGER.warning("Failed to connect to Circle+ node")
+        await hass.async_add_executor_job(stick.disconnect)
         raise ConfigEntryNotReady
     except TimeoutException:
         _LOGGER.warning("Timeout")
+        await hass.async_add_executor_job(stick.disconnect)
         raise ConfigEntryNotReady
     stick.scan(discover_finished)
 
