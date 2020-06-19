@@ -158,7 +158,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             "model": self._model,
         }
         if self._mac:
-            info["connections"] = {CONNECTION_NETWORK_MAC, self._mac}
+            info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
         return info
 
     @property
