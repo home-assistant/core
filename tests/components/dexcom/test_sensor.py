@@ -1,5 +1,4 @@
 """The sensor tests for the griddy platform."""
-from asynctest import patch
 from pydexcom import GlucoseReading
 
 from homeassistant.components.dexcom.const import DOMAIN
@@ -10,6 +9,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 
 async def test_sensors(hass):

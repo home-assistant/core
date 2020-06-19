@@ -1,10 +1,11 @@
 """Test the Dexcom config flow."""
-from asynctest import MagicMock, patch
 from pydexcom import AccountError, SessionError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.dexcom.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+
+from tests.async_mock import MagicMock, patch
 
 
 async def test_form(hass):
