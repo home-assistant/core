@@ -39,7 +39,8 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
 
-from .const import DEFAULT_PORT, DOMAIN
+from .__init__ import start_server_discovery
+from .const import DEFAULT_PORT, DOMAIN, PLAYER_DISCOVERY_UNSUBS
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -128,6 +129,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     _LOGGER.debug("Creating LMS object for %s", host)
     lms = Server(async_get_clientsession(hass), host, port, username, password)
 
+    player_discovery_unsubs = hass.data[DOMAIN].setdefault(PLAYER_DISCOVERY_UNSUBS, {})
+    player_discovery_unsubs.setdefault(config_entry.unique_id)
+
     async def _discovery():
         """Discover squeezebox players by polling server."""
 
@@ -156,7 +160,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
+        player_discovery_unsubs[
+            config_entry.unique_id
+        ] = hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
     asyncio.create_task(_discovery())
@@ -187,6 +193,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SERVICE_SYNC, {vol.Required(ATTR_OTHER_PLAYER): cv.string}, "async_sync",
     )
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
+
+    # Start server discovery task if not already running
+    await start_server_discovery(hass)
 
     return True
 

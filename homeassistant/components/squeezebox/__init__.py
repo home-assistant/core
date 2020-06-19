@@ -1,6 +1,7 @@
 """The Logitech Squeezebox integration."""
 
 import asyncio
+import logging
 
 from pysqueezebox import async_discover
 
@@ -9,8 +10,9 @@ from homeassistant.config_entries import SOURCE_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .media_player import _LOGGER
+from .const import DOMAIN, PLAYER_DISCOVERY_UNSUBS
+
+_LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_TASK = "discovery_task"
 
@@ -61,10 +63,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
+    # Stop player discovery task for this config entry.
+    hass.data[DOMAIN][PLAYER_DISCOVERY_UNSUBS][entry.unique_id]()
+
     # Stop server discovery task if this is the last config entry.
     current_entries = hass.config_entries.async_entries(DOMAIN)
     if len(current_entries) == 1 and current_entries[0] == entry:
         _LOGGER.debug("Stopping server discovery task")
         hass.data[DOMAIN][DISCOVERY_TASK].cancel()
+        hass.data[DOMAIN].pop(DISCOVERY_TASK)
 
     return await hass.config_entries.async_forward_entry_unload(entry, MP_DOMAIN)
