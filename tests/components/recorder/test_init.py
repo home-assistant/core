@@ -284,3 +284,32 @@ def test_saving_sets_old_state(hass_recorder):
         assert states[1].old_state_id is None
         assert states[2].old_state_id == states[0].state_id
         assert states[3].old_state_id == states[1].state_id
+
+
+def test_saving_state_with_serializable_data(hass_recorder, caplog):
+    """Test saving sets old state."""
+    hass = hass_recorder()
+
+    hass.states.set("test.one", "on", {"fail": CannotSerializeMe()})
+    wait_recording_done(hass)
+    hass.states.set("test.two", "on", {})
+    wait_recording_done(hass)
+    hass.states.set("test.two", "off", {})
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = list(session.query(States))
+        assert len(states) == 2
+
+        assert states[0].entity_id == "test.two"
+        assert states[1].entity_id == "test.two"
+        assert states[0].old_state_id is None
+        assert states[1].old_state_id == states[0].state_id
+
+    assert "State is not JSON serializable" in caplog.text
+
+
+class CannotSerializeMe:
+    """A class that the JSONEncoder cannot serialize."""
+
+    pass
