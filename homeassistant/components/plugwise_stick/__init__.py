@@ -3,7 +3,13 @@ import asyncio
 import logging
 
 import plugwise
-from plugwise.exceptions import NetworkDown, PortError, StickInitError, TimeoutException
+from plugwise.exceptions import (
+    CirclePlusError,
+    NetworkDown,
+    PortError,
+    StickInitError,
+    TimeoutException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -72,8 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         await hass.async_add_executor_job(stick.connect)
         _LOGGER.debug("Initialize USB-stick")
         await hass.async_add_executor_job(stick.initialize_stick)
-        _LOGGER.debug("Discover Plugwise nodes")
-        stick.scan(discover_finished)
+        _LOGGER.debug("Discover Circle+ node")
+        await hass.async_add_executor_job(stick.initialize_circle_plus)
     except PortError:
         _LOGGER.error("Connecting to Plugwise USBstick communication failed")
         raise ConfigEntryNotReady
@@ -83,9 +89,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     except NetworkDown:
         _LOGGER.warning("Plugwise zigbee network down")
         raise ConfigEntryNotReady
+    except CirclePlusError:
+        _LOGGER.warning("Failed to connect to Circle+ node")
+        raise ConfigEntryNotReady
     except TimeoutException:
         _LOGGER.warning("Timeout")
         raise ConfigEntryNotReady
+    stick.scan(discover_finished)
 
     def shutdown(event):
         hass.async_create_task(hass.data[DOMAIN][entry.entry_id]["stick"].disconnect)
