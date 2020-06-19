@@ -66,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         )
         hass.config_entries.async_update_entry(
             entry,
+            title=f"{places[0]}",
             data={
                 CONF_LATITUDE: places[0].latitude,
                 CONF_LONGITUDE: places[0].longitude,
