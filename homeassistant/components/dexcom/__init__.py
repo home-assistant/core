@@ -33,7 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry.data[CONF_PASSWORD],
             entry.data[CONF_SERVER] == SERVER_OUS,
         )
-    except (AccountError, SessionError):
+    except AccountError:
+        return False
+    except SessionError:
         raise ConfigEntryNotReady
 
     async def async_update_data():
