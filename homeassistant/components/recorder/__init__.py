@@ -146,13 +146,13 @@ def run_information_with_session(session, point_in_time: Optional[datetime] = No
     """Return information about current run from the database."""
     recorder_runs = RecorderRuns
 
-    res = (
-        session.query(recorder_runs)
-        .filter(
+    query = session.query(recorder_runs)
+    if point_in_time:
+        query = query.filter(
             (recorder_runs.start < point_in_time) & (recorder_runs.end > point_in_time)
         )
-        .first()
-    )
+
+    res = query.first()
     if res:
         session.expunge(res)
     return res
