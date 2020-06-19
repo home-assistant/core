@@ -133,4 +133,4 @@ class MeteoFranceOptionsFlowHandler(config_entries.OptionsFlow):
 
 
 def _build_place_key(place) -> str:
-    return f"{place.name};{place.latitude};{place.longitude}"
+    return f"{place};{place.latitude};{place.longitude}"
