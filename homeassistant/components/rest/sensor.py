@@ -7,9 +7,9 @@ from jsonpath import jsonpath
 import requests
 from requests import Session
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from urllib3.exceptions import ProxyError, ProxySchemeUnknown
 import voluptuous as vol
 import xmltodict
-from urllib3.exceptions import ProxyError, ProxySchemeUnknown
 
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
 from homeassistant.const import (
