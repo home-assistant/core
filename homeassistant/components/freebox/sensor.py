@@ -2,13 +2,12 @@
 from datetime import datetime
 from typing import Dict
 
-from pytz import timezone
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.util.dt as dt_util
 
 from .const import (
     CALL_SENSORS,
@@ -22,7 +21,7 @@ from .const import (
 )
 from .router import FreeboxRouter
 
-TIMEZONE = timezone("Europe/Paris")
+TIMEZONE = dt_util.get_time_zone("Europe/Paris")
 
 
 async def async_setup_entry(
@@ -156,6 +155,8 @@ class FreeboxCallSensor(FreeboxSensor):
     def device_state_attributes(self) -> Dict[str, any]:
         """Return device specific state attributes."""
         return {
-            str(datetime.fromtimestamp(call["datetime"], TIMEZONE)): call["name"]
+            datetime.fromtimestamp(call["datetime"], TIMEZONE).strftime(
+                "%d/%m/%Y, %H:%M:%S"
+            ): call["name"]
             for call in self._call_list_for_type
         }
