@@ -61,4 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
+    # Stop server discovery task if this is the last config entry.
+    current_entries = hass.config_entries.async_entries(DOMAIN)
+    if len(current_entries) == 1 and current_entries[0] == entry:
+        _LOGGER.debug("Stopping server discovery task")
+        hass.data[DOMAIN][DISCOVERY_TASK].cancel()
+
     return await hass.config_entries.async_forward_entry_unload(entry, MP_DOMAIN)
