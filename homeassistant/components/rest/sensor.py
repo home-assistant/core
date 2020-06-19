@@ -112,7 +112,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout, proxy_url)
+    rest = RestData(
+        method, resource, auth, headers, payload, verify_ssl, timeout, proxy_url
+    )
     rest.update()
     if rest.data is None:
         raise PlatformNotReady
@@ -265,7 +267,15 @@ class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(
-        self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT, proxy_url=None
+        self,
+        method,
+        resource,
+        auth,
+        headers,
+        data,
+        verify_ssl,
+        timeout=DEFAULT_TIMEOUT,
+        proxy_url=None
     ):
         """Initialize the data object."""
         self._method = method
