@@ -6,6 +6,7 @@ import plugwise
 from plugwise.exceptions import NetworkDown, PortError, StickInitError, TimeoutException
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
@@ -85,6 +86,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     except TimeoutException:
         _LOGGER.warning("Timeout")
         raise ConfigEntryNotReady
+
+    def shutdown(event):
+        hass.async_create_task(hass.data[DOMAIN][entry.entry_id]["stick"].disconnect)
+
+    # Listen when EVENT_HOMEASSISTANT_STOP is fired
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+
     return True
 
 
