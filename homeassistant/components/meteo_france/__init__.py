@@ -56,6 +56,22 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up an Meteo-France account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
+    latitude = entry.data.get(CONF_LATITUDE)
+
+    # Migrate from previous config
+    if not latitude:
+        client = MeteoFranceClient()
+        places = await hass.async_add_executor_job(
+            client.search_places, entry.data[CONF_CITY]
+        )
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                CONF_LATITUDE: places[0].latitude,
+                CONF_LONGITUDE: places[0].longitude,
+            },
+        )
+
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
@@ -116,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
-        "Department correspondig to %s is %s", entry.title, department,
+        "Department corresponding to %s is %s", entry.title, department,
     )
     if department and not hass.data[DOMAIN].get(department):
         coordinator_alert = DataUpdateCoordinator(
