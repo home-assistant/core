@@ -569,16 +569,12 @@ async def _async_component_dependencies(
         if start_domain in dep_integration.after_dependencies:
             raise CircularDependency(start_domain, dependency_domain)
 
-        # If this integration is already fully resolved, use that info
-        if dep_integration.all_dependencies_resolved:
-            loaded.update(dep_integration.all_dependencies)
-            continue
+        if dep_integration.dependencies:
+            dep_loaded = await _async_component_dependencies(
+                hass, start_domain, dep_integration, loaded, loading
+            )
 
-        dep_loaded = await _async_component_dependencies(
-            hass, start_domain, dep_integration, loaded, loading
-        )
-
-        loaded.update(dep_loaded)
+            loaded.update(dep_loaded)
 
     loaded.add(domain)
     loading.remove(domain)
