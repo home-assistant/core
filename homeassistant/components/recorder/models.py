@@ -138,7 +138,7 @@ class States(Base):  # type: ignore
 
         return States.from_event_with_attributes(event, None, None)
 
-    def to_native(self):
+    def to_native(self, validate_entity_id=True):
         """Convert to an HA state object."""
         context = Context(id=self.context_id, user_id=self.context_user_id)
         try:
@@ -149,9 +149,7 @@ class States(Base):  # type: ignore
                 process_timestamp(self.last_changed),
                 process_timestamp(self.last_updated),
                 context=context,
-                # Temp, because database can still store invalid entity IDs
-                # Remove with 1.0 or in 2020.
-                temp_invalid_id_bypass=True,
+                validate_entity_id=validate_entity_id,
             )
         except ValueError:
             # When json.loads fails

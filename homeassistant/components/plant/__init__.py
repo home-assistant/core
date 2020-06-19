@@ -311,7 +311,7 @@ class Plant(Entity):
                 )
                 .order_by(States.last_updated.asc())
             )
-            states = execute(query)
+            states = execute(query, to_native=True, validate_entity_ids=False)
 
             for state in states:
                 # filter out all None, NaN and "unknown" states
