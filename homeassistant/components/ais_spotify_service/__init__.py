@@ -9,8 +9,6 @@ import logging
 
 from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
-from homeassistant.helpers import event
-from homeassistant.util import dt as dt_util
 
 from .config_flow import configured_service, setUrl
 
@@ -138,15 +136,6 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "select_track_uri", select_track_uri)
     hass.services.async_register(DOMAIN, "change_play_queue", change_play_queue)
 
-    # Update daily playlists, start at 7AM + some random minutes and seconds based on the system startup
-    async def check_favorites(now):
-        await hass.services.async_call("ais_spotify_service", "get_favorites")
-
-    _dt = dt_util.utcnow()
-    event.async_track_utc_time_change(
-        hass, check_favorites, hour=7, minute=_dt.minute, second=_dt.second
-    )
-
     return True
 
 
@@ -241,14 +230,15 @@ class SpotifyData:
             items = results["items"]
             title_prefix = "Album: "
             icon = "mdi:album"
-        # elif audio_type == "user_tracks":
-        #     items = results["items"]
-        #     title_prefix = "Album: "
-        #     icon = "mdi:play"
+        elif audio_type == "user_tracks":
+            items = results["items"]
+            title_prefix = "Utwór: "
+            icon = "mdi:play"
 
         list_idx = len(list_info)
         for item in items:
             try:
+                i_total = 0
                 if audio_type == "playlist":
                     item_owner_id = item["owner"]["id"]
                     i_total = item["tracks"]["total"]
@@ -262,15 +252,33 @@ class SpotifyData:
                     i_total = item["popularity"]
                 elif audio_type == "user_albums":
                     i_total = item["album"]["total_tracks"]
+                elif audio_type == "user_tracks":
+                    i_total = 1
                 if i_total > 0:
-                    if len(item["images"]) > 0:
-                        thumbnail = item["images"][0]["url"]
+                    thumbnail = "/static/icons/favicon-100x100.png"
+                    uri = ""
+                    name = ""
+                    if audio_type == "user_albums":
+                        if len(item["album"]["images"]) > 0:
+                            thumbnail = item["album"]["images"][0]["url"]
+                            uri = item["album"]["uri"]
+                            name = item["album"]["name"]
+                    elif audio_type == "user_tracks":
+                        name = item["track"]["name"]
+                        uri = item["track"]["uri"]
+                        if "album" in item["track"]:
+                            if len(item["track"]["album"]["images"]) > 0:
+                                thumbnail = item["track"]["album"]["images"][0]["url"]
                     else:
-                        thumbnail = "/static/icons/favicon-100x100.png"
+                        if len(item["images"]) > 0:
+                            thumbnail = item["images"][0]["url"]
+                            uri = item["uri"]
+                            name = item["name"]
+
                     list_info[list_idx] = {
-                        "uri": item["uri"],
-                        "title": title_prefix + item["name"],
-                        "name": title_prefix + item["name"],
+                        "uri": uri,
+                        "title": title_prefix + name,
+                        "name": title_prefix + name,
                         "type": audio_type,
                         "item_owner_id": item_owner_id,
                         "thumbnail": thumbnail,
@@ -354,6 +362,11 @@ class SpotifyData:
 
     async def async_process_get_favorites(self, call):
         """Get favorites from Spotify."""
+        search_type = "playlists"
+        if "type" in call.data:
+            # playlists, artists, albums, tracks
+            search_type = call.data["type"]
+
         self.refresh_spotify_instance()
 
         # Don't true search when token is expired
@@ -362,37 +375,45 @@ class SpotifyData:
             return
 
         list_info = {}
-        track_info = {}
 
         # The scope playlist-read-private user-library-read etc
         # user_playlists
-        results = self._spotify.current_user_playlists(limit=10)
-        if results["total"] > 0:
-            list_info = self.get_list_from_results(results, "user_playlists", list_info)
-
-        # current_user_followed_artists
-        # results = self._spotify.current_user_followed_artists(limit=10)
-        # if "artists" in results:
-        #     if results["artists"]["total"] > 0:
-        #         list_info = self.get_list_from_results(results, "user_artists", list_info)
-
-        # current_user_saved_albums
-        # results = self._spotify.current_user_saved_albums(limit=10)
-        # if results["total"] > 0:
-        #     list_info = self.get_list_from_results(results, "user_albums", list_info)
-        #
-        # # current_user_saved_tracks
-        # results = self._spotify.current_user_saved_tracks(limit=10)
-        # if results["total"] > 0:
-        #     track_info = self.get_list_from_results(results, "user_tracks", track_info)
-
-        # featured_playlists
-        results = self._spotify.featured_playlists(limit=10, country="PL")
-        list_info = self.get_list_from_results(results, "playlist", list_info)
+        if search_type == "playlists":
+            # featured_playlists
+            results = self._spotify.featured_playlists(limit=10, country="PL")
+            list_info = self.get_list_from_results(results, "playlist", list_info)
+            # current_user_playlists
+            results = self._spotify.current_user_playlists(limit=10)
+            if results["total"] > 0:
+                list_info = self.get_list_from_results(
+                    results, "user_playlists", list_info
+                )
+        elif search_type == "artists":
+            # current_user_followed_artists
+            results = self._spotify.current_user_followed_artists(limit=10)
+            if "artists" in results:
+                if results["artists"]["total"] > 0:
+                    list_info = self.get_list_from_results(
+                        results, "user_artists", list_info
+                    )
+        elif search_type == "albums":
+            # current_user_saved_albums
+            results = self._spotify.current_user_saved_albums(limit=10)
+            if results["total"] > 0:
+                list_info = self.get_list_from_results(
+                    results, "user_albums", list_info
+                )
+        elif search_type == "tracks":
+            # current_user_saved_tracks
+            results = self._spotify.current_user_saved_tracks(limit=10)
+            if results["total"] > 0:
+                list_info = self.get_list_from_results(
+                    results, "user_tracks", list_info
+                )
 
         # update lists
         self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
-        self.hass.states.async_set("sensor.spotifylist", -1, track_info)
+        self.hass.states.async_set("sensor.spotifylist", -1, {})
 
     async def async_process_search(self, call):
         """Search album on Spotify."""
