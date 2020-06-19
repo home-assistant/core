@@ -103,6 +103,7 @@ ALLOWED_USED_COMPONENTS = {
     "input_number",
     "input_select",
     "input_text",
+    "onboarding",
     "persistent_notification",
     "person",
     "script",

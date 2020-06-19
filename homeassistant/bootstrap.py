@@ -38,16 +38,20 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
 
-LOG_SLOW_STARTUP_INTERVAL = 1
+LOG_SLOW_STARTUP_INTERVAL = 60
 
 DEBUGGER_INTEGRATIONS = {"ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
-LOGGING_INTEGRATIONS = {"logger", "system_log", "sentry"}
-# These integrations are set up before other integrations
-# Note, stage 1 after dependencies are not respected.
-STAGE_1_INTEGRATIONS = {
+LOGGING_INTEGRATIONS = {
+    # Set log levels
+    "logger",
+    # Error logging
+    "system_log",
+    "sentry",
     # To record data
     "recorder",
+}
+STAGE_1_INTEGRATIONS = {
     # To make sure we forward data to other instances
     "mqtt_eventstream",
     # To provide account link implementations
@@ -132,12 +136,8 @@ async def async_setup_hass(
                 await hass.async_block_till_done()
 
         safe_mode = True
-        old_config = hass.config
         hass = core.HomeAssistant()
-        hass.config.skip_pip = old_config.skip_pip
-        hass.config.internal_url = old_config.internal_url
-        hass.config.external_url = old_config.external_url
-        hass.config.config_dir = old_config.config_dir
+        hass.config.config_dir = config_dir
 
     if safe_mode:
         _LOGGER.info("Starting in safe mode")
@@ -383,8 +383,24 @@ async def _async_set_up_integrations(
     """Set up all the integrations."""
     setup_started = hass.data[DATA_SETUP_STARTED] = {}
     domains = _get_domains(hass, config)
+    logging_domains = domains & LOGGING_INTEGRATIONS
 
-    # Resolve all dependencies so we know all integrations that will be loaded
+    # Load logging as soon as possible
+    if logging_domains:
+        _LOGGER.info("Setting up logging: %s", logging_domains)
+        await async_setup_multi_components(hass, logging_domains, config, setup_started)
+
+    _LOGGER.info("Domains to be set up: %s", domains)
+
+    # Start up debuggers. Start these first in case they want to wait.
+    debuggers = domains & DEBUGGER_INTEGRATIONS
+
+    if debuggers:
+        _LOGGER.debug("Setting up debuggers: %s", debuggers)
+        await async_setup_multi_components(hass, debuggers, config, setup_started)
+
+    # Resolve all dependencies so we know all integrations
+    # that will have to be loaded and start rightaway
     integrations_to_process = [
         int_or_exc
         for int_or_exc in await asyncio.gather(
@@ -405,22 +421,38 @@ async def _async_set_up_integrations(
     for itg in integrations_to_process:
         domains.update(itg.dependencies)
 
-    # Start up debuggers. Start these first in case they want to wait.
-    debuggers = domains & DEBUGGER_INTEGRATIONS
-    if debuggers:
-        _LOGGER.debug("Starting up debuggers %s", debuggers)
-        await async_setup_multi_components(hass, debuggers, config, setup_started)
-        domains -= DEBUGGER_INTEGRATIONS
-
-    # setup components
-    logging_domains = domains & LOGGING_INTEGRATIONS
+    # calculate what components to setup in what stage
     stage_1_domains = domains & STAGE_1_INTEGRATIONS
-    stage_2_domains = domains - logging_domains - stage_1_domains
 
-    # Start setup
-    if logging_domains:
-        _LOGGER.info("Setting up %s", logging_domains)
-        await async_setup_multi_components(hass, logging_domains, config, setup_started)
+    # Find all after dependencies of any dependency of any stage 1 integration
+    # that we plan on loading and promote them to stage 1
+    integration_cache = {itg.domain: itg for itg in integrations_to_process}
+    promote_stage_1 = set()
+
+    for itg in integrations_to_process:
+        if itg.domain not in stage_1_domains:
+            continue
+
+        # Promote all after dependencies of anything that
+        # will be loaded during stage 1 to stage 1
+        promote_stage_1.update(itg.all_dependencies)
+        promote_stage_1.update(
+            domain for domain in itg.after_dependencies if domain in domains
+        )
+
+        # And do that too for all of its dependencies
+        for dep_domain in itg.all_dependencies:
+            dep_itg = integration_cache.get(dep_domain)
+            if dep_itg is None:
+                dep_itg = await loader.async_get_integration(hass, dep_domain)
+                integration_cache[dep_itg.domain] = dep_itg
+
+            promote_stage_1.update(
+                domain for domain in dep_itg.after_dependencies if domain in domains
+            )
+
+    stage_1_domains.update(promote_stage_1)
+    stage_2_domains = domains - logging_domains - debuggers - stage_1_domains
 
     # Kick off loading the registries. They don't need to be awaited.
     asyncio.gather(
@@ -429,13 +461,15 @@ async def _async_set_up_integrations(
         hass.helpers.area_registry.async_get_registry(),
     )
 
+    # Start setup
+    async_set_domains_to_be_loaded(hass, stage_1_domains | stage_2_domains)
+
     if stage_1_domains:
-        _LOGGER.info("Setting up %s", stage_1_domains)
+        _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
         await async_setup_multi_components(hass, stage_1_domains, config, setup_started)
 
     if stage_2_domains:
-        # This will manage after_dependencies
-        async_set_domains_to_be_loaded(hass, stage_2_domains)
+        _LOGGER.info("Setting up stage 2: %s", stage_2_domains)
         await async_setup_multi_components(hass, stage_2_domains, config, setup_started)
 
     # Wrap up startup
