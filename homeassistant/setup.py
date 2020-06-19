@@ -3,7 +3,7 @@ import asyncio
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Awaitable, Callable, List, Optional
+from typing import Awaitable, Callable, Optional, Set
 
 from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = "component"
 
+DATA_SETUP_DONE = "setup_done"
 DATA_SETUP_STARTED = "setup_started"
 DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
@@ -24,6 +25,15 @@ SLOW_SETUP_WARNING = 10
 # Since a pip install can run, we wait
 # 30 minutes to timeout
 SLOW_SETUP_MAX_WAIT = 1800
+
+
+@core.callback
+def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: Set[str]) -> None:
+    """Set domains that are going to be loaded from the config.
+
+    This will allow us to properly handle after_dependencies.
+    """
+    hass.data[DATA_SETUP_DONE] = {domain: asyncio.Event() for domain in domains}
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
@@ -52,26 +62,43 @@ async def async_setup_component(
         _async_setup_component(hass, domain, config)
     )
 
-    return await task  # type: ignore
+    try:
+        return await task  # type: ignore
+    finally:
+        if domain in hass.data.get(DATA_SETUP_DONE, {}):
+            hass.data[DATA_SETUP_DONE].pop(domain).set()
 
 
 async def _async_process_dependencies(
-    hass: core.HomeAssistant, config: ConfigType, name: str, dependencies: List[str]
+    hass: core.HomeAssistant, config: ConfigType, integration: loader.Integration
 ) -> bool:
     """Ensure all dependencies are set up."""
-    tasks = [async_setup_component(hass, dep, config) for dep in dependencies]
+    tasks = {
+        dep: hass.loop.create_task(async_setup_component(hass, dep, config))
+        for dep in integration.dependencies
+    }
+
+    to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
+    for dep in integration.after_dependencies:
+        if dep in to_be_loaded and dep not in hass.config.components:
+            tasks[dep] = hass.loop.create_task(to_be_loaded[dep].wait())
 
     if not tasks:
         return True
 
-    results = await asyncio.gather(*tasks)
+    _LOGGER.debug("Dependency %s will wait for %s", integration.domain, list(tasks))
+    results = await asyncio.gather(*tasks.values())
 
-    failed = [dependencies[idx] for idx, res in enumerate(results) if not res]
+    failed = [
+        domain
+        for idx, domain in enumerate(integration.dependencies)
+        if not results[idx]
+    ]
 
     if failed:
         _LOGGER.error(
             "Unable to set up dependencies of %s. Setup failed for dependencies: %s",
-            name,
+            integration.domain,
             ", ".join(failed),
         )
 
@@ -99,22 +126,7 @@ async def _async_setup_component(
         return False
 
     # Validate all dependencies exist and there are no circular dependencies
-    try:
-        await loader.async_component_dependencies(hass, domain)
-    except loader.IntegrationNotFound as err:
-        _LOGGER.error(
-            "Not setting up %s because we are unable to resolve (sub)dependency %s",
-            domain,
-            err.domain,
-        )
-        return False
-    except loader.CircularDependency as err:
-        _LOGGER.error(
-            "Not setting up %s because it contains a circular dependency: %s -> %s",
-            domain,
-            err.from_domain,
-            err.to_domain,
-        )
+    if not await integration.resolve_dependencies():
         return False
 
     # Process requirements as soon as possible, so we can import the component
@@ -301,9 +313,7 @@ async def async_process_deps_reqs(
     elif integration.domain in processed:
         return
 
-    if integration.dependencies and not await _async_process_dependencies(
-        hass, config, integration.domain, integration.dependencies
-    ):
+    if not await _async_process_dependencies(hass, config, integration):
         raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip and integration.requirements:
