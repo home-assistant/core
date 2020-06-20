@@ -137,7 +137,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         def get_room_ids(home_id):
             """Return all module available on the API as a list."""
-            return [room for room in home_data.rooms[home_id]]
+            return home_data.rooms[home_id].keys()
 
         for home_id in home_ids:
             _LOGGER.debug("Setting up home %s ...", home_id)
