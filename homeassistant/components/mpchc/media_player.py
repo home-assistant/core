@@ -124,8 +124,6 @@ class MpcHcDevice(MediaPlayerEntity):
             return STATE_PAUSED
         if state == "2":
             return STATE_PLAYING
-        if state == "paused":
-            return STATE_PAUSED
 
         return STATE_IDLE
 
