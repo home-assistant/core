@@ -24,9 +24,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="already_setup")
 
-        if not conf[CONF_ACCESS_TOKEN]:
-            return self.async_abort(reason="auth")
-
         await self._abort_if_configured(conf[CONF_ACCESS_TOKEN])
 
         user, errors = await self._check_access_token(conf[CONF_ACCESS_TOKEN])
