@@ -121,7 +121,7 @@ class UnifiDeviceScanner(DeviceScanner):
 
 def _response_to_json(response):
     try:
-        json_response = json.loads(str(response)[31:-1].replace("\\", ""))
+        json_response = json.loads(str(response)[31:-1].replace("\\\\", "\\"))
         _LOGGER.debug(str(json_response))
         ssid_table = json_response.get(UNIFI_SSID_TABLE)
         active_clients = {}
