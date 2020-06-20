@@ -32,7 +32,7 @@ async def test_default(hass: HomeAssistant, mock_debugpy) -> None:
 
 
 async def test_wait_on_startup(hass: HomeAssistant, mock_debugpy) -> None:
-    """Test if the default settings work."""
+    """Test if the waiting for client is called."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_WAIT: True}})
 
     mock_debugpy.listen.assert_called_once_with(("0.0.0.0", 5678))
@@ -41,7 +41,7 @@ async def test_wait_on_startup(hass: HomeAssistant, mock_debugpy) -> None:
 
 
 async def test_on_demand(hass: HomeAssistant, mock_debugpy) -> None:
-    """Test if the default settings work."""
+    """Test on-demand debugging using a service call."""
     assert await async_setup_component(
         hass,
         DOMAIN,
