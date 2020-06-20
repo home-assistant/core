@@ -605,7 +605,7 @@ class LazyState(State):
         "_context",
     ]
 
-    def __init__(self, row):
+    def __init__(self, row):  # pylint: disable=super-init-not-called
         """Init the lazy state."""
         self._row = row
         self.entity_id = self._row.entity_id
