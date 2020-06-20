@@ -270,7 +270,7 @@ def _get_states_with_session(
     return [
         state
         for state in (LazyState(row) for row in execute(query))
-        if not state.attributes.get(ATTR_HIDDEN, False)
+        if not state.hidden
     ]
 
 
@@ -333,7 +333,7 @@ def _sorted_states_to_json(
                         domain != SCRIPT_DOMAIN
                         or native_state.attributes.get(ATTR_CAN_CANCEL)
                     )
-                    and not native_state.attributes.get(ATTR_HIDDEN, False)
+                    and not native_state.hidden
                 ]
             )
             continue
@@ -345,7 +345,6 @@ def _sorted_states_to_json(
         if not ent_results:
             ent_results.append(LazyState(next(group)))
 
-        initial_state = ent_results[-1]
         prev_state = ent_results[-1]
         initial_state_count = len(ent_results)
 
@@ -370,11 +369,7 @@ def _sorted_states_to_json(
             )
             prev_state = db_state
 
-        if (
-            prev_state
-            and prev_state != initial_state
-            and len(ent_results) != initial_state_count
-        ):
+        if prev_state and len(ent_results) != initial_state_count:
             # There was at least one state change
             # replace the last minimal state with
             # a full state
@@ -626,6 +621,13 @@ class LazyState(State):
                 _LOGGER.exception("Error converting row to state: %s", self)
                 self._attributes = {}
         return self._attributes
+
+    @property
+    def hidden(self):
+        """Determine if a state is hidden."""
+        if ATTR_HIDDEN not in self._row.attributes:
+            return False
+        return self.attributes.get(ATTR_HIDDEN, False)
 
     @property
     def context(self):
