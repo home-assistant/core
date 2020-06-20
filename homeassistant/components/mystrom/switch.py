@@ -6,10 +6,16 @@ from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS, PRECISION_TENTHS)
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_NAME,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+)
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.temperature import display_temp as show_temp
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.temperature import display_temp as show_temp
 
 DEFAULT_NAME = "myStrom Switch"
 
@@ -72,7 +78,9 @@ class MyStromSwitch(SwitchEntity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         try:
-            temperature = show_temp(self.hass, self.plug.temperature, TEMP_CELSIUS, PRECISION_TENTHS)
+            temperature = show_temp(
+                self.hass, self.plug.temperature, TEMP_CELSIUS, PRECISION_TENTHS
+            )
         except (ValueError, TypeError):
             temperature = None
 
