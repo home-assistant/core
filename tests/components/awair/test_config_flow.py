@@ -5,8 +5,8 @@ from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.awair.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 
 from .const import (
     CONFIG,
@@ -86,8 +86,53 @@ async def test_no_devices_error(hass):
         assert result["reason"] == "no_devices"
 
 
+async def test_import(hass):
+    """Test config.yaml import."""
+
+    with patch(
+        "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, DEVICES_FIXTURE]
+    ), patch(
+        "homeassistant.components.awair.sensor.async_setup_entry", return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_ACCESS_TOKEN: CONFIG[CONF_ACCESS_TOKEN]},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "foo@bar.com (32406)"
+        assert result["data"][CONF_ACCESS_TOKEN] == CONFIG[CONF_ACCESS_TOKEN]
+        assert result["result"].unique_id == CONFIG_ENTRY_UNIQUE_ID
+
+
+async def test_reauth(hass):
+    """Test reauth flow."""
+    with patch(
+        "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, DEVICES_FIXTURE]
+    ), patch(
+        "homeassistant.components.awair.sensor.async_setup_entry", return_value=True,
+    ):
+        mock_config = MockConfigEntry(
+            domain=DOMAIN, unique_id=CONFIG_ENTRY_UNIQUE_ID, data=CONFIG
+        )
+        mock_config.add_to_hass(hass)
+        hass.config_entries.async_update_entry(
+            mock_config, data={**CONFIG, CONF_ACCESS_TOKEN: "blah"}
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "unique_id": CONFIG[CONF_EMAIL]},
+            data=CONFIG,
+        )
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "reauth_successful"
+
+
 async def test_create_entry(hass):
-    """Test that overall flow."""
+    """Test overall flow."""
 
     with patch(
         "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, DEVICES_FIXTURE]
