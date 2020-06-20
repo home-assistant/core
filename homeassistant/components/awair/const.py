@@ -35,24 +35,7 @@ ATTRIBUTION = "Awair air quality sensor"
 ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
-
-# Some of these names are historical, because this integration
-# created sensors with names that matched the API somewhat
-# directly. If air quality device classes are standardized
-# across home assistant, then we should adjust these as well.
-# For example:
-# score -> air_quality_index
-# CO2   -> carbon_dioxide
-# PM10  -> particulate_matter_10
-# PM2.5 -> particulate_matter_2_5
-# VOC   -> volatile_organic_compounds
-
-DEVICE_CLASS_AIR_QUALITY_INDEX = "score"
-DEVICE_CLASS_CO2 = "CO2"
-DEVICE_CLASS_PM_10 = "PM10"
-DEVICE_CLASS_PM_2_5 = "PM2.5"
-DEVICE_CLASS_SOUND_LEVEL = "sound_level"
-DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
+ATTR_UNIQUE_ID = "unique_id"
 
 DOMAIN = "awair"
 
@@ -67,55 +50,64 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_UNIT: UNIT_PERCENTAGE,
-        ATTR_LABEL: "Awair Score",
+        ATTR_LABEL: "Awair score",
+        ATTR_UNIQUE_ID: "score",  # matches legacy format
     },
     API_HUMID: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
         ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_LABEL: "Humidity",
+        ATTR_UNIQUE_ID: "HUMID",  # matches legacy format
     },
     API_LUX: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
         ATTR_ICON: None,
         ATTR_UNIT: "lx",
         ATTR_LABEL: "Illuminance",
+        ATTR_UNIQUE_ID: "illuminance",
     },
     API_SPL_A: {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:ear-hearing",
         ATTR_UNIT: "dBa",
         ATTR_LABEL: "Sound level",
+        ATTR_UNIQUE_ID: "sound_level",
     },
     API_VOC: {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:cloud",
         ATTR_UNIT: CONCENTRATION_PARTS_PER_BILLION,
         ATTR_LABEL: "Volatile organic compounds",
+        ATTR_UNIQUE_ID: "VOC",  # matches legacy format
     },
     API_TEMP: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_ICON: None,
         ATTR_UNIT: TEMP_CELSIUS,
         ATTR_LABEL: "Temperature",
+        ATTR_UNIQUE_ID: "TEMP",  # matches legacy format
     },
     API_PM25: {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_LABEL: "PM2.5",
+        ATTR_UNIQUE_ID: "PM25",  # matches legacy format
     },
     API_PM10: {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_LABEL: "PM10",
+        ATTR_UNIQUE_ID: "PM10",  # matches legacy format
     },
     API_CO2: {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:cloud",
         ATTR_UNIT: CONCENTRATION_PARTS_PER_MILLION,
         ATTR_LABEL: "Carbon dioxide",
+        ATTR_UNIQUE_ID: "CO2",  # matches legacy format
     },
 }
 

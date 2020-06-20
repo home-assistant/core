@@ -16,11 +16,13 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
     API_DUST,
+    API_PM25,
     API_SCORE,
     API_TEMP,
     API_VOC,
     ATTR_ICON,
     ATTR_LABEL,
+    ATTR_UNIQUE_ID,
     ATTR_UNIT,
     ATTRIBUTION,
     DOMAIN,
@@ -101,7 +103,16 @@ class AwairSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return the uuid as the unique_id."""
-        return f"{self._device.uuid}-{self._kind}"
+        unique_id_tag = SENSOR_TYPES[self._kind][ATTR_UNIQUE_ID]
+
+        # This integration used to create a sensor that was labelled as a "PM2.5"
+        # sensor for first-gen Awair devices, but its unique_id reflected the truth:
+        # under the hood, it was a "DUST" sensor. So we preserve that specific unique_id
+        # for users with first-gen devices that are upgrading.
+        if self._kind == API_PM25 and API_DUST in self._air_data.sensors:
+            unique_id_tag = "DUST"
+
+        return f"{self._device.uuid}_{unique_id_tag}"
 
     @property
     def available(self) -> bool:

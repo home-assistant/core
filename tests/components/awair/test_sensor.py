@@ -10,7 +10,9 @@ from homeassistant.components.awair.const import (
     API_SPL_A,
     API_TEMP,
     API_VOC,
+    ATTR_UNIQUE_ID,
     DOMAIN,
+    SENSOR_TYPES,
 )
 from homeassistant.const import (
     ATTR_ICON,
@@ -78,7 +80,7 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}-{API_SCORE}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
         "88",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -87,7 +89,7 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_temperature",
-        f"{AWAIR_UUID}-{API_TEMP}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_TEMP][ATTR_UNIQUE_ID]}",
         "21.8",
         {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS, "awair_index": 1.0},
     )
@@ -96,7 +98,7 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_humidity",
-        f"{AWAIR_UUID}-{API_HUMID}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_HUMID][ATTR_UNIQUE_ID]}",
         "41.59",
         {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE, "awair_index": 0.0},
     )
@@ -105,7 +107,7 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_carbon_dioxide",
-        f"{AWAIR_UUID}-{API_CO2}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_CO2][ATTR_UNIQUE_ID]}",
         "654.0",
         {
             ATTR_ICON: "mdi:cloud",
@@ -118,7 +120,7 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_volatile_organic_compounds",
-        f"{AWAIR_UUID}-{API_VOC}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_VOC][ATTR_UNIQUE_ID]}",
         "366",
         {
             ATTR_ICON: "mdi:cloud",
@@ -131,7 +133,8 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm2_5",
-        f"{AWAIR_UUID}-{API_PM25}",
+        # gen1 unique_id should be awair_12345-DUST, which matches old integration behavior
+        f"{AWAIR_UUID}_DUST",
         "14.3",
         {
             ATTR_ICON: "mdi:blur",
@@ -144,7 +147,7 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm10",
-        f"{AWAIR_UUID}-{API_PM10}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_PM10][ATTR_UNIQUE_ID]}",
         "14.3",
         {
             ATTR_ICON: "mdi:blur",
@@ -173,7 +176,7 @@ async def test_awair_gen2_sensors(hass):
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}-{API_SCORE}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
         "97",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -182,7 +185,7 @@ async def test_awair_gen2_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm2_5",
-        f"{AWAIR_UUID}-{API_PM25}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_PM25][ATTR_UNIQUE_ID]}",
         "2.0",
         {
             ATTR_ICON: "mdi:blur",
@@ -207,7 +210,7 @@ async def test_awair_mint_sensors(hass):
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}-{API_SCORE}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
         "98",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -216,7 +219,7 @@ async def test_awair_mint_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm2_5",
-        f"{AWAIR_UUID}-{API_PM25}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_PM25][ATTR_UNIQUE_ID]}",
         "1.0",
         {
             ATTR_ICON: "mdi:blur",
@@ -229,7 +232,7 @@ async def test_awair_mint_sensors(hass):
         hass,
         registry,
         "sensor.living_room_illuminance",
-        f"{AWAIR_UUID}-{API_LUX}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_LUX][ATTR_UNIQUE_ID]}",
         "441.7",
         {ATTR_UNIT_OF_MEASUREMENT: "lx"},
     )
@@ -249,7 +252,7 @@ async def test_awair_glow_sensors(hass):
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}-{API_SCORE}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
         "93",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -269,7 +272,7 @@ async def test_awair_omni_sensors(hass):
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}-{API_SCORE}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
         "99",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -278,7 +281,7 @@ async def test_awair_omni_sensors(hass):
         hass,
         registry,
         "sensor.living_room_sound_level",
-        f"{AWAIR_UUID}-{API_SPL_A}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SPL_A][ATTR_UNIQUE_ID]}",
         "47.0",
         {ATTR_ICON: "mdi:ear-hearing", ATTR_UNIT_OF_MEASUREMENT: "dBa"},
     )
@@ -287,7 +290,7 @@ async def test_awair_omni_sensors(hass):
         hass,
         registry,
         "sensor.living_room_illuminance",
-        f"{AWAIR_UUID}-{API_LUX}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_LUX][ATTR_UNIQUE_ID]}",
         "804.9",
         {ATTR_UNIT_OF_MEASUREMENT: "lx"},
     )
@@ -322,7 +325,7 @@ async def test_awair_unavailable(hass):
         hass,
         registry,
         "sensor.living_room_awair_score",
-        f"{AWAIR_UUID}-{API_SCORE}",
+        f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
         "88",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -335,7 +338,7 @@ async def test_awair_unavailable(hass):
             hass,
             registry,
             "sensor.living_room_awair_score",
-            f"{AWAIR_UUID}-{API_SCORE}",
+            f"{AWAIR_UUID}_{SENSOR_TYPES[API_SCORE][ATTR_UNIQUE_ID]}",
             STATE_UNAVAILABLE,
             {ATTR_ICON: "mdi:blur"},
         )
