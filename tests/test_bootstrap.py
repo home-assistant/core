@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant import bootstrap
+from homeassistant import bootstrap, core
 import homeassistant.config as config_util
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
@@ -16,9 +16,11 @@ from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
+    MockPlatform,
     flush_store,
     get_test_config_dir,
     mock_coro,
+    mock_entity_platform,
     mock_integration,
 )
 
@@ -81,7 +83,7 @@ async def test_core_failure_loads_safe_mode(hass, caplog):
     assert "group" not in hass.config.components
 
 
-async def test_setting_up_config(hass, caplog):
+async def test_setting_up_config(hass):
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
         hass, {"group hello": {}, "homeassistant": {}}
@@ -90,9 +92,8 @@ async def test_setting_up_config(hass, caplog):
     assert "group" in hass.config.components
 
 
-async def test_setup_after_deps_all_present(hass, caplog):
+async def test_setup_after_deps_all_present(hass):
     """Test after_dependencies when all present."""
-    caplog.set_level(logging.DEBUG)
     order = []
 
     def gen_domain_setup(domain):
@@ -122,19 +123,115 @@ async def test_setup_after_deps_all_present(hass, caplog):
         ),
     )
 
-    await bootstrap._async_set_up_integrations(
-        hass, {"root": {}, "first_dep": {}, "second_dep": {}}
-    )
+    with patch(
+        "homeassistant.components.logger.async_setup", gen_domain_setup("logger")
+    ):
+        await bootstrap._async_set_up_integrations(
+            hass, {"root": {}, "first_dep": {}, "second_dep": {}, "logger": {}}
+        )
 
     assert "root" in hass.config.components
     assert "first_dep" in hass.config.components
     assert "second_dep" in hass.config.components
-    assert order == ["root", "first_dep", "second_dep"]
+    assert order == ["logger", "root", "first_dep", "second_dep"]
 
 
-async def test_setup_after_deps_not_trigger_load(hass, caplog):
+async def test_setup_after_deps_in_stage_1_ignored(hass):
+    """Test after_dependencies are ignored in stage 1."""
+    # This test relies on this
+    assert "cloud" in bootstrap.STAGE_1_INTEGRATIONS
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={"after_dependencies": ["an_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep", async_setup=gen_domain_setup("an_after_dep"),
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="cloud",
+            async_setup=gen_domain_setup("cloud"),
+            partial_manifest={"after_dependencies": ["normal_integration"]},
+        ),
+    )
+
+    await bootstrap._async_set_up_integrations(
+        hass, {"cloud": {}, "normal_integration": {}, "an_after_dep": {}}
+    )
+
+    assert "normal_integration" in hass.config.components
+    assert "cloud" in hass.config.components
+    assert order == ["cloud", "an_after_dep", "normal_integration"]
+
+
+async def test_setup_after_deps_via_platform(hass):
+    """Test after_dependencies set up via platform."""
+    order = []
+    after_dep_event = asyncio.Event()
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            if domain == "after_dep_of_platform_int":
+                await after_dep_event.wait()
+
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="after_dep_of_platform_int",
+            async_setup=gen_domain_setup("after_dep_of_platform_int"),
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int",
+            async_setup=gen_domain_setup("platform_int"),
+            partial_manifest={"after_dependencies": ["after_dep_of_platform_int"]},
+        ),
+    )
+    mock_entity_platform(hass, "light.platform_int", MockPlatform())
+
+    @core.callback
+    def continue_loading(_):
+        """When light component loaded, continue other loading."""
+        after_dep_event.set()
+
+    hass.bus.async_listen_once("component_loaded", continue_loading)
+
+    await bootstrap._async_set_up_integrations(
+        hass, {"light": {"platform": "platform_int"}, "after_dep_of_platform_int": {}}
+    )
+
+    assert "light" in hass.config.components
+    assert "after_dep_of_platform_int" in hass.config.components
+    assert "platform_int" in hass.config.components
+    assert order == ["after_dep_of_platform_int", "platform_int"]
+
+
+async def test_setup_after_deps_not_trigger_load(hass):
     """Test after_dependencies does not trigger loading it."""
-    caplog.set_level(logging.DEBUG)
     order = []
 
     def gen_domain_setup(domain):
@@ -169,12 +266,10 @@ async def test_setup_after_deps_not_trigger_load(hass, caplog):
     assert "root" in hass.config.components
     assert "first_dep" not in hass.config.components
     assert "second_dep" in hass.config.components
-    assert order == ["root", "second_dep"]
 
 
-async def test_setup_after_deps_not_present(hass, caplog):
+async def test_setup_after_deps_not_present(hass):
     """Test after_dependencies when referenced integration doesn't exist."""
-    caplog.set_level(logging.DEBUG)
     order = []
 
     def gen_domain_setup(domain):
