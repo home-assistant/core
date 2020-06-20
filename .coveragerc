@@ -822,7 +822,16 @@ omit =
     homeassistant/components/todoist/const.py
     homeassistant/components/tof/sensor.py
     homeassistant/components/tomato/device_tracker.py
-    homeassistant/components/toon/*
+    homeassistant/components/toon/__init__.py
+    homeassistant/components/toon/binary_sensor.py
+    homeassistant/components/toon/climate.py
+    homeassistant/components/toon/const.py
+    homeassistant/components/toon/coordinator.py
+    homeassistant/components/toon/helpers.py
+    homeassistant/components/toon/models.py
+    homeassistant/components/toon/oauth2.py
+    homeassistant/components/toon/sensor.py
+    homeassistant/components/toon/switch.py
     homeassistant/components/torque/sensor.py
     homeassistant/components/totalconnect/*
     homeassistant/components/touchline/climate.py
