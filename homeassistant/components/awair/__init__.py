@@ -82,10 +82,12 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 return {result.device.uuid: result for result in results}
             except AuthError as err:
-                await self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": "reauth"},
-                    data={"config_entry": self._config_entry},
+                self.hass.add_job(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": "reauth"},
+                        data={"config_entry": self._config_entry},
+                    )
                 )
                 raise UpdateFailed(err)
             except Exception as err:
