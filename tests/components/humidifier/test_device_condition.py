@@ -127,7 +127,7 @@ async def test_get_conditions_toggle_only(hass, device_reg, entity_reg):
 async def test_if_state(hass, calls):
     """Test for turn_on and turn_off conditions."""
     hass.states.async_set(
-        "humidifier.entity", STATE_ON, {const.ATTR_MODE: const.MODE_AWAY,},
+        "humidifier.entity", STATE_ON, {const.ATTR_MODE: const.MODE_AWAY}
     )
 
     assert await async_setup_component(
@@ -213,7 +213,7 @@ async def test_if_state(hass, calls):
     assert calls[1].data["some"] == "is_off event - test_event2"
 
     hass.states.async_set(
-        "humidifier.entity", STATE_ON, {const.ATTR_MODE: const.MODE_AWAY,},
+        "humidifier.entity", STATE_ON, {const.ATTR_MODE: const.MODE_AWAY}
     )
 
     hass.bus.async_fire("test_event3")
@@ -223,7 +223,7 @@ async def test_if_state(hass, calls):
     assert calls[2].data["some"] == "is_mode - event - test_event3"
 
     hass.states.async_set(
-        "humidifier.entity", STATE_ON, {const.ATTR_MODE: const.MODE_HOME,},
+        "humidifier.entity", STATE_ON, {const.ATTR_MODE: const.MODE_HOME}
     )
 
     # Should not fire
