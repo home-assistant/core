@@ -27,6 +27,7 @@ from .const import (
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
     CONF_USER_ID,
+    DOMAIN,
 )
 from .helpers import supports_encryption
 
@@ -73,6 +74,12 @@ class RegistrationsView(HomeAssistantView):
             data[CONF_SECRET] = secrets.token_hex(SecretBox.KEY_SIZE)
 
         data[CONF_USER_ID] = request["hass_user"].id
+
+        await hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, data=data, context={"source": "registration"}
+            )
+        )
 
         remote_ui_url = None
         try:
