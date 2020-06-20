@@ -30,6 +30,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MPC-HC"
 DEFAULT_PORT = 13579
+DEFAULT_LOG = []
+
+LOG_CONNECT = "connect"
+LOG_SEND_COMMAND = "send_command"
+LOG_TYPES = [LOG_CONNECT, LOG_SEND_COMMAND]
+
+CONF_LOG = 'log'
 
 SUPPORT_MPCHC = (
     SUPPORT_VOLUME_MUTE
@@ -46,6 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_LOG, default=list(DEFAULT_LOG)): vol.All(cv.ensure_list, [vol.In(LOG_TYPES)]),
     }
 )
 
@@ -55,21 +63,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    log = config.get(CONF_LOG)
 
     url = f"{host}:{port}"
 
-    add_entities([MpcHcDevice(name, url)], True)
+    add_entities([MpcHcDevice(name, url, log)], True)
 
 
 class MpcHcDevice(MediaPlayerEntity):
     """Representation of a MPC-HC server."""
 
-    def __init__(self, name, url):
+    def __init__(self, name, url, log):
         """Initialize the MPC-HC device."""
         self._name = name
         self._url = url
         self._player_variables = {}
         self._available = False
+        self._log = log
 
     def update(self):
         """Get the latest details."""
@@ -82,7 +92,8 @@ class MpcHcDevice(MediaPlayerEntity):
                 self._player_variables[var[0]] = var[1].lower()
             self._available = True
         except requests.exceptions.RequestException:
-            _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+            if LOG_CONNECT in self._log:
+                _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
             self._player_variables = {}
             self._available = False
 
@@ -92,9 +103,10 @@ class MpcHcDevice(MediaPlayerEntity):
             params = {"wm_command": command_id}
             requests.get(f"{self._url}/command.html", params=params, timeout=3)
         except requests.exceptions.RequestException:
-            _LOGGER.error(
-                "Could not send command %d to MPC-HC at: %s", command_id, self._url
-            )
+            if LOG_SEND_COMMAND in self._log:
+                _LOGGER.error(
+                    "Could not send command %d to MPC-HC at: %s", command_id, self._url
+                )
 
     @property
     def name(self):
