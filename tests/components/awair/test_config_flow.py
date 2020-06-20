@@ -57,6 +57,8 @@ async def test_duplicate_error(hass):
 
     with patch(
         "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, DEVICES_FIXTURE]
+    ), patch(
+        "homeassistant.components.awair.sensor.async_setup_entry", return_value=True,
     ):
         MockConfigEntry(
             domain=DOMAIN, unique_id=CONFIG_ENTRY_UNIQUE_ID, data=CONFIG
@@ -89,6 +91,8 @@ async def test_create_entry(hass):
 
     with patch(
         "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, DEVICES_FIXTURE]
+    ), patch(
+        "homeassistant.components.awair.sensor.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
