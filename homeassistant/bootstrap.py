@@ -445,8 +445,8 @@ async def _async_set_up_integrations(
     # calculate what components to setup in what stage
     stage_1_domains = set()
 
-    # Find all (after) dependencies of any dependency of any stage 1 integration
-    # that we plan on loading and promote them to stage 1 to avoid deadlocks
+    # Find all dependencies of any dependency of any stage 1 integration that
+    # we plan on loading and promote them to stage 1
     deps_promotion = STAGE_1_INTEGRATIONS
     while deps_promotion:
         old_deps_promotion = deps_promotion
