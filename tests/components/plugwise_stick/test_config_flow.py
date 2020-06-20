@@ -35,10 +35,9 @@ async def test_user_flow_show_form(hass):
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-@patch(
-    "homeassistant.components.plugwise_stick.config_flow.validate_connection",
-    AsyncMock(return_value=None),
-)
+@patch("plugwise.stick.connect", MagicMock(return_value=None))
+@patch("plugwise.stick.initialize_stick", MagicMock(return_value=None))
+@patch("plugwise.stick.disconnect", MagicMock(return_value=None))
 async def test_user_flow_select(hass):
     """Test user flow when USB-stick is selected from list."""
     port = com_port()
@@ -145,17 +144,6 @@ async def test_timeout_exception(hass):
     )
     assert result["type"] == "form"
     assert result["errors"] == {"base": "network_timeout"}
-
-
-@patch("plugwise.stick.connect", MagicMock(return_value=None))
-@patch("plugwise.stick.initialize_stick", MagicMock(return_value=None))
-@patch("plugwise.stick.disconnect", MagicMock(return_value=None))
-async def test_successful_connection(hass):
-    """Test successful connection."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_USB_PATH: "/dev/null"},
-    )
-    assert result["errors"] == {}
 
 
 def test_get_serial_by_id_no_dir():
