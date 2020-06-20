@@ -491,7 +491,7 @@ prayer_times_calculator==0.0.3
 prometheus_client==0.7.1
 
 # homeassistant.components.ptvsd
-ptvsd==4.2.8
+ptvsd==4.3.2
 
 # homeassistant.components.androidtv
 pure-python-adb==0.2.2.dev0
