@@ -72,7 +72,7 @@ class NetatmoDataHandler:
 
         async def async_update(event_time):
             """Update device."""
-            queue = [entry for entry in self._queue[0:PARALLEL_CALLS]]
+            queue = self._queue[0:PARALLEL_CALLS]
             for _ in queue:
                 self._queue.append(self._queue.pop(0))
 
