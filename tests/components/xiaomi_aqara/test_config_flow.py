@@ -33,9 +33,6 @@ def xiaomi_aqara_fixture():
         "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGatewayDiscovery",
         return_value=mock_gateway_discovery,
     ), patch(
-        "homeassistant.components.xiaomi_aqara.config_flow.get_mac_address",
-        return_value=TEST_MAC,
-    ), patch(
         "homeassistant.components.xiaomi_aqara.async_setup_entry", return_value=True
     ):
         yield
@@ -168,37 +165,6 @@ async def test_config_flow_user_discovery_error(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
-
-
-async def test_config_flow_user_get_mac_error(hass):
-    """Test a failed config flow initialized by the user where the mac address of the gateway could not be retrieved."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.xiaomi_aqara.config_flow.get_mac_address",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
-        )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-    assert result["errors"] == {"base": "get_mac_error"}
 
 
 async def test_zeroconf_success(hass):

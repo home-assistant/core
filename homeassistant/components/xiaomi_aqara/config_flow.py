@@ -1,8 +1,6 @@
 """Config flow to configure Xiaomi Aqara."""
-from functools import partial
 import logging
 
-from getmac import get_mac_address
 import voluptuous as vol
 from xiaomi_gateway import XiaomiGatewayDiscovery
 
@@ -143,39 +141,27 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             sid = self.selected_gateway.sid
             protocol = self.selected_gateway.proto
 
-            # get mac address
-            mac_address = await self.async_get_mac(ip_adress)
+            # format_mac, for a gateway the sid equels the mac address
+            mac_address = format_mac(sid)
 
-            if mac_address is not None:
-                # set unique_id
-                unique_id = mac_address
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+            # set unique_id
+            unique_id = mac_address
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title=name,
-                    data={
-                        CONF_HOST: ip_adress,
-                        CONF_PORT: port,
-                        CONF_MAC: mac_address,
-                        CONF_INTERFACE: self.interface,
-                        CONF_PROTOCOL: protocol,
-                        CONF_KEY: key,
-                        CONF_SID: sid,
-                    },
-                )
-
-            errors["base"] = "get_mac_error"
+            return self.async_create_entry(
+                title=name,
+                data={
+                    CONF_HOST: ip_adress,
+                    CONF_PORT: port,
+                    CONF_MAC: mac_address,
+                    CONF_INTERFACE: self.interface,
+                    CONF_PROTOCOL: protocol,
+                    CONF_KEY: key,
+                    CONF_SID: sid,
+                },
+            )
 
         return self.async_show_form(
             step_id="settings", data_schema=GATEWAY_SETTINGS, errors=errors
         )
-
-    async def async_get_mac(self, ip_adress):
-        """Get the mac address of the Xiaomi Aqara Gateway."""
-        mac_address = await self.hass.async_add_executor_job(
-            partial(get_mac_address, **{"ip": ip_adress})
-        )
-        if mac_address is not None:
-            mac_address = format_mac(mac_address)
-        return mac_address

@@ -27,8 +27,7 @@
     },
     "error": {
       "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
-      "not_found_error": "Zeroconf discovered Gateway could not be located to get the necessary information",
-      "get_mac_error": "Could not retrieve the mac adress of the Gateway"
+      "not_found_error": "Zeroconf discovered Gateway could not be located to get the necessary information"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
