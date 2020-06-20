@@ -1,6 +1,8 @@
 """Integrates Native Apps to Home Assistant."""
 import asyncio
 
+import emoji
+
 from homeassistant.components import cloud
 from homeassistant.components.webhook import (
     async_register as webhook_register,
@@ -9,6 +11,7 @@ from homeassistant.components.webhook import (
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.util import slugify
 
 from .const import (
     ATTR_DEVICE_ID,
@@ -75,6 +78,20 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 async def async_setup_entry(hass, entry):
     """Set up a mobile_app entry."""
     registration = entry.data
+
+    if slugify(registration[ATTR_DEVICE_NAME], separator=""):
+        # if slug is not empty and would not only be underscores
+        # use DEVICE_NAME
+        pass
+    elif emoji.emoji_count(registration[ATTR_DEVICE_NAME]):
+        # If otherwise empty string contains emoji
+        # use descriptive name of the first emoji
+        registration[ATTR_DEVICE_NAME] = emoji.demojize(
+            emoji.emoji_lis(registration[ATTR_DEVICE_NAME])[0]["emoji"]
+        ).replace(":", "")
+    else:
+        # Fallback to DEVICE_ID
+        registration[ATTR_DEVICE_NAME] = registration[ATTR_DEVICE_ID]
 
     webhook_id = registration[CONF_WEBHOOK_ID]
 
