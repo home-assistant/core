@@ -1,7 +1,6 @@
 """Tests for config flow."""
 from aiohttp.test_utils import TestClient
 
-from homeassistant.components import webhook
 from homeassistant.components.withings import const
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
@@ -50,8 +49,6 @@ async def test_config_reauth_profile(
         },
     }
     await async_process_ha_core_config(hass, hass_config.get(HA_DOMAIN))
-    assert await async_setup_component(hass, HA_DOMAIN, {})
-    assert await async_setup_component(hass, webhook.DOMAIN, hass_config)
     assert await async_setup_component(hass, const.DOMAIN, hass_config)
     await hass.async_block_till_done()
 
