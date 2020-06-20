@@ -189,17 +189,17 @@ class NetdataAlarms(Entity):
         alarms = self.netdata.api.alarms["alarms"]
         self._state = None
         number_of_alarms = len(alarms)
-        number_of_relevant_alamrs = number_of_alarms
+        number_of_relevant_alarms = number_of_alarms
 
         _LOGGER.debug("Host %s has %s alarms", self.name, number_of_alarms)
 
         for alarm in alarms:
             if alarms[alarm]["recipient"] == "silent":
-                number_of_relevant_alamrs = number_of_relevant_alamrs - 1
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
             elif alarms[alarm]["status"] == "CRITICAL":
                 self._state = "critical"
                 return
-        self._state = "ok" if number_of_relevant_alamrs == 0 else "warning"
+        self._state = "ok" if number_of_relevant_alarms == 0 else "warning"
 
 
 class NetdataData:
