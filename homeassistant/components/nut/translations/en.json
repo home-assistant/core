@@ -1,6 +1,5 @@
 {
     "config": {
-        "flow_title": "NUT server ({host}:{port})",
         "abort": {
             "already_configured": "Device is already configured"
         },

@@ -181,7 +181,7 @@ aioftp==0.12.0
 aioguardian==0.2.3
 
 # homeassistant.components.harmony
-aioharmony==0.2.4
+aioharmony==0.2.5
 
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.38

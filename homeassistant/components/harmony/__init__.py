@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
+from .const import ATTR_ACTIVITY_NOTIFY, DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
 from .remote import HarmonyRemote
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,11 +38,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     name = entry.data[CONF_NAME]
     activity = entry.options.get(ATTR_ACTIVITY)
     delay_secs = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+    activity_notify = entry.options.get(ATTR_ACTIVITY_NOTIFY, False)
 
     harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
     try:
         device = HarmonyRemote(
-            name, entry.unique_id, address, activity, harmony_conf_file, delay_secs
+            name,
+            entry.unique_id,
+            address,
+            activity,
+            harmony_conf_file,
+            delay_secs,
+            activity_notify,
         )
         connected_ok = await device.connect()
     except (asyncio.TimeoutError, ValueError, AttributeError):

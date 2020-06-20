@@ -38,7 +38,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
 
-LOG_SLOW_STARTUP_INTERVAL = 1
+LOG_SLOW_STARTUP_INTERVAL = 60
 
 DEBUGGER_INTEGRATIONS = {"ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
@@ -445,8 +445,8 @@ async def _async_set_up_integrations(
     # calculate what components to setup in what stage
     stage_1_domains = set()
 
-    # Find all (after) dependencies of any dependency of any stage 1 integration
-    # that we plan on loading and promote them to stage 1 to avoid deadlocks
+    # Find all dependencies of any dependency of any stage 1 integration that
+    # we plan on loading and promote them to stage 1
     deps_promotion = STAGE_1_INTEGRATIONS
     while deps_promotion:
         old_deps_promotion = deps_promotion
