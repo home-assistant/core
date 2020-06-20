@@ -86,9 +86,12 @@ async def async_setup_entry(hass, entry):
     elif emoji.emoji_count(registration[ATTR_DEVICE_NAME]):
         # If otherwise empty string contains emoji
         # use descriptive name of the first emoji
-        registration[ATTR_DEVICE_NAME] = emoji.demojize(
-            emoji.emoji_lis(registration[ATTR_DEVICE_NAME])[0]["emoji"]
-        ).replace(":", "")
+        registration[ATTR_DEVICE_NAME] = (
+            emoji.demojize(emoji.emoji_lis(registration[ATTR_DEVICE_NAME])[0]["emoji"])
+            .replace(":", "")
+            .replace("_", " ")
+            .title()
+        )
     else:
         # Fallback to DEVICE_ID
         registration[ATTR_DEVICE_NAME] = registration[ATTR_DEVICE_ID]
