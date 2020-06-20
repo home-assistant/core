@@ -1,8 +1,10 @@
 """Constants for the Awair component."""
 
-from collections import namedtuple
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+
+from python_awair.devices import AwairDevice
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -15,8 +17,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
-
-AwairResult = namedtuple("AwairResult", ["device", "air_data"])
 
 API_CO2 = "carbon_dioxide"
 API_DUST = "dust"
@@ -64,57 +64,65 @@ UPDATE_INTERVAL = timedelta(minutes=5)
 
 SENSOR_TYPES = {
     API_SCORE: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_AIR_QUALITY_INDEX,
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_LABEL: "Awair Score",
     },
     API_HUMID: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-        ATTR_ICON: "mdi:water-percent",
+        ATTR_ICON: None,
         ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_LABEL: "Humidity",
     },
     API_LUX: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
-        ATTR_ICON: "mdi:lightbulb",
-        ATTR_UNIT: "lux",
+        ATTR_ICON: None,
+        ATTR_UNIT: "lx",
         ATTR_LABEL: "Illuminance",
     },
     API_SPL_A: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_SOUND_LEVEL,
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:ear-hearing",
         ATTR_UNIT: "dBa",
         ATTR_LABEL: "Sound level",
     },
     API_VOC: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:cloud",
         ATTR_UNIT: CONCENTRATION_PARTS_PER_BILLION,
         ATTR_LABEL: "Volatile organic compounds",
     },
     API_TEMP: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: "mdi:thermometer",
+        ATTR_ICON: None,
         ATTR_UNIT: TEMP_CELSIUS,
         ATTR_LABEL: "Temperature",
     },
     API_PM25: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_PM_2_5,
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_LABEL: "PM2.5",
     },
     API_PM10: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_PM_10,
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_LABEL: "PM10",
     },
     API_CO2: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_CO2,
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:cloud",
         ATTR_UNIT: CONCENTRATION_PARTS_PER_MILLION,
         ATTR_LABEL: "Carbon dioxide",
     },
 }
+
+
+@dataclass
+class AwairResult:
+    """Wrapper class to hold an awair device and set of air data."""
+
+    device: AwairDevice
+    air_data: dict

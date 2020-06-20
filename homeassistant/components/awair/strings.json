@@ -5,17 +5,24 @@
         "title": "Awair",
         "description": "You must register for an Awair developer access token at: https://developer.getawair.com/onboard/login",
         "data": {
-          "access_token": "Awair access token"
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      },
+      "reauth": {
+        "title": "Awair",
+        "description": "Please re-enter your Awair developer access token.",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
         }
       }
     },
     "error": {
-      "auth": "Invalid access token.",
+      "auth": "[%key:common::config_flow::error::invalid_access_token%]",
       "unknown": "Unknown Awair API error."
     },
     "abort": {
-      "already_configured": "The Awair integration has already been set up for this access token.",
-      "no_devices": "No Awair devices found for this access token."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_devices": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }

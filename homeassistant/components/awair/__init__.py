@@ -5,9 +5,8 @@ from typing import Any, Optional
 
 from async_timeout import timeout
 from python_awair import Awair
-from python_awair.exceptions import AwairError, RatelimitError
+from python_awair.exceptions import AuthError
 
-from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -26,9 +25,8 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 async def async_setup_entry(hass, config_entry) -> bool:
     """Set up Awair integration from a config entry."""
-    access_token = config_entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
-    coordinator = AwairDataUpdateCoordinator(hass, access_token, session)
+    coordinator = AwairDataUpdateCoordinator(hass, config_entry, session)
 
     await coordinator.async_refresh()
 
@@ -64,9 +62,11 @@ async def async_unload_entry(hass, config_entry) -> bool:
 class AwairDataUpdateCoordinator(DataUpdateCoordinator):
     """Define a wrapper class to update Awair data."""
 
-    def __init__(self, hass, access_token, session) -> None:
+    def __init__(self, hass, config_entry, session) -> None:
         """Set up the AwairDataUpdateCoordinator class."""
+        access_token = config_entry.data[CONF_ACCESS_TOKEN]
         self._awair = Awair(access_token=access_token, session=session)
+        self._config_entry = config_entry
 
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
@@ -81,18 +81,11 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                     *[self._fetch_air_data(device) for device in devices]
                 )
                 return {result.device.uuid: result for result in results}
-            except RatelimitError as err:
-                raise UpdateFailed(err)
-            except AwairError as err:
-                message = (
-                    "Unable to update Awair data - please ensure your access token is correct. ",
-                    "You may unload and re-add the Awair integration if you need to update the access token.",
-                )
-                persistent_notification.async_create(
-                    hass=self.hass,
-                    message=message,
-                    title="Awair",
-                    notification_id="awair_api_error",
+            except AuthError as err:
+                await self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": "reauth"},
+                    data={"config_entry": self._config_entry},
                 )
                 raise UpdateFailed(err)
             except Exception as err:

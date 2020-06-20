@@ -6,14 +6,13 @@ from python_awair.devices import AwairDevice
 import voluptuous as vol
 
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ACCESS_TOKEN
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util import slugify
 
 from .const import (
     API_DUST,
@@ -26,7 +25,6 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
     DUST_ALIASES,
-    LOGGER,
     SENSOR_TYPES,
 )
 
@@ -86,14 +84,6 @@ class AwairSensor(Entity):
         self._device = device
         self._coordinator = coordinator
 
-        entity_id_name = SENSOR_TYPES[self.__kind][ATTR_DEVICE_CLASS]
-        if self.__device.name:
-            entity_id_name = f"{self.__device.name} {entity_id_name}"
-
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, entity_id_name, hass=self.__coordinator.hass
-        )
-
     @property
     def should_poll(self) -> bool:
         """Return the polling requirement of the entity."""
@@ -111,7 +101,7 @@ class AwairSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return the uuid as the unique_id."""
-        return f"{self._device.uuid}-{SENSOR_TYPES[self._kind][ATTR_DEVICE_CLASS]}"
+        return f"{self._device.uuid}-{self._kind}"
 
     @property
     def available(self) -> bool:
@@ -199,12 +189,10 @@ class AwairSensor(Entity):
         https://docs.developer.getawair.com/?version=latest#awair-score-and-index
         """
         attrs = {}
-        label = slugify(SENSOR_TYPES[self._kind][ATTR_DEVICE_CLASS])
-
         if self._kind in self._air_data.indices:
-            attrs[f"{label}_awair_index"] = abs(self._air_data.indices[self._kind])
+            attrs["awair_index"] = abs(self._air_data.indices[self._kind])
         elif self._kind in DUST_ALIASES and API_DUST in self._air_data.indices:
-            attrs[f"{label}_awair_index"] = abs(self._air_data.indices.dust)
+            attrs["awair_index"] = abs(self._air_data.indices.dust)
 
         return attrs
 
@@ -241,8 +229,7 @@ class AwairSensor(Entity):
     def _air_data(self) -> Optional[AwairResult]:
         """Return the latest data for our device, or None."""
         result: Optional[AwairResult] = self._coordinator.data.get(self._device.uuid)
-        )
         if result:
             return result.air_data
-        else:
-            return None
+
+        return None
