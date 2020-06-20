@@ -21,9 +21,11 @@ from homeassistant.const import (
     CONF_PORT,
     STATE_IDLE,
     STATE_OFF,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +39,7 @@ LOG_SEND_COMMAND = "send_command"
 LOG_TYPES = [LOG_CONNECT, LOG_SEND_COMMAND]
 
 CONF_LOG = 'log'
+CONF_POWER_SENSOR = 'power_sensor'
 
 SUPPORT_MPCHC = (
     SUPPORT_VOLUME_MUTE
@@ -54,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_LOG, default=list(DEFAULT_LOG)): vol.All(cv.ensure_list, [vol.In(LOG_TYPES)]),
+        vol.Optional(CONF_POWER_SENSOR): cv.entity_id
     }
 )
 
@@ -64,49 +68,77 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     log = config.get(CONF_LOG)
+    power_sensor = config.get(CONF_POWER_SENSOR)
 
     url = f"{host}:{port}"
 
-    add_entities([MpcHcDevice(name, url, log)], True)
+    add_entities([MpcHcDevice(hass, name, url, log, power_sensor)], True)
 
 
 class MpcHcDevice(MediaPlayerEntity):
     """Representation of a MPC-HC server."""
 
-    def __init__(self, name, url, log):
+    def __init__(self, hass, name, url, log, power_sensor):
         """Initialize the MPC-HC device."""
+        self.hass = hass
         self._name = name
         self._url = url
         self._player_variables = {}
         self._available = False
         self._log = log
+        self._power_sensor_available = False
+        self._power_sensor = power_sensor
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+
+        if self._power_sensor:
+            async_track_state_change(self.hass, self._power_sensor,
+                                     self._async_power_sensor_changed)
+
+    async def _async_power_sensor_changed(self, entity_id, old_state, new_state):
+        """Handle power sensor changes."""
+        if new_state is None:
+            return
+
+        if new_state.state == STATE_ON and self._power_sensor_available == False:
+            self._power_sensor_available = True
+        if new_state.state == STATE_OFF:
+            if self._power_sensor_available == True:
+                self._power_sensor_available = False
+            if self._available == True:
+                self._available = False
 
     def update(self):
         """Get the latest details."""
-        try:
-            response = requests.get(f"{self._url}/variables.html", data=None, timeout=3)
+        if not self._power_sensor or self._power_sensor and self._power_sensor_available:
+            try:
+                response = requests.get(f"{self._url}/variables.html", data=None, timeout=3)
+                response.encoding = 'utf-8'
 
-            mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>', response.text)
+                mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>', response.text)
 
-            for var in mpchc_variables:
-                self._player_variables[var[0]] = var[1].lower()
-            self._available = True
-        except requests.exceptions.RequestException:
-            if LOG_CONNECT in self._log:
-                _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
-            self._player_variables = {}
-            self._available = False
+                for var in mpchc_variables:
+                    self._player_variables[var[0]] = var[1].lower()
+                self._available = True
+            except requests.exceptions.RequestException:
+                if LOG_CONNECT in self._log:
+                    _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+                self._player_variables = {}
+                self._available = False
 
     def _send_command(self, command_id):
         """Send a command to MPC-HC via its window message ID."""
-        try:
-            params = {"wm_command": command_id}
-            requests.get(f"{self._url}/command.html", params=params, timeout=3)
-        except requests.exceptions.RequestException:
-            if LOG_SEND_COMMAND in self._log:
-                _LOGGER.error(
-                    "Could not send command %d to MPC-HC at: %s", command_id, self._url
-                )
+        if not self._power_sensor or self._power_sensor and self._power_sensor_available:
+            try:
+                params = {"wm_command": command_id}
+                requests.get(f"{self._url}/command.html", params=params, timeout=3)
+            except requests.exceptions.RequestException:
+                if LOG_SEND_COMMAND in self._log:
+                    _LOGGER.error(
+                        "Could not send command %d to MPC-HC at: %s", command_id, self._url
+                    )
 
     @property
     def name(self):
