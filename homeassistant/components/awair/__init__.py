@@ -82,13 +82,24 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 return {result.device.uuid: result for result in results}
             except AuthError as err:
-                self.hass.add_job(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": "reauth"},
-                        data={"config_entry": self._config_entry},
+                flow_context = {
+                    "source": "reauth",
+                    "unique_id": self._config_entry.unique_id,
+                }
+
+                matching_flows = [
+                    flow
+                    for flow in self.hass.config_entries.flow.async_progress()
+                    if flow["context"] == flow_context
+                ]
+
+                if not matching_flows:
+                    self.hass.add_job(
+                        self.hass.config_entries.flow.async_init(
+                            DOMAIN, context=flow_context, data=self._config_entry.data,
+                        )
                     )
-                )
+
                 raise UpdateFailed(err)
             except Exception as err:
                 raise UpdateFailed(err)

@@ -7,7 +7,7 @@ from python_awair.exceptions import AuthError, AwairError
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
@@ -24,15 +24,15 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="already_setup")
 
-        await self._abort_if_configured(conf[CONF_ACCESS_TOKEN])
-
         user, error = await self._check_connection(conf[CONF_ACCESS_TOKEN])
         if error is not None:
             return self.async_abort(reason=error)
 
+        await self._abort_if_configured(user.email)
+
         return self.async_create_entry(
             title=f"{user.email} ({user.user_id})",
-            data={CONF_ACCESS_TOKEN: conf[CONF_ACCESS_TOKEN]},
+            data={CONF_EMAIL: user.email, CONF_ACCESS_TOKEN: conf[CONF_ACCESS_TOKEN]},
         )
 
     async def async_step_user(self, user_input: Union[dict, None] = None):
@@ -43,7 +43,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             user, error = await self._check_connection(user_input[CONF_ACCESS_TOKEN])
 
             if user is not None:
-                await self._abort_if_configured(user_input[CONF_ACCESS_TOKEN])
+                await self._abort_if_configured(user_input[CONF_EMAIL])
                 title = f"{user.email} ({user.user_id})"
                 return self.async_create_entry(title=title, data=user_input)
 
@@ -54,7 +54,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_ACCESS_TOKEN): str}
+            ),
             errors=errors,
         )
 
@@ -63,27 +65,31 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if "config_entry" in user_input:
-                if self.unique_id is None:
-                    await self.async_set_unique_id(user_input["config_entry"].unique_id)
-            elif CONF_ACCESS_TOKEN in user_input:
-                access_token = user_input[CONF_ACCESS_TOKEN]
-                user, error = await self._check_connection(access_token)
+            access_token = user_input[CONF_ACCESS_TOKEN]
+            _, error = await self._check_connection(access_token)
 
-                if error is None:
-                    return self.async_create_entry(
-                        title=f"{user.email} ({user.user_id})",
-                        data={CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN]},
-                    )
+            if error is None:
+                for entry in self._async_current_entries():
+                    if entry.unique_id == self.unique_id:
+                        self.hass.config_entries.async_update_entry(
+                            entry, data=user_input
+                        )
 
-                if error != "auth":
-                    return self.async_abort(reason=error)
+                        return self.async_abort(reason="reauth_successful")
 
-                errors = {CONF_ACCESS_TOKEN: error}
+            if error != "auth":
+                return self.async_abort(reason=error)
+
+            errors = {CONF_ACCESS_TOKEN: error}
 
         return self.async_show_form(
             step_id="reauth",
-            data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_EMAIL, default=self.unique_id): str,
+                    vol.Required(CONF_ACCESS_TOKEN): str,
+                }
+            ),
             errors=errors,
         )
 
@@ -106,7 +112,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.error("Unexpected API error: %s", err)
             return (None, "unknown")
 
-    async def _abort_if_configured(self, access_token: str):
-        """Abort if this access_token has been set up."""
-        await self.async_set_unique_id(access_token)
+    async def _abort_if_configured(self, email: str):
+        """Abort if this email has been set up."""
+        await self.async_set_unique_id(email)
         self._abort_if_unique_id_configured()
