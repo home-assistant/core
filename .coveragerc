@@ -153,7 +153,6 @@ omit =
     homeassistant/components/danfoss_air/*
     homeassistant/components/darksky/weather.py
     homeassistant/components/ddwrt/device_tracker.py
-    homeassistant/components/debugpy/__init__.py
     homeassistant/components/decora/light.py
     homeassistant/components/decora_wifi/light.py
     homeassistant/components/delijn/*

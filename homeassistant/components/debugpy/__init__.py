@@ -4,6 +4,7 @@ import logging
 from threading import Thread
 from typing import Optional
 
+import debugpy
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -42,11 +43,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         call: Optional[ServiceCall] = None, *, wait: bool = True
     ) -> None:
         """Start the debugger."""
-        # This is a local import, since importing this at the top, will cause
-        # ptvsd to hook into `sys.settrace`. So does `coverage` to generate
-        # coverage, resulting in a battle and incomplete code test coverage.
-        import debugpy  # pylint: disable=import-outside-toplevel
-
         debugpy.listen((conf[CONF_HOST], conf[CONF_PORT]))
 
         wait = conf[CONF_WAIT]
