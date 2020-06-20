@@ -126,6 +126,8 @@ TYPE_TEMPF = "tempf"
 TYPE_TEMPINF = "tempinf"
 TYPE_TOTALRAININ = "totalrainin"
 TYPE_UV = "uv"
+TYPE_PM25 = "pm25"
+TYPE_PM25_24H = "pm25_24h"
 TYPE_WEEKLYRAININ = "weeklyrainin"
 TYPE_WINDDIR = "winddir"
 TYPE_WINDDIR_AVG10M = "winddir_avg10m"
@@ -218,6 +220,8 @@ SENSOR_TYPES = {
     TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TOTALRAININ: ("Lifetime Rain", "in", TYPE_SENSOR, None),
     TYPE_UV: ("uv", "Index", TYPE_SENSOR, None),
+    TYPE_PM25: ("PM25", "μg/m^3", TYPE_SENSOR, None),
+    TYPE_PM25_24H: ("PM25 24h Avg", "μg/m^3", TYPE_SENSOR, None),
     TYPE_WEEKLYRAININ: ("Weekly Rain", "in", TYPE_SENSOR, None),
     TYPE_WINDDIR: ("Wind Dir", DEGREE, TYPE_SENSOR, None),
     TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, TYPE_SENSOR, None),
