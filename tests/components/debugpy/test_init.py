@@ -17,7 +17,7 @@ from tests.async_mock import patch
 
 @pytest.fixture
 def mock_debugpy():
-    """Mock path lib."""
+    """Mock debugpy lib."""
     with patch("homeassistant.components.debugpy.debugpy") as mocked_debugpy:
         yield mocked_debugpy
 
@@ -28,6 +28,7 @@ async def test_default(hass: HomeAssistant, mock_debugpy) -> None:
 
     mock_debugpy.listen.assert_called_once_with(("0.0.0.0", 5678))
     mock_debugpy.wait_for_client.assert_not_called()
+    assert len(mock_debugpy.method_calls) == 1
 
 
 async def test_wait_on_startup(hass: HomeAssistant, mock_debugpy) -> None:
@@ -36,6 +37,7 @@ async def test_wait_on_startup(hass: HomeAssistant, mock_debugpy) -> None:
 
     mock_debugpy.listen.assert_called_once_with(("0.0.0.0", 5678))
     mock_debugpy.wait_for_client.assert_called_once()
+    assert len(mock_debugpy.method_calls) == 2
 
 
 async def test_on_demand(hass: HomeAssistant, mock_debugpy) -> None:
@@ -48,6 +50,7 @@ async def test_on_demand(hass: HomeAssistant, mock_debugpy) -> None:
 
     mock_debugpy.listen.assert_not_called()
     mock_debugpy.wait_for_client.assert_not_called()
+    assert len(mock_debugpy.method_calls) == 0
 
     await hass.services.async_call(
         DOMAIN, SERVICE_START, blocking=True,
@@ -55,3 +58,4 @@ async def test_on_demand(hass: HomeAssistant, mock_debugpy) -> None:
 
     mock_debugpy.listen.assert_called_once_with(("127.0.0.1", 80))
     mock_debugpy.wait_for_client.assert_not_called()
+    assert len(mock_debugpy.method_calls) == 1
