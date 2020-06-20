@@ -81,10 +81,12 @@ class RegistrationsView(HomeAssistantView):
             # if slug is not empty and would not only be underscores
             # use DEVICE_NAME
             pass
-        elif slugify(emoji.demojize(data[ATTR_DEVICE_NAME]), separator=""):
-            # If we can decode emoji to get non-empty DEVICE_NAME
-            # use descriptive emoji name
-            data[ATTR_DEVICE_NAME] = emoji.demojize(data[ATTR_DEVICE_NAME])
+        elif emoji.emoji_count(data[ATTR_DEVICE_NAME]):
+            # If otherwise empty string contains emoji
+            # use descriptive name of the first emoji
+            data[ATTR_DEVICE_NAME] = emoji.demojize(
+                emoji.emoji_lis(data[ATTR_DEVICE_NAME])[0]["emoji"]
+            ).replace(":", "")
         else:
             # Fallback to DEVICE_ID
             data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
