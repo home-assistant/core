@@ -496,6 +496,10 @@ class HistoryPeriodView(HomeAssistantView):
         minimal_response,
     ):
         """Fetch significant stats from the database as json."""
+        import cProfile
+
+        pr = cProfile.Profile()
+        pr.enable()
         timer_start = time.perf_counter()
 
         with session_scope(hass=hass) as session:
@@ -529,7 +533,11 @@ class HistoryPeriodView(HomeAssistantView):
             sorted_result.extend(result)
             result = sorted_result
 
-        return self.json(result)
+        hh = self.json(result)
+        pr.disable()
+        pr.create_stats()
+        pr.dump_stats("history54.cprof")
+        return hh
 
 
 class Filters:
