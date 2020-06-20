@@ -6,7 +6,7 @@ attrs==19.3.0
 bcrypt==3.1.7
 certifi>=2020.4.5.1
 ciso8601==2.1.3
-importlib-metadata==1.6.0
+importlib-metadata==1.6.0;python_version<'3.8'
 jinja2>=2.11.1
 PyJWT==1.7.1
 cryptography==2.9.2
@@ -14,7 +14,7 @@ pip>=8.0.3
 python-slugify==4.0.0
 pytz>=2020.1
 pyyaml==5.3.1
-requests==2.23.0
+requests==2.24.0
 ruamel.yaml==0.15.100
 voluptuous==0.11.7
 voluptuous-serialize==2.3.0
@@ -181,7 +181,7 @@ aioftp==0.12.0
 aioguardian==0.2.3
 
 # homeassistant.components.harmony
-aioharmony==0.2.4
+aioharmony==0.2.5
 
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.38
@@ -200,7 +200,7 @@ aioimaplib==0.7.15
 aiokafka==0.5.1
 
 # homeassistant.components.kef
-aiokef==0.2.10
+aiokef==0.2.12
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
@@ -306,7 +306,7 @@ avea==1.4
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==30
+axis==32
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -472,7 +472,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.8.1
+denonavr==0.9.3
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.11.0
@@ -634,6 +634,7 @@ georss_ign_sismologia_client==0.2
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.3
 
+# homeassistant.components.denonavr
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
@@ -686,7 +687,7 @@ greenwavereality==0.5.1
 griddypower==0.1.0
 
 # homeassistant.components.growatt_server
-growattServer==0.0.1
+growattServer==0.0.4
 
 # homeassistant.components.gstreamer
 gstreamer-player==1.1.2
@@ -734,7 +735,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200613.0
+home-assistant-frontend==20200620.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -949,7 +950,7 @@ netdata==0.1.2
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
-netdisco==2.7.0
+netdisco==2.7.1
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1090,7 +1091,7 @@ plexapi==4.0.0
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.10
+plexwebsocket==0.0.11
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1127,7 +1128,7 @@ proxmoxer==1.1.0
 psutil==5.7.0
 
 # homeassistant.components.ptvsd
-ptvsd==4.2.8
+ptvsd==4.3.2
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.8
@@ -1176,7 +1177,7 @@ pyHS100==0.3.5
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.4.6
+pyMetno==0.5.1
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.25
@@ -1203,7 +1204,7 @@ py_nextbusnext==0.1.4
 pyads==3.0.7
 
 # homeassistant.components.hisense_aehw4a1
-pyaehw4a1==0.3.4
+pyaehw4a1==0.3.5
 
 # homeassistant.components.aftership
 pyaftership==0.1.2
@@ -1608,6 +1609,9 @@ pysignalclirestapi==0.3.4
 # homeassistant.components.sma
 pysma==0.3.5
 
+# homeassistant.components.smappee
+pysmappee==0.1.0
+
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
 
@@ -1963,9 +1967,6 @@ sleepyq==0.7
 # homeassistant.components.xmpp
 slixmpp==1.5.1
 
-# homeassistant.components.smappee
-smappy==0.2.16
-
 # homeassistant.components.smarthab
 smarthab==0.20
 
@@ -2204,7 +2205,7 @@ wiffi==1.0.0
 wirelesstagpy==0.4.0
 
 # homeassistant.components.withings
-withings-api==2.1.3
+withings-api==2.1.6
 
 # homeassistant.components.wled
 wled==0.4.3
@@ -2245,7 +2246,7 @@ yeelight==0.5.2
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.06.06
+youtube_dl==2020.06.16.1
 
 # homeassistant.components.zengge
 zengge==0.2

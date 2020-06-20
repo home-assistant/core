@@ -2,6 +2,6 @@
   "domain": "ptvsd",
   "name": "PTVSD - Python Tools for Visual Studio Debug Server",
   "documentation": "https://www.home-assistant.io/integrations/ptvsd",
-  "requirements": ["ptvsd==4.2.8"],
+  "requirements": ["ptvsd==4.3.2"],
   "codeowners": ["@swamp-ig"]
 }

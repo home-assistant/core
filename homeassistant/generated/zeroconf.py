@@ -40,6 +40,9 @@ ZEROCONF = {
     "_miio._udp.local.": [
         "xiaomi_miio"
     ],
+    "_nut._tcp.local.": [
+        "nut"
+    ],
     "_printer._tcp.local.": [
         "brother"
     ],

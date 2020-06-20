@@ -66,7 +66,6 @@ SERVICE_HANDLERS = {
     SERVICE_YEELIGHT: ("yeelight", None),
     "yamaha": ("media_player", "yamaha"),
     "logitech_mediaserver": ("media_player", "squeezebox"),
-    "denonavr": ("media_player", "denonavr"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
     "bose_soundtouch": ("media_player", "soundtouch"),
@@ -82,6 +81,7 @@ OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
 MIGRATED_SERVICE_HANDLERS = [
     "axis",
     "deconz",
+    "denonavr",
     "esphome",
     "google_cast",
     SERVICE_HEOS,

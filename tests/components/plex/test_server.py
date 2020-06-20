@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .mock_classes import (
+    MockPlexAccount,
     MockPlexArtist,
     MockPlexLibrary,
     MockPlexLibrarySection,
@@ -62,8 +63,9 @@ async def test_new_users_available(hass):
 
     server_id = mock_plex_server.machineIdentifier
 
-    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        await hass.async_block_till_done()
 
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
 
@@ -101,8 +103,9 @@ async def test_new_ignored_users_available(hass, caplog):
 
     server_id = mock_plex_server.machineIdentifier
 
-    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        await hass.async_block_till_done()
 
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
 
@@ -253,8 +256,9 @@ async def test_ignore_plex_web_client(hass):
 
     server_id = mock_plex_server.machineIdentifier
 
-    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount(players=0)):
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
@@ -287,8 +291,9 @@ async def test_media_lookups(hass):
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
 
     # Plex Key searches
-    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        await hass.async_block_till_done()
     media_player_id = hass.states.async_entity_ids("media_player")[0]
     with patch("homeassistant.components.plex.PlexServer.create_playqueue"):
         assert await hass.services.async_call(
