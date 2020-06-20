@@ -16,8 +16,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up lights for a Lutron deployment."""
     async_add_entities(
-        LutronLight(area, device, hass.data[DOMAIN][entry.entry_id][LUTRON_CONTROLLER],)
-        for (area, device) in hass.data[DOMAIN][entry.entry_id][LUTRON_DEVICES]["light"]
+        (
+            LutronLight(
+                area, device, hass.data[DOMAIN][entry.entry_id][LUTRON_CONTROLLER],
+            )
+            for (area, device) in hass.data[DOMAIN][entry.entry_id][LUTRON_DEVICES][
+                "light"
+            ]
+        ),
+        True,
     )
 
 

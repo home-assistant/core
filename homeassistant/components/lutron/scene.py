@@ -13,16 +13,19 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up scenes for a Lutron Deployment."""
     async_add_entities(
-        LutronScene(
-            area,
-            keypad,
-            device,
-            led,
-            hass.data[DOMAIN][entry.entry_id][LUTRON_CONTROLLER],
-        )
-        for (area, keypad, device, led) in hass.data[DOMAIN][entry.entry_id][
-            LUTRON_DEVICES
-        ]["scene"]
+        (
+            LutronScene(
+                area,
+                keypad,
+                device,
+                led,
+                hass.data[DOMAIN][entry.entry_id][LUTRON_CONTROLLER],
+            )
+            for (area, keypad, device, led) in hass.data[DOMAIN][entry.entry_id][
+                LUTRON_DEVICES
+            ]["scene"]
+        ),
+        True,
     )
 
 
@@ -31,9 +34,9 @@ class LutronScene(LutronDevice, Scene):
 
     def __init__(self, area, keypad, lutron_device, lutron_led, controller):
         """Initialize the scene/button."""
-        super().__init__(area, lutron_device, controller)
         self._keypad = keypad
         self._led = lutron_led
+        super().__init__(area, lutron_device, controller)
         self._keypad_unique_id = f"{self._controller.guid}_{self._keypad.uuid}"
 
     def activate(self, **kwargs: Any) -> None:
