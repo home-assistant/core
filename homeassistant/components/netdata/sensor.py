@@ -176,8 +176,7 @@ class NetdataAlarms(Entity):
             return "mdi:alert-outline"
         elif self._state == "critical":
             return "mdi:alert"
-        else:
-            return "mdi:crosshairs-question"
+        return "mdi:crosshairs-question"
 
     @property
     def available(self):
@@ -190,17 +189,17 @@ class NetdataAlarms(Entity):
         alarms = self.netdata.api.alarms["alarms"]
         self._state = None
         number_of_alarms = len(alarms)
-        n = number_of_alarms
+        number_of_relevant_alamrs = number_of_alarms
 
         _LOGGER.debug("Host %s has %s alarms", self.name, number_of_alarms)
 
         for alarm in alarms:
             if alarms[alarm]["recipient"] == "silent":
-                n = n - 1
+                number_of_relevant_alamrs = number_of_relevant_alamrs - 1
             elif alarms[alarm]["status"] == "CRITICAL":
                 self._state = "critical"
                 return
-        self._state = "ok" if n == 0 else "warning"
+        self._state = "ok" if number_of_relevant_alamrs == 0 else "warning"
 
 
 class NetdataData:
