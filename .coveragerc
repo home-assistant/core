@@ -80,7 +80,12 @@ omit =
     homeassistant/components/bh1750/sensor.py
     homeassistant/components/bitcoin/sensor.py
     homeassistant/components/bizkaibus/sensor.py
-    homeassistant/components/blink/*
+    homeassistant/components/blink/__init__.py
+    homeassistant/components/blink/alarm_control_panel.py
+    homeassistant/components/blink/binary_sensor.py
+    homeassistant/components/blink/camera.py
+    homeassistant/components/blink/const.py
+    homeassistant/components/blink/sensor.py
     homeassistant/components/blinksticklight/light.py
     homeassistant/components/blinkt/light.py
     homeassistant/components/blockchain/sensor.py
@@ -155,6 +160,7 @@ omit =
     homeassistant/components/deluge/switch.py
     homeassistant/components/denon/media_player.py
     homeassistant/components/denonavr/media_player.py
+    homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
     homeassistant/components/devolo_home_control/__init__.py
     homeassistant/components/devolo_home_control/binary_sensor.py
@@ -288,6 +294,7 @@ omit =
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
     homeassistant/components/glances/__init__.py
+    homeassistant/components/glances/const.py
     homeassistant/components/glances/sensor.py
     homeassistant/components/gntp/notify.py
     homeassistant/components/goalfeed/*
@@ -343,6 +350,8 @@ omit =
     homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/entity.py
+    homeassistant/components/hvv_departures/sensor.py
+    homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
@@ -719,7 +728,10 @@ omit =
     homeassistant/components/sinch/*
     homeassistant/components/slide/*
     homeassistant/components/sma/sensor.py
-    homeassistant/components/smappee/*
+    homeassistant/components/smappee/__init__.py
+    homeassistant/components/smappee/api.py
+    homeassistant/components/smappee/sensor.py
+    homeassistant/components/smappee/switch.py
     homeassistant/components/smarty/*
     homeassistant/components/smarthab/*
     homeassistant/components/sms/*

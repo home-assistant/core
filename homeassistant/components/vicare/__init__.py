@@ -19,9 +19,10 @@ from homeassistant.helpers.storage import STORAGE_DIR
 
 _LOGGER = logging.getLogger(__name__)
 
-VICARE_PLATFORMS = ["climate", "water_heater"]
+VICARE_PLATFORMS = ["climate", "sensor", "binary_sensor", "water_heater"]
 
 DOMAIN = "vicare"
+PYVICARE_ERROR = "error"
 VICARE_API = "api"
 VICARE_NAME = "name"
 VICARE_HEATING_TYPE = "heating_type"

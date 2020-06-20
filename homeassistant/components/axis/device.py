@@ -5,6 +5,7 @@ import asyncio
 import async_timeout
 import axis
 from axis.configuration import Configuration
+from axis.errors import Unauthorized
 from axis.event_stream import OPERATION_INITIALIZED
 from axis.mqtt import mqtt_json_to_event
 from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
@@ -153,9 +154,13 @@ class AxisNetworkDevice:
 
     async def use_mqtt(self, hass: HomeAssistant, component: str) -> None:
         """Set up to use MQTT."""
-        status = await hass.async_add_executor_job(
-            self.api.vapix.mqtt.get_client_status
-        )
+        try:
+            status = await hass.async_add_executor_job(
+                self.api.vapix.mqtt.get_client_status
+            )
+        except Unauthorized:
+            # This means the user has too low privileges
+            status = {}
 
         if status.get("data", {}).get("status", {}).get("state") == "active":
             self.listeners.append(

@@ -1,135 +1,236 @@
 """Tests for the Withings component."""
-from datetime import timedelta
+import datetime
+import re
+from typing import Any
+from urllib.parse import urlparse
 
+from aiohttp.test_utils import TestClient
+from asynctest import MagicMock
 import pytest
-from withings_api import WithingsApi
-from withings_api.common import TimeoutException, UnauthorizedException
+import requests_mock
+from withings_api.common import NotifyAppli, NotifyListProfile, NotifyListResponse
 
 from homeassistant.components.withings.common import (
-    NotAuthenticatedError,
-    WithingsDataManager,
+    ConfigEntryWithingsApi,
+    DataManager,
+    WebhookConfig,
 )
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.util import dt
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
 
-from tests.async_mock import MagicMock, patch
-
-
-@pytest.fixture(name="withings_api")
-def withings_api_fixture() -> WithingsApi:
-    """Provide withings api."""
-    withings_api = WithingsApi.__new__(WithingsApi)
-    withings_api.user_get_device = MagicMock()
-    withings_api.measure_get_meas = MagicMock()
-    withings_api.sleep_get = MagicMock()
-    withings_api.sleep_get_summary = MagicMock()
-    return withings_api
+from tests.common import MockConfigEntry
+from tests.components.withings.common import (
+    ComponentFactory,
+    get_data_manager_by_user_id,
+    new_profile_config,
+)
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.fixture(name="data_manager")
-def data_manager_fixture(hass, withings_api: WithingsApi) -> WithingsDataManager:
-    """Provide data manager."""
-    return WithingsDataManager(hass, "My Profile", withings_api)
+async def test_config_entry_withings_api(hass: HomeAssistant) -> None:
+    """Test ConfigEntryWithingsApi."""
+    config_entry = MockConfigEntry(
+        data={"token": {"access_token": "mock_access_token", "expires_at": 1111111}}
+    )
+    config_entry.add_to_hass(hass)
+
+    implementation_mock = MagicMock(spec=AbstractOAuth2Implementation)
+    implementation_mock.async_refresh_token.return_value = {
+        "expires_at": 1111111,
+        "access_token": "mock_access_token",
+    }
+
+    with requests_mock.mock() as rqmck:
+        rqmck.get(
+            re.compile(".*"),
+            status_code=200,
+            json={"status": 0, "body": {"message": "success"}},
+        )
+
+        api = ConfigEntryWithingsApi(hass, config_entry, implementation_mock)
+        response = await hass.async_add_executor_job(
+            api.request, "test", {"arg1": "val1", "arg2": "val2"}
+        )
+        assert response == {"message": "success"}
 
 
-def test_print_service() -> None:
-    """Test method."""
-    # Go from None to True
-    WithingsDataManager.service_available = None
-    assert WithingsDataManager.print_service_available()
-    assert WithingsDataManager.service_available is True
-    assert not WithingsDataManager.print_service_available()
-    assert not WithingsDataManager.print_service_available()
-
-    # Go from True to False
-    assert WithingsDataManager.print_service_unavailable()
-    assert WithingsDataManager.service_available is False
-    assert not WithingsDataManager.print_service_unavailable()
-    assert not WithingsDataManager.print_service_unavailable()
-
-    # Go from False to True
-    assert WithingsDataManager.print_service_available()
-    assert WithingsDataManager.service_available is True
-    assert not WithingsDataManager.print_service_available()
-    assert not WithingsDataManager.print_service_available()
-
-    # Go from Non to False
-    WithingsDataManager.service_available = None
-    assert WithingsDataManager.print_service_unavailable()
-    assert WithingsDataManager.service_available is False
-    assert not WithingsDataManager.print_service_unavailable()
-    assert not WithingsDataManager.print_service_unavailable()
-
-
-async def test_data_manager_call(data_manager: WithingsDataManager) -> None:
-    """Test method."""
-    # Not authenticated 1.
-    test_function = MagicMock(side_effect=UnauthorizedException(401))
-    with pytest.raises(NotAuthenticatedError):
-        await data_manager.call(test_function)
-
-    # Not authenticated 2.
-    test_function = MagicMock(side_effect=TimeoutException(522))
-    with pytest.raises(PlatformNotReady):
-        await data_manager.call(test_function)
-
-    # Service error.
-    test_function = MagicMock(side_effect=PlatformNotReady())
-    with pytest.raises(PlatformNotReady):
-        await data_manager.call(test_function)
-
-
-async def test_data_manager_call_throttle_enabled(
-    data_manager: WithingsDataManager,
+@pytest.mark.parametrize(
+    ["user_id", "arg_user_id", "arg_appli", "expected_code"],
+    [
+        [0, 0, NotifyAppli.WEIGHT.value, 0],  # Success
+        [0, None, 1, 0],  # Success, we ignore the user_id.
+        [0, None, None, 12],  # No request body.
+        [0, "GG", None, 20],  # appli not provided.
+        [0, 0, None, 20],  # appli not provided.
+        [0, 0, 99, 21],  # Invalid appli.
+        [0, 11, NotifyAppli.WEIGHT.value, 0],  # Success, we ignore the user_id
+    ],
+)
+async def test_webhook_post(
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    aiohttp_client,
+    user_id: int,
+    arg_user_id: Any,
+    arg_appli: Any,
+    expected_code: int,
 ) -> None:
-    """Test method."""
-    hello_func = MagicMock(return_value="HELLO2")
+    """Test webhook callback."""
+    person0 = new_profile_config("person0", user_id)
 
-    result = await data_manager.call(hello_func, throttle_domain="test")
-    assert result == "HELLO2"
+    await component_factory.configure_component(profile_configs=(person0,))
+    await component_factory.setup_profile(person0.user_id)
+    data_manager = get_data_manager_by_user_id(hass, user_id)
 
-    result = await data_manager.call(hello_func, throttle_domain="test")
-    assert result == "HELLO2"
+    client: TestClient = await aiohttp_client(hass.http.app)
 
-    assert hello_func.call_count == 1
+    post_data = {}
+    if arg_user_id is not None:
+        post_data["userid"] = arg_user_id
+    if arg_appli is not None:
+        post_data["appli"] = arg_appli
 
-
-async def test_data_manager_call_throttle_disabled(
-    data_manager: WithingsDataManager,
-) -> None:
-    """Test method."""
-    hello_func = MagicMock(return_value="HELLO2")
-
-    result = await data_manager.call(hello_func)
-    assert result == "HELLO2"
-
-    result = await data_manager.call(hello_func)
-    assert result == "HELLO2"
-
-    assert hello_func.call_count == 2
-
-
-async def test_data_manager_update_sleep_date_range(
-    data_manager: WithingsDataManager,
-) -> None:
-    """Test method."""
-    patch_time_zone = patch(
-        "homeassistant.util.dt.DEFAULT_TIME_ZONE",
-        new=dt.get_time_zone("America/Belize"),
+    resp = await client.post(
+        urlparse(data_manager.webhook_config.url).path, data=post_data
     )
 
-    with patch_time_zone:
-        update_start_time = dt.now()
-        await data_manager.update_sleep()
+    # Wait for remaining tasks to complete.
+    await hass.async_block_till_done()
 
-        call_args = data_manager.api.sleep_get.call_args_list[0][1]
-        startdate = call_args.get("startdate")
-        enddate = call_args.get("enddate")
+    data = await resp.json()
+    resp.close()
 
-        assert startdate.tzname() == "CST"
+    assert data["code"] == expected_code
 
-        assert enddate.tzname() == "CST"
-        assert startdate.tzname() == "CST"
-        assert update_start_time < enddate
-        assert enddate < update_start_time + timedelta(seconds=1)
-        assert enddate > startdate
+
+async def test_webhook_head(
+    hass: HomeAssistant, component_factory: ComponentFactory, aiohttp_client,
+) -> None:
+    """Test head method on webhook view."""
+    person0 = new_profile_config("person0", 0)
+
+    await component_factory.configure_component(profile_configs=(person0,))
+    await component_factory.setup_profile(person0.user_id)
+    data_manager = get_data_manager_by_user_id(hass, person0.user_id)
+
+    client: TestClient = await aiohttp_client(hass.http.app)
+    resp = await client.head(urlparse(data_manager.webhook_config.url).path)
+    assert resp.status == 200
+
+
+async def test_webhook_put(
+    hass: HomeAssistant, component_factory: ComponentFactory, aiohttp_client,
+) -> None:
+    """Test webhook callback."""
+    person0 = new_profile_config("person0", 0)
+
+    await component_factory.configure_component(profile_configs=(person0,))
+    await component_factory.setup_profile(person0.user_id)
+    data_manager = get_data_manager_by_user_id(hass, person0.user_id)
+
+    client: TestClient = await aiohttp_client(hass.http.app)
+    resp = await client.put(urlparse(data_manager.webhook_config.url).path)
+
+    # Wait for remaining tasks to complete.
+    await hass.async_block_till_done()
+
+    assert resp.status == 200
+    data = await resp.json()
+    assert data
+    assert data["code"] == 2
+
+
+async def test_data_manager_webhook_subscription(
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test data manager webhook subscriptions."""
+    person0 = new_profile_config("person0", 0)
+    await component_factory.configure_component(profile_configs=(person0,))
+
+    api: ConfigEntryWithingsApi = MagicMock(spec=ConfigEntryWithingsApi)
+    data_manager = DataManager(
+        hass,
+        "person0",
+        api,
+        0,
+        WebhookConfig(id="1234", url="http://localhost/api/webhook/1234", enabled=True),
+    )
+
+    # pylint: disable=protected-access
+    data_manager._notify_subscribe_delay = datetime.timedelta(seconds=0)
+    data_manager._notify_unsubscribe_delay = datetime.timedelta(seconds=0)
+
+    api.notify_list.return_value = NotifyListResponse(
+        profiles=(
+            NotifyListProfile(
+                appli=NotifyAppli.BED_IN,
+                callbackurl="https://not.my.callback/url",
+                expires=None,
+                comment=None,
+            ),
+            NotifyListProfile(
+                appli=NotifyAppli.BED_IN,
+                callbackurl=data_manager.webhook_config.url,
+                expires=None,
+                comment=None,
+            ),
+            NotifyListProfile(
+                appli=NotifyAppli.BED_OUT,
+                callbackurl=data_manager.webhook_config.url,
+                expires=None,
+                comment=None,
+            ),
+        )
+    )
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.request(
+        "HEAD", data_manager.webhook_config.url, status=200,
+    )
+
+    # Test subscribing
+    await data_manager.async_subscribe_webhook()
+    api.notify_subscribe.assert_any_call(
+        data_manager.webhook_config.url, NotifyAppli.WEIGHT
+    )
+    api.notify_subscribe.assert_any_call(
+        data_manager.webhook_config.url, NotifyAppli.CIRCULATORY
+    )
+    api.notify_subscribe.assert_any_call(
+        data_manager.webhook_config.url, NotifyAppli.ACTIVITY
+    )
+    api.notify_subscribe.assert_any_call(
+        data_manager.webhook_config.url, NotifyAppli.SLEEP
+    )
+    try:
+        api.notify_subscribe.assert_any_call(
+            data_manager.webhook_config.url, NotifyAppli.USER
+        )
+        assert False
+    except AssertionError:
+        pass
+    try:
+        api.notify_subscribe.assert_any_call(
+            data_manager.webhook_config.url, NotifyAppli.BED_IN
+        )
+        assert False
+    except AssertionError:
+        pass
+    try:
+        api.notify_subscribe.assert_any_call(
+            data_manager.webhook_config.url, NotifyAppli.BED_OUT
+        )
+        assert False
+    except AssertionError:
+        pass
+
+    # Test unsubscribing.
+    await data_manager.async_unsubscribe_webhook()
+    api.notify_revoke.assert_any_call(
+        data_manager.webhook_config.url, NotifyAppli.BED_IN
+    )
+    api.notify_revoke.assert_any_call(
+        data_manager.webhook_config.url, NotifyAppli.BED_OUT
+    )
