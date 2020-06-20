@@ -6,7 +6,7 @@ from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_HOST, CONF_NAME, TEMP_CELSIUS, PRECISION_TENTHS
+from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS, PRECISION_TENTHS)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.temperature import display_temp as show_temp
 import homeassistant.helpers.config_validation as cv
@@ -69,12 +69,18 @@ class MyStromSwitch(SwitchEntity):
         return self.plug.consumption
 
     @property
-    def current_temperature(self):
-        """Return the current room temperature in ha temperature unit."""
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        try:
+            temperature = show_temp(self.hass, self.plug.temperature, TEMP_CELSIUS, PRECISION_TENTHS)
+        except (ValueError, TypeError):
+            temperature = None
 
-        # convert the temperature from python-mystrom which is always CELSIUS to ha unit.
-        # Also round by tenths as this is why python-mystrom returns as smallest precision
-        return show_temp(self.hass, self.plug.temperature, TEMP_CELSIUS, PRECISION_TENTHS)
+        attrs = {
+            ATTR_TEMPERATURE: temperature,
+        }
+
+        return attrs
 
     @property
     def available(self):
