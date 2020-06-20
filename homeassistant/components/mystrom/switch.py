@@ -6,8 +6,9 @@ from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, TEMP_CELSIUS, PRECISION_TENTHS
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.temperature import display_temp as show_temp
 import homeassistant.helpers.config_validation as cv
 
 DEFAULT_NAME = "myStrom Switch"
@@ -66,6 +67,14 @@ class MyStromSwitch(SwitchEntity):
     def current_power_w(self):
         """Return the current power consumption in W."""
         return self.plug.consumption
+
+    @property
+    def current_temperature(self):
+        """Return the current room temperature in ha temperature unit."""
+
+        # convert the temperature from python-mystrom which is always CELSIUS to ha unit.
+        # Also round by tenths as this is why python-mystrom returns as smallest precision
+        return show_temp(self.hass, self.plug.temperature, TEMP_CELSIUS, PRECISION_TENTHS)
 
     @property
     def available(self):
