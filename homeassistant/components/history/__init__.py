@@ -201,13 +201,6 @@ def _get_states_with_session(
     session, utc_point_in_time, entity_ids=None, run=None, filters=None
 ):
     """Return the states at a specific point in time."""
-    if run is None:
-        run = recorder.run_information_with_session(session, utc_point_in_time)
-
-        # History did not run before utc_point_in_time
-        if run is None:
-            return []
-
     query = session.query(*QUERY_STATES)
 
     if entity_ids and len(entity_ids) == 1:
@@ -215,58 +208,65 @@ def _get_states_with_session(
         # have a single entity id
         query = (
             query.filter(
-                States.last_updated >= run.start,
                 States.last_updated < utc_point_in_time,
                 States.entity_id.in_(entity_ids),
             )
             .order_by(States.last_updated.desc())
             .limit(1)
         )
+        return _dbquery_to_non_hidden_states(query)
 
-    else:
-        # We have more than one entity to look at (most commonly we want
-        # all entities,) so we need to do a search on all states since the
-        # last recorder run started.
+    if run is None:
+        run = recorder.run_information_with_session(session, utc_point_in_time)
 
-        most_recent_states_by_date = session.query(
-            States.entity_id.label("max_entity_id"),
-            func.max(States.last_updated).label("max_last_updated"),
-        ).filter(
-            (States.last_updated >= run.start)
-            & (States.last_updated < utc_point_in_time)
-        )
+        # History did not run before utc_point_in_time
+        if run is None:
+            return []
 
-        if entity_ids:
-            most_recent_states_by_date.filter(States.entity_id.in_(entity_ids))
+    # We have more than one entity to look at (most commonly we want
+    # all entities,) so we need to do a search on all states since the
+    # last recorder run started.
 
-        most_recent_states_by_date = most_recent_states_by_date.group_by(
-            States.entity_id
-        )
+    most_recent_states_by_date = session.query(
+        States.entity_id.label("max_entity_id"),
+        func.max(States.last_updated).label("max_last_updated"),
+    ).filter(
+        (States.last_updated >= run.start) & (States.last_updated < utc_point_in_time)
+    )
 
-        most_recent_states_by_date = most_recent_states_by_date.subquery()
+    if entity_ids:
+        most_recent_states_by_date.filter(States.entity_id.in_(entity_ids))
 
-        most_recent_state_ids = session.query(
-            func.max(States.state_id).label("max_state_id")
-        ).join(
-            most_recent_states_by_date,
-            and_(
-                States.entity_id == most_recent_states_by_date.c.max_entity_id,
-                States.last_updated == most_recent_states_by_date.c.max_last_updated,
-            ),
-        )
+    most_recent_states_by_date = most_recent_states_by_date.group_by(States.entity_id)
 
-        most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
+    most_recent_states_by_date = most_recent_states_by_date.subquery()
 
-        most_recent_state_ids = most_recent_state_ids.subquery()
+    most_recent_state_ids = session.query(
+        func.max(States.state_id).label("max_state_id")
+    ).join(
+        most_recent_states_by_date,
+        and_(
+            States.entity_id == most_recent_states_by_date.c.max_entity_id,
+            States.last_updated == most_recent_states_by_date.c.max_last_updated,
+        ),
+    )
 
-        query = query.join(
-            most_recent_state_ids,
-            States.state_id == most_recent_state_ids.c.max_state_id,
-        ).filter(~States.domain.in_(IGNORE_DOMAINS))
+    most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
 
-        if filters:
-            query = filters.apply(query, entity_ids)
+    most_recent_state_ids = most_recent_state_ids.subquery()
 
+    query = query.join(
+        most_recent_state_ids, States.state_id == most_recent_state_ids.c.max_state_id,
+    ).filter(~States.domain.in_(IGNORE_DOMAINS))
+
+    if filters:
+        query = filters.apply(query, entity_ids)
+
+    return _dbquery_to_non_hidden_states(query)
+
+
+def _dbquery_to_non_hidden_states(query):
+    """Return states that are not hidden."""
     return [
         state
         for state in (LazyState(row) for row in execute(query))
