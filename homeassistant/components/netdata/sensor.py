@@ -172,9 +172,9 @@ class NetdataAlarms(Entity):
         """Status symbol if type is symbol."""
         if self._state == "ok":
             return "mdi:check"
-        elif self._state == "warning":
+        if self._state == "warning":
             return "mdi:alert-outline"
-        elif self._state == "critical":
+        if self._state == "critical":
             return "mdi:alert"
         return "mdi:crosshairs-question"
 
