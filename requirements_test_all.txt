@@ -528,7 +528,7 @@ pyTibber==0.14.0
 py_nextbusnext==0.1.4
 
 # homeassistant.components.hisense_aehw4a1
-pyaehw4a1==0.3.4
+pyaehw4a1==0.3.5
 
 # homeassistant.components.airvisual
 pyairvisual==4.4.0
