@@ -1,5 +1,6 @@
 """Config flow to configure Xiaomi Aqara."""
 import logging
+from socket import gaierror
 
 import voluptuous as vol
 from xiaomi_gateway import XiaomiGatewayDiscovery
@@ -56,24 +57,29 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Discover Xiaomi Aqara Gateways in the netwerk to get required SIDs.
             xiaomi = XiaomiGatewayDiscovery(self.hass.add_job, [], self.interface)
-            await self.hass.async_add_executor_job(xiaomi.discover_gateways)
-            self.gateways = xiaomi.gateways
+            try:
+                await self.hass.async_add_executor_job(xiaomi.discover_gateways)
+            except gaierror:
+                errors[CONF_INTERFACE] = "invalid_interface"
 
-            # if host is already known by zeroconf discovery
-            if self.host is not None:
-                self.selected_gateway = self.gateways.get(self.host)
-                if self.selected_gateway is not None:
-                    return await self.async_step_settings()
+            if not errors:
+                self.gateways = xiaomi.gateways
 
-                errors["base"] = "not_found_error"
-            else:
-                if len(self.gateways) == 1:
-                    self.selected_gateway = list(self.gateways.values())[0]
-                    return await self.async_step_settings()
-                if len(self.gateways) > 1:
-                    return await self.async_step_select()
+                # if host is already known by zeroconf discovery
+                if self.host is not None:
+                    self.selected_gateway = self.gateways.get(self.host)
+                    if self.selected_gateway is not None:
+                        return await self.async_step_settings()
 
-                errors["base"] = "discovery_error"
+                    errors["base"] = "not_found_error"
+                else:
+                    if len(self.gateways) == 1:
+                        self.selected_gateway = list(self.gateways.values())[0]
+                        return await self.async_step_settings()
+                    if len(self.gateways) > 1:
+                        return await self.async_step_select()
+
+                    errors["base"] = "discovery_error"
 
         return self.async_show_form(
             step_id="user", data_schema=GATEWAY_CONFIG, errors=errors

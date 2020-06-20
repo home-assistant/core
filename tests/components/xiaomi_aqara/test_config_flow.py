@@ -1,4 +1,6 @@
 """Test the Xiaomi Aqara config flow."""
+from socket import gaierror
+
 import pytest
 
 from homeassistant import config_entries
@@ -38,7 +40,7 @@ def xiaomi_aqara_fixture():
         yield
 
 
-def get_mock_discovery(host_list):
+def get_mock_discovery(host_list, invalid_interface=False):
     """Return a mock gateway info instance."""
     gateway_discovery = Mock()
 
@@ -54,6 +56,9 @@ def get_mock_discovery(host_list):
         gateway_dict[host] = gateway
 
     gateway_discovery.gateways = gateway_dict
+
+    if invalid_interface:
+        gateway_discovery.discover_gateways = Mock(side_effect=gaierror)
 
     return gateway_discovery
 
@@ -165,6 +170,31 @@ async def test_config_flow_user_discovery_error(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
+
+
+async def test_config_flow_user_invalid_interface(hass):
+    """Test a failed config flow initialized by the user with an invalid interface."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    mock_gateway_discovery = get_mock_discovery([], invalid_interface=True)
+
+    with patch(
+        "homeassistant.components.xiaomi_aqara.config_flow.XiaomiGatewayDiscovery",
+        return_value=mock_gateway_discovery,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {const.CONF_INTERFACE: "invalid_interface"}
 
 
 async def test_zeroconf_success(hass):
