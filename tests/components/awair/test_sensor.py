@@ -1,12 +1,15 @@
 """Tests for the Awair sensor platform."""
 
 from homeassistant.components.awair.const import (
-    DEVICE_CLASS_AIR_QUALITY_INDEX,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_PM_2_5,
-    DEVICE_CLASS_PM_10,
-    DEVICE_CLASS_SOUND_LEVEL,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    API_CO2,
+    API_HUMID,
+    API_LUX,
+    API_PM10,
+    API_PM25,
+    API_SCORE,
+    API_SPL_A,
+    API_TEMP,
+    API_VOC,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -15,9 +18,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
@@ -77,8 +77,8 @@ async def test_awair_gen1_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_score",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
+        "sensor.living_room_awair_score",
+        f"{AWAIR_UUID}-{API_SCORE}",
         "88",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -87,51 +87,43 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_temperature",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_TEMPERATURE}",
+        f"{AWAIR_UUID}-{API_TEMP}",
         "21.8",
-        {
-            ATTR_ICON: "mdi:thermometer",
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-            "temperature_awair_index": 1.0,
-        },
+        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS, "awair_index": 1.0},
     )
 
     assert_expected_properties(
         hass,
         registry,
         "sensor.living_room_humidity",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_HUMIDITY}",
+        f"{AWAIR_UUID}-{API_HUMID}",
         "41.59",
-        {
-            ATTR_ICON: "mdi:water-percent",
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
-            "humidity_awair_index": 0.0,
-        },
+        {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE, "awair_index": 0.0},
     )
 
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_co2",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_CO2}",
+        "sensor.living_room_carbon_dioxide",
+        f"{AWAIR_UUID}-{API_CO2}",
         "654.0",
         {
             ATTR_ICON: "mdi:cloud",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
-            "co2_awair_index": 0.0,
+            "awair_index": 0.0,
         },
     )
 
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_voc",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS}",
+        "sensor.living_room_volatile_organic_compounds",
+        f"{AWAIR_UUID}-{API_VOC}",
         "366",
         {
             ATTR_ICON: "mdi:cloud",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
-            "voc_awair_index": 1.0,
+            "awair_index": 1.0,
         },
     )
 
@@ -139,12 +131,12 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm2_5",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_PM_2_5}",
+        f"{AWAIR_UUID}-{API_PM25}",
         "14.3",
         {
             ATTR_ICON: "mdi:blur",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            "pm2_5_awair_index": 1.0,
+            "awair_index": 1.0,
         },
     )
 
@@ -152,12 +144,12 @@ async def test_awair_gen1_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm10",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_PM_10}",
+        f"{AWAIR_UUID}-{API_PM10}",
         "14.3",
         {
             ATTR_ICON: "mdi:blur",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            "pm10_awair_index": 1.0,
+            "awair_index": 1.0,
         },
     )
 
@@ -180,8 +172,8 @@ async def test_awair_gen2_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_score",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
+        "sensor.living_room_awair_score",
+        f"{AWAIR_UUID}-{API_SCORE}",
         "97",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -190,12 +182,12 @@ async def test_awair_gen2_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm2_5",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_PM_2_5}",
+        f"{AWAIR_UUID}-{API_PM25}",
         "2.0",
         {
             ATTR_ICON: "mdi:blur",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            "pm2_5_awair_index": 0.0,
+            "awair_index": 0.0,
         },
     )
 
@@ -214,8 +206,8 @@ async def test_awair_mint_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_score",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
+        "sensor.living_room_awair_score",
+        f"{AWAIR_UUID}-{API_SCORE}",
         "98",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -224,12 +216,12 @@ async def test_awair_mint_sensors(hass):
         hass,
         registry,
         "sensor.living_room_pm2_5",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_PM_2_5}",
+        f"{AWAIR_UUID}-{API_PM25}",
         "1.0",
         {
             ATTR_ICON: "mdi:blur",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            "pm2_5_awair_index": 0.0,
+            "awair_index": 0.0,
         },
     )
 
@@ -237,13 +229,13 @@ async def test_awair_mint_sensors(hass):
         hass,
         registry,
         "sensor.living_room_illuminance",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_ILLUMINANCE}",
+        f"{AWAIR_UUID}-{API_LUX}",
         "441.7",
-        {ATTR_ICON: "mdi:lightbulb", ATTR_UNIT_OF_MEASUREMENT: "lux"},
+        {ATTR_UNIT_OF_MEASUREMENT: "lx"},
     )
 
     # The Mint does not have a CO2 sensor.
-    assert hass.states.get("sensor.living_room_co2") is None
+    assert hass.states.get("sensor.living_room_carbon_dioxide") is None
 
 
 async def test_awair_glow_sensors(hass):
@@ -256,8 +248,8 @@ async def test_awair_glow_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_score",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
+        "sensor.living_room_awair_score",
+        f"{AWAIR_UUID}-{API_SCORE}",
         "93",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -276,8 +268,8 @@ async def test_awair_omni_sensors(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_score",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
+        "sensor.living_room_awair_score",
+        f"{AWAIR_UUID}-{API_SCORE}",
         "99",
         {ATTR_ICON: "mdi:blur"},
     )
@@ -286,7 +278,7 @@ async def test_awair_omni_sensors(hass):
         hass,
         registry,
         "sensor.living_room_sound_level",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_SOUND_LEVEL}",
+        f"{AWAIR_UUID}-{API_SPL_A}",
         "47.0",
         {ATTR_ICON: "mdi:ear-hearing", ATTR_UNIT_OF_MEASUREMENT: "dBa"},
     )
@@ -295,9 +287,9 @@ async def test_awair_omni_sensors(hass):
         hass,
         registry,
         "sensor.living_room_illuminance",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_ILLUMINANCE}",
+        f"{AWAIR_UUID}-{API_LUX}",
         "804.9",
-        {ATTR_ICON: "mdi:lightbulb", ATTR_UNIT_OF_MEASUREMENT: "lux"},
+        {ATTR_UNIT_OF_MEASUREMENT: "lx"},
     )
 
 
@@ -316,7 +308,7 @@ async def test_awair_offline(hass):
     # device *should* have if it's online. If we don't see it,
     # then we probably didn't set anything up. Which is correct,
     # in this case.
-    assert hass.states.get("sensor.living_room_score") is None
+    assert hass.states.get("sensor.living_room_awair_score") is None
 
 
 async def test_awair_unavailable(hass):
@@ -329,21 +321,21 @@ async def test_awair_unavailable(hass):
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_score",
-        f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
+        "sensor.living_room_awair_score",
+        f"{AWAIR_UUID}-{API_SCORE}",
         "88",
         {ATTR_ICON: "mdi:blur"},
     )
 
     with patch("python_awair.AwairClient.query", side_effect=OFFLINE_FIXTURE):
         await hass.helpers.entity_component.async_update_entity(
-            "sensor.living_room_score"
+            "sensor.living_room_awair_score"
         )
         assert_expected_properties(
             hass,
             registry,
-            "sensor.living_room_score",
-            f"{AWAIR_UUID}-{DEVICE_CLASS_AIR_QUALITY_INDEX}",
+            "sensor.living_room_awair_score",
+            f"{AWAIR_UUID}-{API_SCORE}",
             STATE_UNAVAILABLE,
             {ATTR_ICON: "mdi:blur"},
         )

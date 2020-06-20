@@ -26,9 +26,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         await self._abort_if_configured(conf[CONF_ACCESS_TOKEN])
 
-        user, errors = await self._check_access_token(conf[CONF_ACCESS_TOKEN])
-        if errors is not None:
-            return self.async_abort(reason="auth")
+        user, error = await self._check_connection(conf[CONF_ACCESS_TOKEN])
+        if error is not None:
+            return self.async_abort(reason=error)
 
         return self.async_create_entry(
             title=f"{user.email} ({user.user_id})",
@@ -40,12 +40,17 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            user, errors = await self._check_access_token(user_input[CONF_ACCESS_TOKEN])
+            user, error = await self._check_connection(user_input[CONF_ACCESS_TOKEN])
 
-            if not errors:
+            if user is not None:
                 await self._abort_if_configured(user_input[CONF_ACCESS_TOKEN])
                 title = f"{user.email} ({user.user_id})"
                 return self.async_create_entry(title=title, data=user_input)
+
+            if error != "auth":
+                return self.async_abort(reason=error)
+
+            errors = {CONF_ACCESS_TOKEN: "auth"}
 
         return self.async_show_form(
             step_id="user",
@@ -63,12 +68,18 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(user_input["config_entry"].unique_id)
             elif CONF_ACCESS_TOKEN in user_input:
                 access_token = user_input[CONF_ACCESS_TOKEN]
-                user, errors = await self._check_access_token(access_token)
-                if not errors:
+                user, error = await self._check_connection(access_token)
+
+                if error is None:
                     return self.async_create_entry(
                         title=f"{user.email} ({user.user_id})",
                         data={CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN]},
                     )
+
+                if error != "auth":
+                    return self.async_abort(reason=error)
+
+                errors = {CONF_ACCESS_TOKEN: error}
 
         return self.async_show_form(
             step_id="reauth",
@@ -76,7 +87,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _check_access_token(self, access_token: str):
+    async def _check_connection(self, access_token: str):
         """Check the access token is valid."""
         session = async_get_clientsession(self.hass)
         awair = Awair(access_token=access_token, session=session)
@@ -85,15 +96,15 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             user = await awair.user()
             devices = await user.devices()
             if not devices:
-                return self.async_abort(reason="no_devices")
+                return (None, "no_devices")
 
             return (user, None)
 
         except AuthError:
-            return (None, {CONF_ACCESS_TOKEN: "auth"})
+            return (None, "auth")
         except AwairError as err:
             LOGGER.error("Unexpected API error: %s", err)
-            return (None, {"base": "unknown"})
+            return (None, "unknown")
 
     async def _abort_if_configured(self, access_token: str):
         """Abort if this access_token has been set up."""

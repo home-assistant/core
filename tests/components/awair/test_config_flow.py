@@ -48,7 +48,8 @@ async def test_unexpected_api_error(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "unknown"}
+        assert result["type"] == "abort"
+        assert result["reason"] == "unknown"
 
 
 async def test_duplicate_error(hass):
@@ -79,8 +80,8 @@ async def test_no_devices_error(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["reason"] == "no_devices"
         assert result["type"] == "abort"
+        assert result["reason"] == "no_devices"
 
 
 async def test_create_entry(hass):
