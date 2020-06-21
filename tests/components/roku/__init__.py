@@ -33,7 +33,7 @@ def mock_connection(
     app: str = "roku",
     host: str = HOST,
     power: bool = True,
-    media_state = "close",
+    media_state: str = "close",
     error: bool = False,
     server_error: bool = False,
 ) -> None:
@@ -152,7 +152,7 @@ async def setup_integration(
     unique_id: str = UPNP_SERIAL,
     error: bool = False,
     power: bool = True,
-    media_state = "close",
+    media_state: str = "close",
     server_error: bool = False,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
