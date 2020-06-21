@@ -8,17 +8,25 @@
             },
             "init": {
                 "data": {
-                    "include_domains": "[%key:component::homekit::config::step::user::data::include_domains%]"
+                    "include_domains": "[%key:component::homekit::config::step::user::data::include_domains%]",
+                    "filter_by_excluding": "Include entities not specifically excluded"
                 },
-                "description": "Entities in the \u201cDomains to include\u201d will be bridged to HomeKit. You will be able to select which entities to exclude from this list on the next screen.",
+                "description": "Entities in the \u201cDomains to include\u201d will be bridged to HomeKit. You will be able to select which entities are bridged from this list on the next screen.",
                 "title": "Select domains to bridge."
             },
             "exclude": {
                 "data": {
                     "exclude_entities": "Entities to exclude"
                 },
-                "description": "Choose the entities that you do NOT want to be bridged.",
+                "description": "Choose the entities that you do NOT want to be bridged. New entities will be automatically included.",
                 "title": "Exclude entities in selected domains from bridge"
+            },
+            "include": {
+                "data": {
+                    "include_entities": "Entities to include"
+                },
+                "description": "Choose the entities that you DO want to be bridged. New entities will not be automatically included.",
+                "title": "Include entities in selected domains to bridge"
             },
             "cameras": {
                 "data": {

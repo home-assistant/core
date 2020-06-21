@@ -25,6 +25,7 @@ from .const import (
     CONF_VIDEO_CODEC,
     DEFAULT_AUTO_START,
     DEFAULT_CONFIG_FLOW_PORT,
+    DEFAULT_FILTER_BY_EXCLUDING,
     DEFAULT_SAFE_MODE,
     SHORT_BRIDGE_NAME,
     VIDEO_CODEC_COPY,
@@ -36,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CAMERA_COPY = "camera_copy"
 CONF_DOMAINS = "domains"
+CONF_FILTER_BY_EXCLUDING = "filter_by_excluding"
 
 SUPPORTED_DOMAINS = [
     "alarm_control_panel",
@@ -180,7 +182,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for tado."""
+    """Handle a option flow for Homekit."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize options flow."""
@@ -306,6 +308,48 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
         return self.async_show_form(step_id="exclude", data_schema=data_schema)
 
+    async def async_step_include(self, user_input=None):
+        """Choose entities to include from the domain."""
+        if user_input is not None:
+            self.homekit_options[CONF_FILTER] = {
+                CONF_INCLUDE_DOMAINS: self.homekit_options[CONF_INCLUDE_DOMAINS],
+                CONF_EXCLUDE_DOMAINS: self.homekit_options.get(
+                    CONF_EXCLUDE_DOMAINS, []
+                ),
+                CONF_EXCLUDE_ENTITIES: self.homekit_options.get(
+                    CONF_EXCLUDE_ENTITIES, []
+                ),
+                CONF_INCLUDE_ENTITIES: user_input[CONF_INCLUDE_ENTITIES],
+            }
+            included_cameras_copy = self.included_cameras.copy()
+            for entity_id in included_cameras_copy:
+                if entity_id not in user_input[CONF_INCLUDE_ENTITIES]:
+                    self.included_cameras.remove(entity_id)
+            if self.included_cameras:
+                return await self.async_step_cameras()
+            return await self.async_step_advanced()
+
+        entity_filter = self.homekit_options.get(CONF_FILTER, {})
+        all_supported_entities = await self.hass.async_add_executor_job(
+            _get_entities_matching_domains,
+            self.hass,
+            self.homekit_options[CONF_INCLUDE_DOMAINS],
+        )
+        self.included_cameras = {
+            entity_id
+            for entity_id in all_supported_entities
+            if entity_id.startswith("camera.")
+        }
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_INCLUDE_ENTITIES,
+                    default=entity_filter.get(CONF_INCLUDE_ENTITIES, []),
+                ): cv.multi_select(all_supported_entities),
+            }
+        )
+        return self.async_show_form(step_id="include", data_schema=data_schema)
+
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         if self.config_entry.source == SOURCE_IMPORT:
@@ -313,17 +357,28 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             self.homekit_options.update(user_input)
-            return await self.async_step_exclude()
+            if self.homekit_options[CONF_FILTER_BY_EXCLUDING]:
+                return await self.async_step_exclude()
+
+            return await self.async_step_include()
 
         self.homekit_options = dict(self.config_entry.options)
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
 
+        # Getting this with a default for backwards compatibility
+        filter_by_excluding = self.homekit_options.get(
+            CONF_FILTER_BY_EXCLUDING, DEFAULT_FILTER_BY_EXCLUDING
+        )
+
         data_schema = vol.Schema(
             {
                 vol.Optional(
+                    CONF_FILTER_BY_EXCLUDING, default=filter_by_excluding
+                ): bool,
+                vol.Optional(
                     CONF_INCLUDE_DOMAINS,
                     default=entity_filter.get(CONF_INCLUDE_DOMAINS, []),
-                ): cv.multi_select(SUPPORTED_DOMAINS)
+                ): cv.multi_select(SUPPORTED_DOMAINS),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

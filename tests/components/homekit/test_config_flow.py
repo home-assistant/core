@@ -9,7 +9,7 @@ from homeassistant.const import CONF_NAME, CONF_PORT
 from tests.common import MockConfigEntry
 
 
-def _mock_config_entry_with_options_populated():
+def _mock_exclude_config_entry_with_options_populated():
     """Create a mock config entry with options populated."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -25,6 +25,30 @@ def _mock_config_entry_with_options_populated():
                 ],
                 "exclude_entities": ["climate.front_gate"],
             },
+            "filter_by_excluding": True,
+            "auto_start": False,
+            "safe_mode": False,
+        },
+    )
+
+
+def _mock_include_config_entry_with_options_populated():
+    """Create a mock config entry with options populated."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            "filter": {
+                "include_domains": [
+                    "fan",
+                    "vacuum",
+                    "media_player",
+                    "climate",
+                    "alarm_control_panel",
+                ],
+                "include_entities": ["climate.front_gate"],
+            },
+            "filter_by_excluding": False,
             "auto_start": False,
             "safe_mode": False,
         },
@@ -117,10 +141,10 @@ async def test_import(hass):
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_options_flow_advanced(hass):
-    """Test config flow options."""
+async def test_exclude_options_flow_advanced(hass):
+    """Test exclude config flow options."""
 
-    config_entry = _mock_config_entry_with_options_populated()
+    config_entry = _mock_exclude_config_entry_with_options_populated()
     config_entry.add_to_hass(hass)
 
     hass.states.async_set("climate.old", "off")
@@ -154,6 +178,7 @@ async def test_options_flow_advanced(hass):
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
+        "filter_by_excluding": True,
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old"],
@@ -164,10 +189,58 @@ async def test_options_flow_advanced(hass):
     }
 
 
-async def test_options_flow_basic(hass):
-    """Test config flow options."""
+async def test_include_options_flow_advanced(hass):
+    """Test include config flow options."""
 
-    config_entry = _mock_config_entry_with_options_populated()
+    config_entry = _mock_include_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("climate.old", "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": True}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"include_domains": ["fan", "vacuum", "climate"]},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "include"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"include_entities": ["climate.old"]},
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "advanced"
+
+    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"], user_input={"auto_start": True, "safe_mode": True},
+        )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "auto_start": True,
+        "filter_by_excluding": False,
+        "filter": {
+            "exclude_domains": [],
+            "include_entities": ["climate.old"],
+            "include_domains": ["fan", "vacuum", "climate"],
+            "exclude_entities": [],
+        },
+        "safe_mode": True,
+    }
+
+
+async def test_exclude_options_flow_basic(hass):
+    """Test exclude config flow options."""
+
+    config_entry = _mock_exclude_config_entry_with_options_populated()
     config_entry.add_to_hass(hass)
 
     hass.states.async_set("climate.old", "off")
@@ -201,6 +274,7 @@ async def test_options_flow_basic(hass):
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": False,
+        "filter_by_excluding": True,
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old"],
@@ -211,10 +285,58 @@ async def test_options_flow_basic(hass):
     }
 
 
-async def test_options_flow_with_cameras(hass):
-    """Test config flow options."""
+async def test_include_options_flow_basic(hass):
+    """Test include config flow options."""
 
-    config_entry = _mock_config_entry_with_options_populated()
+    config_entry = _mock_include_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("climate.old", "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"include_domains": ["fan", "vacuum", "climate"]},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "include"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"include_entities": ["climate.old"]},
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "advanced"
+
+    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"], user_input={"safe_mode": True},
+        )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "auto_start": False,
+        "filter_by_excluding": False,
+        "filter": {
+            "exclude_domains": [],
+            "include_entities": ["climate.old"],
+            "include_domains": ["fan", "vacuum", "climate"],
+            "exclude_entities": [],
+        },
+        "safe_mode": True,
+    }
+
+
+async def test_exclude_options_flow_with_cameras(hass):
+    """Test exclude config flow options."""
+
+    config_entry = _mock_exclude_config_entry_with_options_populated()
     config_entry.add_to_hass(hass)
 
     hass.states.async_set("climate.old", "off")
@@ -261,6 +383,7 @@ async def test_options_flow_with_cameras(hass):
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": False,
+        "filter_by_excluding": True,
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
@@ -310,11 +433,144 @@ async def test_options_flow_with_cameras(hass):
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": False,
+        "filter_by_excluding": True,
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
             "include_domains": ["fan", "vacuum", "climate", "camera"],
             "include_entities": [],
+        },
+        "entity_config": {"camera.native_h264": {}},
+        "safe_mode": True,
+    }
+
+
+async def test_include_options_flow_with_cameras(hass):
+    """Test include config flow options."""
+
+    config_entry = _mock_include_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("climate.old", "off")
+    hass.states.async_set("camera.native_h264", "off")
+    hass.states.async_set("camera.transcode_h264", "off")
+    hass.states.async_set("camera.excluded", "off")
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"include_domains": ["fan", "vacuum", "climate", "camera"]},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "include"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "include_entities": [
+                "climate.old",
+                "camera.native_h264",
+                "camera.transcode_h264",
+            ]
+        },
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "cameras"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"], user_input={"camera_copy": ["camera.native_h264"]},
+    )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["step_id"] == "advanced"
+
+    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
+        result4 = await hass.config_entries.options.async_configure(
+            result3["flow_id"], user_input={"safe_mode": True},
+        )
+
+    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "auto_start": False,
+        "filter_by_excluding": False,
+        "filter": {
+            "exclude_domains": [],
+            "include_entities": [
+                "climate.old",
+                "camera.native_h264",
+                "camera.transcode_h264",
+            ],
+            "include_domains": ["fan", "vacuum", "climate", "camera"],
+            "exclude_entities": [],
+        },
+        "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
+        "safe_mode": True,
+    }
+
+    # Now run though again and verify we can turn off copy
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"include_domains": ["fan", "vacuum", "climate", "camera"]},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "include"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "include_entities": [
+                "climate.old",
+                "camera.native_h264",
+                "camera.transcode_h264",
+            ]
+        },
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "cameras"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"], user_input={"camera_copy": []},
+    )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["step_id"] == "advanced"
+
+    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
+        result4 = await hass.config_entries.options.async_configure(
+            result3["flow_id"], user_input={"safe_mode": True},
+        )
+
+    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "auto_start": False,
+        "filter_by_excluding": False,
+        "filter": {
+            "exclude_domains": [],
+            "include_entities": [
+                "climate.old",
+                "camera.native_h264",
+                "camera.transcode_h264",
+            ],
+            "include_domains": ["fan", "vacuum", "climate", "camera"],
+            "exclude_entities": [],
         },
         "entity_config": {"camera.native_h264": {}},
         "safe_mode": True,
