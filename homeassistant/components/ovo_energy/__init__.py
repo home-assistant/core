@@ -1,18 +1,31 @@
 """Support for OVO Energy."""
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict
 
 import aiohttp
+import async_timeout
+from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
-from homeassistant.components.ovo_energy.const import DOMAIN
+from homeassistant.components.ovo_energy.const import (
+    DATA_CLIENT,
+    DATA_COORDINATOR,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+    """Set up the OVO Energy components."""
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
@@ -26,8 +39,30 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 
+    async def async_update_data() -> OVODailyUsage:
+        """Fetch data from OVO Energy."""
+        now = datetime.utcnow()
+        async with async_timeout.timeout(10):
+            return await client.get_daily_usage(now.strftime("%Y-%m"))
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name="sensor",
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=30),
+    )
+
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = client
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CLIENT: client,
+        DATA_COORDINATOR: coordinator,
+    }
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
 
     # Setup components
     hass.async_create_task(
@@ -50,8 +85,16 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool
 class OVOEnergyEntity(Entity):
     """Defines a base OVO Energy entity."""
 
-    def __init__(self, client: OVOEnergy, key: str, name: str, icon: str) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        client: OVOEnergy,
+        key: str,
+        name: str,
+        icon: str,
+    ) -> None:
         """Initialize the OVO Energy entity."""
+        self._coordinator = coordinator
         self._client = client
         self._key = key
         self._name = name
@@ -76,7 +119,7 @@ class OVOEnergyEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        return self._coordinator.last_update_success and self._available
 
     @property
     def should_poll(self):
@@ -88,11 +131,6 @@ class OVOEnergyEntity(Entity):
         if await self._ovo_energy_update():
             self._available = True
         else:
-            if self._available:
-                _LOGGER.debug(
-                    "An error occurred while updating OVO Energy sensor.",
-                    exc_info=True,
-                )
             self._available = False
 
     async def _ovo_energy_update(self) -> None:
