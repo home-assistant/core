@@ -148,7 +148,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             protocol = self.selected_gateway.proto
 
             if key is not None:
-                # validate key by issueing stop ringtone playback command.
+                # validate key by issuing stop ringtone playback command.
                 self.selected_gateway.key = key
                 valid_key = self.selected_gateway.write_to_hub(sid, mid=10000)
             else:
