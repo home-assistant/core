@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_START,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -195,7 +196,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
     # Start server discovery task if not already running
-    asyncio.create_task(start_server_discovery(hass))
+    if hass.is_running:
+        asyncio.create_task(start_server_discovery(hass))
+    else:
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
+        )
 
     return True
 
