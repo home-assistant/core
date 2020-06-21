@@ -12,7 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-
     sensors = []
 
     for entry in discovery_info["entries"]:
