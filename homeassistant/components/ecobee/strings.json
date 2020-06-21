@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ecobee API key",
+        "description": "Please enter the API key obtained from ecobee.com.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "authorize": {
+        "title": "Authorize app on ecobee.com",
+        "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with pin code:\n\n{pin}\n\nThen, press Submit."
+      }
+    },
+    "error": {
+      "pin_request_failed": "Error requesting PIN from ecobee; please verify API key is correct.",
+      "token_request_failed": "Error requesting tokens from ecobee; please try again."
+    },
+    "abort": {
+      "one_instance_only": "This integration currently supports only one ecobee instance."
+    }
+  }
+}

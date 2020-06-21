@@ -1,0 +1,7 @@
+{
+  "domain": "cppm_tracker",
+  "name": "Aruba ClearPass",
+  "documentation": "https://www.home-assistant.io/integrations/cppm_tracker",
+  "requirements": ["clearpasspy==1.0.2"],
+  "codeowners": []
+}

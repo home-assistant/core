@@ -1,0 +1,1 @@
+"""The Synology SRM component."""

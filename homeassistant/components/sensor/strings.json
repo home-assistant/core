@@ -1,0 +1,33 @@
+{
+  "title": "Sensor",
+  "device_automation": {
+    "condition_type": {
+      "is_battery_level": "Current {entity_name} battery level",
+      "is_humidity": "Current {entity_name} humidity",
+      "is_illuminance": "Current {entity_name} illuminance",
+      "is_power": "Current {entity_name} power",
+      "is_pressure": "Current {entity_name} pressure",
+      "is_signal_strength": "Current {entity_name} signal strength",
+      "is_temperature": "Current {entity_name} temperature",
+      "is_timestamp": "Current {entity_name} timestamp",
+      "is_value": "Current {entity_name} value"
+    },
+    "trigger_type": {
+      "battery_level": "{entity_name} battery level changes",
+      "humidity": "{entity_name} humidity changes",
+      "illuminance": "{entity_name} illuminance changes",
+      "power": "{entity_name} power changes",
+      "pressure": "{entity_name} pressure changes",
+      "signal_strength": "{entity_name} signal strength changes",
+      "temperature": "{entity_name} temperature changes",
+      "timestamp": "{entity_name} timestamp changes",
+      "value": "{entity_name} value changes"
+    }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
+    }
+  }
+}

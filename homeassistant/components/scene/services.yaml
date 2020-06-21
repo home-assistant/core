@@ -1,0 +1,53 @@
+# Describes the format for available scene services
+
+turn_on:
+  description: Activate a scene.
+  fields:
+    transition:
+      description:
+        Transition duration in seconds it takes to bring devices to the state
+        defined in the scene.
+      example: 2.5
+    entity_id:
+      description: Name(s) of scenes to turn on
+      example: "scene.romantic"
+
+reload:
+  description: Reload the scene configuration
+
+apply:
+  description:
+    Activate a scene. Takes same data as the entities field from a single scene
+    in the config.
+  fields:
+    transition:
+      description:
+        Transition duration in seconds it takes to bring devices to the state
+        defined in the scene.
+      example: 2.5
+    entities:
+      description: The entities and the state that they need to be.
+      example:
+        light.kitchen: "on"
+        light.ceiling:
+          state: "on"
+          brightness: 80
+
+create:
+  description: Creates a new scene.
+  fields:
+    scene_id:
+      description: The entity_id of the new scene.
+      example: all_lights
+    entities:
+      description: The entities to control with the scene.
+      example:
+        light.tv_back_light: "on"
+        light.ceiling:
+          state: "on"
+          brightness: 200
+    snapshot_entities:
+      description: The entities of which a snapshot is to be taken
+      example:
+        - light.ceiling
+        - light.kitchen

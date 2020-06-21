@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba Google Hangouts je ji\u017e nakonfigurov\u00e1na",
+            "unknown": "Do\u0161lo k nezn\u00e1m\u00e9 chyb\u011b"
+        },
+        "error": {
+            "invalid_2fa": "Dfoufaktorov\u00e9 ov\u011b\u0159en\u00ed se nezda\u0159ilo. Zkuste to znovu.",
+            "invalid_2fa_method": "Neplatn\u00e1 metoda 2FA (ov\u011b\u0159en\u00ed na telefonu).",
+            "invalid_login": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed jm\u00e9no, pros\u00edm zkuste to znovu."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Dvoufaktorov\u00fd ov\u011b\u0159ovac\u00ed k\u00f3d"
+                },
+                "title": "Dvoufaktorov\u00e9 ov\u011b\u0159en\u00ed"
+            },
+            "user": {
+                "data": {
+                    "email": "E-mailov\u00e1 adresa",
+                    "password": "Heslo"
+                },
+                "title": "P\u0159ihl\u00e1\u0161en\u00ed do slu\u017eby Google Hangouts"
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "domain": "alarm_control_panel",
+  "name": "Alarm Control Panel",
+  "documentation": "https://www.home-assistant.io/integrations/alarm_control_panel",
+  "codeowners": [],
+  "quality_scale": "internal"
+}

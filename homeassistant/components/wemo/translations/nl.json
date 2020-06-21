@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Geen Wemo-apparaten gevonden op het netwerk.",
+            "single_instance_allowed": "Slechts een enkele configuratie van Wemo is mogelijk."
+        },
+        "step": {
+            "confirm": {
+                "description": "Wilt u Wemo instellen?"
+            }
+        }
+    }
+}

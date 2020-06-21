@@ -1,0 +1,60 @@
+{
+    "state": {
+        "_": {
+            "off": "Itzalita",
+            "on": "Piztuta"
+        },
+        "battery": {
+            "off": "Normala",
+            "on": "Baxua"
+        },
+        "cold": {
+            "off": "Normala",
+            "on": "Hotza"
+        },
+        "connectivity": {
+            "off": "Deskonektatuta",
+            "on": "Konektatuta"
+        },
+        "door": {
+            "off": "Itxita",
+            "on": "Ireki"
+        },
+        "garage_door": {
+            "off": "Itxita",
+            "on": "Ireki"
+        },
+        "heat": {
+            "off": "Normala",
+            "on": "Beroa"
+        },
+        "lock": {
+            "off": "Itxita",
+            "on": "Irekita"
+        },
+        "moisture": {
+            "off": "Lehorra",
+            "on": "Buztita"
+        },
+        "opening": {
+            "off": "Itxita",
+            "on": "Ireki"
+        },
+        "presence": {
+            "off": "Kanpoan",
+            "on": "Etxean"
+        },
+        "problem": {
+            "off": "Ondo",
+            "on": "Arazoa"
+        },
+        "safety": {
+            "off": "Babestuta"
+        },
+        "window": {
+            "off": "Itxita",
+            "on": "Ireki"
+        }
+    },
+    "title": "Sentsore bitarra"
+}

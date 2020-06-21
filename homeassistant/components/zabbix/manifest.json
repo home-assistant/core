@@ -1,0 +1,7 @@
+{
+  "domain": "zabbix",
+  "name": "Zabbix",
+  "documentation": "https://www.home-assistant.io/integrations/zabbix",
+  "requirements": ["pyzabbix==0.7.4"],
+  "codeowners": []
+}

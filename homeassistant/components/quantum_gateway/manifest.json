@@ -1,0 +1,7 @@
+{
+  "domain": "quantum_gateway",
+  "name": "Quantum Gateway",
+  "documentation": "https://www.home-assistant.io/integrations/quantum_gateway",
+  "requirements": ["quantum-gateway==0.0.5"],
+  "codeowners": ["@cisasteelersfan"]
+}

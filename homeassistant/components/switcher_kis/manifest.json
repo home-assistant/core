@@ -1,0 +1,7 @@
+{
+  "domain": "switcher_kis",
+  "name": "Switcher",
+  "documentation": "https://www.home-assistant.io/integrations/switcher_kis/",
+  "codeowners": ["@tomerfi"],
+  "requirements": ["aioswitcher==1.2.0"]
+}

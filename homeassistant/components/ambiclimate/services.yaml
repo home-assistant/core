@@ -1,0 +1,36 @@
+# Describes the format for available services for ambiclimate
+
+set_comfort_mode:
+  description: >
+    Enable comfort mode on your AC
+  fields:
+    Name:
+      description: >
+        String with device name.
+      example: Bedroom
+
+send_comfort_feedback:
+  description: >
+    Send feedback for comfort mode
+  fields:
+    Name:
+      description: >
+        String with device name.
+      example: Bedroom
+    Value:
+      description: >
+        Send any of the following comfort values: too_hot, too_warm, bit_warm, comfortable, bit_cold, too_cold, freezing
+      example: bit_warm
+
+set_temperature_mode:
+  description: >
+    Enable temperature mode on your AC
+  fields:
+    Name:
+      description: >
+        String with device name.
+      example: Bedroom
+    Value:
+      description: >
+        Target value in celsius
+      example: 22

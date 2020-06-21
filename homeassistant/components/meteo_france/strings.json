@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "M\u00e9t\u00e9o-France",
+        "description": "Enter the postal code (only for France, recommended) or city name",
+        "data": { "city": "City" }
+      }
+    },
+    "abort": {
+      "already_configured": "City already configured",
+      "unknown": "Unknown error: please retry later"
+    }
+  }
+}

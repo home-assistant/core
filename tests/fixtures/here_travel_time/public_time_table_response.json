@@ -1,0 +1,308 @@
+{
+    "response": {
+        "metaInfo": {
+            "timestamp": "2019-08-06T06:43:24Z",
+            "mapVersion": "8.30.99.152",
+            "moduleVersion": "7.2.201931-4739",
+            "interfaceVersion": "2.6.66",
+            "availableMapVersion": [
+                "8.30.99.152"
+            ]
+        },
+        "route": [
+            {
+                "waypoint": [
+                    {
+                        "linkId": "-1230414527",
+                        "mappedPosition": {
+                            "latitude": 41.9797859,
+                            "longitude": -87.8790879
+                        },
+                        "originalPosition": {
+                            "latitude": 41.9798,
+                            "longitude": -87.8801
+                        },
+                        "type": "stopOver",
+                        "spot": 0.5079365,
+                        "sideOfStreet": "right",
+                        "mappedRoadName": "Mannheim Rd",
+                        "label": "Mannheim Rd - US-12",
+                        "shapeIndex": 0,
+                        "source": "user"
+                    },
+                    {
+                        "linkId": "+924115108",
+                        "mappedPosition": {
+                            "latitude": 41.90413,
+                            "longitude": -87.9223502
+                        },
+                        "originalPosition": {
+                            "latitude": 41.9043,
+                            "longitude": -87.9216001
+                        },
+                        "type": "stopOver",
+                        "spot": 0.1925926,
+                        "sideOfStreet": "right",
+                        "mappedRoadName": "",
+                        "label": "",
+                        "shapeIndex": 111,
+                        "source": "user"
+                    }
+                ],
+                "mode": {
+                    "type": "fastest",
+                    "transportModes": [
+                        "publicTransportTimeTable"
+                    ],
+                    "trafficMode": "disabled",
+                    "feature": []
+                },
+                "leg": [
+                    {
+                        "start": {
+                            "linkId": "-1230414527",
+                            "mappedPosition": {
+                                "latitude": 41.9797859,
+                                "longitude": -87.8790879
+                            },
+                            "originalPosition": {
+                                "latitude": 41.9798,
+                                "longitude": -87.8801
+                            },
+                            "type": "stopOver",
+                            "spot": 0.5079365,
+                            "sideOfStreet": "right",
+                            "mappedRoadName": "Mannheim Rd",
+                            "label": "Mannheim Rd - US-12",
+                            "shapeIndex": 0,
+                            "source": "user"
+                        },
+                        "end": {
+                            "linkId": "+924115108",
+                            "mappedPosition": {
+                                "latitude": 41.90413,
+                                "longitude": -87.9223502
+                            },
+                            "originalPosition": {
+                                "latitude": 41.9043,
+                                "longitude": -87.9216001
+                            },
+                            "type": "stopOver",
+                            "spot": 0.1925926,
+                            "sideOfStreet": "right",
+                            "mappedRoadName": "",
+                            "label": "",
+                            "shapeIndex": 111,
+                            "source": "user"
+                        },
+                        "length": 14775,
+                        "travelTime": 4784,
+                        "maneuver": [
+                            {
+                                "position": {
+                                    "latitude": 41.9797859,
+                                    "longitude": -87.8790879
+                                },
+                                "instruction": "Head <span class=\"heading\">south</span> on <span class=\"street\">Mannheim Rd</span>. <span class=\"distance-description\">Go for <span class=\"length\">848 m</span>.</span>",
+                                "travelTime": 848,
+                                "length": 848,
+                                "id": "M1",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9722581,
+                                    "longitude": -87.8776109
+                                },
+                                "instruction": "Take the street on the <span class=\"direction\">left</span>, <span class=\"next-street\">Mannheim Rd</span>. <span class=\"distance-description\">Go for <span class=\"length\">812 m</span>.</span>",
+                                "travelTime": 812,
+                                "length": 812,
+                                "id": "M2",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.965051,
+                                    "longitude": -87.8769591
+                                },
+                                "instruction": "Go to the <span class=\"company\">Bus</span> stop <span class=\"station\">Mannheim/Lawrence</span> and take the <span class=\"transit\">bus</span> <span class=\"line\">330</span> toward <span class=\"destination\">Archer/Harlem (Terminal)</span>. <span class=\"distance-description\">Follow for <span class=\"stops\">33 stops</span>.</span>",
+                                "travelTime": 900,
+                                "length": 7815,
+                                "id": "M3",
+                                "stopName": "Mannheim/Lawrence",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.896836,
+                                    "longitude": -87.883771
+                                },
+                                "instruction": "Get off at <span class=\"station\">Mannheim/Lake</span>.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M4",
+                                "stopName": "Mannheim/Lake",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.896836,
+                                    "longitude": -87.883771
+                                },
+                                "instruction": "Walk to <span class=\"company\">Bus</span> <span class=\"station\">Lake/Mannheim</span>.",
+                                "travelTime": 300,
+                                "length": 72,
+                                "id": "M5",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.897263,
+                                    "longitude": -87.8842648
+                                },
+                                "instruction": "Take the <span class=\"transit\">bus</span> <span class=\"line\">309</span> toward <span class=\"destination\">Elmhurst Metra Station</span>. <span class=\"distance-description\">Follow for <span class=\"stops\">18 stops</span>.</span>",
+                                "travelTime": 1020,
+                                "length": 4362,
+                                "id": "M6",
+                                "stopName": "Lake/Mannheim",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9066347,
+                                    "longitude": -87.928671
+                                },
+                                "instruction": "Get off at <span class=\"station\">North/Berteau</span>.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M7",
+                                "stopName": "North/Berteau",
+                                "nextRoadName": "E Berteau Ave",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9066347,
+                                    "longitude": -87.928671
+                                },
+                                "instruction": "Head <span class=\"heading\">north</span> on <span class=\"street\">E Berteau Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">23 m</span>.</span>",
+                                "travelTime": 40,
+                                "length": 23,
+                                "id": "M8",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9067693,
+                                    "longitude": -87.9284549
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">E Berteau Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">40 m</span>.</span>",
+                                "travelTime": 44,
+                                "length": 40,
+                                "id": "M9",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9065011,
+                                    "longitude": -87.9282939
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">E North Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">49 m</span>.</span>",
+                                "travelTime": 56,
+                                "length": 49,
+                                "id": "M10",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9065225,
+                                    "longitude": -87.9277039
+                                },
+                                "instruction": "Turn <span class=\"direction\">slightly right</span>. <span class=\"distance-description\">Go for <span class=\"length\">409 m</span>.</span>",
+                                "travelTime": 419,
+                                "length": 409,
+                                "id": "M11",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9040334,
+                                    "longitude": -87.9260409
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">E Third St</span>. <span class=\"distance-description\">Go for <span class=\"length\">206 m</span>.</span>",
+                                "travelTime": 206,
+                                "length": 206,
+                                "id": "M12",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9038832,
+                                    "longitude": -87.9236054
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span>. <span class=\"distance-description\">Go for <span class=\"length\">113 m</span>.</span>",
+                                "travelTime": 113,
+                                "length": 113,
+                                "id": "M13",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9039047,
+                                    "longitude": -87.9222536
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span>. <span class=\"distance-description\">Go for <span class=\"length\">26 m</span>.</span>",
+                                "travelTime": 26,
+                                "length": 26,
+                                "id": "M14",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.90413,
+                                    "longitude": -87.9223502
+                                },
+                                "instruction": "Arrive at your destination on the right.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M15",
+                                "_type": "PrivateTransportManeuverType"
+                            }
+                        ]
+                    }
+                ],
+                "publicTransportLine": [
+                    {
+                        "lineName": "330",
+                        "companyName": "PACE",
+                        "destination": "Archer/Harlem (Terminal)",
+                        "type": "busPublic",
+                        "id": "L1"
+                    },
+                    {
+                        "lineName": "309",
+                        "companyName": "PACE",
+                        "destination": "Elmhurst Metra Station",
+                        "type": "busPublic",
+                        "id": "L2"
+                    }
+                ],
+                "summary": {
+                    "distance": 14775,
+                    "baseTime": 4784,
+                    "flags": [
+                        "noThroughRoad",
+                        "builtUpArea",
+                        "park"
+                    ],
+                    "text": "The trip takes <span class=\"length\">14.8 km</span> and <span class=\"time\">1:20 h</span>.",
+                    "travelTime": 4784,
+                    "departure": "2019-08-06T05:09:20-05:00",
+                    "timetableExpiration": "2019-08-04T00:00:00Z",
+                    "_type": "PublicTransportRouteSummaryType"
+                }
+            }
+        ],
+        "language": "en-us"
+    }
+}

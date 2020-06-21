@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Local j\u00e1 est\u00e1 configurado."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Radius"
+                },
+                "title": "Preencha os detalhes do filtro."
+            }
+        }
+    }
+}

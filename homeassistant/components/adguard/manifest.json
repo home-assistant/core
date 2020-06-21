@@ -1,0 +1,8 @@
+{
+  "domain": "adguard",
+  "name": "AdGuard Home",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/adguard",
+  "requirements": ["adguardhome==0.4.2"],
+  "codeowners": ["@frenck"]
+}

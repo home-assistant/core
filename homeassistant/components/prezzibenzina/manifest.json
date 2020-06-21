@@ -1,0 +1,7 @@
+{
+  "domain": "prezzibenzina",
+  "name": "Prezzi Benzina",
+  "documentation": "https://www.home-assistant.io/integrations/prezzibenzina",
+  "requirements": ["prezzibenzina-py==1.1.4"],
+  "codeowners": []
+}

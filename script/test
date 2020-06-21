@@ -1,0 +1,6 @@
+#!/bin/sh
+# Executes the tests with tox.
+
+cd "$(dirname "$0")/.."
+
+tox -e py36

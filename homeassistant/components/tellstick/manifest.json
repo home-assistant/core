@@ -1,0 +1,7 @@
+{
+  "domain": "tellstick",
+  "name": "TellStick",
+  "documentation": "https://www.home-assistant.io/integrations/tellstick",
+  "requirements": ["tellcore-net==0.4", "tellcore-py==1.1.2"],
+  "codeowners": []
+}

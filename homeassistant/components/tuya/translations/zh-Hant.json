@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "conn_error": "\u9023\u7dda\u5931\u6557",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+        },
+        "error": {
+            "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "flow_title": "Tuya \u8a2d\u5b9a",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "\u5e33\u865f\u570b\u5bb6\u4ee3\u78bc\uff08\u4f8b\u5982\uff1a\u7f8e\u570b 1 \u6216\u4e2d\u570b 86\uff09",
+                    "password": "\u5bc6\u78bc",
+                    "platform": "\u5e33\u6236\u8a3b\u518a\u6240\u5728\u4f4d\u7f6e",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8f38\u5165 Tuya \u6191\u8b49\u3002",
+                "title": "Tuya"
+            }
+        }
+    }
+}

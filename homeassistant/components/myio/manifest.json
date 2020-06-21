@@ -1,0 +1,8 @@
+{
+  "domain": "myio",
+  "name": "myIO",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/myio",
+  "requirements": ["myio==0.0.6"],
+  "codeowners": ["@SmarthomeNinja"]
+}

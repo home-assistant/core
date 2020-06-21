@@ -1,0 +1,6 @@
+{
+  "domain": "wunderground",
+  "name": "Weather Underground (WUnderground)",
+  "documentation": "https://www.home-assistant.io/integrations/wunderground",
+  "codeowners": []
+}

@@ -1,0 +1,27 @@
+# Describes the format for available notification services
+
+notify:
+  description: Send a notification.
+  fields:
+    message:
+      description: Message body of the notification.
+      example: The garage door has been open for 10 minutes.
+    title:
+      description: Optional title for your notification.
+      example: "Your Garage Door Friend"
+    target:
+      description: An array of targets to send the notification to. Optional depending on the platform.
+      example: platform specific
+    data:
+      description: Extended information for notification. Optional depending on the platform.
+      example: platform specific
+
+apns_register:
+  description: Registers a device to receive push notifications.
+  fields:
+    push_id:
+      description: The device token, a 64 character hex string (256 bits). The device token is provided to you by your client app, which receives the token after registering itself with the remote notification service.
+      example: "72f2a8633655c5ce574fdc9b2b34ff8abdfc3b739b6ceb7a9ff06c1cbbf99f62"
+    name:
+      description: A friendly name for the device (optional).
+      example: "Sam's iPhone"

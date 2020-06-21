@@ -1,0 +1,11 @@
+# Describes the format for available HomeKit services
+
+start:
+  description: Starts the HomeKit driver.
+
+reset_accessory:
+  description: Reset a HomeKit accessory. This can be useful when changing a media_player’s device class to tv, linking a battery, or whenever Home Assistant adds support for new HomeKit features to existing entities.
+  fields:
+    entity_id:
+      description: Name of the entity to reset.
+      example: "binary_sensor.grid_status"

@@ -1,0 +1,8 @@
+{
+  "domain": "juicenet",
+  "name": "JuiceNet",
+  "documentation": "https://www.home-assistant.io/integrations/juicenet",
+  "requirements": ["python-juicenet==1.0.1"],
+  "codeowners": ["@jesserockz"],
+  "config_flow": true
+}

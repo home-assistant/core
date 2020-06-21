@@ -1,0 +1,8 @@
+{
+  "domain": "http",
+  "name": "HTTP",
+  "documentation": "https://www.home-assistant.io/integrations/http",
+  "requirements": ["aiohttp_cors==0.7.0"],
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

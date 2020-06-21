@@ -1,0 +1,7 @@
+{
+  "domain": "sun",
+  "name": "Sun",
+  "documentation": "https://www.home-assistant.io/integrations/sun",
+  "codeowners": ["@Swamp-Ig"],
+  "quality_scale": "internal"
+}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Va\u0161 Home Assistant mora biti dostopen prek interneta, da boste lahko prejemali Traccar sporo\u010dila.",
+            "one_instance_allowed": "Potrebna je samo ena instanca."
+        },
+        "create_entry": {
+            "default": "\u010ce \u017eelite poslati dogodke v Home Assistant, boste morali nastaviti funkcijo \"webhook\" v traccar.\n\nUporabite naslednji URL: ' {webhook_url} '\n\nZa podrobnej\u0161e informacije glejte [dokumentacijo] ({docs_url})."
+        },
+        "step": {
+            "user": {
+                "description": "Ali ste prepri\u010dani, da \u017eelite nastaviti Traccar?",
+                "title": "Nastavite Traccar"
+            }
+        }
+    }
+}

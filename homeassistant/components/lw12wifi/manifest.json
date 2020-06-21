@@ -1,0 +1,7 @@
+{
+  "domain": "lw12wifi",
+  "name": "LAGUTE LW-12",
+  "documentation": "https://www.home-assistant.io/integrations/lw12wifi",
+  "requirements": ["lw12==0.9.2"],
+  "codeowners": []
+}

@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "Tod",
+            "initializing": "Inizialisi\u00e4r\u00e4",
+            "ready": "Parat",
+            "sleeping": "Schlaf\u00e4"
+        },
+        "query_stage": {
+            "dead": "Tod ({query_stage})",
+            "initializing": "Inizialisi\u00e4r\u00e4 ( {query_stage} )"
+        }
+    }
+}

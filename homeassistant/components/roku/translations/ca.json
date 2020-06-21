@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Vols configurar {name}?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Introdueix la teva informaci\u00f3 de Roku."
+            }
+        }
+    }
+}

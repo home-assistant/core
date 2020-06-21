@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Mikrotik Router",
+        "data": {
+          "name": "Name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "Use ssl"
+        }
+      }
+    },
+    "error": {
+      "name_exists": "Name exists",
+      "cannot_connect": "Connection Unsuccessful",
+      "wrong_credentials": "Wrong Credentials"
+    },
+    "abort": {
+      "already_configured": "Mikrotik is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "device_tracker": {
+        "data": {
+          "arp_ping": "Enable ARP ping",
+          "force_dhcp": "Force scanning using DHCP",
+          "detection_time": "Consider home interval"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_only": "Denne integration underst\u00f8tter i \u00f8jeblikket kun en ecobee-instans."
+        },
+        "error": {
+            "pin_request_failed": "Fejl ved anmodning om pinkode fra ecobee. Kontroller at API-n\u00f8glen er korrekt.",
+            "token_request_failed": "Fejl ved anmodning om tokens fra ecobee. Pr\u00f8v igen."
+        },
+        "step": {
+            "authorize": {
+                "description": "Godkend denne app p\u00e5 https://www.ecobee.com/consumerportal/index.html med PIN-kode:\n\n{pin}\n\nTryk derefter p\u00e5 Indsend.",
+                "title": "Godkend app p\u00e5 ecobee.com"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8gle"
+                },
+                "description": "Indtast API-n\u00f8glen, du har f\u00e5et fra ecobee.com.",
+                "title": "ecobee API-n\u00f8gle"
+            }
+        }
+    }
+}

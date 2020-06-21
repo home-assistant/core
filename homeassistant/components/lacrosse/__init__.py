@@ -1,0 +1,1 @@
+"""The lacrosse component."""

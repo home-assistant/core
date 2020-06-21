@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "connection_error": "Failed to connect",
+            "connection_upgrade": "Failed to connect to printer due to connection upgrade being required.",
+            "ipp_error": "Encountered IPP error.",
+            "ipp_version_error": "IPP version not supported by printer.",
+            "parse_error": "Failed to parse response from printer.",
+            "unique_id_required": "Device missing unique identification required for discovery."
+        },
+        "error": {
+            "connection_error": "Failed to connect",
+            "connection_upgrade": "Failed to connect to printer. Please try again with SSL/TLS option checked."
+        },
+        "flow_title": "Printer: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Relative path to the printer",
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Printer supports communication over SSL/TLS",
+                    "verify_ssl": "Printer uses a proper SSL certificate"
+                },
+                "description": "Set up your printer via Internet Printing Protocol (IPP) to integrate with Home Assistant.",
+                "title": "Link your printer"
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to set up {name}?",
+                "title": "Discovered printer"
+            }
+        }
+    }
+}

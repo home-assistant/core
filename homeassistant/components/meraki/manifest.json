@@ -1,0 +1,7 @@
+{
+  "domain": "meraki",
+  "name": "Meraki",
+  "documentation": "https://www.home-assistant.io/integrations/meraki",
+  "dependencies": ["http"],
+  "codeowners": []
+}

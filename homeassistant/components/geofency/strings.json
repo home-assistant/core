@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up the Geofency Webhook",
+        "description": "Are you sure you want to set up the Geofency Webhook?"
+      }
+    },
+    "abort": {
+      "one_instance_allowed": "Only a single instance is necessary.",
+      "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive messages from Geofency."
+    },
+    "create_entry": {
+      "default": "To send events to Home Assistant, you will need to setup the webhook feature in Geofency.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details."
+    }
+  }
+}

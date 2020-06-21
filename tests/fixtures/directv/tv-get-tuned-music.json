@@ -1,0 +1,28 @@
+{
+  "callsign": "MCSJ",
+  "duration": 86400,
+  "isOffAir": false,
+  "isPclocked": 3,
+  "isPpv": false,
+  "isRecording": false,
+  "isVod": false,
+  "major": 851,
+  "minor": 65535,
+  "music": {
+    "by": "Gerald Albright",
+    "cd": "Slam Dunk (2014)",
+    "title": "Sparkle In Your Eyes"
+  },
+  "offset": 15050,
+  "programId": "76917562",
+  "rating": "TV-PG",
+  "startTime": 1584784800,
+  "stationId": 2872196,
+  "status": {
+    "code": 200,
+    "commandResult": 0,
+    "msg": "OK.",
+    "query": "/tv/getTuned"
+  },
+  "title": "Smooth Jazz"
+}

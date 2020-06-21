@@ -1,0 +1,32 @@
+# Describes the format for available group services
+reload:
+  description: Reload group configuration.
+
+set:
+  description: Create/Update a user group.
+  fields:
+    object_id:
+      description: Group id and part of entity id.
+      example: "test_group"
+    name:
+      description: Name of group
+      example: "My test group"
+    icon:
+      description: Name of icon for the group.
+      example: "mdi:camera"
+    entities:
+      description: List of all members in the group. Not compatible with 'delta'.
+      example: domain.entity_id1, domain.entity_id2
+    add_entities:
+      description: List of members they will change on group listening.
+      example: domain.entity_id1, domain.entity_id2
+    all:
+      description: Enable this option if the group should only turn on when all entities are on.
+      example: true
+
+remove:
+  description: Remove a user group.
+  fields:
+    object_id:
+      description: Group id and part of entity id.
+      example: "test_group"

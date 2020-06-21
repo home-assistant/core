@@ -1,0 +1,7 @@
+{
+  "domain": "cpuspeed",
+  "name": "CPU Speed",
+  "documentation": "https://www.home-assistant.io/integrations/cpuspeed",
+  "requirements": ["py-cpuinfo==5.0.0"],
+  "codeowners": ["@fabaff"]
+}

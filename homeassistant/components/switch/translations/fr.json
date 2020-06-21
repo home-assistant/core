@@ -1,0 +1,24 @@
+{
+    "device_automation": {
+        "action_type": {
+            "toggle": "Basculer {entity_name}",
+            "turn_off": "\u00c9teindre {entity_name}",
+            "turn_on": "Allumer {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} est \u00e9teint",
+            "is_on": "{entity_name} est allum\u00e9"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} \u00e9teint",
+            "turned_on": "{entity_name} allum\u00e9"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Inactif",
+            "on": "On"
+        }
+    },
+    "title": "Interrupteur"
+}

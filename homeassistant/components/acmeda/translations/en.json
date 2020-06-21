@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "No new Pulse hubs discovered."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Host ID"
+                },
+                "title": "Pick a hub to add"
+            }
+        }
+    },
+    "title": "Rollease Acmeda Automate"
+}

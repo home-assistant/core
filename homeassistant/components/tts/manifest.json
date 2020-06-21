@@ -1,0 +1,9 @@
+{
+  "domain": "tts",
+  "name": "Text-to-Speech (TTS)",
+  "documentation": "https://www.home-assistant.io/integrations/tts",
+  "requirements": ["mutagen==1.44.0"],
+  "dependencies": ["http"],
+  "after_dependencies": ["media_player"],
+  "codeowners": ["@pvizeli"]
+}

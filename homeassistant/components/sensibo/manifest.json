@@ -1,0 +1,7 @@
+{
+  "domain": "sensibo",
+  "name": "Sensibo",
+  "documentation": "https://www.home-assistant.io/integrations/sensibo",
+  "requirements": ["pysensibo==1.0.3"],
+  "codeowners": ["@andrey-git"]
+}

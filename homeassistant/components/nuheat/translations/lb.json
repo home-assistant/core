@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Den Thermostat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "invalid_thermostat": "Seriennummer vum Thermostat ass ong\u00eblteg",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "serial_number": "Seriennummer vum Thermostat",
+                    "username": "Benotzernumm"
+                },
+                "description": "Du brauchs d'Seriennummer oder ID vum Thermostat, andeems Du dech op https://MyNuHeat.com umells an den Thermostat auswielt.",
+                "title": "Mat NuHeat verbannen"
+            }
+        }
+    }
+}

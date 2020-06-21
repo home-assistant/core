@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up iZone?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of iZone is necessary.",
+      "no_devices_found": "No iZone devices found on the network."
+    }
+  }
+}

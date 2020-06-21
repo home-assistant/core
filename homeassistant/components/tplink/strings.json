@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to setup TP-Link smart devices?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration is necessary.",
+      "no_devices_found": "No TP-Link devices found on the network."
+    }
+  }
+}

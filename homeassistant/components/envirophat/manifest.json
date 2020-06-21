@@ -1,0 +1,7 @@
+{
+  "domain": "envirophat",
+  "name": "Enviro pHAT",
+  "documentation": "https://www.home-assistant.io/integrations/envirophat",
+  "requirements": ["envirophat==0.0.6", "smbus-cffi==0.5.1"],
+  "codeowners": []
+}

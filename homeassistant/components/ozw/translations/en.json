@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "The MQTT integration is not set up",
+            "one_instance_allowed": "The integration only supports one Z-Wave instance"
+        },
+        "step": {
+            "user": {
+                "title": "Confirm set up"
+            }
+        }
+    }
+}

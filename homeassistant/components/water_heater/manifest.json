@@ -1,0 +1,6 @@
+{
+  "domain": "water_heater",
+  "name": "Water Heater",
+  "documentation": "https://www.home-assistant.io/integrations/water_heater",
+  "codeowners": []
+}

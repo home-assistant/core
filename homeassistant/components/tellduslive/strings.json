@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "TelldusLive is already configured",
+      "authorize_url_fail": "Unknown error generating an authorize url.",
+      "authorize_url_timeout": "Timeout generating authorize url.",
+      "unknown": "Unknown error occurred"
+    },
+    "error": {
+      "auth_error": "Authentication error, please try again"
+    },
+    "step": {
+      "auth": {
+        "description": "To link your TelldusLive account:\n 1. Click the link below\n 2. Login to Telldus Live\n 3. Authorize **{app_name}** (click **Yes**).\n 4. Come back here and click **SUBMIT**.\n\n [Link TelldusLive account]({auth_url})",
+        "title": "Authenticate against TelldusLive"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "title": "Pick endpoint."
+      }
+    }
+  }
+}

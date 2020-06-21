@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "De powerwall is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "unknown": "Onverwachte fout",
+            "wrong_version": "Uw powerwall gebruikt een softwareversie die niet wordt ondersteund. Overweeg om dit probleem te upgraden of te melden, zodat het kan worden opgelost."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP-adres"
+                },
+                "title": "Maak verbinding met de powerwall"
+            }
+        }
+    }
+}

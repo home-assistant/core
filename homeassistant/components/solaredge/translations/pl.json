@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "site_exists": "To site_id jest ju\u017c skonfigurowane."
+        },
+        "error": {
+            "site_exists": "To site_id jest ju\u017c skonfigurowane."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "name": "Nazwa tej instalacji",
+                    "site_id": "SolarEdge site-id"
+                },
+                "title": "Zdefiniuj parametry API dla tej instalacji"
+            }
+        }
+    }
+}

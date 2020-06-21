@@ -1,0 +1,127 @@
+# Describes the format for available light services
+
+turn_on:
+  description: Turn a light on.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: "light.kitchen"
+    transition:
+      description: Duration in seconds it takes to get to next state
+      example: 60
+    rgb_color:
+      description: Color for the light in RGB-format.
+      example: "[255, 100, 100]"
+    color_name:
+      description: A human readable color name.
+      example: "red"
+    hs_color:
+      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      example: "[300, 70]"
+    xy_color:
+      description: Color for the light in XY-format.
+      example: "[0.52, 0.43]"
+    color_temp:
+      description: Color temperature for the light in mireds.
+      example: 250
+    kelvin:
+      description: Color temperature for the light in Kelvin.
+      example: 4000
+    white_value:
+      description: Number between 0..255 indicating level of white.
+      example: "250"
+    brightness:
+      description: Number between 0..255 indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
+      example: 120
+    brightness_pct:
+      description: Number between 0..100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
+      example: 47
+    brightness_step:
+      description: Change brightness by an amount. Should be between -255..255.
+      example: -25.5
+    brightness_step_pct:
+      description: Change brightness by a percentage. Should be between -100..100.
+      example: -10
+    profile:
+      description: Name of a light profile to use.
+      example: relax
+    flash:
+      description: If the light should flash. Valid values are short and long.
+      example: short
+      values:
+        - short
+        - long
+    effect:
+      description: Light effect.
+      example: random
+      values:
+        - colorloop
+        - random
+
+turn_off:
+  description: Turn a light off.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn off.
+      example: "light.kitchen"
+    transition:
+      description: Duration in seconds it takes to get to next state.
+      example: 60
+    flash:
+      description: If the light should flash. Valid values are short and long.
+      example: short
+      values:
+        - short
+        - long
+
+toggle:
+  description: Toggles a light.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: "light.kitchen"
+    transition:
+      description: Duration in seconds it takes to get to next state
+      example: 60
+    rgb_color:
+      description: Color for the light in RGB-format.
+      example: "[255, 100, 100]"
+    color_name:
+      description: A human readable color name.
+      example: "red"
+    hs_color:
+      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      example: "[300, 70]"
+    xy_color:
+      description: Color for the light in XY-format.
+      example: "[0.52, 0.43]"
+    color_temp:
+      description: Color temperature for the light in mireds.
+      example: 250
+    kelvin:
+      description: Color temperature for the light in Kelvin.
+      example: 4000
+    white_value:
+      description: Number between 0..255 indicating level of white.
+      example: "250"
+    brightness:
+      description: Number between 0..255 indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
+      example: 120
+    brightness_pct:
+      description: Number between 0..100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
+      example: 47
+    profile:
+      description: Name of a light profile to use.
+      example: relax
+    flash:
+      description: If the light should flash. Valid values are short and long.
+      example: short
+      values:
+        - short
+        - long
+    effect:
+      description: Light effect.
+      example: random
+      values:
+        - colorloop
+        - random

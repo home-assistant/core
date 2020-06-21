@@ -1,0 +1,31 @@
+# Describes the format for available water_heater services
+
+set_away_mode:
+  description: Turn away mode on/off for water_heater device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "water_heater.water_heater"
+    away_mode:
+      description: New value of away mode.
+      example: true
+
+set_temperature:
+  description: Set target temperature of water_heater device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "water_heater.water_heater"
+    temperature:
+      description: New target temperature for water heater.
+      example: 25
+
+set_operation_mode:
+  description: Set operation mode for water_heater device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "water_heater.water_heater"
+    operation_mode:
+      description: New value of operation mode.
+      example: eco

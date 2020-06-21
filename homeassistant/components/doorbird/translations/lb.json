@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebse DoorBird ass scho konfigur\u00e9iert",
+            "link_local_address": "Lokal Link Adressen ginn net \u00ebnnerst\u00ebtzt",
+            "not_doorbird_device": "D\u00ebsen Apparat ass kee DoorBird"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "DoorBird {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Numm vum Apparat",
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "title": "Mat DoorBird verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Komma getrennte L\u00ebscht vun Evenementer"
+                },
+                "description": "Setzt ee mat Komma getrennten Evenement Numm fir all Evenement dob\u00e4i d\u00e9i sollt suiv\u00e9iert ginn. Wann's du se hei aginn hues, benotz d'DoorBird App fir se zu engem spezifeschen Evenement dob\u00e4i ze setzen. Kuckt d'Dokumentatioun op https://www.home-assistant.io/integrations/doorbird/#events. Beispill: somebody_pressed_the_button, motion"
+            }
+        }
+    }
+}

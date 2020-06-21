@@ -1,0 +1,151 @@
+.\" Man page generated from reStructuredText.
+.
+.TH MID3V2 1 "" "" ""
+.SH NAME
+mid3v2 \- audio tag editor similar to 'id3v2'
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH SYNOPSIS
+.sp
+\fBmid3v2\fP [\fIoptions\fP] \fIfilename\fP ...
+.SH DESCRIPTION
+.sp
+\fBmid3v2\fP is a Mutagen\-based replacement for id3lib\(aqs id3v2. It supports
+ID3v2.4 and more frames; it also does not have the numerous bugs that plague
+id3v2.
+.sp
+This program exists mostly for compatibility with programs that want to tag
+files using id3v2. For a more usable interface, we recommend Ex Falso.
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.B \-q\fP,\fB  \-\-quiet
+Be quiet: do not mention file operations that perform the user\(aqs
+request. Warnings will still be printed.
+.TP
+.B \-v\fP,\fB  \-\-verbose
+Be verbose: state all operations performed. This is the opposite of
+\-\-quiet. This is the default.
+.TP
+.B \-e\fP,\fB  \-\-escape
+Enable interpretation of backslash escapes for tag values.
+Makes it possible to escape the colon\-separator in TXXX, WXXX, COMM
+values like \(aq\e:\(aq and insert escape sequences like \(aq\en\(aq, \(aq\et\(aq etc.
+.TP
+.B \-f\fP,\fB  \-\-list\-frames
+Display all supported ID3v2.3/2.4 frames and their meanings.
+.TP
+.B \-L\fP,\fB  \-\-list\-genres
+List all ID3v1 numeric genres. These can be used to set TCON frames,
+but it is not recommended.
+.TP
+.B \-l\fP,\fB  \-\-list
+List all tags in the files. The output format is \fInot\fP the same as
+id3v2\(aqs; instead, it is easily parsable and readable. Some tags may not
+have human\-readable representations.
+.TP
+.B \-\-list\-raw
+List all tags in the files, in raw format. Although this format is
+nominally human\-readable, it may be very long if the tag contains
+embedded binary data.
+.TP
+.B \-d\fP,\fB  \-\-delete\-v2
+Delete ID3v2 tags.
+.TP
+.B \-s\fP,\fB  \-\-delete\-v1
+Delete ID3v1 tags.
+.TP
+.B \-D\fP,\fB  \-\-delete\-all
+Delete all ID3 tags.
+.TP
+.BI \-\-delete\-frames\fB= FRAMES
+Delete specific ID3v2 frames (or groups of frames) from the files.
+\fBFRAMES\fP is a "," separated list of frame names e.g. \fB"TPE1,TALB"\fP
+.TP
+.B \-C\fP,\fB  \-\-convert
+Convert ID3v1 tags to ID3v2 tags. This  will also happen automatically
+during any editing.
+.TP
+.BI \-a\fP,\fB  \-\-artist\fB= ARTIST
+Set the artist information (TPE1).
+.TP
+.BI \-A\fP,\fB  \-\-album\fB= ALBUM
+Set the album information (TALB).
+.TP
+.BI \-t\fP,\fB  \-\-song\fB= TITLE
+Set the title information (TIT2).
+.TP
+.BI \-c\fP,\fB  \-\-comment\fB= <DESCRIPTION:COMMENT:LANGUAGE>
+Set a comment (COMM). The language and description may be omitted, in
+which case the language defaults to English, and the description to an
+empty string.
+.TP
+.BI \-p\fP,\fB  \-\-picture\fB= <FILENAME:DESCRIPTION:IMAGE\-TYPE:MIME\-TYPE>
+Set the attached picture (APIC). Everything except the filename can be
+omitted in which case default values will be used.
+.TP
+.BI \-g\fP,\fB  \-\-genre\fB= GENRE
+Set the genre information (TCON).
+.TP
+.BI \-y\fP,\fB  \-\-year\fB= <YYYY>\fP,\fB \ \-\-date\fB= <YYYY\-[MM\-DD]>
+Set the year/date information (TDRC).
+.TP
+.BI \-T\fP,\fB  \-\-track\fB= <NUM/NUM>
+Set the track number (TRCK).
+.UNINDENT
+.sp
+Any text or URL frame (those beginning with T or W) can be modified or
+added by prefixing the name of the frame with "\-\-". For example, \fB\-\-TIT3
+"Monkey!"\fP will set the TIT3 (subtitle) frame to \fBMonkey!\fP\&.
+.sp
+The TXXX frame has the format <DESCRIPTION:TEXT>; many TXXX frames may be
+set in the file as long as they have different keys. To set this key, just
+separate the text with a colon, e.g. \fB\-\-TXXX "ALBUMARTISTSORT:Examples,
+The"\fP\&. The description can be omitted in which case it defaults to an empty
+string.
+.sp
+The WXXX frame has the same format as TXXX but since URLs usually contain a
+":" you have provide a description or enable escaping (\-e):
+\fB\-\-WXXX "desc:http://foo.bar"\fP or \fB\-e \-\-WXXX "http\e\e://foo.bar"\fP
+.sp
+The USLT frame has the format <DESCRIPTION:TEXT:LANGUAGE>. The language and
+description may be omitted, in which case the language defaults to English,
+and the description to an empty string.
+.sp
+The special POPM frame can be set in a similar way: \fB\-\-POPM
+"bob@example.com:128:2"\fP to set Bob\(aqs rating to 128/255 with 2 plays.
+.SH BUGS
+.sp
+No sanity checking is done on the editing operations you perform, so mid3v2
+will happily accept \-\-TSIZ when editing an ID3v2.4 frame. However, it will
+also automatically throw it out during the next edit operation.
+.SH AUTHOR
+.sp
+Joe Wreschnig is the author of mid3v2, but he doesn\(aqt like to admit it.
+.\" Generated by docutils manpage writer.
+.

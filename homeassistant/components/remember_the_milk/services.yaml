@@ -1,0 +1,21 @@
+# Describes the format for available Remember The Milk services
+
+create_task:
+  description: >-
+    Create (or update) a new task in your Remember The Milk account. If you want to update a task
+    later on, you have to set an "id" when creating the task.
+    Note: Updating a tasks does not support the smart syntax.
+  fields:
+    name:
+      description: name of the new task, you can use the smart syntax here
+      example: "do this ^today #from_hass"
+    id:
+      description: (optional) identifier for the task you're creating, can be used to update or complete the task later on
+      example: myid
+
+complete_task:
+  description: Complete a tasks that was privously created.
+  fields:
+    id:
+      description: identifier that was defined when creating the task
+      example: myid

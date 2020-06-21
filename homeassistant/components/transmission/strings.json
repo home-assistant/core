@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup Transmission Client",
+        "data": {
+          "name": "Name",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "name_exists": "Name already exists",
+      "wrong_credentials": "Wrong username or password",
+      "cannot_connect": "Unable to Connect to host"
+    },
+    "abort": {
+      "already_configured": "Host is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Transmission",
+        "data": {
+          "scan_interval": "Update frequency"
+        }
+      }
+    }
+  }
+}

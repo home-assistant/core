@@ -1,0 +1,10 @@
+#!/bin/sh
+# Resolve all dependencies that the application requires to run.
+
+# Stop on errors
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "Installing development dependencies..."
+python3 -m pip install tox colorlog pre-commit $(grep mypy requirements_test.txt)

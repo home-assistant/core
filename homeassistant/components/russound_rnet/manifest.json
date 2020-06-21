@@ -1,0 +1,7 @@
+{
+  "domain": "russound_rnet",
+  "name": "Russound RNET",
+  "documentation": "https://www.home-assistant.io/integrations/russound_rnet",
+  "requirements": ["russound==0.1.9"],
+  "codeowners": []
+}

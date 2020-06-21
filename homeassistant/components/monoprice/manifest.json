@@ -1,0 +1,8 @@
+{
+  "domain": "monoprice",
+  "name": "Monoprice 6-Zone Amplifier",
+  "documentation": "https://www.home-assistant.io/integrations/monoprice",
+  "requirements": ["pymonoprice==0.3"],
+  "codeowners": ["@etsinko", "@OnFreund"],
+  "config_flow": true
+}

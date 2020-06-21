@@ -1,0 +1,11 @@
+{
+  "domain": "lifx",
+  "name": "LIFX",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/lifx",
+  "requirements": ["aiolifx==0.6.7", "aiolifx_effects==0.2.2"],
+  "homekit": {
+    "models": ["LIFX"]
+  },
+  "codeowners": []
+}

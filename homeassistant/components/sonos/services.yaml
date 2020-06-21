@@ -1,0 +1,89 @@
+join:
+  description: Group player together.
+  fields:
+    master:
+      description: Entity ID of the player that should become the coordinator of the group.
+      example: "media_player.living_room_sonos"
+    entity_id:
+      description: Name(s) of entities that will join the master.
+      example: "media_player.living_room_sonos"
+
+unjoin:
+  description: Unjoin the player from a group.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be unjoined from their group.
+      example: "media_player.living_room_sonos"
+
+snapshot:
+  description: Take a snapshot of the media player.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be snapshot.
+      example: "media_player.living_room_sonos"
+    with_group:
+      description: True (default) or False. Also snapshot the group layout.
+      example: "true"
+
+restore:
+  description: Restore a snapshot of the media player.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be restored.
+      example: "media_player.living_room_sonos"
+    with_group:
+      description: True (default) or False. Also restore the group layout.
+      example: "true"
+
+set_sleep_timer:
+  description: Set a Sonos timer.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will have a timer set.
+      example: "media_player.living_room_sonos"
+    sleep_time:
+      description: Number of seconds to set the timer.
+      example: "900"
+
+clear_sleep_timer:
+  description: Clear a Sonos timer.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will have the timer cleared.
+      example: "media_player.living_room_sonos"
+
+set_option:
+  description: Set Sonos sound options.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will have options set.
+      example: "media_player.living_room_sonos"
+    night_sound:
+      description: Enable Night Sound mode
+      example: "true"
+    speech_enhance:
+      description: Enable Speech Enhancement mode
+      example: "true"
+    status_light:
+      description: Enable Status (LED) Light
+      example: "true"
+
+play_queue:
+  description: Starts playing the queue from the first item.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will start playing.
+      example: "media_player.living_room_sonos"
+    queue_position:
+      description: Position of the song in the queue to start playing from.
+      example: "0"
+
+remove_from_queue:
+  description: Removes an item from the queue.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will remove an item.
+      example: "media_player.living_room_sonos"
+    queue_position:
+      description: Position in the queue to remove.
+      example: "0"

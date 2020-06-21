@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up Google Cast?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of Google Cast is necessary.",
+      "no_devices_found": "No Google Cast devices found on the network."
+    }
+  }
+}

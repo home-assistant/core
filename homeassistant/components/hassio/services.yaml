@@ -1,0 +1,84 @@
+addon_install:
+  description: Install a Hass.io docker add-on.
+  fields:
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+    version:
+      description: Optional or it will be use the latest version.
+      example: "0.2"
+
+addon_start:
+  description: Start a Hass.io docker add-on.
+  fields:
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
+addon_restart:
+  description: Restart a Hass.io docker add-on.
+  fields:
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
+addon_stdin:
+  description: Write data to a Hass.io docker add-on stdin .
+  fields:
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
+addon_stop:
+  description: Stop a Hass.io docker add-on.
+  fields:
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
+addon_uninstall:
+  description: Uninstall a Hass.io docker add-on.
+  fields:
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
+addon_update:
+  description: Update a Hass.io docker add-on.
+  fields:
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+    version:
+      description: Optional or it will be use the latest version.
+      example: "0.2"
+
+homeassistant_update:
+  description: Update the Home Assistant docker image.
+  fields:
+    version:
+      description: Optional or it will be use the latest version.
+      example: 0.40.1
+
+host_reboot:
+  description: Reboot the host system.
+
+host_shutdown:
+  description: Poweroff the host system.
+
+host_update:
+  description: Update the host system.
+  fields:
+    version:
+      description: Optional or it will be use the latest version.
+      example: "0.3"
+
+supervisor_reload:
+  description: Reload the Hass.io supervisor.
+
+supervisor_update:
+  description: Update the Hass.io supervisor.
+  fields:
+    version:
+      description: Optional or it will be use the latest version.
+      example: "0.3"

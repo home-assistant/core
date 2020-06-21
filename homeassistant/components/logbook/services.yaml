@@ -1,0 +1,15 @@
+log:
+  description: Create a custom entry in your logbook.
+  fields:
+    name:
+      description: Custom name for an entity, can be referenced with entity_id
+      example: "Kitchen"
+    message:
+      description: Message of the custom logbook entry
+      example: "is being used"
+    entity_id:
+      description: Entity to reference in custom logbook entry [Optional]
+      example: "light.kitchen"
+    domain:
+      description: Icon of domain to display in custom logbook entry [Optional]
+      example: "light"

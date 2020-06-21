@@ -1,0 +1,1 @@
+"""The uptimerobot component."""

@@ -1,0 +1,9 @@
+{
+  "domain": "tellduslive",
+  "name": "Telldus Live",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tellduslive",
+  "requirements": ["tellduslive==0.10.11"],
+  "codeowners": ["@fredrike"],
+  "quality_scale": "gold"
+}

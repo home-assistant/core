@@ -1,0 +1,7 @@
+{
+  "domain": "moon",
+  "name": "Moon",
+  "documentation": "https://www.home-assistant.io/integrations/moon",
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
+}

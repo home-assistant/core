@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Nome"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "webostv",
+  "name": "LG webOS Smart TV",
+  "documentation": "https://www.home-assistant.io/integrations/webostv",
+  "requirements": ["aiopylgtv==0.3.3"],
+  "dependencies": ["configurator"],
+  "codeowners": ["@bendavid"]
+}

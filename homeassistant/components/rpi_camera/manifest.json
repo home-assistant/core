@@ -1,0 +1,6 @@
+{
+  "domain": "rpi_camera",
+  "name": "Raspberry Pi Camera",
+  "documentation": "https://www.home-assistant.io/integrations/rpi_camera",
+  "codeowners": []
+}

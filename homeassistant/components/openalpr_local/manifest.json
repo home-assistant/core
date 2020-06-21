@@ -1,0 +1,6 @@
+{
+  "domain": "openalpr_local",
+  "name": "OpenALPR Local",
+  "documentation": "https://www.home-assistant.io/integrations/openalpr_local",
+  "codeowners": []
+}

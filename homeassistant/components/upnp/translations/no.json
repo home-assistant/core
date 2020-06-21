@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP / IGD er allerede konfigurert",
+            "incomplete_discovery": "Ufullstendig oppdagelse",
+            "no_devices_discovered": "Ingen UPnP / IGDs oppdaget",
+            "no_devices_found": "Ingen UPnP / IGD-enheter funnet p\u00e5 nettverket."
+        },
+        "error": {
+            "few": "f\u00e5",
+            "many": "mange",
+            "one": "en",
+            "other": "andre",
+            "two": "to",
+            "zero": "ingen"
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "\u00d8nsker du \u00e5 sette opp denne UPnP/IGD-enheten?"
+            },
+            "user": {
+                "data": {
+                    "scan_interval": "Oppdateringsintervall (sekunder, minimum 30)",
+                    "usn": "Enhet"
+                }
+            }
+        }
+    }
+}

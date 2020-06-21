@@ -1,0 +1,7 @@
+{
+  "domain": "discord",
+  "name": "Discord",
+  "documentation": "https://www.home-assistant.io/integrations/discord",
+  "requirements": ["discord.py==1.3.3"],
+  "codeowners": []
+}

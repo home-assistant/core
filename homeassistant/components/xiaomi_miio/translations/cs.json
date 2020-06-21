@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "connect_error": "Nepoda\u0159ilo se p\u0159ipojit, zkuste to znovu",
+            "no_device_selected": "Nebylo vybr\u00e1no \u017e\u00e1dn\u00e9 za\u0159\u00edzen\u00ed, vyberte jedno za\u0159\u00edzen\u00ed."
+        },
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP adresa",
+                    "name": "N\u00e1zev br\u00e1ny",
+                    "token": "API Token"
+                },
+                "description": "Je vy\u017eadov\u00e1n token API, pokyny naleznete na str\u00e1nce https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token.",
+                "title": "P\u0159ipojen\u00ed k br\u00e1n\u011b Xiaomi"
+            },
+            "user": {
+                "data": {
+                    "gateway": "P\u0159ipojen\u00ed k br\u00e1n\u011b Xiaomi"
+                },
+                "description": "Vyberte, ke kter\u00e9mu za\u0159\u00edzen\u00ed se chcete p\u0159ipojit.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

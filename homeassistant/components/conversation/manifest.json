@@ -1,0 +1,8 @@
+{
+  "domain": "conversation",
+  "name": "Conversation",
+  "documentation": "https://www.home-assistant.io/integrations/conversation",
+  "dependencies": ["http"],
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

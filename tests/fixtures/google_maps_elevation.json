@@ -1,0 +1,13 @@
+{
+   "results" : [
+      {
+         "elevation" : 101.5,
+         "location" : {
+            "lat" : 32.54321,
+            "lng" : -117.12345
+         },
+         "resolution" : 4.8
+      }
+   ],
+   "status" : "OK"
+}

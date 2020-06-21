@@ -1,0 +1,7 @@
+{
+  "domain": "homematic",
+  "name": "Homematic",
+  "documentation": "https://www.home-assistant.io/integrations/homematic",
+  "requirements": ["pyhomematic==0.1.67"],
+  "codeowners": ["@pvizeli", "@danielperna84"]
+}
