@@ -17,7 +17,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import STATE_HOME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY
+from homeassistant.const import (
+    STATE_HOME,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
+)
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
 from .const import DOMAIN
