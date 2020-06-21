@@ -94,7 +94,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                 ]
 
                 if not matching_flows:
-                    self.hass.add_job(
+                    self.hass.async_create_task(
                         self.hass.config_entries.flow.async_init(
                             DOMAIN, context=flow_context, data=self._config_entry.data,
                         )
