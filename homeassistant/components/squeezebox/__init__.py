@@ -44,7 +44,7 @@ async def start_server_discovery(hass):
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Logitech Squeezebox component."""
     if hass.is_running:
-        await start_server_discovery(hass)
+        asyncio.create_task(start_server_discovery(hass))
     else:
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
