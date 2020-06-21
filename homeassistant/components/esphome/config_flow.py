@@ -100,10 +100,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             already_configured = False
 
-            if (
-                entry.data[CONF_HOST] == address
-                or entry.data[CONF_HOST] == discovery_info[CONF_HOST]
-            ):
+            if CONF_HOST in entry.data and entry.data[CONF_HOST] in [
+                address,
+                discovery_info[CONF_HOST],
+            ]:
                 # Is this address or IP address already configured?
                 already_configured = True
             elif entry.entry_id in self.hass.data.get(DATA_KEY, {}):

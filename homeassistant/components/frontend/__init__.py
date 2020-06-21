@@ -281,8 +281,13 @@ async def async_setup(hass, config):
 
     # To smooth transition to new urls, add redirects to new urls of dev tools
     # Added June 27, 2019. Can be removed in 2021.
-    for panel in ("event", "info", "service", "state", "template", "mqtt"):
+    for panel in ("event", "service", "state", "template"):
         hass.http.register_redirect(f"/dev-{panel}", f"/developer-tools/{panel}")
+    for panel in ("logs", "info", "mqtt"):
+        # Can be removed in 2021.
+        hass.http.register_redirect(f"/dev-{panel}", f"/config/{panel}")
+        # Added June 20 2020. Can be removed in 2022.
+        hass.http.register_redirect(f"/developer-tools/{panel}", f"/config/{panel}")
 
     async_register_built_in_panel(
         hass,
@@ -451,7 +456,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         if template is None:
             template = await hass.async_add_executor_job(self.get_template)
 
-        response = web.Response(
+        return web.Response(
             text=template.render(
                 theme_color=MANIFEST_JSON["theme_color"],
                 extra_urls=hass.data[DATA_EXTRA_HTML_URL],
@@ -460,8 +465,6 @@ class IndexView(web_urldispatcher.AbstractResource):
             ),
             content_type="text/html",
         )
-        response.enable_compression()
-        return response
 
     def __len__(self) -> int:
         """Return length of resource."""
@@ -483,9 +486,7 @@ class ManifestJSONView(HomeAssistantView):
     def get(self, request):  # pylint: disable=no-self-use
         """Return the manifest.json."""
         msg = json.dumps(MANIFEST_JSON, sort_keys=True)
-        response = web.Response(text=msg, content_type="application/manifest+json")
-        response.enable_compression()
-        return response
+        return web.Response(text=msg, content_type="application/manifest+json")
 
 
 @callback
