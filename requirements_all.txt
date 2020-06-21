@@ -760,7 +760,7 @@ httplib2==0.10.3
 huawei-lte-api==1.4.12
 
 # homeassistant.components.hydrawise
-hydrawiser==0.1.1
+hydrawiser==0.2
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
