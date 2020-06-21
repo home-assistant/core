@@ -2,13 +2,13 @@
 
 import json
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
+from homeassistant.const import CONF_ACCESS_TOKEN
 
 from tests.common import load_fixture
 
 AWAIR_UUID = "awair_24947"
-CONFIG = {CONF_ACCESS_TOKEN: "12345", CONF_EMAIL: "foo@bar.com"}
-CONFIG_ENTRY_UNIQUE_ID = f"{CONFIG[CONF_EMAIL]}"
+CONFIG = {CONF_ACCESS_TOKEN: "12345"}
+CONF_UNIQUE_ID = "foo@bar.com"
 DEVICES_FIXTURE = json.loads(load_fixture("awair/devices.json"))
 GEN1_DATA_FIXTURE = json.loads(load_fixture("awair/awair.json"))
 GEN2_DATA_FIXTURE = json.loads(load_fixture("awair/awair-r2.json"))
