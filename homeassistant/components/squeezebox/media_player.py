@@ -195,7 +195,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
     # Start server discovery task if not already running
-    await start_server_discovery(hass)
+    asyncio.create_task(start_server_discovery(hass))
 
     return True
 
