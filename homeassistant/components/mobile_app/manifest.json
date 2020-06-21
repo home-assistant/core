@@ -3,7 +3,7 @@
   "name": "Mobile App",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mobile_app",
-  "requirements": ["PyNaCl==1.3.0"],
+  "requirements": ["PyNaCl==1.3.0", "emoji==0.5.4"],
   "dependencies": ["http", "webhook", "person"],
   "after_dependencies": ["cloud", "camera"],
   "codeowners": ["@robbiet480"],
