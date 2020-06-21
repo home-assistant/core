@@ -763,7 +763,7 @@ httplib2==0.10.3
 huawei-lte-api==1.4.12
 
 # homeassistant.components.hydrawise
-hydrawiser==0.1.1
+hydrawiser==0.2
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
@@ -1775,7 +1775,7 @@ python-whois==0.7.2
 python-wink==1.10.5
 
 # homeassistant.components.awair
-python_awair==0.0.4
+python_awair==0.1.1
 
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.2.1
@@ -1893,7 +1893,7 @@ rjpl==0.3.5
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.4.2
+rokuecp==0.5.0
 
 # homeassistant.components.roomba
 roombapy==1.6.1
