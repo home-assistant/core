@@ -127,13 +127,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     port = config[CONF_PORT]
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(config_entry.unique_id, {})
+    hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
 
     known_players = hass.data[DOMAIN].get(KNOWN_PLAYERS)
     if known_players is None:
         hass.data[DOMAIN][KNOWN_PLAYERS] = known_players = []
 
-    entry_players = hass.data[DOMAIN][config_entry.unique_id].setdefault(
+    entry_players = hass.data[DOMAIN][config_entry.entry_id].setdefault(
         ENTRY_PLAYERS, []
     )
 
@@ -169,7 +169,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        hass.data[DOMAIN][config_entry.unique_id][
+        hass.data[DOMAIN][config_entry.entry_id][
             PLAYER_DISCOVERY_UNSUB
         ] = hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
 
