@@ -10,7 +10,7 @@ from homeassistant.config_entries import SOURCE_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PLAYER_DISCOVERY_UNSUBS
+from .const import DOMAIN, ENTRY_PLAYERS, KNOWN_PLAYERS, PLAYER_DISCOVERY_UNSUB
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
-    hass.data[DOMAIN][PLAYER_DISCOVERY_UNSUBS][entry.unique_id]()
+    hass.data[DOMAIN][entry.unique_id][PLAYER_DISCOVERY_UNSUB]()
+
+    # Remove config entry's players from list of known players
+    entry_players = hass.data[DOMAIN][entry.unique_id][ENTRY_PLAYERS]
+    if entry_players:
+        for player in entry_players:
+            _LOGGER.debug("Remove entry player %s from list of known players.", player)
+            hass.data[DOMAIN][KNOWN_PLAYERS].remove(player)
+
+    # Remove stored data for this config entry
+    hass.data[DOMAIN].pop(entry.unique_id)
 
     # Stop server discovery task if this is the last config entry.
     current_entries = hass.config_entries.async_entries(DOMAIN)

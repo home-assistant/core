@@ -41,7 +41,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
 
 from .__init__ import start_server_discovery
-from .const import DEFAULT_PORT, DOMAIN, PLAYER_DISCOVERY_UNSUBS
+from .const import (
+    DEFAULT_PORT,
+    DOMAIN,
+    ENTRY_PLAYERS,
+    KNOWN_PLAYERS,
+    PLAYER_DISCOVERY_UNSUB,
+)
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -85,7 +91,6 @@ PLATFORM_SCHEMA = vol.All(
     ),
 )
 
-KNOWN_PLAYERS = "known_players"
 KNOWN_SERVERS = "known_servers"
 ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
@@ -122,16 +127,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     port = config[CONF_PORT]
 
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(config_entry.unique_id, {})
 
     known_players = hass.data[DOMAIN].get(KNOWN_PLAYERS)
     if known_players is None:
         hass.data[DOMAIN][KNOWN_PLAYERS] = known_players = []
 
+    entry_players = hass.data[DOMAIN][config_entry.unique_id].setdefault(
+        ENTRY_PLAYERS, []
+    )
+
     _LOGGER.debug("Creating LMS object for %s", host)
     lms = Server(async_get_clientsession(hass), host, port, username, password)
-
-    player_discovery_unsubs = hass.data[DOMAIN].setdefault(PLAYER_DISCOVERY_UNSUBS, {})
-    player_discovery_unsubs.setdefault(config_entry.unique_id)
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -154,6 +161,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 _LOGGER.debug("Adding new entity: %s", player)
                 entity = SqueezeBoxEntity(player)
                 known_players.append(entity)
+                entry_players.append(entity)
                 async_add_entities([entity])
 
         players = await lms.async_get_players()
@@ -161,8 +169,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        player_discovery_unsubs[
-            config_entry.unique_id
+        hass.data[DOMAIN][config_entry.unique_id][
+            PLAYER_DISCOVERY_UNSUB
         ] = hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)

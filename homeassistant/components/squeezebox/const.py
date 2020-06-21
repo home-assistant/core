@@ -1,4 +1,6 @@
 """Constants for the Squeezebox component."""
 DOMAIN = "squeezebox"
-PLAYER_DISCOVERY_UNSUBS = "player_discovery_unsubs"
+ENTRY_PLAYERS = "entry_players"
+KNOWN_PLAYERS = "known_players"
+PLAYER_DISCOVERY_UNSUB = "player_discovery_unsub"
 DEFAULT_PORT = 9000
