@@ -114,13 +114,9 @@ async def test_import_aborts_if_configured(hass):
     ), patch(
         "homeassistant.components.awair.sensor.async_setup_entry", return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_ACCESS_TOKEN: CONFIG[CONF_ACCESS_TOKEN]},
-        )
-
-        assert result["result"].unique_id == CONF_UNIQUE_ID
+        MockConfigEntry(
+            domain=DOMAIN, unique_id=CONF_UNIQUE_ID, data=CONFIG
+        ).add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
