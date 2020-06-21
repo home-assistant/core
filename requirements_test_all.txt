@@ -233,7 +233,7 @@ doorbirdpy==2.0.8
 dsmr_parser==0.18
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.40
+dynalite_devices==0.1.41
 
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
