@@ -109,7 +109,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
         super().__init__(
             coordinator,
             client,
-            f"{DOMAIN}_{client.account_id}_last_electricity_reading",
+            f"{client.account_id}_last_electricity_reading",
             "OVO Last Electricity Reading",
             "mdi:flash",
             "kWh",
