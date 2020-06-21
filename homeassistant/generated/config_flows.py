@@ -19,6 +19,7 @@ FLOWS = [
     "atag",
     "august",
     "avri",
+    "awair",
     "axis",
     "blebox",
     "blink",
