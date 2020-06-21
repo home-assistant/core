@@ -51,8 +51,8 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         data_schema = {
-            vol.Required("username"): str,
-            vol.Required("password"): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
         }
 
         return self.async_show_form(

@@ -31,15 +31,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 def _spider_startup_wrapper(entry):
     """Startup wrapper for spider."""
-    try:
-        api = SpiderApi(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            entry.data[CONF_SCAN_INTERVAL],
-        )
-        return api
-    except UnauthorizedException:
-        _LOGGER.error("Can't connect to the Spider API")
+    api = SpiderApi(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        entry.data[CONF_SCAN_INTERVAL],
+    )
+    return api
 
 
 async def async_setup(hass, config):
@@ -62,16 +59,20 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Spider via config entry."""
-    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
-        _spider_startup_wrapper, entry
-    )
-
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+    try:
+        hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
+            _spider_startup_wrapper, entry
         )
 
-    return True
+        for component in PLATFORMS:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, component)
+            )
+
+        return True
+    except UnauthorizedException:
+        _LOGGER.error("Can't connect to the Spider API")
+        return False
 
 
 async def async_unload_entry(hass, entry):
