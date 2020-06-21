@@ -46,6 +46,11 @@ class ProxmoxSensor(Entity):
         self._maxdisk = None
         self._usedisk = None
         self._state = None
+        self._total = None
+        self._used = None
+        self._avail = None
+        self._content = None
+        self._type = None
 
     @property
     def name(self):
