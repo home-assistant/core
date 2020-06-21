@@ -8,7 +8,7 @@ from tests.common import load_fixture
 
 AWAIR_UUID = "awair_24947"
 CONFIG = {CONF_ACCESS_TOKEN: "12345"}
-CONF_UNIQUE_ID = "foo@bar.com"
+UNIQUE_ID = "foo@bar.com"
 DEVICES_FIXTURE = json.loads(load_fixture("awair/devices.json"))
 GEN1_DATA_FIXTURE = json.loads(load_fixture("awair/awair.json"))
 GEN2_DATA_FIXTURE = json.loads(load_fixture("awair/awair-r2.json"))

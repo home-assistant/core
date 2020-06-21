@@ -8,13 +8,7 @@ from homeassistant.components.awair.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from .const import (
-    CONF_UNIQUE_ID,
-    CONFIG,
-    DEVICES_FIXTURE,
-    NO_DEVICES_FIXTURE,
-    USER_FIXTURE,
-)
+from .const import CONFIG, DEVICES_FIXTURE, NO_DEVICES_FIXTURE, UNIQUE_ID, USER_FIXTURE
 
 from tests.common import MockConfigEntry
 
@@ -60,9 +54,9 @@ async def test_duplicate_error(hass):
     ), patch(
         "homeassistant.components.awair.sensor.async_setup_entry", return_value=True,
     ):
-        MockConfigEntry(
-            domain=DOMAIN, unique_id=CONF_UNIQUE_ID, data=CONFIG
-        ).add_to_hass(hass)
+        MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG).add_to_hass(
+            hass
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -103,7 +97,7 @@ async def test_import(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "foo@bar.com (32406)"
         assert result["data"][CONF_ACCESS_TOKEN] == CONFIG[CONF_ACCESS_TOKEN]
-        assert result["result"].unique_id == CONF_UNIQUE_ID
+        assert result["result"].unique_id == UNIQUE_ID
 
 
 async def test_import_aborts_on_api_error(hass):
@@ -128,9 +122,9 @@ async def test_import_aborts_if_configured(hass):
     ), patch(
         "homeassistant.components.awair.sensor.async_setup_entry", return_value=True,
     ):
-        MockConfigEntry(
-            domain=DOMAIN, unique_id=CONF_UNIQUE_ID, data=CONFIG
-        ).add_to_hass(hass)
+        MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG).add_to_hass(
+            hass
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -149,18 +143,14 @@ async def test_reauth(hass):
     ), patch(
         "homeassistant.components.awair.sensor.async_setup_entry", return_value=True,
     ):
-        mock_config = MockConfigEntry(
-            domain=DOMAIN, unique_id=CONF_UNIQUE_ID, data=CONFIG
-        )
+        mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
         mock_config.add_to_hass(hass)
         hass.config_entries.async_update_entry(
             mock_config, data={**CONFIG, CONF_ACCESS_TOKEN: "blah"}
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "unique_id": CONF_UNIQUE_ID},
-            data=CONFIG,
+            DOMAIN, context={"source": "reauth", "unique_id": UNIQUE_ID}, data=CONFIG,
         )
 
         assert result["type"] == "abort"
@@ -168,18 +158,14 @@ async def test_reauth(hass):
 
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "unique_id": CONF_UNIQUE_ID},
-            data=CONFIG,
+            DOMAIN, context={"source": "reauth", "unique_id": UNIQUE_ID}, data=CONFIG,
         )
 
         assert result["errors"] == {CONF_ACCESS_TOKEN: "auth"}
 
     with patch("python_awair.AwairClient.query", side_effect=AwairError()):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "unique_id": CONF_UNIQUE_ID},
-            data=CONFIG,
+            DOMAIN, context={"source": "reauth", "unique_id": UNIQUE_ID}, data=CONFIG,
         )
 
         assert result["type"] == "abort"
@@ -201,4 +187,4 @@ async def test_create_entry(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "foo@bar.com (32406)"
         assert result["data"][CONF_ACCESS_TOKEN] == CONFIG[CONF_ACCESS_TOKEN]
-        assert result["result"].unique_id == CONF_UNIQUE_ID
+        assert result["result"].unique_id == UNIQUE_ID
