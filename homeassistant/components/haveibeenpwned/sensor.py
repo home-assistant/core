@@ -7,7 +7,13 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_EMAIL
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_EMAIL,
+    HTTP_NOT_FOUND,
+    HTTP_OK,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
@@ -81,13 +87,11 @@ class HaveIBeenPwnedSensor(Entity):
             return val
 
         for idx, value in enumerate(self._data.data[self._email]):
-            tmpname = "breach {}".format(idx + 1)
-            tmpvalue = "{} {}".format(
-                value["Title"],
-                dt_util.as_local(dt_util.parse_datetime(value["AddedDate"])).strftime(
-                    DATE_STR_FORMAT
-                ),
+            tmpname = f"breach {idx + 1}"
+            datetime_local = dt_util.as_local(
+                dt_util.parse_datetime(value["AddedDate"])
             )
+            tmpvalue = f"{value['Title']} {datetime_local.strftime(DATE_STR_FORMAT)}"
             val[tmpname] = tmpvalue
 
         return val
@@ -160,7 +164,7 @@ class HaveIBeenPwnedData:
             _LOGGER.error("Failed fetching data for %s", self._email)
             return
 
-        if req.status_code == 200:
+        if req.status_code == HTTP_OK:
             self.data[self._email] = sorted(
                 req.json(), key=lambda k: k["AddedDate"], reverse=True
             )
@@ -169,7 +173,7 @@ class HaveIBeenPwnedData:
             # the forced updates try this current email again
             self.set_next_email()
 
-        elif req.status_code == 404:
+        elif req.status_code == HTTP_NOT_FOUND:
             self.data[self._email] = []
 
             # only goto next email if we had data so that

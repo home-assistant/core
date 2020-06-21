@@ -22,4 +22,3 @@ new_task:
     due_date:
       description: The day this task is due, in format YYYY-MM-DD.
       example: "2019-10-22"
-

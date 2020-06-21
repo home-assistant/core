@@ -34,7 +34,7 @@ async def test_show_set_form(hass):
 async def test_connection_error(hass, aioclient_mock):
     """Test we show user form on Twente Milieu connection error."""
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress", exc=aiohttp.ClientError
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress", exc=aiohttp.ClientError
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()
@@ -49,7 +49,7 @@ async def test_connection_error(hass, aioclient_mock):
 async def test_invalid_address(hass, aioclient_mock):
     """Test we show user form on Twente Milieu invalid address error."""
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": []},
         headers={"Content-Type": "application/json"},
     )
@@ -70,7 +70,7 @@ async def test_address_already_set_up(hass, aioclient_mock):
     )
 
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
         headers={"Content-Type": "application/json"},
     )
@@ -86,7 +86,7 @@ async def test_address_already_set_up(hass, aioclient_mock):
 async def test_full_flow_implementation(hass, aioclient_mock):
     """Test registering an integration and finishing flow works."""
     aioclient_mock.post(
-        "https://wasteapi.2go-mobile.com/api/FetchAdress",
+        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
         headers={"Content-Type": "application/json"},
     )

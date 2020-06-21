@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "La tua istanza di Home Assistant deve essere accessibile da Internet per ricevere messaggi da Twilio.",
+            "one_instance_allowed": "\u00c8 necessaria una sola istanza."
+        },
+        "create_entry": {
+            "default": "Per inviare eventi a Home Assistant, dovrai configurare [Webhooks con Twilio]({twilio_url})\n\n Compila le seguenti informazioni: \n\n - URL: `{webhook_url}` \n - Method: POST \n - Content Type: application/x-www-form-urlencoded\n\n Vedi [la documentazione]({docs_url}) su come configurare le automazioni per gestire i dati in arrivo."
+        },
+        "step": {
+            "user": {
+                "description": "Sei sicuro di voler configurare Twilio?",
+                "title": "Configura il webhook di Twilio"
+            }
+        }
+    }
+}

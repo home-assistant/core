@@ -3,6 +3,5 @@
   "name": "1-Wire",
   "documentation": "https://www.home-assistant.io/integrations/onewire",
   "requirements": ["pyownet==0.10.0.post1"],
-  "dependencies": [],
   "codeowners": ["@garbled1"]
 }

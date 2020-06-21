@@ -55,7 +55,7 @@ resume_program:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'climate.kitchen'
+      example: "climate.kitchen"
     resume_all:
       description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
       example: true
@@ -65,7 +65,7 @@ set_fan_min_on_time:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'climate.kitchen'
+      example: "climate.kitchen"
     fan_min_on_time:
       description: New value of fan min on time.
       example: 5

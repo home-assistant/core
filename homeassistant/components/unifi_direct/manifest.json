@@ -3,6 +3,5 @@
   "name": "Ubiquiti UniFi AP",
   "documentation": "https://www.home-assistant.io/integrations/unifi_direct",
   "requirements": ["pexpect==4.6.0"],
-  "dependencies": [],
   "codeowners": []
 }

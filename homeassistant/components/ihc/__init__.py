@@ -53,7 +53,6 @@ AUTO_SETUP_YAML = "ihc_auto_setup.yaml"
 DOMAIN = "ihc"
 
 IHC_CONTROLLER = "controller"
-IHC_DATA = "ihc{}"
 IHC_INFO = "info"
 IHC_PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
 
@@ -191,7 +190,10 @@ SET_RUNTIME_VALUE_BOOL_SCHEMA = vol.Schema(
 )
 
 SET_RUNTIME_VALUE_INT_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_IHC_ID): cv.positive_int, vol.Required(ATTR_VALUE): int}
+    {
+        vol.Required(ATTR_IHC_ID): cv.positive_int,
+        vol.Required(ATTR_VALUE): vol.Coerce(int),
+    }
 )
 
 SET_RUNTIME_VALUE_FLOAT_SCHEMA = vol.Schema(
@@ -233,7 +235,7 @@ def ihc_setup(hass, config, conf, controller_id):
     # Manual configuration
     get_manual_configuration(hass, config, conf, ihc_controller, controller_id)
     # Store controller configuration
-    ihc_key = IHC_DATA.format(controller_id)
+    ihc_key = f"ihc{controller_id}"
     hass.data[ihc_key] = {IHC_CONTROLLER: ihc_controller, IHC_INFO: conf[CONF_INFO]}
     setup_service_functions(hass, ihc_controller)
     return True

@@ -1,6 +1,5 @@
 """Tests for the Home Assistant auth module."""
 from datetime import timedelta
-from unittest.mock import Mock, patch
 
 import jwt
 import pytest
@@ -12,6 +11,7 @@ from homeassistant.auth.const import MFA_SESSION_EXPIRATION
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import CLIENT_ID, MockUser, ensure_auth_manager_loaded, flush_store
 
 
@@ -31,7 +31,7 @@ async def test_auth_manager_from_config_validates_config(mock_hass):
             [
                 {"name": "Test Name", "type": "insecure_example", "users": []},
                 {
-                    "name": "Invalid config because no users",
+                    "name": "Invalid configuration because no users",
                     "type": "insecure_example",
                     "id": "invalid_config",
                 },
@@ -81,7 +81,7 @@ async def test_auth_manager_from_config_auth_modules(mock_hass):
             [
                 {"name": "Module 1", "type": "insecure_example", "data": []},
                 {
-                    "name": "Invalid config because no data",
+                    "name": "Invalid configuration because no data",
                     "type": "insecure_example",
                     "id": "another",
                 },
@@ -453,7 +453,7 @@ async def test_refresh_token_type_long_lived_access_token(hass):
 
 
 async def test_cannot_deactive_owner(mock_hass):
-    """Test that we cannot deactive the owner."""
+    """Test that we cannot deactivate the owner."""
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     owner = MockUser(is_owner=True).add_to_auth_manager(manager)
 
@@ -899,8 +899,8 @@ async def test_async_remove_user(hass):
     assert events[0].data["user_id"] == user.id
 
 
-async def test_new_users_admin(mock_hass):
-    """Test newly created users are admin."""
+async def test_new_users(mock_hass):
+    """Test newly created users."""
     manager = await auth.auth_manager_from_config(
         mock_hass,
         [
@@ -911,7 +911,17 @@ async def test_new_users_admin(mock_hass):
                         "username": "test-user",
                         "password": "test-pass",
                         "name": "Test Name",
-                    }
+                    },
+                    {
+                        "username": "test-user-2",
+                        "password": "test-pass",
+                        "name": "Test Name",
+                    },
+                    {
+                        "username": "test-user-3",
+                        "password": "test-pass",
+                        "name": "Test Name",
+                    },
                 ],
             }
         ],
@@ -920,7 +930,18 @@ async def test_new_users_admin(mock_hass):
     ensure_auth_manager_loaded(manager)
 
     user = await manager.async_create_user("Hello")
+    # first user in the system is owner and admin
+    assert user.is_owner
     assert user.is_admin
+    assert user.groups == []
+
+    user = await manager.async_create_user("Hello 2")
+    assert not user.is_admin
+    assert user.groups == []
+
+    user = await manager.async_create_user("Hello 3", ["system-admin"])
+    assert user.is_admin
+    assert user.groups[0].id == "system-admin"
 
     user_cred = await manager.async_get_or_create_user(
         auth_models.Credentials(

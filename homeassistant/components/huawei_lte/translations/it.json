@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questo dispositivo \u00e8 gi\u00e0 stato configurato",
+            "already_in_progress": "Questo dispositivo \u00e8 gi\u00e0 in fase di configurazione",
+            "not_huawei_lte": "Non \u00e8 un dispositivo Huawei LTE"
+        },
+        "error": {
+            "connection_failed": "Connessione fallita",
+            "connection_timeout": "Timeout di connessione",
+            "incorrect_password": "Password errata",
+            "incorrect_username": "Nome utente errato",
+            "incorrect_username_or_password": "Nome utente o password errati",
+            "invalid_url": "URL non valido",
+            "login_attempts_exceeded": "Superati i tentativi di accesso massimi, riprovare pi\u00f9 tardi",
+            "response_error": "Errore sconosciuto dal dispositivo",
+            "unknown_connection_error": "Errore sconosciuto durante la connessione al dispositivo"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "url": "URL",
+                    "username": "Nome utente"
+                },
+                "description": "Immettere i dettagli di accesso al dispositivo. La specifica di nome utente e password \u00e8 facoltativa, ma abilita il supporto per altre funzionalit\u00e0 di integrazione. D'altra parte, l'uso di una connessione autorizzata pu\u00f2 causare problemi di accesso all'interfaccia Web del dispositivo dall'esterno di Home Assistant mentre l'integrazione \u00e8 attiva e viceversa.",
+                "title": "Configura Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nome del servizio di notifica (la modifica richiede il riavvio)",
+                    "recipient": "Destinatari della notifica SMS",
+                    "track_new_devices": "Traccia nuovi dispositivi"
+                }
+            }
+        }
+    }
+}

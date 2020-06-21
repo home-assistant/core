@@ -4,7 +4,7 @@ disable:
     duration:
       description: Time that the Pi-hole should be disabled for
       example: "00:00:15"
-    name: 
+    name:
       description: "[Optional] When multiple Pi-holes are configured, the name of the one to disable. If omitted, all configured Pi-holes will be disabled."
       example: "Pi-Hole"
 enable:

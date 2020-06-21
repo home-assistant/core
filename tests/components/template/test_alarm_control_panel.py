@@ -7,6 +7,8 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED,
 )
 
 from tests.common import async_mock_service
@@ -52,6 +54,7 @@ async def test_template_state_text(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -78,6 +81,24 @@ async def test_template_state_text(hass):
 
     state = hass.states.get("alarm_control_panel.test_template_panel")
     assert state.state == STATE_ALARM_DISARMED
+
+    hass.states.async_set("alarm_control_panel.test", STATE_ALARM_PENDING)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test_template_panel")
+    assert state.state == STATE_ALARM_PENDING
+
+    hass.states.async_set("alarm_control_panel.test", STATE_ALARM_TRIGGERED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test_template_panel")
+    assert state.state == STATE_ALARM_TRIGGERED
+
+    hass.states.async_set("alarm_control_panel.test", "invalid_state")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test_template_panel")
+    assert state.state == "unknown"
 
 
 async def test_optimistic_states(hass):
@@ -116,6 +137,7 @@ async def test_optimistic_states(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -169,6 +191,7 @@ async def test_no_action_scripts(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -241,6 +264,7 @@ async def test_template_syntax_error(hass, caplog):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -285,6 +309,7 @@ async def test_invalid_name_does_not_create(hass, caplog):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -305,6 +330,7 @@ async def test_invalid_panel_does_not_create(hass, caplog):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -318,6 +344,7 @@ async def test_no_panels_does_not_create(hass, caplog):
         hass, "alarm_control_panel", {"alarm_control_panel": {"platform": "template"}},
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -363,6 +390,7 @@ async def test_name(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -405,6 +433,7 @@ async def test_arm_home_action(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -451,6 +480,7 @@ async def test_arm_away_action(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -497,6 +527,7 @@ async def test_arm_night_action(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -543,6 +574,7 @@ async def test_disarm_action(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 

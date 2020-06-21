@@ -5,10 +5,10 @@ from pymfy.api.devices.category import Category
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 
-from . import API, DEVICES, DOMAIN, SomfyEntity
+from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -25,7 +25,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         devices = hass.data[DOMAIN][DEVICES]
 
         return [
-            SomfyCover(cover, hass.data[DOMAIN][API])
+            SomfyCover(
+                cover, hass.data[DOMAIN][API], hass.data[DOMAIN][CONF_OPTIMISTIC]
+            )
             for cover in devices
             if categories & set(cover.categories)
         ]
@@ -33,13 +35,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_covers), True)
 
 
-class SomfyCover(SomfyEntity, CoverDevice):
+class SomfyCover(SomfyEntity, CoverEntity):
     """Representation of a Somfy cover device."""
 
-    def __init__(self, device, api):
+    def __init__(self, device, api, optimistic):
         """Initialize the Somfy device."""
         super().__init__(device, api)
         self.cover = Blind(self.device, self.api)
+        self.optimistic = optimistic
+        self._closed = None
 
     async def async_update(self):
         """Update the device with the latest data."""
@@ -48,10 +52,14 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
+        if self.optimistic:
+            self._closed = True
         self.cover.close()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
+        if self.optimistic:
+            self._closed = False
         self.cover.open()
 
     def stop_cover(self, **kwargs):
@@ -76,6 +84,8 @@ class SomfyCover(SomfyEntity, CoverDevice):
         is_closed = None
         if self.has_capability("position"):
             is_closed = self.cover.is_closed()
+        elif self.optimistic:
+            is_closed = self._closed
         return is_closed
 
     @property

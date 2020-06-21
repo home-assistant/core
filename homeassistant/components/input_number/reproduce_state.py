@@ -1,7 +1,9 @@
 """Reproduce an Input number state."""
 import asyncio
 import logging
-from typing import Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
+
+import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, State
@@ -13,7 +15,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistantType,
+    state: State,
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -37,16 +43,29 @@ async def _async_reproduce_state(
     service = SERVICE_SET_VALUE
     service_data = {ATTR_ENTITY_ID: state.entity_id, ATTR_VALUE: state.state}
 
-    await hass.services.async_call(
-        DOMAIN, service, service_data, context=context, blocking=True
-    )
+    try:
+        await hass.services.async_call(
+            DOMAIN, service, service_data, context=context, blocking=True
+        )
+    except vol.Invalid as err:
+        # If value out of range.
+        _LOGGER.warning("Unable to reproduce state for %s: %s", state.entity_id, err)
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistantType,
+    states: Iterable[State],
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce Input number states."""
     # Reproduce states in parallel.
     await asyncio.gather(
-        *(_async_reproduce_state(hass, state, context) for state in states)
+        *(
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
+            for state in states
+        )
     )

@@ -73,7 +73,7 @@ class JewishCalendarSensor(Entity):
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        date = hdate.HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
+        daytime_date = hdate.HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
         # sunset ("shkia"). The time in between is a gray area (aka "Bein
@@ -82,16 +82,16 @@ class JewishCalendarSensor(Entity):
         # For some sensors, it is more interesting to consider the date to be
         # tomorrow based on sunset ("shkia"), for others based on "tzais".
         # Hence the following variables.
-        after_tzais_date = after_shkia_date = date
+        after_tzais_date = after_shkia_date = daytime_date
         today_times = self.make_zmanim(today)
 
         if now > sunset:
-            after_shkia_date = date.next_day
+            after_shkia_date = daytime_date.next_day
 
         if today_times.havdalah and now > today_times.havdalah:
-            after_tzais_date = date.next_day
+            after_tzais_date = daytime_date.next_day
 
-        self._state = self.get_state(after_shkia_date, after_tzais_date)
+        self._state = self.get_state(daytime_date, after_shkia_date, after_tzais_date)
         _LOGGER.debug("New value for %s: %s", self._type, self._state)
 
     def make_zmanim(self, date):
@@ -112,7 +112,7 @@ class JewishCalendarSensor(Entity):
 
         return {}
 
-    def get_state(self, after_shkia_date, after_tzais_date):
+    def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
@@ -128,6 +128,8 @@ class JewishCalendarSensor(Entity):
             return after_shkia_date.holiday_description
         if self._type == "omer_count":
             return after_shkia_date.omer_day
+        if self._type == "daf_yomi":
+            return daytime_date.daf_yomi
 
         return None
 
@@ -157,7 +159,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
 
         return attrs
 
-    def get_state(self, after_shkia_date, after_tzais_date):
+    def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
         if self._type == "upcoming_shabbat_candle_lighting":
             times = self.make_zmanim(

@@ -8,11 +8,15 @@ from python_awair import AwairClient
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_ACCESS_TOKEN,
     CONF_DEVICES,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -45,39 +49,39 @@ SENSOR_TYPES = {
     },
     "HUMID": {
         "device_class": DEVICE_CLASS_HUMIDITY,
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
         "icon": "mdi:water-percent",
     },
     "CO2": {
         "device_class": DEVICE_CLASS_CARBON_DIOXIDE,
-        "unit_of_measurement": "ppm",
+        "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
         "icon": "mdi:periodic-table-co2",
     },
     "VOC": {
         "device_class": DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-        "unit_of_measurement": "ppb",
+        "unit_of_measurement": CONCENTRATION_PARTS_PER_BILLION,
         "icon": "mdi:cloud",
     },
     # Awair docs don't actually specify the size they measure for 'dust',
     # but 2.5 allows the sensor to show up in HomeKit
     "DUST": {
         "device_class": DEVICE_CLASS_PM2_5,
-        "unit_of_measurement": "µg/m3",
+        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         "icon": "mdi:cloud",
     },
     "PM25": {
         "device_class": DEVICE_CLASS_PM2_5,
-        "unit_of_measurement": "µg/m3",
+        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         "icon": "mdi:cloud",
     },
     "PM10": {
         "device_class": DEVICE_CLASS_PM10,
-        "unit_of_measurement": "µg/m3",
+        "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         "icon": "mdi:cloud",
     },
     "score": {
         "device_class": DEVICE_CLASS_SCORE,
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
         "icon": "mdi:percent",
     },
 }

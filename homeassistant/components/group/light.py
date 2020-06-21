@@ -76,7 +76,7 @@ async def async_setup_platform(
     )
 
 
-class LightGroup(light.Light):
+class LightGroup(light.LightEntity):
     """Representation of a light group."""
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:
@@ -182,6 +182,11 @@ class LightGroup(light.Light):
     def should_poll(self) -> bool:
         """No polling needed for a light group."""
         return False
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes for the light group."""
+        return {ATTR_ENTITY_ID: self._entity_ids}
 
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the light group."""
@@ -326,7 +331,7 @@ def _mean_int(*args):
 
 def _mean_tuple(*args):
     """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(l) / len(l) for l in zip(*args))
+    return tuple(sum(x) / len(x) for x in zip(*args))
 
 
 def _reduce_attribute(

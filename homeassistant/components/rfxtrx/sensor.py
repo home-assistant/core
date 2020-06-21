@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not isinstance(event, SensorEvent):
             return
 
-        device_id = "sensor_" + slugify(event.device.id_string.lower())
+        device_id = f"sensor_{slugify(event.device.id_string.lower())}"
 
         if device_id in RFX_DEVICES:
             sensors = RFX_DEVICES[device_id]

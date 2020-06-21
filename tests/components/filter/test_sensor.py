@@ -1,7 +1,6 @@
 """The test for the data filter sensor platform."""
 from datetime import timedelta
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components.filter.sensor import (
     LowPassFilter,
@@ -15,6 +14,7 @@ import homeassistant.core as ha
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     get_test_home_assistant,
@@ -59,6 +59,7 @@ class TestFilterSensor(unittest.TestCase):
         }
         with assert_setup_component(0):
             assert setup_component(self.hass, "sensor", config)
+            self.hass.block_till_done()
 
     def test_chain(self):
         """Test if filter chaining works."""
@@ -77,6 +78,7 @@ class TestFilterSensor(unittest.TestCase):
 
         with assert_setup_component(1, "sensor"):
             assert setup_component(self.hass, "sensor", config)
+            self.hass.block_till_done()
 
             for value in self.values:
                 self.hass.states.set(config["sensor"]["entity_id"], value.state)
@@ -104,6 +106,7 @@ class TestFilterSensor(unittest.TestCase):
         t_0 = dt_util.utcnow() - timedelta(minutes=1)
         t_1 = dt_util.utcnow() - timedelta(minutes=2)
         t_2 = dt_util.utcnow() - timedelta(minutes=3)
+        t_3 = dt_util.utcnow() - timedelta(minutes=4)
 
         if missing:
             fake_states = {}
@@ -111,8 +114,9 @@ class TestFilterSensor(unittest.TestCase):
             fake_states = {
                 "sensor.test_monitored": [
                     ha.State("sensor.test_monitored", 18.0, last_changed=t_0),
-                    ha.State("sensor.test_monitored", 19.0, last_changed=t_1),
-                    ha.State("sensor.test_monitored", 18.2, last_changed=t_2),
+                    ha.State("sensor.test_monitored", "unknown", last_changed=t_1),
+                    ha.State("sensor.test_monitored", 19.0, last_changed=t_2),
+                    ha.State("sensor.test_monitored", 18.2, last_changed=t_3),
                 ]
             }
 
@@ -126,6 +130,7 @@ class TestFilterSensor(unittest.TestCase):
             ):
                 with assert_setup_component(1, "sensor"):
                     assert setup_component(self.hass, "sensor", config)
+                    self.hass.block_till_done()
 
                 for value in self.values:
                     self.hass.states.set(config["sensor"]["entity_id"], value.state)
@@ -174,6 +179,7 @@ class TestFilterSensor(unittest.TestCase):
             ):
                 with assert_setup_component(1, "sensor"):
                     assert setup_component(self.hass, "sensor", config)
+                    self.hass.block_till_done()
 
                 self.hass.block_till_done()
                 state = self.hass.states.get("sensor.test")
@@ -208,6 +214,17 @@ class TestFilterSensor(unittest.TestCase):
             filtered = filt.filter_state(state)
         assert 21 == filtered.state
 
+    def test_unknown_state_outlier(self):
+        """Test issue #32395."""
+        filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
+        out = ha.State("sensor.test_monitored", "unknown")
+        for state in [out] + self.values + [out]:
+            try:
+                filtered = filt.filter_state(state)
+            except ValueError:
+                assert state.state == "unknown"
+        assert 21 == filtered.state
+
     def test_precision_zero(self):
         """Test if precision of zero returns an integer."""
         filt = LowPassFilter(window_size=10, precision=0, entity=None, time_constant=10)
@@ -218,8 +235,12 @@ class TestFilterSensor(unittest.TestCase):
     def test_lowpass(self):
         """Test if lowpass filter works."""
         filt = LowPassFilter(window_size=10, precision=2, entity=None, time_constant=10)
-        for state in self.values:
-            filtered = filt.filter_state(state)
+        out = ha.State("sensor.test_monitored", "unknown")
+        for state in [out] + self.values + [out]:
+            try:
+                filtered = filt.filter_state(state)
+            except ValueError:
+                assert state.state == "unknown"
         assert 18.05 == filtered.state
 
     def test_range(self):

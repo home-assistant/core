@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -42,8 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Aladdin Connect platform."""
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
     acc = AladdinConnectClient(username, password)
 
     try:
@@ -53,15 +53,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            "Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
 
 
-class AladdinDevice(CoverDevice):
+class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
     def __init__(self, acc, device):

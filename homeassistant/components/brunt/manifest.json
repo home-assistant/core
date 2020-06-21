@@ -3,6 +3,5 @@
   "name": "Brunt Blind Engine",
   "documentation": "https://www.home-assistant.io/integrations/brunt",
   "requirements": ["brunt==0.1.3"],
-  "dependencies": [],
   "codeowners": ["@eavanvalkenburg"]
 }

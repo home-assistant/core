@@ -17,29 +17,27 @@ from homeassistant.const import (
     STATE_ALARM_DISARMING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.exceptions import HomeAssistantError
 
-from . import DOMAIN as TOTALCONNECT_DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up an alarm control panel for a TotalConnect device."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, entry, async_add_entities) -> None:
+    """Set up TotalConnect alarm panels based on a config entry."""
     alarms = []
 
-    client = hass.data[TOTALCONNECT_DOMAIN].client
+    client = hass.data[DOMAIN][entry.entry_id]
 
-    for location in client.locations:
-        location_id = location.get("LocationID")
-        name = location.get("LocationName")
-        alarms.append(TotalConnectAlarm(name, location_id, client))
-    add_entities(alarms)
+    for location_id, location in client.locations.items():
+        location_name = location.location_name
+        alarms.append(TotalConnectAlarm(location_name, location_id, client))
+
+    async_add_entities(alarms, True)
 
 
-class TotalConnectAlarm(alarm.AlarmControlPanel):
+class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
     """Represent an TotalConnect status."""
 
     def __init__(self, name, location_id, client):
@@ -72,55 +70,44 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
 
     def update(self):
         """Return the state of the device."""
-        status = self._client.get_armed_status(self._name)
+        self._client.get_armed_status(self._location_id)
         attr = {
             "location_name": self._name,
             "location_id": self._location_id,
-            "ac_loss": self._client.ac_loss,
-            "low_battery": self._client.low_battery,
+            "ac_loss": self._client.locations[self._location_id].ac_loss,
+            "low_battery": self._client.locations[self._location_id].low_battery,
+            "cover_tampered": self._client.locations[
+                self._location_id
+            ].is_cover_tampered(),
             "triggered_source": None,
             "triggered_zone": None,
         }
 
-        if status == self._client.DISARMED:
+        if self._client.locations[self._location_id].is_disarmed():
             state = STATE_ALARM_DISARMED
-        elif status == self._client.DISARMED_BYPASS:
-            state = STATE_ALARM_DISARMED
-        elif status == self._client.ARMED_STAY:
+        elif self._client.locations[self._location_id].is_armed_home():
             state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.ARMED_STAY_INSTANT:
-            state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.ARMED_STAY_INSTANT_BYPASS:
-            state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.ARMED_STAY_NIGHT:
+        elif self._client.locations[self._location_id].is_armed_night():
             state = STATE_ALARM_ARMED_NIGHT
-        elif status == self._client.ARMED_AWAY:
+        elif self._client.locations[self._location_id].is_armed_away():
             state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_AWAY_BYPASS:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_AWAY_INSTANT:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_AWAY_INSTANT_BYPASS:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_CUSTOM_BYPASS:
+        elif self._client.locations[self._location_id].is_armed_custom_bypass():
             state = STATE_ALARM_ARMED_CUSTOM_BYPASS
-        elif status == self._client.ARMING:
+        elif self._client.locations[self._location_id].is_arming():
             state = STATE_ALARM_ARMING
-        elif status == self._client.DISARMING:
+        elif self._client.locations[self._location_id].is_disarming():
             state = STATE_ALARM_DISARMING
-        elif status == self._client.ALARMING:
+        elif self._client.locations[self._location_id].is_triggered_police():
             state = STATE_ALARM_TRIGGERED
             attr["triggered_source"] = "Police/Medical"
-        elif status == self._client.ALARMING_FIRE_SMOKE:
+        elif self._client.locations[self._location_id].is_triggered_fire():
             state = STATE_ALARM_TRIGGERED
             attr["triggered_source"] = "Fire/Smoke"
-        elif status == self._client.ALARMING_CARBON_MONOXIDE:
+        elif self._client.locations[self._location_id].is_triggered_gas():
             state = STATE_ALARM_TRIGGERED
             attr["triggered_source"] = "Carbon Monoxide"
         else:
-            logging.info(
-                "Total Connect Client returned unknown status code: %s", status
-            )
+            logging.info("Total Connect Client returned unknown status")
             state = None
 
         self._state = state
@@ -128,16 +115,20 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._client.disarm(self._name)
+        if self._client.disarm(self._location_id) is not True:
+            raise HomeAssistantError(f"TotalConnect failed to disarm {self._name}.")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._client.arm_stay(self._name)
+        if self._client.arm_stay(self._location_id) is not True:
+            raise HomeAssistantError(f"TotalConnect failed to arm home {self._name}.")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._client.arm_away(self._name)
+        if self._client.arm_away(self._location_id) is not True:
+            raise HomeAssistantError(f"TotalConnect failed to arm away {self._name}.")
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        self._client.arm_stay_night(self._name)
+        if self._client.arm_stay_night(self._location_id) is not True:
+            raise HomeAssistantError(f"TotalConnect failed to arm night {self._name}.")

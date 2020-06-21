@@ -15,7 +15,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import collection, entity_registry
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -26,7 +26,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceC
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_number"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
@@ -105,7 +104,6 @@ CONFIG_SCHEMA = vol.Schema(
             )
         )
     },
-    required=True,
     extra=vol.ALLOW_EXTRA,
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
@@ -135,7 +133,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     await yaml_collection.async_load(
-        [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
+        [{CONF_ID: id_, **(conf or {})} for id_, conf in config.get(DOMAIN, {}).items()]
     )
     await storage_collection.async_load()
 
@@ -143,18 +141,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def _collection_changed(
-        change_type: str, item_id: str, config: typing.Optional[typing.Dict]
-    ) -> None:
-        """Handle a collection change: clean up entity registry on removals."""
-        if change_type != collection.CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(hass)
-        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
-
-    yaml_collection.async_add_listener(_collection_changed)
-    storage_collection.async_add_listener(_collection_changed)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
@@ -162,7 +150,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         if conf is None:
             conf = {DOMAIN: {}}
         await yaml_collection.async_load(
-            [{CONF_ID: id_, **conf} for id_, conf in conf[DOMAIN].items()]
+            [{CONF_ID: id_, **conf} for id_, conf in conf.get(DOMAIN, {}).items()]
         )
 
     homeassistant.helpers.service.async_register_admin_service(
@@ -220,7 +208,7 @@ class InputNumber(RestoreEntity):
     def from_yaml(cls, config: typing.Dict) -> "InputNumber":
         """Return entity instance initialized from yaml storage."""
         input_num = cls(config)
-        input_num.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_num.editable = False
         return input_num
 
@@ -299,44 +287,22 @@ class InputNumber(RestoreEntity):
     async def async_set_value(self, value):
         """Set new value."""
         num_value = float(value)
+
         if num_value < self._minimum or num_value > self._maximum:
-            _LOGGER.warning(
-                "Invalid value: %s (range %s - %s)",
-                num_value,
-                self._minimum,
-                self._maximum,
+            raise vol.Invalid(
+                f"Invalid value for {self.entity_id}: {value} (range {self._minimum} - {self._maximum})"
             )
-            return
+
         self._current_value = num_value
         self.async_write_ha_state()
 
     async def async_increment(self):
         """Increment value."""
-        new_value = self._current_value + self._step
-        if new_value > self._maximum:
-            _LOGGER.warning(
-                "Invalid value: %s (range %s - %s)",
-                new_value,
-                self._minimum,
-                self._maximum,
-            )
-            return
-        self._current_value = new_value
-        self.async_write_ha_state()
+        await self.async_set_value(min(self._current_value + self._step, self._maximum))
 
     async def async_decrement(self):
         """Decrement value."""
-        new_value = self._current_value - self._step
-        if new_value < self._minimum:
-            _LOGGER.warning(
-                "Invalid value: %s (range %s - %s)",
-                new_value,
-                self._minimum,
-                self._maximum,
-            )
-            return
-        self._current_value = new_value
-        self.async_write_ha_state()
+        await self.async_set_value(max(self._current_value - self._step, self._minimum))
 
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""

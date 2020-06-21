@@ -1,10 +1,10 @@
 """Test check_config script."""
 import logging
-from unittest.mock import patch
 
 from homeassistant.config import YAML_CONFIG_FILE
 import homeassistant.scripts.check_config as check_config
 
+from tests.async_mock import patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,7 +120,7 @@ def test_secrets(isfile_patch, loop):
 
 @patch("os.path.isfile", return_value=True)
 def test_package_invalid(isfile_patch, loop):
-    """Test a valid platform setup."""
+    """Test an invalid package."""
     files = {
         YAML_CONFIG_FILE: BASE_CONFIG + ("  packages:\n    p1:\n" '      group: ["a"]')
     }

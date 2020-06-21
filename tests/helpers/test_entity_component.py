@@ -3,12 +3,11 @@
 from collections import OrderedDict
 from datetime import timedelta
 import logging
-from unittest.mock import Mock, patch
 
-import asynctest
 import pytest
+import voluptuous as vol
 
-from homeassistant.const import ENTITY_MATCH_ALL
+from homeassistant.const import ENTITY_MATCH_ALL, ENTITY_MATCH_NONE
 import homeassistant.core as ha
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
@@ -16,13 +15,13 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockModule,
     MockPlatform,
     async_fire_time_changed,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -81,13 +80,8 @@ async def test_setup_recovers_when_setup_raises(hass):
     assert platform2_setup.called
 
 
-@asynctest.patch(
-    "homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",
-    return_value=mock_coro(),
-)
-@asynctest.patch(
-    "homeassistant.setup.async_setup_component", return_value=mock_coro(True)
-)
+@patch("homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",)
+@patch("homeassistant.setup.async_setup_component", return_value=True)
 async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     """Test setup for discovery."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -104,7 +98,7 @@ async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
 
 
-@asynctest.patch("homeassistant.helpers.entity_platform.async_track_time_interval")
+@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_config(mock_track, hass):
     """Test the setting of the scan interval via configuration."""
 
@@ -186,7 +180,7 @@ async def test_platform_not_ready(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_setup({DOMAIN: {"platform": "mod1"}})
-
+    await hass.async_block_till_done()
     assert len(platform1_setup.mock_calls) == 1
     assert "test_domain.mod1" not in hass.config.components
 
@@ -223,10 +217,21 @@ async def test_extract_from_service_fails_if_no_entity_id(hass):
         [MockEntity(name="test_1"), MockEntity(name="test_2")]
     )
 
-    call = ha.ServiceCall("test", "service")
-
-    assert [] == sorted(
-        ent.entity_id for ent in (await component.async_extract_from_service(call))
+    assert (
+        await component.async_extract_from_service(ha.ServiceCall("test", "service"))
+        == []
+    )
+    assert (
+        await component.async_extract_from_service(
+            ha.ServiceCall("test", "service", {"entity_id": ENTITY_MATCH_NONE})
+        )
+        == []
+    )
+    assert (
+        await component.async_extract_from_service(
+            ha.ServiceCall("test", "service", {"area_id": ENTITY_MATCH_NONE})
+        )
+        == []
     )
 
 
@@ -263,7 +268,7 @@ async def test_extract_from_service_no_group_expand(hass):
 async def test_setup_dependencies_platform(hass):
     """Test we setup the dependencies of a platform.
 
-    We're explictely testing that we process dependencies even if a component
+    We're explicitly testing that we process dependencies even if a component
     with the same name has already been loaded.
     """
     mock_integration(
@@ -275,7 +280,7 @@ async def test_setup_dependencies_platform(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_setup({DOMAIN: {"platform": "test_component"}})
-
+    await hass.async_block_till_done()
     assert "test_component" in hass.config.components
     assert "test_component2" in hass.config.components
     assert "test_domain.test_component" in hass.config.components
@@ -283,7 +288,7 @@ async def test_setup_dependencies_platform(hass):
 
 async def test_setup_entry(hass):
     """Test setup entry calls async_setup_entry on platform."""
-    mock_setup_entry = Mock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
     mock_entity_platform(
         hass,
         "test_domain.entry_domain",
@@ -305,7 +310,7 @@ async def test_setup_entry(hass):
 
 
 async def test_setup_entry_platform_not_exist(hass):
-    """Test setup entry fails if platform doesnt exist."""
+    """Test setup entry fails if platform does not exist."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain="non_existing")
 
@@ -314,7 +319,7 @@ async def test_setup_entry_platform_not_exist(hass):
 
 async def test_setup_entry_fails_duplicate(hass):
     """Test we don't allow setting up a config entry twice."""
-    mock_setup_entry = Mock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
     mock_entity_platform(
         hass,
         "test_domain.entry_domain",
@@ -332,7 +337,7 @@ async def test_setup_entry_fails_duplicate(hass):
 
 async def test_unload_entry_resets_platform(hass):
     """Test unloading an entry removes all entities."""
-    mock_setup_entry = Mock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
     mock_entity_platform(
         hass,
         "test_domain.entry_domain",
@@ -367,15 +372,16 @@ async def test_update_entity(hass):
     """Test that we can update an entity with the helper."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entity = MockEntity()
-    entity.async_update_ha_state = Mock(return_value=mock_coro())
+    entity.async_write_ha_state = Mock()
+    entity.async_update_ha_state = AsyncMock(return_value=None)
     await component.async_add_entities([entity])
 
     # Called as part of async_add_entities
-    assert len(entity.async_update_ha_state.mock_calls) == 1
+    assert len(entity.async_write_ha_state.mock_calls) == 1
 
     await hass.helpers.entity_component.async_update_entity(entity.entity_id)
 
-    assert len(entity.async_update_ha_state.mock_calls) == 2
+    assert len(entity.async_update_ha_state.mock_calls) == 1
     assert entity.async_update_ha_state.mock_calls[-1][1][0] is True
 
 
@@ -429,3 +435,53 @@ async def test_extract_all_use_match_all(hass, caplog):
     assert (
         "Not passing an entity ID to a service to target all entities is deprecated"
     ) not in caplog.text
+
+
+async def test_register_entity_service(hass):
+    """Test not expanding a group."""
+    entity = MockEntity(entity_id=f"{DOMAIN}.entity")
+    calls = []
+
+    @ha.callback
+    def appender(**kwargs):
+        calls.append(kwargs)
+
+    entity.async_called_by_service = appender
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_add_entities([entity])
+
+    component.async_register_entity_service(
+        "hello", {"some": str}, "async_called_by_service"
+    )
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "hello",
+            {"entity_id": entity.entity_id, "invalid": "data"},
+            blocking=True,
+        )
+        assert len(calls) == 0
+
+    await hass.services.async_call(
+        DOMAIN, "hello", {"entity_id": entity.entity_id, "some": "data"}, blocking=True
+    )
+    assert len(calls) == 1
+    assert calls[0] == {"some": "data"}
+
+    await hass.services.async_call(
+        DOMAIN, "hello", {"entity_id": ENTITY_MATCH_ALL, "some": "data"}, blocking=True
+    )
+    assert len(calls) == 2
+    assert calls[1] == {"some": "data"}
+
+    await hass.services.async_call(
+        DOMAIN, "hello", {"entity_id": ENTITY_MATCH_NONE, "some": "data"}, blocking=True
+    )
+    assert len(calls) == 2
+
+    await hass.services.async_call(
+        DOMAIN, "hello", {"area_id": ENTITY_MATCH_NONE, "some": "data"}, blocking=True
+    )
+    assert len(calls) == 2

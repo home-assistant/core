@@ -1,7 +1,7 @@
 """Support for OpenTherm Gateway binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorDevice
+from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
 from homeassistant.const import CONF_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class OpenThermBinarySensor(BinarySensorDevice):
+class OpenThermBinarySensor(BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
     def __init__(self, gw_dev, var, device_class, friendly_name_format):
@@ -61,6 +61,11 @@ class OpenThermBinarySensor(BinarySensorDevice):
         self._unsub_updates()
 
     @property
+    def available(self):
+        """Return availability of the sensor."""
+        return self._state is not None
+
+    @property
     def entity_registry_enabled_default(self):
         """Disable binary_sensors by default."""
         return False
@@ -68,8 +73,9 @@ class OpenThermBinarySensor(BinarySensorDevice):
     @callback
     def receive_report(self, status):
         """Handle status updates from the component."""
-        self._state = bool(status.get(self._var))
-        self.async_schedule_update_ha_state()
+        state = status.get(self._var)
+        self._state = None if state is None else bool(state)
+        self.async_write_ha_state()
 
     @property
     def name(self):

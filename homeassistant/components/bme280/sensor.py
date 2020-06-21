@@ -8,7 +8,12 @@ import smbus  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -44,7 +49,7 @@ SENSOR_HUMID = "humidity"
 SENSOR_PRESS = "pressure"
 SENSOR_TYPES = {
     SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", "%"],
+    SENSOR_HUMID: ["Humidity", UNIT_PERCENTAGE],
     SENSOR_PRESS: ["Pressure", "mb"],
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
@@ -80,22 +85,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the BME280 sensor."""
 
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
-    name = config.get(CONF_NAME)
-    i2c_address = config.get(CONF_I2C_ADDRESS)
+    name = config[CONF_NAME]
+    i2c_address = config[CONF_I2C_ADDRESS]
 
-    bus = smbus.SMBus(config.get(CONF_I2C_BUS))
+    bus = smbus.SMBus(config[CONF_I2C_BUS])
     sensor = await hass.async_add_job(
         partial(
             BME280,
             bus,
             i2c_address,
-            osrs_t=config.get(CONF_OVERSAMPLING_TEMP),
-            osrs_p=config.get(CONF_OVERSAMPLING_PRES),
-            osrs_h=config.get(CONF_OVERSAMPLING_HUM),
-            mode=config.get(CONF_OPERATION_MODE),
-            t_sb=config.get(CONF_T_STANDBY),
-            filter_mode=config.get(CONF_FILTER_MODE),
-            delta_temp=config.get(CONF_DELTA_TEMP),
+            osrs_t=config[CONF_OVERSAMPLING_TEMP],
+            osrs_p=config[CONF_OVERSAMPLING_PRES],
+            osrs_h=config[CONF_OVERSAMPLING_HUM],
+            mode=config[CONF_OPERATION_MODE],
+            t_sb=config[CONF_T_STANDBY],
+            filter_mode=config[CONF_FILTER_MODE],
+            delta_temp=config[CONF_DELTA_TEMP],
             logger=_LOGGER,
         )
     )

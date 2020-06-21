@@ -1,20 +1,20 @@
 """deCONZ cover platform tests."""
 from copy import deepcopy
 
-from asynctest import patch
-
 from homeassistant.components import deconz
 import homeassistant.components.cover as cover
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
+from tests.async_mock import patch
+
 COVERS = {
     "1": {
         "id": "Level controllable cover id",
         "name": "Level controllable cover",
         "type": "Level controllable output",
-        "state": {"bri": 255, "on": False, "reachable": True},
+        "state": {"bri": 254, "on": False, "reachable": True},
         "modelid": "Not zigbee spec",
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     },
@@ -22,7 +22,7 @@ COVERS = {
         "id": "Window covering device id",
         "name": "Window covering device",
         "type": "Window covering device",
-        "state": {"bri": 255, "on": True, "reachable": True},
+        "state": {"bri": 254, "on": True, "reachable": True},
         "modelid": "lumi.curtain",
         "uniqueid": "00:00:00:00:00:00:00:01-00",
     },
@@ -32,6 +32,22 @@ COVERS = {
         "type": "Not a cover",
         "state": {"reachable": True},
         "uniqueid": "00:00:00:00:00:00:00:02-00",
+    },
+    "4": {
+        "id": "deconz old brightness cover id",
+        "name": "deconz old brightness cover",
+        "type": "Level controllable output",
+        "state": {"bri": 255, "on": False, "reachable": True},
+        "modelid": "Not zigbee spec",
+        "uniqueid": "00:00:00:00:00:00:00:03-00",
+    },
+    "5": {
+        "id": "Window covering controller id",
+        "name": "Window covering controller",
+        "type": "Window covering controller",
+        "state": {"bri": 254, "on": True, "reachable": True},
+        "modelid": "Motor controller",
+        "uniqueid": "00:00:00:00:00:00:00:04-00",
     },
 }
 
@@ -62,7 +78,9 @@ async def test_cover(hass):
     assert "cover.level_controllable_cover" in gateway.deconz_ids
     assert "cover.window_covering_device" in gateway.deconz_ids
     assert "cover.unsupported_cover" not in gateway.deconz_ids
-    assert len(hass.states.async_all()) == 3
+    assert "cover.deconz_old_brightness_cover" in gateway.deconz_ids
+    assert "cover.window_covering_controller" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 5
 
     level_controllable_cover = hass.states.get("cover.level_controllable_cover")
     assert level_controllable_cover.state == "open"
@@ -74,7 +92,7 @@ async def test_cover(hass):
         "id": "1",
         "state": {"on": True},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     level_controllable_cover = hass.states.get("cover.level_controllable_cover")
@@ -105,7 +123,7 @@ async def test_cover(hass):
         )
         await hass.async_block_till_done()
         set_callback.assert_called_with(
-            "put", "/lights/1/state", json={"on": True, "bri": 255}
+            "put", "/lights/1/state", json={"on": True, "bri": 254}
         )
 
     with patch.object(
@@ -119,6 +137,23 @@ async def test_cover(hass):
         )
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"bri_inc": 0})
+
+    # Test that a reported cover position of 255 (deconz-rest-api < 2.05.73) is interpreted correctly.
+    deconz_old_brightness_cover = hass.states.get("cover.deconz_old_brightness_cover")
+    assert deconz_old_brightness_cover.state == "open"
+
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "4",
+        "state": {"on": True},
+    }
+    gateway.api.event_handler(state_changed_event)
+    await hass.async_block_till_done()
+
+    deconz_old_brightness_cover = hass.states.get("cover.deconz_old_brightness_cover")
+    assert deconz_old_brightness_cover.attributes["current_position"] == 0
 
     await gateway.async_reset()
 

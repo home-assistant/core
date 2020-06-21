@@ -1,7 +1,6 @@
 """The tests for the input_boolean component."""
 # pylint: disable=protected-access
 import logging
-from unittest.mock import patch
 
 import pytest
 
@@ -23,6 +22,7 @@ from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import mock_component, mock_restore_cache
 
 _LOGGER = logging.getLogger(__name__)
@@ -240,14 +240,13 @@ async def test_reload(hass, hass_admin_user):
             }
         },
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_RELOAD,
-                blocking=True,
-                context=Context(user_id=hass_admin_user.id),
-            )
-            await hass.async_block_till_done()
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 
@@ -334,3 +333,22 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     state = hass.states.get(input_entity_id)
     assert state is None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+
+
+async def test_setup_no_config(hass, hass_admin_user):
+    """Test component setup with no config."""
+    count_start = len(hass.states.async_entity_ids())
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file", autospec=True, return_value={}
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert count_start == len(hass.states.async_entity_ids())

@@ -6,8 +6,10 @@ from homeassistant.components.netatmo.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
@@ -42,7 +44,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         hass,
         "netatmo",
         {
-            "netatmo": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
+            "netatmo": {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
             "http": {"base_url": "https://example.com"},
         },
     )
@@ -54,15 +56,16 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
 
     scope = "+".join(
         [
-            "read_station",
-            "read_camera",
             "access_camera",
-            "write_camera",
-            "read_presence",
             "access_presence",
+            "read_camera",
             "read_homecoach",
+            "read_presence",
             "read_smokedetector",
+            "read_station",
             "read_thermostat",
+            "write_camera",
+            "write_presence",
             "write_thermostat",
         ]
     )
@@ -88,6 +91,10 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch(
+        "homeassistant.components.netatmo.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup.mock_calls) == 1

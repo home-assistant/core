@@ -32,36 +32,45 @@ FOLDER = "python_scripts"
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(dict)}, extra=vol.ALLOW_EXTRA)
 
-ALLOWED_HASS = set(["bus", "services", "states"])
-ALLOWED_EVENTBUS = set(["fire"])
-ALLOWED_STATEMACHINE = set(
-    ["entity_ids", "all", "get", "is_state", "is_state_attr", "remove", "set"]
-)
-ALLOWED_SERVICEREGISTRY = set(["services", "has_service", "call"])
-ALLOWED_TIME = set(
-    ["sleep", "strftime", "strptime", "gmtime", "localtime", "ctime", "time", "mktime"]
-)
-ALLOWED_DATETIME = set(["date", "time", "datetime", "timedelta", "tzinfo"])
-ALLOWED_DT_UTIL = set(
-    [
-        "utcnow",
-        "now",
-        "as_utc",
-        "as_timestamp",
-        "as_local",
-        "utc_from_timestamp",
-        "start_of_local_day",
-        "parse_datetime",
-        "parse_date",
-        "get_age",
-    ]
-)
+ALLOWED_HASS = {"bus", "services", "states"}
+ALLOWED_EVENTBUS = {"fire"}
+ALLOWED_STATEMACHINE = {
+    "entity_ids",
+    "all",
+    "get",
+    "is_state",
+    "is_state_attr",
+    "remove",
+    "set",
+}
+ALLOWED_SERVICEREGISTRY = {"services", "has_service", "call"}
+ALLOWED_TIME = {
+    "sleep",
+    "strftime",
+    "strptime",
+    "gmtime",
+    "localtime",
+    "ctime",
+    "time",
+    "mktime",
+}
+ALLOWED_DATETIME = {"date", "time", "datetime", "timedelta", "tzinfo"}
+ALLOWED_DT_UTIL = {
+    "utcnow",
+    "now",
+    "as_utc",
+    "as_timestamp",
+    "as_local",
+    "utc_from_timestamp",
+    "start_of_local_day",
+    "parse_datetime",
+    "parse_date",
+    "get_age",
+}
 
 
 class ScriptError(HomeAssistantError):
     """When a script error occurs."""
-
-    pass
 
 
 def setup(hass, config):
@@ -205,7 +214,6 @@ class StubPrinter:
 
     def __init__(self, _getattr_):
         """Initialize our printer."""
-        pass
 
     def _call_print(self, *objects, **kwargs):
         """Print text."""

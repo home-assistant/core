@@ -7,7 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -36,14 +36,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the light platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
-    ads_var_enable = config.get(CONF_ADS_VAR)
+    ads_var_enable = config[CONF_ADS_VAR]
     ads_var_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness, name)])
 
 
-class AdsLight(AdsEntity, Light):
+class AdsLight(AdsEntity, LightEntity):
     """Representation of ADS light."""
 
     def __init__(self, ads_hub, ads_var_enable, ads_var_brightness, name):

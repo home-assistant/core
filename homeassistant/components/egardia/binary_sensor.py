@@ -1,7 +1,7 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import ATTR_DISCOVER_DEVICES, EGARDIA_DEVICE
@@ -38,7 +38,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class EgardiaBinarySensor(BinarySensorDevice):
+class EgardiaBinarySensor(BinarySensorEntity):
     """Represents a sensor based on an Egardia sensor (IR, Door Contact)."""
 
     def __init__(self, sensor_id, name, egardia_system, device_class):
@@ -63,12 +63,6 @@ class EgardiaBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Whether the device is switched on."""
         return self._state == STATE_ON
-
-    @property
-    def hidden(self):
-        """Whether the device is hidden by default."""
-        # these type of sensors are probably mainly used for automations
-        return True
 
     @property
     def device_class(self):

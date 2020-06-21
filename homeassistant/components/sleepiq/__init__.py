@@ -11,21 +11,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-DOMAIN = "sleepiq"
+from .const import DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-IS_IN_BED = "is_in_bed"
-SLEEP_NUMBER = "sleep_number"
-SENSOR_TYPES = {SLEEP_NUMBER: "SleepNumber", IS_IN_BED: "Is In Bed"}
-
-LEFT = "left"
-RIGHT = "right"
-SIDES = [LEFT, RIGHT]
-
 _LOGGER = logging.getLogger(__name__)
-
-DATA = None
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -46,14 +36,12 @@ def setup(hass, config):
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-    global DATA
-
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
     client = Sleepyq(username, password)
     try:
-        DATA = SleepIQData(client)
-        DATA.update()
+        data = SleepIQData(client)
+        data.update()
     except ValueError:
         message = """
             SleepIQ failed to login, double check your username and password"
@@ -61,6 +49,7 @@ def setup(hass, config):
         _LOGGER.error(message)
         return False
 
+    hass.data[DOMAIN] = data
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
     discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
 

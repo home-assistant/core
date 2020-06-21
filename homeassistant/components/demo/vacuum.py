@@ -21,8 +21,8 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
-    StateVacuumDevice,
-    VacuumDevice,
+    StateVacuumEntity,
+    VacuumEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,12 +78,12 @@ DEMO_VACUUM_STATE = "5_Fifth_floor"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Demo config entry."""
-    setup_platform(hass, {}, async_add_entities)
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo vacuums."""
-    add_entities(
+    async_add_entities(
         [
             DemoVacuum(DEMO_VACUUM_COMPLETE, SUPPORT_ALL_SERVICES),
             DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
@@ -95,7 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class DemoVacuum(VacuumDevice):
+class DemoVacuum(VacuumEntity):
     """Representation of a demo vacuum."""
 
     def __init__(self, name, supported_features):
@@ -126,31 +126,21 @@ class DemoVacuum(VacuumDevice):
     @property
     def status(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_STATUS == 0:
-            return
-
         return self._status
 
     @property
     def fan_speed(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
-
         return self._fan_speed
 
     @property
     def fan_speed_list(self):
         """Return the status of the vacuum."""
-        assert self.supported_features & SUPPORT_FAN_SPEED != 0
         return FAN_SPEEDS
 
     @property
     def battery_level(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
-
         return max(0, min(100, self._battery_level))
 
     @property
@@ -254,7 +244,7 @@ class DemoVacuum(VacuumDevice):
         self.schedule_update_ha_state()
 
 
-class StateDemoVacuum(StateVacuumDevice):
+class StateDemoVacuum(StateVacuumEntity):
     """Representation of a demo vacuum supporting states."""
 
     def __init__(self, name):
@@ -289,24 +279,16 @@ class StateDemoVacuum(StateVacuumDevice):
     @property
     def battery_level(self):
         """Return the current battery level of the vacuum."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
-
         return max(0, min(100, self._battery_level))
 
     @property
     def fan_speed(self):
         """Return the current fan speed of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
-
         return self._fan_speed
 
     @property
     def fan_speed_list(self):
         """Return the list of supported fan speeds."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
         return FAN_SPEEDS
 
     @property

@@ -3,7 +3,7 @@ custom_cleaning:
   fields:
     entity_id:
       description: Name of the vacuum entity. [Required]
-      example: 'vacuum.neato'
+      example: "vacuum.neato"
     mode:
       description: "Set the cleaning mode: 1 for eco and 2 for turbo. Defaults to turbo if not set."
       example: 2

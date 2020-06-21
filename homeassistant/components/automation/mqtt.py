@@ -11,8 +11,10 @@ import homeassistant.helpers.config_validation as cv
 # mypy: allow-untyped-defs
 
 CONF_ENCODING = "encoding"
+CONF_QOS = "qos"
 CONF_TOPIC = "topic"
 DEFAULT_ENCODING = "utf-8"
+DEFAULT_QOS = 0
 
 TRIGGER_SCHEMA = vol.Schema(
     {
@@ -20,6 +22,9 @@ TRIGGER_SCHEMA = vol.Schema(
         vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_PAYLOAD): cv.string,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+        vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
+            vol.Coerce(int), vol.In([0, 1, 2])
+        ),
     }
 )
 
@@ -29,6 +34,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     topic = config[CONF_TOPIC]
     payload = config.get(CONF_PAYLOAD)
     encoding = config[CONF_ENCODING] or None
+    qos = config[CONF_QOS]
 
     @callback
     def mqtt_automation_listener(mqttmsg):
@@ -49,6 +55,6 @@ async def async_attach_trigger(hass, config, action, automation_info):
             hass.async_run_job(action, {"trigger": data})
 
     remove = await mqtt.async_subscribe(
-        hass, topic, mqtt_automation_listener, encoding=encoding
+        hass, topic, mqtt_automation_listener, encoding=encoding, qos=qos
     )
     return remove

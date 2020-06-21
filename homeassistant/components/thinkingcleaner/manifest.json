@@ -3,6 +3,5 @@
   "name": "Thinking Cleaner",
   "documentation": "https://www.home-assistant.io/integrations/thinkingcleaner",
   "requirements": ["pythinkingcleaner==0.0.3"],
-  "dependencies": [],
   "codeowners": []
 }

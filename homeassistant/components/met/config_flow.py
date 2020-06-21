@@ -12,15 +12,15 @@ from .const import CONF_TRACK_HOME, DOMAIN, HOME_LOCATION_NAME
 @callback
 def configured_instances(hass):
     """Return a set of configured SimpliSafe instances."""
-    entites = []
+    entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data.get("track_home"):
-            entites.append("home")
+            entries.append("home")
             continue
-        entites.append(
+        entries.append(
             f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
         )
-    return set(entites)
+    return set(entries)
 
 
 class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

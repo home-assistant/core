@@ -3,6 +3,5 @@
   "name": "SolarEdge Local",
   "documentation": "https://www.home-assistant.io/integrations/solaredge_local",
   "requirements": ["solaredge-local==0.2.0"],
-  "dependencies": [],
   "codeowners": ["@drobtravels", "@scheric"]
 }

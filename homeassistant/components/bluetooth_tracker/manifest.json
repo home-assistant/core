@@ -3,6 +3,5 @@
   "name": "Bluetooth Tracker",
   "documentation": "https://www.home-assistant.io/integrations/bluetooth_tracker",
   "requirements": ["bt_proximity==0.2", "pybluez==0.22"],
-  "dependencies": [],
   "codeowners": []
 }

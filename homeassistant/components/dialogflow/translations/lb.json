@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "\u00c4r Home Assistant Instanz muss iwwert Internet accessibel si fir Dialogflow Noriichten z'empf\u00e4nken.",
+            "one_instance_allowed": "N\u00ebmmen eng eenzeg Instanz ass n\u00e9ideg."
+        },
+        "create_entry": {
+            "default": "Fir Evenementer un Home Assistant ze sch\u00e9cken, muss [Webhook Integratioun mat Dialogflow]({dialogflow_url}) ageriicht ginn.\n\nF\u00ebllt folgend Informatiounen aus:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/x-www-form-urlencoded\n\nLiest [Dokumentatioun]({docs_url}) fir w\u00e9ider D\u00e9tailer."
+        },
+        "step": {
+            "user": {
+                "description": "S\u00e9cher fir Dialogflowanzeriichten?",
+                "title": "Dialogflow Webhook ariichten"
+            }
+        }
+    }
+}

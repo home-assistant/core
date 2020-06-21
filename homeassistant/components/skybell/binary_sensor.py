@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -44,14 +44,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
+class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
     """A binary sensor implementation for Skybell devices."""
 
     def __init__(self, device, sensor_type):
         """Initialize a binary sensor for a Skybell device."""
         super().__init__(device)
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(
+        self._name = "{} {}".format(
             self._device.name, SENSOR_TYPES[self._sensor_type][0]
         )
         self._device_class = SENSOR_TYPES[self._sensor_type][1]

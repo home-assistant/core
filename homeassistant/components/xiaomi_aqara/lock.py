@@ -1,7 +1,7 @@
 """Support for Xiaomi Aqara locks."""
 import logging
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
@@ -32,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class XiaomiAqaraLock(LockDevice, XiaomiDevice):
+class XiaomiAqaraLock(LockEntity, XiaomiDevice):
     """Representation of a XiaomiAqaraLock."""
 
     def __init__(self, device, name, xiaomi_hub):
@@ -63,7 +63,7 @@ class XiaomiAqaraLock(LockDevice, XiaomiDevice):
     def clear_unlock_state(self, _):
         """Clear unlock state automatically."""
         self._state = STATE_LOCKED
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""

@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 # pylint: disable=unused-import
 from .const import CONF_VENDOR, NEATO_DOMAIN, VALID_VENDORS
 
-DOCS_URL = "https://www.home-assistant.io/components/neato"
+DOCS_URL = "https://www.home-assistant.io/integrations/neato"
 DEFAULT_VENDOR = "neato"
 
 _LOGGER = logging.getLogger(__name__)

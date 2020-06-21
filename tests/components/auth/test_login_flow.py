@@ -1,8 +1,7 @@
 """Tests for the login flow."""
-from unittest.mock import patch
-
 from . import async_setup_auth
 
+from tests.async_mock import patch
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 
 
@@ -54,7 +53,7 @@ async def test_invalid_username_password(hass, aiohttp_client):
 
     # Incorrect username
     resp = await client.post(
-        "/auth/login_flow/{}".format(step["flow_id"]),
+        f"/auth/login_flow/{step['flow_id']}",
         json={
             "client_id": CLIENT_ID,
             "username": "wrong-user",
@@ -70,7 +69,7 @@ async def test_invalid_username_password(hass, aiohttp_client):
 
     # Incorrect password
     resp = await client.post(
-        "/auth/login_flow/{}".format(step["flow_id"]),
+        f"/auth/login_flow/{step['flow_id']}",
         json={
             "client_id": CLIENT_ID,
             "username": "test-user",
@@ -105,7 +104,7 @@ async def test_login_exist_user(hass, aiohttp_client):
     step = await resp.json()
 
     resp = await client.post(
-        "/auth/login_flow/{}".format(step["flow_id"]),
+        f"/auth/login_flow/{step['flow_id']}",
         json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
     )
 

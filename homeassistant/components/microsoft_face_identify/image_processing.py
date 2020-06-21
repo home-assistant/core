@@ -61,7 +61,7 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
         if name:
             self._name = name
         else:
-            self._name = "MicrosoftFace {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"MicrosoftFace {split_entity_id(camera_entity)[1]}"
 
     @property
     def confidence(self):

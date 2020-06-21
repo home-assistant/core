@@ -3,6 +3,5 @@
   "name": "Ubiquiti mFi mPort",
   "documentation": "https://www.home-assistant.io/integrations/mfi",
   "requirements": ["mficlient==0.3.0"],
-  "dependencies": [],
   "codeowners": []
 }

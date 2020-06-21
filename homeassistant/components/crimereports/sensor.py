@@ -50,8 +50,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Crime Reports platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
-    radius = config.get(CONF_RADIUS)
+    name = config[CONF_NAME]
+    radius = config[CONF_RADIUS]
     include = config.get(CONF_INCLUDE)
     exclude = config.get(CONF_EXCLUDE)
 

@@ -12,11 +12,9 @@ from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     PLATFORM_SCHEMA,
-    RemoteDevice,
+    RemoteEntity,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_HIDDEN,
     CONF_COMMAND,
     CONF_HOST,
     CONF_NAME,
@@ -24,10 +22,10 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, SERVICE_LEARN
+from .const import SERVICE_LEARN, SERVICE_SET_LED_OFF, SERVICE_SET_LED_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,14 +36,6 @@ CONF_COMMANDS = "commands"
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_SLOT = 1
-
-LEARN_COMMAND_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): vol.All(str),
-        vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
-        vol.Optional(CONF_SLOT, default=1): vol.All(int, vol.Range(min=1, max=1000000)),
-    }
-)
 
 COMMAND_SCHEMA = vol.Schema(
     {vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string])}
@@ -61,7 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SLOT, default=DEFAULT_SLOT): vol.All(
             int, vol.Range(min=1, max=1000000)
         ),
-        vol.Optional(ATTR_HIDDEN, default=True): cv.boolean,
         vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
         vol.Optional(CONF_COMMANDS, default={}): cv.schema_with_slug_keys(
             COMMAND_SCHEMA
@@ -102,42 +91,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    friendly_name = config.get(CONF_NAME, "xiaomi_miio_" + host.replace(".", "_"))
+    friendly_name = config.get(CONF_NAME, f"xiaomi_miio_{host.replace('.', '_')}")
     slot = config.get(CONF_SLOT)
     timeout = config.get(CONF_TIMEOUT)
 
-    hidden = config.get(ATTR_HIDDEN)
-
     xiaomi_miio_remote = XiaomiMiioRemote(
-        friendly_name,
-        device,
-        unique_id,
-        slot,
-        timeout,
-        hidden,
-        config.get(CONF_COMMANDS),
+        friendly_name, device, unique_id, slot, timeout, config.get(CONF_COMMANDS)
     )
 
     hass.data[DATA_KEY][host] = xiaomi_miio_remote
 
     async_add_entities([xiaomi_miio_remote])
 
-    async def async_service_handler(service):
+    async def async_service_led_off_handler(entity, service):
+        """Handle set_led_off command."""
+        await hass.async_add_executor_job(entity.device.set_indicator_led, False)
+
+    async def async_service_led_on_handler(entity, service):
+        """Handle set_led_on command."""
+        await hass.async_add_executor_job(entity.device.set_indicator_led, True)
+
+    async def async_service_learn_handler(entity, service):
         """Handle a learn command."""
-        if service.service != SERVICE_LEARN:
-            _LOGGER.error("We should not handle service: %s", service.service)
-            return
-
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        entity = None
-        for remote in hass.data[DATA_KEY].values():
-            if remote.entity_id == entity_id:
-                entity = remote
-
-        if not entity:
-            _LOGGER.error("entity_id: '%s' not found", entity_id)
-            return
-
         device = entity.device
 
         slot = service.data.get(CONF_SLOT, entity.slot)
@@ -170,22 +145,34 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
         )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_LEARN, async_service_handler, schema=LEARN_COMMAND_SCHEMA
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_LEARN,
+        {
+            vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
+            vol.Optional(CONF_SLOT, default=1): vol.All(
+                int, vol.Range(min=1, max=1000000)
+            ),
+        },
+        async_service_learn_handler,
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_LED_ON, {}, async_service_led_on_handler,
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_LED_OFF, {}, async_service_led_off_handler,
     )
 
 
-class XiaomiMiioRemote(RemoteDevice):
+class XiaomiMiioRemote(RemoteEntity):
     """Representation of a Xiaomi Miio Remote device."""
 
-    def __init__(
-        self, friendly_name, device, unique_id, slot, timeout, hidden, commands
-    ):
+    def __init__(self, friendly_name, device, unique_id, slot, timeout, commands):
         """Initialize the remote."""
         self._name = friendly_name
         self._device = device
         self._unique_id = unique_id
-        self._is_hidden = hidden
         self._slot = slot
         self._timeout = timeout
         self._state = False
@@ -205,11 +192,6 @@ class XiaomiMiioRemote(RemoteDevice):
     def device(self):
         """Return the remote object."""
         return self._device
-
-    @property
-    def hidden(self):
-        """Return if we should hide entity."""
-        return self._is_hidden
 
     @property
     def slot(self):
@@ -234,13 +216,6 @@ class XiaomiMiioRemote(RemoteDevice):
     def should_poll(self):
         """We should not be polled for device up state."""
         return False
-
-    @property
-    def device_state_attributes(self):
-        """Hide remote by default."""
-        if self._is_hidden:
-            return {"hidden": "true"}
-        return
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""

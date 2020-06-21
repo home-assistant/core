@@ -3,6 +3,5 @@
   "name": "Volkszaehler",
   "documentation": "https://www.home-assistant.io/integrations/volkszaehler",
   "requirements": ["volkszaehler==0.1.2"],
-  "dependencies": [],
   "codeowners": []
 }

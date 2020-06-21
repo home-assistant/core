@@ -96,9 +96,7 @@ class EcobeeData:
             await self._hass.async_add_executor_job(self.ecobee.update)
             _LOGGER.debug("Updating ecobee")
         except ExpiredTokenError:
-            _LOGGER.warning(
-                "Ecobee update failed; attempting to refresh expired tokens"
-            )
+            _LOGGER.debug("Refreshing expired ecobee tokens")
             await self.refresh()
 
     async def refresh(self) -> bool:
@@ -113,7 +111,7 @@ class EcobeeData:
                 },
             )
             return True
-        _LOGGER.error("Error updating ecobee tokens")
+        _LOGGER.error("Error refreshing ecobee tokens")
         return False
 
 

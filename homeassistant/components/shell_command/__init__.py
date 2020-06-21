@@ -56,7 +56,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             # pylint: disable=no-member
             create_process = asyncio.subprocess.create_subprocess_shell(
                 cmd,
-                loop=hass.loop,
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -69,7 +68,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             # pylint: disable=no-member
             create_process = asyncio.subprocess.create_subprocess_exec(
                 *shlexed_cmd,
-                loop=hass.loop,
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,

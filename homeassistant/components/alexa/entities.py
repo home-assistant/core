@@ -1,4 +1,5 @@
 """Alexa entity adapters."""
+import logging
 from typing import List
 
 from homeassistant.components import (
@@ -6,6 +7,7 @@ from homeassistant.components import (
     alert,
     automation,
     binary_sensor,
+    camera,
     cover,
     fan,
     group,
@@ -20,6 +22,7 @@ from homeassistant.components import (
     sensor,
     switch,
     timer,
+    vacuum,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
@@ -32,11 +35,13 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import network
 from homeassistant.util.decorator import Registry
 
 from .capabilities import (
     Alexa,
     AlexaBrightnessController,
+    AlexaCameraStreamController,
     AlexaChannelController,
     AlexaColorController,
     AlexaColorTemperatureController,
@@ -66,6 +71,8 @@ from .capabilities import (
     AlexaToggleController,
 )
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
+
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ADAPTERS = Registry()
 
@@ -244,7 +251,6 @@ class AlexaEntity:
 
         Raises _UnsupportedInterface.
         """
-        pass
 
     def interfaces(self):
         """Return a list of supported interfaces.
@@ -260,8 +266,7 @@ class AlexaEntity:
             if not interface.properties_proactively_reported():
                 continue
 
-            for prop in interface.serialize_properties():
-                yield prop
+            yield from interface.serialize_properties()
 
     def serialize_discovery(self):
         """Serialize the entity for discovery."""
@@ -275,10 +280,12 @@ class AlexaEntity:
         }
 
         locale = self.config.locale
-        capabilities = []
-        for i in self.interfaces():
-            if locale in i.supported_locales:
-                capabilities.append(i.serialize_discovery())
+        capabilities = [
+            i.serialize_discovery()
+            for i in self.interfaces()
+            if locale in i.supported_locales
+        ]
+
         result["capabilities"] = capabilities
 
         return result
@@ -378,7 +385,7 @@ class CoverCapabilities(AlexaEntity):
     def default_display_categories(self):
         """Return the display categories for this entity."""
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
-        if device_class == cover.DEVICE_CLASS_GARAGE:
+        if device_class in (cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_GATE):
             return [DisplayCategory.GARAGE_DOOR]
         if device_class == cover.DEVICE_CLASS_DOOR:
             return [DisplayCategory.DOOR]
@@ -399,6 +406,10 @@ class CoverCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class not in (cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_GATE):
+            yield AlexaPowerController(self.entity)
+
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield AlexaRangeController(
@@ -409,9 +420,7 @@ class CoverCapabilities(AlexaEntity):
                 self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
             )
         if supported & cover.SUPPORT_SET_TILT_POSITION:
-            yield AlexaRangeController(
-                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}"
-            )
+            yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
 
@@ -508,12 +517,7 @@ class MediaPlayerCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.const.SUPPORT_VOLUME_SET:
             yield AlexaSpeaker(self.entity)
-
-        step_volume_features = (
-            media_player.const.SUPPORT_VOLUME_MUTE
-            | media_player.const.SUPPORT_VOLUME_STEP
-        )
-        if supported & step_volume_features:
+        elif supported & media_player.const.SUPPORT_VOLUME_STEP:
             yield AlexaStepSpeaker(self.entity)
 
         playback_features = (
@@ -531,13 +535,23 @@ class MediaPlayerCapabilities(AlexaEntity):
             yield AlexaSeekController(self.entity)
 
         if supported & media_player.SUPPORT_SELECT_SOURCE:
-            yield AlexaInputController(self.entity)
+            inputs = AlexaInputController.get_valid_inputs(
+                self.entity.attributes.get(
+                    media_player.const.ATTR_INPUT_SOURCE_LIST, []
+                )
+            )
+            if len(inputs) > 0:
+                yield AlexaInputController(self.entity)
 
         if supported & media_player.const.SUPPORT_PLAY_MEDIA:
             yield AlexaChannelController(self.entity)
 
         if supported & media_player.const.SUPPORT_SELECT_SOUND_MODE:
-            yield AlexaEqualizerController(self.entity)
+            inputs = AlexaInputController.get_valid_inputs(
+                self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST, [])
+            )
+            if len(inputs) > 0:
+                yield AlexaEqualizerController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
@@ -723,4 +737,83 @@ class TimerCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         yield AlexaTimeHoldController(self.entity, allow_remote_resume=True)
+        yield AlexaPowerController(self.entity)
         yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(vacuum.DOMAIN)
+class VacuumCapabilities(AlexaEntity):
+    """Class to represent vacuum capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if (
+            (supported & vacuum.SUPPORT_TURN_ON) or (supported & vacuum.SUPPORT_START)
+        ) and (
+            (supported & vacuum.SUPPORT_TURN_OFF)
+            or (supported & vacuum.SUPPORT_RETURN_HOME)
+        ):
+            yield AlexaPowerController(self.entity)
+
+        if supported & vacuum.SUPPORT_FAN_SPEED:
+            yield AlexaRangeController(
+                self.entity, instance=f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}"
+            )
+
+        if supported & vacuum.SUPPORT_PAUSE:
+            support_resume = bool(supported & vacuum.SUPPORT_START)
+            yield AlexaTimeHoldController(
+                self.entity, allow_remote_resume=support_resume
+            )
+
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(camera.DOMAIN)
+class CameraCapabilities(AlexaEntity):
+    """Class to represent Camera capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.CAMERA]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        if self._check_requirements():
+            supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if supported & camera.SUPPORT_STREAM:
+                yield AlexaCameraStreamController(self.entity)
+
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+    def _check_requirements(self):
+        """Check the hass URL for HTTPS scheme."""
+        if "stream" not in self.hass.config.components:
+            _LOGGER.debug(
+                "%s requires stream component for AlexaCameraStreamController",
+                self.entity_id,
+            )
+            return False
+
+        try:
+            network.get_url(
+                self.hass,
+                allow_internal=False,
+                allow_ip=False,
+                require_ssl=True,
+                require_standard_port=True,
+            )
+        except network.NoURLAvailableError:
+            _LOGGER.debug(
+                "%s requires HTTPS for AlexaCameraStreamController", self.entity_id
+            )
+            return False
+
+        return True

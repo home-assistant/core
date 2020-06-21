@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebs Koordinate oder ode/Pro ID si schon registr\u00e9iert."
+        },
+        "error": {
+            "general_error": "Onbekannten Feeler",
+            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel uginn",
+            "unable_to_connect": "Kann sech net mat der Node/Pri verbannen."
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad"
+                },
+                "description": "Benotz Airvisual cloud API fir eng geografescher Lag z'iwwerwaachen.",
+                "title": "Geografie ariichten"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "IP Adresse / Numm vun der Unit\u00e9it",
+                    "password": "Passwuert"
+                },
+                "description": "Pers\u00e9inlech Airvisual Unit\u00e9it iwwerwaachen. Passwuert kann vum UI vum Apparat ausgelies ginn.",
+                "title": "Airvisual Node/Pro ariichten"
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Geografesche Standuert",
+                    "node_pro": "Airvisual Node Pro",
+                    "type": "Typ vun der Integratioun"
+                },
+                "description": "Typ vun Airvisual Donn\u00e9\u00eb fir d'Iwwerwachung auswielen.",
+                "title": "AirVisual konfigur\u00e9ieren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Iwwerwaachte Geografie op der Kaart uweisen"
+                },
+                "title": "Airvisual ariichten"
+            }
+        }
+    }
+}

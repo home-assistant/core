@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquest dispositiu Elgato Key Light ja est\u00e0 configurat.",
+            "connection_error": "No s'ha pogut connectar amb el dispositiu Elgato Key Light."
+        },
+        "error": {
+            "connection_error": "No s'ha pogut connectar amb el dispositiu Elgato Key Light."
+        },
+        "flow_title": "Elgato Key Light: {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "description": "Configura l'Elgato Key Light per integrar-lo amb Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Vols afegir l'Elgato Key Light amb n\u00famero de s\u00e8rie `{serial_number}` a Home Assistant?",
+                "title": "Dispositiu Elgato Key Light descobert"
+            }
+        }
+    }
+}

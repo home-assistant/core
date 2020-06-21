@@ -82,7 +82,7 @@ def setup(hass, config):
 
         _LOGGER.debug("Ebusd integration setup completed")
         return True
-    except (socket.timeout, socket.error):
+    except (socket.timeout, OSError):
         return False
 
 

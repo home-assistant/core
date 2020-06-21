@@ -3,6 +3,7 @@ import asyncio
 
 from aiohttp.client_exceptions import ClientResponseError
 
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -10,11 +11,9 @@ from homeassistant.util import dt as dt_util
 EPSILON_DELTA = 0.0000000001
 
 
-def radar_map_url(dim: int = 512) -> str:
+def radar_map_url(dim: int = 512, country_code: str = "NL") -> str:
     """Build map url, defaulting to 512 wide (as in component)."""
-    return ("https://api.buienradar.nl/image/1.0/RadarMapNL?w={dim}&h={dim}").format(
-        dim=dim
-    )
+    return f"https://api.buienradar.nl/image/1.0/RadarMap{country_code}?w={dim}&h={dim}"
 
 
 async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
@@ -24,6 +23,7 @@ async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -56,6 +56,7 @@ async def test_expire_delta(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -79,6 +80,7 @@ async def test_only_one_fetch_at_a_time(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -102,6 +104,31 @@ async def test_dimension(aioclient_mock, hass, hass_client):
         "camera",
         {"camera": {"name": "config_test", "platform": "buienradar", "dimension": 700}},
     )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    await client.get("/api/camera_proxy/camera.config_test")
+
+    assert aioclient_mock.call_count == 1
+
+
+async def test_belgium_country(aioclient_mock, hass, hass_client):
+    """Test that it actually adheres to another country like Belgium."""
+    aioclient_mock.get(radar_map_url(country_code="BE"), text="hello world")
+
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "buienradar",
+                "country_code": "BE",
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -117,6 +144,7 @@ async def test_failure_response_not_cached(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -150,6 +178,7 @@ async def test_last_modified_updates(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -178,10 +207,11 @@ async def test_retries_after_error(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
-    aioclient_mock.get(radar_map_url(), text=None, status=500)
+    aioclient_mock.get(radar_map_url(), text=None, status=HTTP_INTERNAL_SERVER_ERROR)
 
     # A 404 should not return data and throw:
     try:

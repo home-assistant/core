@@ -9,6 +9,5 @@
       "st": "urn:schemas-denon-com:device:ACT-Denon:1"
     }
   ],
-  "dependencies": [],
   "codeowners": ["@andrewsayre"]
 }

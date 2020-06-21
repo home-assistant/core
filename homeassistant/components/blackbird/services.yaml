@@ -3,8 +3,7 @@ set_all_zones:
   fields:
     entity_id:
       description: Name of any blackbird zone.
-      example: 'media_player.zone_1'
+      example: "media_player.zone_1"
     source:
       description: Name of source to switch to.
-      example: 'Source 1'
-
+      example: "Source 1"

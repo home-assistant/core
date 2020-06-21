@@ -1,33 +1,25 @@
 {
   "config": {
-    "title": "deCONZ Zigbee gateway",
     "flow_title": "deCONZ Zigbee gateway ({host})",
     "step": {
-      "init": {
-        "title": "Define deCONZ gateway",
+      "user": {
         "data": {
-          "host": "Host",
-          "port": "Port"
+          "host": "Select discovered deCONZ gateway"
+        }
+      },
+      "manual_input": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "link": {
         "title": "Link with deCONZ",
         "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings -> Gateway -> Advanced\n2. Press \"Authenticate app\" button"
       },
-      "options": {
-        "title": "Extra configuration options for deCONZ",
-        "data": {
-          "allow_clip_sensor": "Allow importing virtual sensors",
-          "allow_deconz_groups": "Allow importing deCONZ groups"
-        }
-      },
       "hassio_confirm": {
         "title": "deCONZ Zigbee gateway via Hass.io add-on",
-        "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the Hass.io add-on {addon}?",
-        "data": {
-          "allow_clip_sensor": "Allow importing virtual sensors",
-          "allow_deconz_groups": "Allow importing deCONZ groups"
-        }
+        "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the Hass.io add-on {addon}?"
       }
     },
     "error": {
@@ -45,11 +37,12 @@
   "options": {
     "step": {
       "deconz_devices": {
-        "description": "Configure visibility of deCONZ device types",
         "data": {
           "allow_clip_sensor": "Allow deCONZ CLIP sensors",
           "allow_deconz_groups": "Allow deCONZ light groups"
-        }
+        },
+        "description": "Configure visibility of deCONZ device types",
+        "title": "deCONZ options"
       }
     }
   },
@@ -93,6 +86,8 @@
       "open": "Open",
       "close": "Close",
       "both_buttons": "Both buttons",
+      "top_buttons": "Top buttons",
+      "bottom_buttons": "Bottom buttons",
       "button_1": "First button",
       "button_2": "Second button",
       "button_3": "Third button",

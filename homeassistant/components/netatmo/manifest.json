@@ -3,7 +3,10 @@
   "name": "Netatmo",
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "requirements": [
-    "pyatmo==3.2.0"
+    "pyatmo==3.3.1"
+  ],
+  "after_dependencies": [
+    "cloud"
   ],
   "dependencies": [
     "webhook"
@@ -14,6 +17,7 @@
   "config_flow": true,
   "homekit": {
     "models": [
+      "Healty Home Coach",
       "Netatmo Relay",
       "Presence",
       "Welcome"

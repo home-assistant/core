@@ -3,6 +3,7 @@ import datetime as dt
 import re
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
+import ciso8601
 import pytz
 import pytz.exceptions as pytzexceptions
 import pytz.tzinfo as pytzinfo
@@ -30,7 +31,7 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
     Async friendly.
     """
-    global DEFAULT_TIME_ZONE
+    global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
 
     # NOTE: Remove in the future in favour of typing
     assert isinstance(time_zone, dt.tzinfo)
@@ -122,6 +123,10 @@ def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
     Raises ValueError if the input is well formatted but not a valid datetime.
     Returns None if the input isn't well formatted.
     """
+    try:
+        return ciso8601.parse_datetime(dt_str)
+    except (ValueError, IndexError):
+        pass
     match = DATETIME_RE.match(dt_str)
     if not match:
         return None
@@ -239,9 +244,11 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> Lis
     return res
 
 
-# pylint: disable=redefined-outer-name
 def find_next_time_expression_time(
-    now: dt.datetime, seconds: List[int], minutes: List[int], hours: List[int]
+    now: dt.datetime,  # pylint: disable=redefined-outer-name
+    seconds: List[int],
+    minutes: List[int],
+    hours: List[int],
 ) -> dt.datetime:
     """Find the next datetime from now for which the time expression matches.
 

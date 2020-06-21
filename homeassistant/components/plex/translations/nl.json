@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alle gekoppelde servers zijn al geconfigureerd",
+            "already_configured": "Deze Plex-server is al geconfigureerd",
+            "already_in_progress": "Plex wordt geconfigureerd",
+            "invalid_import": "Ge\u00efmporteerde configuratie is ongeldig",
+            "non-interactive": "Niet-interactieve import",
+            "token_request_timeout": "Time-out verkrijgen van token",
+            "unknown": "Mislukt om onbekende reden"
+        },
+        "error": {
+            "faulty_credentials": "Autorisatie mislukt",
+            "no_servers": "Geen servers gekoppeld aan account",
+            "not_found": "Plex-server niet gevonden"
+        },
+        "flow_title": "{naam} ({host})",
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Meerdere servers beschikbaar, selecteer er een:",
+                "title": "Selecteer Plex server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "use_episode_art": "Gebruik aflevering kunst"
+                },
+                "description": "Opties voor Plex-mediaspelers"
+            }
+        }
+    }
+}

@@ -32,13 +32,10 @@ SERVICE_FREEBOX = "freebox"
 SERVICE_HASS_IOS_APP = "hass_ios"
 SERVICE_HASSIO = "hassio"
 SERVICE_HEOS = "heos"
-SERVICE_IGD = "igd"
 SERVICE_KONNECTED = "konnected"
 SERVICE_MOBILE_APP = "hass_mobile_app"
 SERVICE_NETGEAR = "netgear_router"
 SERVICE_OCTOPRINT = "octoprint"
-SERVICE_PLEX = "plex_mediaserver"
-SERVICE_ROKU = "roku"
 SERVICE_SABNZBD = "sabnzbd"
 SERVICE_SAMSUNG_PRINTER = "samsung_printer"
 SERVICE_TELLDUSLIVE = "tellstick"
@@ -50,8 +47,6 @@ SERVICE_XIAOMI_GW = "xiaomi_gw"
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
-    SERVICE_IGD: "upnp",
-    SERVICE_PLEX: "plex",
 }
 
 SERVICE_HANDLERS = {
@@ -61,7 +56,6 @@ SERVICE_HANDLERS = {
     SERVICE_HASSIO: ("hassio", None),
     SERVICE_APPLE_TV: ("apple_tv", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
-    SERVICE_ROKU: ("roku", None),
     SERVICE_WINK: ("wink", None),
     SERVICE_XIAOMI_GW: ("xiaomi_aqara", None),
     SERVICE_SABNZBD: ("sabnzbd", None),
@@ -70,17 +64,12 @@ SERVICE_HANDLERS = {
     SERVICE_OCTOPRINT: ("octoprint", None),
     SERVICE_FREEBOX: ("freebox", None),
     SERVICE_YEELIGHT: ("yeelight", None),
-    "panasonic_viera": ("media_player", "panasonic_viera"),
     "yamaha": ("media_player", "yamaha"),
     "logitech_mediaserver": ("media_player", "squeezebox"),
-    "directv": ("media_player", "directv"),
-    "denonavr": ("media_player", "denonavr"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
-    "harmony": ("remote", "harmony"),
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
-    "songpal": ("media_player", "songpal"),
     "kodi": ("media_player", "kodi"),
     "volumio": ("media_player", "volumio"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
@@ -92,13 +81,16 @@ OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
 MIGRATED_SERVICE_HANDLERS = [
     "axis",
     "deconz",
+    "denonavr",
     "esphome",
     "google_cast",
     SERVICE_HEOS,
+    "harmony",
     "homekit",
     "ikea_tradfri",
     "philips_hue",
     "sonos",
+    "songpal",
     SERVICE_WEMO,
 ]
 

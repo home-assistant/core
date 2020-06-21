@@ -7,7 +7,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -175,7 +175,7 @@ class VoiceRSSProvider(Provider):
             with async_timeout.timeout(10):
                 request = await websession.post(VOICERSS_API_URL, data=form_data)
 
-                if request.status != 200:
+                if request.status != HTTP_OK:
                     _LOGGER.error(
                         "Error %d on load url %s.", request.status, request.url
                     )

@@ -45,6 +45,7 @@ class EntityMapStorage:
         """Get a pairing cache item."""
         return self.storage_data.get(homekit_id)
 
+    @callback
     def async_create_or_update_map(self, homekit_id, config_num, accessories):
         """Create a new pairing cache."""
         data = {"config_num": config_num, "accessories": accessories}
@@ -52,6 +53,7 @@ class EntityMapStorage:
         self._async_schedule_save()
         return data
 
+    @callback
     def async_delete_map(self, homekit_id):
         """Delete pairing cache."""
         if homekit_id not in self.storage_data:

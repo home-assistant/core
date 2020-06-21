@@ -4,7 +4,7 @@ from typing import Optional
 from starline import StarlineAuth
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import (  # pylint: disable=unused-import
@@ -85,6 +85,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_authenticate_user(error)
         return self._async_form_auth_captcha(error)
 
+    @core.callback
     def _async_form_auth_app(self, error=None):
         """Authenticate application form."""
         errors = {}
@@ -106,6 +107,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @core.callback
     def _async_form_auth_user(self, error=None):
         """Authenticate user form."""
         errors = {}
@@ -127,6 +129,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @core.callback
     def _async_form_auth_mfa(self, error=None):
         """Authenticate mfa form."""
         errors = {}
@@ -146,6 +149,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"phone_number": self._phone_number},
         )
 
+    @core.callback
     def _async_form_auth_captcha(self, error=None):
         """Captcha verification form."""
         errors = {}

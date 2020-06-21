@@ -1,4 +1,7 @@
 """Basic checks for HomeKitclimate."""
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
+
 from homeassistant.components.climate.const import (
     DOMAIN,
     HVAC_MODE_COOL,
@@ -10,7 +13,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
 )
 
-from tests.components.homekit_controller.common import FakeService, setup_test_component
+from tests.components.homekit_controller.common import setup_test_component
 
 HEATING_COOLING_TARGET = ("thermostat", "heating-cooling.target")
 HEATING_COOLING_CURRENT = ("thermostat", "heating-cooling.current")
@@ -20,63 +23,65 @@ HUMIDITY_TARGET = ("thermostat", "relative-humidity.target")
 HUMIDITY_CURRENT = ("thermostat", "relative-humidity.current")
 
 
-def create_thermostat_service():
+def create_thermostat_service(accessory):
     """Define thermostat characteristics."""
-    service = FakeService("public.hap.service.thermostat")
+    service = accessory.add_service(ServicesTypes.THERMOSTAT)
 
-    char = service.add_characteristic("heating-cooling.target")
+    char = service.add_char(CharacteristicsTypes.HEATING_COOLING_TARGET)
     char.value = 0
 
-    char = service.add_characteristic("heating-cooling.current")
+    char = service.add_char(CharacteristicsTypes.HEATING_COOLING_CURRENT)
     char.value = 0
 
-    char = service.add_characteristic("temperature.target")
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_TARGET)
+    char.minValue = 7
+    char.maxValue = 35
     char.value = 0
 
-    char = service.add_characteristic("temperature.current")
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_CURRENT)
     char.value = 0
 
-    char = service.add_characteristic("relative-humidity.target")
+    char = service.add_char(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET)
     char.value = 0
 
-    char = service.add_characteristic("relative-humidity.current")
+    char = service.add_char(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
     char.value = 0
 
-    return service
 
-
-async def test_climate_respect_supported_op_modes_1(hass, utcnow):
-    """Test that climate respects minValue/maxValue hints."""
-    service = FakeService("public.hap.service.thermostat")
-    char = service.add_characteristic("heating-cooling.target")
+def create_thermostat_service_min_max(accessory):
+    """Define thermostat characteristics."""
+    service = accessory.add_service(ServicesTypes.THERMOSTAT)
+    char = service.add_char(CharacteristicsTypes.HEATING_COOLING_TARGET)
     char.value = 0
     char.minValue = 0
     char.maxValue = 1
 
-    helper = await setup_test_component(hass, [service])
 
+async def test_climate_respect_supported_op_modes_1(hass, utcnow):
+    """Test that climate respects minValue/maxValue hints."""
+    helper = await setup_test_component(hass, create_thermostat_service_min_max)
     state = await helper.poll_and_get_state()
     assert state.attributes["hvac_modes"] == ["off", "heat"]
 
 
-async def test_climate_respect_supported_op_modes_2(hass, utcnow):
-    """Test that climate respects validValue hints."""
-    service = FakeService("public.hap.service.thermostat")
-    char = service.add_characteristic("heating-cooling.target")
+def create_thermostat_service_valid_vals(accessory):
+    """Define thermostat characteristics."""
+    service = accessory.add_service(ServicesTypes.THERMOSTAT)
+    char = service.add_char(CharacteristicsTypes.HEATING_COOLING_TARGET)
     char.value = 0
     char.valid_values = [0, 1, 2]
 
-    helper = await setup_test_component(hass, [service])
 
+async def test_climate_respect_supported_op_modes_2(hass, utcnow):
+    """Test that climate respects validValue hints."""
+    helper = await setup_test_component(hass, create_thermostat_service_valid_vals)
     state = await helper.poll_and_get_state()
     assert state.attributes["hvac_modes"] == ["off", "heat", "cool"]
 
 
 async def test_climate_change_thermostat_state(hass, utcnow):
     """Test that we can turn a HomeKit thermostat on and off again."""
-    from homekit.model.services import ThermostatService
-
-    helper = await setup_test_component(hass, [ThermostatService()])
+    helper = await setup_test_component(hass, create_thermostat_service)
 
     await hass.services.async_call(
         DOMAIN,
@@ -114,9 +119,7 @@ async def test_climate_change_thermostat_state(hass, utcnow):
 
 async def test_climate_change_thermostat_temperature(hass, utcnow):
     """Test that we can turn a HomeKit thermostat on and off again."""
-    from homekit.model.services import ThermostatService
-
-    helper = await setup_test_component(hass, [ThermostatService()])
+    helper = await setup_test_component(hass, create_thermostat_service)
 
     await hass.services.async_call(
         DOMAIN,
@@ -137,7 +140,7 @@ async def test_climate_change_thermostat_temperature(hass, utcnow):
 
 async def test_climate_change_thermostat_humidity(hass, utcnow):
     """Test that we can turn a HomeKit thermostat on and off again."""
-    helper = await setup_test_component(hass, [create_thermostat_service()])
+    helper = await setup_test_component(hass, create_thermostat_service)
 
     await hass.services.async_call(
         DOMAIN,
@@ -158,7 +161,7 @@ async def test_climate_change_thermostat_humidity(hass, utcnow):
 
 async def test_climate_read_thermostat_state(hass, utcnow):
     """Test that we can read the state of a HomeKit thermostat accessory."""
-    helper = await setup_test_component(hass, [create_thermostat_service()])
+    helper = await setup_test_component(hass, create_thermostat_service)
 
     # Simulate that heating is on
     helper.characteristics[TEMPERATURE_CURRENT].value = 19
@@ -200,7 +203,7 @@ async def test_climate_read_thermostat_state(hass, utcnow):
 
 async def test_hvac_mode_vs_hvac_action(hass, utcnow):
     """Check that we haven't conflated hvac_mode and hvac_action."""
-    helper = await setup_test_component(hass, [create_thermostat_service()])
+    helper = await setup_test_component(hass, create_thermostat_service)
 
     # Simulate that current temperature is above target temp
     # Heating might be on, but hvac_action currently 'off'

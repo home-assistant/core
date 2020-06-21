@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kiszolg\u00e1l\u00f3 m\u00e1r konfigur\u00e1lva van."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "name": "N\u00e9v"
+                },
+                "title": "Kapcsold \u00f6ssze a Minecraft szervered"
+            }
+        }
+    }
+}

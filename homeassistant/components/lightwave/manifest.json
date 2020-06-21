@@ -2,7 +2,6 @@
   "domain": "lightwave",
   "name": "Lightwave",
   "documentation": "https://www.home-assistant.io/integrations/lightwave",
-  "requirements": ["lightwave==0.17"],
-  "dependencies": [],
+  "requirements": ["lightwave==0.18"],
   "codeowners": []
 }

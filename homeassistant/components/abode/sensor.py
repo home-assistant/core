@@ -1,6 +1,4 @@
 """Support for Abode Security System sensors."""
-import logging
-
 import abodepy.helpers.constants as CONST
 
 from homeassistant.const import (
@@ -12,19 +10,12 @@ from homeassistant.const import (
 from . import AbodeDevice
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 # Sensor types: Name, icon
 SENSOR_TYPES = {
     CONST.TEMP_STATUS_KEY: ["Temperature", DEVICE_CLASS_TEMPERATURE],
     CONST.HUMI_STATUS_KEY: ["Humidity", DEVICE_CLASS_HUMIDITY],
     CONST.LUX_STATUS_KEY: ["Lux", DEVICE_CLASS_ILLUMINANCE],
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -49,9 +40,7 @@ class AbodeSensor(AbodeDevice):
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(
-            self._device.name, SENSOR_TYPES[self._sensor_type][0]
-        )
+        self._name = f"{self._device.name} {SENSOR_TYPES[self._sensor_type][0]}"
         self._device_class = SENSOR_TYPES[self._sensor_type][1]
 
     @property

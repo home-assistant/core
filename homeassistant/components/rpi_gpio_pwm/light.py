@@ -17,9 +17,9 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE, STATE_ON
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_TYPE, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
@@ -58,6 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     vol.Required(CONF_TYPE): vol.In(CONF_LED_TYPES),
                     vol.Optional(CONF_FREQUENCY): cv.positive_int,
                     vol.Optional(CONF_ADDRESS): cv.byte,
+                    vol.Optional(CONF_HOST): cv.string,
                 }
             ],
         )
@@ -76,6 +77,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if CONF_FREQUENCY in led_conf:
             opt_args["freq"] = led_conf[CONF_FREQUENCY]
         if driver_type == CONF_DRIVER_GPIO:
+            if CONF_HOST in led_conf:
+                opt_args["host"] = led_conf[CONF_HOST]
             driver = GpioDriver(pins, **opt_args)
         elif driver_type == CONF_DRIVER_PCA9685:
             if CONF_ADDRESS in led_conf:
@@ -101,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(leds)
 
 
-class PwmSimpleLed(Light, RestoreEntity):
+class PwmSimpleLed(LightEntity, RestoreEntity):
     """Representation of a simple one-color PWM LED."""
 
     def __init__(self, led, name):

@@ -3,6 +3,5 @@
   "name": "remote_rpi_gpio",
   "documentation": "https://www.home-assistant.io/integrations/remote_rpi_gpio",
   "requirements": ["gpiozero==1.5.1"],
-  "dependencies": [],
   "codeowners": []
 }

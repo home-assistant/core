@@ -3,6 +3,5 @@
   "name": "Heatmiser",
   "documentation": "https://www.home-assistant.io/integrations/heatmiser",
   "requirements": ["heatmiserV3==1.1.18"],
-  "dependencies": [],
   "codeowners": ["@andylockran"]
 }

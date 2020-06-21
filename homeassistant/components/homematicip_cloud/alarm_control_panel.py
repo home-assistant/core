@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -16,9 +16,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID
+from . import DOMAIN as HMIPC_DOMAIN
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,22 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
-) -> None:
-    """Set up the HomematicIP Cloud alarm control devices."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    async_add_entities([HomematicipAlarmControlPanel(hap)])
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    async_add_entities([HomematicipAlarmControlPanelEntity(hap)])
 
 
-class HomematicipAlarmControlPanel(AlarmControlPanel):
+class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     """Representation of an alarm control panel."""
 
     def __init__(self, hap: HomematicipHAP) -> None:
@@ -102,10 +96,18 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
         """Register callbacks."""
         self._home.on_update(self._async_device_changed)
 
+    @callback
     def _async_device_changed(self, *args, **kwargs) -> None:
         """Handle device state changes."""
-        _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
-        self.async_schedule_update_ha_state()
+        # Don't update disabled entities
+        if self.enabled:
+            _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
+            self.async_write_ha_state()
+        else:
+            _LOGGER.debug(
+                "Device Changed Event for %s (Alarm Control Panel) not fired. Entity is disabled.",
+                self.name,
+            )
 
     @property
     def name(self) -> str:

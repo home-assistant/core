@@ -1,0 +1,111 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana",
+            "already_in_progress": "Konfiguracijski tok za napravo je \u017ee v teku.",
+            "not_konn_panel": "Ni prepoznana kot Konnected.io naprava",
+            "unknown": "Pri\u0161lo je do neznane napake"
+        },
+        "error": {
+            "cannot_connect": "Ni mogo\u010de vzpostaviti povezave s Konnected plo\u0161\u010do v {Host}: {Port}"
+        },
+        "step": {
+            "confirm": {
+                "description": "Model: {model}\nID: {id}\nGostitelj: {host}\nVrata: {port}\n\nV nastavitvah lahko nastavite vedenje I/O in plo\u0161\u010de Konnected alarma. ",
+                "title": "Konnected naprava pripravljena"
+            },
+            "import_confirm": {
+                "description": "Konnected alarm panel z ID {id} je bil odkrit v konfiguraciji. YAML. To tok vam bo omogo\u010dil, da ga uvozite v va\u0161o konfiguracijo.",
+                "title": "Uvoz Konnected Naprave"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-naslov Konnected naprave",
+                    "port": "Vrata Konnected naprave"
+                },
+                "description": "Vnesite podatke o gostitelju v svoj Konnected Panel."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "Ni prepoznana kot Konnected.io naprava"
+        },
+        "error": {
+            "bad_host": "Neveljaven URL gostitelja API-ja za preglasitev",
+            "few": "nekaj",
+            "one": "ena",
+            "other": "drugo",
+            "two": "dva"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Zamenjajte odprto / zaprto stanje",
+                    "name": "Ime (neobvezno)",
+                    "type": "Vrsta binarnega senzorja"
+                },
+                "description": "Izberite mo\u017enosti za binarni senzor, priklju\u010den na {zone}",
+                "title": "Konfigurirajte binarni senzor"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Ime (neobvezno)",
+                    "poll_interval": "Interval osve\u017eevanja (minute) (neobvezno)",
+                    "type": "Vrsta tipala"
+                },
+                "description": "Izberite mo\u017enosti za digitalni senzor, priklju\u010den na {zone}",
+                "title": "Konfigurirajte digitalni senzor"
+            },
+            "options_io": {
+                "data": {
+                    "1": "Zone 1",
+                    "2": "Zone 2",
+                    "3": "Zone 3",
+                    "4": "Zone 4",
+                    "5": "Zone 5",
+                    "6": "Zone 6",
+                    "7": "Zone 7",
+                    "out": "OUT"
+                },
+                "description": "Odkrili {model} na {host} . Spodaj izberite osnovno konfiguracijo vsakega I / O - odvisno od I / O lahko omogo\u010da binarne senzorje (odpiranje / zapiranje kontaktov), digitalne senzorje (dht in ds18b20) ali preklopne izhode. Podrobne mo\u017enosti boste lahko konfigurirali v naslednjih korakih.",
+                "title": "Konfigurirajte I / O"
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Obmo\u010dje 10",
+                    "11": "Obmo\u010dje 11",
+                    "12": "Obmo\u010dje 12",
+                    "8": "Obmo\u010dje 8",
+                    "9": "Obmo\u010dje 9",
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2 / ALARM2",
+                    "out1": "OUT1"
+                },
+                "description": "Izberite konfiguracijo preostalega I/O spodaj.  Podrobne mo\u017enosti boste lahko konfigurirali v naslednjih korakih.",
+                "title": "Konfigurirajte raz\u0161irjeni I/O"
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "Preveri gostiteljski URL API (neobvezno)",
+                    "blink": "Lu\u010dka LED na zaslonu utripa, ko po\u0161iljate spremembo stanja",
+                    "override_api_host": "Preglasi privzeti URL gostiteljske plo\u0161\u010de API-ja za Home Assistant"
+                },
+                "description": "Izberite \u017eeleno vedenje za va\u0161o plo\u0161\u010do",
+                "title": "Konfigurirajte Razno"
+            },
+            "options_switch": {
+                "data": {
+                    "activation": "Izhod, ko je vklopljen",
+                    "momentary": "Trajanje impulza (ms) (neobvezno)",
+                    "more_states": "Konfigurirajte dodatna stanja za to obmo\u010dje",
+                    "name": "Ime (neobvezno)",
+                    "pause": "Premor med impulzi (ms) (neobvezno)",
+                    "repeat": "\u010casi ponovitve (-1 = neskon\u010dno) (neobvezno)"
+                },
+                "description": "Izberite izhodne mo\u017enosti za {zone} : stanje {state}",
+                "title": "Konfigurirajte preklopni izhod"
+            }
+        }
+    }
+}

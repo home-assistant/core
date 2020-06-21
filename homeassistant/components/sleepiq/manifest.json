@@ -3,6 +3,5 @@
   "name": "SleepIQ",
   "documentation": "https://www.home-assistant.io/integrations/sleepiq",
   "requirements": ["sleepyq==0.7"],
-  "dependencies": [],
   "codeowners": []
 }

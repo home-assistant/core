@@ -2,7 +2,6 @@
   "domain": "dlna_dmr",
   "name": "DLNA Digital Media Renderer",
   "documentation": "https://www.home-assistant.io/integrations/dlna_dmr",
-  "requirements": ["async-upnp-client==0.14.12"],
-  "dependencies": [],
+  "requirements": ["async-upnp-client==0.14.13"],
   "codeowners": []
 }

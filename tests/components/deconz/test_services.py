@@ -1,13 +1,14 @@
 """deCONZ service tests."""
 
-from asynctest import Mock, patch
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import deconz
-from homeassistant.components.deconz.const import CONF_BRIDGEID
+from homeassistant.components.deconz.const import CONF_BRIDGE_ID
 
 from .test_gateway import BRIDGEID, setup_deconz_integration
+
+from tests.async_mock import Mock, patch
 
 GROUP = {
     "1": {
@@ -91,7 +92,7 @@ async def test_configure_service_with_field(hass):
 
     data = {
         deconz.services.SERVICE_FIELD: "/light/2",
-        CONF_BRIDGEID: BRIDGEID,
+        CONF_BRIDGE_ID: BRIDGEID,
         deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
@@ -180,7 +181,7 @@ async def test_service_refresh_devices(hass):
     """Test that service can refresh devices."""
     gateway = await setup_deconz_integration(hass)
 
-    data = {CONF_BRIDGEID: BRIDGEID}
+    data = {CONF_BRIDGE_ID: BRIDGEID}
 
     with patch(
         "pydeconz.DeconzSession.request",

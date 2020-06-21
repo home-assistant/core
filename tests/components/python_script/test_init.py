@@ -1,11 +1,11 @@
 """Test the python_script component."""
 import logging
-from unittest.mock import mock_open, patch
 
 from homeassistant.components.python_script import DOMAIN, FOLDER, execute
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import mock_open, patch
 from tests.common import patch_yaml_files
 
 
@@ -162,7 +162,7 @@ async def test_accessing_forbidden_methods(hass, caplog):
         caplog.records.clear()
         hass.async_add_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done()
-        assert "Not allowed to access {}".format(name) in caplog.text
+        assert f"Not allowed to access {name}" in caplog.text
 
 
 async def test_iterating(hass):

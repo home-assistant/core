@@ -95,8 +95,16 @@ class PushBulletNotificationService(BaseNotificationService):
             # Target is email, send directly, don't use a target object.
             # This also seems to work to send to all devices in own account.
             if ttype == "email":
-                self._push_data(message, title, data, self.pushbullet, tname)
+                self._push_data(message, title, data, self.pushbullet, email=tname)
                 _LOGGER.info("Sent notification to email %s", tname)
+                continue
+
+            # Target is sms, send directly, don't use a target object.
+            if ttype == "sms":
+                self._push_data(
+                    message, title, data, self.pushbullet, phonenumber=tname
+                )
+                _LOGGER.info("Sent sms notification to %s", tname)
                 continue
 
             # Refresh if name not found. While awaiting periodic refresh
@@ -120,7 +128,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 _LOGGER.error("No such target: %s/%s", ttype, tname)
                 continue
 
-    def _push_data(self, message, title, data, pusher, email=None):
+    def _push_data(self, message, title, data, pusher, email=None, phonenumber=None):
         """Create the message content."""
 
         if data is None:
@@ -133,7 +141,10 @@ class PushBulletNotificationService(BaseNotificationService):
             email_kwargs = {}
             if email:
                 email_kwargs["email"] = email
-            if url:
+            if phonenumber:
+                device = pusher.devices[0]
+                pusher.push_sms(device, phonenumber, message)
+            elif url:
                 pusher.push_link(title, url, body=message, **email_kwargs)
             elif filepath:
                 if not self.hass.config.is_allowed_path(filepath):

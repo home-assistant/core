@@ -128,7 +128,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class WaterHeaterDevice(Entity):
+class WaterHeaterEntity(Entity):
     """Representation of a water_heater device."""
 
     @property
@@ -145,8 +145,8 @@ class WaterHeaterDevice(Entity):
 
     @property
     def capability_attributes(self):
-        """Return capabilitiy attributes."""
-        supported_features = self.supported_features
+        """Return capability attributes."""
+        supported_features = self.supported_features or 0
 
         data = {
             ATTR_MIN_TEMP: show_temp(
@@ -319,3 +319,15 @@ async def async_service_temperature_set(entity, service):
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+class WaterHeaterDevice(WaterHeaterEntity):
+    """Representation of a water heater (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "WaterHeaterDevice is deprecated, modify %s to extend WaterHeaterEntity",
+            cls.__name__,
+        )

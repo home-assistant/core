@@ -1,7 +1,7 @@
 """Tests for the Google Assistant integration."""
-from asynctest.mock import MagicMock
-
 from homeassistant.components.google_assistant import helpers
+
+from tests.async_mock import MagicMock
 
 
 def mock_google_config_store(agent_user_ids=None):
@@ -22,6 +22,7 @@ class MockConfig(helpers.AbstractConfig):
         *,
         secure_devices_pin=None,
         should_expose=None,
+        should_2fa=None,
         entity_config=None,
         hass=None,
         local_sdk_webhook_id=None,
@@ -32,6 +33,7 @@ class MockConfig(helpers.AbstractConfig):
         """Initialize config."""
         super().__init__(hass)
         self._should_expose = should_expose
+        self._should_2fa = should_2fa
         self._secure_devices_pin = secure_devices_pin
         self._entity_config = entity_config or {}
         self._local_sdk_webhook_id = local_sdk_webhook_id
@@ -72,6 +74,10 @@ class MockConfig(helpers.AbstractConfig):
         """Expose it all."""
         return self._should_expose is None or self._should_expose(state)
 
+    def should_2fa(self, state):
+        """Expose it all."""
+        return self._should_2fa is None or self._should_2fa(state)
+
 
 BASIC_CONFIG = MockConfig()
 
@@ -91,7 +97,7 @@ DEMO_DEVICES = [
         "id": "switch.ac",
         "name": {"name": "AC"},
         "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.OUTLET",
         "willReportState": False,
     },
     {
@@ -103,7 +109,10 @@ DEMO_DEVICES = [
     },
     {
         "id": "light.ceiling_lights",
-        "name": {"name": "Roof Lights", "nicknames": ["top lights", "ceiling lights"]},
+        "name": {
+            "name": "Roof Lights",
+            "nicknames": ["Roof Lights", "top lights", "ceiling lights"],
+        },
         "traits": [
             "action.devices.traits.OnOff",
             "action.devices.traits.Brightness",
@@ -158,8 +167,10 @@ DEMO_DEVICES = [
             "action.devices.traits.OnOff",
             "action.devices.traits.Volume",
             "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
@@ -169,15 +180,22 @@ DEMO_DEVICES = [
             "action.devices.traits.OnOff",
             "action.devices.traits.Volume",
             "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
         "id": "media_player.lounge_room",
         "name": {"name": "Lounge room"},
-        "traits": ["action.devices.traits.OnOff", "action.devices.traits.Modes"],
-        "type": "action.devices.types.SWITCH",
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
+        ],
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {
@@ -187,8 +205,10 @@ DEMO_DEVICES = [
             "action.devices.traits.OnOff",
             "action.devices.traits.Volume",
             "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
         ],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.SETTOP",
         "willReportState": False,
     },
     {

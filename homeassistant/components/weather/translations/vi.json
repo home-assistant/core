@@ -1,0 +1,20 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Tr\u1eddi trong, \u0111\u00eam",
+            "cloudy": "Nhi\u1ec1u m\u00e2y",
+            "fog": "S\u01b0\u01a1ng m\u00f9",
+            "hail": "M\u01b0a \u0111a\u0341",
+            "lightning": "S\u00e9t",
+            "lightning-rainy": "S\u00e9t, m\u01b0a",
+            "partlycloudy": "M\u00e2y r\u1ea3i r\u00e1c",
+            "pouring": "M\u01b0a l\u1edbn",
+            "rainy": "M\u01b0a",
+            "snowy": "Tuy\u1ebft",
+            "snowy-rainy": "Tuy\u1ebft, m\u01b0a",
+            "sunny": "N\u1eafng \u0111\u1eb9p",
+            "windy": "Gi\u00f3 nh\u1eb9",
+            "windy-variant": "Gi\u00f3 nh\u1eb9"
+        }
+    }
+}

@@ -4,7 +4,7 @@ import logging
 import radiotherm
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -125,7 +125,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(tstats, True)
 
 
-class RadioThermostat(ClimateDevice):
+class RadioThermostat(ClimateEntity):
     """Representation of a Radio Thermostat."""
 
     def __init__(self, device, hold_temp):
@@ -198,7 +198,7 @@ class RadioThermostat(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        code = FAN_MODE_TO_CODE.get(fan_mode, None)
+        code = FAN_MODE_TO_CODE.get(fan_mode)
         if code is not None:
             self.device.fmode = code
 
@@ -290,6 +290,8 @@ class RadioThermostat(ClimateDevice):
                 )
                 return
             self._current_humidity = humiditydata
+            self._program_mode = data["program_mode"]
+            self._preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
 
         # Map thermostat values into various STATE_ flags.
         self._current_temperature = current_temp
@@ -297,8 +299,6 @@ class RadioThermostat(ClimateDevice):
         self._fstate = CODE_TO_FAN_STATE[data["fstate"]]
         self._tmode = CODE_TO_TEMP_MODE[data["tmode"]]
         self._tstate = CODE_TO_TEMP_STATE[data["tstate"]]
-        self._program_mode = data["program_mode"]
-        self._preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
 
         self._current_operation = self._tmode
         if self._tmode == HVAC_MODE_COOL:

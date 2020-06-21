@@ -1,5 +1,5 @@
 """Demo implementation of the media player."""
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -48,7 +48,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-YOUTUBE_COVER_URL_FORMAT = "https://img.youtube.com/vi/{}/hqdefault.jpg"
 SOUND_MODE_LIST = ["Dummy Music", "Dummy Movie"]
 DEFAULT_SOUND_MODE = "Dummy Music"
 
@@ -94,7 +93,7 @@ NETFLIX_PLAYER_SUPPORT = (
 )
 
 
-class AbstractDemoPlayer(MediaPlayerDevice):
+class AbstractDemoPlayer(MediaPlayerEntity):
     """A demo media players."""
 
     # We only implement the methods that we support
@@ -238,7 +237,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return YOUTUBE_COVER_URL_FORMAT.format(self.youtube_id)
+        return f"https://img.youtube.com/vi/{self.youtube_id}/hqdefault.jpg"
 
     @property
     def media_title(self):

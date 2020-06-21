@@ -58,13 +58,9 @@ def setup(hass, config):
 class MEDownloadException(Exception):
     """Media extractor download exception."""
 
-    pass
-
 
 class MEQueryException(Exception):
     """Media extractor query exception."""
-
-    pass
 
 
 class MediaExtractor:

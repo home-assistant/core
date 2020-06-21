@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cet appareil Elgato Key Light est d\u00e9j\u00e0 configur\u00e9.",
+            "connection_error": "Impossible de se connecter au p\u00e9riph\u00e9rique Elgato Key Light."
+        },
+        "error": {
+            "connection_error": "Impossible de se connecter au p\u00e9riph\u00e9rique Elgato Key Light."
+        },
+        "flow_title": "Elgato Key Light: {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te ou adresse IP",
+                    "port": "Port"
+                },
+                "description": "Configurez votre Elgato Key Light pour l'int\u00e9grer \u00e0 Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Voulez-vous ajouter l'Elgato Key Light avec le num\u00e9ro de s\u00e9rie `{serial_number}` \u00e0 Home Assistant?",
+                "title": "Appareil Elgato Key Light d\u00e9couvert"
+            }
+        }
+    }
+}

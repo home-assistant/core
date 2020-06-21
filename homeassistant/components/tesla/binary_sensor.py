@@ -1,16 +1,11 @@
 """Support for Tesla binary sensor."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Tesla binary sensor."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -31,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
+class TeslaBinarySensor(TeslaDevice, BinarySensorEntity):
     """Implement an Tesla binary sensor for parking and charger."""
 
     def __init__(self, tesla_device, controller, sensor_type, config_entry):
@@ -60,3 +55,4 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
         _LOGGER.debug("Updating sensor: %s", self._name)
         await super().async_update()
         self._state = self.tesla_device.get_value()
+        self._attributes = self.tesla_device.attrs

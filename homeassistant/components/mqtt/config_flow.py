@@ -74,12 +74,12 @@ class FlowHandler(config_entries.ConfigFlow):
 
         return self.async_create_entry(title="configuration.yaml", data={})
 
-    async def async_step_hassio(self, user_input=None):
+    async def async_step_hassio(self, discovery_info):
         """Receive a Hass.io discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        self._hassio_discovery = user_input
+        self._hassio_discovery = discovery_info
 
         return await self.async_step_hassio_confirm()
 
@@ -125,6 +125,7 @@ class FlowHandler(config_entries.ConfigFlow):
 
 def try_connection(broker, port, username, password, protocol="3.1"):
     """Test if we can connect to an MQTT broker."""
+    # pylint: disable=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
     if protocol == "3.1":

@@ -52,7 +52,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
+class SatelIntegraAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     def __init__(self, controller, name, arm_home_mode, partition_id):
@@ -67,8 +67,10 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         """Update alarm status and register callbacks for future updates."""
         _LOGGER.debug("Starts listening for panel messages")
         self._update_alarm_status()
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
+            )
         )
 
     @callback
@@ -78,7 +80,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         _LOGGER.debug("Got status update, current status: %s", state)
         if state != self._state:
             self._state = state
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         else:
             _LOGGER.debug("Ignoring alarm status message, same state")
 

@@ -52,15 +52,19 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         # Check if host needs to be updated
         entry = entries[0]
         if entry.data[CONF_HOST] != host:
-            entry.data[CONF_HOST] = host
-            entry.title = format_title(host)
-            hass.config_entries.async_update_entry(entry)
+            hass.config_entries.async_update_entry(
+                entry, title=format_title(host), data={**entry.data, CONF_HOST: host}
+            )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents the HEOS controller."""
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
+
     host = entry.data[CONF_HOST]
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes

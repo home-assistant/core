@@ -78,7 +78,7 @@ issue_zigbee_cluster_command:
       example: "server"
     args:
       description: args to pass to the command
-      example: '[arg1, arg2, argN]'
+      example: "[arg1, arg2, argN]"
     manufacturer:
       description: manufacturer code
       example: 0x00FC
@@ -98,7 +98,7 @@ issue_zigbee_group_command:
       example: 0
     args:
       description: args to pass to the command
-      example: '[arg1, arg2, argN]'
+      example: "[arg1, arg2, argN]"
     manufacturer:
       description: manufacturer code
       example: 0x00FC

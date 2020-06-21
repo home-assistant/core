@@ -1,6 +1,5 @@
 """Integration tests for the auth component."""
 from datetime import timedelta
-from unittest.mock import patch
 
 from homeassistant.auth.models import Credentials
 from homeassistant.components import auth
@@ -10,6 +9,7 @@ from homeassistant.util.dt import utcnow
 
 from . import async_setup_auth
 
+from tests.async_mock import patch
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
 
 
@@ -28,7 +28,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     step = await resp.json()
 
     resp = await client.post(
-        "/auth/login_flow/{}".format(step["flow_id"]),
+        f"/auth/login_flow/{step['flow_id']}",
         json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
     )
 
@@ -71,7 +71,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert resp.status == 401
 
     resp = await client.get(
-        "/api/", headers={"authorization": "Bearer {}".format(tokens["access_token"])}
+        "/api/", headers={"authorization": f"Bearer {tokens['access_token']}"}
     )
     assert resp.status == 200
 

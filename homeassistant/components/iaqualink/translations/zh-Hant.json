@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44 iAqualink \u9023\u7dda\u3002"
+        },
+        "error": {
+            "connection_failure": "\u7121\u6cd5\u9023\u7dda\u81f3 iAqualink\uff0c\u8acb\u78ba\u8a8d\u60a8\u7684\u4f7f\u7528\u8005\u540d\u7a31\u8207\u5bc6\u78bc\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8acb\u8f38\u5165 iAqualink \u5e33\u865f\u4f7f\u7528\u8005\u540d\u7a31\u8207\u5bc6\u78bc\u3002",
+                "title": "\u9023\u7dda\u81f3 iAqualink"
+            }
+        }
+    }
+}

@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ONVIF Apparat ass scho konfigur\u00e9iert.",
+            "already_in_progress": "Konfiguratioun's Oflaf fir den ONVIF Apparat ass schonn am gaangen.",
+            "no_h264": "Keng H264 Streams disponibel. Iwwerpr\u00e9if Profil Konfiguratioun op dengem Apparat.",
+            "no_mac": "Konnt keng eenzegarteg ID ariichte fir den ONVIF Apparat.",
+            "onvif_error": "Feeler beim ariichten vum ONVIF Apparat. Kuck d'Logs fir m\u00e9i Informatiounen."
+        },
+        "error": {
+            "connection_failed": "Konnt sech net mam ONVIF Service mat den ugebueden Umeldungsinformatiounen verbannen."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "title": "Authentifikatioun konfigur\u00e9ieren"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Kamera Entit\u00e9it erstellen"
+                },
+                "description": "Kamera Entit\u00e9it fir {profile} mat {resolution} Opl\u00e9isung erstellen?",
+                "title": "Profiler konfigur\u00e9ieren"
+            },
+            "device": {
+                "data": {
+                    "host": "Entdeckten ONVIF Apparat auswielen"
+                },
+                "title": "ONVIF Apparat auswielen"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Apparat",
+                    "name": "Numm",
+                    "port": "Port"
+                },
+                "title": "ONVIF Apparat ariichten"
+            },
+            "user": {
+                "description": "Andeems du op ofsch\u00e9cke klicks, g\u00ebtt dain Netzwierk fir ONVIF Apparater duerchsicht d\u00e9i den Profile S. \u00ebnnerst\u00ebtzen.\n\nVerschidde Hiersteller hunn ugefaang ONVIF standardm\u00e9isseg ze d\u00e9aktiv\u00e9ieren. Stell s\u00e9cher dass ONVIF an denger Kamera ugeschalt ass.",
+                "title": "ONVIF Apparat ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "Extra FFMPEG Argumenter",
+                    "rtsp_transport": "RTSP Transport Mechanismus"
+                },
+                "title": "ONVIF Apparat Optiounen"
+            }
+        }
+    }
+}

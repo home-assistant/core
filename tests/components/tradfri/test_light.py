@@ -1,7 +1,6 @@
 """Tradfri lights platform tests."""
 
 from copy import deepcopy
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from pytradfri.device import Device
@@ -10,6 +9,7 @@ from pytradfri.device.light_control import LightControl
 
 from homeassistant.components import tradfri
 
+from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 DEFAULT_TEST_FEATURES = {
@@ -149,17 +149,22 @@ async def setup_gateway(hass, mock_gateway, mock_api):
     hass.data[tradfri.KEY_GATEWAY] = {entry.entry_id: mock_gateway}
     hass.data[tradfri.KEY_API] = {entry.entry_id: mock_api}
     await hass.config_entries.async_forward_entry_setup(entry, "light")
+    await hass.async_block_till_done()
 
 
 def mock_light(test_features={}, test_state={}, n=0):
     """Mock a tradfri light."""
     mock_light_data = Mock(**test_state)
 
+    dev_info_mock = MagicMock()
+    dev_info_mock.manufacturer = "manufacturer"
+    dev_info_mock.model_number = "model"
+    dev_info_mock.firmware_version = "1.2.3"
     mock_light = Mock(
         id=f"mock-light-id-{n}",
         reachable=True,
         observe=Mock(),
-        device_info=MagicMock(),
+        device_info=dev_info_mock,
     )
     mock_light.name = f"tradfri_light_{n}"
 

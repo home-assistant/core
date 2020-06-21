@@ -58,11 +58,7 @@ class HydrawiseSensor(HydrawiseEntity):
                     if relay["nicetime"] == "Not scheduled":
                         self._state = "not_scheduled"
                     else:
-                        self._state = (
-                            relay["nicetime"].split(",")[0]
-                            + " "
-                            + relay["nicetime"].split(" ")[3]
-                        )
+                        self._state = f"{relay['nicetime'].split(',')[0]} {relay['nicetime'].split(' ')[3]}"
 
     @property
     def icon(self):

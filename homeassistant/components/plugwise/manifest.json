@@ -1,8 +1,8 @@
 {
   "domain": "plugwise",
-  "name": "Plugwise Anna",
+  "name": "Plugwise",
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
-  "dependencies": [],
-  "codeowners": ["@laetificat", "@CoMPaTech", "@bouwew"],
-  "requirements": ["haanna==0.13.5"]
+  "requirements": ["Plugwise_Smile==0.2.13"],
+  "codeowners": ["@CoMPaTech", "@bouwew"],
+  "config_flow": true
 }

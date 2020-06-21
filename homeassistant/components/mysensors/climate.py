@@ -1,6 +1,6 @@
 """MySensors platform that offers a Climate (MySensors-HVAC) component."""
 from homeassistant.components import mysensors
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -43,7 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
+class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
     """Representation of a MySensors HVAC."""
 
     @property
@@ -162,7 +162,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
             if self.gateway.optimistic:
                 # Optimistically assume that device has changed state
                 self._values[value_type] = value
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
@@ -173,7 +173,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
             self._values[set_req.V_HVAC_SPEED] = fan_mode
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target temperature."""
@@ -187,7 +187,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
             self._values[self.value_type] = hvac_mode
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""

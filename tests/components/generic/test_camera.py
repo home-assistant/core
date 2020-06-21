@@ -2,6 +2,7 @@
 import asyncio
 from unittest import mock
 
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR, HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 
@@ -22,6 +23,7 @@ async def test_fetching_url(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -54,6 +56,7 @@ async def test_fetching_without_verify_ssl(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -80,6 +83,7 @@ async def test_fetching_url_with_verify_ssl(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -93,7 +97,7 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
     aioclient_mock.get("http://example.com/5a", text="hello world")
     aioclient_mock.get("http://example.com/10a", text="hello world")
     aioclient_mock.get("http://example.com/15a", text="hello planet")
-    aioclient_mock.get("http://example.com/20a", status=404)
+    aioclient_mock.get("http://example.com/20a", status=HTTP_NOT_FOUND)
 
     await async_setup_component(
         hass,
@@ -107,6 +111,7 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -117,7 +122,7 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
     with mock.patch("async_timeout.timeout", side_effect=asyncio.TimeoutError()):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert aioclient_mock.call_count == 0
-        assert resp.status == 500
+        assert resp.status == HTTP_INTERNAL_SERVER_ERROR
 
     hass.states.async_set("sensor.temp", "10")
 
@@ -170,6 +175,7 @@ async def test_camera_content_type(aioclient_mock, hass, hass_client):
     await async_setup_component(
         hass, "camera", {"camera": [cam_config_svg, cam_config_normal]}
     )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 

@@ -93,9 +93,7 @@ async def handle_webhook(hass, webhook_id, request):
         # before the previous zone was exited. The enter message will
         # be sent first, then the exit message will be sent second.
         return web.Response(
-            text="Ignoring exit from {} (already in {})".format(
-                location_name, current_state
-            ),
+            text=f"Ignoring exit from {location_name} (already in {current_state})",
             status=HTTP_OK,
         )
 

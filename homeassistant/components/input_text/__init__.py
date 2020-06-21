@@ -15,7 +15,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import collection, entity_registry
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -26,7 +26,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceC
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_text"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
@@ -89,27 +88,24 @@ def _cv_input_text(cfg):
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.Any(
-                vol.All(
-                    {
-                        vol.Optional(CONF_NAME): cv.string,
-                        vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
-                        vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
-                        vol.Optional(CONF_INITIAL, ""): cv.string,
-                        vol.Optional(CONF_ICON): cv.icon,
-                        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                        vol.Optional(CONF_PATTERN): cv.string,
-                        vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In(
-                            [MODE_TEXT, MODE_PASSWORD]
-                        ),
-                    },
-                    _cv_input_text,
-                ),
-                None,
-            )
+            vol.All(
+                lambda value: value or {},
+                {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
+                    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
+                    vol.Optional(CONF_INITIAL, ""): cv.string,
+                    vol.Optional(CONF_ICON): cv.icon,
+                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                    vol.Optional(CONF_PATTERN): cv.string,
+                    vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In(
+                        [MODE_TEXT, MODE_PASSWORD]
+                    ),
+                },
+                _cv_input_text,
+            ),
         )
     },
-    required=True,
     extra=vol.ALLOW_EXTRA,
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
@@ -137,7 +133,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     await yaml_collection.async_load(
-        [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
+        [{CONF_ID: id_, **(conf or {})} for id_, conf in config.get(DOMAIN, {}).items()]
     )
     await storage_collection.async_load()
 
@@ -145,18 +141,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def _collection_changed(
-        change_type: str, item_id: str, config: typing.Optional[typing.Dict]
-    ) -> None:
-        """Handle a collection change: clean up entity registry on removals."""
-        if change_type != collection.CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(hass)
-        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
-
-    yaml_collection.async_add_listener(_collection_changed)
-    storage_collection.async_add_listener(_collection_changed)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
@@ -164,7 +150,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         if conf is None:
             conf = {DOMAIN: {}}
         await yaml_collection.async_load(
-            [{CONF_ID: id_, **(cfg or {})} for id_, cfg in conf[DOMAIN].items()]
+            [{CONF_ID: id_, **(cfg or {})} for id_, cfg in conf.get(DOMAIN, {}).items()]
         )
 
     homeassistant.helpers.service.async_register_admin_service(
@@ -215,15 +201,8 @@ class InputText(RestoreEntity):
     @classmethod
     def from_yaml(cls, config: typing.Dict) -> "InputText":
         """Return entity instance initialized from yaml storage."""
-        # set defaults for empty config
-        config = {
-            CONF_MAX: CONF_MAX_VALUE,
-            CONF_MIN: CONF_MIN_VALUE,
-            CONF_MODE: MODE_TEXT,
-            **config,
-        }
         input_text = cls(config)
-        input_text.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_text.editable = False
         return input_text
 

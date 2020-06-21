@@ -8,6 +8,7 @@ from homeassistant.components import (
     fan,
     group,
     input_boolean,
+    input_select,
     light,
     lock,
     media_player,
@@ -44,6 +45,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "fan",
     "group",
     "input_boolean",
+    "input_select",
     "light",
     "media_player",
     "scene",
@@ -57,29 +59,30 @@ DEFAULT_EXPOSED_DOMAINS = [
 ]
 
 PREFIX_TYPES = "action.devices.types."
-TYPE_CAMERA = PREFIX_TYPES + "CAMERA"
-TYPE_LIGHT = PREFIX_TYPES + "LIGHT"
-TYPE_SWITCH = PREFIX_TYPES + "SWITCH"
-TYPE_VACUUM = PREFIX_TYPES + "VACUUM"
-TYPE_SCENE = PREFIX_TYPES + "SCENE"
-TYPE_FAN = PREFIX_TYPES + "FAN"
-TYPE_THERMOSTAT = PREFIX_TYPES + "THERMOSTAT"
-TYPE_LOCK = PREFIX_TYPES + "LOCK"
-TYPE_BLINDS = PREFIX_TYPES + "BLINDS"
-TYPE_GARAGE = PREFIX_TYPES + "GARAGE"
-TYPE_OUTLET = PREFIX_TYPES + "OUTLET"
-TYPE_SENSOR = PREFIX_TYPES + "SENSOR"
-TYPE_DOOR = PREFIX_TYPES + "DOOR"
-TYPE_TV = PREFIX_TYPES + "TV"
-TYPE_SPEAKER = PREFIX_TYPES + "SPEAKER"
-TYPE_ALARM = PREFIX_TYPES + "SECURITYSYSTEM"
+TYPE_CAMERA = f"{PREFIX_TYPES}CAMERA"
+TYPE_LIGHT = f"{PREFIX_TYPES}LIGHT"
+TYPE_SWITCH = f"{PREFIX_TYPES}SWITCH"
+TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
+TYPE_SCENE = f"{PREFIX_TYPES}SCENE"
+TYPE_FAN = f"{PREFIX_TYPES}FAN"
+TYPE_THERMOSTAT = f"{PREFIX_TYPES}THERMOSTAT"
+TYPE_LOCK = f"{PREFIX_TYPES}LOCK"
+TYPE_BLINDS = f"{PREFIX_TYPES}BLINDS"
+TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
+TYPE_OUTLET = f"{PREFIX_TYPES}OUTLET"
+TYPE_SENSOR = f"{PREFIX_TYPES}SENSOR"
+TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
+TYPE_TV = f"{PREFIX_TYPES}TV"
+TYPE_SPEAKER = f"{PREFIX_TYPES}SPEAKER"
+TYPE_ALARM = f"{PREFIX_TYPES}SECURITYSYSTEM"
+TYPE_SETTOP = f"{PREFIX_TYPES}SETTOP"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
 HOMEGRAPH_SCOPE = "https://www.googleapis.com/auth/homegraph"
 HOMEGRAPH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
-REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + "v1/devices:requestSync"
-REPORT_STATE_BASE_URL = HOMEGRAPH_URL + "v1/devices:reportStateAndNotification"
+REQUEST_SYNC_BASE_URL = f"{HOMEGRAPH_URL}v1/devices:requestSync"
+REPORT_STATE_BASE_URL = f"{HOMEGRAPH_URL}v1/devices:reportStateAndNotification"
 
 # Error codes used for SmartHomeError class
 # https://developers.google.com/actions/reference/smarthome/errors-exceptions
@@ -112,9 +115,10 @@ DOMAIN_TO_GOOGLE_TYPES = {
     fan.DOMAIN: TYPE_FAN,
     group.DOMAIN: TYPE_SWITCH,
     input_boolean.DOMAIN: TYPE_SWITCH,
+    input_select.DOMAIN: TYPE_SENSOR,
     light.DOMAIN: TYPE_LIGHT,
     lock.DOMAIN: TYPE_LOCK,
-    media_player.DOMAIN: TYPE_SWITCH,
+    media_player.DOMAIN: TYPE_SETTOP,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
@@ -124,6 +128,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.DEVICE_CLASS_GARAGE): TYPE_GARAGE,
+    (cover.DOMAIN, cover.DEVICE_CLASS_GATE): TYPE_GARAGE,
     (cover.DOMAIN, cover.DEVICE_CLASS_DOOR): TYPE_DOOR,
     (switch.DOMAIN, switch.DEVICE_CLASS_SWITCH): TYPE_SWITCH,
     (switch.DOMAIN, switch.DEVICE_CLASS_OUTLET): TYPE_OUTLET,
@@ -133,7 +138,6 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
-    (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY): TYPE_SENSOR,
 }
@@ -143,3 +147,8 @@ CHALLENGE_PIN_NEEDED = "pinNeeded"
 CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
 
 STORE_AGENT_USER_IDS = "agent_user_ids"
+
+SOURCE_CLOUD = "cloud"
+SOURCE_LOCAL = "local"
+
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}

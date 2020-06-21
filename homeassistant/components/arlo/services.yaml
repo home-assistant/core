@@ -1,4 +1,4 @@
 # Describes the format for available arlo services
 
 update:
- description: Update the state for all cameras and the base station.
+  description: Update the state for all cameras and the base station.

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This app key is already in use."
+        },
+        "error": {
+            "invalid_key": "Invalid API Key and/or Application Key",
+            "no_devices": "No devices found in account"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "app_key": "Application Key"
+                },
+                "title": "Fill in your information"
+            }
+        }
+    }
+}

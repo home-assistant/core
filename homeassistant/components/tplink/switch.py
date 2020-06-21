@@ -7,7 +7,7 @@ from pyHS100 import SmartDeviceException, SmartPlug
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W,
     ATTR_TODAY_ENERGY_KWH,
-    SwitchDevice,
+    SwitchEntity,
 )
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
@@ -22,17 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 ATTR_CURRENT_A = "current_a"
-
-
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning(
-        "Loading as a platform is no longer supported, "
-        "convert to use the tplink component."
-    )
 
 
 def add_entity(device: SmartPlug, async_add_entities):
@@ -54,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
     return True
 
 
-class SmartPlugSwitch(SwitchDevice):
+class SmartPlugSwitch(SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
     def __init__(self, smartplug: SmartPlug):

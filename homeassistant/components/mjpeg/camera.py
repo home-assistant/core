@@ -122,10 +122,10 @@ class MjpegCamera(Camera):
                 return image
 
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout getting camera image")
+            _LOGGER.error("Timeout getting camera image from %s", self._name)
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Error getting new camera image: %s", err)
+            _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
 
     def camera_image(self):
         """Return a still image response from the camera."""

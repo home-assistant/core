@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Postnummer er allerede registreret",
+            "invalid_zip_code": "Postnummer er ugyldig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "Postnummer"
+                },
+                "description": "Udfyld dit amerikanske eller canadiske postnummer.",
+                "title": "IQVIA"
+            }
+        }
+    }
+}

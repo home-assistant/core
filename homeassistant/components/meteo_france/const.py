@@ -1,9 +1,14 @@
 """Meteo-France component constants."""
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+    TIME_MINUTES,
+    UNIT_PERCENTAGE,
+)
 
 DOMAIN = "meteo_france"
-DATA_METEO_FRANCE = "data_meteo_france"
+PLATFORMS = ["sensor", "weather"]
 ATTRIBUTION = "Data provided by Météo-France"
 
 CONF_CITY = "city"
@@ -17,25 +22,25 @@ SENSOR_TYPE_CLASS = "device_class"
 SENSOR_TYPES = {
     "rain_chance": {
         SENSOR_TYPE_NAME: "Rain chance",
-        SENSOR_TYPE_UNIT: "%",
+        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:weather-rainy",
         SENSOR_TYPE_CLASS: None,
     },
     "freeze_chance": {
         SENSOR_TYPE_NAME: "Freeze chance",
-        SENSOR_TYPE_UNIT: "%",
+        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:snowflake",
         SENSOR_TYPE_CLASS: None,
     },
     "thunder_chance": {
         SENSOR_TYPE_NAME: "Thunder chance",
-        SENSOR_TYPE_UNIT: "%",
+        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:weather-lightning",
         SENSOR_TYPE_CLASS: None,
     },
     "snow_chance": {
         SENSOR_TYPE_NAME: "Snow chance",
-        SENSOR_TYPE_UNIT: "%",
+        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:weather-snowy",
         SENSOR_TYPE_CLASS: None,
     },
@@ -47,13 +52,13 @@ SENSOR_TYPES = {
     },
     "wind_speed": {
         SENSOR_TYPE_NAME: "Wind Speed",
-        SENSOR_TYPE_UNIT: "km/h",
+        SENSOR_TYPE_UNIT: SPEED_KILOMETERS_PER_HOUR,
         SENSOR_TYPE_ICON: "mdi:weather-windy",
         SENSOR_TYPE_CLASS: None,
     },
     "next_rain": {
         SENSOR_TYPE_NAME: "Next rain",
-        SENSOR_TYPE_UNIT: "min",
+        SENSOR_TYPE_UNIT: TIME_MINUTES,
         SENSOR_TYPE_ICON: "mdi:weather-rainy",
         SENSOR_TYPE_CLASS: None,
     },
@@ -78,9 +83,14 @@ SENSOR_TYPES = {
 }
 
 CONDITION_CLASSES = {
-    "clear-night": ["Nuit Claire"],
+    "clear-night": ["Nuit Claire", "Nuit claire"],
     "cloudy": ["Très nuageux"],
-    "fog": ["Brume ou bancs de brouillard", "Brouillard", "Brouillard givrant"],
+    "fog": [
+        "Brume ou bancs de brouillard",
+        "Brume",
+        "Brouillard",
+        "Brouillard givrant",
+    ],
     "hail": ["Risque de grêle"],
     "lightning": ["Risque d'orages", "Orages"],
     "lightning-rainy": ["Pluie orageuses", "Pluies orageuses", "Averses orageuses"],

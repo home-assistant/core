@@ -29,20 +29,12 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
     now = dt_util.utcnow()
-    return "{}?{}={}".format(
-        path,
-        SIGN_QUERY_PARAM,
-        jwt.encode(
-            {
-                "iss": refresh_token_id,
-                "path": path,
-                "iat": now,
-                "exp": now + expiration,
-            },
-            secret,
-            algorithm="HS256",
-        ).decode(),
+    encoded = jwt.encode(
+        {"iss": refresh_token_id, "path": path, "iat": now, "exp": now + expiration},
+        secret,
+        algorithm="HS256",
     )
+    return f"{path}?{SIGN_QUERY_PARAM}=" f"{encoded.decode()}"
 
 
 @callback

@@ -3,6 +3,5 @@
   "name": "Philips TV",
   "documentation": "https://www.home-assistant.io/integrations/philips_js",
   "requirements": ["ha-philipsjs==0.0.8"],
-  "dependencies": [],
   "codeowners": ["@elupus"]
 }

@@ -2,8 +2,7 @@
   "domain": "trend",
   "name": "Trend",
   "documentation": "https://www.home-assistant.io/integrations/trend",
-  "requirements": ["numpy==1.17.4"],
-  "dependencies": [],
+  "requirements": ["numpy==1.18.5"],
   "codeowners": [],
   "quality_scale": "internal"
 }

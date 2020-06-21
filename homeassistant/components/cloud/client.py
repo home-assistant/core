@@ -11,14 +11,15 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     smart_home as alexa_sh,
 )
-from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.components.google_assistant import const as gc, smart_home as ga
+from homeassistant.const import HTTP_OK
 from homeassistant.core import Context, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.aiohttp import MockRequest
 
 from . import alexa_config, google_config, utils
-from .const import DISPATCHER_REMOTE_UPDATE
+from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,7 +161,7 @@ class CloudClient(Interface):
         gconf = await self.get_google_config()
 
         return await ga.async_handle_message(
-            self._hass, gconf, gconf.cloud_user, payload
+            self._hass, gconf, gconf.cloud_user, payload, gc.SOURCE_CLOUD
         )
 
     async def async_webhook_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
@@ -174,13 +175,14 @@ class CloudClient(Interface):
                 break
 
         if found is None:
-            return {"status": 200}
+            return {"status": HTTP_OK}
 
         request = MockRequest(
             content=payload["body"].encode("utf-8"),
             headers=payload["headers"],
             method=payload["method"],
             query_string=payload["query"],
+            mock_source=DOMAIN,
         )
 
         response = await self._hass.components.webhook.async_handle_webhook(

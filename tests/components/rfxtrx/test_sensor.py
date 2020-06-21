@@ -4,7 +4,7 @@ import unittest
 import pytest
 
 from homeassistant.components import rfxtrx as rfxtrx_core
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_component
@@ -18,8 +18,9 @@ class TestSensorRfxtrx(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, "rfxtrx")
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx_core.RFX_DEVICES = {}
@@ -137,7 +138,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
                 _entity_hum = rfxtrx_core.RFX_DEVICES[id]["Humidity"]
-                assert "%" == _entity_hum.unit_of_measurement
+                assert UNIT_PERCENTAGE == _entity_hum.unit_of_measurement
                 assert "Bath" == _entity_hum.__str__()
                 assert _entity_hum.state is None
                 assert TEMP_CELSIUS == _entity_temp.unit_of_measurement
@@ -271,7 +272,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
                 _entity_hum = rfxtrx_core.RFX_DEVICES[id]["Humidity"]
-                assert "%" == _entity_hum.unit_of_measurement
+                assert UNIT_PERCENTAGE == _entity_hum.unit_of_measurement
                 assert "Bath" == _entity_hum.__str__()
                 assert _entity_temp.state is None
                 assert TEMP_CELSIUS == _entity_temp.unit_of_measurement
@@ -303,7 +304,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
                 _entity_hum = rfxtrx_core.RFX_DEVICES[id]["Humidity"]
-                assert "%" == _entity_hum.unit_of_measurement
+                assert UNIT_PERCENTAGE == _entity_hum.unit_of_measurement
                 assert 15 == _entity_hum.state
                 assert {
                     "Battery numeric": 9,

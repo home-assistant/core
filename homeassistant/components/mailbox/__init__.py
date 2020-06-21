@@ -9,6 +9,7 @@ from aiohttp.web_exceptions import HTTPNotFound
 import async_timeout
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -141,6 +142,7 @@ class Mailbox:
         self.hass = hass
         self.name = name
 
+    @callback
     def async_update(self):
         """Send event notification of updated mailbox."""
         self.hass.bus.async_fire(EVENT)
@@ -168,15 +170,13 @@ class Mailbox:
         """Return a list of the current messages."""
         raise NotImplementedError()
 
-    def async_delete(self, msgid):
+    async def async_delete(self, msgid):
         """Delete the specified messages."""
         raise NotImplementedError()
 
 
 class StreamError(Exception):
     """Media streaming exception."""
-
-    pass
 
 
 class MailboxView(HomeAssistantView):
@@ -200,7 +200,7 @@ class MailboxPlatformsView(MailboxView):
     url = "/api/mailbox/platforms"
     name = "api:mailbox:platforms"
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
         platforms = []
         for mailbox in self.mailboxes:
@@ -236,7 +236,7 @@ class MailboxDeleteView(MailboxView):
     async def delete(self, request, platform, msgid):
         """Delete items."""
         mailbox = self.get_mailbox(platform)
-        mailbox.async_delete(msgid)
+        await mailbox.async_delete(msgid)
 
 
 class MailboxMediaView(MailboxView):
@@ -256,8 +256,8 @@ class MailboxMediaView(MailboxView):
                 except StreamError as err:
                     error_msg = "Error getting media: %s" % (err)
                     _LOGGER.error(error_msg)
-                    return web.Response(status=500)
+                    return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
             if stream:
                 return web.Response(body=stream, content_type=mailbox.media_type)
 
-        return web.Response(status=500)
+        return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)

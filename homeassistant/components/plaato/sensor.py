@@ -2,6 +2,7 @@
 
 import logging
 
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -145,7 +146,7 @@ class PlaatoSensor(Entity):
         if self._type == ATTR_BPM:
             return "bpm"
         if self._type == ATTR_ABV:
-            return "%"
+            return UNIT_PERCENTAGE
 
         return ""
 
@@ -156,6 +157,8 @@ class PlaatoSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            f"{PLAATO_DOMAIN}_{self.unique_id}", self.async_schedule_update_ha_state
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                f"{PLAATO_DOMAIN}_{self.unique_id}", self.async_write_ha_state
+            )
         )

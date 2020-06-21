@@ -3,7 +3,7 @@ update_file_path:
   fields:
     entity_id:
       description: Name of the entity_id of the camera to update.
-      example: 'camera.local_file'
+      example: "camera.local_file"
     file_path:
       description: The full path to the new image file to be displayed.
-      example: '/config/www/images/image.jpg'
+      example: "/config/www/images/image.jpg"

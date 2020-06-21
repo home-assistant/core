@@ -1,9 +1,9 @@
 """The tests for the Flux switch platform."""
-from asynctest.mock import patch
 import pytest
 
 from homeassistant.components import light, switch
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_PLATFORM,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -13,13 +13,13 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
     mock_restore_cache,
 )
-from tests.components.light import common as common_light
 from tests.components.switch import common
 
 
@@ -36,7 +36,7 @@ async def test_valid_config(hass):
             }
         },
     )
-
+    await hass.async_block_till_done()
     state = hass.states.get("switch.flux")
     assert state
     assert state.state == "off"
@@ -57,6 +57,7 @@ async def test_restore_state_last_on(hass):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.flux")
     assert state
@@ -78,6 +79,7 @@ async def test_restore_state_last_off(hass):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.flux")
     assert state
@@ -129,6 +131,7 @@ async def test_flux_when_switch_is_off(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -178,6 +181,7 @@ async def test_flux_before_sunrise(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -231,6 +235,7 @@ async def test_flux_before_sunrise_known_location(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -284,6 +289,7 @@ async def test_flux_after_sunrise_before_sunset(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -337,6 +343,7 @@ async def test_flux_after_sunset_before_stop(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -391,6 +398,7 @@ async def test_flux_after_stop_before_sunrise(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -444,6 +452,7 @@ async def test_flux_with_custom_start_stop_times(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -501,6 +510,7 @@ async def test_flux_before_sunrise_stop_next_day(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -559,6 +569,7 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -617,6 +628,7 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(hass, x):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -674,6 +686,7 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -731,6 +744,7 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -785,6 +799,7 @@ async def test_flux_with_custom_colortemps(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -841,6 +856,7 @@ async def test_flux_with_custom_brightness(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -895,11 +911,16 @@ async def test_flux_with_multiple_lights(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1, ent2, ent3 = platform.ENTITIES
-    common_light.turn_on(hass, entity_id=ent2.entity_id)
-    await hass.async_block_till_done()
-    common_light.turn_on(hass, entity_id=ent3.entity_id)
+
+    await hass.services.async_call(
+        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ent2.entity_id}, blocking=True
+    )
+    await hass.services.async_call(
+        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ent3.entity_id}, blocking=True
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(ent1.entity_id)
@@ -923,9 +944,9 @@ async def test_flux_with_multiple_lights(hass):
 
     def event_date(hass, event, now=None):
         if event == SUN_EVENT_SUNRISE:
-            print("sunrise {}".format(sunrise_time))
+            print(f"sunrise {sunrise_time}")
             return sunrise_time
-        print("sunset {}".format(sunset_time))
+        print(f"sunset {sunset_time}")
         return sunset_time
 
     with patch(
@@ -968,6 +989,7 @@ async def test_flux_with_mired(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 
@@ -1019,6 +1041,7 @@ async def test_flux_with_rgb(hass):
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     ent1 = platform.ENTITIES[0]
 

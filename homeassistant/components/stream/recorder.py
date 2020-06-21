@@ -17,7 +17,8 @@ def async_setup_recorder(hass):
 
 def recorder_save_worker(file_out: str, segments: List[Segment]):
     """Handle saving stream."""
-    output = av.open(file_out, "w", options={"movflags": "frag_keyframe"})
+    first_pts = None
+    output = av.open(file_out, "w")
     output_v = None
 
     for segment in segments:
@@ -29,12 +30,21 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
         # Add output streams
         if not output_v:
             output_v = output.add_stream(template=source_v)
+            context = output_v.codec_context
+            context.flags |= "GLOBAL_HEADER"
 
         # Remux video
         for packet in source.demux(source_v):
             if packet is not None and packet.dts is not None:
+                if first_pts is None:
+                    first_pts = packet.pts
+
+                packet.pts -= first_pts
+                packet.dts -= first_pts
                 packet.stream = output_v
                 output.mux(packet)
+
+        source.close()
 
     output.close()
 

@@ -32,13 +32,14 @@ def run(args):
         os.makedirs(config_dir)
 
     hass = HomeAssistant()
-    config_path = hass.loop.run_until_complete(async_run(hass, config_dir))
+    hass.config.config_dir = config_dir
+    config_path = hass.loop.run_until_complete(async_run(hass))
     print("Configuration file:", config_path)
     return 0
 
 
-async def async_run(hass, config_dir):
+async def async_run(hass):
     """Make sure config exists."""
-    path = await config_util.async_ensure_config_exists(hass, config_dir)
+    path = await config_util.async_ensure_config_exists(hass)
     await hass.async_stop(force=True)
     return path

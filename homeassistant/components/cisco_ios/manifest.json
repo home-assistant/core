@@ -3,6 +3,5 @@
   "name": "Cisco IOS",
   "documentation": "https://www.home-assistant.io/integrations/cisco_ios",
   "requirements": ["pexpect==4.6.0"],
-  "dependencies": [],
   "codeowners": ["@fbradyirl"]
 }

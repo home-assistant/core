@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nessun dispositivo Hisense AEH-W4A1 trovato sulla rete.",
+            "single_instance_allowed": "\u00c8 consentita solo una configurazione di Hisense AEH-W4A1"
+        },
+        "step": {
+            "confirm": {
+                "description": "Voui configurare Hisense AEH-W4A1"
+            }
+        }
+    }
+}

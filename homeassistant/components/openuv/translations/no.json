@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Disse koordinatene er allerede registrert."
+        },
+        "error": {
+            "identifier_exists": "Koordinatene er allerede registrert",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenUV API-n\u00f8kkel",
+                    "elevation": "Elevasjon",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad"
+                },
+                "title": "Fyll ut informasjonen din"
+            }
+        }
+    }
+}

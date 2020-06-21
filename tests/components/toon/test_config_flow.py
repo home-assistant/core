@@ -1,7 +1,5 @@
 """Tests for the Toon config flow."""
 
-from unittest.mock import patch
-
 import pytest
 from toonapilib.toonapilibexceptions import (
     AgreementsRetrievalError,
@@ -12,16 +10,16 @@ from toonapilib.toonapilibexceptions import (
 
 from homeassistant import data_entry_flow
 from homeassistant.components.toon import config_flow
-from homeassistant.components.toon.const import (
+from homeassistant.components.toon.const import CONF_DISPLAY, CONF_TENANT, DOMAIN
+from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_DISPLAY,
-    CONF_TENANT,
-    DOMAIN,
+    CONF_PASSWORD,
+    CONF_USERNAME,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FIXTURE_APP = {
@@ -77,8 +75,8 @@ async def test_show_authenticate_form(hass):
 @pytest.mark.parametrize(
     "side_effect,reason",
     [
-        (InvalidConsumerKey, "client_id"),
-        (InvalidConsumerSecret, "client_secret"),
+        (InvalidConsumerKey, CONF_CLIENT_ID),
+        (InvalidConsumerSecret, CONF_CLIENT_SECRET),
         (AgreementsRetrievalError, "no_agreements"),
         (Exception, "unknown_auth_fail"),
     ],

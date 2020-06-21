@@ -3,6 +3,5 @@
   "name": "FinTS",
   "documentation": "https://www.home-assistant.io/integrations/fints",
   "requirements": ["fints==1.0.1"],
-  "dependencies": [],
   "codeowners": []
 }

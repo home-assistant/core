@@ -2,7 +2,5 @@
   "domain": "google_domains",
   "name": "Google Domains",
   "documentation": "https://www.home-assistant.io/integrations/google_domains",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": []
 }

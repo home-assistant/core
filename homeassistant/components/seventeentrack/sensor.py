@@ -130,7 +130,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "summary_{0}_{1}".format(self._data.account_id, slugify(self._status))
+        return "summary_{}_{}".format(self._data.account_id, slugify(self._status))
 
     @property
     def unit_of_measurement(self):

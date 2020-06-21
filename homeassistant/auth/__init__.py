@@ -215,12 +215,14 @@ class AuthManager:
 
         return user
 
-    async def async_create_user(self, name: str) -> models.User:
+    async def async_create_user(
+        self, name: str, group_ids: Optional[List[str]] = None
+    ) -> models.User:
         """Create a user."""
         kwargs: Dict[str, Any] = {
             "name": name,
             "is_active": True,
-            "group_ids": [GROUP_ID_ADMIN],
+            "group_ids": group_ids or [],
         }
 
         if await self._user_should_be_owner():
@@ -301,7 +303,7 @@ class AuthManager:
     async def async_deactivate_user(self, user: models.User) -> None:
         """Deactivate a user."""
         if user.is_owner:
-            raise ValueError("Unable to deactive the owner")
+            raise ValueError("Unable to deactivate the owner")
         await self._store.async_deactivate_user(user)
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:

@@ -2,12 +2,10 @@
 from datetime import timedelta
 import os
 
-from asynctest import mock, patch
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    CONF_AWAY_HIDE,
     CONF_CONSIDER_HOME,
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_TRACK_NEW,
@@ -17,12 +15,14 @@ from homeassistant.components.unifi_direct.device_tracker import (
     CONF_PORT,
     DOMAIN,
     PLATFORM_SCHEMA,
+    UnifiDeviceScanner,
     _response_to_json,
     get_scanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import MagicMock, call, patch
 from tests.common import assert_setup_component, load_fixture, mock_component
 
 scanner_path = "homeassistant.components.unifi_direct.device_tracker.UnifiDeviceScanner"
@@ -38,7 +38,7 @@ def setup_comp(hass):
         os.remove(yaml_devices)
 
 
-@patch(scanner_path, return_value=mock.MagicMock())
+@patch(scanner_path, return_value=MagicMock(spec=UnifiDeviceScanner))
 async def test_get_scanner(unifi_mock, hass):
     """Test creating an Unifi direct scanner with a password."""
     conf_dict = {
@@ -49,7 +49,7 @@ async def test_get_scanner(unifi_mock, hass):
             CONF_PASSWORD: "fake_pass",
             CONF_TRACK_NEW: True,
             CONF_CONSIDER_HOME: timedelta(seconds=180),
-            CONF_NEW_DEVICE_DEFAULTS: {CONF_TRACK_NEW: True, CONF_AWAY_HIDE: False},
+            CONF_NEW_DEVICE_DEFAULTS: {CONF_TRACK_NEW: True},
         }
     }
 
@@ -57,7 +57,7 @@ async def test_get_scanner(unifi_mock, hass):
         assert await async_setup_component(hass, DOMAIN, conf_dict)
 
     conf_dict[DOMAIN][CONF_PORT] = 22
-    assert unifi_mock.call_args == mock.call(conf_dict[DOMAIN])
+    assert unifi_mock.call_args == call(conf_dict[DOMAIN])
 
 
 @patch("pexpect.pxssh.pxssh")

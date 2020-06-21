@@ -129,7 +129,7 @@ async def async_setup(hass, config):
 
 def _get_mysensors_name(gateway, node_id, child_id):
     """Return a name for a node child."""
-    node_name = "{} {}".format(gateway.sensors[node_id].sketch_name, node_id)
+    node_name = f"{gateway.sensors[node_id].sketch_name} {node_id}"
     node_name = next(
         (
             node[CONF_NODE_NAME]

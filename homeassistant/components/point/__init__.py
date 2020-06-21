@@ -7,7 +7,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_TOKEN,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -30,9 +35,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 DATA_CONFIG_ENTRY_LOCK = "point_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "point_config_entry_is_setup"
@@ -75,13 +77,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     def token_saver(token):
         _LOGGER.debug("Saving updated token")
-        entry.data[CONF_TOKEN] = token
-        hass.config_entries.async_update_entry(entry, data={**entry.data})
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_TOKEN: token}
+        )
 
     # Force token update.
     entry.data[CONF_TOKEN]["expires_in"] = -1
     session = PointSession(
-        entry.data["refresh_args"]["client_id"],
+        entry.data["refresh_args"][CONF_CLIENT_ID],
         token=entry.data[CONF_TOKEN],
         auto_refresh_kwargs=entry.data["refresh_args"],
         token_saver=token_saver,
@@ -105,12 +108,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry, session):
     """Set up a webhook to handle binary sensor events."""
     if CONF_WEBHOOK_ID not in entry.data:
-        entry.data[CONF_WEBHOOK_ID] = hass.components.webhook.async_generate_id()
-        entry.data[CONF_WEBHOOK_URL] = hass.components.webhook.async_generate_url(
-            entry.data[CONF_WEBHOOK_ID]
+        webhook_id = hass.components.webhook.async_generate_id()
+        webhook_url = hass.components.webhook.async_generate_url(webhook_id)
+        _LOGGER.info("Registering new webhook at: %s", webhook_url)
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_WEBHOOK_ID: webhook_id,
+                CONF_WEBHOOK_URL: webhook_url,
+            },
         )
-        _LOGGER.info("Registering new webhook at: %s", entry.data[CONF_WEBHOOK_URL])
-        hass.config_entries.async_update_entry(entry, data={**entry.data})
     await hass.async_add_executor_job(
         session.update_webhook,
         entry.data[CONF_WEBHOOK_URL],
@@ -264,7 +273,6 @@ class MinutPointEntity(Entity):
 
     async def _update_callback(self):
         """Update the value of the sensor."""
-        pass
 
     @property
     def available(self):
@@ -303,7 +311,7 @@ class MinutPointEntity(Entity):
             "connections": {("mac", device["device_mac"])},
             "identifieres": device["device_id"],
             "manufacturer": "Minut",
-            "model": "Point v{}".format(device["hardware_version"]),
+            "model": f"Point v{device['hardware_version']}",
             "name": device["description"],
             "sw_version": device["firmware"]["installed"],
             "via_device": (DOMAIN, device["home"]),
@@ -312,7 +320,7 @@ class MinutPointEntity(Entity):
     @property
     def name(self):
         """Return the display name of this device."""
-        return "{} {}".format(self._name, self.device_class.capitalize())
+        return f"{self._name} {self.device_class.capitalize()}"
 
     @property
     def is_updated(self):

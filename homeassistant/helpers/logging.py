@@ -35,20 +35,20 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
         """Log the message provided at the appropriate level."""
         if self.isEnabledFor(level):
             msg, log_kwargs = self.process(msg, kwargs)
-            self.logger._log(  # type: ignore # pylint: disable=protected-access
+            self.logger._log(  # pylint: disable=protected-access
                 level, KeywordMessage(msg, args, kwargs), (), **log_kwargs
             )
 
     def process(
         self, msg: Any, kwargs: MutableMapping[str, Any]
     ) -> Tuple[Any, MutableMapping[str, Any]]:
-        """Process the keyward args in preparation for logging."""
+        """Process the keyword args in preparation for logging."""
         return (
             msg,
             {
                 k: kwargs[k]
                 for k in inspect.getfullargspec(
-                    self.logger._log  # type: ignore # pylint: disable=protected-access
+                    self.logger._log  # pylint: disable=protected-access
                 ).args[1:]
                 if k in kwargs
             },

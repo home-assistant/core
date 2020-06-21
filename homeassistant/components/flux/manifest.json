@@ -2,8 +2,6 @@
   "domain": "flux",
   "name": "Flux",
   "documentation": "https://www.home-assistant.io/integrations/flux",
-  "requirements": [],
-  "dependencies": [],
   "after_dependencies": ["light"],
   "codeowners": [],
   "quality_scale": "internal"

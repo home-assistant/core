@@ -3,6 +3,5 @@
   "name": "Wireless Sensor Tags",
   "documentation": "https://www.home-assistant.io/integrations/wirelesstag",
   "requirements": ["wirelesstagpy==0.4.0"],
-  "dependencies": [],
   "codeowners": []
 }

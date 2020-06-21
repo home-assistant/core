@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import (
     ATTR_SOURCE_TYPE,
-    ENTITY_ID_FORMAT,
+    DOMAIN,
     SOURCE_TYPE_GPS,
 )
 from homeassistant.const import (
@@ -68,7 +68,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
         self._data = data or {}
-        self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        self.entity_id = f"{DOMAIN}.{dev_id}"
 
     @property
     def unique_id(self):
@@ -119,11 +119,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("host_name")
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return self._data.get("source_type", SOURCE_TYPE_GPS)
@@ -159,4 +154,5 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     def update_data(self, data):
         """Mark the device as seen."""
         self._data = data
-        self.async_write_ha_state()
+        if self.hass:
+            self.async_write_ha_state()

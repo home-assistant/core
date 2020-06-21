@@ -3,6 +3,5 @@
   "name": "Digital Ocean",
   "documentation": "https://www.home-assistant.io/integrations/digital_ocean",
   "requirements": ["python-digitalocean==1.13.2"],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

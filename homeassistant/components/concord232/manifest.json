@@ -3,6 +3,5 @@
   "name": "Concord232",
   "documentation": "https://www.home-assistant.io/integrations/concord232",
   "requirements": ["concord232==0.15"],
-  "dependencies": [],
   "codeowners": []
 }

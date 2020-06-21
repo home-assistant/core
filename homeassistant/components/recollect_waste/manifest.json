@@ -3,6 +3,5 @@
   "name": "ReCollect Waste",
   "documentation": "https://www.home-assistant.io/integrations/recollect_waste",
   "requirements": ["recollect-waste==1.0.1"],
-  "dependencies": [],
   "codeowners": []
 }

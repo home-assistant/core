@@ -1,12 +1,12 @@
 """Test the HMAC-based One Time Password (MFA) auth module."""
 import asyncio
-from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.components.notify import NOTIFY_SERVICE_SCHEMA
 
+from tests.async_mock import patch
 from tests.common import MockUser, async_mock_service
 
 MOCK_CODE = "123456"
@@ -321,7 +321,7 @@ async def test_include_exclude_config(hass):
 
 
 async def test_setup_user_no_notify_service(hass):
-    """Test setup flow abort if there is no avilable notify service."""
+    """Test setup flow abort if there is no available notify service."""
     async_mock_service(hass, "notify", "test1", NOTIFY_SERVICE_SCHEMA)
     notify_auth_module = await auth_mfa_module_from_config(
         hass, {"type": "notify", "exclude": "test1"}

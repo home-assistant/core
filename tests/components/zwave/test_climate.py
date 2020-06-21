@@ -342,7 +342,7 @@ def test_get_device_detects_single_setpoint_device(device_single_setpoint):
 
 
 def test_default_hvac_modes():
-    """Test wether all hvac modes are included in default_hvac_modes."""
+    """Test whether all hvac modes are included in default_hvac_modes."""
     for hvac_mode in HVAC_MODES:
         assert hvac_mode in DEFAULT_HVAC_MODES
 
@@ -853,7 +853,6 @@ def test_fan_action_value_changed(device):
 
 def test_aux_heat_unsupported_set(device):
     """Test aux heat for climate device."""
-    device = device
     assert device.values.primary.data == HVAC_MODE_HEAT
     device.turn_aux_heat_on()
     assert device.values.primary.data == HVAC_MODE_HEAT
@@ -863,7 +862,6 @@ def test_aux_heat_unsupported_set(device):
 
 def test_aux_heat_unsupported_value_changed(device):
     """Test aux heat for climate device."""
-    device = device
     assert device.is_aux_heat is None
     device.values.primary.data = HVAC_MODE_HEAT
     value_changed(device.values.primary)

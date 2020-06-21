@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Sou\u0159adnice jsou ji\u017e zaregistrovan\u00e9",
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenUV API Kl\u00ed\u010d",
+                    "elevation": "Nadmo\u0159sk\u00e1 v\u00fd\u0161ka",
+                    "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
+                    "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka"
+                },
+                "title": "Vypl\u0148te va\u0161e \u00fadaje"
+            }
+        }
+    }
+}

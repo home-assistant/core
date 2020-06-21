@@ -4,21 +4,21 @@ from datetime import datetime, timedelta
 import logging
 
 import async_timeout
-from pywemo import discovery
-import requests
+from pywemo.ouimeaux_device.api.service import ActionException
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import convert
 
-from . import SUBSCRIPTION_REGISTRY
-from .const import DOMAIN
+from .const import DOMAIN as WEMO_DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=10)
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
+# The WEMO_ constants below come from pywemo itself
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_SWITCH_MODE = "switch_mode"
 ATTR_CURRENT_STATE_DETAIL = "state_detail"
@@ -32,27 +32,24 @@ WEMO_OFF = 0
 WEMO_STANDBY = 8
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up discovered WeMo switches."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo switches."""
 
-    if discovery_info is not None:
-        location = discovery_info["ssdp_description"]
-        mac = discovery_info["mac_address"]
+    async def _discovered_wemo(device):
+        """Handle a discovered Wemo device."""
+        async_add_entities([WemoSwitch(device)])
 
-        try:
-            device = discovery.device_from_description(location, mac)
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-        ) as err:
-            _LOGGER.error("Unable to access %s (%s)", location, err)
-            raise PlatformNotReady
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.switch", _discovered_wemo)
 
-        if device:
-            add_entities([WemoSwitch(device)])
+    await asyncio.gather(
+        *[
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
+        ]
+    )
 
 
-class WemoSwitch(SwitchDevice):
+class WemoSwitch(SwitchEntity):
     """Representation of a WeMo switch."""
 
     def __init__(self, device):
@@ -82,7 +79,7 @@ class WemoSwitch(SwitchDevice):
             return
 
         await self._async_locked_update(force_update)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):
@@ -97,7 +94,12 @@ class WemoSwitch(SwitchDevice):
     @property
     def device_info(self):
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(DOMAIN, self._serialnumber)}}
+        return {
+            "name": self._name,
+            "identifiers": {(WEMO_DOMAIN, self._serialnumber)},
+            "model": self._model_name,
+            "manufacturer": "Belkin",
+        }
 
     @property
     def device_state_attributes(self):
@@ -189,18 +191,32 @@ class WemoSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.wemo.on()
+        try:
+            if self.wemo.on():
+                self._state = WEMO_ON
+        except ActionException as err:
+            _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
+            self._available = False
+
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.wemo.off()
+        try:
+            if self.wemo.off():
+                self._state = WEMO_OFF
+        except ActionException as err:
+            _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
+            self._available = False
+
+        self.schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Wemo switch added to Home Assistant."""
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = SUBSCRIPTION_REGISTRY
+        registry = self.hass.data[WEMO_DOMAIN]["registry"]
         await self.hass.async_add_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
@@ -245,6 +261,7 @@ class WemoSwitch(SwitchDevice):
             if not self._available:
                 _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
-        except AttributeError as err:
+        except (AttributeError, ActionException) as err:
             _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
+            self.wemo.reconnect_with_device()

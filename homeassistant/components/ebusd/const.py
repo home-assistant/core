@@ -1,8 +1,12 @@
 """Constants for ebus component."""
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, PRESSURE_BAR, TEMP_CELSIUS
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    PRESSURE_BAR,
+    TEMP_CELSIUS,
+    TIME_SECONDS,
+)
 
 DOMAIN = "ebusd"
-TIME_SECONDS = "seconds"
 
 #  SensorTypes from ebusdpy module :
 #  0='decimal', 1='time-schedule', 2='switch', 3='string', 4='value;status'
@@ -36,6 +40,7 @@ SENSOR_TYPES = {
         ],
         "HolidayTemperature": ["HolidayTemp", TEMP_CELSIUS, "mdi:thermometer", 0],
         "HWTemperatureDesired": ["HwcTempDesired", TEMP_CELSIUS, "mdi:thermometer", 0],
+        "HWActualTemperature": ["HwcStorageTemp", TEMP_CELSIUS, "mdi:thermometer", 0],
         "HWTimerMonday": ["hwcTimer.Monday", None, "mdi:timer", 1],
         "HWTimerTuesday": ["hwcTimer.Tuesday", None, "mdi:timer", 1],
         "HWTimerWednesday": ["hwcTimer.Wednesday", None, "mdi:timer", 1],
@@ -43,6 +48,7 @@ SENSOR_TYPES = {
         "HWTimerFriday": ["hwcTimer.Friday", None, "mdi:timer", 1],
         "HWTimerSaturday": ["hwcTimer.Saturday", None, "mdi:timer", 1],
         "HWTimerSunday": ["hwcTimer.Sunday", None, "mdi:timer", 1],
+        "HWOperativeMode": ["HwcOpMode", None, "mdi:math-compass", 3],
         "WaterPressure": ["WaterPressure", PRESSURE_BAR, "mdi:water-pump", 0],
         "Zone1RoomZoneMapping": ["z1RoomZoneMapping", None, "mdi:label", 0],
         "Zone1NightTemperature": ["z1NightTemp", TEMP_CELSIUS, "mdi:weather-night", 0],

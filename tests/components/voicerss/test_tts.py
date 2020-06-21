@@ -9,6 +9,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 import homeassistant.components.tts as tts
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant, mock_service
@@ -21,6 +22,13 @@ class TestTTSVoiceRSSPlatform:
     def setup_method(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+
+        asyncio.run_coroutine_threadsafe(
+            async_process_ha_core_config(
+                self.hass, {"internal_url": "http://example.local:8123"}
+            ),
+            self.hass.loop,
+        )
 
         self.url = "https://api.voicerss.org/"
         self.form_data = {
@@ -67,7 +75,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -97,7 +108,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -121,6 +135,7 @@ class TestTTSVoiceRSSPlatform:
             tts.DOMAIN,
             "voicerss_say",
             {
+                "entity_id": "media_player.something",
                 tts.ATTR_MESSAGE: "I person is on front of your door.",
                 tts.ATTR_LANGUAGE: "de-de",
             },
@@ -145,7 +160,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -167,7 +185,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -194,7 +215,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 

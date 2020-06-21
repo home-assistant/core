@@ -3,6 +3,5 @@
   "name": "iGlo",
   "documentation": "https://www.home-assistant.io/integrations/iglo",
   "requirements": ["iglo==1.2.7"],
-  "dependencies": [],
   "codeowners": []
 }

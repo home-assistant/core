@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -72,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     )
 
 
-class TemplateLock(LockDevice):
+class TemplateLock(LockEntity):
     """Representation of a template lock."""
 
     def __init__(
@@ -174,12 +174,12 @@ class TemplateLock(LockDevice):
         """Lock the device."""
         if self._optimistic:
             self._state = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         await self._command_lock.async_run(context=self._context)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
         if self._optimistic:
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         await self._command_unlock.async_run(context=self._context)

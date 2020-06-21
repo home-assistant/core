@@ -3,24 +3,40 @@ import asyncio
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Awaitable, Callable, Dict, List, Optional
+from typing import Awaitable, Callable, Optional, Set
 
 from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = "component"
 
+DATA_SETUP_DONE = "setup_done"
+DATA_SETUP_STARTED = "setup_started"
 DATA_SETUP = "setup_tasks"
 DATA_DEPS_REQS = "deps_reqs_processed"
 
 SLOW_SETUP_WARNING = 10
+# Since a pip install can run, we wait
+# 30 minutes to timeout
+SLOW_SETUP_MAX_WAIT = 1800
 
 
-def setup_component(hass: core.HomeAssistant, domain: str, config: Dict) -> bool:
+@core.callback
+def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: Set[str]) -> None:
+    """Set domains that are going to be loaded from the config.
+
+    This will allow us to properly handle after_dependencies.
+    """
+    hass.data[DATA_SETUP_DONE] = {domain: asyncio.Event() for domain in domains}
+
+
+def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
     """Set up a component and all its dependencies."""
     return asyncio.run_coroutine_threadsafe(
         async_setup_component(hass, domain, config), hass.loop
@@ -28,7 +44,7 @@ def setup_component(hass: core.HomeAssistant, domain: str, config: Dict) -> bool
 
 
 async def async_setup_component(
-    hass: core.HomeAssistant, domain: str, config: Dict
+    hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component and all its dependencies.
 
@@ -46,37 +62,43 @@ async def async_setup_component(
         _async_setup_component(hass, domain, config)
     )
 
-    return await task  # type: ignore
+    try:
+        return await task  # type: ignore
+    finally:
+        if domain in hass.data.get(DATA_SETUP_DONE, {}):
+            hass.data[DATA_SETUP_DONE].pop(domain).set()
 
 
 async def _async_process_dependencies(
-    hass: core.HomeAssistant, config: Dict, name: str, dependencies: List[str]
+    hass: core.HomeAssistant, config: ConfigType, integration: loader.Integration
 ) -> bool:
     """Ensure all dependencies are set up."""
-    blacklisted = [dep for dep in dependencies if dep in loader.DEPENDENCY_BLACKLIST]
+    tasks = {
+        dep: hass.loop.create_task(async_setup_component(hass, dep, config))
+        for dep in integration.dependencies
+    }
 
-    if blacklisted and name != "default_config":
-        _LOGGER.error(
-            "Unable to set up dependencies of %s: "
-            "found blacklisted dependencies: %s",
-            name,
-            ", ".join(blacklisted),
-        )
-        return False
-
-    tasks = [async_setup_component(hass, dep, config) for dep in dependencies]
+    to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
+    for dep in integration.after_dependencies:
+        if dep in to_be_loaded and dep not in hass.config.components:
+            tasks[dep] = hass.loop.create_task(to_be_loaded[dep].wait())
 
     if not tasks:
         return True
 
-    results = await asyncio.gather(*tasks)
+    _LOGGER.debug("Dependency %s will wait for %s", integration.domain, list(tasks))
+    results = await asyncio.gather(*tasks.values())
 
-    failed = [dependencies[idx] for idx, res in enumerate(results) if not res]
+    failed = [
+        domain
+        for idx, domain in enumerate(integration.dependencies)
+        if not results[idx]
+    ]
 
     if failed:
         _LOGGER.error(
             "Unable to set up dependencies of %s. Setup failed for dependencies: %s",
-            name,
+            integration.domain,
             ", ".join(failed),
         )
 
@@ -85,7 +107,7 @@ async def _async_process_dependencies(
 
 
 async def _async_setup_component(
-    hass: core.HomeAssistant, domain: str, config: Dict
+    hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component for Home Assistant.
 
@@ -104,22 +126,7 @@ async def _async_setup_component(
         return False
 
     # Validate all dependencies exist and there are no circular dependencies
-    try:
-        await loader.async_component_dependencies(hass, domain)
-    except loader.IntegrationNotFound as err:
-        _LOGGER.error(
-            "Not setting up %s because we are unable to resolve (sub)dependency %s",
-            domain,
-            err.domain,
-        )
-        return False
-    except loader.CircularDependency as err:
-        _LOGGER.error(
-            "Not setting up %s because it contains a circular dependency: %s -> %s",
-            domain,
-            err.from_domain,
-            err.to_domain,
-        )
+    if not await integration.resolve_dependencies():
         return False
 
     # Process requirements as soon as possible, so we can import the component
@@ -134,8 +141,8 @@ async def _async_setup_component(
     # So we do it before validating config to catch these errors.
     try:
         component = integration.get_component()
-    except ImportError:
-        log_error("Unable to import component", integration.documentation)
+    except ImportError as err:
+        log_error(f"Unable to import component: {err}", integration.documentation)
         return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Setup failed for %s: unknown error", domain)
@@ -151,6 +158,7 @@ async def _async_setup_component(
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
+    hass.data.setdefault(DATA_SETUP_STARTED, {})[domain] = dt_util.utcnow()
 
     if hasattr(component, "PLATFORM_SCHEMA"):
         # Entity components have their own warning
@@ -166,19 +174,34 @@ async def _async_setup_component(
 
     try:
         if hasattr(component, "async_setup"):
-            result = await component.async_setup(  # type: ignore
+            task = component.async_setup(  # type: ignore
                 hass, processed_config
             )
         elif hasattr(component, "setup"):
-            result = await hass.async_add_executor_job(
-                component.setup, hass, processed_config  # type: ignore
+            # This should not be replaced with hass.async_add_executor_job because
+            # we don't want to track this task in case it blocks startup.
+            task = hass.loop.run_in_executor(
+                None, component.setup, hass, processed_config  # type: ignore
             )
         else:
             log_error("No setup function defined.")
+            hass.data[DATA_SETUP_STARTED].pop(domain)
             return False
+
+        result = await asyncio.wait_for(task, SLOW_SETUP_MAX_WAIT)
+    except asyncio.TimeoutError:
+        _LOGGER.error(
+            "Setup of %s is taking longer than %s seconds."
+            " Startup will proceed without waiting any longer.",
+            domain,
+            SLOW_SETUP_MAX_WAIT,
+        )
+        hass.data[DATA_SETUP_STARTED].pop(domain)
+        return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
         async_notify_setup_error(hass, domain, integration.documentation)
+        hass.data[DATA_SETUP_STARTED].pop(domain)
         return False
     finally:
         end = timer()
@@ -188,19 +211,29 @@ async def _async_setup_component(
 
     if result is False:
         log_error("Integration failed to initialize.")
+        hass.data[DATA_SETUP_STARTED].pop(domain)
         return False
     if result is not True:
         log_error(
             f"Integration {domain!r} did not return boolean if setup was "
             "successful. Disabling component."
         )
+        hass.data[DATA_SETUP_STARTED].pop(domain)
         return False
 
-    if hass.config_entries:
-        for entry in hass.config_entries.async_entries(domain):
-            await entry.async_setup(hass, integration=integration)
+    # Flush out async_setup calling create_task. Fragile but covered by test.
+    await asyncio.sleep(0)
+    await hass.config_entries.flow.async_wait_init_flow_finish(domain)
+
+    await asyncio.gather(
+        *[
+            entry.async_setup(hass, integration=integration)
+            for entry in hass.config_entries.async_entries(domain)
+        ]
+    )
 
     hass.config.components.add(domain)
+    hass.data[DATA_SETUP_STARTED].pop(domain)
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:
@@ -212,7 +245,7 @@ async def _async_setup_component(
 
 
 async def async_prepare_setup_platform(
-    hass: core.HomeAssistant, hass_config: Dict, domain: str, platform_name: str
+    hass: core.HomeAssistant, hass_config: ConfigType, domain: str, platform_name: str
 ) -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup.
 
@@ -267,7 +300,7 @@ async def async_prepare_setup_platform(
 
 
 async def async_process_deps_reqs(
-    hass: core.HomeAssistant, config: Dict, integration: loader.Integration
+    hass: core.HomeAssistant, config: ConfigType, integration: loader.Integration
 ) -> None:
     """Process all dependencies and requirements for a module.
 
@@ -280,9 +313,7 @@ async def async_process_deps_reqs(
     elif integration.domain in processed:
         return
 
-    if integration.dependencies and not await _async_process_dependencies(
-        hass, config, integration.domain, integration.dependencies
-    ):
+    if not await _async_process_dependencies(hass, config, integration):
         raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip and integration.requirements:

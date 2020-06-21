@@ -1,9 +1,4 @@
-"""
-Support for MQTT vacuums.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/vacuum.mqtt/
-"""
+"""Support for MQTT vacuums."""
 import logging
 
 import voluptuous as vol
@@ -44,15 +39,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_discover(discovery_payload):
         """Discover and add a MQTT vacuum."""
+        discovery_data = discovery_payload.discovery_data
         try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_hash
+                config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
+            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
             raise
 
     async_dispatcher_connect(
@@ -61,10 +55,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry, discovery_hash=None
+    config, async_add_entities, config_entry, discovery_data=None
 ):
     """Set up the MQTT vacuum."""
     setup_entity = {LEGACY: async_setup_entity_legacy, STATE: async_setup_entity_state}
     await setup_entity[config[CONF_SCHEMA]](
-        config, async_add_entities, config_entry, discovery_hash
+        config, async_add_entities, config_entry, discovery_data
     )

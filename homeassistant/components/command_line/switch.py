@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    SwitchDevice,
+    SwitchEntity,
 )
 from homeassistant.const import (
     CONF_COMMAND_OFF,
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class CommandSwitch(SwitchDevice):
+class CommandSwitch(SwitchEntity):
     """Representation a switch that can be toggled using shell commands."""
 
     def __init__(
@@ -94,7 +94,7 @@ class CommandSwitch(SwitchDevice):
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = subprocess.call(command, shell=True) == 0
+        success = subprocess.call(command, shell=True) == 0  # nosec # shell by design
 
         if not success:
             _LOGGER.error("Command failed: %s", command)
@@ -107,7 +107,9 @@ class CommandSwitch(SwitchDevice):
         _LOGGER.info("Running state command: %s", command)
 
         try:
-            return_value = subprocess.check_output(command, shell=True)
+            return_value = subprocess.check_output(
+                command, shell=True  # nosec # shell by design
+            )
             return return_value.strip().decode("utf-8")
         except subprocess.CalledProcessError:
             _LOGGER.error("Command failed: %s", command)
@@ -116,7 +118,7 @@ class CommandSwitch(SwitchDevice):
     def _query_state_code(command):
         """Execute state command for return code."""
         _LOGGER.info("Running state command: %s", command)
-        return subprocess.call(command, shell=True) == 0
+        return subprocess.call(command, shell=True) == 0  # nosec # shell by design
 
     @property
     def should_poll(self):

@@ -1,6 +1,5 @@
 """The tests for Home Assistant frontend."""
 import re
-from unittest.mock import patch
 
 import pytest
 
@@ -13,9 +12,12 @@ from homeassistant.components.frontend import (
     EVENT_PANELS_UPDATED,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_capture_events, mock_coro
+from tests.async_mock import patch
+from tests.common import async_capture_events
 
 CONFIG_THEMES = {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}}
 
@@ -97,22 +99,13 @@ async def test_dont_cache_service_worker(mock_http_client):
 async def test_404(mock_http_client):
     """Test for HTTP 404 error."""
     resp = await mock_http_client.get("/not-existing")
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
 
 async def test_we_cannot_POST_to_root(mock_http_client):
     """Test that POST is not allow to root."""
     resp = await mock_http_client.post("/")
     assert resp.status == 405
-
-
-async def test_states_routes(mock_http_client):
-    """All served by index."""
-    resp = await mock_http_client.get("/states")
-    assert resp.status == 200
-
-    resp = await mock_http_client.get("/states/group.existing")
-    assert resp.status == 200
 
 
 async def test_themes_api(hass, hass_ws_client):
@@ -125,6 +118,16 @@ async def test_themes_api(hass, hass_ws_client):
 
     assert msg["result"]["default_theme"] == "default"
     assert msg["result"]["themes"] == {"happy": {"primary-color": "red"}}
+
+    # safe mode
+    hass.config.safe_mode = True
+    await client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_theme"] == "safe_mode"
+    assert msg["result"]["themes"] == {
+        "safe_mode": {"primary-color": "#db4437", "accent-color": "#eeee02"}
+    }
 
 
 async def test_themes_set_theme(hass, hass_ws_client):
@@ -173,7 +176,7 @@ async def test_themes_reload_themes(hass, hass_ws_client):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.frontend.load_yaml_config_file",
+        "homeassistant.components.frontend.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
         await hass.services.async_call(
@@ -207,7 +210,7 @@ async def test_missing_themes(hass, hass_ws_client):
 
 async def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
     """Test that extra urls are loaded."""
-    resp = await mock_http_client_with_urls.get("/states?latest")
+    resp = await mock_http_client_with_urls.get("/lovelace?latest")
     assert resp.status == 200
     text = await resp.text()
     assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
@@ -218,7 +221,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
     hass.components.frontend.async_register_built_in_panel(
         "map", "Map", "mdi:tooltip-account", require_admin=True
@@ -246,7 +249,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     hass.components.frontend.async_remove_panel("map")
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
     assert len(events) == 2
 
@@ -281,10 +284,17 @@ async def test_get_translations(hass, hass_ws_client):
 
     with patch(
         "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang: mock_coro({"lang": lang}),
+        side_effect=lambda hass, lang, category, integration, config_flow: {
+            "lang": lang
+        },
     ):
         await client.send_json(
-            {"id": 5, "type": "frontend/get_translations", "language": "nl"}
+            {
+                "id": 5,
+                "type": "frontend/get_translations",
+                "language": "nl",
+                "category": "lang",
+            }
         )
         msg = await client.receive_json()
 
@@ -327,3 +337,24 @@ async def test_auth_authorize(mock_http_client):
     resp = await mock_http_client.get(authorizejs.groups(0)[0])
     assert resp.status == 200
     assert "public" in resp.headers.get("cache-control")
+
+
+async def test_get_version(hass, hass_ws_client):
+    """Test get_version command."""
+    frontend = await async_get_integration(hass, "frontend")
+    cur_version = next(
+        req.split("==", 1)[1]
+        for req in frontend.requirements
+        if req.startswith("home-assistant-frontend==")
+    )
+
+    await async_setup_component(hass, "frontend", {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "frontend/get_version"})
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"version": cur_version}

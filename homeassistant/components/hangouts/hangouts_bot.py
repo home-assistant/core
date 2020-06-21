@@ -7,6 +7,8 @@ import aiohttp
 import hangups
 from hangups import ChatMessageEvent, ChatMessageSegment, Client, get_auth, hangouts_pb2
 
+from homeassistant.const import HTTP_OK
+from homeassistant.core import callback
 from homeassistant.helpers import dispatcher, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -75,6 +77,7 @@ class HangoutsBot:
                 return conv
         return None
 
+    @callback
     def async_update_conversation_commands(self):
         """Refresh the commands for every conversation."""
         self._conversation_intents = {}
@@ -110,6 +113,7 @@ class HangoutsBot:
             self._async_handle_conversation_event
         )
 
+    @callback
     def async_resolve_conversations(self, _):
         """Resolve the list of default and error suppressed conversations."""
         self._default_conv_ids = []
@@ -270,7 +274,7 @@ class HangoutsBot:
                 try:
                     websession = async_get_clientsession(self.hass)
                     async with websession.get(uri, timeout=5) as response:
-                        if response.status != 200:
+                        if response.status != HTTP_OK:
                             _LOGGER.error(
                                 "Fetch image failed, %s, %s", response.status, response
                             )

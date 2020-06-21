@@ -3,6 +3,5 @@
   "name": "MessageBird",
   "documentation": "https://www.home-assistant.io/integrations/message_bird",
   "requirements": ["messagebird==1.2.0"],
-  "dependencies": [],
   "codeowners": []
 }

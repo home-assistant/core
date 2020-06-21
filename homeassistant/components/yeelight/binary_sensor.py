@@ -1,8 +1,8 @@
 """Sensor platform support for yeelight."""
 import logging
+from typing import Optional
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.core import callback
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DATA_UPDATED, DATA_YEELIGHT
@@ -22,24 +22,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([YeelightNightlightModeSensor(device)])
 
 
-class YeelightNightlightModeSensor(BinarySensorDevice):
+class YeelightNightlightModeSensor(BinarySensorEntity):
     """Representation of a Yeelight nightlight mode sensor."""
 
     def __init__(self, device):
         """Initialize nightlight mode sensor."""
         self._device = device
 
-    @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state()
-
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_dispatcher_connect(
-            self.hass,
-            DATA_UPDATED.format(self._device.ipaddr),
-            self._schedule_immediate_update,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                DATA_UPDATED.format(self._device.ipaddr),
+                self.async_write_ha_state,
+            )
         )
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        unique = self._device.unique_id
+
+        if unique:
+            return unique + "-nightlight_sensor"
+
+        return None
+
+    @property
+    def available(self) -> bool:
+        """Return if bulb is available."""
+        return self._device.available
 
     @property
     def should_poll(self):

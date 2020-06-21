@@ -1,6 +1,8 @@
 """Support for Notion sensors."""
 import logging
 
+from homeassistant.core import callback
+
 from . import SENSOR_TEMPERATURE, SENSOR_TYPES, NotionEntity
 from .const import DATA_CLIENT, DOMAIN
 
@@ -58,7 +60,8 @@ class NotionSensor(NotionEntity):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Fetch new state data for the sensor."""
         task = self._notion.tasks[self._task_id]
 

@@ -2,6 +2,7 @@
 import asyncio
 import functools
 import logging
+from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import uuid
 import weakref
@@ -20,7 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 _UNDEF: dict = {}
 
 SOURCE_DISCOVERY = "discovery"
+SOURCE_HASSIO = "hassio"
+SOURCE_HOMEKIT = "homekit"
 SOURCE_IMPORT = "import"
+SOURCE_INTEGRATION_DISCOVERY = "integration_discovery"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
@@ -60,6 +64,7 @@ ENTRY_STATE_FAILED_UNLOAD = "failed_unload"
 
 UNRECOVERABLE_STATES = (ENTRY_STATE_MIGRATION_ERROR, ENTRY_STATE_FAILED_UNLOAD)
 
+DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
 DISCOVERY_SOURCES = (
     SOURCE_SSDP,
@@ -139,10 +144,10 @@ class ConfigEntry:
         self.title = title
 
         # Config data
-        self.data = data
+        self.data = MappingProxyType(data)
 
         # Entry options
-        self.options = options or {}
+        self.options = MappingProxyType(options or {})
 
         # Entry system options
         self.system_options = SystemOptions(**system_options)
@@ -183,7 +188,7 @@ class ConfigEntry:
             component = integration.get_component()
         except ImportError as err:
             _LOGGER.error(
-                "Error importing integration %s to set up %s config entry: %s",
+                "Error importing integration %s to set up %s configuration entry: %s",
                 integration.domain,
                 self.domain,
                 err,
@@ -197,7 +202,7 @@ class ConfigEntry:
                 integration.get_platform("config_flow")
             except ImportError as err:
                 _LOGGER.error(
-                    "Error importing platform config_flow from integration %s to set up %s config entry: %s",
+                    "Error importing platform config_flow from integration %s to set up %s configuration entry: %s",
                     integration.domain,
                     self.domain,
                     err,
@@ -266,7 +271,15 @@ class ConfigEntry:
             return True
 
         if integration is None:
-            integration = await loader.async_get_integration(hass, self.domain)
+            try:
+                integration = await loader.async_get_integration(hass, self.domain)
+            except loader.IntegrationNotFound:
+                # The integration was likely a custom_component
+                # that was uninstalled, or an integration
+                # that has been renamed without removing the config
+                # entry.
+                self.state = ENTRY_STATE_NOT_LOADED
+                return True
 
         component = integration.get_component()
 
@@ -314,7 +327,15 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE:
             return
 
-        integration = await loader.async_get_integration(hass, self.domain)
+        try:
+            integration = await loader.async_get_integration(hass, self.domain)
+        except loader.IntegrationNotFound:
+            # The integration was likely a custom_component
+            # that was uninstalled, or an integration
+            # that has been renamed without removing the config
+            # entry.
+            return
+
         component = integration.get_component()
         if not hasattr(component, "async_remove_entry"):
             return
@@ -396,8 +417,8 @@ class ConfigEntry:
             "version": self.version,
             "domain": self.domain,
             "title": self.title,
-            "data": self.data,
-            "options": self.options,
+            "data": dict(self.data),
+            "options": dict(self.options),
             "system_options": self.system_options.as_dict(),
             "source": self.source,
             "connection_class": self.connection_class,
@@ -447,6 +468,10 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                     and progress_flow["context"].get("unique_id") == flow.unique_id
                 ):
                     self.async_abort(progress_flow["flow_id"])
+
+            # Reset unique ID when the default discovery ID has been used
+            if flow.unique_id == DEFAULT_DISCOVERY_UNIQUE_ID:
+                await flow.async_set_unique_id(None)
 
             # Find existing entry.
             for check_entry in self.config_entries.async_entries(result["handler"]):
@@ -503,7 +528,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             integration.get_platform("config_flow")
         except ImportError as err:
             _LOGGER.error(
-                "Error occurred loading config flow for integration %s: %s",
+                "Error occurred loading configuration flow for integration %s: %s",
                 handler_key,
                 err,
             )
@@ -720,6 +745,7 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         unique_id: Union[str, dict, None] = _UNDEF,
+        title: Union[str, dict] = _UNDEF,
         data: dict = _UNDEF,
         options: dict = _UNDEF,
         system_options: dict = _UNDEF,
@@ -728,11 +754,14 @@ class ConfigEntries:
         if unique_id is not _UNDEF:
             entry.unique_id = cast(Optional[str], unique_id)
 
+        if title is not _UNDEF:
+            entry.title = cast(str, title)
+
         if data is not _UNDEF:
-            entry.data = data
+            entry.data = MappingProxyType(data)
 
         if options is not _UNDEF:
-            entry.options = options
+            entry.options = MappingProxyType(options)
 
         if system_options is not _UNDEF:
             entry.system_options.update(**system_options)
@@ -775,6 +804,7 @@ class ConfigEntries:
 
         return await entry.async_unload(self.hass, integration=integration)
 
+    @callback
     def _async_schedule_save(self) -> None:
         """Save the entity registry to a file."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
@@ -817,28 +847,46 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         raise data_entry_flow.UnknownHandler
 
     @callback
-    def _abort_if_unique_id_configured(self) -> None:
+    def _abort_if_unique_id_configured(
+        self, updates: Optional[Dict[Any, Any]] = None
+    ) -> None:
         """Abort if the unique ID is already configured."""
+        assert self.hass
         if self.unique_id is None:
             return
 
-        if self.unique_id in self._async_current_ids():
-            raise data_entry_flow.AbortFlow("already_configured")
+        for entry in self._async_current_entries():
+            if entry.unique_id == self.unique_id:
+                if updates is not None and not updates.items() <= entry.data.items():
+                    self.hass.config_entries.async_update_entry(
+                        entry, data={**entry.data, **updates}
+                    )
+                raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
-        self, unique_id: str, *, raise_on_progress: bool = True
+        self, unique_id: Optional[str] = None, *, raise_on_progress: bool = True
     ) -> Optional[ConfigEntry]:
         """Set a unique ID for the config flow.
 
         Returns optionally existing config entry with same ID.
         """
+        if unique_id is None:
+            self.context["unique_id"] = None  # pylint: disable=no-member
+            return None
+
         if raise_on_progress:
             for progress in self._async_in_progress():
                 if progress["context"].get("unique_id") == unique_id:
                     raise data_entry_flow.AbortFlow("already_in_progress")
 
-        # pylint: disable=no-member
-        self.context["unique_id"] = unique_id
+        self.context["unique_id"] = unique_id  # pylint: disable=no-member
+
+        # Abort discoveries done using the default discovery unique id
+        assert self.hass is not None
+        if unique_id != DEFAULT_DISCOVERY_UNIQUE_ID:
+            for progress in self._async_in_progress():
+                if progress["context"].get("unique_id") == DEFAULT_DISCOVERY_UNIQUE_ID:
+                    self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
         for entry in self._async_current_entries():
             if entry.unique_id == unique_id:
@@ -856,11 +904,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def _async_current_ids(self, include_ignore: bool = True) -> Set[Optional[str]]:
         """Return current unique IDs."""
         assert self.hass is not None
-        return set(
+        return {
             entry.unique_id
             for entry in self.hass.config_entries.async_entries(self.handler)
             if include_ignore or entry.source != SOURCE_IGNORE
-        )
+        }
 
     @callback
     def _async_in_progress(self) -> List[Dict]:
@@ -880,6 +928,49 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     async def async_step_unignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Rediscover a config entry by it's unique_id."""
         return self.async_abort(reason="not_implemented")
+
+    async def async_step_user(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Handle a flow initiated by the user."""
+        return self.async_abort(reason="not_implemented")
+
+    async def _async_handle_discovery_without_unique_id(self) -> None:
+        """Mark this flow discovered, without a unique identifier.
+
+        If a flow initiated by discovery, doesn't have a unique ID, this can
+        be used alternatively. It will ensure only 1 flow is started and only
+        when the handler has no existing config entries.
+
+        It ensures that the discovery can be ignored by the user.
+        """
+        if self.unique_id is not None:
+            return
+
+        # Abort if the handler has config entries already
+        if self._async_current_entries():
+            raise data_entry_flow.AbortFlow("already_configured")
+
+        # Use an special unique id to differentiate
+        await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
+        self._abort_if_unique_id_configured()
+
+        # Abort if any other flow for this handler is already in progress
+        assert self.hass is not None
+        if self._async_in_progress():
+            raise data_entry_flow.AbortFlow("already_in_progress")
+
+    async def async_step_discovery(
+        self, discovery_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle a flow initialized by discovery."""
+        await self._async_handle_discovery_without_unique_id()
+        return await self.async_step_user()
+
+    async_step_hassio = async_step_discovery
+    async_step_homekit = async_step_discovery
+    async_step_ssdp = async_step_discovery
+    async_step_zeroconf = async_step_discovery
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):
@@ -903,8 +994,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         if entry.domain not in HANDLERS:
             raise data_entry_flow.UnknownHandler
 
-        flow = cast(OptionsFlow, HANDLERS[entry.domain].async_get_options_flow(entry))
-        return flow
+        return cast(OptionsFlow, HANDLERS[entry.domain].async_get_options_flow(entry))
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]
@@ -941,7 +1031,7 @@ class SystemOptions:
         self.disable_new_entities = disable_new_entities
 
     def as_dict(self) -> Dict[str, Any]:
-        """Return dictionary version of this config entrys system options."""
+        """Return dictionary version of this config entries system options."""
         return {"disable_new_entities": self.disable_new_entities}
 
 
@@ -1018,7 +1108,7 @@ class EntityRegistryDisabledHandler:
         self.changed = set()
 
         _LOGGER.info(
-            "Reloading config entries because disabled_by changed in entity registry: %s",
+            "Reloading configuration entries because disabled_by changed in entity registry: %s",
             ", ".join(self.changed),
         )
 

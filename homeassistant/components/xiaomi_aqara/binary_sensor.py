@@ -1,7 +1,7 @@
 """Support for Xiaomi aqara binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
@@ -99,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
+class XiaomiBinarySensor(XiaomiDevice, BinarySensorEntity):
     """Representation of a base XiaomiBinarySensor."""
 
     def __init__(self, device, name, xiaomi_hub, data_key, device_class):
@@ -197,7 +197,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Set state to False."""
         self._unsub_set_no_motion = None
         self._state = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway.

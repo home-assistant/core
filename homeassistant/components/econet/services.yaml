@@ -3,7 +3,7 @@ add_vacation:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'water_heater.econet'
+      example: "water_heater.econet"
     start_date:
       description: The timestamp of when the vacation should start. (Optional, defaults to now)
       example: 1513186320
@@ -16,4 +16,4 @@ delete_vacation:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'water_heater.econet'
+      example: "water_heater.econet"

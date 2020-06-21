@@ -3,6 +3,5 @@
   "name": "Music Player Daemon (MPD)",
   "documentation": "https://www.home-assistant.io/integrations/mpd",
   "requirements": ["python-mpd2==1.0.0"],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

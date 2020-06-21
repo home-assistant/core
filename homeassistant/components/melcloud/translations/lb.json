@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MELCloud Integratioun ass scho konfigur\u00e9iert fir d\u00ebs Email. Acc\u00e8s Jeton gouf erneiert."
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "E-Mail"
+                },
+                "description": "Verbann dech mat dengem MElCloud Kont.",
+                "title": "Mat MELCloud verbannen"
+            }
+        }
+    }
+}

@@ -1,15 +1,11 @@
 """The tests for the MQTT device tracker platform."""
-from asynctest import patch
 import pytest
 
-from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker.const import (
-    ENTITY_ID_FORMAT,
-    SOURCE_TYPE_BLUETOOTH,
-)
+from homeassistant.components.device_tracker.const import DOMAIN, SOURCE_TYPE_BLUETOOTH
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 
@@ -35,14 +31,7 @@ async def test_ensure_device_tracker_platform_validation(hass):
         dev_id = "paulus"
         topic = "/location/paulus"
         assert await async_setup_component(
-            hass,
-            device_tracker.DOMAIN,
-            {
-                device_tracker.DOMAIN: {
-                    CONF_PLATFORM: "mqtt",
-                    "devices": {dev_id: topic},
-                }
-            },
+            hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: topic}}}
         )
         assert mock_sp.call_count == 1
 
@@ -50,15 +39,13 @@ async def test_ensure_device_tracker_platform_validation(hass):
 async def test_new_message(hass, mock_device_tracker_conf):
     """Test new message."""
     dev_id = "paulus"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DOMAIN}.{dev_id}"
     topic = "/location/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
-        hass,
-        device_tracker.DOMAIN,
-        {device_tracker.DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: topic}}},
+        hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: topic}}}
     )
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
@@ -68,21 +55,16 @@ async def test_new_message(hass, mock_device_tracker_conf):
 async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
     """Test single level wildcard topic."""
     dev_id = "paulus"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DOMAIN}.{dev_id}"
     subscription = "/location/+/paulus"
     topic = "/location/room/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
-        device_tracker.DOMAIN,
-        {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: "mqtt",
-                "devices": {dev_id: subscription},
-            }
-        },
+        DOMAIN,
+        {DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: subscription}}},
     )
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
@@ -92,21 +74,16 @@ async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
 async def test_multi_level_wildcard_topic(hass, mock_device_tracker_conf):
     """Test multi level wildcard topic."""
     dev_id = "paulus"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DOMAIN}.{dev_id}"
     subscription = "/location/#"
     topic = "/location/room/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
-        device_tracker.DOMAIN,
-        {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: "mqtt",
-                "devices": {dev_id: subscription},
-            }
-        },
+        DOMAIN,
+        {DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: subscription}}},
     )
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
@@ -116,21 +93,16 @@ async def test_multi_level_wildcard_topic(hass, mock_device_tracker_conf):
 async def test_single_level_wildcard_topic_not_matching(hass, mock_device_tracker_conf):
     """Test not matching single level wildcard topic."""
     dev_id = "paulus"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DOMAIN}.{dev_id}"
     subscription = "/location/+/paulus"
     topic = "/location/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
-        device_tracker.DOMAIN,
-        {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: "mqtt",
-                "devices": {dev_id: subscription},
-            }
-        },
+        DOMAIN,
+        {DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: subscription}}},
     )
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
@@ -140,21 +112,16 @@ async def test_single_level_wildcard_topic_not_matching(hass, mock_device_tracke
 async def test_multi_level_wildcard_topic_not_matching(hass, mock_device_tracker_conf):
     """Test not matching multi level wildcard topic."""
     dev_id = "paulus"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DOMAIN}.{dev_id}"
     subscription = "/location/#"
     topic = "/somewhere/room/paulus"
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
-        device_tracker.DOMAIN,
-        {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: "mqtt",
-                "devices": {dev_id: subscription},
-            }
-        },
+        DOMAIN,
+        {DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: subscription}}},
     )
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
@@ -166,17 +133,17 @@ async def test_matching_custom_payload_for_home_and_not_home(
 ):
     """Test custom payload_home sets state to home and custom payload_not_home sets state to not_home."""
     dev_id = "paulus"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DOMAIN}.{dev_id}"
     topic = "/location/paulus"
     payload_home = "present"
     payload_not_home = "not present"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
-        device_tracker.DOMAIN,
+        DOMAIN,
         {
-            device_tracker.DOMAIN: {
+            DOMAIN: {
                 CONF_PLATFORM: "mqtt",
                 "devices": {dev_id: topic},
                 "payload_home": payload_home,
@@ -198,18 +165,18 @@ async def test_not_matching_custom_payload_for_home_and_not_home(
 ):
     """Test not matching payload does not set state to home or not_home."""
     dev_id = "paulus"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DOMAIN}.{dev_id}"
     topic = "/location/paulus"
     payload_home = "present"
     payload_not_home = "not present"
     payload_not_matching = "test"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
-        device_tracker.DOMAIN,
+        DOMAIN,
         {
-            device_tracker.DOMAIN: {
+            DOMAIN: {
                 CONF_PLATFORM: "mqtt",
                 "devices": {dev_id: topic},
                 "payload_home": payload_home,
@@ -226,17 +193,17 @@ async def test_not_matching_custom_payload_for_home_and_not_home(
 async def test_matching_source_type(hass, mock_device_tracker_conf):
     """Test setting source type."""
     dev_id = "paulus"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DOMAIN}.{dev_id}"
     topic = "/location/paulus"
     source_type = SOURCE_TYPE_BLUETOOTH
     location = "work"
 
-    hass.config.components = set(["mqtt", "zone"])
+    hass.config.components = {"mqtt", "zone"}
     assert await async_setup_component(
         hass,
-        device_tracker.DOMAIN,
+        DOMAIN,
         {
-            device_tracker.DOMAIN: {
+            DOMAIN: {
                 CONF_PLATFORM: "mqtt",
                 "devices": {dev_id: topic},
                 "source_type": source_type,

@@ -7,7 +7,11 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
+    TIME_HOURS,
+    UNIT_PERCENTAGE,
+    UV_INDEX,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -35,27 +39,18 @@ SENSOR_TYPES = {
         None,
         DEVICE_CLASS_TEMPERATURE,
     ],
-    SENSOR_TYPE_HUMIDITY: ["Humidity", "%", None, DEVICE_CLASS_HUMIDITY],
-    SENSOR_TYPE_RAINRATE: ["Rain rate", "mm/h", "mdi:water", None],
+    SENSOR_TYPE_HUMIDITY: ["Humidity", UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
+    SENSOR_TYPE_RAINRATE: ["Rain rate", f"mm/{TIME_HOURS}", "mdi:water", None],
     SENSOR_TYPE_RAINTOTAL: ["Rain total", "mm", "mdi:water", None],
     SENSOR_TYPE_WINDDIRECTION: ["Wind direction", "", "", None],
-    SENSOR_TYPE_WINDAVERAGE: ["Wind average", "m/s", "", None],
-    SENSOR_TYPE_WINDGUST: ["Wind gust", "m/s", "", None],
-    SENSOR_TYPE_UV: ["UV", "UV", "", None],
+    SENSOR_TYPE_WINDAVERAGE: ["Wind average", SPEED_METERS_PER_SECOND, "", None],
+    SENSOR_TYPE_WINDGUST: ["Wind gust", SPEED_METERS_PER_SECOND, "", None],
+    SENSOR_TYPE_UV: ["UV", UV_INDEX, "", None],
     SENSOR_TYPE_WATT: ["Power", POWER_WATT, "", None],
     SENSOR_TYPE_LUMINANCE: ["Luminance", "lx", None, DEVICE_CLASS_ILLUMINANCE],
     SENSOR_TYPE_DEW_POINT: ["Dew Point", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     SENSOR_TYPE_BAROMETRIC_PRESSURE: ["Barometric Pressure", "kPa", "", None],
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up TelldusLive.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

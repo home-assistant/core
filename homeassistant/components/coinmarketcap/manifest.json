@@ -3,6 +3,5 @@
   "name": "CoinMarketCap",
   "documentation": "https://www.home-assistant.io/integrations/coinmarketcap",
   "requirements": ["coinmarketcap==5.0.3"],
-  "dependencies": [],
   "codeowners": []
 }

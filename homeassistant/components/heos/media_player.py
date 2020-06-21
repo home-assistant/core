@@ -6,7 +6,7 @@ from typing import Sequence
 
 from pyheos import HeosError, const as heos_const
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN,
@@ -60,11 +60,6 @@ CONTROL_TO_SUPPORT = {
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ):
@@ -90,7 +85,7 @@ def log_command_error(command: str):
     return decorator
 
 
-class HeosMediaPlayer(MediaPlayerDevice):
+class HeosMediaPlayer(MediaPlayerEntity):
     """The HEOS player."""
 
     def __init__(self, player):
@@ -166,7 +161,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
     @log_command_error("play media")
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        if media_type == MEDIA_TYPE_URL:
+        if media_type in (MEDIA_TYPE_URL, MEDIA_TYPE_MUSIC):
             await self._player.play_url(media_id)
             return
 

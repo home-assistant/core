@@ -6,7 +6,7 @@ from pyirishrail.pyirishrail import IrishRailRTPI
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -97,9 +97,11 @@ class IrishRailTransportSensor(Entity):
         if self._times:
             next_up = "None"
             if len(self._times) > 1:
-                next_up = self._times[1][ATTR_ORIGIN] + " to "
-                next_up += self._times[1][ATTR_DESTINATION] + " in "
-                next_up += self._times[1][ATTR_DUE_IN]
+                next_up = (
+                    f"{self._times[1][ATTR_ORIGIN]} to "
+                    f"{self._times[1][ATTR_DESTINATION]} in "
+                    f"{self._times[1][ATTR_DUE_IN]}"
+                )
 
             return {
                 ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -118,7 +120,7 @@ class IrishRailTransportSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
     @property
     def icon(self):

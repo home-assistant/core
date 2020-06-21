@@ -1,0 +1,11 @@
+{
+    "state": {
+        "_": {
+            "ready": "Spreman"
+        },
+        "query_stage": {
+            "dead": " ({query_stage})",
+            "initializing": " ( {query_stage} )"
+        }
+    }
+}

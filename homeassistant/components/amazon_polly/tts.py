@@ -147,7 +147,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_engine(hass, config, discovery_info=None):
     """Set up Amazon Polly speech component."""
-    output_format = config.get(CONF_OUTPUT_FORMAT)
+    output_format = config[CONF_OUTPUT_FORMAT]
     sample_rate = config.get(CONF_SAMPLE_RATE, DEFAULT_SAMPLE_RATES[output_format])
     if sample_rate not in SUPPORTED_SAMPLE_RATES_MAP.get(output_format):
         _LOGGER.error(
@@ -163,7 +163,7 @@ def get_engine(hass, config, discovery_info=None):
         boto3.setup_default_session(profile_name=profile)
 
     aws_config = {
-        CONF_REGION: config.get(CONF_REGION),
+        CONF_REGION: config[CONF_REGION],
         CONF_ACCESS_KEY_ID: config.get(CONF_ACCESS_KEY_ID),
         CONF_SECRET_ACCESS_KEY: config.get(CONF_SECRET_ACCESS_KEY),
     }
@@ -197,7 +197,7 @@ class AmazonPollyProvider(Provider):
         self.config = config
         self.supported_langs = supported_languages
         self.all_voices = all_voices
-        self.default_voice = self.config.get(CONF_VOICE)
+        self.default_voice = self.config[CONF_VOICE]
         self.name = "Amazon Polly"
 
     @property

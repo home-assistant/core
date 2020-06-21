@@ -3,7 +3,7 @@ configure:
   fields:
     entity:
       description: Entity id representing a specific device in deCONZ.
-      example: 'light.rgb_light'
+      example: "light.rgb_light"
     field:
       description: >-
         Field is a string representing a full path to deCONZ endpoint (when
@@ -15,11 +15,11 @@ configure:
       example: '{"on": true}'
     bridgeid:
       description: (Optional) Bridgeid is a string unique for each deCONZ hardware. It can be found as part of the integration name.
-      example: '00212EFFFF012345'
+      example: "00212EFFFF012345"
 
 device_refresh:
   description: Refresh device lists from deCONZ.
   fields:
     bridgeid:
       description: (Optional) Bridgeid is a string unique for each deCONZ hardware. It can be found as part of the integration name.
-      example: '00212EFFFF012345'
+      example: "00212EFFFF012345"

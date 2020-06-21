@@ -3,6 +3,5 @@
   "name": "Taps Aff",
   "documentation": "https://www.home-assistant.io/integrations/tapsaff",
   "requirements": ["tapsaff==0.2.1"],
-  "dependencies": [],
   "codeowners": []
 }

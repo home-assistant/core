@@ -105,12 +105,12 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             api_key=api_key,
         )
 
-    hass.services.register(DOMAIN, name + "ring", ring_service)
-    hass.services.register(DOMAIN, name + "set_wallpaper", set_wallpaper_service)
-    hass.services.register(DOMAIN, name + "send_sms", send_sms_service)
-    hass.services.register(DOMAIN, name + "send_file", send_file_service)
-    hass.services.register(DOMAIN, name + "send_url", send_url_service)
-    hass.services.register(DOMAIN, name + "send_tasker", send_tasker_service)
+    hass.services.register(DOMAIN, f"{name}ring", ring_service)
+    hass.services.register(DOMAIN, f"{name}set_wallpaper", set_wallpaper_service)
+    hass.services.register(DOMAIN, f"{name}send_sms", send_sms_service)
+    hass.services.register(DOMAIN, f"{name}send_file", send_file_service)
+    hass.services.register(DOMAIN, f"{name}send_url", send_url_service)
+    hass.services.register(DOMAIN, f"{name}send_tasker", send_tasker_service)
 
 
 def setup(hass, config):
@@ -122,7 +122,7 @@ def setup(hass, config):
         device_ids = device.get(CONF_DEVICE_IDS)
         device_names = device.get(CONF_DEVICE_NAMES)
         name = device.get(CONF_NAME)
-        name = name.lower().replace(" ", "_") + "_" if name else ""
+        name = f"{name.lower().replace(' ', '_')}_" if name else ""
         if api_key:
             if not get_devices(api_key):
                 _LOGGER.error("Error connecting to Join, check API key")

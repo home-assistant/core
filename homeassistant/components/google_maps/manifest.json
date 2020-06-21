@@ -3,6 +3,5 @@
   "name": "Google Maps",
   "documentation": "https://www.home-assistant.io/integrations/google_maps",
   "requirements": ["locationsharinglib==4.1.0"],
-  "dependencies": [],
   "codeowners": []
 }

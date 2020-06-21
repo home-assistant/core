@@ -4,7 +4,7 @@ import logging
 from openwebif.api import CreateDevice
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TVSHOW,
     SUPPORT_NEXT_TRACK,
@@ -107,7 +107,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         port=config.get(CONF_PORT),
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
-        is_https=config.get(CONF_SSL),
+        is_https=config[CONF_SSL],
         prefer_picon=config.get(CONF_USE_CHANNEL_ICON),
         mac_address=config.get(CONF_MAC_ADDRESS),
         turn_off_to_deep=config.get(CONF_DEEP_STANDBY),
@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([Enigma2Device(config[CONF_NAME], device)], True)
 
 
-class Enigma2Device(MediaPlayerDevice):
+class Enigma2Device(MediaPlayerEntity):
     """Representation of an Enigma2 box."""
 
     def __init__(self, name, device):

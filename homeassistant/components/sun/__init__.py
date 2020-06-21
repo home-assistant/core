@@ -77,7 +77,7 @@ async def async_setup(hass, config):
     if config.get(CONF_ELEVATION) is not None:
         _LOGGER.warning(
             "Elevation is now configured in Home Assistant core. "
-            "See https://home-assistant.io/docs/configuration/basic/"
+            "See https://www.home-assistant.io/docs/configuration/basic/"
         )
     Sun(hass)
     return True

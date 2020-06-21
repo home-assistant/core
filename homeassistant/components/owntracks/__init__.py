@@ -16,7 +16,7 @@ from homeassistant.setup import async_when_setup
 
 from .config_flow import CONF_SECRET
 from .const import DOMAIN
-from .messages import async_handle_message
+from .messages import async_handle_message, encrypt_message
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,6 +154,7 @@ async def handle_webhook(hass, webhook_id, request):
     Android does not set a topic but adds headers to the request.
     """
     context = hass.data[DOMAIN]["context"]
+    topic_base = re.sub("/#$", "", context.mqtt_topic)
 
     try:
         message = await request.json()
@@ -168,7 +169,6 @@ async def handle_webhook(hass, webhook_id, request):
         device = headers.get("X-Limit-D", user)
 
         if user:
-            topic_base = re.sub("/#$", "", context.mqtt_topic)
             message["topic"] = f"{topic_base}/{user}/{device}"
 
         elif message["_type"] != "encrypted":
@@ -180,7 +180,35 @@ async def handle_webhook(hass, webhook_id, request):
             return json_response([])
 
     hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
-    return json_response([])
+
+    response = []
+
+    for person in hass.states.async_all():
+        if person.domain != "person":
+            continue
+
+        if "latitude" in person.attributes and "longitude" in person.attributes:
+            response.append(
+                {
+                    "_type": "location",
+                    "lat": person.attributes["latitude"],
+                    "lon": person.attributes["longitude"],
+                    "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
+                    "tst": int(person.last_updated.timestamp()),
+                }
+            )
+
+    if message["_type"] == "encrypted" and context.secret:
+        return json_response(
+            {
+                "_type": "encrypted",
+                "data": encrypt_message(
+                    context.secret, message["topic"], json.dumps(response)
+                ),
+            }
+        )
+
+    return json_response(response)
 
 
 class OwnTracksContext:

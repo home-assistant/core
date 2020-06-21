@@ -108,11 +108,6 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def unique_id(self):
         """Return the unique ID."""
         return self._unique_id

@@ -1,13 +1,13 @@
 """The tests for the Owntracks device tracker."""
 import json
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components import owntracks
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
@@ -18,16 +18,16 @@ from tests.common import (
 USER = "greg"
 DEVICE = "phone"
 
-LOCATION_TOPIC = "owntracks/{}/{}".format(USER, DEVICE)
-EVENT_TOPIC = "owntracks/{}/{}/event".format(USER, DEVICE)
-WAYPOINTS_TOPIC = "owntracks/{}/{}/waypoints".format(USER, DEVICE)
-WAYPOINT_TOPIC = "owntracks/{}/{}/waypoint".format(USER, DEVICE)
+LOCATION_TOPIC = f"owntracks/{USER}/{DEVICE}"
+EVENT_TOPIC = f"owntracks/{USER}/{DEVICE}/event"
+WAYPOINTS_TOPIC = f"owntracks/{USER}/{DEVICE}/waypoints"
+WAYPOINT_TOPIC = f"owntracks/{USER}/{DEVICE}/waypoint"
 USER_BLACKLIST = "ram"
-WAYPOINTS_TOPIC_BLOCKED = "owntracks/{}/{}/waypoints".format(USER_BLACKLIST, DEVICE)
-LWT_TOPIC = "owntracks/{}/{}/lwt".format(USER, DEVICE)
-BAD_TOPIC = "owntracks/{}/{}/unsupported".format(USER, DEVICE)
+WAYPOINTS_TOPIC_BLOCKED = f"owntracks/{USER_BLACKLIST}/{DEVICE}/waypoints"
+LWT_TOPIC = f"owntracks/{USER}/{DEVICE}/lwt"
+BAD_TOPIC = f"owntracks/{USER}/{DEVICE}/unsupported"
 
-DEVICE_TRACKER_STATE = "device_tracker.{}_{}".format(USER, DEVICE)
+DEVICE_TRACKER_STATE = f"device_tracker.{USER}_{DEVICE}"
 
 IBEACON_DEVICE = "keys"
 MOBILE_BEACON_FMT = "device_tracker.beacon_{}"
@@ -1510,7 +1510,7 @@ async def test_customized_mqtt_topic(hass, setup_comp):
     """Test subscribing to a custom mqtt topic."""
     await setup_owntracks(hass, {CONF_MQTT_TOPIC: "mytracks/#"})
 
-    topic = "mytracks/{}/{}".format(USER, DEVICE)
+    topic = f"mytracks/{USER}/{DEVICE}"
 
     await send_message(hass, topic, LOCATION_MESSAGE)
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
@@ -1565,3 +1565,72 @@ async def test_restore_state(hass, hass_client):
     assert state_1.attributes["longitude"] == state_2.attributes["longitude"]
     assert state_1.attributes["battery_level"] == state_2.attributes["battery_level"]
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
+
+
+async def test_returns_empty_friends(hass, hass_client):
+    """Test that an empty list of persons' locations is returned."""
+    entry = MockConfigEntry(
+        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/webhook/owntracks_test",
+        json=LOCATION_MESSAGE,
+        headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
+    )
+
+    assert resp.status == 200
+    assert await resp.text() == "[]"
+
+
+async def test_returns_array_friends(hass, hass_client):
+    """Test that a list of persons' current locations is returned."""
+    otracks = MockConfigEntry(
+        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+    )
+    otracks.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(otracks.entry_id)
+    await hass.async_block_till_done()
+
+    # Setup device_trackers
+    assert await async_setup_component(
+        hass,
+        "person",
+        {
+            "person": [
+                {
+                    "name": "person 1",
+                    "id": "person1",
+                    "device_trackers": ["device_tracker.person_1_tracker_1"],
+                },
+                {
+                    "name": "person2",
+                    "id": "person2",
+                    "device_trackers": ["device_tracker.person_2_tracker_1"],
+                },
+            ]
+        },
+    )
+    hass.states.async_set(
+        "device_tracker.person_1_tracker_1", "home", {"latitude": 10, "longitude": 20}
+    )
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/webhook/owntracks_test",
+        json=LOCATION_MESSAGE,
+        headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
+    )
+
+    assert resp.status == 200
+    response_json = json.loads(await resp.text())
+
+    assert response_json[0]["lat"] == 10
+    assert response_json[0]["lon"] == 20
+    assert response_json[0]["tid"] == "p1"

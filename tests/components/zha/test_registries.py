@@ -19,16 +19,10 @@ def zha_device():
 
 
 @pytest.fixture
-def channels():
+def channels(channel):
     """Return a mock of channels."""
 
-    def channel(name, chan_id):
-        ch = mock.MagicMock()
-        ch.name = name
-        ch.generic_id = chan_id
-        return ch
-
-    return [channel("level", "channel_0x0008"), channel("on_off", "channel_0x0006")]
+    return [channel("level", 8), channel("on_off", 6)]
 
 
 @pytest.mark.parametrize(
@@ -61,8 +55,20 @@ def channels():
         # manufacturer matching
         (registries.MatchRule(manufacturers="no match"), False),
         (registries.MatchRule(manufacturers=MANUFACTURER), True),
+        (
+            registries.MatchRule(manufacturers="no match", aux_channels="aux_channel"),
+            False,
+        ),
+        (
+            registries.MatchRule(
+                manufacturers=MANUFACTURER, aux_channels="aux_channel"
+            ),
+            True,
+        ),
         (registries.MatchRule(models=MODEL), True),
         (registries.MatchRule(models="no match"), False),
+        (registries.MatchRule(models=MODEL, aux_channels="aux_channel"), True),
+        (registries.MatchRule(models="no match", aux_channels="aux_channel"), False),
         # match everything
         (
             registries.MatchRule(
@@ -119,10 +125,9 @@ def channels():
         ),
     ],
 )
-def test_registry_matching(rule, matched, zha_device, channels):
+def test_registry_matching(rule, matched, channels):
     """Test strict rule matching."""
-    reg = registries.ZHAEntityRegistry()
-    assert reg._strict_matched(zha_device, channels, rule) is matched
+    assert rule.strict_matched(MANUFACTURER, MODEL, channels) is matched
 
 
 @pytest.mark.parametrize(
@@ -203,7 +208,109 @@ def test_registry_matching(rule, matched, zha_device, channels):
         ),
     ],
 )
-def test_registry_loose_matching(rule, matched, zha_device, channels):
+def test_registry_loose_matching(rule, matched, channels):
     """Test loose rule matching."""
-    reg = registries.ZHAEntityRegistry()
-    assert reg._loose_matched(zha_device, channels, rule) is matched
+    assert rule.loose_matched(MANUFACTURER, MODEL, channels) is matched
+
+
+def test_match_rule_claim_channels_color(channel):
+    """Test channel claiming."""
+    ch_color = channel("color", 0x300)
+    ch_level = channel("level", 8)
+    ch_onoff = channel("on_off", 6)
+
+    rule = registries.MatchRule(channel_names="on_off", aux_channels={"color", "level"})
+    claimed = rule.claim_channels([ch_color, ch_level, ch_onoff])
+    assert {"color", "level", "on_off"} == {ch.name for ch in claimed}
+
+
+@pytest.mark.parametrize(
+    "rule, match",
+    [
+        (registries.MatchRule(channel_names={"level"}), {"level"}),
+        (registries.MatchRule(channel_names={"level", "no match"}), {"level"}),
+        (registries.MatchRule(channel_names={"on_off"}), {"on_off"}),
+        (registries.MatchRule(generic_ids="channel_0x0000"), {"basic"}),
+        (
+            registries.MatchRule(channel_names="level", generic_ids="channel_0x0000"),
+            {"basic", "level"},
+        ),
+        (registries.MatchRule(channel_names={"level", "power"}), {"level", "power"}),
+        (
+            registries.MatchRule(
+                channel_names={"level", "on_off"}, aux_channels={"basic", "power"}
+            ),
+            {"basic", "level", "on_off", "power"},
+        ),
+        (registries.MatchRule(channel_names={"color"}), set()),
+    ],
+)
+def test_match_rule_claim_channels(rule, match, channel, channels):
+    """Test channel claiming."""
+    ch_basic = channel("basic", 0)
+    channels.append(ch_basic)
+    ch_power = channel("power", 1)
+    channels.append(ch_power)
+
+    claimed = rule.claim_channels(channels)
+    assert match == {ch.name for ch in claimed}
+
+
+@pytest.fixture
+def entity_registry():
+    """Registry fixture."""
+    return registries.ZHAEntityRegistry()
+
+
+@pytest.mark.parametrize(
+    "manufacturer, model, match_name",
+    (
+        ("random manufacturer", "random model", "OnOff"),
+        ("random manufacturer", MODEL, "OnOffModel"),
+        (MANUFACTURER, "random model", "OnOffManufacturer"),
+        (MANUFACTURER, MODEL, "OnOffModelManufacturer"),
+        (MANUFACTURER, "some model", "OnOffMultimodel"),
+    ),
+)
+def test_weighted_match(channel, entity_registry, manufacturer, model, match_name):
+    """Test weightedd match."""
+
+    s = mock.sentinel
+
+    @entity_registry.strict_match(
+        s.component,
+        channel_names="on_off",
+        models={MODEL, "another model", "some model"},
+    )
+    class OnOffMultimodel:
+        pass
+
+    @entity_registry.strict_match(s.component, channel_names="on_off")
+    class OnOff:
+        pass
+
+    @entity_registry.strict_match(
+        s.component, channel_names="on_off", manufacturers=MANUFACTURER
+    )
+    class OnOffManufacturer:
+        pass
+
+    @entity_registry.strict_match(s.component, channel_names="on_off", models=MODEL)
+    class OnOffModel:
+        pass
+
+    @entity_registry.strict_match(
+        s.component, channel_names="on_off", models=MODEL, manufacturers=MANUFACTURER
+    )
+    class OnOffModelManufacturer:
+        pass
+
+    ch_on_off = channel("on_off", 6)
+    ch_level = channel("level", 8)
+
+    match, claimed = entity_registry.get_entity(
+        s.component, manufacturer, model, [ch_on_off, ch_level]
+    )
+
+    assert match.__name__ == match_name
+    assert claimed == [ch_on_off]

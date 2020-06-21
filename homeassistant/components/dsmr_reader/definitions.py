@@ -1,5 +1,12 @@
 """Definitions for DSMR Reader sensors added to MQTT."""
 
+from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
+    VOLT,
+    VOLUME_CUBIC_METERS,
+)
+
 
 def dsmr_transform(value):
     """Transform DSMR version value to right format."""
@@ -19,22 +26,22 @@ DEFINITIONS = {
     "dsmr/reading/electricity_delivered_1": {
         "name": "Low tariff usage",
         "icon": "mdi:flash",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/reading/electricity_returned_1": {
         "name": "Low tariff returned",
         "icon": "mdi:flash-outline",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/reading/electricity_delivered_2": {
         "name": "High tariff usage",
         "icon": "mdi:flash",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/reading/electricity_returned_2": {
         "name": "High tariff returned",
         "icon": "mdi:flash-outline",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/reading/electricity_currently_delivered": {
         "name": "Current power usage",
@@ -79,32 +86,47 @@ DEFINITIONS = {
     "dsmr/reading/extra_device_delivered": {
         "name": "Gas meter usage",
         "icon": "mdi:fire",
-        "unit": "m3",
+        "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/reading/phase_voltage_l1": {
         "name": "Current voltage L1",
         "icon": "mdi:flash",
-        "unit": "V",
+        "unit": VOLT,
     },
     "dsmr/reading/phase_voltage_l2": {
         "name": "Current voltage L2",
         "icon": "mdi:flash",
-        "unit": "V",
+        "unit": VOLT,
     },
     "dsmr/reading/phase_voltage_l3": {
         "name": "Current voltage L3",
         "icon": "mdi:flash",
-        "unit": "V",
+        "unit": VOLT,
+    },
+    "dsmr/reading/phase_power_current_l1": {
+        "name": "Phase power current L1",
+        "icon": "mdi:flash",
+        "unit": ELECTRICAL_CURRENT_AMPERE,
+    },
+    "dsmr/reading/phase_power_current_l2": {
+        "name": "Phase power current L2",
+        "icon": "mdi:flash",
+        "unit": ELECTRICAL_CURRENT_AMPERE,
+    },
+    "dsmr/reading/phase_power_current_l3": {
+        "name": "Phase power current L3",
+        "icon": "mdi:flash",
+        "unit": ELECTRICAL_CURRENT_AMPERE,
     },
     "dsmr/consumption/gas/delivered": {
         "name": "Gas usage",
         "icon": "mdi:fire",
-        "unit": "m3",
+        "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/consumption/gas/currently_delivered": {
         "name": "Current gas usage",
         "icon": "mdi:fire",
-        "unit": "m3",
+        "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/consumption/gas/read_at": {
         "name": "Gas meter read",
@@ -114,32 +136,32 @@ DEFINITIONS = {
     "dsmr/day-consumption/electricity1": {
         "name": "Low tariff usage",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity2": {
         "name": "High tariff usage",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity1_returned": {
         "name": "Low tariff return",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity2_returned": {
         "name": "High tariff return",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity_merged": {
         "name": "Power usage total",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity_returned_merged": {
         "name": "Power return total",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity1_cost": {
         "name": "Low tariff cost",
@@ -159,7 +181,7 @@ DEFINITIONS = {
     "dsmr/day-consumption/gas": {
         "name": "Gas usage",
         "icon": "mdi:counter",
-        "unit": "m3",
+        "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/day-consumption/gas_cost": {
         "name": "Gas cost",

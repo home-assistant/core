@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_COVERS,
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(covers)
 
 
-class GaradgetCover(CoverDevice):
+class GaradgetCover(CoverEntity):
     """Representation of a Garadget cover."""
 
     def __init__(self, hass, args):
@@ -229,7 +229,7 @@ class GaradgetCover(CoverDevice):
         try:
             status = self._get_variable("doorStatus")
             _LOGGER.debug("Current Status: %s", status["status"])
-            self._state = STATES_MAP.get(status["status"], None)
+            self._state = STATES_MAP.get(status["status"])
             self.time_in_state = status["time"]
             self.signal = status["signal"]
             self.sensor = status["sensor"]
@@ -251,9 +251,7 @@ class GaradgetCover(CoverDevice):
 
     def _get_variable(self, var):
         """Get latest status."""
-        url = "{}/v1/devices/{}/{}?access_token={}".format(
-            self.particle_url, self.device_id, var, self.access_token
-        )
+        url = f"{self.particle_url}/v1/devices/{self.device_id}/{var}?access_token={self.access_token}"
         ret = requests.get(url, timeout=10)
         result = {}
         for pairs in ret.json()["result"].split("|"):

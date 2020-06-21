@@ -6,7 +6,13 @@ from typing import Any, Dict
 from toonapilib import Toon
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -16,8 +22,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import config_flow  # noqa: F401
 from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_DISPLAY,
     CONF_TENANT,
     DATA_TOON,
@@ -80,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     )
     hass.data.setdefault(DATA_TOON_CLIENT, {})[entry.entry_id] = toon
 
-    toon_data = ToonData(hass, entry, toon)
+    toon_data = await hass.async_add_executor_job(ToonData, hass, entry, toon)
     hass.data.setdefault(DATA_TOON, {})[entry.entry_id] = toon_data
     async_track_time_interval(hass, toon_data.update, conf[CONF_SCAN_INTERVAL])
 
@@ -96,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
 
     def update(call):
         """Service call to manually update the data."""
-        called_display = call.data.get(CONF_DISPLAY, None)
+        called_display = call.data.get(CONF_DISPLAY)
         for toon_data in hass.data[DATA_TOON].values():
             if (
                 called_display and called_display == toon_data.display_name
@@ -137,7 +141,7 @@ class ToonData:
 
     def update(self, now=None):
         """Update all Toon data and notify entities."""
-        # Ignore the TTL meganism from client library
+        # Ignore the TTL mechanism from client library
         # It causes a lots of issues, hence we take control over caching
         self._toon._clear_cache()  # pylint: disable=protected-access
 

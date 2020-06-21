@@ -63,10 +63,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the BH1750 sensor."""
 
-    name = config.get(CONF_NAME)
-    bus_number = config.get(CONF_I2C_BUS)
-    i2c_address = config.get(CONF_I2C_ADDRESS)
-    operation_mode = config.get(CONF_OPERATION_MODE)
+    name = config[CONF_NAME]
+    bus_number = config[CONF_I2C_BUS]
+    i2c_address = config[CONF_I2C_ADDRESS]
+    operation_mode = config[CONF_OPERATION_MODE]
 
     bus = smbus.SMBus(bus_number)
 
@@ -76,8 +76,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             bus,
             i2c_address,
             operation_mode=operation_mode,
-            measurement_delay=config.get(CONF_DELAY),
-            sensitivity=config.get(CONF_SENSITIVITY),
+            measurement_delay=config[CONF_DELAY],
+            sensitivity=config[CONF_SENSITIVITY],
             logger=_LOGGER,
         )
     )
@@ -85,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("BH1750 sensor not detected at %s", i2c_address)
         return False
 
-    dev = [BH1750Sensor(sensor, name, SENSOR_UNIT, config.get(CONF_MULTIPLIER))]
+    dev = [BH1750Sensor(sensor, name, SENSOR_UNIT, config[CONF_MULTIPLIER])]
     _LOGGER.info(
         "Setup of BH1750 light sensor at %s in mode %s is complete",
         i2c_address,

@@ -3,6 +3,5 @@
   "name": "Whois",
   "documentation": "https://www.home-assistant.io/integrations/whois",
   "requirements": ["python-whois==0.7.2"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -1,5 +1,4 @@
 """Provides functionality to interact with lights."""
-import asyncio
 import csv
 from datetime import timedelta
 import logging
@@ -8,15 +7,12 @@ from typing import Dict, Optional, Tuple
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.exceptions import Unauthorized, UnknownUser
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -44,7 +40,7 @@ SUPPORT_COLOR = 16
 SUPPORT_TRANSITION = 32
 SUPPORT_WHITE_VALUE = 128
 
-# Integer that represents transition time in seconds to make change.
+# Float that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
 
 # Lists holding color values
@@ -61,6 +57,8 @@ ATTR_WHITE_VALUE = "white_value"
 # Brightness of the light, 0..255 or percentage
 ATTR_BRIGHTNESS = "brightness"
 ATTR_BRIGHTNESS_PCT = "brightness_pct"
+ATTR_BRIGHTNESS_STEP = "brightness_step"
+ATTR_BRIGHTNESS_STEP_PCT = "brightness_step_pct"
 
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
@@ -87,12 +85,17 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
+VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
+VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
+VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
 
 LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
-    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
+    vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
     vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
         vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
@@ -114,7 +117,7 @@ LIGHT_TURN_ON_SCHEMA = {
     ),
     vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(vol.Coerce(int), vol.Range(min=0)),
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
+    ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
 
@@ -154,7 +157,7 @@ def preprocess_turn_on_alternatives(params):
 
     brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
     if brightness_pct is not None:
-        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct / 100)
+        params[ATTR_BRIGHTNESS] = round(255 * brightness_pct / 100)
 
     xy_color = params.pop(ATTR_XY_COLOR, None)
     if xy_color is not None:
@@ -164,12 +167,19 @@ def preprocess_turn_on_alternatives(params):
     if rgb_color is not None:
         params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
 
+    return params
+
+
+def filter_turn_off_params(params):
+    """Filter out params not used in turn off."""
+    return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
+
 
 def preprocess_turn_off(params):
     """Process data for turning light off if brightness is 0."""
     if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
         # Zero brightness: Light will be turned off
-        params = {k: v for k, v in params.items() if k in [ATTR_TRANSITION, ATTR_FLASH]}
+        params = filter_turn_off_params(params)
         return (True, params)  # Light should be turned off
 
     return (False, None)  # Light should be turned on
@@ -187,83 +197,79 @@ async def async_setup(hass, config):
     if not profiles_valid:
         return False
 
-    async def async_handle_light_on_service(service):
-        """Handle a turn light on service call."""
-        # Get the validated data
-        params = service.data.copy()
+    def preprocess_data(data):
+        """Preprocess the service data."""
+        base = {
+            entity_field: data.pop(entity_field)
+            for entity_field in cv.ENTITY_SERVICE_FIELDS
+            if entity_field in data
+        }
 
-        # Convert the entity ids to valid light ids
-        target_lights = await component.async_extract_from_service(service)
-        params.pop(ATTR_ENTITY_ID, None)
+        base["params"] = preprocess_turn_on_alternatives(data)
+        return base
 
-        if service.context.user_id:
-            user = await hass.auth.async_get_user(service.context.user_id)
-            if user is None:
-                raise UnknownUser(context=service.context)
+    async def async_handle_light_on_service(light, call):
+        """Handle turning a light on.
 
-            entity_perms = user.permissions.check_entity
+        If brightness is set to 0, this service will turn the light off.
+        """
+        params = call.data["params"]
 
-            for light in target_lights:
-                if not entity_perms(light, POLICY_CONTROL):
-                    raise Unauthorized(
-                        context=service.context,
-                        entity_id=light,
-                        permission=POLICY_CONTROL,
-                    )
+        if not params:
+            default_profile = Profiles.get_default(light.entity_id)
 
-        preprocess_turn_on_alternatives(params)
-        turn_lights_off, off_params = preprocess_turn_off(params)
+            if default_profile is not None:
+                params = {ATTR_PROFILE: default_profile}
+                preprocess_turn_on_alternatives(params)
 
-        poll_lights = []
-        change_tasks = []
-        for light in target_lights:
-            light.async_set_context(service.context)
+        elif ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
+            brightness = light.brightness if light.is_on else 0
 
-            pars = params
-            off_pars = off_params
-            turn_light_off = turn_lights_off
-            if not pars:
-                pars = params.copy()
-                pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
-                preprocess_turn_on_alternatives(pars)
-                turn_light_off, off_pars = preprocess_turn_off(pars)
-            if turn_light_off:
-                task = light.async_request_call(light.async_turn_off(**off_pars))
+            params = params.copy()
+
+            if ATTR_BRIGHTNESS_STEP in params:
+                brightness += params.pop(ATTR_BRIGHTNESS_STEP)
+
             else:
-                task = light.async_request_call(light.async_turn_on(**pars))
+                brightness += round(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
 
-            change_tasks.append(task)
+            params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
 
-            if light.should_poll:
-                poll_lights.append(light)
+        turn_light_off, off_params = preprocess_turn_off(params)
+        if turn_light_off:
+            await light.async_turn_off(**off_params)
+        else:
+            await light.async_turn_on(**params)
 
-        if change_tasks:
-            await asyncio.wait(change_tasks)
+    async def async_handle_toggle_service(light, call):
+        """Handle toggling a light.
 
-        if poll_lights:
-            await asyncio.wait(
-                [light.async_update_ha_state(True) for light in poll_lights]
-            )
+        If brightness is set to 0, this service will turn the light off.
+        """
+        if light.is_on:
+            off_params = filter_turn_off_params(call.data["params"])
+            await light.async_turn_off(**off_params)
+        else:
+            await async_handle_light_on_service(light, call)
 
     # Listen for light on and light off service calls.
-    hass.services.async_register(
-        DOMAIN,
+
+    component.async_register_entity_service(
         SERVICE_TURN_ON,
+        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
         async_handle_light_on_service,
-        schema=cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA),
     )
 
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {
-            ATTR_TRANSITION: VALID_TRANSITION,
-            ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
-        },
+        {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH},
         "async_turn_off",
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE, LIGHT_TURN_ON_SCHEMA, "async_toggle"
+        SERVICE_TOGGLE,
+        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
+        async_handle_toggle_service,
     )
 
     return True
@@ -328,7 +334,7 @@ class Profiles:
     def get_default(cls, entity_id):
         """Return the default turn-on profile for the given light."""
         # pylint: disable=unsupported-membership-test
-        name = entity_id + ".default"
+        name = f"{entity_id}.default"
         if name in cls._all:
             return name
         name = "group.all_lights.default"
@@ -337,7 +343,7 @@ class Profiles:
         return None
 
 
-class Light(ToggleEntity):
+class LightEntity(ToggleEntity):
     """Representation of a light."""
 
     @property
@@ -433,3 +439,14 @@ class Light(ToggleEntity):
     def supported_features(self):
         """Flag supported features."""
         return 0
+
+
+class Light(LightEntity):
+    """Representation of a light (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "Light is deprecated, modify %s to extend LightEntity", cls.__name__,
+        )

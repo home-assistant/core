@@ -4,7 +4,7 @@ import logging
 import pysdcp
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class SonyProjector(SwitchDevice):
+class SonyProjector(SwitchEntity):
     """Represents a Sony Projector as a switch."""
 
     def __init__(self, sdcp_connection, name):

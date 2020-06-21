@@ -6,7 +6,12 @@ from hass_nabucasa import cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    EVENT_HOMEASSISTANT_STARTED,
+    HTTP_OK,
+)
+from homeassistant.core import CoreState, callback
 from homeassistant.helpers import entity_registry
 
 from .const import (
@@ -32,12 +37,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._cloud = cloud
         self._cur_entity_prefs = self._prefs.google_entity_configs
         self._sync_entities_lock = asyncio.Lock()
-
-        prefs.async_listen_updates(self._async_prefs_updated)
-        hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated,
-        )
+        self._sync_on_started = False
 
     @property
     def enabled(self):
@@ -83,6 +83,13 @@ class CloudGoogleConfig(AbstractConfig):
         # Remove bad data that was there until 0.103.6 - Jan 6, 2020
         self._store.pop_agent_user_id(self._user)
 
+        self._prefs.async_listen_updates(self._async_prefs_updated)
+
+        self.hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._handle_entity_registry_updated,
+        )
+
     def should_expose(self, state):
         """If a state object should be exposed."""
         return self._should_expose_entity_id(state.entity_id)
@@ -124,7 +131,7 @@ class CloudGoogleConfig(AbstractConfig):
     async def _async_request_sync_devices(self, agent_user_id: str):
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
-            return 200
+            return HTTP_OK
 
         async with self._sync_entities_lock:
             resp = await cloud_api.async_google_actions_request_sync(self._cloud)
@@ -160,8 +167,29 @@ class CloudGoogleConfig(AbstractConfig):
         if not self.enabled or not self._cloud.is_logged_in:
             return
 
+        # Only consider entity registry updates if info relevant for Google has changed
+        if event.data["action"] == "update" and not bool(
+            set(event.data["changes"]) & entity_registry.ENTITY_DESCRIBING_ATTRIBUTES
+        ):
+            return
+
         entity_id = event.data["entity_id"]
 
-        # Schedule a sync if a change was made to an entity that Google knows about
-        if self._should_expose_entity_id(entity_id):
+        if not self._should_expose_entity_id(entity_id):
+            return
+
+        if self.hass.state == CoreState.running:
+            self.async_schedule_google_sync_all()
+            return
+
+        if self._sync_on_started:
+            return
+
+        self._sync_on_started = True
+
+        @callback
+        async def sync_google(_):
+            """Sync entities to Google."""
             await self.async_sync_entities_all()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)

@@ -3,47 +3,46 @@ update:
   fields:
     account:
       description: Your iCloud account username (email) or account name.
-      example: 'steve@apple.com'
+      example: "steve@apple.com"
 
 play_sound:
   description: Play sound on an Apple device.
   fields:
     account:
       description: (required) Your iCloud account username (email) or account name.
-      example: 'steve@apple.com'
+      example: "steve@apple.com"
     device_name:
       description: (required) The name of the Apple device to play a sound.
-      example: 'stevesiphone'
+      example: "stevesiphone"
 
 display_message:
   description: Display a message on an Apple device.
   fields:
     account:
       description: (required) Your iCloud account username (email) or account name.
-      example: 'steve@apple.com'
+      example: "steve@apple.com"
     device_name:
       description: (required) The name of the Apple device to display the message.
-      example: 'stevesiphone'
+      example: "stevesiphone"
     message:
       description: (required) The content of your message.
-      example: 'Hey Steve !'
+      example: "Hey Steve !"
     sound:
       description: To make a sound when displaying the message (boolean).
-      example: 'true'
+      example: "true"
 
 lost_device:
   description: Make an Apple device in lost state.
   fields:
     account:
       description: (required) Your iCloud account username (email) or account name.
-      example: 'steve@apple.com'
+      example: "steve@apple.com"
     device_name:
       description: (required) The name of the Apple device to set lost.
-      example: 'stevesiphone'
+      example: "stevesiphone"
     number:
       description: (required) The phone number to call in lost mode (must contain country code).
-      example: '+33450020100'
+      example: "+33450020100"
     message:
       description: (required) The message to display in lost mode.
-      example: 'Call me'
-
+      example: "Call me"

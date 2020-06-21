@@ -101,8 +101,8 @@ class BrWeather(WeatherEntity):
 
     def __init__(self, data, config):
         """Initialise the platform with a data instance and station name."""
-        self._stationname = config.get(CONF_NAME, None)
-        self._forecast = config.get(CONF_FORECAST)
+        self._stationname = config.get(CONF_NAME)
+        self._forecast = config[CONF_FORECAST]
         self._data = data
 
     @property
@@ -113,8 +113,8 @@ class BrWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._stationname or "BR {}".format(
-            self._data.stationname or "(unknown station)"
+        return (
+            self._stationname or f"BR {self._data.stationname or '(unknown station)'}"
         )
 
     @property

@@ -4,7 +4,7 @@ from datetime import datetime
 from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
 
 
-class TestDateTimeJSONEncoder(object):
+class TestDateTimeJSONEncoder:
     """Bundle for DateTimeJSONEncoder tests."""
 
     def test_datetime(self):

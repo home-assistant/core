@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_EFFECT,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOSTS
 from homeassistant.exceptions import PlatformNotReady
@@ -31,8 +31,6 @@ SCAN_INTERVAL = timedelta(minutes=1)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string])}
 )
-
-NAME_FORMAT = "EverLights {} Zone {}"
 
 
 def color_rgb_to_int(red: int, green: int, blue: int) -> int:
@@ -67,7 +65,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(lights)
 
 
-class EverLightsLight(Light):
+class EverLightsLight(LightEntity):
     """Representation of a Flux light."""
 
     def __init__(self, api, channel, status, effects):
@@ -96,7 +94,7 @@ class EverLightsLight(Light):
     @property
     def name(self):
         """Return the name of the device."""
-        return NAME_FORMAT.format(self._mac, self._channel)
+        return f"EverLights {self._mac} Zone {self._channel}"
 
     @property
     def is_on(self):

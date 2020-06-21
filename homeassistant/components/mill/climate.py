@@ -4,8 +4,10 @@ import logging
 from mill import Mill
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     FAN_ON,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -18,6 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -27,6 +30,7 @@ from .const import (
     ATTR_ROOM_NAME,
     ATTR_SLEEP_TEMP,
     DOMAIN,
+    MANUFACTURER,
     MAX_TEMP,
     MIN_TEMP,
     SERVICE_SET_ROOM_TEMP,
@@ -35,10 +39,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
 
 SET_ROOM_TEMP_SCHEMA = vol.Schema(
     {
@@ -50,16 +50,15 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Mill heater."""
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the Mill climate."""
     mill_data_connection = Mill(
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
     )
     if not await mill_data_connection.connect():
-        _LOGGER.error("Failed to connect to Mill")
-        return
+        raise ConfigEntryNotReady
 
     await mill_data_connection.find_all_heaters()
 
@@ -83,7 +82,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MillHeater(ClimateDevice):
+class MillHeater(ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
     def __init__(self, heater, mill_data_connection):
@@ -168,6 +167,13 @@ class MillHeater(ClimateDevice):
         return MAX_TEMP
 
     @property
+    def hvac_action(self):
+        """Return current hvac i.e. heat, cool, idle."""
+        if self._heater.is_gen1 or self._heater.is_heating == 1:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
+
+    @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
@@ -209,3 +215,19 @@ class MillHeater(ClimateDevice):
     async def async_update(self):
         """Retrieve latest state."""
         self._heater = await self._conn.update_device(self._heater.device_id)
+
+    @property
+    def device_id(self):
+        """Return the ID of the physical device this sensor is part of."""
+        return self._heater.device_id
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        device_info = {
+            "identifiers": {(DOMAIN, self.device_id)},
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+            "model": f"generation {1 if self._heater.is_gen1 else 2}",
+        }
+        return device_info

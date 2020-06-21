@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten var allerede konfigurert.",
+            "already_in_progress": "Konfigurasjonsflyt for enhet p\u00e5g\u00e5r allerede.",
+            "unable_to_connect": "Kan ikke koble til enheten."
+        },
+        "flow_title": "Arcam FMJ p\u00e5 {host}",
+        "step": {
+            "confirm": {
+                "description": "Vil du legge Arcam FMJ p\u00e5 ` {host} ` til Home Assistant? "
+            },
+            "user": {
+                "description": "Vennligst skriv inn vertsnavnet eller IP-adressen til enheten."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} ble bedt om \u00e5 sl\u00e5 p\u00e5"
+        }
+    }
+}

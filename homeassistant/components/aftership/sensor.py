@@ -6,7 +6,7 @@ from pyaftership.tracker import Tracking
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -27,7 +27,7 @@ CONF_TITLE = "title"
 CONF_TRACKING_NUMBER = "tracking_number"
 
 DEFAULT_NAME = "aftership"
-UPDATE_TOPIC = DOMAIN + "_update"
+UPDATE_TOPIC = f"{DOMAIN}_update"
 
 ICON = "mdi:package-variant-closed"
 
@@ -66,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     await aftership.get_trackings()
 
-    if not aftership.meta or aftership.meta["code"] != 200:
+    if not aftership.meta or aftership.meta["code"] != HTTP_OK:
         _LOGGER.error(
             "No tracking data found. Check API key is correct: %s", aftership.meta
         )
@@ -145,14 +145,16 @@ class AfterShipSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self._force_update
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self._force_update
+            )
         )
 
     async def _force_update(self):
         """Force update of data."""
         await self.async_update(no_throttle=True)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self, **kwargs):
@@ -162,7 +164,7 @@ class AfterShipSensor(Entity):
         if not self.aftership.meta:
             _LOGGER.error("Unknown errors when querying")
             return
-        if self.aftership.meta["code"] != 200:
+        if self.aftership.meta["code"] != HTTP_OK:
             _LOGGER.error(
                 "Errors when querying AfterShip. %s", str(self.aftership.meta)
             )
@@ -189,7 +191,7 @@ class AfterShipSensor(Entity):
                     "name": name,
                     "tracking_number": track["tracking_number"],
                     "slug": track["slug"],
-                    "link": "%s%s/%s" % (BASE, track["slug"], track["tracking_number"]),
+                    "link": f"{BASE}{track['slug']}/{track['tracking_number']}",
                     "last_update": track["updated_at"],
                     "expected_delivery": track["expected_delivery"],
                     "status": track["tag"],

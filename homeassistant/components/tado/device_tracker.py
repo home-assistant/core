@@ -13,7 +13,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -114,7 +114,7 @@ class TadoDeviceScanner(DeviceScanner):
 
                 response = await self.websession.get(url)
 
-                if response.status != 200:
+                if response.status != HTTP_OK:
                     _LOGGER.warning("Error %d on %s.", response.status, self.tadoapiurl)
                     return False
 

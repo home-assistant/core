@@ -3,21 +3,21 @@ seek_forward:
   fields:
     entity_id:
       description: Name of entity for the instance of Channels to seek in.
-      example: 'media_player.family_room_channels'
+      example: "media_player.family_room_channels"
 
 seek_backward:
   description: Seek backward by a set number of seconds.
   fields:
     entity_id:
       description: Name of entity for the instance of Channels to seek in.
-      example: 'media_player.family_room_channels'
+      example: "media_player.family_room_channels"
 
 seek_by:
   description: Seek by an inputted number of seconds.
   fields:
     entity_id:
       description: Name of entity for the instance of Channels to seek in.
-      example: 'media_player.family_room_channels'
+      example: "media_player.family_room_channels"
     seconds:
       description: Number of seconds to seek by. Negative numbers seek backwards.
       example: 120

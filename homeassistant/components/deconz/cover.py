@@ -5,7 +5,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -46,7 +46,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_cover(gateway.api.lights.values())
 
 
-class DeconzCover(DeconzDevice, CoverDevice):
+class DeconzCover(DeconzDevice, CoverEntity):
     """Representation of a deCONZ cover."""
 
     def __init__(self, device, gateway):
@@ -61,7 +61,7 @@ class DeconzCover(DeconzDevice, CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return 100 - int(self._device.brightness / 255 * 100)
+        return 100 - int(self._device.brightness / 254 * 100)
 
     @property
     def is_closed(self):
@@ -88,7 +88,7 @@ class DeconzCover(DeconzDevice, CoverDevice):
 
         if position < 100:
             data["on"] = True
-            data["bri"] = 255 - int(position / 100 * 255)
+            data["bri"] = 254 - int(position / 100 * 254)
 
         await self._device.async_set_state(data)
 

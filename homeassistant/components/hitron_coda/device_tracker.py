@@ -10,7 +10,13 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_TYPE,
+    CONF_USERNAME,
+    HTTP_OK,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def get_scanner(_hass, config):
-    """Validate the configuration and return a Nmap scanner."""
+    """Validate the configuration and return a Hitron CODA-4582U scanner."""
     scanner = HitronCODADeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -83,7 +89,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
-        if res.status_code != 200:
+        if res.status_code != HTTP_OK:
             _LOGGER.error("Connection failed with http code %s", res.status_code)
             return False
         try:
@@ -109,7 +115,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
-        if res.status_code != 200:
+        if res.status_code != HTTP_OK:
             _LOGGER.error("Connection failed with http code %s", res.status_code)
             return False
         try:

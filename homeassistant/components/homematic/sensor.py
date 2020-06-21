@@ -2,20 +2,28 @@
 import logging
 
 from homeassistant.const import (
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_WATT_HOUR,
+    FREQUENCY_HERTZ,
     POWER_WATT,
-    STATE_UNKNOWN,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+    VOLT,
+    VOLUME_CUBIC_METERS,
 )
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 HM_STATE_HA_CAST = {
+    "IPGarage": {0: "closed", 1: "open", 2: "ventilation", 3: None},
     "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"},
     "RotaryHandleSensorIP": {0: "closed", 1: "tilted", 2: "open"},
     "WaterSensor": {0: "dry", 1: "wet", 2: "water"},
@@ -30,16 +38,16 @@ HM_STATE_HA_CAST = {
 }
 
 HM_UNIT_HA_CAST = {
-    "HUMIDITY": "%",
-    "TEMPERATURE": "°C",
-    "ACTUAL_TEMPERATURE": "°C",
+    "HUMIDITY": UNIT_PERCENTAGE,
+    "TEMPERATURE": TEMP_CELSIUS,
+    "ACTUAL_TEMPERATURE": TEMP_CELSIUS,
     "BRIGHTNESS": "#",
     "POWER": POWER_WATT,
     "CURRENT": "mA",
-    "VOLTAGE": "V",
+    "VOLTAGE": VOLT,
     "ENERGY_COUNTER": ENERGY_WATT_HOUR,
-    "GAS_POWER": "m3",
-    "GAS_ENERGY_COUNTER": "m3",
+    "GAS_POWER": VOLUME_CUBIC_METERS,
+    "GAS_ENERGY_COUNTER": VOLUME_CUBIC_METERS,
     "LUX": "lx",
     "ILLUMINATION": "lx",
     "CURRENT_ILLUMINATION": "lx",
@@ -47,13 +55,14 @@ HM_UNIT_HA_CAST = {
     "LOWEST_ILLUMINATION": "lx",
     "HIGHEST_ILLUMINATION": "lx",
     "RAIN_COUNTER": "mm",
-    "WIND_SPEED": "km/h",
-    "WIND_DIRECTION": "°",
-    "WIND_DIRECTION_RANGE": "°",
+    "WIND_SPEED": SPEED_KILOMETERS_PER_HOUR,
+    "WIND_DIRECTION": DEGREE,
+    "WIND_DIRECTION_RANGE": DEGREE,
     "SUNSHINEDURATION": "#",
     "AIR_PRESSURE": "hPa",
-    "FREQUENCY": "Hz",
+    "FREQUENCY": FREQUENCY_HERTZ,
     "VALUE": "#",
+    "VALVE_STATE": UNIT_PERCENTAGE,
 }
 
 HM_DEVICE_CLASS_HA_CAST = {
@@ -82,7 +91,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMSensor(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMSensor(HMDevice):
@@ -117,6 +126,6 @@ class HMSensor(HMDevice):
     def _init_data_struct(self):
         """Generate a data dictionary (self._data) from metadata."""
         if self._state:
-            self._data.update({self._state: STATE_UNKNOWN})
+            self._data.update({self._state: None})
         else:
             _LOGGER.critical("Unable to initialize sensor: %s", self._name)

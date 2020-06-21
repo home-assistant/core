@@ -5,7 +5,7 @@ import logging
 from pyrainbird import AvailableStations, RainbirdController
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
 from homeassistant.helpers import config_validation as cv
 
@@ -45,10 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = zone_config.get(CONF_FRIENDLY_NAME)
             devices.append(
                 RainBirdSwitch(
-                    controller,
-                    zone,
-                    time,
-                    name if name else "Sprinkler {}".format(zone),
+                    controller, zone, time, name if name else f"Sprinkler {zone}",
                 )
             )
 
@@ -70,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class RainBirdSwitch(SwitchDevice):
+class RainBirdSwitch(SwitchEntity):
     """Representation of a Rain Bird switch."""
 
     def __init__(self, controller: RainbirdController, zone, time, name):

@@ -61,7 +61,7 @@ async def async_exec(*args, display=False):
     argsp = []
     for arg in args:
         if os.path.isfile(arg):
-            argsp.append("\\\n  {}".format(shlex.quote(arg)))
+            argsp.append(f"\\\n  {shlex.quote(arg)}")
         else:
             argsp.append(shlex.quote(arg))
     printc("cyan", *argsp)
@@ -75,9 +75,7 @@ async def async_exec(*args, display=False):
             kwargs["stderr"] = asyncio.subprocess.PIPE
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
     except FileNotFoundError as err:
-        printc(
-            FAIL, f"Could not execute {args[0]}. Did you install test requirements?",
-        )
+        printc(FAIL, f"Could not execute {args[0]}. Did you install test requirements?")
         raise err
 
     if not display:

@@ -50,10 +50,8 @@ class LogiSensor(Entity):
         self._sensor_type = sensor_type
         self._camera = camera
         self._id = f"{self._camera.mac_address}-{self._sensor_type}"
-        self._icon = "mdi:{}".format(SENSOR_TYPES.get(self._sensor_type)[2])
-        self._name = "{0} {1}".format(
-            self._camera.name, SENSOR_TYPES.get(self._sensor_type)[0]
-        )
+        self._icon = f"mdi:{SENSOR_TYPES.get(self._sensor_type)[2]}"
+        self._name = f"{self._camera.name} {SENSOR_TYPES.get(self._sensor_type)[0]}"
         self._activity = {}
         self._state = None
         self._tz = time_zone
@@ -127,8 +125,8 @@ class LogiSensor(Entity):
             last_activity = await self._camera.get_last_activity(force_refresh=True)
             if last_activity is not None:
                 last_activity_time = as_local(last_activity.end_time_utc)
-                self._state = "{0:0>2}:{1:0>2}".format(
-                    last_activity_time.hour, last_activity_time.minute
+                self._state = (
+                    f"{last_activity_time.hour:0>2}:{last_activity_time.minute:0>2}"
                 )
         else:
             state = getattr(self._camera, self._sensor_type, None)

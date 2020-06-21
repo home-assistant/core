@@ -1,8 +1,8 @@
 """Support for Verisure locks."""
 import logging
-from time import sleep, time
+from time import monotonic, sleep
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 
 from . import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, HUB as hub
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(locks)
 
 
-class VerisureDoorlock(LockDevice):
+class VerisureDoorlock(LockEntity):
     """Representation of a Verisure doorlock."""
 
     def __init__(self, device_label):
@@ -71,7 +71,7 @@ class VerisureDoorlock(LockDevice):
 
     def update(self):
         """Update lock status."""
-        if time() - self._change_timestamp < 10:
+        if monotonic() - self._change_timestamp < 10:
             return
         hub.update_overview()
         status = hub.get_first(
@@ -131,4 +131,4 @@ class VerisureDoorlock(LockDevice):
             transaction = hub.session.get_lock_state_transaction(transaction_id)
         if transaction["result"] == "OK":
             self._state = state
-            self._change_timestamp = time()
+            self._change_timestamp = monotonic()

@@ -3,6 +3,5 @@
   "name": "Avi-on",
   "documentation": "https://www.home-assistant.io/integrations/avion",
   "requirements": ["avion==0.10"],
-  "dependencies": [],
   "codeowners": []
 }

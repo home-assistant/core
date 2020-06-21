@@ -11,11 +11,23 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_UNIT_SYSTEM,
+    LENGTH_FEET,
+    MASS_KILOGRAMS,
+    MASS_MILLIGRAMS,
+    TIME_MILLISECONDS,
+    TIME_MINUTES,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.network import get_url
 from homeassistant.util.json import load_json, save_json
 
 _CONFIGURING = {}
@@ -23,8 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACCESS_TOKEN = "access_token"
 ATTR_REFRESH_TOKEN = "refresh_token"
-ATTR_CLIENT_ID = "client_id"
-ATTR_CLIENT_SECRET = "client_secret"
 ATTR_LAST_SAVED_AT = "last_saved_at"
 
 CONF_MONITORED_RESOURCES = "monitored_resources"
@@ -38,7 +48,10 @@ FITBIT_DEFAULT_RESOURCES = ["activities/steps"]
 
 SCAN_INTERVAL = datetime.timedelta(minutes=30)
 
-DEFAULT_CONFIG = {"client_id": "CLIENT_ID_HERE", "client_secret": "CLIENT_SECRET_HERE"}
+DEFAULT_CONFIG = {
+    CONF_CLIENT_ID: "CLIENT_ID_HERE",
+    CONF_CLIENT_SECRET: "CLIENT_SECRET_HERE",
+}
 
 FITBIT_RESOURCES_LIST = {
     "activities/activityCalories": ["Activity Calories", "cal", "fire"],
@@ -48,14 +61,14 @@ FITBIT_RESOURCES_LIST = {
     "activities/elevation": ["Elevation", "", "walk"],
     "activities/floors": ["Floors", "floors", "walk"],
     "activities/heart": ["Resting Heart Rate", "bpm", "heart-pulse"],
-    "activities/minutesFairlyActive": ["Minutes Fairly Active", "minutes", "walk"],
-    "activities/minutesLightlyActive": ["Minutes Lightly Active", "minutes", "walk"],
+    "activities/minutesFairlyActive": ["Minutes Fairly Active", TIME_MINUTES, "walk"],
+    "activities/minutesLightlyActive": ["Minutes Lightly Active", TIME_MINUTES, "walk"],
     "activities/minutesSedentary": [
         "Minutes Sedentary",
-        "minutes",
+        TIME_MINUTES,
         "seat-recline-normal",
     ],
-    "activities/minutesVeryActive": ["Minutes Very Active", "minutes", "run"],
+    "activities/minutesVeryActive": ["Minutes Very Active", TIME_MINUTES, "run"],
     "activities/steps": ["Steps", "steps", "walk"],
     "activities/tracker/activityCalories": ["Tracker Activity Calories", "cal", "fire"],
     "activities/tracker/calories": ["Tracker Calories", "cal", "fire"],
@@ -64,53 +77,57 @@ FITBIT_RESOURCES_LIST = {
     "activities/tracker/floors": ["Tracker Floors", "floors", "walk"],
     "activities/tracker/minutesFairlyActive": [
         "Tracker Minutes Fairly Active",
-        "minutes",
+        TIME_MINUTES,
         "walk",
     ],
     "activities/tracker/minutesLightlyActive": [
         "Tracker Minutes Lightly Active",
-        "minutes",
+        TIME_MINUTES,
         "walk",
     ],
     "activities/tracker/minutesSedentary": [
         "Tracker Minutes Sedentary",
-        "minutes",
+        TIME_MINUTES,
         "seat-recline-normal",
     ],
     "activities/tracker/minutesVeryActive": [
         "Tracker Minutes Very Active",
-        "minutes",
+        TIME_MINUTES,
         "run",
     ],
     "activities/tracker/steps": ["Tracker Steps", "steps", "walk"],
     "body/bmi": ["BMI", "BMI", "human"],
-    "body/fat": ["Body Fat", "%", "human"],
+    "body/fat": ["Body Fat", UNIT_PERCENTAGE, "human"],
     "body/weight": ["Weight", "", "human"],
     "devices/battery": ["Battery", None, None],
     "sleep/awakeningsCount": ["Awakenings Count", "times awaken", "sleep"],
-    "sleep/efficiency": ["Sleep Efficiency", "%", "sleep"],
-    "sleep/minutesAfterWakeup": ["Minutes After Wakeup", "minutes", "sleep"],
-    "sleep/minutesAsleep": ["Sleep Minutes Asleep", "minutes", "sleep"],
-    "sleep/minutesAwake": ["Sleep Minutes Awake", "minutes", "sleep"],
-    "sleep/minutesToFallAsleep": ["Sleep Minutes to Fall Asleep", "minutes", "sleep"],
+    "sleep/efficiency": ["Sleep Efficiency", UNIT_PERCENTAGE, "sleep"],
+    "sleep/minutesAfterWakeup": ["Minutes After Wakeup", TIME_MINUTES, "sleep"],
+    "sleep/minutesAsleep": ["Sleep Minutes Asleep", TIME_MINUTES, "sleep"],
+    "sleep/minutesAwake": ["Sleep Minutes Awake", TIME_MINUTES, "sleep"],
+    "sleep/minutesToFallAsleep": [
+        "Sleep Minutes to Fall Asleep",
+        TIME_MINUTES,
+        "sleep",
+    ],
     "sleep/startTime": ["Sleep Start Time", None, "clock"],
-    "sleep/timeInBed": ["Sleep Time in Bed", "minutes", "hotel"],
+    "sleep/timeInBed": ["Sleep Time in Bed", TIME_MINUTES, "hotel"],
 }
 
 FITBIT_MEASUREMENTS = {
     "en_US": {
-        "duration": "ms",
+        "duration": TIME_MILLISECONDS,
         "distance": "mi",
-        "elevation": "ft",
+        "elevation": LENGTH_FEET,
         "height": "in",
         "weight": "lbs",
         "body": "in",
         "liquids": "fl. oz.",
-        "blood glucose": "mg/dL",
+        "blood glucose": f"{MASS_MILLIGRAMS}/dL",
         "battery": "",
     },
     "en_GB": {
-        "duration": "milliseconds",
+        "duration": TIME_MILLISECONDS,
         "distance": "kilometers",
         "elevation": "meters",
         "height": "centimeters",
@@ -121,11 +138,11 @@ FITBIT_MEASUREMENTS = {
         "battery": "",
     },
     "metric": {
-        "duration": "milliseconds",
+        "duration": TIME_MILLISECONDS,
         "distance": "kilometers",
         "elevation": "meters",
         "height": "centimeters",
-        "weight": "kilograms",
+        "weight": MASS_KILOGRAMS,
         "body": "centimeters",
         "liquids": "milliliters",
         "blood glucose": "mmol/L",
@@ -168,18 +185,16 @@ def request_app_setup(hass, config, add_entities, config_path, discovery_info=No
         else:
             setup_platform(hass, config, add_entities, discovery_info)
 
-    start_url = f"{hass.config.api.base_url}{FITBIT_AUTH_CALLBACK_PATH}"
+    start_url = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
 
-    description = """Please create a Fitbit developer app at
+    description = f"""Please create a Fitbit developer app at
                        https://dev.fitbit.com/apps/new.
                        For the OAuth 2.0 Application Type choose Personal.
-                       Set the Callback URL to {}.
+                       Set the Callback URL to {start_url}.
                        They will provide you a Client ID and secret.
-                       These need to be saved into the file located at: {}.
+                       These need to be saved into the file located at: {config_path}.
                        Then come back here and hit the below button.
-                       """.format(
-        start_url, config_path
-    )
+                       """
 
     submit = "I have saved my Client ID and Client Secret into fitbit.conf."
 
@@ -205,7 +220,7 @@ def request_oauth_completion(hass):
     def fitbit_configuration_callback(callback_data):
         """Handle configuration updates."""
 
-    start_url = f"{hass.config.api.base_url}{FITBIT_AUTH_START}"
+    start_url = f"{get_url(hass)}{FITBIT_AUTH_START}"
 
     description = f"Please authorize Fitbit by visiting {start_url}"
 
@@ -240,8 +255,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     expires_at = config_file.get(ATTR_LAST_SAVED_AT)
     if None not in (access_token, refresh_token):
         authd_client = Fitbit(
-            config_file.get(ATTR_CLIENT_ID),
-            config_file.get(ATTR_CLIENT_SECRET),
+            config_file.get(CONF_CLIENT_ID),
+            config_file.get(CONF_CLIENT_SECRET),
             access_token=access_token,
             refresh_token=refresh_token,
             expires_at=expires_at,
@@ -294,12 +309,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     else:
         oauth = FitbitOauth2Client(
-            config_file.get(ATTR_CLIENT_ID), config_file.get(ATTR_CLIENT_SECRET)
+            config_file.get(CONF_CLIENT_ID), config_file.get(CONF_CLIENT_SECRET)
         )
 
-        redirect_uri = "{}{}".format(
-            hass.config.api.base_url, FITBIT_AUTH_CALLBACK_PATH
-        )
+        redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
 
         fitbit_auth_start_url, _ = oauth.authorize_token_url(
             redirect_uri=redirect_uri,
@@ -344,26 +357,20 @@ class FitbitAuthCallbackView(HomeAssistantView):
 
         result = None
         if data.get("code") is not None:
-            redirect_uri = "{}{}".format(
-                hass.config.api.base_url, FITBIT_AUTH_CALLBACK_PATH
-            )
+            redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
 
             try:
                 result = self.oauth.fetch_access_token(data.get("code"), redirect_uri)
             except MissingTokenError as error:
                 _LOGGER.error("Missing token: %s", error)
-                response_message = """Something went wrong when
+                response_message = f"""Something went wrong when
                 attempting authenticating with Fitbit. The error
-                encountered was {}. Please try again!""".format(
-                    error
-                )
+                encountered was {error}. Please try again!"""
             except MismatchingStateError as error:
                 _LOGGER.error("Mismatched state, CSRF error: %s", error)
-                response_message = """Something went wrong when
+                response_message = f"""Something went wrong when
                 attempting authenticating with Fitbit. The error
-                encountered was {}. Please try again!""".format(
-                    error
-                )
+                encountered was {error}. Please try again!"""
         else:
             _LOGGER.error("Unknown error when authing")
             response_message = """Something went wrong when
@@ -378,17 +385,15 @@ class FitbitAuthCallbackView(HomeAssistantView):
                 An unknown error occurred. Please try again!
                 """
 
-        html_response = """<html><head><title>Fitbit Auth</title></head>
-        <body><h1>{}</h1></body></html>""".format(
-            response_message
-        )
+        html_response = f"""<html><head><title>Fitbit Auth</title></head>
+        <body><h1>{response_message}</h1></body></html>"""
 
         if result:
             config_contents = {
                 ATTR_ACCESS_TOKEN: result.get("access_token"),
                 ATTR_REFRESH_TOKEN: result.get("refresh_token"),
-                ATTR_CLIENT_ID: self.oauth.client_id,
-                ATTR_CLIENT_SECRET: self.oauth.client_secret,
+                CONF_CLIENT_ID: self.oauth.client_id,
+                CONF_CLIENT_SECRET: self.oauth.client_secret,
                 ATTR_LAST_SAVED_AT: int(time.time()),
             }
         save_json(hass.config.path(FITBIT_CONFIG_FILE), config_contents)
@@ -413,7 +418,7 @@ class FitbitSensor(Entity):
         self.extra = extra
         self._name = FITBIT_RESOURCES_LIST[self.resource_type][0]
         if self.extra:
-            self._name = "{0} Battery".format(self.extra.get("deviceVersion"))
+            self._name = f"{self.extra.get('deviceVersion')} Battery"
         unit_type = FITBIT_RESOURCES_LIST[self.resource_type][1]
         if unit_type == "":
             split_resource = self.resource_type.split("/")
@@ -449,7 +454,7 @@ class FitbitSensor(Entity):
         if self.resource_type == "devices/battery" and self.extra:
             battery_level = BATTERY_LEVELS[self.extra.get("battery")]
             return icon_for_battery_level(battery_level=battery_level, charging=None)
-        return "mdi:{}".format(FITBIT_RESOURCES_LIST[self.resource_type][2])
+        return f"mdi:{FITBIT_RESOURCES_LIST[self.resource_type][2]}"
 
     @property
     def device_state_attributes(self):
@@ -502,7 +507,7 @@ class FitbitSensor(Entity):
                     self._state = raw_state
                 else:
                     try:
-                        self._state = "{0:,}".format(int(raw_state))
+                        self._state = f"{int(raw_state):,}"
                     except TypeError:
                         self._state = raw_state
 
@@ -513,8 +518,8 @@ class FitbitSensor(Entity):
         config_contents = {
             ATTR_ACCESS_TOKEN: token.get("access_token"),
             ATTR_REFRESH_TOKEN: token.get("refresh_token"),
-            ATTR_CLIENT_ID: self.client.client.client_id,
-            ATTR_CLIENT_SECRET: self.client.client.client_secret,
+            CONF_CLIENT_ID: self.client.client.client_id,
+            CONF_CLIENT_SECRET: self.client.client.client_secret,
             ATTR_LAST_SAVED_AT: int(time.time()),
         }
         save_json(self.config_path, config_contents)

@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.sensor import DOMAIN
+from homeassistant.const import VOLT
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -11,7 +12,7 @@ BASE_CFG = {
     "platform": "sma",
     "host": "1.1.1.1",
     "password": "",
-    "custom": {"my_sensor": {"key": "1234567890123", "unit": "V"}},
+    "custom": {"my_sensor": {"key": "1234567890123", "unit": VOLT}},
 }
 
 
@@ -23,6 +24,7 @@ async def test_sma_config(hass):
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: dict(BASE_CFG, sensors=sensors)}
         )
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.current_consumption")
     assert state

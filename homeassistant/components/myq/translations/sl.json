@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MyQ je \u017ee konfiguriran"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "invalid_auth": "Neveljavna avtentikacija",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "title": "Pove\u017eite se s prehodom MyQ"
+            }
+        }
+    }
+}

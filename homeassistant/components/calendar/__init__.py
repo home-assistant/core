@@ -6,7 +6,7 @@ import re
 from aiohttp import web
 
 from homeassistant.components import http
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import HTTP_BAD_REQUEST, STATE_OFF, STATE_ON
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -35,9 +35,9 @@ async def async_setup(hass, config):
     hass.http.register_view(CalendarListView(component))
     hass.http.register_view(CalendarEventView(component))
 
-    # Doesn't work in prod builds of the frontend: home-assistant-polymer#1289
-    # hass.components.frontend.async_register_built_in_panel(
-    #     'calendar', 'calendar', 'hass:calendar')
+    hass.components.frontend.async_register_built_in_panel(
+        "calendar", "calendar", "hass:calendar"
+    )
 
     await component.async_setup(config)
     return True
@@ -86,15 +86,15 @@ def calculate_offset(event, offset):
     summary = event.get("summary", "")
     # check if we have an offset tag in the message
     # time is HH:MM or MM
-    reg = "{}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)".format(offset)
+    reg = f"{offset}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)"
     search = re.search(reg, summary)
     if search and search.group(1):
         time = search.group(1)
         if ":" not in time:
             if time[0] == "+" or time[0] == "-":
-                time = "{}0:{}".format(time[0], time[1:])
+                time = f"{time[0]}0:{time[1:]}"
             else:
-                time = "0:{}".format(time)
+                time = f"0:{time}"
 
         offset_time = time_period_str(time)
         summary = (summary[: search.start()] + summary[search.end() :]).strip()
@@ -172,7 +172,7 @@ class CalendarEventView(http.HomeAssistantView):
     url = "/api/calendars/{entity_id}"
     name = "api:calendars:calendar"
 
-    def __init__(self, component):
+    def __init__(self, component: EntityComponent) -> None:
         """Initialize calendar view."""
         self.component = component
 
@@ -182,12 +182,12 @@ class CalendarEventView(http.HomeAssistantView):
         start = request.query.get("start")
         end = request.query.get("end")
         if None in (start, end, entity):
-            return web.Response(status=400)
+            return web.Response(status=HTTP_BAD_REQUEST)
         try:
             start_date = dt.parse_datetime(start)
             end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
-            return web.Response(status=400)
+            return web.Response(status=HTTP_BAD_REQUEST)
         event_list = await entity.async_get_events(
             request.app["hass"], start_date, end_date
         )
@@ -200,11 +200,11 @@ class CalendarListView(http.HomeAssistantView):
     url = "/api/calendars"
     name = "api:calendars"
 
-    def __init__(self, component):
+    def __init__(self, component: EntityComponent) -> None:
         """Initialize calendar view."""
         self.component = component
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
         hass = request.app["hass"]
         calendar_list = []

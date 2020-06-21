@@ -4,7 +4,7 @@ import logging
 from pyuptimerobot import UptimeRobot
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class UptimeRobotBinarySensor(BinarySensorDevice):
+class UptimeRobotBinarySensor(BinarySensorEntity):
     """Representation of a Uptime Robot binary sensor."""
 
     def __init__(self, api_key, up_robot, monitor_id, name, target):

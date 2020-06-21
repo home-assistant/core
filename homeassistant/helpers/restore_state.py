@@ -2,7 +2,7 @@
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Awaitable, Dict, List, Optional, Set, cast
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
@@ -19,9 +19,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
-
-# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-# mypy: no-warn-return-any
 
 DATA_RESTORE_STATE_TASK = "restore_state_task"
 
@@ -45,7 +42,7 @@ class StoredState:
         self.state = state
         self.last_seen = last_seen
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> Dict[str, Any]:
         """Return a dict representation of the stored state."""
         return {"state": self.state.as_dict(), "last_seen": self.last_seen}
 
@@ -104,7 +101,7 @@ class RestoreStateData:
                 load_instance(hass)
             )
 
-        return await task
+        return await cast(Awaitable["RestoreStateData"], task)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
@@ -115,6 +112,7 @@ class RestoreStateData:
         self.last_states: Dict[str, StoredState] = {}
         self.entity_ids: Set[str] = set()
 
+    @callback
     def async_get_stored_states(self) -> List[StoredState]:
         """Get the set of states which should be stored.
 
@@ -125,11 +123,11 @@ class RestoreStateData:
         now = dt_util.utcnow()
         all_states = self.hass.states.async_all()
         # Entities currently backed by an entity object
-        current_entity_ids = set(
+        current_entity_ids = {
             state.entity_id
             for state in all_states
             if not state.attributes.get(entity_registry.ATTR_RESTORED)
-        )
+        }
 
         # Start with the currently registered states
         stored_states = [
@@ -173,13 +171,13 @@ class RestoreStateData:
     def async_setup_dump(self, *args: Any) -> None:
         """Set up the restore state listeners."""
 
-        def _async_dump_states(*_: Any) -> None:
-            self.hass.async_create_task(self.async_dump_states())
+        async def _async_dump_states(*_: Any) -> None:
+            await self.async_dump_states()
 
         # Dump the initial states now. This helps minimize the risk of having
         # old states loaded by overwriting the last states once Home Assistant
         # has started and the old states have been read.
-        _async_dump_states()
+        self.hass.async_create_task(_async_dump_states())
 
         # Dump states periodically
         async_track_time_interval(self.hass, _async_dump_states, STATE_DUMP_INTERVAL)
@@ -209,15 +207,18 @@ class RestoreStateData:
         self.entity_ids.remove(entity_id)
 
 
-def _encode(value):
+def _encode(value: Any) -> Any:
     """Little helper to JSON encode a value."""
     try:
-        return JSONEncoder.default(None, value)
+        return JSONEncoder.default(
+            None,  # type: ignore
+            value,
+        )
     except TypeError:
         return value
 
 
-def _encode_complex(value):
+def _encode_complex(value: Any) -> Any:
     """Recursively encode all values with the JSONEncoder."""
     if isinstance(value, dict):
         return {_encode(key): _encode_complex(value) for key, value in value.items()}

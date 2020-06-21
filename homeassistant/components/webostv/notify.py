@@ -16,6 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_get_service(hass, config, discovery_info=None):
     """Return the notify service."""
 
+    if discovery_info is None:
+        return None
+
     host = discovery_info.get(CONF_HOST)
     icon_path = discovery_info.get(CONF_ICON)
 

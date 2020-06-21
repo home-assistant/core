@@ -1,8 +1,9 @@
 """The tests for the hassio component."""
 import asyncio
-from unittest.mock import patch
 
 import pytest
+
+from tests.async_mock import patch
 
 
 async def test_forward_request(hassio_client, aioclient_mock):
@@ -25,7 +26,7 @@ async def test_forward_request(hassio_client, aioclient_mock):
 )
 async def test_auth_required_forward_request(hassio_noauth_client, build_type):
     """Test auth required for normal request."""
-    resp = await hassio_noauth_client.post("/api/hassio/{}".format(build_type))
+    resp = await hassio_noauth_client.post(f"/api/hassio/{build_type}")
 
     # Check we got right response
     assert resp.status == 401
@@ -46,9 +47,9 @@ async def test_forward_request_no_auth_for_panel(
     hassio_client, build_type, aioclient_mock
 ):
     """Test no auth needed for ."""
-    aioclient_mock.get("http://127.0.0.1/{}".format(build_type), text="response")
+    aioclient_mock.get(f"http://127.0.0.1/{build_type}", text="response")
 
-    resp = await hassio_client.get("/api/hassio/{}".format(build_type))
+    resp = await hassio_client.get(f"/api/hassio/{build_type}")
 
     # Check we got right response
     assert resp.status == 200
@@ -60,10 +61,25 @@ async def test_forward_request_no_auth_for_panel(
 
 
 async def test_forward_request_no_auth_for_logo(hassio_client, aioclient_mock):
-    """Test no auth needed for ."""
+    """Test no auth needed for logo."""
     aioclient_mock.get("http://127.0.0.1/addons/bl_b392/logo", text="response")
 
     resp = await hassio_client.get("/api/hassio/addons/bl_b392/logo")
+
+    # Check we got right response
+    assert resp.status == 200
+    body = await resp.text()
+    assert body == "response"
+
+    # Check we forwarded command
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+async def test_forward_request_no_auth_for_icon(hassio_client, aioclient_mock):
+    """Test no auth needed for icon."""
+    aioclient_mock.get("http://127.0.0.1/addons/bl_b392/icon", text="response")
+
+    resp = await hassio_client.get("/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == 200

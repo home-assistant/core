@@ -3,6 +3,5 @@
   "name": "Awair",
   "documentation": "https://www.home-assistant.io/integrations/awair",
   "requirements": ["python_awair==0.0.4"],
-  "dependencies": [],
   "codeowners": ["@danielsjf"]
 }

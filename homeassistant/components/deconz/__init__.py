@@ -1,10 +1,11 @@
 """Support for deCONZ devices."""
 import voluptuous as vol
 
+from homeassistant.config_entries import _UNDEF
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from .config_flow import get_master_gateway
-from .const import CONF_MASTER_GATEWAY, DOMAIN
+from .const import CONF_BRIDGE_ID, CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN
 from .gateway import DeconzGateway
 from .services import async_setup_services, async_unload_services
 
@@ -37,8 +38,14 @@ async def async_setup_entry(hass, config_entry):
 
     # 0.104 introduced config entry unique id, this makes upgrading possible
     if config_entry.unique_id is None:
+
+        new_data = _UNDEF
+        if CONF_BRIDGE_ID in config_entry.data:
+            new_data = dict(config_entry.data)
+            new_data[CONF_GROUP_ID_BASE] = config_entry.data[CONF_BRIDGE_ID]
+
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=gateway.api.config.bridgeid
+            config_entry, unique_id=gateway.api.config.bridgeid, data=new_data
         )
 
     hass.data[DOMAIN][config_entry.unique_id] = gateway

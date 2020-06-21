@@ -42,7 +42,7 @@ class CiscoDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.port = config.get(CONF_PORT)
-        self.password = config.get(CONF_PASSWORD)
+        self.password = config[CONF_PASSWORD]
 
         self.last_results = {}
 

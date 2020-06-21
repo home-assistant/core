@@ -4,7 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elgato",
   "requirements": ["elgato==0.2.0"],
-  "dependencies": [],
   "zeroconf": ["_elg._tcp.local."],
   "codeowners": ["@frenck"],
   "quality_scale": "platinum"

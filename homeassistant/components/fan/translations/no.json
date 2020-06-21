@@ -1,0 +1,23 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Sl\u00e5 av {entity_name}",
+            "turn_on": "Sl\u00e5 p\u00e5 {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} er av",
+            "is_on": "{entity_name} er p\u00e5"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} sl\u00e5tt av",
+            "turned_on": "{entity_name} sl\u00e5tt p\u00e5"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        }
+    },
+    "title": "Vifte"
+}

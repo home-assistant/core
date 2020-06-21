@@ -54,7 +54,7 @@ class TOTPSensor(Entity):
     @callback
     def _call_loop(self):
         self._state = self._otp.now()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         # Update must occur at even TIME_STEP, e.g. 12:00:00, 12:00:30,
         # 12:01:00, etc. in order to have synced time (see RFC6238)

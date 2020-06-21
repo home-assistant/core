@@ -11,14 +11,20 @@ SPC = "spc"
 SUREPY = "surepy"
 
 CONF_HOUSEHOLD_ID = "household_id"
+CONF_FEEDERS = "feeders"
 CONF_FLAPS = "flaps"
+CONF_PARENT = "parent"
 CONF_PETS = "pets"
+CONF_PRODUCT_ID = "product_id"
 CONF_DATA = "data"
 
 SURE_IDS = "sure_ids"
 
 # platforms
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
+
+# sure petcare api
+SURE_API_TIMEOUT = 15
 
 # flap
 BATTERY_ICON = "mdi:battery"
