@@ -54,7 +54,6 @@ ATTR_TIME_PERIOD = "time_period"
 
 WATER_HEATER_TIMER_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
             cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
         ),
