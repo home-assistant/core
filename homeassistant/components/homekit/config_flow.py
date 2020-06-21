@@ -312,7 +312,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Choose entities to include from the domain."""
         if user_input is not None:
             self.homekit_options[CONF_FILTER] = {
-                CONF_INCLUDE_DOMAINS: self.homekit_options[CONF_INCLUDE_DOMAINS],
+                CONF_INCLUDE_DOMAINS: [],
                 CONF_EXCLUDE_DOMAINS: self.homekit_options.get(
                     CONF_EXCLUDE_DOMAINS, []
                 ),
@@ -330,10 +330,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_advanced()
 
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
+        domains_to_include = self.homekit_options[CONF_INCLUDE_DOMAINS]
+        for included_entity in entity_filter.get(CONF_INCLUDE_ENTITIES, []):
+            domain = included_entity.split(".")
+            if domain[0] not in domains_to_include:
+                domains_to_include.append(domain[0])
         all_supported_entities = await self.hass.async_add_executor_job(
-            _get_entities_matching_domains,
-            self.hass,
-            self.homekit_options[CONF_INCLUDE_DOMAINS],
+            _get_entities_matching_domains, self.hass, domains_to_include,
         )
         self.included_cameras = {
             entity_id
@@ -369,6 +372,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         filter_by_excluding = self.homekit_options.get(
             CONF_FILTER_BY_EXCLUDING, DEFAULT_FILTER_BY_EXCLUDING
         )
+        domains_to_include = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
+
+        # If we're not excluding, the Include list will be empty.
+        if not filter_by_excluding:
+            for included_entity in entity_filter.get(CONF_INCLUDE_ENTITIES, []):
+                domain = included_entity.split(".")
+                if domain[0] not in domains_to_include:
+                    domains_to_include.append(domain[0])
 
         data_schema = vol.Schema(
             {
@@ -376,8 +387,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_FILTER_BY_EXCLUDING, default=filter_by_excluding
                 ): bool,
                 vol.Optional(
-                    CONF_INCLUDE_DOMAINS,
-                    default=entity_filter.get(CONF_INCLUDE_DOMAINS, []),
+                    CONF_INCLUDE_DOMAINS, default=domains_to_include,
                 ): cv.multi_select(SUPPORTED_DOMAINS),
             }
         )

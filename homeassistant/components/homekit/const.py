@@ -12,7 +12,6 @@ HOMEKIT = "homekit"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
-CONF_FILTER_DOMAINS = "filter_domains"
 
 # ### Codecs ####
 VIDEO_CODEC_COPY = "copy"

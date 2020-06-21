@@ -38,16 +38,7 @@ def _mock_include_config_entry_with_options_populated():
         domain=DOMAIN,
         data={CONF_NAME: "mock_name", CONF_PORT: 12345},
         options={
-            "filter": {
-                "include_domains": [
-                    "fan",
-                    "vacuum",
-                    "media_player",
-                    "climate",
-                    "alarm_control_panel",
-                ],
-                "include_entities": ["climate.front_gate"],
-            },
+            "filter": {"include_entities": ["climate.front_gate", "climate.old"]},
             "filter_by_excluding": False,
             "auto_start": False,
             "safe_mode": False,
@@ -230,7 +221,7 @@ async def test_include_options_flow_advanced(hass):
         "filter": {
             "exclude_domains": [],
             "include_entities": ["climate.old"],
-            "include_domains": ["fan", "vacuum", "climate"],
+            "include_domains": [],
             "exclude_entities": [],
         },
         "safe_mode": True,
@@ -326,7 +317,7 @@ async def test_include_options_flow_basic(hass):
         "filter": {
             "exclude_domains": [],
             "include_entities": ["climate.old"],
-            "include_domains": ["fan", "vacuum", "climate"],
+            "include_domains": [],
             "exclude_entities": [],
         },
         "safe_mode": True,
@@ -509,7 +500,7 @@ async def test_include_options_flow_with_cameras(hass):
                 "camera.native_h264",
                 "camera.transcode_h264",
             ],
-            "include_domains": ["fan", "vacuum", "climate", "camera"],
+            "include_domains": [],
             "exclude_entities": [],
         },
         "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
@@ -569,7 +560,7 @@ async def test_include_options_flow_with_cameras(hass):
                 "camera.native_h264",
                 "camera.transcode_h264",
             ],
-            "include_domains": ["fan", "vacuum", "climate", "camera"],
+            "include_domains": [],
             "exclude_entities": [],
         },
         "entity_config": {"camera.native_h264": {}},
