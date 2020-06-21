@@ -4,7 +4,7 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_PORT
 
-from . import CONF_CONTAINERS, CONF_NODES, CONF_STORAGE, PROXMOX_CLIENTS, ProxmoxItemType
+from . import CONF_NODES, CONF_STORAGE, PROXMOX_CLIENTS, ProxmoxItemType
 
 ATTRIBUTION = "Data provided by Proxmox VE"
 _LOGGER = logging.getLogger(__name__)
@@ -68,12 +68,11 @@ class ProxmoxSensor(Entity):
         return {
             "node": self._item_node,
             "storagename": self._storagename,
-            "type": self._item_type.name,
+            "type": self._type,
             "gb_total": self._total,
             "gb_used": self._used,
             "gb_avail": self._avail,
             "content": self._content,
-            "type": self._type,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
@@ -85,10 +84,10 @@ class ProxmoxSensor(Entity):
             _LOGGER.warning("Failed to poll storage %s", self._storagename)
             return
 
-        self._state = round( item["used_fraction"] * 100, 1)
-        self._total = round( item["total"] / 1024/1024/1024, 1)
-        self._used = round( item["used"] / 1024/1024/1024, 1)
-        self._avail = round( item["avail"] / 1024/1024/1024, 1)
+        self._state = round(item["used_fraction"] * 100, 1)
+        self._total = round(item["total"] / 1024 / 1024 / 1024, 1)
+        self._used = round(item["used"] / 1024 / 1024 / 1024, 1)
+        self._avail = round(item["avail"] / 1024 / 1024 / 1024, 1)
         self._content = item["content"]
         self._type = item["type"]
 
