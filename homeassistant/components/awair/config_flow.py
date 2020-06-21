@@ -1,6 +1,6 @@
 """Config flow for Awair."""
 
-from typing import Union
+from typing import Optional
 
 from python_awair import Awair
 from python_awair.exceptions import AuthError, AwairError
@@ -36,7 +36,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             data={CONF_ACCESS_TOKEN: conf[CONF_ACCESS_TOKEN]},
         )
 
-    async def async_step_user(self, user_input: Union[dict, None] = None):
+    async def async_step_user(self, user_input: Optional[dict] = None):
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -61,7 +61,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input: Union[dict, None] = None):
+    async def async_step_reauth(self, user_input: Optional[dict] = None):
         """Handle re-auth if token invalid."""
         errors = {}
 
