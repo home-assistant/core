@@ -132,7 +132,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     player_discovery_unsubs = hass.data[DOMAIN].setdefault(PLAYER_DISCOVERY_UNSUBS, {})
     player_discovery_unsubs.setdefault(config_entry.unique_id)
 
-    async def _discovery():
+    async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
 
         async def _discovered_player(player):
