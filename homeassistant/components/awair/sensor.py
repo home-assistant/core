@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ACCESS_TOKEN
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_ACCESS_TOKEN
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -173,11 +173,6 @@ class AwairSensor(Entity):
         return SENSOR_TYPES[self._kind][ATTR_UNIT]
 
     @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
-
-    @property
     def device_state_attributes(self) -> dict:
         """Return the Awair Index alongside state attributes.
 
@@ -199,7 +194,7 @@ class AwairSensor(Entity):
 
         https://docs.developer.getawair.com/?version=latest#awair-score-and-index
         """
-        attrs = {}
+        attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if self._kind in self._air_data.indices:
             attrs["awair_index"] = abs(self._air_data.indices[self._kind])
         elif self._kind in DUST_ALIASES and API_DUST in self._air_data.indices:
