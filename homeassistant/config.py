@@ -39,6 +39,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_WHITELIST_EXTERNAL_DIRS,
+    CONF_WHITELIST_EXTERNAL_URLS,
     TEMP_CELSIUS,
     __version__,
 )
@@ -185,6 +186,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
             cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
         ),
+        vol.Optional(CONF_WHITELIST_EXTERNAL_URLS): vol.All(cv.ensure_list, [cv.url]),
         vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
         vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
             cv.ensure_list,
@@ -501,6 +503,10 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
     hac.whitelist_external_dirs = {hass.config.path("www")}
     if CONF_WHITELIST_EXTERNAL_DIRS in config:
         hac.whitelist_external_dirs.update(set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
+
+    # Init whitelist external URL list
+    if CONF_WHITELIST_EXTERNAL_URLS in config:
+        hac.whitelist_external_urls.update(set(config[CONF_WHITELIST_EXTERNAL_URLS]))
 
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])

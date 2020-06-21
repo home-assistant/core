@@ -177,6 +177,7 @@ CONF_WEEKDAY = "weekday"
 CONF_WHITE_VALUE = "white_value"
 CONF_WHITELIST = "whitelist"
 CONF_WHITELIST_EXTERNAL_DIRS = "whitelist_external_dirs"
+CONF_WHITELIST_EXTERNAL_URLS = "whitelist_external_urls"
 CONF_XY = "xy"
 CONF_ZONE = "zone"
 
