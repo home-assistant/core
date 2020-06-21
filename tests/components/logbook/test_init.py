@@ -1595,10 +1595,6 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     assert response.status == 200
     json_dict = await response.json()
 
-    import pprint
-
-    pprint.pprint(json_dict)
-
     assert len(json_dict) == 5
     assert json_dict[0]["entity_id"] == entity_id_test
     assert json_dict[1]["entity_id"] == entity_id_second
