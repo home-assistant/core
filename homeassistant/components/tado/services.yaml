@@ -1,5 +1,5 @@
 set_water_heater_timer:
-  description: Turn on water heater for a set time
+  description: Turn on water heater for a set time.
   fields:
     entity_id:
       description: Entity ID for the tado component to turn on for a set time.
