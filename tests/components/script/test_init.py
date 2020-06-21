@@ -473,6 +473,7 @@ async def test_config(hass):
 async def test_logbook_humanify_script_started_event(hass):
     """Test humanifying script started event."""
     await async_setup_component(hass, DOMAIN, {})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     event1, event2 = list(
         logbook.humanify(
@@ -487,6 +488,7 @@ async def test_logbook_humanify_script_started_event(hass):
                     {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
                 ),
             ],
+            entity_attr_cache,
         )
     )
 
