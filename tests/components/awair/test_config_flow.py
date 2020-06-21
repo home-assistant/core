@@ -106,6 +106,20 @@ async def test_import(hass):
         assert result["result"].unique_id == CONF_UNIQUE_ID
 
 
+async def test_import_aborts_on_api_error(hass):
+    """Test config.yaml imports on api error."""
+
+    with patch("python_awair.AwairClient.query", side_effect=AwairError()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_ACCESS_TOKEN: CONFIG[CONF_ACCESS_TOKEN]},
+        )
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "unknown"
+
+
 async def test_import_aborts_if_configured(hass):
     """Test config import doesn't re-import unnecessarily."""
 
@@ -160,6 +174,16 @@ async def test_reauth(hass):
         )
 
         assert result["errors"] == {CONF_ACCESS_TOKEN: "auth"}
+
+    with patch("python_awair.AwairClient.query", side_effect=AwairError()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "unique_id": CONF_UNIQUE_ID},
+            data=CONFIG,
+        )
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "unknown"
 
 
 async def test_create_entry(hass):
