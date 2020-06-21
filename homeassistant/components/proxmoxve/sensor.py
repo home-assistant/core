@@ -1,8 +1,8 @@
 """Sensor to read Proxmox VE data."""
 import logging
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_PORT
+from homeassistant.helpers.entity import Entity
 
 from . import CONF_NODES, CONF_STORAGE, PROXMOX_CLIENTS, ProxmoxItemType
 
@@ -59,7 +59,7 @@ class ProxmoxSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return '%'
+        return "%"
 
     @property
     def state(self):
