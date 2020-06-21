@@ -176,7 +176,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-            errors["base"] = "invalid_key"
+            errors[CONF_KEY] = "invalid_key"
 
         return self.async_show_form(
             step_id="settings", data_schema=GATEWAY_SETTINGS, errors=errors
