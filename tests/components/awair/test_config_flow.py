@@ -106,6 +106,32 @@ async def test_import(hass):
         assert result["result"].unique_id == CONFIG_ENTRY_UNIQUE_ID
 
 
+async def test_import_aborts_if_configured(hass):
+    """Test config import doesn't re-import unnecessarily."""
+
+    with patch(
+        "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, DEVICES_FIXTURE]
+    ), patch(
+        "homeassistant.components.awair.sensor.async_setup_entry", return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_ACCESS_TOKEN: CONFIG[CONF_ACCESS_TOKEN]},
+        )
+
+        assert result["result"].unique_id == CONFIG_ENTRY_UNIQUE_ID
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_ACCESS_TOKEN: CONFIG[CONF_ACCESS_TOKEN]},
+        )
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "already_setup"
+
+
 async def test_reauth(hass):
     """Test reauth flow."""
     with patch(
@@ -129,6 +155,15 @@ async def test_reauth(hass):
 
         assert result["type"] == "abort"
         assert result["reason"] == "reauth_successful"
+
+    with patch("python_awair.AwairClient.query", side_effect=AuthError()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "unique_id": CONFIG[CONF_EMAIL]},
+            data=CONFIG,
+        )
+
+        assert result["errors"] == {CONF_ACCESS_TOKEN: "auth"}
 
 
 async def test_create_entry(hass):
