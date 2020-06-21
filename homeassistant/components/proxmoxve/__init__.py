@@ -26,6 +26,7 @@ CONF_NODE = "node"
 CONF_NODES = "nodes"
 CONF_VMS = "vms"
 CONF_CONTAINERS = "containers"
+CONF_STORAGE = "storage"
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pam"
@@ -57,6 +58,9 @@ CONFIG_SCHEMA = vol.Schema(
                                         ],
                                         vol.Optional(CONF_CONTAINERS, default=[]): [
                                             cv.positive_int
+                                        ],
+                                        vol.Optional(CONF_STORAGE, default=[]): [
+                                            cv.string
                                         ],
                                     }
                                 )
@@ -107,6 +111,9 @@ def setup(hass, config):
         hass.helpers.discovery.load_platform(
             "binary_sensor", DOMAIN, {"entries": config[DOMAIN]}, config
         )
+        hass.helpers.discovery.load_platform(
+            "sensor", DOMAIN, {"entries": config[DOMAIN]}, config
+        )
         return True
 
     return False
@@ -117,6 +124,7 @@ class ProxmoxItemType(Enum):
 
     qemu = 0
     lxc = 1
+    storage = 2
 
 
 class ProxmoxClient:
