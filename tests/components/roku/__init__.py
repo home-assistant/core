@@ -33,6 +33,7 @@ def mock_connection(
     app: str = "roku",
     host: str = HOST,
     power: bool = True,
+    media_state: str = "close",
     error: bool = False,
     server_error: bool = False,
 ) -> None:
@@ -86,6 +87,12 @@ def mock_connection(
     aioclient_mock.get(
         f"{roku_url}/query/tv-channels",
         text=load_fixture("roku/rokutv-tv-channels.xml"),
+        headers={"Content-Type": "text/xml"},
+    )
+
+    aioclient_mock.get(
+        f"{roku_url}/query/media-player",
+        text=load_fixture(f"roku/media-player-{media_state}.xml"),
         headers={"Content-Type": "text/xml"},
     )
 
@@ -145,6 +152,7 @@ async def setup_integration(
     unique_id: str = UPNP_SERIAL,
     error: bool = False,
     power: bool = True,
+    media_state: str = "close",
     server_error: bool = False,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
@@ -161,6 +169,7 @@ async def setup_integration(
             host=host,
             error=error,
             power=power,
+            media_state=media_state,
             server_error=server_error,
         )
         await hass.config_entries.async_setup(entry.entry_id)

@@ -92,8 +92,9 @@ class TestMQTTComponent(unittest.TestCase):
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         self.calls = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -307,8 +308,9 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass = get_test_home_assistant()
         mock_mqtt_client(self.hass)
         self.calls = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -893,9 +895,8 @@ async def test_mqtt_ws_remove_discovered_device(
     hass, device_reg, entity_reg, hass_ws_client, mqtt_mock
 ):
     """Test MQTT websocket device removal."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    config_entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, config_entry)
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", config_entry)
 
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
@@ -926,9 +927,8 @@ async def test_mqtt_ws_remove_discovered_device_twice(
     hass, device_reg, hass_ws_client, mqtt_mock
 ):
     """Test MQTT websocket device removal."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    config_entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, config_entry)
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", config_entry)
 
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
@@ -961,9 +961,8 @@ async def test_mqtt_ws_remove_discovered_device_same_topic(
     hass, device_reg, hass_ws_client, mqtt_mock
 ):
     """Test MQTT websocket device removal."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    config_entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, config_entry)
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", config_entry)
 
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
@@ -1019,9 +1018,8 @@ async def test_mqtt_ws_get_device_debug_info(
     hass, device_reg, hass_ws_client, mqtt_mock
 ):
     """Test MQTT websocket device debug info."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    config_entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, config_entry)
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", config_entry)
 
     config = {
         "device": {"identifiers": ["0AFFD2"]},
@@ -1105,9 +1103,8 @@ async def test_debug_info_multiple_devices(hass, mqtt_mock):
         },
     ]
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
     registry = await hass.helpers.device_registry.async_get_registry()
 
     for d in devices:
@@ -1187,9 +1184,8 @@ async def test_debug_info_multiple_entities_triggers(hass, mqtt_mock):
         },
     ]
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
     registry = await hass.helpers.device_registry.async_get_registry()
 
     for c in config:
@@ -1265,9 +1261,8 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
         "unique_id": "veryunique",
     }
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
     registry = await hass.helpers.device_registry.async_get_registry()
 
     data = json.dumps(config)
@@ -1314,9 +1309,8 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
         "unique_id": "veryunique",
     }
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
     registry = await hass.helpers.device_registry.async_get_registry()
 
     data = json.dumps(config)
@@ -1376,9 +1370,8 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
         "unique_id": "veryunique",
     }
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
     registry = await hass.helpers.device_registry.async_get_registry()
 
     data = json.dumps(config)
@@ -1430,9 +1423,8 @@ async def test_debug_info_qos_retain(hass, mqtt_mock):
         "unique_id": "veryunique",
     }
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
     registry = await hass.helpers.device_registry.async_get_registry()
 
     data = json.dumps(config)

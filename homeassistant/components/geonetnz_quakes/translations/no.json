@@ -5,6 +5,10 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "mmi": "",
+                    "radius": ""
+                },
                 "title": "Fyll ut filterdetaljene."
             }
         }

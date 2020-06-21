@@ -11,6 +11,7 @@
                     "longitude": "Lengdegrad",
                     "name": "Navn"
                 },
+                "description": "",
                 "title": "Lokasjon"
             }
         }

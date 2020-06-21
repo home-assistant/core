@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_house_number": "Ung\u00fcltige Hausnummer"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_number": "Hausnummer",
+                    "zip_code": "Postleitzahl"
+                },
+                "description": "Gibt deine Adresse ein",
+                "title": "Avri"
+            }
+        }
+    },
+    "title": "Avri"
+}

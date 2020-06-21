@@ -175,10 +175,10 @@ def async_find_group_entity_id(hass, domain, group):
     return None
 
 
-async def async_enable_traffic(hass, zha_devices):
+async def async_enable_traffic(hass, zha_devices, enabled=True):
     """Allow traffic to flow through the gateway and the zha device."""
     for zha_device in zha_devices:
-        zha_device.update_available(True)
+        zha_device.update_available(enabled)
     await hass.async_block_till_done()
 
 

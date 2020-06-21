@@ -264,10 +264,10 @@ async def test_zeroconf_with_uuid_device_exists_abort(
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_empty_unique_id_required_abort(
+async def test_zeroconf_empty_unique_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we abort zeroconf flow if printer lacks (empty) unique identification."""
+    """Test zeroconf flow if printer lacks (empty) unique identification."""
     mock_connection(aioclient_mock, no_unique_id=True)
 
     discovery_info = {
@@ -278,14 +278,13 @@ async def test_zeroconf_empty_unique_id_required_abort(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "unique_id_required"
+    assert result["type"] == RESULT_TYPE_FORM
 
 
-async def test_zeroconf_unique_id_required_abort(
+async def test_zeroconf_no_unique_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we abort zeroconf flow if printer lacks unique identification."""
+    """Test zeroconf flow if printer lacks unique identification."""
     mock_connection(aioclient_mock, no_unique_id=True)
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
@@ -293,8 +292,7 @@ async def test_zeroconf_unique_id_required_abort(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "unique_id_required"
+    assert result["type"] == RESULT_TYPE_FORM
 
 
 async def test_full_user_flow_implementation(

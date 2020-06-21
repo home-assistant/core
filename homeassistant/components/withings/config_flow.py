@@ -11,8 +11,9 @@ from homeassistant.helpers import config_entry_oauth2_flow
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(const.DOMAIN)
-class WithingsFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
+class WithingsFlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=const.DOMAIN
+):
     """Handle a config flow."""
 
     DOMAIN = const.DOMAIN
@@ -33,6 +34,7 @@ class WithingsFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
                     AuthScope.USER_INFO.value,
                     AuthScope.USER_METRICS.value,
                     AuthScope.USER_ACTIVITY.value,
+                    AuthScope.USER_SLEEP_EVENTS.value,
                 ]
             )
         }
@@ -57,8 +59,20 @@ class WithingsFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
             data_schema=vol.Schema({vol.Required(const.PROFILE): vol.In(profiles)}),
         )
 
+    async def async_step_reauth(self, data: dict) -> dict:
+        """Prompt user to re-authenticate."""
+        if data is not None:
+            return await self.async_step_user()
+
+        return self.async_show_form(
+            step_id="reauth",
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            description_placeholders={"profile": self.context["profile"]},
+        )
+
     async def async_step_finish(self, data: dict) -> dict:
         """Finish the flow."""
         self._current_data = None
 
+        await self.async_set_unique_id(data["token"]["userid"], raise_on_progress=False)
         return self.async_create_entry(title=data[const.PROFILE], data=data)

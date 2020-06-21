@@ -42,7 +42,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add binary sensor from Axis device."""
         event = device.api.event[event_id]
 
-        if event.CLASS != CLASS_OUTPUT:
+        if event.CLASS != CLASS_OUTPUT and not (
+            event.CLASS == CLASS_LIGHT and event.TYPE == "Light"
+        ):
             async_add_entities([AxisBinarySensor(event, device)], True)
 
     device.listeners.append(

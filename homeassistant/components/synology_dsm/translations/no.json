@@ -25,7 +25,8 @@
                     "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
                     "username": "Brukernavn"
                 },
-                "description": "Vil du konfigurere {name} ({host})?"
+                "description": "Vil du konfigurere {name} ({host})?",
+                "title": ""
             },
             "user": {
                 "data": {
@@ -34,7 +35,8 @@
                     "port": "Port (valgfritt)",
                     "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
                     "username": "Brukernavn"
-                }
+                },
+                "title": ""
             }
         }
     },

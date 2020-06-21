@@ -116,17 +116,17 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
-    async def async_step_ssdp(self, user_input=None):
+    async def async_step_ssdp(self, discovery_info):
         """Handle a flow initialized by discovery."""
-        host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
+        host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         ip_address = await self.hass.async_add_executor_job(_get_ip, host)
 
         self._host = host
         self._ip = self.context[CONF_IP_ADDRESS] = ip_address
-        self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
-        self._model = user_input.get(ATTR_UPNP_MODEL_NAME)
+        self._manufacturer = discovery_info.get(ATTR_UPNP_MANUFACTURER)
+        self._model = discovery_info.get(ATTR_UPNP_MODEL_NAME)
         self._name = f"Samsung {self._model}"
-        self._id = user_input.get(ATTR_UPNP_UDN)
+        self._id = discovery_info.get(ATTR_UPNP_UDN)
         self._title = self._model
 
         # probably access denied
