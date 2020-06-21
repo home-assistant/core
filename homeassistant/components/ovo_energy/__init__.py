@@ -15,11 +15,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up the OVO Energy components."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up OVO Energy from a config entry."""
 
