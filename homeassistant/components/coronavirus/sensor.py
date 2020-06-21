@@ -55,7 +55,7 @@ class CoronavirusSensor(Entity):
             for case in self.coordinator.data.values():
                 value = getattr(case, self.info_type)
                 if value is None:
-                    return None
+                    continue
                 sum_cases += value
 
             return sum_cases
