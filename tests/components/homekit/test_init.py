@@ -17,6 +17,7 @@ async def test_humanify_homekit_changed_event(hass, hk_driver):
     """Test humanifying HomeKit changed event."""
     with patch("homeassistant.components.homekit.HomeKit"):
         assert await async_setup_component(hass, "homekit", {"homekit": {}})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     event1, event2 = list(
         logbook.humanify(
@@ -40,6 +41,7 @@ async def test_humanify_homekit_changed_event(hass, hk_driver):
                     },
                 ),
             ],
+            entity_attr_cache,
         )
     )
 
