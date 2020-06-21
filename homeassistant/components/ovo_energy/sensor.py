@@ -8,11 +8,7 @@ from ovoenergy import OVODailyElectricity, OVODailyGas, OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.components.ovo_energy import OVOEnergyDeviceEntity
-from homeassistant.components.ovo_energy.const import (
-    CONF_ACCOUNT_ID,
-    DATA_OVO_ENERGY_CLIENT,
-    DOMAIN,
-)
+from homeassistant.components.ovo_energy.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
@@ -28,8 +24,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up OVO Energy sensor based on a config entry."""
-    instance_key = f"{DOMAIN}_{entry.data[CONF_ACCOUNT_ID]}"
-    client = hass.data[instance_key][DATA_OVO_ENERGY_CLIENT]
+    client = hass.data[DOMAIN][entry.entry_id]
 
     now = datetime.utcnow()
     try:

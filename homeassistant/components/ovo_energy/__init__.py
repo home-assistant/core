@@ -5,11 +5,7 @@ from typing import Any, Dict
 import aiohttp
 from ovoenergy.ovoenergy import OVOEnergy
 
-from homeassistant.components.ovo_energy.const import (
-    CONF_ACCOUNT_ID,
-    DATA_OVO_ENERGY_CLIENT,
-    DOMAIN,
-)
+from homeassistant.components.ovo_energy.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -35,8 +31,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 
-    instance_key = f"{DOMAIN}_{entry.data[CONF_ACCOUNT_ID]}"
-    hass.data.setdefault(instance_key, {})[DATA_OVO_ENERGY_CLIENT] = client
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = client
 
     # Setup components
     hass.async_create_task(
@@ -51,7 +47,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool
     # Unload sensors
     await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
-    del hass.data[f"{DOMAIN}_{entry.data[CONF_ACCOUNT_ID]}"]
+    del hass.data[DOMAIN][entry.entry_id]
 
     return True
 
