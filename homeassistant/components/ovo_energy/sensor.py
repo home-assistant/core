@@ -80,15 +80,9 @@ class OVOEnergySensor(OVOEnergyDeviceEntity):
         self._coordinator = coordinator
         self._state = None
         self._attributes = None
-        self._available = False
         self._unit_of_measurement = unit_of_measurement
 
         super().__init__(client, key, name, icon)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._key
 
     @property
     def state(self) -> str:
@@ -104,11 +98,6 @@ class OVOEnergySensor(OVOEnergyDeviceEntity):
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
 
 
 class OVOEnergyLastElectricityReading(OVOEnergySensor):

@@ -64,6 +64,11 @@ class OVOEnergyEntity(Entity):
         self._available = True
 
     @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this sensor."""
+        return self._key
+
+    @property
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
@@ -77,6 +82,11 @@ class OVOEnergyEntity(Entity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
+
+    @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
 
     async def async_update(self) -> None:
         """Update OVO Energy entity."""
