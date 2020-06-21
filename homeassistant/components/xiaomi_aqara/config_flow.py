@@ -147,26 +147,36 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             sid = self.selected_gateway.sid
             protocol = self.selected_gateway.proto
 
-            # format_mac, for a gateway the sid equels the mac address
-            mac_address = format_mac(sid)
+            if key is not None:
+                # validate key by issueing stop ringtone playback command.
+                self.selected_gateway.key = key
+                valid_key = self.selected_gateway.write_to_hub(sid, mid=10000)
+            else:
+                valid_key = True
 
-            # set unique_id
-            unique_id = mac_address
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            if valid_key:
+                # format_mac, for a gateway the sid equels the mac address
+                mac_address = format_mac(sid)
 
-            return self.async_create_entry(
-                title=name,
-                data={
-                    CONF_HOST: ip_adress,
-                    CONF_PORT: port,
-                    CONF_MAC: mac_address,
-                    CONF_INTERFACE: self.interface,
-                    CONF_PROTOCOL: protocol,
-                    CONF_KEY: key,
-                    CONF_SID: sid,
-                },
-            )
+                # set unique_id
+                unique_id = mac_address
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=name,
+                    data={
+                        CONF_HOST: ip_adress,
+                        CONF_PORT: port,
+                        CONF_MAC: mac_address,
+                        CONF_INTERFACE: self.interface,
+                        CONF_PROTOCOL: protocol,
+                        CONF_KEY: key,
+                        CONF_SID: sid,
+                    },
+                )
+
+            errors["base"] = "invalid_key"
 
         return self.async_show_form(
             step_id="settings", data_schema=GATEWAY_SETTINGS, errors=errors
