@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         name="sensor",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=30),
+        update_interval=timedelta(seconds=300),
     )
 
     hass.data.setdefault(DOMAIN, {})
