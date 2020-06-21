@@ -27,8 +27,8 @@ from homeassistant.const import (
 
 from .const import (
     AWAIR_UUID,
+    CONF_UNIQUE_ID,
     CONFIG,
-    CONFIG_ENTRY_UNIQUE_ID,
     DEVICES_FIXTURE,
     GEN1_DATA_FIXTURE,
     GEN2_DATA_FIXTURE,
@@ -46,9 +46,7 @@ from tests.common import MockConfigEntry
 async def setup_awair(hass, fixtures):
     """Add Awair devices to hass, using specified fixtures for data."""
 
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=CONFIG_ENTRY_UNIQUE_ID, data=CONFIG
-    )
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=CONF_UNIQUE_ID, data=CONFIG)
     with patch("python_awair.AwairClient.query", side_effect=fixtures):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
