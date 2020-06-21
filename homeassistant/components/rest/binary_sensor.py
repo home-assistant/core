@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorEntity,
+    BinarySensorDevice,
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([RestBinarySensor(hass, rest, name, device_class, value_template,)])
 
 
-class RestBinarySensor(BinarySensorEntity):
+class RestBinarySensor(BinarySensorDevice):
     """Representation of a REST binary sensor."""
 
     def __init__(self, hass, rest, name, device_class, value_template):
@@ -154,3 +154,5 @@ class RestBinarySensor(BinarySensorEntity):
     def update(self):
         """Get the latest data from REST API and updates the state."""
         self.rest.update()
+        value = self.rest.data
+        self._state = value
