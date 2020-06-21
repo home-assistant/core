@@ -82,12 +82,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ALL_EVENT_TYPES = [
-    EVENT_STATE_CHANGED,
-    EVENT_LOGBOOK_ENTRY,
+HOMEASSISTANT_EVENTS = [
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 ]
+
+ALL_EVENT_TYPES = [EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY, *HOMEASSISTANT_EVENTS]
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -124,7 +124,9 @@ def async_describe_event(hass, domain, event_name, describe_callback):
 
 
 async def async_setup(hass, config):
-    """Listen for download events to download files."""
+    """Logbook setup."""
+
+    hass.data.setdefault(DOMAIN, {})
 
     @callback
     def log_message(service):
@@ -374,9 +376,14 @@ def _generate_filter_from_config(config):
     )
 
 
+def _all_entities_filter(_):
+    """Filter that accepts all entities."""
+    return True
+
+
 def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
-    entities_filter = _generate_filter_from_config(config)
+
     entity_attr_cache = EntityAttributeCache(hass)
 
     def yield_events(query):
@@ -389,9 +396,12 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
     with session_scope(hass=hass) as session:
         if entity_id is not None:
             entity_ids = [entity_id.lower()]
+            entities_filter = generate_filter([], entity_ids, [], [])
         elif config.get(CONF_EXCLUDE) or config.get(CONF_INCLUDE):
+            entities_filter = _generate_filter_from_config(config)
             entity_ids = _get_related_entity_ids(session, entities_filter)
         else:
+            entities_filter = _all_entities_filter
             entity_ids = None
 
         old_state = aliased(States, name="old_state")
@@ -456,7 +466,6 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
 
 
 def _keep_event(hass, event, entities_filter, entity_attr_cache):
-
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.entity_id
         if entity_id is None:
@@ -476,26 +485,25 @@ def _keep_event(hass, event, entities_filter, entity_attr_cache):
         ):
             # Don't show continuous sensor value changes in the logbook
             return False
-    elif event.event_type == EVENT_LOGBOOK_ENTRY:
-        event_data = event.data
-        domain = event_data.get(ATTR_DOMAIN)
-        entity_id = None
-    elif event.event_type in hass.data.get(DOMAIN, {}) and not event.data.get(
-        "entity_id"
-    ):
+    elif event.event_type in HOMEASSISTANT_EVENTS:
+        entity_id = f"{HA_DOMAIN}."
+    elif event.event_type in hass.data[DOMAIN] and ATTR_ENTITY_ID not in event.data:
         # If the entity_id isn't described, use the domain that describes
         # the event for filtering.
         domain = hass.data[DOMAIN][event.event_type][0]
-        entity_id = None
+        if domain is None:
+            return False
+        entity_id = f"{domain}."
     else:
         event_data = event.data
-        domain = event_data.get(ATTR_DOMAIN)
-        entity_id = event_data.get("entity_id")
+        entity_id = event_data.get(ATTR_ENTITY_ID)
+        if entity_id is None:
+            domain = event_data.get(ATTR_DOMAIN)
+            if domain is None:
+                return False
+            entity_id = f"{domain}."
 
-    if not entity_id and domain:
-        entity_id = f"{domain}."
-
-    return not entity_id or entities_filter(entity_id)
+    return entities_filter(entity_id)
 
 
 def _entry_message_from_event(hass, entity_id, domain, event, entity_attr_cache):
