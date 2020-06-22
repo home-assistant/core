@@ -193,6 +193,95 @@ async def _logbook_filtering(hass, last_changed, last_updated):
 
 
 @benchmark
+async def logbook_filtering_entity_id(hass):
+    """Run a 100k state changes through a logbook entity filter."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components import logbook
+
+    config = {
+        "include": {
+            "domains": [
+                "automation",
+                "script",
+                "group",
+                "media_player",
+                "custom_component",
+            ],
+            "entity_globs": [
+                "binary_sensor.*_contact",
+                "binary_sensor.*_occupancy",
+                "binary_sensor.*_detected",
+                "binary_sensor.*_active",
+                "input_*",
+                "device_tracker.*_phone",
+                "switch.*_light",
+                "binary_sensor.*_charging",
+                "binary_sensor.*_lock",
+                "binary_sensor.*_connected",
+            ],
+            "entities": [
+                "test.entity_1",
+                "test.entity_2",
+                "binary_sensor.garage_door_open",
+                "test.entity_3",
+                "test.entity_4",
+            ],
+        },
+        "exclude": {
+            "domains": ["input_number"],
+            "entity_globs": ["media_player.google_*", "group.all_*"],
+        },
+    }
+
+    entity_ids = [
+        "automation.home_arrival",
+        "script.shut_off_house",
+        "binary_sensor.garage_door_open",
+        "binary_sensor.front_door_lock",
+        "binary_sensor.kitchen_motion_sensor_occupancy",
+        "switch.desk_lamp",
+        "light.dining_room",
+        "input_boolean.guest_staying_over",
+        "person.eleanor_fant",
+        "alert.issue_at_home",
+        "calendar.eleanor_fant_s_calendar",
+        "sun.sun",
+    ]
+    now = dt_util.utcnow()
+    events = [
+        _create_state_changed_event_from_old_new(
+            entity_id,
+            now,
+            {"entity_id": entity_id, "state": "old"},
+            {
+                "entity_id": entity_id,
+                "state": "new",
+                "last_changed": 1,
+                "last_updated": 1,
+            },
+        )
+        for entity_id in entity_ids
+    ]
+
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
+
+    def yield_events(events):
+        # pylint: disable=protected-access
+        entities_filter = logbook._generate_filter_from_config(config)
+        size = len(events)
+        for i in range(10 ** 5):
+            event = events[i % size]
+            if logbook._keep_event(hass, event, entities_filter, entity_attr_cache):
+                yield event
+
+    start = timer()
+
+    list(logbook.humanify(hass, yield_events(events), entity_attr_cache))
+
+    return timer() - start
+
+
+@benchmark
 async def valid_entity_id(hass):
     """Run valid entity ID a million times."""
     start = timer()
