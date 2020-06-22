@@ -39,17 +39,20 @@ DOMAIN = const.DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.All(
-            cv.deprecated(const.CONF_PROFILES, invalidation_version="0.114"),
-            vol.Schema(
-                {
-                    vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Required(CONF_CLIENT_SECRET): vol.All(
-                        cv.string, vol.Length(min=1)
-                    ),
-                    vol.Optional(const.CONF_USE_WEBHOOK, default=False): cv.boolean,
-                }
-            ),
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
+                vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Length(min=1)),
+                vol.Optional(const.CONF_USE_WEBHOOK, default=False): cv.boolean,
+                cv.deprecated(
+                    const.CONF_PROFILES, invalidation_version="0.114"
+                ): vol.All(
+                    cv.ensure_list,
+                    vol.Unique(),
+                    vol.Length(min=1),
+                    [vol.All(cv.string, vol.Length(min=1))],
+                ),
+            }
         )
     },
     extra=vol.ALLOW_EXTRA,
