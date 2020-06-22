@@ -214,7 +214,7 @@ async def test_attributes_app(
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Netflix"
 
 
-async def test_attributes_media_paused(
+async def test_attributes_app_media_paused(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test attributes for app with paused media."""
