@@ -567,7 +567,7 @@ pycoolmasternet==0.0.4
 pycountry==19.8.18
 
 # homeassistant.components.daikin
-pydaikin==2.1.2
+pydaikin==2.2.0
 
 # homeassistant.components.deconz
 pydeconz==71
