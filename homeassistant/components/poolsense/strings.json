@@ -10,7 +10,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
