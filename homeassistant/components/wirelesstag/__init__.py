@@ -77,12 +77,15 @@ class WirelessTagPlatform(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError as vex:
-            _LOGGER.error("Invalid JSON: %s", str(vex))
+            _LOGGER.error("Invalid JSON for %s: %s", event, vex)
+            return
 
         if event == "update":
             await self.handle_tag_update(data)
         elif event == "binary":
             await self.handle_binary_update(data)
+        else:
+            _LOGGER.warning("Received unknown event %s", event)
 
         return self.json({})
 
@@ -150,33 +153,21 @@ class WirelessTagPlatform(HomeAssistantView):
     async def handle_tag_update(self, data):
         """Handle push event from wireless tag manager."""
         _LOGGER.info("Push notification for update arrived: %s", data)
-        try:
-            tag_id = data.get("id")
-            mac = data.get("mac")
-            async_dispatcher_send(
-                self.hass, SIGNAL_TAG_UPDATE.format(tag_id, mac), data
-            )
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error(
-                "Unable to handle tag update: %s error: %s", str(data), str(ex),
-            )
+
+        tag_id = data.get("id")
+        mac = data.get("mac")
+        async_dispatcher_send(self.hass, SIGNAL_TAG_UPDATE.format(tag_id, mac), data)
 
     async def handle_binary_update(self, data):
         """Handle push notifications for binary (on/off) events."""
         _LOGGER.info("Push notification for binary event arrived: %s", data)
-        try:
-            tag_id = data.get("id")
-            event_type = data.get("type")
-            mac = data.get("mac")
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
-                data,
-            )
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error(
-                "Unable to handle tag binary update: %s error: %s", str(data), str(ex),
-            )
+
+        tag_id = data.get("id")
+        event_type = data.get("type")
+        mac = data.get("mac")
+        async_dispatcher_send(
+            self.hass, SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac), data,
+        )
 
 
 def setup(hass, config):
