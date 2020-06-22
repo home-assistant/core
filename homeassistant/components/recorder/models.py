@@ -28,7 +28,7 @@ SCHEMA_VERSION = 8
 
 _LOGGER = logging.getLogger(__name__)
 
-DB_TIMEZONE = "Z"
+DB_TIMEZONE = "+00:00"
 
 
 class Events(Base):  # type: ignore
@@ -202,3 +202,13 @@ def process_timestamp(ts):
         return ts.replace(tzinfo=dt_util.UTC)
 
     return dt_util.as_utc(ts)
+
+
+def process_timestamp_to_utc_isoformat(ts):
+    """Process a timestamp into UTC isotime."""
+    if ts is None:
+        return None
+    if ts.tzinfo is None:
+        return f"{ts.isoformat()}{DB_TIMEZONE}"
+
+    return dt_util.as_utc(ts).isoformat()

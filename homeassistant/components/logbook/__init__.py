@@ -11,7 +11,12 @@ import voluptuous as vol
 
 from homeassistant.components import sun
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder.models import Events, States, process_timestamp
+from homeassistant.components.recorder.models import (
+    Events,
+    States,
+    process_timestamp,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.util import (
     QUERY_RETRY_WAIT,
     RETRIES,
@@ -248,7 +253,7 @@ def humanify(hass, events, entity_attr_cache, prev_states=None):
             if event.event_type in external_events:
                 domain, describe_event = external_events[event.event_type]
                 data = describe_event(event)
-                data["when"] = event.time_fired
+                data["when"] = event.time_fired_isoformat
                 data["domain"] = domain
                 data["context_user_id"] = event.context_user_id
                 yield data
@@ -275,7 +280,7 @@ def humanify(hass, events, entity_attr_cache, prev_states=None):
                 ) or split_entity_id(entity_id)[1].replace("_", " ")
 
                 yield {
-                    "when": event.time_fired,
+                    "when": event.time_fired_isoformat,
                     "name": name,
                     "message": _entry_message_from_event(
                         hass, entity_id, domain, event, entity_attr_cache
@@ -290,7 +295,7 @@ def humanify(hass, events, entity_attr_cache, prev_states=None):
                     continue
 
                 yield {
-                    "when": event.time_fired,
+                    "when": event.time_fired_isoformat,
                     "name": "Home Assistant",
                     "message": "started",
                     "domain": HA_DOMAIN,
@@ -304,7 +309,7 @@ def humanify(hass, events, entity_attr_cache, prev_states=None):
                     action = "stopped"
 
                 yield {
-                    "when": event.time_fired,
+                    "when": event.time_fired_isoformat,
                     "name": "Home Assistant",
                     "message": action,
                     "domain": HA_DOMAIN,
@@ -322,7 +327,7 @@ def humanify(hass, events, entity_attr_cache, prev_states=None):
                         pass
 
                 yield {
-                    "when": event.time_fired,
+                    "when": event.time_fired_isoformat,
                     "name": event_data.get(ATTR_NAME),
                     "message": event_data.get(ATTR_MESSAGE),
                     "domain": domain,
@@ -601,6 +606,7 @@ class LazyEventPartialState:
         "_row",
         "_event_data",
         "_time_fired",
+        "_time_fired_isoformat",
         "_attributes",
         "event_type",
         "entity_id",
@@ -613,6 +619,7 @@ class LazyEventPartialState:
         self._row = row
         self._event_data = None
         self._time_fired = None
+        self._time_fired_isoformat = None
         self._attributes = None
         self.event_type = self._row.event_type
         self.entity_id = self._row.entity_id
@@ -661,6 +668,18 @@ class LazyEventPartialState:
                 process_timestamp(self._row.time_fired) or dt_util.utcnow()
             )
         return self._time_fired
+
+    @property
+    def time_fired_isoformat(self):
+        """Time event was fired in utc isoformat."""
+        if not self._time_fired_isoformat:
+            if self._time_fired:
+                self._time_fired_isoformat = self._time_fired.isoformat()
+            else:
+                self._time_fired_isoformat = process_timestamp_to_utc_isoformat(
+                    self._row.time_fired or dt_util.utcnow()
+                )
+        return self._time_fired_isoformat
 
     @property
     def has_old_and_new_state(self):
