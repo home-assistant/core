@@ -423,7 +423,7 @@ class HistoryPeriodView(HomeAssistantView):
         self, request: web.Request, datetime: Optional[str] = None
     ) -> web.Response:
         """Return history over a period of time."""
-
+        datetime_ = None
         if datetime:
             datetime_ = dt_util.parse_datetime(datetime)
 
