@@ -11,8 +11,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHan
 
 from .const import CONF_AGREEMENT, CONF_AGREEMENT_ID, CONF_MIGRATE, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a Toon config flow."""
@@ -85,7 +83,6 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 ),
             )
 
-        _LOGGER.error(user_input)
         agreement_index = agreements_list.index(user_input[CONF_AGREEMENT])
         return await self._create_entry(self.agreements[agreement_index])
 
