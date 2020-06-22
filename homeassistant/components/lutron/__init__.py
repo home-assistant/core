@@ -126,7 +126,7 @@ async def async_setup_entry(hass, entry):
                 hass_button = LutronButton(hass, hass_area, keypad, button)
                 _LOGGER.debug("Adding Button %s", hass_button.id)
                 hass_data[LUTRON_BUTTONS][hass_button.id] = hass_button
-        if area.occupancy_group is not None:
+        if area.occupancy_group is not None and area.sensors:
             hass_data[LUTRON_DEVICES]["binary_sensor"].append(
                 (hass_area, area.occupancy_group)
             )
