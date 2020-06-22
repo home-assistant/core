@@ -36,7 +36,7 @@ async def async_setup_entry(
 
     sensors = [
         ToonElectricityMeterDeviceSensor(coordinator, key=key)
-        for key in {
+        for key in (
             "power_average_daily",
             "power_average",
             "power_daily_cost",
@@ -46,21 +46,21 @@ async def async_setup_entry(
             "power_value",
             "solar_meter_reading_low_produced",
             "solar_meter_reading_produced",
-        }
+        )
     ]
 
     if coordinator.data.gas_usage and coordinator.data.gas_usage.is_smart:
         sensors.extend(
             [
                 ToonGasMeterDeviceSensor(coordinator, key=key)
-                for key in {
+                for key in (
                     "gas_average_daily",
                     "gas_average",
                     "gas_daily_cost",
                     "gas_daily_usage",
                     "gas_meter_reading",
                     "gas_value",
-                }
+                )
             ]
         )
 
