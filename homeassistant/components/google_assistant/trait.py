@@ -988,6 +988,14 @@ class ArmDisArmTrait(_Trait):
         STATE_ALARM_TRIGGERED: SERVICE_ALARM_TRIGGER,
     }
 
+    state_to_support = {
+        STATE_ALARM_ARMED_HOME: alarm_control_panel.const.SUPPORT_ALARM_ARM_HOME,
+        STATE_ALARM_ARMED_AWAY: alarm_control_panel.const.SUPPORT_ALARM_ARM_AWAY,
+        STATE_ALARM_ARMED_NIGHT: alarm_control_panel.const.SUPPORT_ALARM_ARM_NIGHT,
+        STATE_ALARM_ARMED_CUSTOM_BYPASS: alarm_control_panel.const.SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+        STATE_ALARM_TRIGGERED: alarm_control_panel.const.SUPPORT_ALARM_TRIGGER,
+    }
+
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
@@ -998,11 +1006,20 @@ class ArmDisArmTrait(_Trait):
         """Return if the trait might ask for 2FA."""
         return True
 
+    def _supported_states(self):
+        """Return supported states."""
+        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        return [
+            state
+            for state, required_feature in self.state_to_support.items()
+            if features & required_feature != 0
+        ]
+
     def sync_attributes(self):
         """Return ArmDisarm attributes for a sync request."""
         response = {}
         levels = []
-        for state in self.state_to_service:
+        for state in self._supported_states():
             # level synonyms are generated from state names
             # 'armed_away' becomes 'armed away' or 'away'
             level_synonym = [state.replace("_", " ")]
@@ -1014,6 +1031,7 @@ class ArmDisArmTrait(_Trait):
                 "level_values": [{"level_synonym": level_synonym, "lang": "en"}],
             }
             levels.append(level)
+
         response["availableArmLevels"] = {"levels": levels, "ordered": False}
         return response
 
@@ -1031,11 +1049,26 @@ class ArmDisArmTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an ArmDisarm command."""
         if params["arm"] and not params.get("cancel"):
-            if self.state.state == params["armLevel"]:
+            arm_level = params.get("armLevel")
+
+            # If no arm level given, we can only arm it if there is
+            # only one supported arm type. We never default to triggered.
+            if not arm_level:
+                states = self._supported_states()
+
+                if STATE_ALARM_TRIGGERED in states:
+                    states.remove(STATE_ALARM_TRIGGERED)
+
+                if len(states) != 1:
+                    raise SmartHomeError(ERR_NOT_SUPPORTED, "ArmLevel missing")
+
+                arm_level = states[0]
+
+            if self.state.state == arm_level:
                 raise SmartHomeError(ERR_ALREADY_ARMED, "System is already armed")
             if self.state.attributes["code_arm_required"]:
                 _verify_pin_challenge(data, self.state, challenge)
-            service = self.state_to_service[params["armLevel"]]
+            service = self.state_to_service[arm_level]
         # disarm the system without asking for code when
         # 'cancel' arming action is received while current status is pending
         elif (
