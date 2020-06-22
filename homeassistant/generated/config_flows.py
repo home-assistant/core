@@ -139,6 +139,7 @@ FLOWS = [
     "smappee",
     "smartthings",
     "smhi",
+    "sms",
     "solaredge",
     "solarlog",
     "soma",
