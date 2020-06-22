@@ -47,6 +47,7 @@ SERVICE_XIAOMI_GW = "xiaomi_gw"
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
+    "logitech_mediaserver": "squeezebox",
 }
 
 SERVICE_HANDLERS = {
@@ -64,7 +65,6 @@ SERVICE_HANDLERS = {
     SERVICE_FREEBOX: ("freebox", None),
     SERVICE_YEELIGHT: ("yeelight", None),
     "yamaha": ("media_player", "yamaha"),
-    "logitech_mediaserver": ("media_player", "squeezebox"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
     "bose_soundtouch": ("media_player", "soundtouch"),

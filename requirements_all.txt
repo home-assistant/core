@@ -952,7 +952,7 @@ ndms2_client==0.0.11
 nessclient==0.9.15
 
 # homeassistant.components.netdata
-netdata==0.1.2
+netdata==0.2.0
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
@@ -992,7 +992,7 @@ numato-gpio==0.7.1
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.5
+numpy==1.19.0
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1643,7 +1643,7 @@ pysonos==0.0.31
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.2.1
+pysqueezebox==0.2.4
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
@@ -1679,7 +1679,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.5
+python-ecobee-api==0.2.7
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11

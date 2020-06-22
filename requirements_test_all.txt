@@ -439,7 +439,7 @@ numato-gpio==0.7.1
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.5
+numpy==1.19.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -729,8 +729,11 @@ pysonos==0.0.31
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
+# homeassistant.components.squeezebox
+pysqueezebox==0.2.4
+
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.5
+python-ecobee-api==0.2.7
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0

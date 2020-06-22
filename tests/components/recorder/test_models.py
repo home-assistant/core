@@ -201,6 +201,7 @@ async def test_process_timestamp():
     assert process_timestamp(datetime_hst_timezone) == datetime(
         2016, 7, 9, 21, 31, tzinfo=dt.UTC
     )
+    assert process_timestamp(None) is None
 
 
 async def test_process_timestamp_to_utc_isoformat():
@@ -236,3 +237,4 @@ async def test_process_timestamp_to_utc_isoformat():
         process_timestamp_to_utc_isoformat(datetime_hst_timezone)
         == "2016-07-09T21:31:00+00:00"
     )
+    assert process_timestamp_to_utc_isoformat(None) is None
