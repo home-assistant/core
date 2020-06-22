@@ -8,7 +8,6 @@ import logging
 from operator import attrgetter
 import os
 import ssl
-import sys
 from typing import Any, Callable, List, Optional, Union
 
 import attr
@@ -88,7 +87,6 @@ CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
-CONF_TLS_VERSION = "tls_version"
 
 CONF_COMMAND_TOPIC = "command_topic"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
@@ -181,9 +179,6 @@ CONFIG_SCHEMA = vol.Schema(
                     CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
                 ): cv.isfile,
                 vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-                vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL): vol.Any(
-                    "auto", "1.0", "1.1", "1.2"
-                ),
                 vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
                     cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
                 ),
@@ -692,21 +687,6 @@ class MQTT:
         elif certificate == "auto":
             certificate = certifi.where()
 
-        # Be able to override versions other than TLSv1.0 under Python3.6
-        conf_tls_version: str = self.conf.get(CONF_TLS_VERSION)
-        if conf_tls_version == "1.2":
-            tls_version = ssl.PROTOCOL_TLSv1_2
-        elif conf_tls_version == "1.1":
-            tls_version = ssl.PROTOCOL_TLSv1_1
-        elif conf_tls_version == "1.0":
-            tls_version = ssl.PROTOCOL_TLSv1
-        else:
-            # Python3.6 supports automatic negotiation of highest TLS version
-            if sys.hexversion >= 0x03060000:
-                tls_version = ssl.PROTOCOL_TLS  # pylint: disable=no-member
-            else:
-                tls_version = ssl.PROTOCOL_TLSv1
-
         client_key = self.conf.get(CONF_CLIENT_KEY)
         client_cert = self.conf.get(CONF_CLIENT_CERT)
         tls_insecure = self.conf.get(CONF_TLS_INSECURE)
@@ -715,7 +695,7 @@ class MQTT:
                 certificate,
                 certfile=client_cert,
                 keyfile=client_key,
-                tls_version=tls_version,
+                tls_version=ssl.PROTOCOL_TLS,
             )
 
             if tls_insecure is not None:
