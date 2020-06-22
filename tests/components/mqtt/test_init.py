@@ -26,7 +26,6 @@ from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
     async_fire_time_changed,
-    async_mock_mqtt_component,
     mock_device_registry,
     mock_registry,
 )
@@ -77,9 +76,11 @@ def record_calls(calls):
     return record_calls
 
 
-async def test_mqtt_connects_on_home_assistant_mqtt_setup(hass, mqtt_mock):
+async def test_mqtt_connects_on_home_assistant_mqtt_setup(
+    hass, mqtt_client_mock, mqtt_mock
+):
     """Test if client is connected after mqtt init on bootstrap."""
-    assert mqtt_mock._mqttc.connect.call_count == 1
+    assert mqtt_client_mock.connect.call_count == 1
 
 
 async def test_mqtt_disconnects_on_home_assistant_stop(hass, mqtt_mock):
@@ -574,14 +575,16 @@ async def test_subscribe_special_characters(hass, mqtt_mock, calls, record_calls
     assert calls[0][0].payload == payload
 
 
-async def test_retained_message_on_subscribe_received(hass, mqtt_mock):
+async def test_retained_message_on_subscribe_received(
+    hass, mqtt_client_mock, mqtt_mock
+):
     """Test every subscriber receives retained message on subscribe."""
 
     def side_effect(*args):
         async_fire_mqtt_message(hass, "test/state", "online")
         return 0, 0
 
-    mqtt_mock._mqttc.subscribe.side_effect = side_effect
+    mqtt_client_mock.subscribe.side_effect = side_effect
 
     # Fake that the client is connected
     mqtt_mock.connected = True
@@ -597,7 +600,9 @@ async def test_retained_message_on_subscribe_received(hass, mqtt_mock):
     assert calls_b.called
 
 
-async def test_not_calling_unsubscribe_with_active_subscribers(hass, mqtt_mock):
+async def test_not_calling_unsubscribe_with_active_subscribers(
+    hass, mqtt_client_mock, mqtt_mock
+):
     """Test not calling unsubscribe() when other subscribers are active."""
     # Fake that the client is connected
     mqtt_mock.connected = True
@@ -605,34 +610,36 @@ async def test_not_calling_unsubscribe_with_active_subscribers(hass, mqtt_mock):
     unsub = await mqtt.async_subscribe(hass, "test/state", None)
     await mqtt.async_subscribe(hass, "test/state", None)
     await hass.async_block_till_done()
-    assert mqtt_mock._mqttc.subscribe.called
+    assert mqtt_client_mock.subscribe.called
 
     unsub()
     await hass.async_block_till_done()
-    assert not mqtt_mock._mqttc.unsubscribe.called
+    assert not mqtt_client_mock.unsubscribe.called
 
 
-async def test_restore_subscriptions_on_reconnect(hass, mqtt_mock):
+async def test_restore_subscriptions_on_reconnect(hass, mqtt_client_mock, mqtt_mock):
     """Test subscriptions are restored on reconnect."""
     # Fake that the client is connected
     mqtt_mock.connected = True
 
     await mqtt.async_subscribe(hass, "test/state", None)
     await hass.async_block_till_done()
-    assert mqtt_mock._mqttc.subscribe.call_count == 1
+    assert mqtt_client_mock.subscribe.call_count == 1
 
     mqtt_mock._mqtt_on_disconnect(None, None, 0)
     mqtt_mock._mqtt_on_connect(None, None, None, 0)
     await hass.async_block_till_done()
-    assert mqtt_mock._mqttc.subscribe.call_count == 2
+    assert mqtt_client_mock.subscribe.call_count == 2
 
 
-async def test_restore_all_active_subscriptions_on_reconnect(hass, mqtt_mock):
+async def test_restore_all_active_subscriptions_on_reconnect(
+    hass, mqtt_client_mock, mqtt_mock
+):
     """Test active subscriptions are restored correctly on reconnect."""
     # Fake that the client is connected
     mqtt_mock.connected = True
 
-    mqtt_mock._mqttc.subscribe.side_effect = (
+    mqtt_client_mock.subscribe.side_effect = (
         (0, 1),
         (0, 2),
         (0, 3),
@@ -649,42 +656,44 @@ async def test_restore_all_active_subscriptions_on_reconnect(hass, mqtt_mock):
         call("test/state", 0),
         call("test/state", 1),
     ]
-    assert mqtt_mock._mqttc.subscribe.mock_calls == expected
+    assert mqtt_client_mock.subscribe.mock_calls == expected
 
     unsub()
     await hass.async_block_till_done()
-    assert mqtt_mock._mqttc.unsubscribe.call_count == 0
+    assert mqtt_client_mock.unsubscribe.call_count == 0
 
     mqtt_mock._mqtt_on_disconnect(None, None, 0)
     mqtt_mock._mqtt_on_connect(None, None, None, 0)
     await hass.async_block_till_done()
 
     expected.append(call("test/state", 1))
-    assert mqtt_mock._mqttc.subscribe.mock_calls == expected
+    assert mqtt_client_mock.subscribe.mock_calls == expected
 
 
-async def test_setup_embedded_starts_with_no_config(hass):
-    """Test setting up embedded server with no config."""
+@pytest.fixture
+def mqtt_server_start_mock(hass):
+    """Mock embedded server start."""
     client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
 
     with patch(
         "homeassistant.components.mqtt.server.async_start",
         return_value=(True, client_config),
     ) as _start:
-        await async_mock_mqtt_component(hass, {})
-        assert _start.call_count == 1
+        yield _start
 
 
-async def test_setup_embedded_with_embedded(hass):
+@pytest.mark.parametrize("mqtt_config", [{}])
+async def test_setup_embedded_starts_with_no_config(
+    hass, mqtt_server_start_mock, mqtt_mock
+):
     """Test setting up embedded server with no config."""
-    client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
+    assert mqtt_server_start_mock.call_count == 1
 
-    with patch(
-        "homeassistant.components.mqtt.server.async_start",
-        return_value=(True, client_config),
-    ) as _start:
-        await async_mock_mqtt_component(hass, {"embedded": None})
-        assert _start.call_count == 1
+
+@pytest.mark.parametrize("mqtt_config", [{"embedded": None}])
+async def test_setup_embedded_with_embedded(hass, mqtt_server_start_mock, mqtt_mock):
+    """Test setting up embedded server with empty embedded config."""
+    assert mqtt_server_start_mock.call_count == 1
 
 
 async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
@@ -784,29 +793,29 @@ async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass, moc
     assert mock_mqtt.mock_calls[0][2]["tls_version"] == ssl.PROTOCOL_TLSv1
 
 
-async def test_birth_message(hass):
-    """Test sending birth message."""
-    mqtt_mock = await async_mock_mqtt_component(
-        hass,
+@pytest.mark.parametrize(
+    "mqtt_config",
+    [
         {
             mqtt.CONF_BROKER: "mock-broker",
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "birth",
                 mqtt.ATTR_PAYLOAD: "birth",
             },
-        },
-    )
+        }
+    ],
+)
+async def test_birth_message(hass, mqtt_client_mock, mqtt_mock):
+    """Test sending birth message."""
     calls = []
-    mqtt_mock._mqttc.publish.side_effect = lambda *args: calls.append(args)
+    mqtt_client_mock.publish.side_effect = lambda *args: calls.append(args)
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
     assert calls[-1] == ("birth", "birth", 0, False)
 
 
-async def test_mqtt_subscribes_topics_on_connect(hass):
+async def test_mqtt_subscribes_topics_on_connect(hass, mqtt_client_mock, mqtt_mock):
     """Test subscription to topic on connect."""
-    mqtt_mock = await async_mock_mqtt_component(hass)
-
     await mqtt.async_subscribe(hass, "topic/test", None)
     await mqtt.async_subscribe(hass, "home/sensor", None, 2)
     await mqtt.async_subscribe(hass, "still/pending", None)
@@ -821,7 +830,7 @@ async def test_mqtt_subscribes_topics_on_connect(hass):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert mqtt_mock._mqttc.disconnect.call_count == 0
+    assert mqtt_client_mock.disconnect.call_count == 0
 
     expected = {"topic/test": 0, "home/sensor": 2, "still/pending": 1}
     calls = {call[1][1]: call[1][2] for call in hass.add_job.mock_calls}
@@ -834,9 +843,8 @@ async def test_setup_fails_without_config(hass):
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_message_callback_exception_gets_logged(hass, caplog):
+async def test_message_callback_exception_gets_logged(hass, caplog, mqtt_mock):
     """Test exception raised by message handler."""
-    await async_mock_mqtt_component(hass)
 
     @callback
     def bad_handler(*args):
@@ -853,10 +861,8 @@ async def test_message_callback_exception_gets_logged(hass, caplog):
     )
 
 
-async def test_mqtt_ws_subscription(hass, hass_ws_client):
+async def test_mqtt_ws_subscription(hass, hass_ws_client, mqtt_mock):
     """Test MQTT websocket subscription."""
-    await async_mock_mqtt_component(hass)
-
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "mqtt/subscribe", "topic": "test-topic"})
     response = await client.receive_json()
@@ -879,10 +885,8 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client):
     assert response["success"]
 
 
-async def test_dump_service(hass):
+async def test_dump_service(hass, mqtt_mock):
     """Test that we can dump a topic."""
-    await async_mock_mqtt_component(hass)
-
     mopen = mock_open()
 
     await hass.services.async_call(
