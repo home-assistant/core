@@ -4,7 +4,7 @@
       "user": {
         "title": "Connect to PoolSense",
         "data": {
-          "host": "Host"
+          "host": "[%key:common::config_flow::data::host%]"
         }
       }
     },
