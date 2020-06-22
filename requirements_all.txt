@@ -932,6 +932,9 @@ mychevy==2.0.1
 # homeassistant.components.mycroft
 mycroftapi==2.0
 
+# homeassistant.components.myio
+myio==0.0.6
+
 # homeassistant.components.n26
 n26==0.2.7
 

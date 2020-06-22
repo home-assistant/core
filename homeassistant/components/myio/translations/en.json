@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "port": "HTTP Port",
+          "port_app": "App Port",
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Already configured, choose other name",
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication!",
+      "unknown": "Unexpected error",
+      "app_port": "App Port is not working"
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Cannot connect to myIO Server"
+    }
+  },
+  "options": {
+    "step": {
+      "myio_options": {
+        "data": {
+          "refresh_time": "Refresh time"
+        }
+      }
+    }
+  }
+}

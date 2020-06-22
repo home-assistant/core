@@ -449,6 +449,9 @@ minio==4.0.9
 # homeassistant.components.tts
 mutagen==1.45.1
 
+# homeassistant.components.myio
+myio==0.0.6
+
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
 

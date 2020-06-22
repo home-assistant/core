@@ -540,6 +540,10 @@ omit =
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
     homeassistant/components/mycroft/notify.py
+    homeassistant/components/myio/sensor.py
+    homeassistant/components/myio/__init__.py
+    homeassistant/components/myio/const.py
+    homeassistant/components/myio/config_flow.py
     homeassistant/components/mysensors/*
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
