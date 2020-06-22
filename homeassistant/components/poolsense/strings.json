@@ -2,9 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to PoolSense",
+        "title": "PoolSense",
+        "description": "[%key:common::config_flow::description%]",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "serial": "Serial"
         }
       }
     },
@@ -16,6 +20,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "title": "PoolSense"
+  }
 }

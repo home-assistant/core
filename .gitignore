@@ -132,5 +132,3 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
-
-venv37/
