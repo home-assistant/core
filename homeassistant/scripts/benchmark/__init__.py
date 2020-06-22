@@ -12,6 +12,7 @@ from typing import Callable, Dict, TypeVar
 from homeassistant import core
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED
+from homeassistant.helpers.entityfilter import convert_include_exclude_filter
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.util import dt as dt_util
 
@@ -178,26 +179,28 @@ async def _logbook_filtering(hass, last_changed, last_updated):
 
     entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    def yield_events(event):
-        # pylint: disable=protected-access
-        entities_filter = logbook._generate_filter_from_config({})
+    entities_filter = convert_include_exclude_filter(
+        logbook.INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA({})
+    )
+
+    def yield_events(event, entities_filter):
         for _ in range(10 ** 5):
+            # pylint: disable=protected-access
             if logbook._keep_event(hass, event, entities_filter, entity_attr_cache):
                 yield event
 
     start = timer()
 
-    list(logbook.humanify(hass, yield_events(event), entity_attr_cache))
+    list(
+        logbook.humanify(hass, yield_events(event, entities_filter), entity_attr_cache)
+    )
 
     return timer() - start
 
 
 @benchmark
-async def logbook_filtering_entity_id(hass):
-    """Run a 100k state changes through a logbook entity filter."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components import logbook
-
+async def filtering_entity_id(hass):
+    """Run a 100k state changes through entity filter."""
     config = {
         "include": {
             "domains": [
@@ -230,6 +233,7 @@ async def logbook_filtering_entity_id(hass):
         "exclude": {
             "domains": ["input_number"],
             "entity_globs": ["media_player.google_*", "group.all_*"],
+            "entities": [],
         },
     }
 
@@ -247,36 +251,18 @@ async def logbook_filtering_entity_id(hass):
         "calendar.eleanor_fant_s_calendar",
         "sun.sun",
     ]
-    now = dt_util.utcnow()
-    events = [
-        _create_state_changed_event_from_old_new(
-            entity_id,
-            now,
-            {"entity_id": entity_id, "state": "old"},
-            {
-                "entity_id": entity_id,
-                "state": "new",
-                "last_changed": 1,
-                "last_updated": 1,
-            },
-        )
-        for entity_id in entity_ids
-    ]
 
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
-
-    def yield_events(events):
-        # pylint: disable=protected-access
-        entities_filter = logbook._generate_filter_from_config(config)
-        size = len(events)
+    def yield_entity_ids(entity_ids, config):
+        entities_filter = convert_include_exclude_filter(config)
+        size = len(entity_ids)
         for i in range(10 ** 5):
-            event = events[i % size]
-            if logbook._keep_event(hass, event, entities_filter, entity_attr_cache):
-                yield event
+            entity_id = entity_ids[i % size]
+            if entities_filter(entity_id):
+                yield entity_id
 
     start = timer()
 
-    list(logbook.humanify(hass, yield_events(events), entity_attr_cache))
+    list(yield_entity_ids(entity_ids, config))
 
     return timer() - start
 

@@ -56,29 +56,27 @@ BASE_FILTER_SCHEMA = vol.Schema(
 FILTER_SCHEMA = vol.All(BASE_FILTER_SCHEMA, convert_filter)
 
 
-def convert_filter_alt(
+def convert_include_exclude_filter(
     config: Dict[str, Dict[str, List[str]]]
 ) -> Callable[[str], bool]:
-    """Convert the alternate filter schema into a filter."""
+    """Convert the include exclude filter schema into a filter."""
     include = config[CONF_INCLUDE]
     exclude = config[CONF_EXCLUDE]
-    filt = generate_filter(
-        include[CONF_DOMAINS],
-        include[CONF_ENTITIES],
-        exclude[CONF_DOMAINS],
-        exclude[CONF_ENTITIES],
-        include[CONF_ENTITY_GLOBS],
-        exclude[CONF_ENTITY_GLOBS],
-    )
-    total_filters = sum(len(val) for val in include.values()) + sum(
-        len(val) for val in exclude.values()
+    filt = convert_filter(
+        {
+            CONF_INCLUDE_DOMAINS: include[CONF_DOMAINS],
+            CONF_INCLUDE_ENTITY_GLOBS: include[CONF_ENTITY_GLOBS],
+            CONF_INCLUDE_ENTITIES: include[CONF_ENTITIES],
+            CONF_EXCLUDE_DOMAINS: exclude[CONF_DOMAINS],
+            CONF_EXCLUDE_ENTITY_GLOBS: exclude[CONF_ENTITY_GLOBS],
+            CONF_EXCLUDE_ENTITIES: exclude[CONF_ENTITIES],
+        }
     )
     setattr(filt, "config", config)
-    setattr(filt, "empty_filter", total_filters == 0)
     return filt
 
 
-ALT_FILTER_SCHEMA_INNER = vol.Schema(
+INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER = vol.Schema(
     {
         vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ENTITY_GLOBS, default=[]): vol.All(
@@ -88,18 +86,20 @@ ALT_FILTER_SCHEMA_INNER = vol.Schema(
     }
 )
 
-ALT_BASE_FILTER_SCHEMA = vol.Schema(
+INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA = vol.Schema(
     {
         vol.Optional(
-            CONF_INCLUDE, default=ALT_FILTER_SCHEMA_INNER({})
-        ): ALT_FILTER_SCHEMA_INNER,
+            CONF_INCLUDE, default=INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER({})
+        ): INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
         vol.Optional(
-            CONF_EXCLUDE, default=ALT_FILTER_SCHEMA_INNER({})
-        ): ALT_FILTER_SCHEMA_INNER,
+            CONF_EXCLUDE, default=INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER({})
+        ): INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
     }
 )
 
-ALT_FILTER_SCHEMA = vol.All(ALT_BASE_FILTER_SCHEMA, convert_filter_alt)
+INCLUDE_EXCLUDE_FILTER_SCHEMA = vol.All(
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA, convert_include_exclude_filter
+)
 
 
 def _glob_to_re(glob: str) -> Pattern:

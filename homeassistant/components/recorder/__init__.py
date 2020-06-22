@@ -27,9 +27,9 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
-    ALT_BASE_FILTER_SCHEMA,
-    ALT_FILTER_SCHEMA_INNER,
-    convert_filter_alt,
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
+    convert_include_exclude_filter,
 )
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -70,11 +70,11 @@ CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
 CONF_COMMIT_INTERVAL = "commit_interval"
 
-EXCLUDE_SCHEMA = ALT_FILTER_SCHEMA_INNER.extend(
+EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
     {vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string])}
 )
 
-FILTER_SCHEMA = ALT_BASE_FILTER_SCHEMA.extend(
+FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {vol.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA}
 )
 
@@ -103,7 +103,7 @@ CONFIG_SCHEMA = vol.Schema(
                     ): cv.positive_int,
                 }
             ),
-            convert_filter_alt,
+            convert_include_exclude_filter,
         )
     },
     extra=vol.ALLOW_EXTRA,

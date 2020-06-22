@@ -29,7 +29,10 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
-from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS, convert_filter_alt
+from homeassistant.helpers.entityfilter import (
+    CONF_ENTITY_GLOBS,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
@@ -155,7 +158,7 @@ class TestComponentLogbook(unittest.TestCase):
         attributes = {"unit_of_measurement": "foo"}
         eventA = self.create_state_changed_event(pointA, entity_id, 10, attributes)
 
-        entities_filter = convert_filter_alt(
+        entities_filter = convert_include_exclude_filter(
             logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
         )
         assert (
@@ -180,7 +183,7 @@ class TestComponentLogbook(unittest.TestCase):
         )
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        entities_filter = convert_filter_alt(
+        entities_filter = convert_include_exclude_filter(
             logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
         )
         events = [
@@ -218,7 +221,7 @@ class TestComponentLogbook(unittest.TestCase):
         )
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        entities_filter = convert_filter_alt(
+        entities_filter = convert_include_exclude_filter(
             logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
         )
         events = [
@@ -253,7 +256,7 @@ class TestComponentLogbook(unittest.TestCase):
         )
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        entities_filter = convert_filter_alt(
+        entities_filter = convert_include_exclude_filter(
             logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
         )
         events = [
@@ -292,7 +295,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.DOMAIN: {logbook.CONF_EXCLUDE: {CONF_ENTITIES: [entity_id]}},
             }
         )
-        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
+        entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -331,7 +334,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
+        entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -377,7 +380,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
+        entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -421,7 +424,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
+        entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -468,7 +471,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
+        entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -521,7 +524,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
+        entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -577,7 +580,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
+        entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -648,7 +651,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
+        entities_filter = convert_include_exclude_filter(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -708,7 +711,7 @@ class TestComponentLogbook(unittest.TestCase):
             "light.kitchen", pointC, state_100, state_200
         )
 
-        entities_filter = convert_filter_alt(
+        entities_filter = convert_include_exclude_filter(
             logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
         )
         events = [

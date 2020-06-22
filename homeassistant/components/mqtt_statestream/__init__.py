@@ -8,8 +8,8 @@ from homeassistant.const import MATCH_ALL
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
-    ALT_BASE_FILTER_SCHEMA,
-    convert_filter_alt,
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
 )
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.json import JSONEncoder
@@ -23,14 +23,14 @@ DOMAIN = "mqtt_statestream"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            ALT_BASE_FILTER_SCHEMA.extend(
+            INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
                 {
                     vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
                     vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
                     vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean,
                 }
             ),
-            convert_filter_alt,
+            convert_include_exclude_filter,
         )
     },
     extra=vol.ALLOW_EXTRA,

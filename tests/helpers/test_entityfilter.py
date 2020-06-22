@@ -1,7 +1,7 @@
 """The tests for the EntityFilter component."""
 from homeassistant.helpers.entityfilter import (
-    ALT_FILTER_SCHEMA,
     FILTER_SCHEMA,
+    INCLUDE_EXCLUDE_FILTER_SCHEMA,
     generate_filter,
 )
 
@@ -246,5 +246,5 @@ def test_filter_schema_alt():
             "entities": ["light.kitchen"],
         },
     }
-    filt = ALT_FILTER_SCHEMA(conf)
+    filt = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
     assert filt.config == conf
