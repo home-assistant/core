@@ -9,9 +9,7 @@ import requests.exceptions
 import voluptuous as vol
 from wiserHeatingAPI.wiserHub import (
     WiserHubAuthenticationException,
-    WiserHubDataNull,
     WiserHubTimeoutException,
-    WiserRESTException,
     wiserHub,
 )
 
@@ -53,9 +51,13 @@ async def validate_input(hass, data):
         wiserID = await hass.async_add_executor_job(wiser.getWiserHubName)
     except AttributeError:
         # bug in wiser api needs fixing
-        raise WiserHubDataNull
+        raise CannotConnect
+    except WiserHubAuthenticationException:
+        raise InvalidAuth
+    except WiserHubTimeoutException:
+        raise CannotConnect
     except requests.exceptions.ConnectionError:
-        raise WiserHubTimeoutException
+        raise CannotConnect
     except Exception:
         raise
 
@@ -98,12 +100,10 @@ class WiserFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 validated = await validate_input(self.hass, user_input)
-            except WiserHubAuthenticationException:
+            except InvalidAuth:
                 errors["base"] = "auth_failure"
-            except WiserHubTimeoutException:
+            except CannotConnect:
                 errors["base"] = "timeout_error"
-            except (WiserRESTException, WiserHubDataNull):
-                errors["base"] = "not_successful"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
