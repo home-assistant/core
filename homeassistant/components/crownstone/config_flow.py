@@ -36,7 +36,7 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
-                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str, }
+                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
                 ),
             )
 
@@ -48,7 +48,7 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # handle login errors on setup form
         try:
-            await self.cloud.login()
+            await self.cloud.async_login()
 
             # save email and password for later use
             self.login_info = user_input
@@ -68,7 +68,7 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str, }
+                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
             ),
             errors=errors,
         )
@@ -79,10 +79,10 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="sphere",
-                data_schema=vol.Schema({vol.Required(CONF_SPHERE): str, }),
+                data_schema=vol.Schema({vol.Required(CONF_SPHERE): str}),
             )
         # get the spheres for the user
-        await self.cloud.spheres.update()
+        await self.cloud.spheres.async_update_sphere_data()
         # check if the typed name exists
         if self.cloud.spheres.find(user_input[CONF_SPHERE]) is not None:
             # set the unique id
@@ -109,6 +109,6 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(
                 step_id="sphere",
-                data_schema=vol.Schema({vol.Required(CONF_SPHERE): str, }),
+                data_schema=vol.Schema({vol.Required(CONF_SPHERE): str}),
                 errors=errors,
             )

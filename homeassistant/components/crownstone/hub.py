@@ -61,7 +61,7 @@ class CrownstoneHub:
         )
         # Login
         try:
-            await self.cloud.initialize()
+            await self.cloud.async_initialize()
         except CrownstoneAuthenticationError as auth_err:
             _LOGGER.error(
                 "Auth error during login with type: %s and message: %s",
