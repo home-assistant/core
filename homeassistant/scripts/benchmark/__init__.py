@@ -183,7 +183,7 @@ async def _logbook_filtering(hass, last_changed, last_updated):
         logbook.INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA({})
     )
 
-    def yield_events(event, entities_filter):
+    def yield_events(event):
         for _ in range(10 ** 5):
             # pylint: disable=protected-access
             if logbook._keep_event(hass, event, entities_filter, entity_attr_cache):
@@ -191,9 +191,7 @@ async def _logbook_filtering(hass, last_changed, last_updated):
 
     start = timer()
 
-    list(
-        logbook.humanify(hass, yield_events(event, entities_filter), entity_attr_cache)
-    )
+    list(logbook.humanify(hass, yield_events(event), entity_attr_cache))
 
     return timer() - start
 
@@ -252,17 +250,13 @@ async def filtering_entity_id(hass):
         "sun.sun",
     ]
 
-    def yield_entity_ids(entity_ids, config):
-        entities_filter = convert_include_exclude_filter(config)
-        size = len(entity_ids)
-        for i in range(10 ** 5):
-            entity_id = entity_ids[i % size]
-            if entities_filter(entity_id):
-                yield entity_id
+    entities_filter = convert_include_exclude_filter(config)
+    size = len(entity_ids)
 
     start = timer()
 
-    list(yield_entity_ids(entity_ids, config))
+    for i in range(10 ** 5):
+        entities_filter(entity_ids[i % size])
 
     return timer() - start
 
