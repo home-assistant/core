@@ -12,7 +12,7 @@ import sys
 from typing import Any, Callable, List, Optional, Union
 
 import attr
-import requests.certs
+import certifi
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -493,10 +493,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 def _merge_config(entry, conf):
     """Merge configuration.yaml config with config entry."""
-    conf = dict(conf)
-    conf.update(entry.data)
-
-    return conf
+    return {**conf, **entry.data}
 
 
 async def async_setup_entry(hass, entry):
@@ -683,9 +680,9 @@ class MQTT:
                 os.path.dirname(__file__), "addtrustexternalcaroot.crt"
             )
 
-        # When the certificate is set to auto, use bundled certs from requests
+        # When the certificate is set to auto, use bundled certs from certifi
         elif certificate == "auto":
-            certificate = requests.certs.where()
+            certificate = certifi.where()
 
         # Be able to override versions other than TLSv1.0 under Python3.6
         conf_tls_version: str = self.conf.get(CONF_TLS_VERSION)
@@ -872,9 +869,6 @@ class MQTT:
 
         if CONF_BIRTH_MESSAGE in self.conf:
             birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
-        else:
-            birth_message = None
-        if birth_message:
             self.hass.add_job(
                 self.async_publish(  # pylint: disable=no-value-for-parameter
                     *attr.astuple(

@@ -715,9 +715,9 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto(hass):
 
         assert calls
 
-        import requests.certs
+        import certifi
 
-        expectedCertificate = requests.certs.where()
+        expectedCertificate = certifi.where()
         # assert mock_mqtt.mock_calls[0][1][2]["certificate"] == expectedCertificate
         assert calls[0][0] == expectedCertificate
 
