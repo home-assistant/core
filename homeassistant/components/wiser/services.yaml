@@ -58,12 +58,12 @@ set_smartplug_mode:
       description: Enter the entity_id for the smartplug.
       example: switch.smartplug
     plug_mode:
-      description: Enter the mode, can be auto or manual.
-    example: auto
+      description: Enter the switch mode. Can be auto or manual.
+      example: manual
 
 set_hotwater_mode:
   description: Sets the hot water mode
   fields:
     hotwater_mode:
-      description: Enter the mode can be on , off or auto.
+      description: Enter the mode can be on, off or auto.
       example: auto
