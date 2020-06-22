@@ -1,9 +1,8 @@
 """Support for Mojio Platform."""
 import logging
 
-import requests
-
 from mojio_sdk import API
+import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
