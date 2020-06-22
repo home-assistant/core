@@ -952,7 +952,7 @@ ndms2_client==0.0.11
 nessclient==0.9.15
 
 # homeassistant.components.netdata
-netdata==0.1.2
+netdata==0.2.0
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
