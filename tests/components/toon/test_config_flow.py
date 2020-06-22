@@ -163,7 +163,7 @@ async def test_multiple_agreements(hass, aiohttp_client, aioclient_mock):
         assert result3["step_id"] == "agreement"
 
         result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_AGREEMENT: "1 - None None, None"}
+            result["flow_id"], {CONF_AGREEMENT: "None None, None"}
         )
         assert result4["data"]["auth_implementation"] == "eneco"
         assert result4["data"]["agreement_id"] == 1
