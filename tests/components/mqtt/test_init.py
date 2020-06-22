@@ -825,10 +825,6 @@ async def test_mqtt_subscribes_topics_on_connect(hass, mqtt_client_mock, mqtt_mo
     mqtt_mock._mqtt_on_connect(None, None, 0, 0)
 
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     assert mqtt_client_mock.disconnect.call_count == 0
 
