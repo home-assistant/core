@@ -92,7 +92,7 @@ class ToonElectricityMeterDeviceEntity(ToonEntity):
         return {
             "name": "Electricity Meter",
             "identifiers": {(DOMAIN, agreement_id, "electricity")},
-            "via_device": (DOMAIN, agreement_id, "meter_adapter",),
+            "via_device": (DOMAIN, agreement_id, "meter_adapter"),
         }
 
 
@@ -106,7 +106,7 @@ class ToonGasMeterDeviceEntity(ToonEntity):
         return {
             "name": "Gas Meter",
             "identifiers": {(DOMAIN, agreement_id, "gas")},
-            "via_device": (DOMAIN, agreement_id, "electricity",),
+            "via_device": (DOMAIN, agreement_id, "electricity"),
         }
 
 
@@ -120,7 +120,7 @@ class ToonSolarDeviceEntity(ToonEntity):
         return {
             "name": "Solar Panels",
             "identifiers": {(DOMAIN, agreement_id, "solar")},
-            "via_device": (DOMAIN, agreement_id, "meter_adapter",),
+            "via_device": (DOMAIN, agreement_id, "meter_adapter"),
         }
 
 
@@ -149,5 +149,5 @@ class ToonBoilerDeviceEntity(ToonEntity):
         return {
             "name": "Boiler",
             "identifiers": {(DOMAIN, agreement_id, "boiler")},
-            "via_device": (DOMAIN, agreement_id, "boiler_module",),
+            "via_device": (DOMAIN, agreement_id, "boiler_module"),
         }

@@ -60,7 +60,7 @@ class ToonSwitch(ToonEntity, SwitchEntity):
         """Return the unique ID for this binary sensor."""
         agreement_id = self.coordinator.data.agreement.agreement_id
         # This unique ID is a bit ugly and contains unneeded information.
-        # It is here for lecagy / backward compatible reasons.
+        # It is here for legacy / backward compatible reasons.
         return f"{DOMAIN}_{agreement_id}_switch_{self.key}"
 
     @property
