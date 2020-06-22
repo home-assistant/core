@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -80,6 +81,36 @@ async def _setup_risco(hass, alarm=MagicMock()):
         await hass.async_block_till_done()
 
     return config_entry
+
+
+async def test_cannot_connect(hass):
+    """Test connection error."""
+
+    with patch(
+        "homeassistant.components.risco.RiscoAPI.login", side_effect=CannotConnectError,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        registry = await hass.helpers.entity_registry.async_get_registry()
+        assert not registry.async_is_registered(FIRST_ENTITY_ID)
+        assert not registry.async_is_registered(SECOND_ENTITY_ID)
+
+
+async def test_unauthorized(hass):
+    """Test unauthorized error."""
+
+    with patch(
+        "homeassistant.components.risco.RiscoAPI.login", side_effect=UnauthorizedError,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        registry = await hass.helpers.entity_registry.async_get_registry()
+        assert not registry.async_is_registered(FIRST_ENTITY_ID)
+        assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
 
 async def test_setup(hass, two_part_alarm):

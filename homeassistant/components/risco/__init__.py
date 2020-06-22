@@ -1,11 +1,12 @@
 """The Risco integration."""
 import asyncio
 
-from pyrisco import RiscoAPI
+from pyrisco import CannotConnectError, RiscoAPI, UnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
@@ -21,14 +22,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Risco from a config entry."""
     data = entry.data
     risco = RiscoAPI(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
-    await risco.login()
+    try:
+        await risco.login()
+    except (CannotConnectError, UnauthorizedError) as error:
+        raise ConfigEntryNotReady() from error
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = risco
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
     return True
 
 
@@ -42,6 +46,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
     if unload_ok:
         risco = hass.data[DOMAIN].pop(entry.entry_id)
         await risco.close()
