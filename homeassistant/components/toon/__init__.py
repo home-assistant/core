@@ -24,7 +24,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_AGREEMENT_ID, DOMAIN
+from .const import CONF_AGREEMENT_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
 from .oauth2 import register_oauth2_implementations
 
@@ -46,6 +46,9 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_CLIENT_ID): cv.string,
                     vol.Required(CONF_CLIENT_SECRET): cv.string,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): vol.All(cv.time_period, cv.positive_timedelta),
                 }
             ),
         )
