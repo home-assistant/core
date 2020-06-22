@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import CONF_NAME, TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -56,7 +56,11 @@ class MyIOSensor(Entity):
                 self._number = _sensor
                 break
         self.entity_id = f"sensor.{_server_name}_{self._sensor_id}"
-        self._name = self._sensors[str(self._number)]["description"]
+        if int(self._number) >= 200:
+            self._name = "Imp.Counter"
+
+        else:
+            self._name = self._sensors[str(self._number)]["description"]
         # initialize if the sensor is thermo-, humidity-, or imp counter"""
         if int(self._number) < 100:
             self._state = self._sensors[str(self._number)]["temp"] / 100
@@ -66,20 +70,13 @@ class MyIOSensor(Entity):
             self._state = self._sensors[str(self._number)]["imp"]
 
     @property
-    def scan_interval(self):
-        """Return the unique id."""
-        return SCAN_INTERVAL
-
-    @property
     def unique_id(self):
-        """Return unique ID for light."""
-        return f"server name = {self._server_name}, id = {self._sensor_id}"
+        """Return unique ID for sensor."""
+        return f"{self._server_name}_{self._sensor_id}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if int(self._number) >= 200:
-            return "Imp.Counter"
         return self._name
 
     @property
@@ -90,13 +87,12 @@ class MyIOSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        string_to_send = ""
         if int(self._number) < 100:
             string_to_send = TEMP_CELSIUS
         elif int(self._number) < 200:
-            string_to_send = "%"
+            string_to_send = UNIT_PERCENTAGE
         else:
-            string_to_send = self._name
+            string_to_send = self._sensors[str(self._number)]["description"]
         return string_to_send
 
     def update(self):

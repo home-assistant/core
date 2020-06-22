@@ -3,40 +3,17 @@ from datetime import timedelta
 import logging
 
 from myio.comms_thread import CommsThread  # pylint: disable=import-error
-import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import slugify
 
-from .const import CONF_PORT_APP, CONF_REFRESH_TIME, DOMAIN
+from .const import CONF_REFRESH_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_NAME, default="myIO-Server"): str,
-                vol.Required(CONF_HOST, default="192.168.1.170"): str,
-                vol.Required(CONF_PORT, default="80"): int,
-                vol.Required(CONF_PORT_APP, default="843"): int,
-                vol.Required(CONF_USERNAME, default="admin"): str,
-                vol.Required(CONF_PASSWORD, default="admin"): str,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 COMMS_THREAD = CommsThread()
 
@@ -68,11 +45,6 @@ async def async_setup_entry(hass, config_entry):
 
     async def setup_config_entries():
         """Set up myIO platforms with config entry."""
-
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(config_entry, component)
-            )
 
         # Use `hass.async_add_job` to avoid a circular dependency
         # between the platform and the component
