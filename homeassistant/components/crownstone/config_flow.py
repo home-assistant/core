@@ -13,7 +13,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_ID, CONF_PASSWORD
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_SPHERE, DOMAIN
+from .const import CONF_SPHERE, DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,11 +104,10 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        else:
-            errors["base"] = "sphere_not_exist"
+        errors["base"] = "sphere_not_exist"
 
-            return self.async_show_form(
-                step_id="sphere",
-                data_schema=vol.Schema({vol.Required(CONF_SPHERE): str}),
-                errors=errors,
-            )
+        return self.async_show_form(
+            step_id="sphere",
+            data_schema=vol.Schema({vol.Required(CONF_SPHERE): str}),
+            errors=errors,
+        )
