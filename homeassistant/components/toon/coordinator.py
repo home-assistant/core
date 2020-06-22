@@ -104,7 +104,8 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Webhook expired notification, re-register
         if data.get("code") == 510:
-            return await self.register_webhook()
+            await self.register_webhook()
+            return
 
         try:
             await self.toon.update(data.get("updateDataSet", {}))
