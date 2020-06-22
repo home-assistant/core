@@ -72,6 +72,7 @@ async def async_setup_entry(hass, config_entry):
                     config_entry, component
                 )
 
+        # Pull fresh data from server.
         [hass.data[DOMAIN][_server_name], _temp_server_state] = await COMMS_THREAD.send(
             server_data=server_data(),
             server_status=_temp_server_state,

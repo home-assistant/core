@@ -16,7 +16,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a sensor entity from a config_entry."""
 
     _server_name = slugify(config_entry.data[CONF_NAME])
-    _server_status = hass.states.get(_server_name + ".state").state
+    _server_status = hass.data[DOMAIN][_server_name]["state"]
     _server_data = hass.data[DOMAIN][_server_name]
     _sensors = _server_data["sensors"]
 
