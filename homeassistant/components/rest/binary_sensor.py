@@ -98,15 +98,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if rest.data is None:
         raise PlatformNotReady
 
-    # No need to update the sensor now because it will determine its state
-    # based in the rest resource that has just been retrieved.
-    add_entities([RestBinarySensor(hass, rest, name, device_class, value_template,)])
+    add_entities(
+        [
+            RestBinarySensor(
+                hass,
+                rest,
+                name,
+                device_class,
+                value_template,
+                force_update,
+                resource_template,
+            )
+        ],
+        True,
+    )
 
 
 class RestBinarySensor(BinarySensorDevice):
     """Representation of a REST binary sensor."""
 
-    def __init__(self, hass, rest, name, device_class, value_template):
+    def __init__(self, hass, rest, name, device_class, value_template,force_update,resource_template):
         """Initialize a REST binary sensor."""
         self._hass = hass
         self.rest = rest
@@ -115,6 +126,8 @@ class RestBinarySensor(BinarySensorDevice):
         self._state = False
         self._previous_data = None
         self._value_template = value_template
+        self._force_update = force_update
+        self._resource_template = resource_template
 
     @property
     def name(self):
@@ -150,9 +163,16 @@ class RestBinarySensor(BinarySensorDevice):
             return {"true": True, "on": True, "open": True, "yes": True}.get(
                 response.lower(), False
             )
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._force_update
 
     def update(self):
         """Get the latest data from REST API and updates the state."""
+        if self._resource_template is not None:
+            self.rest.set_url(self._resource_template.render())
+
         self.rest.update()
         value = self.rest.data
         self._state = value
