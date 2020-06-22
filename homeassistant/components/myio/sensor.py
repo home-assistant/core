@@ -6,6 +6,8 @@ from homeassistant.const import CONF_NAME, TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=3)
 
@@ -15,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     _server_name = slugify(config_entry.data[CONF_NAME])
     _server_status = hass.states.get(_server_name + ".state").state
-    _server_data = hass.data[_server_name]
+    _server_data = hass.data[DOMAIN][_server_name]
     _sensors = _server_data["sensors"]
 
     sensor_entities = []
@@ -98,7 +100,7 @@ class MyIOSensor(Entity):
     def update(self):
         """Fetch new state data for the sensor."""
 
-        self._server_data = self.hass.data[self._server_name]
+        self._server_data = self.hass.data[DOMAIN][self._server_name]
         self._name = self._sensors[str(self._number)]["description"]
         if int(self._number) < 100:
             self._state = self._sensors[str(self._number)]["temp"] / 100
