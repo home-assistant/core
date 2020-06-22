@@ -733,7 +733,7 @@ pyspcwebgw==0.4.0
 pysqueezebox==0.2.4
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.5
+python-ecobee-api==0.2.7
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
