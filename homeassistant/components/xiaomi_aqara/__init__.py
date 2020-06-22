@@ -37,6 +37,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["binary_sensor", "sensor", "switch", "light", "cover", "lock"]
+GATEWAY_PLATFORMS_NO_KEY = ["binary_sensor", "sensor"]
 
 ATTR_GW_MAC = "gw_mac"
 ATTR_RINGTONE_ID = "ringtone_id"
@@ -182,7 +183,12 @@ async def async_setup_entry(
         sw_version=entry.data[CONF_PROTOCOL],
     )
 
-    for component in GATEWAY_PLATFORMS:
+    if entry.data[CONF_KEY] is not None:
+        platforms = GATEWAY_PLATFORMS
+    else:
+        platforms = GATEWAY_PLATFORMS_NO_KEY
+
+    for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -194,11 +200,16 @@ async def async_unload_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Unload a config entry."""
+    if entry.data[CONF_KEY] is not None:
+        platforms = GATEWAY_PLATFORMS
+    else:
+        platforms = GATEWAY_PLATFORMS_NO_KEY
+
     unload_ok = all(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in GATEWAY_PLATFORMS
+                for component in platforms
             ]
         )
     )
