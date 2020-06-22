@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a Toon config flow."""
 
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
     DOMAIN = DOMAIN
     VERSION = 2
 
