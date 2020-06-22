@@ -956,8 +956,8 @@ class TestConfig(unittest.TestCase):
             with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
 
-    def test_is_allowed_url(self):
-        """Test is_allowed_url method."""
+    def test_is_allowed_external_url(self):
+        """Test is_allowed_external_url method."""
         self.config.whitelist_external_urls = {
             "http://x.com/1.jpg",
             "http://y.com/2.png",
@@ -969,7 +969,7 @@ class TestConfig(unittest.TestCase):
 
         invalid = ["http://z.com/stream", "https://a.co"]
         for url in invalid:
-            assert not self.config.is_allowed_url(url)
+            assert not self.config.is_allowed_external_url(url)
 
             with pytest.raises(AssertionError):
                 self.config.is_allowed_external_url(None)
