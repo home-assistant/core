@@ -71,7 +71,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return await self._create_entry(self.agreements[0])
 
         agreements_list = [
-            f"{agreement.agreement_id} - {agreement.street} {agreement.house_number}, {agreement.city}"
+            f"{agreement.street} {agreement.house_number}, {agreement.city}"
             for agreement in self.agreements
         ]
 
