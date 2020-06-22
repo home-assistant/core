@@ -367,10 +367,18 @@ def async_publish(
 def publish_template(
     hass: HomeAssistantType, topic, payload_template, qos=None, retain=None
 ) -> None:
+    """Publish message to an MQTT topic."""
+    hass.add_job(async_publish_template, hass, topic, payload_template, qos, retain)
+
+
+@bind_hass
+def async_publish_template(
+    hass: HomeAssistantType, topic, payload_template, qos=None, retain=None
+) -> None:
     """Publish message to an MQTT topic using a template payload."""
     data = _build_publish_data(topic, qos, retain)
     data[ATTR_PAYLOAD_TEMPLATE] = payload_template
-    hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
 
 def wrap_msg_callback(msg_callback: MessageCallbackType) -> MessageCallbackType:
