@@ -1,15 +1,24 @@
 """Support for Broadlink devices."""
+import asyncio
 from functools import partial
 import logging
 
+import broadlink as blk
 from broadlink.exceptions import (
+    AuthenticationError,
     AuthorizationError,
     BroadlinkException,
     ConnectionClosedError,
     DeviceOfflineError,
 )
 
-from .const import DEFAULT_RETRY
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+
+from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
+from .updater import get_update_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,41 +26,161 @@ _LOGGER = logging.getLogger(__name__)
 class BroadlinkDevice:
     """Manages a Broadlink device."""
 
-    def __init__(self, hass, api):
+    def __init__(self, hass, config):
         """Initialize the device."""
         self.hass = hass
-        self.api = api
-        self.available = None
+        self.config = config
+        self.api = None
+        self.coordinator = None
+        self.authorized = None
+        self.reset_jobs = []
 
-    async def async_connect(self):
-        """Connect to the device."""
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self.config.title
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the device."""
+        return self.config.unique_id
+
+    @staticmethod
+    async def async_update(hass, entry):
+        """Update the device and related entities.
+
+        Triggered when the device is renamed on the frontend.
+        """
+        # Update the name in the registry.
+        device_registry = await dr.async_get_registry(hass)
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, entry.unique_id)}, connections=set()
+        )
+        device_registry.async_update_device(device.id, name=entry.title)
+
+        # Update the name of the entities.
+        coordinator = hass.data[DOMAIN].devices[entry.entry_id].coordinator
+        await coordinator.async_request_refresh()
+
+    async def async_setup(self):
+        """Set up the device and related entities."""
+        config = self.config
+        name = config.title
+        host = config.data[CONF_HOST]
+        mac_addr = config.data[CONF_MAC]
+        dev_type = config.data[CONF_TYPE]
+        timeout = config.data[CONF_TIMEOUT]
+
+        api = blk.gendevice(
+            dev_type, (host, DEFAULT_PORT), bytes.fromhex(mac_addr), name=name
+        )
+        api.timeout = timeout
+
+        try:
+            await self.hass.async_add_executor_job(api.auth)
+
+        except AuthenticationError:
+            self.hass.async_create_task(self._async_handle_auth_error())
+            return False
+
+        except DeviceOfflineError:
+            raise ConfigEntryNotReady
+
+        self.api = api
+        self.authorized = True
+
+        coordinator = get_update_coordinator(self)
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            raise ConfigEntryNotReady()
+
+        self.coordinator = coordinator
+        self.hass.data[DOMAIN].devices[config.entry_id] = self
+        self.reset_jobs.append(config.add_update_listener(self.async_update))
+
+        try:
+            fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
+        except BroadlinkException:
+            fw_version = None
+
+        device_registry = await dr.async_get_registry(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=config.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac_addr)},
+            identifiers={(DOMAIN, config.unique_id)},
+            manufacturer=api.manufacturer,
+            model=api.model,
+            name=name,
+            sw_version=fw_version,
+        )
+
+        # Forward entry setup to related domains.
+        tasks = (
+            self.hass.config_entries.async_forward_entry_setup(config, domain)
+            for domain, types in DOMAINS_AND_TYPES
+            if self.api.type in types
+        )
+        for entry_setup in tasks:
+            self.hass.async_create_task(entry_setup)
+
+        return True
+
+    async def async_unload(self):
+        """Unload the device and related entities."""
+        if self.api is None or self.coordinator is None:
+            return True
+
+        while self.reset_jobs:
+            self.reset_jobs.pop()()
+
+        tasks = (
+            self.hass.config_entries.async_forward_entry_unload(self.config, domain)
+            for domain, types in DOMAINS_AND_TYPES
+            if self.api.type in types
+        )
+        results = await asyncio.gather(*tasks)
+        return False not in results
+
+    async def async_auth(self):
+        """Authenticate to the device."""
         try:
             await self.hass.async_add_executor_job(self.api.auth)
-        except BroadlinkException as err_msg:
-            if self.available:
-                self.available = False
-                _LOGGER.warning(
-                    "Disconnected from device at %s: %s", self.api.host[0], err_msg
-                )
+        except BroadlinkException as err:
+            _LOGGER.debug(
+                "Failed to authenticate to the device at %s: %s", self.api.host[0], err
+            )
+            if isinstance(err, AuthenticationError):
+                self.hass.async_create_task(self._async_handle_auth_error())
             return False
-        else:
-            if not self.available:
-                if self.available is not None:
-                    _LOGGER.warning("Connected to device at %s", self.api.host[0])
-                self.available = True
-            return True
+        return True
 
     async def async_request(self, function, *args, **kwargs):
         """Send a request to the device."""
-        partial_function = partial(function, *args, **kwargs)
-        for attempt in range(DEFAULT_RETRY):
-            try:
-                result = await self.hass.async_add_executor_job(partial_function)
-            except (AuthorizationError, ConnectionClosedError, DeviceOfflineError):
-                if attempt == DEFAULT_RETRY - 1 or not await self.async_connect():
-                    raise
-            else:
-                if not self.available:
-                    self.available = True
-                    _LOGGER.warning("Connected to device at %s", self.api.host[0])
-                return result
+        request = partial(function, *args, **kwargs)
+        try:
+            return await self.hass.async_add_executor_job(request)
+        except (AuthorizationError, ConnectionClosedError):
+            if not await self.async_auth():
+                raise
+            return await self.hass.async_add_executor_job(request)
+
+    async def _async_handle_auth_error(self):
+        """Handle an authentication error."""
+        if self.authorized is False:
+            return
+
+        self.authorized = False
+        host = self.config.data[CONF_HOST]
+
+        _LOGGER.error(
+            "The device at %s is locked. Go to the integrations page and follow the config flow to unlock it.",
+            host,
+        )
+
+        self.hass.async_create_task(
+            self.hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=self.config.data,
+            )
+        )

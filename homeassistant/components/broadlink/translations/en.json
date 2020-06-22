@@ -1,0 +1,44 @@
+{
+  "config": {
+    "flow_title": "{name} ({model} at {host})",
+    "step": {
+      "hello": {
+        "title": "Connect to the device",
+        "data": {
+          "host": "Hostname or IP address",
+          "timeout": "Timeout"
+        }
+      },
+      "auth": {
+        "title": "Authenticate to the device"
+      },
+      "reset": {
+        "title": "Unlock the device",
+        "description": "Your device is locked. Follow this tutorial to unlock it:\n1. Factory reset the device.\n2. Use the Broadlink app to add the device to your local network.\n3. Stop. Do not finish the setup. Close the app.\n\nFor more information, refer to the troubleshooting section in the [documentation](https://www.home-assistant.io/integrations/broadlink/)."
+      },
+      "unlock": {
+        "title": "Unlock the device (optional)",
+        "description": "Your device is locked. This can lead to authentication problems in Home Assistant. Would you like to unlock it?",
+        "data": {
+          "unlock": "Yes, do it."
+        }
+      },
+      "finish": {
+        "title": "Choose a name for the device",
+        "data": {
+          "name": "Name"
+        }
+      }
+    },
+    "abort": {
+      "already_in_progress": "This config flow is already in progress."
+    },
+    "error": {
+      "device_not_found": "Device not found.",
+      "device_offline": "The device is offline.",
+      "invalid_hostname": "Invalid hostname.",
+      "invalid_ip_address": "Invalid IP address.",
+      "unknown_error": "Unknown error."
+    }
+  }
+}

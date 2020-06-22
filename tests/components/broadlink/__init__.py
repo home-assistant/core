@@ -1,1 +1,1 @@
-"""The tests for broadlink platforms."""
+"""Tests for the Broadlink integration."""
