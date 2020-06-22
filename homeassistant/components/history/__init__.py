@@ -15,6 +15,7 @@ from homeassistant.components import recorder
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder.models import (
     States,
+    process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.util import execute, session_scope
