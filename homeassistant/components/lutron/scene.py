@@ -46,6 +46,8 @@ class LutronScene(LutronDevice, Scene):
     @property
     def name(self):
         """Return the name of the device."""
+        if self._area.id:
+            return f"{self._keypad.name}: {self._lutron_device.name}"
         return f"{self._area.name} {self._keypad.name}: {self._lutron_device.name}"
 
     @property

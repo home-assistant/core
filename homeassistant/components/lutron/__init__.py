@@ -209,6 +209,8 @@ class LutronDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
+        if self._area.id:
+            return self._lutron_device.name
         return f"{self._area.name} {self._lutron_device.name}"
 
     @property
