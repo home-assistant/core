@@ -2,8 +2,6 @@
 import logging
 from typing import Any, Optional, cast
 
-from yarl import URL
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -81,15 +79,15 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
         """Name of the implementation."""
         return f"{self._name} via Configuration.yaml"
 
-    async def async_generate_authorize_url(self, flow_id: str) -> str:
-        """Generate a url for the user to authorize."""
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
         data = {"tenant_id": self.tenant_id}
 
         if self.issuer is not None:
             data["issuer"] = self.issuer
 
-        url = await super().async_generate_authorize_url(flow_id)
-        return str(URL(url).update_query(data))
+        return data
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Initialize local Toon auth implementation."""
