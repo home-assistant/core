@@ -308,6 +308,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
         return self.async_show_form(step_id="exclude", data_schema=data_schema)
 
+    async def _build_domains_list(self, homekit_options):
+        """Build a list of domains from context."""
+        entity_filter = self.homekit_options.get(CONF_FILTER, {})
+        domains_to_include = self.homekit_options[CONF_INCLUDE_DOMAINS]
+        for included_entity in entity_filter.get(CONF_INCLUDE_ENTITIES, []):
+            domain, _ = split_entity_id(included_entity)
+            if domain not in domains_to_include:
+                domains_to_include.append(domain[0])
+
     async def async_step_include(self, user_input=None):
         """Choose entities to include from the domain."""
         if user_input is not None:
@@ -332,8 +341,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
         domains_to_include = self.homekit_options[CONF_INCLUDE_DOMAINS]
         for included_entity in entity_filter.get(CONF_INCLUDE_ENTITIES, []):
-            domain = included_entity.split(".")
-            if domain[0] not in domains_to_include:
+            domain, _ = split_entity_id(included_entity)
+            if domain not in domains_to_include:
                 domains_to_include.append(domain[0])
         all_supported_entities = await self.hass.async_add_executor_job(
             _get_entities_matching_domains, self.hass, domains_to_include,
@@ -377,8 +386,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         # If we're not excluding, the Include list will be empty.
         if not filter_by_excluding:
             for included_entity in entity_filter.get(CONF_INCLUDE_ENTITIES, []):
-                domain = included_entity.split(".")
-                if domain[0] not in domains_to_include:
+                domain, _ = split_entity_id(included_entity)
+                if domain not in domains_to_include:
                     domains_to_include.append(domain[0])
 
         data_schema = vol.Schema(

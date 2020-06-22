@@ -40,14 +40,14 @@
                 "data": {
                     "exclude_entities": "Entities to exclude"
                 },
-                "description": "Choose the entities that you do NOT want to be bridged. New entities will be automatically included.",
+                "description": "Choose the entities that you do NOT want to be bridged. Note that new entities in these domains will be automatically bridged when this bridge restarts.",
                 "title": "Exclude entities in selected domains from bridge"
             },
             "include": {
                 "data": {
                     "include_entities": "Entities to include"
                 },
-                "description": "Choose the entities that you DO want to be bridged. New entities will not be automatically included.",
+                "description": "Choose the entities that you DO want to be bridged.",
                 "title": "Include entities in selected domains to bridge"
             },
             "init": {
