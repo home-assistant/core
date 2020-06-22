@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to the device",
+        "title": "Connect to PoolSense",
         "data": {
           "host": "Host"
         }
