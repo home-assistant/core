@@ -20,7 +20,6 @@ from wiserHeatingAPI.wiserHub import (
     wiserHub,
 )
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_MINIMUM,
@@ -84,27 +83,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """
-    Wiser uses config flow for configuration.
-
-    But, a "wiser:" entry in configuration.yaml will trigger an import flow
-    if a config entry doesn't already exist. If it exists, the import
-    flow will attempt to import it and create a config entry, to assist users
-    migrating from the old wiser component. Otherwise, the user will have to
-    continue setting up the integration via the config flow.
-    """
-    hass.data.setdefault(DOMAIN, {})
-
-    if DOMAIN not in config:
-        return True
-
-    for conf in config[DOMAIN]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf,
-            )
-        )
-
+    """Set up of the Wiser Hub component."""
     return True
 
 
