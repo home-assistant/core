@@ -107,8 +107,16 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator):
             await self.register_webhook()
             return
 
+        if (
+            "updateDataSet" not in data
+            or "commonName" not in data
+            or self.data.agreement.display_common_name != data["commonName"]
+        ):
+            _LOGGER.warning("Received invalid data from Toon webhook - %s", data)
+            return
+
         try:
-            await self.toon.update(data.get("updateDataSet", {}))
+            await self.toon.update(data["updateDataSet"])
             self.update_listeners()
         except ToonError as err:
             _LOGGER.error("Could not process data received from Toon webhook - %s", err)
