@@ -339,7 +339,7 @@ beewi_smartclim==0.0.7
 bellows==0.17.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.5
+bimmer_connected==0.7.7
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
