@@ -61,6 +61,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=10)
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the LG webOS Smart TV platform."""
 
