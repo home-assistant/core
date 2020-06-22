@@ -3,10 +3,18 @@ from datetime import datetime
 import unittest
 
 import pytest
+import pytz
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from homeassistant.components.recorder.models import Base, Events, RecorderRuns, States
+from homeassistant.components.recorder.models import (
+    Base,
+    Events,
+    RecorderRuns,
+    States,
+    process_timestamp,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
@@ -165,3 +173,68 @@ def test_states_from_native_invalid_entity_id():
 
     state = state.to_native(validate_entity_id=False)
     assert state.entity_id == "test.invalid__id"
+
+
+async def test_process_timestamp():
+    """Test processing time stamp to UTC."""
+    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
+    datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
+    est = pytz.timezone("US/Eastern")
+    datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)
+    nst = pytz.timezone("Canada/Newfoundland")
+    datetime_nst_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=nst)
+    hst = pytz.timezone("US/Hawaii")
+    datetime_hst_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=hst)
+
+    assert process_timestamp(datetime_with_tzinfo) == datetime(
+        2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC
+    )
+    assert process_timestamp(datetime_without_tzinfo) == datetime(
+        2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC
+    )
+    assert process_timestamp(datetime_est_timezone) == datetime(
+        2016, 7, 9, 15, 56, tzinfo=dt.UTC
+    )
+    assert process_timestamp(datetime_nst_timezone) == datetime(
+        2016, 7, 9, 14, 31, tzinfo=dt.UTC
+    )
+    assert process_timestamp(datetime_hst_timezone) == datetime(
+        2016, 7, 9, 21, 31, tzinfo=dt.UTC
+    )
+    assert process_timestamp(None) is None
+
+
+async def test_process_timestamp_to_utc_isoformat():
+    """Test processing time stamp to UTC isoformat."""
+    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
+    datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
+    est = pytz.timezone("US/Eastern")
+    datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)
+    est = pytz.timezone("US/Eastern")
+    datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)
+    nst = pytz.timezone("Canada/Newfoundland")
+    datetime_nst_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=nst)
+    hst = pytz.timezone("US/Hawaii")
+    datetime_hst_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=hst)
+
+    assert (
+        process_timestamp_to_utc_isoformat(datetime_with_tzinfo)
+        == "2016-07-09T11:00:00+00:00"
+    )
+    assert (
+        process_timestamp_to_utc_isoformat(datetime_without_tzinfo)
+        == "2016-07-09T11:00:00+00:00"
+    )
+    assert (
+        process_timestamp_to_utc_isoformat(datetime_est_timezone)
+        == "2016-07-09T15:56:00+00:00"
+    )
+    assert (
+        process_timestamp_to_utc_isoformat(datetime_nst_timezone)
+        == "2016-07-09T14:31:00+00:00"
+    )
+    assert (
+        process_timestamp_to_utc_isoformat(datetime_hst_timezone)
+        == "2016-07-09T21:31:00+00:00"
+    )
+    assert process_timestamp_to_utc_isoformat(None) is None
