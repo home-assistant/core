@@ -340,10 +340,6 @@ def _get_related_entity_ids(session, entity_filter):
             time.sleep(QUERY_RETRY_WAIT)
 
 
-def _generate_filter_from_config(config):
-    return convert_filter_alt(config)
-
-
 def _all_entities_filter(_):
     """Filter that accepts all entities."""
     return True
@@ -366,7 +362,7 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
             entity_ids = [entity_id.lower()]
             entities_filter = generate_filter([], entity_ids, [], [])
         elif config.get(CONF_EXCLUDE) or config.get(CONF_INCLUDE):
-            entities_filter = _generate_filter_from_config(config)
+            entities_filter = convert_filter_alt(config)
             entity_ids = _get_related_entity_ids(session, entities_filter)
         else:
             entities_filter = _all_entities_filter

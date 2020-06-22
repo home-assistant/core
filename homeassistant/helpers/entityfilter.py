@@ -26,8 +26,8 @@ def convert_filter(config: Dict[str, List[str]]) -> Callable[[str], bool]:
         config[CONF_INCLUDE_ENTITIES],
         config[CONF_EXCLUDE_DOMAINS],
         config[CONF_EXCLUDE_ENTITIES],
-        config.get(CONF_INCLUDE_ENTITY_GLOBS, []),
-        config.get(CONF_EXCLUDE_ENTITY_GLOBS, []),
+        config[CONF_INCLUDE_ENTITY_GLOBS],
+        config[CONF_EXCLUDE_ENTITY_GLOBS],
     )
     setattr(filt, "config", config)
     setattr(filt, "empty_filter", sum(len(val) for val in config.values()) == 0)
@@ -60,15 +60,15 @@ def convert_filter_alt(
     config: Dict[str, Dict[str, List[str]]]
 ) -> Callable[[str], bool]:
     """Convert the alternate filter schema into a filter."""
-    include = config.get(CONF_INCLUDE, {})
-    exclude = config.get(CONF_EXCLUDE, {})
+    include = config[CONF_INCLUDE]
+    exclude = config[CONF_EXCLUDE]
     filt = generate_filter(
-        include.get(CONF_DOMAINS, []),
-        include.get(CONF_ENTITIES, []),
-        exclude.get(CONF_DOMAINS, []),
-        exclude.get(CONF_ENTITIES, []),
-        include.get(CONF_ENTITY_GLOBS, []),
-        exclude.get(CONF_ENTITY_GLOBS, []),
+        include[CONF_DOMAINS],
+        include[CONF_ENTITIES],
+        exclude[CONF_DOMAINS],
+        exclude[CONF_ENTITIES],
+        include[CONF_ENTITY_GLOBS],
+        exclude[CONF_ENTITY_GLOBS],
     )
     total_filters = sum(len(val) for val in include.values()) + sum(
         len(val) for val in exclude.values()

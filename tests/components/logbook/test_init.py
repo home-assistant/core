@@ -29,7 +29,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
-from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
+from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS, convert_filter_alt
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
@@ -155,7 +155,9 @@ class TestComponentLogbook(unittest.TestCase):
         attributes = {"unit_of_measurement": "foo"}
         eventA = self.create_state_changed_event(pointA, entity_id, 10, attributes)
 
-        entities_filter = logbook._generate_filter_from_config({})
+        entities_filter = convert_filter_alt(
+            logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
+        )
         assert (
             logbook._keep_event(self.hass, eventA, entities_filter, entity_attr_cache)
             is False
@@ -178,7 +180,9 @@ class TestComponentLogbook(unittest.TestCase):
         )
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        entities_filter = logbook._generate_filter_from_config({})
+        entities_filter = convert_filter_alt(
+            logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
+        )
         events = [
             e
             for e in (
@@ -214,7 +218,9 @@ class TestComponentLogbook(unittest.TestCase):
         )
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        entities_filter = logbook._generate_filter_from_config({})
+        entities_filter = convert_filter_alt(
+            logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
+        )
         events = [
             e
             for e in (
@@ -247,7 +253,9 @@ class TestComponentLogbook(unittest.TestCase):
         )
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        entities_filter = logbook._generate_filter_from_config({})
+        entities_filter = convert_filter_alt(
+            logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
+        )
         events = [
             e
             for e in (
@@ -284,7 +292,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.DOMAIN: {logbook.CONF_EXCLUDE: {CONF_ENTITIES: [entity_id]}},
             }
         )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
+        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -323,7 +331,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
+        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -369,7 +377,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
+        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -413,7 +421,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
+        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -460,7 +468,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
+        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -513,7 +521,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
+        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -569,7 +577,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
+        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -640,7 +648,7 @@ class TestComponentLogbook(unittest.TestCase):
                 },
             }
         )
-        entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
+        entities_filter = convert_filter_alt(config[logbook.DOMAIN])
         events = [
             e
             for e in (
@@ -700,7 +708,9 @@ class TestComponentLogbook(unittest.TestCase):
             "light.kitchen", pointC, state_100, state_200
         )
 
-        entities_filter = logbook._generate_filter_from_config({})
+        entities_filter = convert_filter_alt(
+            logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
+        )
         events = [
             e
             for e in (eventA, eventB)
@@ -1408,6 +1418,7 @@ class TestComponentLogbook(unittest.TestCase):
             entries[0], name=name, message=message, domain="sun", entity_id=entity_id
         )
 
+    # pylint: disable=no-self-use
     def assert_entry(
         self, entry, when=None, name=None, message=None, domain=None, entity_id=None
     ):
@@ -1448,6 +1459,7 @@ class TestComponentLogbook(unittest.TestCase):
             entity_id, event_time_fired, old_state, new_state
         )
 
+    # pylint: disable=no-self-use
     def create_state_changed_event_from_old_new(
         self, entity_id, event_time_fired, old_state, new_state
     ):
@@ -1522,36 +1534,36 @@ async def test_logbook_view_period_entity(hass, hass_client):
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 2
-    assert json[0]["entity_id"] == entity_id_test
-    assert json[1]["entity_id"] == entity_id_second
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0]["entity_id"] == entity_id_test
+    assert response_json[1]["entity_id"] == entity_id_second
 
     # Test today entries with filter by period
     response = await client.get(f"/api/logbook/{start_date.isoformat()}?period=1")
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 2
-    assert json[0]["entity_id"] == entity_id_test
-    assert json[1]["entity_id"] == entity_id_second
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0]["entity_id"] == entity_id_test
+    assert response_json[1]["entity_id"] == entity_id_second
 
     # Test today entries with filter by entity_id
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?entity=switch.test"
     )
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 1
-    assert json[0]["entity_id"] == entity_id_test
+    response_json = await response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["entity_id"] == entity_id_test
 
     # Test entries for 3 days with filter by entity_id
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?period=3&entity=switch.test"
     )
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 1
-    assert json[0]["entity_id"] == entity_id_test
+    response_json = await response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["entity_id"] == entity_id_test
 
     # Tomorrow time 00:00:00
     start = (dt_util.utcnow() + timedelta(days=1)).date()
@@ -1560,25 +1572,25 @@ async def test_logbook_view_period_entity(hass, hass_client):
     # Test tomorrow entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 0
+    response_json = await response.json()
+    assert len(response_json) == 0
 
     # Test tomorrow entries with filter by entity_id
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?entity=switch.test"
     )
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 0
+    response_json = await response.json()
+    assert len(response_json) == 0
 
     # Test entries from tomorrow to 3 days ago with filter by entity_id
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?period=3&entity=switch.test"
     )
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 1
-    assert json[0]["entity_id"] == entity_id_test
+    response_json = await response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["entity_id"] == entity_id_test
 
 
 async def test_logbook_describe_event(hass, hass_client):
@@ -1704,10 +1716,10 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
     )
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 2
-    assert json[0]["entity_id"] == entity_id_test
-    assert json[1]["entity_id"] == entity_id_second
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0]["entity_id"] == entity_id_test
+    assert response_json[1]["entity_id"] == entity_id_second
 
     # Test entries for 3 days with filter by entity_id
     end_time = start + timedelta(hours=72)
@@ -1715,9 +1727,9 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
     )
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 1
-    assert json[0]["entity_id"] == entity_id_test
+    response_json = await response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["entity_id"] == entity_id_test
 
     # Tomorrow time 00:00:00
     start = dt_util.utcnow()
@@ -1729,9 +1741,9 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
     )
     assert response.status == 200
-    json = await response.json()
-    assert len(json) == 1
-    assert json[0]["entity_id"] == entity_id_test
+    response_json = await response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["entity_id"] == entity_id_test
 
 
 async def test_logbook_entity_filter_with_automations(hass, hass_client):

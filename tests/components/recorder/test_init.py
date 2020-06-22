@@ -6,6 +6,8 @@ import unittest
 import pytest
 
 from homeassistant.components.recorder import (
+    CONFIG_SCHEMA,
+    DOMAIN,
     Recorder,
     run_information,
     run_information_from_instance,
@@ -16,7 +18,6 @@ from homeassistant.components.recorder.models import Events, RecorderRuns, State
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, callback
-from homeassistant.helpers.entityfilter import convert_filter_alt
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -268,7 +269,7 @@ def test_recorder_setup_failure():
             uri="sqlite://",
             db_max_retries=10,
             db_retry_wait=3,
-            entity_filter=convert_filter_alt({}),
+            entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
             exclude_t=[],
         )
         rec.start()
