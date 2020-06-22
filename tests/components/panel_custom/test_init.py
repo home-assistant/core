@@ -30,19 +30,22 @@ async def test_webcomponent_custom_path_not_found(hass):
         assert "nice_url" not in panels
 
 
-async def test_webcomponent_custom_path(hass):
+async def test_webcomponent_custom_path(hass, caplog):
     """Test if a web component is found in config panels dir."""
     filename = "mock.file"
 
     config = {
-        "panel_custom": {
-            "name": "todo-mvc",
-            "webcomponent_path": filename,
-            "sidebar_title": "Sidebar Title",
-            "sidebar_icon": "mdi:iconicon",
-            "url_path": "nice_url",
-            "config": {"hello": "world"},
-        }
+        "panel_custom": [
+            {
+                "name": "todo-mvc",
+                "webcomponent_path": filename,
+                "sidebar_title": "Sidebar Title",
+                "sidebar_icon": "mdi:iconicon",
+                "url_path": "nice_url",
+                "config": {"hello": "world"},
+            },
+            {"name": "todo-mvc"},
+        ]
     }
 
     with patch("os.path.isfile", Mock(return_value=True)):
@@ -69,6 +72,8 @@ async def test_webcomponent_custom_path(hass):
             assert panel.frontend_url_path == "nice_url"
             assert panel.sidebar_icon == "mdi:iconicon"
             assert panel.sidebar_title == "Sidebar Title"
+
+    assert "Got HTML panel with duplicate name todo-mvc. Not registering" in caplog.text
 
 
 async def test_js_webcomponent(hass):
@@ -186,7 +191,6 @@ async def test_latest_and_es5_build(hass):
 async def test_url_option_conflict(hass):
     """Test config with multiple url options."""
     to_try = [
-        {"panel_custom": {"name": "todo-mvc"}},
         {
             "panel_custom": {
                 "name": "todo-mvc",

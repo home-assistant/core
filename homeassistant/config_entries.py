@@ -21,6 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 _UNDEF: dict = {}
 
 SOURCE_DISCOVERY = "discovery"
+SOURCE_HASSIO = "hassio"
+SOURCE_HOMEKIT = "homekit"
 SOURCE_IMPORT = "import"
 SOURCE_INTEGRATION_DISCOVERY = "integration_discovery"
 SOURCE_SSDP = "ssdp"
@@ -62,6 +64,7 @@ ENTRY_STATE_FAILED_UNLOAD = "failed_unload"
 
 UNRECOVERABLE_STATES = (ENTRY_STATE_MIGRATION_ERROR, ENTRY_STATE_FAILED_UNLOAD)
 
+DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
 DISCOVERY_SOURCES = (
     SOURCE_SSDP,
@@ -466,6 +469,10 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 ):
                     self.async_abort(progress_flow["flow_id"])
 
+            # Reset unique ID when the default discovery ID has been used
+            if flow.unique_id == DEFAULT_DISCOVERY_UNIQUE_ID:
+                await flow.async_set_unique_id(None)
+
             # Find existing entry.
             for check_entry in self.config_entries.async_entries(result["handler"]):
                 if check_entry.unique_id == flow.unique_id:
@@ -857,18 +864,29 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
-        self, unique_id: str, *, raise_on_progress: bool = True
+        self, unique_id: Optional[str] = None, *, raise_on_progress: bool = True
     ) -> Optional[ConfigEntry]:
         """Set a unique ID for the config flow.
 
         Returns optionally existing config entry with same ID.
         """
+        if unique_id is None:
+            self.context["unique_id"] = None  # pylint: disable=no-member
+            return None
+
         if raise_on_progress:
             for progress in self._async_in_progress():
                 if progress["context"].get("unique_id") == unique_id:
                     raise data_entry_flow.AbortFlow("already_in_progress")
 
         self.context["unique_id"] = unique_id  # pylint: disable=no-member
+
+        # Abort discoveries done using the default discovery unique id
+        assert self.hass is not None
+        if unique_id != DEFAULT_DISCOVERY_UNIQUE_ID:
+            for progress in self._async_in_progress():
+                if progress["context"].get("unique_id") == DEFAULT_DISCOVERY_UNIQUE_ID:
+                    self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
         for entry in self._async_current_entries():
             if entry.unique_id == unique_id:
@@ -910,6 +928,49 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     async def async_step_unignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Rediscover a config entry by it's unique_id."""
         return self.async_abort(reason="not_implemented")
+
+    async def async_step_user(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Handle a flow initiated by the user."""
+        return self.async_abort(reason="not_implemented")
+
+    async def _async_handle_discovery_without_unique_id(self) -> None:
+        """Mark this flow discovered, without a unique identifier.
+
+        If a flow initiated by discovery, doesn't have a unique ID, this can
+        be used alternatively. It will ensure only 1 flow is started and only
+        when the handler has no existing config entries.
+
+        It ensures that the discovery can be ignored by the user.
+        """
+        if self.unique_id is not None:
+            return
+
+        # Abort if the handler has config entries already
+        if self._async_current_entries():
+            raise data_entry_flow.AbortFlow("already_configured")
+
+        # Use an special unique id to differentiate
+        await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
+        self._abort_if_unique_id_configured()
+
+        # Abort if any other flow for this handler is already in progress
+        assert self.hass is not None
+        if self._async_in_progress():
+            raise data_entry_flow.AbortFlow("already_in_progress")
+
+    async def async_step_discovery(
+        self, discovery_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle a flow initialized by discovery."""
+        await self._async_handle_discovery_without_unique_id()
+        return await self.async_step_user()
+
+    async_step_hassio = async_step_discovery
+    async_step_homekit = async_step_discovery
+    async_step_ssdp = async_step_discovery
+    async_step_zeroconf = async_step_discovery
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):

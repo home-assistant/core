@@ -32,9 +32,9 @@ class TestLight(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

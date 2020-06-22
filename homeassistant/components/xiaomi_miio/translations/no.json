@@ -7,6 +7,7 @@
         "error": {
             "no_device_selected": "Ingen enhet valgt, vennligst velg en enhet."
         },
+        "flow_title": "Xiaomi Miio: {navn}",
         "step": {
             "gateway": {
                 "data": {
@@ -21,7 +22,8 @@
                 "data": {
                     "gateway": "Koble til en Xiaomi Gateway"
                 },
-                "description": "Velg hvilken enhet du vil koble til."
+                "description": "Velg hvilken enhet du vil koble til.",
+                "title": ""
             }
         }
     }

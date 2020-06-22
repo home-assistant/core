@@ -2,12 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n para este dispositivo Xiaomi Miio ya est\u00e1 en progreso."
+            "already_in_progress": "El flujo de configuraci\u00f3n para este dispositivo Xiaomi Miio ya est\u00e1 en marcha."
         },
         "error": {
             "connect_error": "No se ha podido conectar",
             "no_device_selected": "No se ha seleccionado ning\u00fan dispositivo, por favor, seleccione un dispositivo."
         },
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "gateway": {
                 "data": {

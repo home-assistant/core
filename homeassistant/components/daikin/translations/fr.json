@@ -3,6 +3,11 @@
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
+        "error": {
+            "device_fail": "Erreur inattendue",
+            "device_timeout": "Echec de la connexion",
+            "forbidden": "Authentification invalide"
+        },
         "step": {
             "user": {
                 "data": {
