@@ -98,6 +98,6 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         self.data[CONF_AGREEMENT_ID] = agreement.agreement_id
         return self.async_create_entry(
-            title=f"{agreement.agreement_id} - {agreement.street} {agreement.house_number}, {agreement.city}",
+            title=f"{agreement.street} {agreement.house_number}, {agreement.city}",
             data=self.data,
         )
