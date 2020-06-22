@@ -6,7 +6,8 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.dt import as_timestamp, now
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_timestamp
 
 from .const import (
     CONF_MANUAL_RUN_MINS,
@@ -23,6 +24,7 @@ from .const import (
     KEY_NAME,
     KEY_ON,
     KEY_RAIN_DELAY,
+    KEY_RAIN_DELAY_END,
     KEY_SCHEDULE_ID,
     KEY_SUBTYPE,
     KEY_SUMMARY,
@@ -177,6 +179,11 @@ class RachioStandbySwitch(RachioSwitch):
 class RachioRainDelay(RachioSwitch):
     """Representation of a rain delay status/switch."""
 
+    def __init__(self, controller):
+        """Set up a Rachio rain delay switch."""
+        self._cancel_update = None
+        super().__init__(controller)
+
     @property
     def name(self) -> str:
         """Return the name of the switch."""
@@ -195,11 +202,27 @@ class RachioRainDelay(RachioSwitch):
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Update the state using webhook data."""
+        if self._cancel_update:
+            self._cancel_update()
+            self._cancel_update = None
+
         if args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_ON:
+            endtime = parse_datetime(args[0][0][KEY_RAIN_DELAY_END])
+            _LOGGER.debug("Rain delay expires at %s", endtime)
             self._state = True
+            self._cancel_update = async_track_point_in_utc_time(
+                self.hass, self._delay_expiration, endtime
+            )
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_OFF:
             self._state = False
 
+        self.async_write_ha_state()
+
+    @callback
+    def _delay_expiration(self, *args) -> None:
+        """Trigger when a rain delay expires."""
+        self._state = False
+        self._cancel_update = None
         self.async_write_ha_state()
 
     def turn_on(self, **kwargs) -> None:
@@ -218,6 +241,16 @@ class RachioRainDelay(RachioSwitch):
             self._state = self._controller.init_data[
                 KEY_RAIN_DELAY
             ] / 1000 > as_timestamp(now())
+
+        # If the controller was in a rain delay state during a reboot, this re-sets the timer
+        if self._state is True:
+            delay_end = utc_from_timestamp(
+                self._controller.init_data[KEY_RAIN_DELAY] / 1000
+            )
+            _LOGGER.debug("Re-setting rain delay timer for %s", delay_end)
+            self._cancel_update = async_track_point_in_utc_time(
+                self.hass, self._delay_expiration, delay_end
+            )
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -392,7 +425,6 @@ class RachioSchedule(RachioSwitch):
 
     def turn_on(self, **kwargs) -> None:
         """Start this schedule."""
-
         self._controller.rachio.schedulerule.start(self._schedule_id)
         _LOGGER.debug(
             "Schedule %s started on %s", self.name, self._controller.name,

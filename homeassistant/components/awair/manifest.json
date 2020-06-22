@@ -2,6 +2,7 @@
   "domain": "awair",
   "name": "Awair",
   "documentation": "https://www.home-assistant.io/integrations/awair",
-  "requirements": ["python_awair==0.0.4"],
-  "codeowners": ["@danielsjf"]
+  "requirements": ["python_awair==0.1.1"],
+  "codeowners": ["@ahayworth", "@danielsjf"],
+  "config_flow": true
 }
