@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import CONF_AGREEMENT, CONF_AGREEMENT_ID, DOMAIN
+from .const import CONF_AGREEMENT, CONF_AGREEMENT_ID, CONF_MIGRATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,14 +47,22 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         return await self.async_step_agreement()
 
-    async def async_step_import(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_step_import(
+        self, config: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Start a configuration flow based on imported data.
 
         This step is merely here to trigger "discovery" when the `toon`
         integration is listed in the user configuration, or when migrating from
         the version 1 schema.
         """
-        await self._async_handle_discovery_without_unique_id()
+
+        if config is not None and CONF_MIGRATE in config:
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            self.context.update({CONF_MIGRATE: config[CONF_MIGRATE]})
+        else:
+            await self._async_handle_discovery_without_unique_id()
+
         return await self.async_step_user()
 
     async def async_step_agreement(
@@ -82,6 +90,12 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await self._create_entry(self.agreements[agreement_index])
 
     async def _create_entry(self, agreement: Agreement) -> Dict[str, Any]:
+        if (  # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            CONF_MIGRATE in self.context
+        ):
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            await self.hass.config_entries.async_remove(self.context[CONF_MIGRATE])
+
         await self.async_set_unique_id(agreement.agreement_id)
         self._abort_if_unique_id_configured()
 

@@ -21,6 +21,7 @@ DOMAIN = "toon"
 CONF_AGREEMENT = "agreement"
 CONF_AGREEMENT_ID = "agreement_id"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
+CONF_MIGRATE = "migrate"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
 DEFAULT_MAX_TEMP = 30.0
@@ -30,10 +31,10 @@ CURRENCY_EUR = "EUR"
 VOLUME_CM3 = "CM3"
 VOLUME_M3 = "M3"
 
-ATTR_SECTION = "section"
-ATTR_MEASUREMENT = "measurement"
 ATTR_DEFAULT_ENABLED = "default_enabled"
 ATTR_INVERTED = "inverted"
+ATTR_MEASUREMENT = "measurement"
+ATTR_SECTION = "section"
 
 BINARY_SENSOR_ENTITIES = {
     "thermostat_info_boiler_connected_None": {

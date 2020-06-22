@@ -3,7 +3,7 @@
 from toonapi import Agreement, ToonError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.toon.const import CONF_AGREEMENT, DOMAIN
+from homeassistant.components.toon.const import CONF_AGREEMENT, CONF_MIGRATE, DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -245,3 +245,46 @@ async def test_import(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_in_progress"
+
+
+async def test_import_migration(hass, aiohttp_client, aioclient_mock):
+    """Test if importing step with migration works."""
+    old_entry = MockConfigEntry(domain=DOMAIN, unique_id=123, version=1)
+    old_entry.add_to_hass(hass)
+
+    await setup_component(hass)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].version == 1
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"][CONF_MIGRATE] == old_entry.entry_id
+
+    # pylint: disable=protected-access
+    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": flows[0]["flow_id"]})
+    await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"], {"implementation": "eneco"}
+    )
+
+    client = await aiohttp_client(hass.http.app)
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    aioclient_mock.post(
+        "https://api.toon.eu/token",
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch("toonapi.Toon.agreements", return_value=[Agreement(agreement_id=123)]):
+        result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"])
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].version == 2

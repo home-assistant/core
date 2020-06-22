@@ -24,7 +24,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_AGREEMENT_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_AGREEMENT_ID, CONF_MIGRATE, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
 from .oauth2 import register_oauth2_implementations
 
@@ -80,10 +80,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The integration switched to OAuth and because of this, uses
         # different unique identifiers as well.
         # Force this by removing the existing entry and trigger a new flow.
-        await hass.config_entries.async_remove(entry.entry_id)
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={CONF_MIGRATE: entry.entry_id},
             )
         )
         return False
