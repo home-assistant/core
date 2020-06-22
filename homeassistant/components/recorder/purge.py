@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 import homeassistant.util.dt as dt_util
 
-from .models import Events, States
+from .models import Events, RecorderRuns, States
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +32,13 @@ def purge_old_data(instance, purge_days, repack):
                 .delete(synchronize_session=False)
             )
             _LOGGER.debug("Deleted %s events", deleted_rows)
+
+            deleted_rows = (
+                session.query(RecorderRuns)
+                .filter(RecorderRuns.start < purge_before)
+                .delete(synchronize_session=False)
+            )
+            _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
 
         # Execute sqlite vacuum command to free up space on disk
         if repack and instance.engine.driver in ("pysqlite", "postgresql"):

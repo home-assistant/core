@@ -488,7 +488,10 @@ class HistoryPeriodView(HomeAssistantView):
     ):
         """Fetch significant stats from the database as json."""
         timer_start = time.perf_counter()
+        import cProfile
 
+        pr = cProfile.Profile()
+        pr.enable()
         with session_scope(hass=hass) as session:
             result = _get_significant_states(
                 hass,
@@ -520,7 +523,11 @@ class HistoryPeriodView(HomeAssistantView):
             sorted_result.extend(result)
             result = sorted_result
 
-        return self.json(result)
+        result = self.json(result)
+        pr.disable()
+        pr.create_stats()
+        pr.dump_stats("history.cprof")
+        return result
 
 
 class Filters:
