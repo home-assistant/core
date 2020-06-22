@@ -13,7 +13,11 @@ import voluptuous as vol
 
 from homeassistant.components import recorder
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder.models import States, process_timestamp
+from homeassistant.components.recorder.models import (
+    States,
+    process_timestamp,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_HIDDEN,
@@ -318,7 +322,7 @@ def _sorted_states_to_json(
 
     # Called in a tight loop so cache the function
     # here
-    _process_timestamp = process_timestamp
+    _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
 
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):
@@ -362,9 +366,9 @@ def _sorted_states_to_json(
             ent_results.append(
                 {
                     STATE_KEY: db_state.state,
-                    LAST_CHANGED_KEY: _process_timestamp(
+                    LAST_CHANGED_KEY: _process_timestamp_to_utc_isoformat(
                         db_state.last_changed
-                    ).isoformat(),
+                    ),
                 }
             )
             prev_state = db_state
