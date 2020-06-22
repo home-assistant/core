@@ -117,7 +117,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RestBinarySensor(BinarySensorDevice):
     """Representation of a REST binary sensor."""
 
-    def __init__(self, hass, rest, name, device_class, value_template,force_update,resource_template):
+    def __init__(
+        self,
+        hass,
+        rest,
+        name,
+        device_class,
+        value_template,
+        force_update,
+        resource_template,
+    ):
         """Initialize a REST binary sensor."""
         self._hass = hass
         self.rest = rest
@@ -163,6 +172,7 @@ class RestBinarySensor(BinarySensorDevice):
             return {"true": True, "on": True, "open": True, "yes": True}.get(
                 response.lower(), False
             )
+
     @property
     def force_update(self):
         """Force update."""
