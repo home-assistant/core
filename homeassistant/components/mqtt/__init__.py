@@ -42,7 +42,7 @@ from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa: F401 pylint: disable=unused-import
-from . import debug_info, discovery, server
+from . import debug_info, discovery
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_TOPIC,
@@ -79,8 +79,6 @@ DATA_MQTT_CONFIG = "mqtt_config"
 
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
-
-CONF_EMBEDDED = "embedded"
 
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_KEEPALIVE = "keepalive"
@@ -169,7 +167,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
                     vol.Coerce(int), vol.Range(min=15)
                 ),
-                vol.Optional(CONF_BROKER): cv.string,
+                vol.Required(CONF_BROKER): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PASSWORD): cv.string,
@@ -186,9 +184,6 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
                     cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
-                ),
-                vol.Optional(CONF_EMBEDDED): vol.All(
-                    server.HBMQTT_CONFIG_SCHEMA, embedded_broker_deprecated
                 ),
                 vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
                 vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
@@ -418,23 +413,6 @@ def subscribe(
     return remove
 
 
-async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
-    """Try to start embedded MQTT broker.
-
-    This method is a coroutine.
-    """
-    conf: ConfigType = config.get(DOMAIN, {})
-
-    success, broker_config = await server.async_start(
-        hass, conf.get(CONF_PASSWORD), conf.get(CONF_EMBEDDED)
-    )
-
-    if not success:
-        return None
-
-    return broker_config
-
-
 async def _async_setup_discovery(
     hass: HomeAssistantType, conf: ConfigType, config_entry
 ) -> bool:
@@ -463,28 +441,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         return bool(hass.config_entries.async_entries(DOMAIN))
 
     conf = dict(conf)
-
-    if CONF_EMBEDDED in conf or CONF_BROKER not in conf:
-
-        broker_config = await _async_setup_server(hass, config)
-
-        if broker_config is None:
-            _LOGGER.error("Unable to start embedded MQTT broker")
-            return False
-
-        conf.update(
-            {
-                CONF_BROKER: broker_config[0],
-                CONF_PORT: broker_config[1],
-                CONF_USERNAME: broker_config[2],
-                CONF_PASSWORD: broker_config[3],
-                CONF_CERTIFICATE: broker_config[4],
-                CONF_PROTOCOL: broker_config[5],
-                CONF_CLIENT_KEY: None,
-                CONF_CLIENT_CERT: None,
-                CONF_TLS_INSECURE: None,
-            }
-        )
 
     hass.data[DATA_MQTT_CONFIG] = conf
 

@@ -713,9 +713,6 @@ hangups==0.4.9
 # homeassistant.components.cloud
 hass-nabucasa==0.34.7
 
-# homeassistant.components.mqtt
-hbmqtt==0.9.5
-
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
 
