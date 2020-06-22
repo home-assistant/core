@@ -57,7 +57,6 @@ SERVICE_HANDLERS = {
     SERVICE_APPLE_TV: ("apple_tv", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
     SERVICE_WINK: ("wink", None),
-    SERVICE_XIAOMI_GW: ("xiaomi_aqara", None),
     SERVICE_SABNZBD: ("sabnzbd", None),
     SERVICE_SAMSUNG_PRINTER: ("sensor", "syncthru"),
     SERVICE_KONNECTED: ("konnected", None),
@@ -92,6 +91,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "sonos",
     "songpal",
     SERVICE_WEMO,
+    SERVICE_XIAOMI_GW,
 ]
 
 DEFAULT_ENABLED = (
