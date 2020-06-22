@@ -21,6 +21,21 @@ def test_no_filters_case_1():
 def test_includes_only_case_2():
     """If include specified, only pass if specified (Case 2)."""
     incl_dom = {"light", "sensor"}
+    incl_ent = {"binary_sensor.working"}
+    excl_dom = {}
+    excl_ent = {}
+    testfilter = generate_filter(incl_dom, incl_ent, excl_dom, excl_ent)
+
+    assert testfilter("sensor.test")
+    assert testfilter("light.test")
+    assert testfilter("binary_sensor.working")
+    assert testfilter("binary_sensor.notworking") is False
+    assert testfilter("sun.sun") is False
+
+
+def test_includes_only_with_glob_case_2():
+    """If include specified, only pass if specified (Case 2)."""
+    incl_dom = {"light", "sensor"}
     incl_glob = {"cover.*_window"}
     incl_ent = {"binary_sensor.working"}
     excl_dom = {}
@@ -40,6 +55,21 @@ def test_includes_only_case_2():
 
 
 def test_excludes_only_case_3():
+    """If exclude specified, pass all but specified (Case 3)."""
+    incl_dom = {}
+    incl_ent = {}
+    excl_dom = {"light", "sensor"}
+    excl_ent = {"binary_sensor.working"}
+    testfilter = generate_filter(incl_dom, incl_ent, excl_dom, excl_ent)
+
+    assert testfilter("sensor.test") is False
+    assert testfilter("light.test") is False
+    assert testfilter("binary_sensor.working") is False
+    assert testfilter("binary_sensor.another")
+    assert testfilter("sun.sun") is True
+
+
+def test_excludes_only_with_glob_case_3():
     """If exclude specified, pass all but specified (Case 3)."""
     incl_dom = {}
     incl_glob = {}
@@ -177,6 +207,19 @@ def test_no_domain_case4c():
 
 def test_filter_schema():
     """Test filter schema."""
+    conf = {
+        "include_domains": ["light"],
+        "include_entities": ["switch.kitchen"],
+        "exclude_domains": ["cover"],
+        "exclude_entities": ["light.kitchen"],
+    }
+    filt = FILTER_SCHEMA(conf)
+    conf.update({"include_entity_globs": [], "exclude_entity_globs": []})
+    assert filt.config == conf
+
+
+def test_filter_schema_with_globs():
+    """Test filter schema with glob options."""
     conf = {
         "include_domains": ["light"],
         "include_entity_globs": ["sensor.kitchen_*"],

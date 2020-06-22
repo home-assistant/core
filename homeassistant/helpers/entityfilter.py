@@ -144,7 +144,7 @@ def generate_filter(
         return (
             entity_id in include_e
             or domain in include_d
-            or _test_against_patterns(include_eg, entity_id)
+            or bool(include_eg and _test_against_patterns(include_eg, entity_id))
         )
 
     def entity_excluded(domain: str, entity_id: str) -> bool:
@@ -152,7 +152,7 @@ def generate_filter(
         return (
             entity_id in exclude_e
             or domain in exclude_d
-            or _test_against_patterns(exclude_eg, entity_id)
+            or bool(exclude_eg and _test_against_patterns(exclude_eg, entity_id))
         )
 
     # Case 1 - no includes or excludes - pass all entities
@@ -194,7 +194,9 @@ def generate_filter(
             if domain in include_d:
                 return not (
                     entity_id in exclude_e
-                    or _test_against_patterns(exclude_eg, entity_id)
+                    or bool(
+                        exclude_eg and _test_against_patterns(exclude_eg, entity_id)
+                    )
                 )
             if _test_against_patterns(include_eg, entity_id):
                 return not entity_excluded(domain, entity_id)
@@ -214,7 +216,9 @@ def generate_filter(
         def entity_filter_4b(entity_id: str) -> bool:
             """Return filter function for case 4b."""
             domain = split_entity_id(entity_id)[0]
-            if domain in exclude_d or _test_against_patterns(exclude_eg, entity_id):
+            if domain in exclude_d or (
+                exclude_eg and _test_against_patterns(exclude_eg, entity_id)
+            ):
                 return entity_id in include_e
             return entity_id not in exclude_e
 

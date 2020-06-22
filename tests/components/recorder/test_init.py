@@ -97,8 +97,8 @@ class TestRecorder(unittest.TestCase):
         )
 
 
-@pytest.fixture(name="hass_recorder")
-def hass_recorder_fixture():
+@pytest.fixture
+def hass_recorder():
     """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
@@ -136,6 +136,15 @@ def _add_events(hass, events):
         return [ev.to_native() for ev in session.query(Events)]
 
 
+# pylint: disable=redefined-outer-name,invalid-name
+def test_saving_state_include_domains(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder({"include": {"domains": "test2"}})
+    states = _add_entities(hass, ["test.recorder", "test2.recorder"])
+    assert len(states) == 1
+    assert hass.states.get("test2.recorder") == states[0]
+
+
 def test_saving_state_include_domains_globs(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -165,6 +174,14 @@ def test_saving_event_exclude_event_type(hass_recorder):
     assert events[0].event_type == "test2"
 
 
+def test_saving_state_exclude_domains(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder({"exclude": {"domains": "test"}})
+    states = _add_entities(hass, ["test.recorder", "test2.recorder"])
+    assert len(states) == 1
+    assert hass.states.get("test2.recorder") == states[0]
+
+
 def test_saving_state_exclude_domains_globs(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -185,6 +202,15 @@ def test_saving_state_exclude_entities(hass_recorder):
     assert hass.states.get("test2.recorder") == states[0]
 
 
+def test_saving_state_exclude_domain_include_entity(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder(
+        {"include": {"entities": "test.recorder"}, "exclude": {"domains": "test"}}
+    )
+    states = _add_entities(hass, ["test.recorder", "test2.recorder"])
+    assert len(states) == 2
+
+
 def test_saving_state_exclude_domain_glob_include_entity(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -197,6 +223,17 @@ def test_saving_state_exclude_domain_glob_include_entity(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test.excluded_entity"]
     )
     assert len(states) == 3
+
+
+def test_saving_state_include_domain_exclude_entity(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder(
+        {"exclude": {"entities": "test.recorder"}, "include": {"domains": "test"}}
+    )
+    states = _add_entities(hass, ["test.recorder", "test2.recorder", "test.ok"])
+    assert len(states) == 1
+    assert hass.states.get("test.ok") == states[0]
+    assert hass.states.get("test.ok").state == "state2"
 
 
 def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
@@ -247,15 +284,17 @@ async def test_defaults_set(hass):
     async def mock_setup(hass, config):
         """Mock setup."""
         nonlocal recorder_config
-        recorder_config = config["recorder"].config
+        recorder_config = config["recorder"]
         return True
 
     with patch("homeassistant.components.recorder.async_setup", side_effect=mock_setup):
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
-    assert recorder_config.get("auto_purge")
-    assert recorder_config.get("purge_keep_days") == 10
+    assert hasattr(recorder_config, "config")
+    config = recorder_config.config
+    assert config["auto_purge"]
+    assert config["purge_keep_days"] == 10
 
 
 def test_auto_purge(hass_recorder):
@@ -264,10 +303,10 @@ def test_auto_purge(hass_recorder):
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
-    new_tz = dt_util.get_time_zone("Europe/Copenhagen")
-    dt_util.set_default_time_zone(new_tz)
+    tz = dt_util.get_time_zone("Europe/Copenhagen")
+    dt_util.set_default_time_zone(tz)
 
-    test_time = new_tz.localize(datetime(2020, 1, 1, 4, 12, 0))
+    test_time = tz.localize(datetime(2020, 1, 1, 4, 12, 0))
 
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data"

@@ -430,7 +430,7 @@ async def test_state_changed_event_exclude_globs(hass, mqtt_mock):
     assert not mqtt_mock.async_publish.called
 
 
-async def test_state_changed_event_exclude_domain_glob_include_entity(
+async def test_state_changed_event_exclude_domain_globs_include_entity(
     hass, mqtt_mock
     ):
     """Test filtering with excluded domain and glob and included entity."""
@@ -488,7 +488,7 @@ async def test_state_changed_event_exclude_domain_glob_include_entity(
     assert not mqtt_mock.async_publish.called
 
 
-async def test_state_changed_event_include_domain_glob_exclude_entity(
+async def test_state_changed_event_include_domain_globs_exclude_entity(
     hass, mqtt_mock
     ):
     """Test filtering with included domain and glob and excluded entity."""
