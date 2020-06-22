@@ -587,7 +587,7 @@ async def test_retained_message_on_subscribe_received(
     mqtt_client_mock.subscribe.side_effect = side_effect
 
     # Fake that the client is connected
-    mqtt_mock.connected = True
+    mqtt_mock().connected = True
 
     calls_a = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_a)
@@ -605,7 +605,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
 ):
     """Test not calling unsubscribe() when other subscribers are active."""
     # Fake that the client is connected
-    mqtt_mock.connected = True
+    mqtt_mock().connected = True
 
     unsub = await mqtt.async_subscribe(hass, "test/state", None)
     await mqtt.async_subscribe(hass, "test/state", None)
@@ -620,7 +620,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
 async def test_restore_subscriptions_on_reconnect(hass, mqtt_client_mock, mqtt_mock):
     """Test subscriptions are restored on reconnect."""
     # Fake that the client is connected
-    mqtt_mock.connected = True
+    mqtt_mock().connected = True
 
     await mqtt.async_subscribe(hass, "test/state", None)
     await hass.async_block_till_done()
@@ -637,7 +637,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 ):
     """Test active subscriptions are restored correctly on reconnect."""
     # Fake that the client is connected
-    mqtt_mock.connected = True
+    mqtt_mock().connected = True
 
     mqtt_client_mock.subscribe.side_effect = (
         (0, 1),
