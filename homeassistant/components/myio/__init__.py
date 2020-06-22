@@ -27,17 +27,13 @@ async def async_setup_entry(hass, config_entry):
     """Set up config entry."""
     _LOGGER.debug(DOMAIN)
     _server_name = slugify(config_entry.data[CONF_NAME])
-    _server_status = "Offline"
     hass.data[_server_name] = {}
-    hass.states.async_set(f"{_server_name}.state", _server_status)
+    hass.data[_server_name]["state"] = "Offline"
+
     try:
         _refresh_timer = config_entry.options[CONF_REFRESH_TIME]
     except (ValueError, Exception):  # pylint: disable=broad-except
         _refresh_timer = 4
-
-    def server_status():
-        """Return the server status."""
-        return hass.states.get(f"{_server_name}.state").state
 
     def server_data():
         """Return the server data dictionary database."""
@@ -57,9 +53,12 @@ async def async_setup_entry(hass, config_entry):
         """Fetch data from API endpoint."""
         was_offline = False
         _temp_coordinator = hass.data[_server_name]["coordinator"]
-        del hass.data[_server_name]["coordinator"]
+        _temp_server_state = hass.data[_server_name]["state"]
 
-        if server_status() == "Offline":
+        del hass.data[_server_name]["coordinator"]
+        del hass.data[_server_name]["state"]
+
+        if _temp_server_state == "Offline":
             hass.states.async_set(f"{_server_name}.available", False)
             was_offline = True
             for component in PLATFORMS:
@@ -67,20 +66,21 @@ async def async_setup_entry(hass, config_entry):
                     config_entry, component
                 )
 
-        [hass.data[_server_name], _server_status] = await COMMS_THREAD.send(
+        [hass.data[_server_name], _temp_server_state] = await COMMS_THREAD.send(
             server_data=server_data(),
-            server_status=server_status(),
+            server_status=_temp_server_state,
             config_entry=config_entry,
             _post=None,
         )
 
-        hass.states.async_set(f"{_server_name}.state", _server_status)
+        hass.states.async_set(f"{_server_name}.state", _temp_server_state)
+        hass.data[_server_name]["state"] = _temp_server_state
 
-        if server_status().startswith("Online") and was_offline:
+        if _temp_server_state.startswith("Online") and was_offline:
             hass.states.async_set(f"{_server_name}.available", True)
             await setup_config_entries()
             _LOGGER.debug("Online")
-        elif not was_offline and server_status() == "Offline":
+        elif not was_offline and _temp_server_state == "Offline":
             _LOGGER.debug("PlatformNotReady")
             hass.data[_server_name]["coordinator"] = _temp_coordinator
             raise PlatformNotReady
