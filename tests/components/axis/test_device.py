@@ -38,11 +38,7 @@ from homeassistant.const import (
 )
 
 from tests.async_mock import Mock, patch
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_mock_mqtt_component,
-)
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 MAC = "00408C12345"
 MODEL = "model"
@@ -266,17 +262,15 @@ async def test_device_info(hass):
     assert device.api.vapix.serial_number == "00408C12345"
 
 
-async def test_device_support_mqtt(hass):
+async def test_device_support_mqtt(hass, mqtt_mock):
     """Successful setup."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
     api_discovery["data"]["apiList"].append(API_DISCOVERY_MQTT)
 
-    mock_mqtt = await async_mock_mqtt_component(hass)
-
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
         await setup_axis_integration(hass)
 
-    mock_mqtt.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
+    mqtt_mock.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
 
     topic = f"{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
     message = b'{"timestamp": 1590258472044, "topic": "onvif:Device/axis:Sensor/PIR", "message": {"source": {"sensor": "0"}, "key": {}, "data": {"state": "1"}}}'
