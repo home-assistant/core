@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
+    CONF_FORCE_UPDATE,
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
@@ -36,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "REST Binary Sensor"
 DEFAULT_VERIFY_SSL = True
+DEFAULT_FORCE_UPDATE = False
 DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -54,6 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
@@ -77,6 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     headers = config.get(CONF_HEADERS)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    force_update = config.get(CONF_FORCE_UPDATE)
 
     if resource_template is not None:
         resource_template.hass = hass
