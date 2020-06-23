@@ -11,7 +11,7 @@
       }
     },
     "abort": {
-      "single_instance_per_username_allowed": "Only one config entry per unique username is supported"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }
 }
