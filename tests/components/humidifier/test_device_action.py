@@ -307,14 +307,7 @@ async def test_capabilities(hass):
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [
-        {
-            "name": "mode",
-            "options": [],
-            "required": True,
-            "type": "select",
-        }
-    ]
+    ) == [{"name": "mode", "options": [], "required": True, "type": "select",}]
 
     # Set state
     hass.states.async_set(
