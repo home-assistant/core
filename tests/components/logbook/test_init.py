@@ -17,7 +17,6 @@ from homeassistant.components.recorder.models import process_timestamp_to_utc_is
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_HIDDEN,
     ATTR_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -208,39 +207,6 @@ class TestComponentLogbook(unittest.TestCase):
         ).as_dict()
         eventA = self.create_state_changed_event_from_old_new(
             None, pointA, state_on, None,
-        )
-        eventB = self.create_state_changed_event(pointB, entity_id2, 20)
-
-        entities_filter = logbook._generate_filter_from_config({})
-        events = [
-            e
-            for e in (
-                MockLazyEventPartialState(EVENT_HOMEASSISTANT_STOP),
-                eventA,
-                eventB,
-            )
-            if logbook._keep_event(self.hass, e, entities_filter, entity_attr_cache)
-        ]
-        entries = list(logbook.humanify(self.hass, events, entity_attr_cache))
-
-        assert len(entries) == 2
-        self.assert_entry(
-            entries[0], name="Home Assistant", message="stopped", domain=ha.DOMAIN
-        )
-        self.assert_entry(
-            entries[1], pointB, "blu", domain="sensor", entity_id=entity_id2
-        )
-
-    def test_exclude_events_hidden(self):
-        """Test if events are excluded if entity is hidden."""
-        entity_id = "sensor.bla"
-        entity_id2 = "sensor.blu"
-        pointA = dt_util.utcnow()
-        pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
-        entity_attr_cache = logbook.EntityAttributeCache(self.hass)
-
-        eventA = self.create_state_changed_event(
-            pointA, entity_id, 10, {ATTR_HIDDEN: "true"}
         )
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
