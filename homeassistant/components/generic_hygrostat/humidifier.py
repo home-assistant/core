@@ -196,9 +196,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         async def _async_startup(event):
             """Init on startup."""
             sensor_state = self.hass.states.get(self._sensor_entity_id)
-            if sensor_state:
-                await self._async_update_humidity(sensor_state)
-                await self.async_update_ha_state()
+            await self._async_sensor_changed(self._sensor_entity_id, None, sensor_state)
+            #if sensor_state:
+            #    await self._async_update_humidity(sensor_state)
+            #    await self.async_update_ha_state()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
@@ -256,7 +257,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state is not None
+        return self._active
 
     @property
     def state_attributes(self):
@@ -311,7 +312,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn hygrostat on."""
-        if self._state is None:
+        if not self._active:
             return
         self._state = True
         await self._async_operate(force=True)
@@ -319,7 +320,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn hygrostat off."""
-        if self._state is None:
+        if not self._active:
             return
         self._state = False
         if self._is_device_active:
@@ -358,6 +359,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         # Get default humidity from super class
         return super().max_humidity
 
+    @callback
     async def _async_sensor_changed(self, entity_id, old_state, new_state):
         """Handle ambient humidity changes."""
         if new_state is None:
@@ -373,9 +375,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         sensor_state = self.hass.states.get(self._sensor_entity_id)
 
         if sensor_state.last_updated < now - self._sensor_stale_duration:
-            _LOGGER.debug("Time is %s, last changed is %s, stale duration is %s")
+            _LOGGER.debug("Time is %s, last changed is %s, stale duration is %s", now, sensor_state.last_updated, self._sensor_stale_duration)
             _LOGGER.warning("Sensor is stalled, call the emergency stop")
-            self._state = None
+            self._cur_humidity = None
+            self._active = False
             if self._is_device_active:
                 await self._async_device_turn_off()
 
@@ -388,14 +391,15 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             return
         self.async_schedule_update_ha_state()
 
-    @callback
     async def _async_update_humidity(self, state):
         """Update hygrostat with latest state from sensor."""
         try:
             self._cur_humidity = float(state.state)
+            _LOGGER.debug("self._cur_humidity = %s", self._cur_humidity)
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
-            self._state = None
+            self._cur_humidity = None
+            self._active = False
             if self._is_device_active:
                 await self._async_device_turn_off()
 
@@ -405,17 +409,18 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             if not self._active and None not in (
                 self._cur_humidity,
                 self._target_humidity,
-                self._state,
             ):
                 self._active = True
+                force = True
                 _LOGGER.info(
                     "Obtained current and target humidity. "
-                    "Generic hygrostat active. %s, %s",
+                    "Generic hygrostat active. %s, %s, %s",
                     self._cur_humidity,
                     self._target_humidity,
+                    self.available,
                 )
 
-            if not self._active or not self._state:
+            if not self._active:
                 return
 
             if not force and time is None:

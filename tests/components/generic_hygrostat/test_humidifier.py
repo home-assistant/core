@@ -144,6 +144,7 @@ async def test_humidifier_switch(hass, setup_comp_1):
     assert STATE_OFF == hass.states.get(humidifier_switch).state
 
     _setup_sensor(hass, 23)
+    #await hass.async_block_till_done()
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HUMIDITY,
@@ -1441,3 +1442,78 @@ def _mock_restore_cache(hass, humidity=40, state=STATE_OFF):
             ),
         ),
     )
+
+async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
+    """Test turn off on sensor stale."""
+
+    humidifier_switch = "input_boolean.test"
+    assert await async_setup_component(
+        hass, input_boolean.DOMAIN, {"input_boolean": {"test": None}}
+    )
+    await hass.async_block_till_done()
+
+    start_time = datetime.datetime.now(pytz.UTC)
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "humidifier": humidifier_switch,
+                "target_sensor": ENT_SENSOR,
+                "initial_state": True,
+                "sensor_stale_duration": {"minutes": 10},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert STATE_OFF == hass.states.get(humidifier_switch).state
+
+    _setup_sensor(hass, 23)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HUMIDITY,
+        {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: 32},
+        blocking=True,
+    )
+
+    assert STATE_ON == hass.states.get(humidifier_switch).state
+
+    # Wait 11 minutes
+    _send_time_changed(hass, start_time + datetime.timedelta(minutes=11))
+    await hass.async_block_till_done()
+
+    # 11 minutes later, no news from the sensor : emergency cut off
+    assert STATE_OFF == hass.states.get(humidifier_switch).state
+    assert "emergency" in caplog.text
+
+    # Updated value from sensor received
+    _setup_sensor(hass, 23)
+    await hass.async_block_till_done()
+
+    # A new value has arrived, the humidifier should go ON
+    assert STATE_ON == hass.states.get(humidifier_switch).state
+
+    # Manual turn off
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+    )
+    assert STATE_OFF == hass.states.get(humidifier_switch).state
+
+    # Wait 11 minutes
+    _send_time_changed(hass, start_time + datetime.timedelta(minutes=11))
+    await hass.async_block_till_done()
+
+    # Still off
+    assert STATE_OFF == hass.states.get(humidifier_switch).state
+
+    # Updated value from sensor received
+    _setup_sensor(hass, 22)
+    await hass.async_block_till_done()
+
+    # Not turning on by itself
+    assert STATE_OFF == hass.states.get(humidifier_switch).state
