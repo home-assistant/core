@@ -1,5 +1,4 @@
 """Support for Plum Lightpad devices."""
-from copy import deepcopy
 import logging
 
 import voluptuous as vol
@@ -39,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     _LOGGER.info("Found Plum Lightpad configuration in config, importing...")
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
     )
 
