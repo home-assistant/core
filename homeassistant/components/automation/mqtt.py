@@ -19,7 +19,7 @@ DEFAULT_QOS = 0
 TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
-        vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic,
         vol.Optional(CONF_PAYLOAD): cv.string,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
