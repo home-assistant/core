@@ -10,12 +10,13 @@ CONF_SITE_ID = "site_id"
 
 DEFAULT_NAME = "SolarEdge"
 
-OVERVIEW_UPDATE_DELAY = timedelta(minutes=10)
+OVERVIEW_UPDATE_DELAY = timedelta(minutes=15)
 DETAILS_UPDATE_DELAY = timedelta(hours=12)
 INVENTORY_UPDATE_DELAY = timedelta(hours=12)
-POWER_FLOW_UPDATE_DELAY = timedelta(minutes=10)
+POWER_FLOW_UPDATE_DELAY = timedelta(minutes=15)
+ENERGY_DETAILS_DELAY = timedelta(minutes=15)
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 # Supported overview sensor types:
 # Key: ['json_key', 'name', unit, icon, default]
@@ -65,4 +66,15 @@ SENSOR_TYPES = {
     "solar_power": ["PV", "Solar Power", None, "mdi:solar-power", False],
     "grid_power": ["GRID", "Grid Power", None, "mdi:power-plug", False],
     "storage_power": ["STORAGE", "Storage Power", None, "mdi:car-battery", False],
+    "purchased_power": ["Purchased", "Imported Power", None, "mdi:flash", False],
+    "production_power": ["Production", "Production Power", None, "mdi:flash", False],
+    "consumption_power": ["Consumption", "Cosumption Power", None, "mdi:flash", False],
+    "selfconsumption_power": [
+        "SelfConsumption",
+        "SelfConsumption Power",
+        None,
+        "mdi:flash",
+        False,
+    ],
+    "feedin_power": ["FeedIn", "Exported Power", None, "mdi:flash", False],
 }
