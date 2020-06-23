@@ -1,11 +1,7 @@
 """Support for monitoring a Smappee appliance binary sensor."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    STATE_OFF,
-    STATE_ON,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import BASE, DOMAIN
 
@@ -106,7 +102,7 @@ class SmappeeAppliance(BinarySensorEntity):
         self._appliance_id = appliance_id
         self._appliance_name = appliance_name
         self._appliance_type = appliance_type
-        self._state = STATE_OFF
+        self._state = False
 
     @property
     def name(self):
@@ -120,7 +116,7 @@ class SmappeeAppliance(BinarySensorEntity):
     @property
     def is_on(self):
         """Return if the binary sensor is turned on."""
-        return self._state == STATE_ON
+        return self._state
 
     @property
     def icon(self):
@@ -173,4 +169,4 @@ class SmappeeAppliance(BinarySensorEntity):
         await self._smappee_base.async_update()
 
         appliance = self._service_location.appliances.get(self._appliance_id)
-        self._state = STATE_ON if appliance.state else STATE_OFF
+        self._state = bool(appliance.state)
