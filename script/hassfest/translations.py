@@ -32,7 +32,7 @@ REMOVED_TITLE_MSG = (
 
 MOVED_TRANSLATIONS_DIRECTORY_MSG = (
     "The '.translations' directory has been moved, the new name is 'translations', "
-    "starting with Home Assistant 0.111 your translations will no longer "
+    "starting with Home Assistant 0.112 your translations will no longer "
     "load if you do not move/rename this "
 )
 
@@ -47,7 +47,7 @@ def check_translations_directory_name(integration: Integration) -> None:
         return
 
     if legacy_translations.is_dir():
-        integration.add_warning("translations", MOVED_TRANSLATIONS_DIRECTORY_MSG)
+        integration.add_error("translations", MOVED_TRANSLATIONS_DIRECTORY_MSG)
 
 
 def find_references(strings, prefix, found):
