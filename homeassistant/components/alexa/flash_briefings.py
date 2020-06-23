@@ -69,10 +69,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
             _LOGGER.error(err, briefing_id)
             return b"", HTTP_UNAUTHORIZED
 
-        if (
-            briefing_id == CONF_PASSWORD
-            or self.flash_briefings.get(briefing_id) is None
-        ):
+        if not isinstance(self.flash_briefings.get(briefing_id), list):
             err = "No configured Alexa flash briefing was found for: %s"
             _LOGGER.error(err, briefing_id)
             return b"", HTTP_NOT_FOUND
