@@ -249,14 +249,11 @@ def _apply_update(engine, new_version, old_version):
     elif new_version == 7:
         _create_index(engine, "states", "ix_states_entity_id")
     elif new_version == 8:
-        # Pending migration, want to group a few.
-        pass
-        # _add_columns(engine, "events", [
-        #     'context_parent_id CHARACTER(36)',
-        # ])
-        # _add_columns(engine, "states", [
-        #     'context_parent_id CHARACTER(36)',
-        # ])
+        _add_columns(engine, "events", ["context_parent_id CHARACTER(36)"])
+        _add_columns(engine, "states", ["context_parent_id CHARACTER(36)"])
+        _add_columns(engine, "states", ["old_state_id INTEGER"])
+        _create_index(engine, "states", "ix_states_context_parent_id")
+        _create_index(engine, "events", "ix_events_context_parent_id")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

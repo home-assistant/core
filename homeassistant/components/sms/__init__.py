@@ -22,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
     sms_config = config.get(DOMAIN, {})
@@ -41,20 +41,18 @@ def setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Configure Gammu state machine."""
 
-    entry_id = entry.entry_id
-    hass.data[DOMAIN].setdefault(entry_id, {})
-
     device = entry.data[CONF_DEVICE]
-    config = dict(Device=device, Connection="at")
+    config = {"Device": device, "Connection": "at"}
     gateway = await create_sms_gateway(config, hass)
-    if gateway:
-        hass.data[DOMAIN][SMS_GATEWAY] = gateway
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
-        return True
-    return False
+    if not gateway:
+        return False
+    hass.data[DOMAIN][SMS_GATEWAY] = gateway
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -69,10 +67,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if SMS_GATEWAY in hass.data[DOMAIN]:
-            gateway = hass.data[DOMAIN][SMS_GATEWAY]
-            hass.data[DOMAIN].pop(SMS_GATEWAY)
-            await gateway.terminate_async()
+        gateway = hass.data[DOMAIN].pop(SMS_GATEWAY)
+        await gateway.terminate_async()
 
     return unload_ok

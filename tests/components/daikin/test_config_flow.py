@@ -47,7 +47,7 @@ def mock_daikin_discovery():
     with patch("homeassistant.components.daikin.config_flow.Discovery") as Discovery:
         Discovery().poll.return_value = {
             "127.0.01": {"mac": "AABBCCDDEEFF", "id": "test"}
-        }
+        }.values()
         yield Discovery
 
 

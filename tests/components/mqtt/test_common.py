@@ -12,12 +12,7 @@ from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.async_mock import ANY
-from tests.common import (
-    async_fire_mqtt_message,
-    async_mock_mqtt_component,
-    async_setup_component,
-    mock_registry,
-)
+from tests.common import async_fire_mqtt_message, async_setup_component, mock_registry
 
 DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "identifiers": ["helloworld"],
@@ -272,9 +267,8 @@ async def help_test_discovery_update_attr(hass, mqtt_mock, caplog, domain, confi
     assert state.attributes.get("val") == "75"
 
 
-async def help_test_unique_id(hass, domain, config):
+async def help_test_unique_id(hass, mqtt_mock, domain, config):
     """Test unique id option only creates one entity per unique_id."""
-    await async_mock_mqtt_component(hass)
     assert await async_setup_component(hass, domain, config)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(domain)) == 1
@@ -478,16 +472,15 @@ async def help_test_entity_id_update_subscriptions(
         topics = ["avty-topic", "test-topic"]
     assert len(topics) > 0
     registry = mock_registry(hass, {})
-    mock_mqtt = await async_mock_mqtt_component(hass)
     assert await async_setup_component(hass, domain, config,)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None
-    assert mock_mqtt.async_subscribe.call_count == len(topics)
+    assert mqtt_mock.async_subscribe.call_count == len(topics)
     for topic in topics:
-        mock_mqtt.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
-    mock_mqtt.async_subscribe.reset_mock()
+        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+    mqtt_mock.async_subscribe.reset_mock()
 
     registry.async_update_entity(f"{domain}.test", new_entity_id=f"{domain}.milk")
     await hass.async_block_till_done()
@@ -498,7 +491,7 @@ async def help_test_entity_id_update_subscriptions(
     state = hass.states.get(f"{domain}.milk")
     assert state is not None
     for topic in topics:
-        mock_mqtt.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
 
 
 async def help_test_entity_id_update_discovery_update(

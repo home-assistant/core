@@ -93,6 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
+    dev.append(NetdataAlarms(netdata, name, host, port))
     async_add_entities(dev, True)
 
 
@@ -145,6 +146,62 @@ class NetdataSensor(Entity):
         )
 
 
+class NetdataAlarms(Entity):
+    """Implementation of a Netdata alarm sensor."""
+
+    def __init__(self, netdata, name, host, port):
+        """Initialize the Netdata alarm sensor."""
+        self.netdata = netdata
+        self._state = None
+        self._name = name
+        self._host = host
+        self._port = port
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._name} Alarms"
+
+    @property
+    def state(self):
+        """Return the state of the resources."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Status symbol if type is symbol."""
+        if self._state == "ok":
+            return "mdi:check"
+        if self._state == "warning":
+            return "mdi:alert-outline"
+        if self._state == "critical":
+            return "mdi:alert"
+        return "mdi:crosshairs-question"
+
+    @property
+    def available(self):
+        """Could the resource be accessed during the last update call."""
+        return self.netdata.available
+
+    async def async_update(self):
+        """Get the latest alarms from Netdata REST API."""
+        await self.netdata.async_update()
+        alarms = self.netdata.api.alarms["alarms"]
+        self._state = None
+        number_of_alarms = len(alarms)
+        number_of_relevant_alarms = number_of_alarms
+
+        _LOGGER.debug("Host %s has %s alarms", self.name, number_of_alarms)
+
+        for alarm in alarms:
+            if alarms[alarm]["recipient"] == "silent":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "CRITICAL":
+                self._state = "critical"
+                return
+        self._state = "ok" if number_of_relevant_alarms == 0 else "warning"
+
+
 class NetdataData:
     """The class for handling the data retrieval."""
 
@@ -159,6 +216,7 @@ class NetdataData:
 
         try:
             await self.api.get_allmetrics()
+            await self.api.get_alarms()
             self.available = True
         except NetdataError:
             _LOGGER.error("Unable to retrieve data from Netdata")

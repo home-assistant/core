@@ -14,7 +14,7 @@
         "step": {
             "init": {
                 "one": "uno",
-                "other": "altro"
+                "other": "altri"
             },
             "ssdp_confirm": {
                 "description": "Vuoi configurare questo dispositivo UPnP/IGD?"

@@ -39,18 +39,23 @@ DOMAIN = const.DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
-                vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Length(min=1)),
-                vol.Optional(const.CONF_USE_WEBHOOK, default=False): cv.boolean,
-                vol.Required(const.CONF_PROFILES): vol.All(
-                    cv.ensure_list,
-                    vol.Unique(),
-                    vol.Length(min=1),
-                    [vol.All(cv.string, vol.Length(min=1))],
-                ),
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(const.CONF_PROFILES, invalidation_version="0.114"),
+            vol.Schema(
+                {
+                    vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Required(CONF_CLIENT_SECRET): vol.All(
+                        cv.string, vol.Length(min=1)
+                    ),
+                    vol.Optional(const.CONF_USE_WEBHOOK, default=False): cv.boolean,
+                    vol.Optional(const.CONF_PROFILES): vol.All(
+                        cv.ensure_list,
+                        vol.Unique(),
+                        vol.Length(min=1),
+                        [vol.All(cv.string, vol.Length(min=1))],
+                    ),
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -87,8 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config_updates = {}
 
     # Add a unique id if it's an older config entry.
-    if entry.unique_id != entry.data["token"]["userid"]:
-        config_updates["unique_id"] = entry.data["token"]["userid"]
+    if entry.unique_id != entry.data["token"]["userid"] or not isinstance(
+        entry.unique_id, str
+    ):
+        config_updates["unique_id"] = str(entry.data["token"]["userid"])
 
     # Add the webhook configuration.
     if CONF_WEBHOOK_ID not in entry.data:
