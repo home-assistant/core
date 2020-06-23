@@ -293,7 +293,17 @@ class SystemMonitorSensor(Entity):
         """Attempt to read CPU / processor temperature."""
         temps = psutil.sensors_temperatures()
 
-        for entries in temps.items():
+        for name, entries in temps.items():
+            i = 1
             for entry in entries:
-                if entry["label"] in CPU_SENSOR_PREFIXES:
-                    return round(entry[0].current, 1)
+                # In case the label is empty (e.g. on Raspberry PI 4),
+                # construct it ourself here based on the sensor key name.
+                if not entry.label:
+                    _label = name + " " + str(i)
+                else:
+                    _label = entry.label
+
+                if _label in CPU_SENSOR_PREFIXES:
+                    return round(entry.current, 1)
+
+                i += 1
