@@ -696,12 +696,6 @@ class TestComponentHistory(unittest.TestCase):
         ):
             # This state will be skipped only different in time
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
-            # This state will be skipped as it hidden
-            set_state(
-                mp3,
-                "Apple TV",
-                attributes={"media_title": str(sentinel.mt2), "hidden": True},
-            )
             # This state will be skipped because domain blacklisted
             set_state(zone, "zoning")
             set_state(script_nc, "off")
@@ -728,8 +722,6 @@ class TestComponentHistory(unittest.TestCase):
             states[therm].append(
                 set_state(therm, 21, attributes={"current_temperature": 20})
             )
-            # state will be skipped since entity is hidden
-            set_state(therm, 22, attributes={"current_temperature": 21, "hidden": True})
 
         return zero, four, states
 

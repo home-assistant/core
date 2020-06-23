@@ -20,7 +20,6 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
-    ATTR_HIDDEN,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -228,7 +227,7 @@ def _get_states_with_session(
             .order_by(States.last_updated.desc())
             .limit(1)
         )
-        return _dbquery_to_non_hidden_states(query)
+        return [LazyState(row) for row in execute(query)]
 
     if run is None:
         run = recorder.run_information_with_session(session, utc_point_in_time)
@@ -276,16 +275,7 @@ def _get_states_with_session(
     if filters:
         query = filters.apply(query, entity_ids)
 
-    return _dbquery_to_non_hidden_states(query)
-
-
-def _dbquery_to_non_hidden_states(query):
-    """Return states that are not hidden."""
-    return [
-        state
-        for state in (LazyState(row) for row in execute(query))
-        if not state.hidden
-    ]
+    return [LazyState(row) for row in execute(query)]
 
 
 def _sorted_states_to_json(
@@ -347,7 +337,6 @@ def _sorted_states_to_json(
                         domain != SCRIPT_DOMAIN
                         or native_state.attributes.get(ATTR_CAN_CANCEL)
                     )
-                    and not native_state.hidden
                 ]
             )
             continue
@@ -363,11 +352,6 @@ def _sorted_states_to_json(
         initial_state_count = len(ent_results)
 
         for db_state in group:
-            if ATTR_HIDDEN in db_state.attributes and LazyState(
-                db_state
-            ).attributes.get(ATTR_HIDDEN, False):
-                continue
-
             # With minimal response we do not care about attribute
             # changes so we can filter out duplicate states
             if db_state.state == prev_state.state:
@@ -635,13 +619,6 @@ class LazyState(State):
                 _LOGGER.exception("Error converting row to state: %s", self)
                 self._attributes = {}
         return self._attributes
-
-    @property
-    def hidden(self):
-        """Determine if a state is hidden."""
-        if ATTR_HIDDEN not in self._row.attributes:
-            return False
-        return self.attributes.get(ATTR_HIDDEN, False)
 
     @property
     def context(self):
