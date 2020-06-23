@@ -1,8 +1,8 @@
 """Test pi_hole component."""
 
 from homeassistant.components import pi_hole
-from homeassistant.setup import async_setup_component
 from homeassistant.components.pi_hole.const import MIN_TIME_BETWEEN_UPDATES
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import _create_mocked_hole, _patch_config_flow_hole
