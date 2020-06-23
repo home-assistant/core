@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "The modem is already configured"
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
         },
         "error": {
-            "cannot_connect": "Failed to connect to modem, please try again",
-            "unknown": "Unexpected error"
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
