@@ -10,9 +10,10 @@ from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.setup import async_setup_component
 
 from tests.async_mock import ANY
-from tests.common import async_fire_mqtt_message, async_setup_component, mock_registry
+from tests.common import async_fire_mqtt_message, mock_registry
 
 DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "identifiers": ["helloworld"],

@@ -25,7 +25,8 @@ from .common import (
     new_profile_config,
 )
 
-from tests.common import MagicMock, MockConfigEntry, patch
+from tests.async_mock import MagicMock, patch
+from tests.common import MockConfigEntry
 
 
 def config_schema_validate(withings_config) -> dict:
