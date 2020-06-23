@@ -670,32 +670,6 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
 
-@pytest.fixture
-def mqtt_server_start_mock(hass):
-    """Mock embedded server start."""
-    client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
-
-    with patch(
-        "homeassistant.components.mqtt.server.async_start",
-        return_value=(True, client_config),
-    ) as _start:
-        yield _start
-
-
-@pytest.mark.parametrize("mqtt_config", [{}])
-async def test_setup_embedded_starts_with_no_config(
-    hass, mqtt_server_start_mock, mqtt_mock
-):
-    """Test setting up embedded server with no config."""
-    assert mqtt_server_start_mock.call_count == 1
-
-
-@pytest.mark.parametrize("mqtt_config", [{"embedded": None}])
-async def test_setup_embedded_with_embedded(hass, mqtt_server_start_mock, mqtt_mock):
-    """Test setting up embedded server with empty embedded config."""
-    assert mqtt_server_start_mock.call_count == 1
-
-
 async def test_setup_logs_error_if_no_connect_broker(hass, caplog):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})

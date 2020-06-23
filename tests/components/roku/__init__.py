@@ -104,6 +104,8 @@ def mock_connection(
         re.compile(f"{roku_url}/launch/.*"), text="OK",
     )
 
+    aioclient_mock.post(f"{roku_url}/search", text="OK")
+
 
 def mock_connection_error(
     aioclient_mock: AiohttpClientMocker,
@@ -122,6 +124,7 @@ def mock_connection_error(
 
     aioclient_mock.post(re.compile(f"{roku_url}/keypress/.*"), exc=SocketGIAError)
     aioclient_mock.post(re.compile(f"{roku_url}/launch/.*"), exc=SocketGIAError)
+    aioclient_mock.post(f"{roku_url}/search", exc=SocketGIAError)
 
 
 def mock_connection_server_error(
@@ -141,6 +144,7 @@ def mock_connection_server_error(
 
     aioclient_mock.post(re.compile(f"{roku_url}/keypress/.*"), status=500)
     aioclient_mock.post(re.compile(f"{roku_url}/launch/.*"), status=500)
+    aioclient_mock.post(f"{roku_url}/search", status=500)
 
 
 async def setup_integration(
