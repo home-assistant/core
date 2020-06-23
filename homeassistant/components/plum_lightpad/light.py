@@ -52,7 +52,7 @@ async def async_setup_entry(
         setup_entities(device)
 
     device_web_session = async_get_clientsession(hass, verify_ssl=False)
-    hass.async_create_task(
+    hass.loop.create_task(
         plum.discover(
             hass.loop,
             loadListener=new_load,
