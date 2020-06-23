@@ -28,6 +28,7 @@ class Gateway:
         """Terminate modem connection."""
         return await self._worker.terminate_async()
 
+
 async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
