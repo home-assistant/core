@@ -1,5 +1,4 @@
 """Config flow for Plum Lightpad."""
-import logging
 from typing import Any, Dict, Optional
 
 import voluptuous as vol
@@ -10,8 +9,6 @@ from homeassistant.helpers import ConfigType
 
 from .const import DOMAIN
 from .utils import load_plum
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -42,11 +39,6 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         already_registered = await self.async_set_unique_id(username)
         if already_registered:
-            _LOGGER.warning(
-                "Config entry with Domain/ID = %s/%s is already registered, skipping...",
-                DOMAIN,
-                self.unique_id,
-            )
             return self.async_abort(reason="single_instance_per_username_allowed")
 
         return self.async_create_entry(
