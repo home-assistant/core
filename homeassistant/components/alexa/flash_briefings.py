@@ -1,5 +1,6 @@
 """Support for Alexa skill service end point."""
 import copy
+import hmac
 import logging
 import uuid
 
@@ -55,6 +56,19 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
         """Handle Alexa Flash Briefing request."""
         _LOGGER.debug("Received Alexa flash briefing request for: %s", briefing_id)
 
+        if request.query.get(API_PASSWORD) is None:
+            err = "No password provided for Alexa flash briefing: %s"
+            _LOGGER.error(err, briefing_id)
+            return b"", HTTP_UNAUTHORIZED
+
+        if not hmac.compare_digest(
+            request.query[API_PASSWORD].encode("utf-8"),
+            self.flash_briefings[CONF_PASSWORD].encode("utf-8"),
+        ):
+            err = "Wrong password for Alexa flash briefing: %s"
+            _LOGGER.error(err, briefing_id)
+            return b"", HTTP_UNAUTHORIZED
+
         if (
             briefing_id == CONF_PASSWORD
             or self.flash_briefings.get(briefing_id) is None
@@ -62,16 +76,6 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
             err = "No configured Alexa flash briefing was found for: %s"
             _LOGGER.error(err, briefing_id)
             return b"", HTTP_NOT_FOUND
-
-        if request.query.get(API_PASSWORD) is None:
-            err = "No password provided for Alexa flash briefing: %s"
-            _LOGGER.error(err, briefing_id)
-            return b"", HTTP_UNAUTHORIZED
-
-        if request.query[API_PASSWORD] != self.flash_briefings.get(CONF_PASSWORD):
-            err = "Wrong password for Alexa flash briefing: %s"
-            _LOGGER.error(err, briefing_id)
-            return b"", HTTP_UNAUTHORIZED
 
         briefing = []
 
