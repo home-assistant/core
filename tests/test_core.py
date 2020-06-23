@@ -965,7 +965,6 @@ class TestConfig(unittest.TestCase):
 
         valid = ["http://x.com/1.jpg", "https://y.com/2.png"]
         for url in valid:
-            print(url)
             assert self.config.is_allowed_external_url(url)
 
         invalid = ["http://z.com/stream", "https://a.co"]
