@@ -48,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Plum Lightpad from a config entry."""
-    _LOGGER.info("Setting up config entry with ID = %s", entry.unique_id)
+    _LOGGER.debug("Setting up config entry with ID = %s", entry.unique_id)
 
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
