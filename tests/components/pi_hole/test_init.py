@@ -8,6 +8,7 @@ from homeassistant.util import dt as dt_util
 from . import _create_mocked_hole, _patch_config_flow_hole
 
 from tests.async_mock import patch
+from tests.common import async_fire_time_changed, async_setup_component 
 
 
 def _patch_init_hole(mocked_hole):
