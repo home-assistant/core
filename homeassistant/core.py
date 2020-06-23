@@ -1360,7 +1360,11 @@ class Config:
 
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
-        return url in self.allowlist_external_urls
+        return any(
+            allowed
+            for allowed in self.allowlist_external_urls
+            if url.startswith(allowed)
+        )
 
     def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""

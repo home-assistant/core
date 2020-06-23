@@ -958,21 +958,19 @@ class TestConfig(unittest.TestCase):
 
     def test_is_allowed_external_url(self):
         """Test is_allowed_external_url method."""
-        self.config.allowlist_external_urls = {
-            "http://x.com/1.jpg",
-            "http://y.com/2.png",
-        }
+        self.config.allowlist_external_urls = [
+            "http://x.com",
+            "https://y.com",
+        ]
 
-        valid = ["http://x.com/1.jpg", "http://y.com/2.png"]
+        valid = ["http://x.com/1.jpg", "https://y.com/2.png"]
         for url in valid:
+            print(url)
             assert self.config.is_allowed_external_url(url)
 
         invalid = ["http://z.com/stream", "https://a.co"]
         for url in invalid:
             assert not self.config.is_allowed_external_url(url)
-
-            with pytest.raises(AssertionError):
-                self.config.is_allowed_external_url(None)
 
 
 async def test_event_on_update(hass):
