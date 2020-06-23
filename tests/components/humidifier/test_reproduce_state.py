@@ -119,10 +119,8 @@ async def test_turn_off_multiple_attrs(hass):
     assert len(turn_on_calls) == 0
     assert len(turn_off_calls) == 1
     assert turn_off_calls[0].data == {"entity_id": ENTITY_1}
-    assert len(mode_calls) == 1
-    assert mode_calls[0].data == {"entity_id": ENTITY_1, "mode": "normal"}
-    assert len(humidity_calls) == 1
-    assert humidity_calls[0].data == {"entity_id": ENTITY_1, "humidity": 45}
+    assert len(mode_calls) == 0
+    assert len(humidity_calls) == 0
 
 
 async def test_multiple_modes(hass):
