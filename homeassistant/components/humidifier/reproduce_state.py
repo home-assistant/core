@@ -44,22 +44,25 @@ async def _async_reproduce_states(
             DOMAIN, service, data, blocking=True, context=context
         )
 
-    # First of all, turn on if needed, because the device might not
-    # be able to set mode and humidity while being off
-    if state.state == STATE_ON:
-        if cur_state.state != STATE_ON:
-            await call_service(SERVICE_TURN_ON, [])
-            # refetch the state as turning on might allow us to see some more values.
-            cur_state = hass.states.get(state.entity_id)
-    elif state.state == STATE_OFF:
+    if state.state == STATE_OFF:
         # Ensure the device is off if it needs to be and exit
         if cur_state.state != STATE_OFF:
             await call_service(SERVICE_TURN_OFF, [])
         return
-    else:
+
+    if state.state != STATE_ON:
+        # we can't know how to handle this
         _LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
+        return
+
+    # First of all, turn on if needed, because the device might not
+    # be able to set mode and humidity while being off
+    if cur_state.state != STATE_ON:
+        await call_service(SERVICE_TURN_ON, [])
+        # refetch the state as turning on might allow us to see some more values
+        cur_state = hass.states.get(state.entity_id)
 
     # Then set the mode before target humidity, because switching modes
     # may invalidate target humidity

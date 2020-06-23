@@ -219,7 +219,7 @@ async def test_state_with_context(hass):
 )
 async def test_attribute(hass, service, attribute):
     """Test that service call is made for each attribute."""
-    hass.states.async_set(ENTITY_1, STATE_OFF, {})
+    hass.states.async_set(ENTITY_1, STATE_ON, {})
 
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
@@ -227,7 +227,7 @@ async def test_attribute(hass, service, attribute):
 
     value = "dummy"
 
-    await async_reproduce_states(hass, [State(ENTITY_1, None, {attribute: value})])
+    await async_reproduce_states(hass, [State(ENTITY_1, STATE_ON, {attribute: value})])
 
     await hass.async_block_till_done()
 
