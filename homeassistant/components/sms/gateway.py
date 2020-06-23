@@ -22,7 +22,7 @@ class Gateway:
         self._hass = hass
 
     async def init_async(self):
-        """Initialize the sms gateway asyncronisly."""
+        """Initialize the sms gateway asynchronously."""
         try:
             await self._worker.SetIncomingSMSAsync()
         except gammu.ERR_NOTSUPPORTED:
