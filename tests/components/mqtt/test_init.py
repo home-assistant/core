@@ -743,56 +743,6 @@ async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
         assert calls[0][3] == expectedTlsVersion
 
 
-async def test_setup_with_tls_config_uses_tls_version1_2(hass):
-    """Test setup uses specified TLS version."""
-    calls = []
-
-    def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
-        calls.append((certificate, certfile, keyfile, tls_version))
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().tls_set = mock_tls_set
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN,
-            data={
-                "certificate": "auto",
-                mqtt.CONF_BROKER: "test-broker",
-                "tls_version": "1.2",
-            },
-        )
-
-        assert await mqtt.async_setup_entry(hass, entry)
-
-        assert calls
-
-        assert calls[0][3] == ssl.PROTOCOL_TLSv1_2
-
-
-async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass):
-    """Test setup uses TLSv1.0 if explicitly chosen."""
-    calls = []
-
-    def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
-        calls.append((certificate, certfile, keyfile, tls_version))
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().tls_set = mock_tls_set
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN,
-            data={
-                "certificate": "auto",
-                mqtt.CONF_BROKER: "test-broker",
-                "tls_version": "1.0",
-            },
-        )
-
-        assert await mqtt.async_setup_entry(hass, entry)
-
-        assert calls
-
-        assert calls[0][3] == ssl.PROTOCOL_TLSv1
-
-
 @pytest.mark.parametrize(
     "mqtt_config",
     [
