@@ -206,6 +206,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
+        # pylint: disable=no-member
         title = self.context.get("title_placeholders", {}).get(
             CONF_NAME
         ) or await self.hass.async_add_executor_job(get_router_title, conn)
@@ -237,6 +238,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
+        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             CONF_NAME: discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
         }
