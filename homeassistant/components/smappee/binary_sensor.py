@@ -107,7 +107,7 @@ class SmappeeAppliance(BinarySensorEntity):
         self._appliance_id = appliance_id
         self._appliance_name = appliance_name
         self._appliance_type = appliance_type
-        self._state = False
+        self._state = STATE_OFF
         self._appliance_power = None
 
     @property
@@ -122,7 +122,7 @@ class SmappeeAppliance(BinarySensorEntity):
     @property
     def is_on(self):
         """Return if the binary sensor is turned on."""
-        return self._state
+        return self._state == STATE_ON
 
     @property
     def icon(self):
