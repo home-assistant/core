@@ -45,7 +45,7 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await load_plum(username, password, self.hass)
         except (ContentTypeError, ConnectTimeout, HTTPError) as ex:
-            _LOGGER.error("Unable to connect to Plum cloud: %s", str(ex))
+            _LOGGER.error("Unable to connect/authenticate to Plum cloud: %s", str(ex))
             return self._show_form({"base": "cannot_connect"})
 
         already_registered = await self.async_set_unique_id(username)

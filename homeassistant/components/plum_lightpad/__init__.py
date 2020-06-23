@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
@@ -56,22 +57,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         plum = await load_plum(username, password, hass)
-
-        hass.data.setdefault(DOMAIN, {})
-        hass.data[DOMAIN][entry.entry_id] = plum
-
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
-
-        def cleanup(event):
-            """Clean up resources."""
-            plum.cleanup()
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
-        return True
-
-    except (ContentTypeError, ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Plum cloud: %s", str(ex))
+    except ContentTypeError as ex:
+        _LOGGER.error("Unable to authenticate to Plum cloud: %s", ex)
         return False
+    except (ConnectTimeout, HTTPError) as ex:
+        _LOGGER.error("Unable to connect to Plum cloud: %s", ex)
+        raise ConfigEntryNotReady
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = plum
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    def cleanup(event):
+        """Clean up resources."""
+        plum.cleanup()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+    return True
