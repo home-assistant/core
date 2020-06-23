@@ -165,7 +165,6 @@ class SmappeeAppliance(BinarySensorEntity):
             "manufacturer": "Smappee",
             "model": self._service_location.device_model,
             "sw_version": self._service_location.firmware_version,
-            "via_device": (DOMAIN, self._smappee_base.smappee.username),
         }
 
     async def async_update(self):
