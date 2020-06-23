@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.async_mock import patch
-from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
+from tests.common import async_fire_mqtt_message
 
 DEVICE_ID = "123TESTMAC"
 NAME = "test_device"
@@ -50,10 +50,8 @@ async def assert_distance(hass, distance):
     assert state.attributes.get("distance") == distance
 
 
-async def test_room_update(hass):
+async def test_room_update(hass, mqtt_mock):
     """Test the updating between rooms."""
-    await async_mock_mqtt_component(hass)
-
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,

@@ -40,10 +40,15 @@ def purge_old_data(instance, purge_days, repack):
             )
             _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
 
-        # Execute sqlite vacuum command to free up space on disk
-        if repack and instance.engine.driver in ("pysqlite", "postgresql"):
-            _LOGGER.debug("Vacuuming SQL DB to free space")
-            instance.engine.execute("VACUUM")
+        if repack:
+            # Execute sqlite or postgresql vacuum command to free up space on disk
+            if instance.engine.driver in ("pysqlite", "postgresql"):
+                _LOGGER.debug("Vacuuming SQL DB to free space")
+                instance.engine.execute("VACUUM")
+            # Optimize mysql / mariadb tables to free up space on disk
+            elif instance.engine.driver == "mysqldb":
+                _LOGGER.debug("Optimizing SQL DB to free space")
+                instance.engine.execute("OPTIMIZE TABLE states, events, recorder_runs")
 
     except SQLAlchemyError as err:
         _LOGGER.warning("Error purging history: %s.", err)

@@ -306,7 +306,7 @@ avea==1.4
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==32
+axis==33
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -1694,7 +1694,7 @@ python-family-hub-local==0.0.2
 python-forecastio==1.4.0
 
 # homeassistant.components.sms
-# python-gammu==2.12
+# python-gammu==3.0
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a
