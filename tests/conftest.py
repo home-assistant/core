@@ -304,8 +304,11 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     assert result
     await hass.async_block_till_done()
 
-    mqtt_component_mock = MagicMock(spec_set=hass.data["mqtt"], wraps=hass.data["mqtt"])
-    hass.data["mqtt"].connected = mqtt_component_mock.connected
+    mqtt_component_mock = MagicMock(
+        return_value=hass.data["mqtt"],
+        spec_set=hass.data["mqtt"],
+        wraps=hass.data["mqtt"],
+    )
     mqtt_component_mock._mqttc = mqtt_client_mock
 
     hass.data["mqtt"] = mqtt_component_mock

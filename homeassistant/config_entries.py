@@ -1008,7 +1008,8 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         entry = self.hass.config_entries.async_get_entry(flow.handler)
         if entry is None:
             raise UnknownEntry(flow.handler)
-        self.hass.config_entries.async_update_entry(entry, options=result["data"])
+        if result["data"] is not None:
+            self.hass.config_entries.async_update_entry(entry, options=result["data"])
 
         result["result"] = True
         return result

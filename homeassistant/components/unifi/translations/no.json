@@ -4,8 +4,8 @@
             "already_configured": "Kontroller nettstedet er allerede konfigurert"
         },
         "error": {
-            "faulty_credentials": "Ugyldig brukerlegitimasjon",
-            "service_unavailable": "Ingen tjeneste tilgjengelig",
+            "faulty_credentials": "Ugyldig godkjenning",
+            "service_unavailable": "Tilkobling mislyktes",
             "unknown_client_mac": "Ingen klient tilgjengelig p\u00e5 den MAC-adressen"
         },
         "step": {
