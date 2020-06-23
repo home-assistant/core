@@ -2,9 +2,13 @@
 import logging
 
 import gammu  # pylint: disable=import-error, no-member
+from gammu.asyncworker import (  # pylint: disable=import-error, no-member
+    GammuAsyncWorker,
+)
+
+from homeassistant.core import callback
 
 from .const import DOMAIN
-from .gammuasync import GammuAsyncWorker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,10 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 class Gateway:
     """SMS gateway to interact with a GSM modem."""
 
-    def __init__(self, worker, loop, hass):
+    def __init__(self, worker, hass):
         """Initialize the sms gateway."""
         self._worker = worker
-        self._loop = loop
         self._hass = hass
 
     async def init_async(self):
@@ -63,7 +66,7 @@ class Gateway:
             _LOGGER.debug("Append event data:%s", event_data)
             data.append(event_data)
 
-        self._loop.call_soon_threadsafe(self._notify_incoming_sms, data)
+        self._hass.add_job(self._notify_incoming_sms, data)
 
     # pylint: disable=no-self-use
     def get_and_delete_all_sms(self, state_machine, force=False):
@@ -120,6 +123,7 @@ class Gateway:
 
         return entries
 
+    @callback
     def _notify_incoming_sms(self, messages):
         """Notify hass when an incoming SMS message is received."""
         for message in messages:
@@ -128,31 +132,31 @@ class Gateway:
                 "date": message["date"],
                 "text": message["message"],
             }
-            _LOGGER.debug("Firing event:%s", event_data)
-            self._hass.bus.fire(f"{DOMAIN}.incoming_sms", event_data)
-
-    async def get_signal_quality_async(self):
-        """Get the current signal quality of the gsm modem."""
-        return await self._worker.get_signal_quality_async()
+            _LOGGER.debug(f"Firing event:{event_data}")
+            self._hass.bus.async_fire(f"{DOMAIN}.incoming_sms", event_data)
 
     async def send_sms_async(self, message):
         """Send sms message via the worker."""
         return await self._worker.send_sms_async(message)
+
+    async def get_imei_async(self):
+        """Get the IMEI of the device."""
+        return await self._worker.get_imei_async()
 
     async def terminate_async(self):
         """Terminate modem connection."""
         return await self._worker.terminate_async()
 
 
-async def create_sms_gateway(config, loop, hass):
+async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
-        worker = GammuAsyncWorker(loop)
+        worker = GammuAsyncWorker()
         worker.configure(config)
         await worker.init_async()
-        gateway = Gateway(worker, loop, hass)
+        gateway = Gateway(worker, hass)
         await gateway.init_async()
         return gateway
     except gammu.GSMError as exc:  # pylint: disable=no-member
         _LOGGER.error("Failed to initialize, error %s", exc)
-        return 0
+        return None
