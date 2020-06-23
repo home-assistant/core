@@ -26,7 +26,6 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import assert_setup_component, mock_restore_cache
 
@@ -52,6 +51,7 @@ async def test_setup_missing_conf(hass):
     }
     with assert_setup_component(0):
         await async_setup_component(hass, "humidifier", {"humidifier": config})
+        await hass.async_block_till_done()
 
 
 async def test_valid_conf(hass):
@@ -68,15 +68,14 @@ async def test_valid_conf(hass):
             }
         },
     )
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
-def setup_comp_1(hass):
+async def setup_comp_1(hass):
     """Initialize components."""
-    hass.config.units = METRIC_SYSTEM
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "homeassistant", {})
-    )
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
 
 
 async def test_humidifier_input_boolean(hass, setup_comp_1):
@@ -85,6 +84,7 @@ async def test_humidifier_input_boolean(hass, setup_comp_1):
     assert await async_setup_component(
         hass, input_boolean.DOMAIN, {"input_boolean": {"test": None}}
     )
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,
@@ -99,6 +99,7 @@ async def test_humidifier_input_boolean(hass, setup_comp_1):
             }
         },
     )
+    await hass.async_block_till_done()
 
     assert STATE_OFF == hass.states.get(humidifier_switch).state
 
@@ -122,6 +123,7 @@ async def test_humidifier_switch(hass, setup_comp_1):
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )
+    await hass.async_block_till_done()
     humidifier_switch = switch_1.entity_id
 
     assert await async_setup_component(
@@ -159,32 +161,29 @@ def _setup_sensor(hass, humidity):
 
 
 @pytest.fixture
-def setup_comp_2(hass):
+async def setup_comp_2(hass):
     """Initialize components."""
-    hass.config.units = METRIC_SYSTEM
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "humidifier": {
-                    "platform": "generic_hygrostat",
-                    "name": "test",
-                    "dry_tolerance": 2,
-                    "wet_tolerance": 4,
-                    "humidifier": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "away_humidity": 35,
-                    "initial_state": True,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 2,
+                "wet_tolerance": 4,
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_humidity": 35,
+                "initial_state": True,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_setup_defaults_to_unknown(hass):
     """Test the setting of defaults to unknown."""
-    hass.config.units = METRIC_SYSTEM
     await async_setup_component(
         hass,
         DOMAIN,
@@ -200,6 +199,7 @@ async def test_setup_defaults_to_unknown(hass):
             }
         },
     )
+    await hass.async_block_till_done()
     assert STATE_OFF == hass.states.get(ENTITY).state
 
 
@@ -477,27 +477,26 @@ def _setup_switch(hass, is_on):
 
 
 @pytest.fixture
-def setup_comp_3(hass):
+async def setup_comp_3(hass):
     """Initialize components."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "humidifier": {
-                    "platform": "generic_hygrostat",
-                    "name": "test",
-                    "dry_tolerance": 2,
-                    "wet_tolerance": 4,
-                    "away_humidity": 30,
-                    "humidifier": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "device_class": "dehumidifier",
-                    "initial_state": True,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 2,
+                "wet_tolerance": 4,
+                "away_humidity": 30,
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "initial_state": True,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_set_target_humidity_dry_off(hass, setup_comp_3):
@@ -685,27 +684,26 @@ async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
 
 
 @pytest.fixture
-def setup_comp_4(hass):
+async def setup_comp_4(hass):
     """Initialize components."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "humidifier": {
-                    "platform": "generic_hygrostat",
-                    "name": "test",
-                    "dry_tolerance": 0.3,
-                    "wet_tolerance": 0.3,
-                    "humidifier": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "device_class": "dehumidifier",
-                    "min_cycle_duration": datetime.timedelta(minutes=10),
-                    "initial_state": True,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 0.3,
+                "wet_tolerance": 0.3,
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "initial_state": True,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_humidity_change_dry_trigger_on_not_long_enough(hass, setup_comp_4):
@@ -829,27 +827,26 @@ async def test_mode_change_dry_trigger_on_not_long_enough(hass, setup_comp_4):
 
 
 @pytest.fixture
-def setup_comp_5(hass):
+async def setup_comp_5(hass):
     """Initialize components."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "humidifier": {
-                    "platform": "generic_hygrostat",
-                    "name": "test",
-                    "dry_tolerance": 0.3,
-                    "wet_tolerance": 0.3,
-                    "humidifier": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "device_class": "dehumidifier",
-                    "min_cycle_duration": datetime.timedelta(minutes=10),
-                    "initial_state": True,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 0.3,
+                "wet_tolerance": 0.3,
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "initial_state": True,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_humidity_change_dry_trigger_on_not_long_enough_2(hass, setup_comp_5):
@@ -973,26 +970,25 @@ async def test_mode_change_dry_trigger_on_not_long_enough_2(hass, setup_comp_5):
 
 
 @pytest.fixture
-def setup_comp_6(hass):
+async def setup_comp_6(hass):
     """Initialize components."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "humidifier": {
-                    "platform": "generic_hygrostat",
-                    "name": "test",
-                    "dry_tolerance": 0.3,
-                    "wet_tolerance": 0.3,
-                    "humidifier": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "min_cycle_duration": datetime.timedelta(minutes=10),
-                    "initial_state": True,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 0.3,
+                "wet_tolerance": 0.3,
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "initial_state": True,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_humidity_change_humidifier_trigger_off_not_long_enough(
@@ -1120,29 +1116,28 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(hass, setup_com
 
 
 @pytest.fixture
-def setup_comp_7(hass):
+async def setup_comp_7(hass):
     """Initialize components."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "humidifier": {
-                    "platform": "generic_hygrostat",
-                    "name": "test",
-                    "dry_tolerance": 0.3,
-                    "wet_tolerance": 0.3,
-                    "humidifier": ENT_SWITCH,
-                    "target_humidity": 25,
-                    "target_sensor": ENT_SENSOR,
-                    "device_class": "dehumidifier",
-                    "min_cycle_duration": datetime.timedelta(minutes=15),
-                    "keep_alive": datetime.timedelta(minutes=10),
-                    "initial_state": True,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 0.3,
+                "wet_tolerance": 0.3,
+                "humidifier": ENT_SWITCH,
+                "target_humidity": 25,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "min_cycle_duration": datetime.timedelta(minutes=15),
+                "keep_alive": datetime.timedelta(minutes=10),
+                "initial_state": True,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_humidity_change_dry_trigger_on_long_enough_3(hass, setup_comp_7):
@@ -1207,28 +1202,27 @@ def _send_time_changed(hass, now):
 
 
 @pytest.fixture
-def setup_comp_8(hass):
+async def setup_comp_8(hass):
     """Initialize components."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "humidifier": {
-                    "platform": "generic_hygrostat",
-                    "name": "test",
-                    "dry_tolerance": 0.3,
-                    "wet_tolerance": 0.3,
-                    "target_humidity": 25,
-                    "humidifier": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "min_cycle_duration": datetime.timedelta(minutes=15),
-                    "keep_alive": datetime.timedelta(minutes=10),
-                    "initial_state": True,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 0.3,
+                "wet_tolerance": 0.3,
+                "target_humidity": 25,
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=15),
+                "keep_alive": datetime.timedelta(minutes=10),
+                "initial_state": True,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_humidity_change_humidifier_trigger_on_long_enough_2(hass, setup_comp_8):
@@ -1304,6 +1298,7 @@ async def test_custom_setup_params(hass):
             }
         },
     )
+    await hass.async_block_till_done()
     assert result
     state = hass.states.get(ENTITY)
     assert state.attributes.get("min_humidity") == MIN_HUMIDITY
@@ -1339,6 +1334,7 @@ async def test_restore_state(hass):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test_hygrostat")
     assert state.attributes[ATTR_HUMIDITY] == 40
@@ -1378,6 +1374,7 @@ async def test_no_restore_state(hass):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test_hygrostat")
     assert state.attributes[ATTR_HUMIDITY] == 40
@@ -1426,6 +1423,7 @@ async def _setup_humidifier(hass):
             }
         },
     )
+    await hass.async_block_till_done()
 
 
 def _mock_restore_cache(hass, humidity=40, state=STATE_OFF):
