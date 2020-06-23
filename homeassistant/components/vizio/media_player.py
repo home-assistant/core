@@ -223,7 +223,7 @@ class VizioDevice(MediaPlayerEntity):
                 setting_type, log_api_exception=False
             )
 
-        if self._all_settings[VIZIO_AUDIO_SETTINGS]:
+        if self._all_settings.get(VIZIO_AUDIO_SETTINGS):
             self._volume_level = (
                 float(self._all_settings[VIZIO_AUDIO_SETTINGS][VIZIO_VOLUME])
                 / self._max_volume
