@@ -46,8 +46,7 @@ SUPPORT_ROKU = (
     | SUPPORT_TURN_OFF
 )
 
-SEARCH_SCHEMA = vol.Schema({vol.Required(ATTR_KEYWORD): str})
-
+SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Roku config entry."""
