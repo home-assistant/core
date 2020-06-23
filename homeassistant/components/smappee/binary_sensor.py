@@ -108,7 +108,6 @@ class SmappeeAppliance(BinarySensorEntity):
         self._appliance_name = appliance_name
         self._appliance_type = appliance_type
         self._state = STATE_OFF
-        self._appliance_power = None
 
     @property
     def name(self):
@@ -179,4 +178,3 @@ class SmappeeAppliance(BinarySensorEntity):
 
         appliance = self._service_location.appliances.get(self._appliance_id)
         self._state = appliance.state
-        self._appliance_power = appliance.power
