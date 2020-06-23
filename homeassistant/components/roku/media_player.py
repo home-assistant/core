@@ -29,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_platform
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
-from .const ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
 
 _LOGGER = logging.getLogger(__name__)
 
