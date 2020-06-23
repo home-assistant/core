@@ -86,7 +86,43 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 {"binary_sensor": {"platform": "rest", "resource": "http://localhost"}},
             )
             self.hass.block_till_done()
-        assert 1 == mock_req.call_count
+        assert 2 == mock_req.call_count
+
+    @requests_mock.Mocker()
+    def test_setup_minimum_resource_template(self, mock_req):
+        """Test setup with minimum configuration (resource_template)."""
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(1, "binary_sensor"):
+            assert setup_component(
+                self.hass,
+                "binary_sensor",
+                {
+                    "binary_sensor": {
+                        "platform": "rest",
+                        "resource_template": "http://localhost",
+                    }
+                },
+            )
+            self.hass.block_till_done()
+        assert mock_req.call_count == 2
+
+    @requests_mock.Mocker()
+    def test_setup_duplicate_resource(self, mock_req):
+        """Test setup with duplicate resources."""
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(0, "binary_sensor"):
+            assert setup_component(
+                self.hass,
+                "binary_sensor",
+                {
+                    "binary_sensor": {
+                        "platform": "rest",
+                        "resource": "http://localhost",
+                        "resource_template": "http://localhost",
+                    }
+                },
+            )
+            self.hass.block_till_done()
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
@@ -112,7 +148,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 },
             )
             self.hass.block_till_done()
-        assert 1 == mock_req.call_count
+        assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
     def test_setup_post(self, mock_req):
@@ -139,7 +175,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 },
             )
             self.hass.block_till_done()
-        assert 1 == mock_req.call_count
+        assert 2 == mock_req.call_count
 
 
 class TestRestBinarySensor(unittest.TestCase):
@@ -155,9 +191,17 @@ class TestRestBinarySensor(unittest.TestCase):
         self.name = "foo"
         self.device_class = "light"
         self.value_template = template.Template("{{ value_json.key }}", self.hass)
+        self.force_update = False
+        self.resource_template = None
 
         self.binary_sensor = rest.RestBinarySensor(
-            self.hass, self.rest, self.name, self.device_class, self.value_template
+            self.hass,
+            self.rest,
+            self.name,
+            self.device_class,
+            self.value_template,
+            self.force_update,
+            self.resource_template,
         )
         self.addCleanup(self.hass.stop)
 
@@ -210,7 +254,13 @@ class TestRestBinarySensor(unittest.TestCase):
             "rest.RestData.update", side_effect=self.update_side_effect("true")
         )
         self.binary_sensor = rest.RestBinarySensor(
-            self.hass, self.rest, self.name, self.device_class, None
+            self.hass,
+            self.rest,
+            self.name,
+            self.device_class,
+            None,
+            self.force_update,
+            self.resource_template,
         )
         self.binary_sensor.update()
         assert STATE_ON == self.binary_sensor.state
