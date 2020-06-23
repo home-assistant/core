@@ -242,7 +242,6 @@ class TestComponentLogbook(unittest.TestCase):
             entries[1], pointB, "blu", domain="sensor", entity_id=entity_id2
         )
 
-
     def test_exclude_events_entity(self):
         """Test if events are filtered if entity is excluded in config."""
         entity_id = "sensor.bla"

@@ -163,8 +163,8 @@ def test_saving_state_include_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
     )
     assert len(states) == 2
-    assert hass.states.get("test2.recorder") == states[0]
-    assert hass.states.get("test3.included_entity") == states[1]
+    assert _state_empty_context(hass, "test2.recorder") == states[0]
+    assert _state_empty_context(hass, "test3.included_entity") == states[1]
 
 
 def test_saving_state_incl_entities(hass_recorder):
@@ -200,7 +200,7 @@ def test_saving_state_exclude_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test2.excluded_entity"]
     )
     assert len(states) == 1
-    assert hass.states.get("test2.recorder") == states[0]
+    assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_state_exclude_entities(hass_recorder):
@@ -257,8 +257,8 @@ def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test.ok", "test2.included_entity"]
     )
     assert len(states) == 1
-    assert hass.states.get("test.ok") == states[0]
-    assert hass.states.get("test.ok").state == "state2"
+    assert _state_empty_context(hass, "test.ok") == states[0]
+    assert _state_empty_context(hass, "test.ok").state == "state2"
 
 
 def test_recorder_setup_failure():

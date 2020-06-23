@@ -66,20 +66,20 @@ from tests.components.homekit.common import patch_debounce
 IP_ADDRESS = "127.0.0.1"
 
 
-@pytest.fixture
-def device_reg(hass):
+@pytest.fixture(name="device_reg")
+def device_reg_fixture(hass):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
-@pytest.fixture
-def entity_reg(hass):
+@pytest.fixture(name="entity_reg")
+def entity_reg_fixture(hass):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
-@pytest.fixture(scope="module")
-def debounce_patcher():
+@pytest.fixture(name="debounce_patcher", scope="module")
+def debounce_patcher_fixture():
     """Patch debounce method."""
     patcher = patch_debounce()
     yield patcher.start()
@@ -472,6 +472,7 @@ async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     homekit.bridge = Mock()
     homekit.bridge.accessories = []
     homekit.driver = hk_driver
+    # pylint: disable=protected-access
     homekit._filter = Mock(return_value=True)
 
     connection = (device_registry.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")
@@ -668,7 +669,7 @@ async def test_homekit_reset_accessories(hass):
         )
         await hass.async_block_till_done()
 
-        assert 2 == hk_driver_config_changed.call_count
+        assert hk_driver_config_changed.call_count == 2
         assert mock_add_accessory.called
         homekit.status = STATUS_READY
 
@@ -725,6 +726,7 @@ async def test_homekit_finds_linked_batteries(
         entry_id=entry.entry_id,
     )
     homekit.driver = hk_driver
+    # pylint: disable=protected-access
     homekit._filter = Mock(return_value=True)
     homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
 
@@ -955,6 +957,7 @@ async def test_homekit_ignored_missing_devices(
         entry_id=entry.entry_id,
     )
     homekit.driver = hk_driver
+    # pylint: disable=protected-access
     homekit._filter = Mock(return_value=True)
     homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
 
@@ -1034,6 +1037,7 @@ async def test_homekit_finds_linked_motion_sensors(
         entry_id=entry.entry_id,
     )
     homekit.driver = hk_driver
+    # pylint: disable=protected-access
     homekit._filter = Mock(return_value=True)
     homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
 
