@@ -4,7 +4,6 @@ from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
-from homeassistant.components.roku.const import ATTR_KEYWORD, SERVICE_SEARCH
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -69,19 +68,3 @@ async def test_main_services(
             blocking=True,
         )
         remote_mock.assert_called_once_with("home")
-
-
-async def test_integration_services(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test integration services."""
-    await setup_integration(hass, aioclient_mock)
-
-    with patch("homeassistant.components.roku.Roku.search") as search_mock:
-        await hass.services.async_call(
-            REMOTE_DOMAIN,
-            SERVICE_SEARCH,
-            {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_KEYWORD: "Space Jam"},
-            blocking=True,
-        )
-        search_mock.assert_called_once_with("Space Jam")
