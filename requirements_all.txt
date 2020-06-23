@@ -306,7 +306,7 @@ avea==1.4
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==32
+axis==33
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -339,7 +339,7 @@ beewi_smartclim==0.0.7
 bellows==0.17.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.5
+bimmer_connected==0.7.7
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -456,6 +456,9 @@ datadog==0.15.0
 # homeassistant.components.metoffice
 datapoint==0.9.5
 
+# homeassistant.components.debugpy
+debugpy==1.0.0b11
+
 # homeassistant.components.decora
 # decora==0.6
 
@@ -527,6 +530,9 @@ eliqonline==1.2.2
 
 # homeassistant.components.elkm1
 elkm1-lib==0.7.18
+
+# homeassistant.components.mobile_app
+emoji==0.5.4
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -705,7 +711,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.6
+hass-nabucasa==0.34.7
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -757,7 +763,7 @@ httplib2==0.10.3
 huawei-lte-api==1.4.12
 
 # homeassistant.components.hydrawise
-hydrawiser==0.1.1
+hydrawiser==0.2
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
@@ -946,7 +952,7 @@ ndms2_client==0.0.11
 nessclient==0.9.15
 
 # homeassistant.components.netdata
-netdata==0.1.2
+netdata==0.2.0
 
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
@@ -986,7 +992,7 @@ numato-gpio==0.7.1
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.5
+numpy==1.19.0
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1273,7 +1279,7 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.1.2
+pydaikin==2.2.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1391,7 +1397,7 @@ pyicloud==0.9.7
 pyinsteon==1.0.4
 
 # homeassistant.components.intesishome
-pyintesishome==1.7.4
+pyintesishome==1.7.5
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -1558,7 +1564,7 @@ pypjlink2==1.2.1
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.0.7
+pyps4-2ndscreen==1.1.0
 
 # homeassistant.components.qvr_pro
 pyqvrpro==0.52
@@ -1637,7 +1643,7 @@ pysonos==0.0.31
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.2.1
+pysqueezebox==0.2.4
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
@@ -1673,7 +1679,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.5
+python-ecobee-api==0.2.7
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11
@@ -1688,7 +1694,7 @@ python-family-hub-local==0.0.2
 python-forecastio==1.4.0
 
 # homeassistant.components.sms
-# python-gammu==2.12
+# python-gammu==3.0
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a
@@ -1769,7 +1775,7 @@ python-whois==0.7.2
 python-wink==1.10.5
 
 # homeassistant.components.awair
-python_awair==0.0.4
+python_awair==0.1.1
 
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.2.1
@@ -1887,7 +1893,7 @@ rjpl==0.3.5
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.4.2
+rokuecp==0.5.0
 
 # homeassistant.components.roomba
 roombapy==1.6.1
@@ -2112,7 +2118,7 @@ tmb==0.0.4
 todoist-python==8.0.0
 
 # homeassistant.components.toon
-toonapilib==3.2.4
+toonapi==0.1.0
 
 # homeassistant.components.totalconnect
 total_connect_client==0.55

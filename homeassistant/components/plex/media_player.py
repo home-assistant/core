@@ -90,11 +90,12 @@ def _async_add_entities(
 class PlexMediaPlayer(MediaPlayerEntity):
     """Representation of a Plex device."""
 
-    def __init__(self, plex_server, device, session=None):
+    def __init__(self, plex_server, device, player_source, session=None):
         """Initialize the Plex device."""
         self.plex_server = plex_server
         self.device = device
         self.session = session
+        self.player_source = player_source
         self._app_name = ""
         self._available = False
         self._device_protocol_capabilities = None
@@ -596,6 +597,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "session_username": self.username,
             "media_library_name": self._app_name,
             "summary": self.media_summary,
+            "player_source": self.player_source,
         }
 
         return attr

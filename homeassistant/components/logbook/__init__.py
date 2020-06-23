@@ -11,18 +11,25 @@ import voluptuous as vol
 
 from homeassistant.components import sun
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder.models import Events, States, process_timestamp
+from homeassistant.components.recorder.models import (
+    Events,
+    States,
+    process_timestamp,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.util import (
     QUERY_RETRY_WAIT,
     RETRIES,
     session_scope,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
     ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_EXCLUDE,
     CONF_INCLUDE,
     EVENT_HOMEASSISTANT_START,
@@ -52,6 +59,8 @@ DOMAIN = "logbook"
 
 GROUP_BY_MINUTES = 15
 
+EMPTY_JSON_OBJECT = "{}"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -78,12 +87,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ALL_EVENT_TYPES = [
-    EVENT_STATE_CHANGED,
-    EVENT_LOGBOOK_ENTRY,
+HOMEASSISTANT_EVENTS = [
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 ]
+
+ALL_EVENT_TYPES = [EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY, *HOMEASSISTANT_EVENTS]
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -120,7 +129,9 @@ def async_describe_event(hass, domain, event_name, describe_callback):
 
 
 async def async_setup(hass, config):
-    """Listen for download events to download files."""
+    """Logbook setup."""
+
+    hass.data.setdefault(DOMAIN, {})
 
     @callback
     def log_message(service):
@@ -194,7 +205,7 @@ class LogbookView(HomeAssistantView):
         return await hass.async_add_job(json_events)
 
 
-def humanify(hass, events, prev_states=None):
+def humanify(hass, events, entity_attr_cache, prev_states=None):
     """Generate a converted list of events into Entry objects.
 
     Will try to group events if possible:
@@ -242,7 +253,7 @@ def humanify(hass, events, prev_states=None):
             if event.event_type in external_events:
                 domain, describe_event = external_events[event.event_type]
                 data = describe_event(event)
-                data["when"] = event.time_fired
+                data["when"] = event.time_fired_isoformat
                 data["domain"] = domain
                 data["context_user_id"] = event.context_user_id
                 yield data
@@ -257,24 +268,22 @@ def humanify(hass, events, prev_states=None):
                 prev_states[entity_id] = event.state
                 domain = event.domain
 
-                if domain in CONTINUOUS_DOMAINS:
+                if (
+                    domain in CONTINUOUS_DOMAINS
+                    and event != last_sensor_event[entity_id]
+                ):
                     # Skip all but the last sensor state
-                    if event != last_sensor_event[entity_id]:
-                        continue
+                    continue
 
-                    # Don't show continuous sensor value changes in the logbook
-                    if _get_attribute(hass, entity_id, event, "unit_of_measurement"):
-                        continue
-
-                name = _get_attribute(
-                    hass, entity_id, event, ATTR_FRIENDLY_NAME
+                name = entity_attr_cache.get(
+                    entity_id, ATTR_FRIENDLY_NAME, event
                 ) or split_entity_id(entity_id)[1].replace("_", " ")
 
                 yield {
-                    "when": event.time_fired,
+                    "when": event.time_fired_isoformat,
                     "name": name,
                     "message": _entry_message_from_event(
-                        hass, entity_id, domain, event
+                        hass, entity_id, domain, event, entity_attr_cache
                     ),
                     "domain": domain,
                     "entity_id": entity_id,
@@ -286,7 +295,7 @@ def humanify(hass, events, prev_states=None):
                     continue
 
                 yield {
-                    "when": event.time_fired,
+                    "when": event.time_fired_isoformat,
                     "name": "Home Assistant",
                     "message": "started",
                     "domain": HA_DOMAIN,
@@ -300,7 +309,7 @@ def humanify(hass, events, prev_states=None):
                     action = "stopped"
 
                 yield {
-                    "when": event.time_fired,
+                    "when": event.time_fired_isoformat,
                     "name": "Home Assistant",
                     "message": action,
                     "domain": HA_DOMAIN,
@@ -318,7 +327,7 @@ def humanify(hass, events, prev_states=None):
                         pass
 
                 yield {
-                    "when": event.time_fired,
+                    "when": event.time_fired_isoformat,
                     "name": event_data.get(ATTR_NAME),
                     "message": event_data.get(ATTR_MESSAGE),
                     "domain": domain,
@@ -372,23 +381,32 @@ def _generate_filter_from_config(config):
     )
 
 
+def _all_entities_filter(_):
+    """Filter that accepts all entities."""
+    return True
+
+
 def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
-    entities_filter = _generate_filter_from_config(config)
+
+    entity_attr_cache = EntityAttributeCache(hass)
 
     def yield_events(query):
         """Yield Events that are not filtered away."""
         for row in query.yield_per(1000):
             event = LazyEventPartialState(row)
-            if _keep_event(hass, event, entities_filter):
+            if _keep_event(hass, event, entities_filter, entity_attr_cache):
                 yield event
 
     with session_scope(hass=hass) as session:
         if entity_id is not None:
             entity_ids = [entity_id.lower()]
+            entities_filter = generate_filter([], entity_ids, [], [])
         elif config.get(CONF_EXCLUDE) or config.get(CONF_INCLUDE):
+            entities_filter = _generate_filter_from_config(config)
             entity_ids = _get_related_entity_ids(session, entities_filter)
         else:
+            entities_filter = _all_entities_filter
             entity_ids = None
 
         old_state = aliased(States, name="old_state")
@@ -409,6 +427,24 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
             .order_by(Events.time_fired)
             .outerjoin(States, (Events.event_id == States.event_id))
             .outerjoin(old_state, (States.old_state_id == old_state.state_id))
+            # The below filter, removes state change events that do not have
+            # and old_state, new_state, or the old and
+            # new state are the same for v8 schema or later.
+            #
+            # If the events/states were stored before v8 schema, we relay on the
+            # prev_states dict to remove them.
+            #
+            # When all data is schema v8 or later, the check for EMPTY_JSON_OBJECT
+            # can be removed.
+            .filter(
+                (Events.event_type != EVENT_STATE_CHANGED)
+                | (Events.event_data != EMPTY_JSON_OBJECT)
+                | (
+                    (States.state_id.isnot(None))
+                    & (old_state.state_id.isnot(None))
+                    & (States.state != old_state.state)
+                )
+            )
             .filter(
                 Events.event_type.in_(ALL_EVENT_TYPES + list(hass.data.get(DOMAIN, {})))
             )
@@ -429,19 +465,12 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
                 | (States.state_id.is_(None))
             )
 
+        # When all data is schema v8 or later, prev_states can be removed
         prev_states = {}
-        return list(humanify(hass, yield_events(query), prev_states))
+        return list(humanify(hass, yield_events(query), entity_attr_cache, prev_states))
 
 
-def _get_attribute(hass, entity_id, event, attribute):
-    current_state = hass.states.get(entity_id)
-    if not current_state:
-        return event.attributes.get(attribute)
-    return current_state.attributes.get(attribute, None)
-
-
-def _keep_event(hass, event, entities_filter):
-
+def _keep_event(hass, event, entities_filter, entity_attr_cache):
     if event.event_type == EVENT_STATE_CHANGED:
         entity_id = event.entity_id
         if entity_id is None:
@@ -456,29 +485,33 @@ def _keep_event(hass, event, entities_filter):
         if event.hidden:
             return False
 
-    elif event.event_type == EVENT_LOGBOOK_ENTRY:
-        event_data = event.data
-        domain = event_data.get(ATTR_DOMAIN)
-        entity_id = None
-    elif event.event_type in hass.data.get(DOMAIN, {}) and not event.data.get(
-        "entity_id"
-    ):
+        if event.domain in CONTINUOUS_DOMAINS and entity_attr_cache.get(
+            entity_id, ATTR_UNIT_OF_MEASUREMENT, event
+        ):
+            # Don't show continuous sensor value changes in the logbook
+            return False
+    elif event.event_type in HOMEASSISTANT_EVENTS:
+        entity_id = f"{HA_DOMAIN}."
+    elif event.event_type in hass.data[DOMAIN] and ATTR_ENTITY_ID not in event.data:
         # If the entity_id isn't described, use the domain that describes
         # the event for filtering.
         domain = hass.data[DOMAIN][event.event_type][0]
-        entity_id = None
+        if domain is None:
+            return False
+        entity_id = f"{domain}."
     else:
         event_data = event.data
-        domain = event_data.get(ATTR_DOMAIN)
-        entity_id = event_data.get("entity_id")
+        entity_id = event_data.get(ATTR_ENTITY_ID)
+        if entity_id is None:
+            domain = event_data.get(ATTR_DOMAIN)
+            if domain is None:
+                return False
+            entity_id = f"{domain}."
 
-    if not entity_id and domain:
-        entity_id = f"{domain}."
-
-    return not entity_id or entities_filter(entity_id)
+    return entities_filter(entity_id)
 
 
-def _entry_message_from_event(hass, entity_id, domain, event):
+def _entry_message_from_event(hass, entity_id, domain, event, entity_attr_cache):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
     state_state = event.state
@@ -494,7 +527,7 @@ def _entry_message_from_event(hass, entity_id, domain, event):
         return "has set"
 
     if domain == "binary_sensor":
-        device_class = _get_attribute(hass, entity_id, event, "device_class")
+        device_class = entity_attr_cache.get(entity_id, ATTR_DEVICE_CLASS, event)
         if device_class == "battery":
             if state_state == STATE_ON:
                 return "is low"
@@ -573,6 +606,7 @@ class LazyEventPartialState:
         "_row",
         "_event_data",
         "_time_fired",
+        "_time_fired_isoformat",
         "_attributes",
         "event_type",
         "entity_id",
@@ -585,6 +619,7 @@ class LazyEventPartialState:
         self._row = row
         self._event_data = None
         self._time_fired = None
+        self._time_fired_isoformat = None
         self._attributes = None
         self.event_type = self._row.event_type
         self.entity_id = self._row.entity_id
@@ -600,7 +635,10 @@ class LazyEventPartialState:
     def attributes(self):
         """State attributes."""
         if not self._attributes:
-            if self._row.attributes is None or self._row.attributes == "{}":
+            if (
+                self._row.attributes is None
+                or self._row.attributes == EMPTY_JSON_OBJECT
+            ):
                 self._attributes = {}
             else:
                 self._attributes = json.loads(self._row.attributes)
@@ -611,7 +649,7 @@ class LazyEventPartialState:
         """Event data."""
 
         if not self._event_data:
-            if self._row.event_data == "{}":
+            if self._row.event_data == EMPTY_JSON_OBJECT:
                 self._event_data = {}
             else:
                 self._event_data = json.loads(self._row.event_data)
@@ -632,11 +670,29 @@ class LazyEventPartialState:
         return self._time_fired
 
     @property
+    def time_fired_isoformat(self):
+        """Time event was fired in utc isoformat."""
+        if not self._time_fired_isoformat:
+            if self._time_fired:
+                self._time_fired_isoformat = self._time_fired.isoformat()
+            else:
+                self._time_fired_isoformat = process_timestamp_to_utc_isoformat(
+                    self._row.time_fired or dt_util.utcnow()
+                )
+        return self._time_fired_isoformat
+
+    @property
     def has_old_and_new_state(self):
         """Check the json data to see if new_state and old_state is present without decoding."""
-        if self._row.event_data == "{}":
+
+        # Delete this check once all states are saved in the v8 schema
+        # format or later (they have the old_state_id column).
+
+        # New events in v8 schema format
+        if self._row.event_data == EMPTY_JSON_OBJECT:
             return self._row.state_id is not None and self._row.old_state_id is not None
 
+        # Old events not in v8 schema format
         return (
             '"old_state": {' in self._row.event_data
             and '"new_state": {' in self._row.event_data
@@ -648,3 +704,38 @@ class LazyEventPartialState:
         if '"hidden":' in self._row.attributes:
             return self.attributes.get(ATTR_HIDDEN, False)
         return False
+
+
+class EntityAttributeCache:
+    """A cache to lookup static entity_id attribute.
+
+    This class should not be used to lookup attributes
+    that are expected to change state.
+    """
+
+    def __init__(self, hass):
+        """Init the cache."""
+        self._hass = hass
+        self._cache = {}
+
+    def get(self, entity_id, attribute, event):
+        """Lookup an attribute for an entity or get it from the cache."""
+        if entity_id in self._cache:
+            if attribute in self._cache[entity_id]:
+                return self._cache[entity_id][attribute]
+        else:
+            self._cache[entity_id] = {}
+
+        current_state = self._hass.states.get(entity_id)
+        if current_state:
+            # Try the current state as its faster than decoding the
+            # attributes
+            self._cache[entity_id][attribute] = current_state.attributes.get(
+                attribute, None
+            )
+        else:
+            # If the entity has been removed, decode the attributes
+            # instead
+            self._cache[entity_id][attribute] = event.attributes.get(attribute)
+
+        return self._cache[entity_id][attribute]

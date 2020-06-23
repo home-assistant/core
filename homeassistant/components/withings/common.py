@@ -258,7 +258,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.HYDRATION,
         MeasureType.HYDRATION,
         "Hydration",
-        UNIT_PERCENTAGE,
+        MASS_KILOGRAMS,
         "mdi:water",
         SENSOR_DOMAIN,
         False,

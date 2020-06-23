@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan kun konfigurere \u00e9n Point-konto.",
+            "already_setup": "Allerede konfigurert. Bare en enkelt konfigurasjon mulig.",
             "authorize_url_fail": "Ukjent feil ved oppretting av godkjenningsadresse.",
             "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
             "external_setup": "Punktet er konfigurert fra en annen flyt.",
-            "no_flows": "Du m\u00e5 konfigurere Point f\u00f8r du kangodkjenne den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/point/)."
+            "no_flows": "Komponenten er ikke konfigurert. F\u00f8lg dokumentasjonen."
         },
         "create_entry": {
-            "default": "Vellykket godkjenning med Minut for din(e) Point enhet(er)"
+            "default": "Vellykket godkjenning"
         },
         "error": {
             "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker p\u00e5 Send",

@@ -46,8 +46,8 @@ class TestMQTT:
         )
         self.hass.block_till_done()
         assert mock_mqtt.called
-        assert mock_mqtt.mock_calls[1][2]["username"] == "homeassistant"
-        assert mock_mqtt.mock_calls[1][2]["password"] == password
+        assert mock_mqtt.mock_calls[1][1][2]["username"] == "homeassistant"
+        assert mock_mqtt.mock_calls[1][1][2]["password"] == password
 
     @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
@@ -69,8 +69,8 @@ class TestMQTT:
         )
         self.hass.block_till_done()
         assert mock_mqtt.called
-        assert mock_mqtt.mock_calls[1][2]["username"] == "homeassistant"
-        assert mock_mqtt.mock_calls[1][2]["password"] == password
+        assert mock_mqtt.mock_calls[1][1][2]["username"] == "homeassistant"
+        assert mock_mqtt.mock_calls[1][1][2]["password"] == password
 
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
     @patch("hbmqtt.broker.Broker.start", return_value=mock_coro())

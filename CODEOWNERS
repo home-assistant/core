@@ -46,7 +46,7 @@ homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/avea/* @pattyland
 homeassistant/components/avri/* @timvancann
-homeassistant/components/awair/* @danielsjf
+homeassistant/components/awair/* @ahayworth @danielsjf
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @Kane610
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
@@ -57,7 +57,7 @@ homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blebox/* @gadgetmobile
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmp280/* @belidzs
-homeassistant/components/bmw_connected_drive/* @gerard33
+homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bom/* @maddenp
 homeassistant/components/braviatv/* @robbiet480 @bieniu
 homeassistant/components/broadlink/* @danielhiversen @felipediel
@@ -86,6 +86,7 @@ homeassistant/components/cpuspeed/* @fabaff
 homeassistant/components/cups/* @fabaff
 homeassistant/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
+homeassistant/components/debugpy/* @frenck
 homeassistant/components/deconz/* @Kane610
 homeassistant/components/delijn/* @bollewolle @Emilv2
 homeassistant/components/demo/* @home-assistant/core
@@ -184,8 +185,10 @@ homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
+homeassistant/components/humidifier/* @home-assistant/core @Shulyaka
 homeassistant/components/hunterdouglas_powerview/* @bdraco
 homeassistant/components/hvv_departures/* @vigonotion
+homeassistant/components/hydrawise/* @ptcryan
 homeassistant/components/iammeter/* @lewei50
 homeassistant/components/iaqualink/* @flz
 homeassistant/components/icloud/* @Quentame

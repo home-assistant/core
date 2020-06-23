@@ -29,6 +29,9 @@ PyTransportNSW==0.1.1
 # homeassistant.components.homekit
 PyTurboJPEG==1.4.0
 
+# homeassistant.components.xiaomi_aqara
+PyXiaomiGateway==0.12.4
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -150,7 +153,7 @@ av==8.0.2
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==32
+axis==33
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -208,6 +211,9 @@ datadog==0.15.0
 # homeassistant.components.metoffice
 datapoint==0.9.5
 
+# homeassistant.components.debugpy
+debugpy==1.0.0b11
+
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
@@ -243,6 +249,9 @@ elgato==0.2.0
 
 # homeassistant.components.elkm1
 elkm1-lib==0.7.18
+
+# homeassistant.components.mobile_app
+emoji==0.5.4
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -313,7 +322,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.6
+hass-nabucasa==0.34.7
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -430,7 +439,7 @@ numato-gpio==0.7.1
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.5
+numpy==1.19.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -561,7 +570,7 @@ pycoolmasternet==0.0.4
 pycountry==19.8.18
 
 # homeassistant.components.daikin
-pydaikin==2.1.2
+pydaikin==2.2.0
 
 # homeassistant.components.deconz
 pydeconz==71
@@ -687,7 +696,7 @@ pyotp==2.3.0
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.0.7
+pyps4-2ndscreen==1.1.0
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -720,8 +729,11 @@ pysonos==0.0.31
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
+# homeassistant.components.squeezebox
+pysqueezebox==0.2.4
+
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.5
+python-ecobee-api==0.2.7
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
@@ -757,7 +769,7 @@ python-twitch-client==0.6.0
 python-velbus==2.0.43
 
 # homeassistant.components.awair
-python_awair==0.0.4
+python_awair==0.1.1
 
 # homeassistant.components.tile
 pytile==3.0.6
@@ -799,7 +811,7 @@ rflink==0.0.52
 ring_doorbell==0.6.0
 
 # homeassistant.components.roku
-rokuecp==0.4.2
+rokuecp==0.5.0
 
 # homeassistant.components.roomba
 roombapy==1.6.1
@@ -878,7 +890,7 @@ tesla-powerwall==0.2.11
 teslajsonpy==0.8.1
 
 # homeassistant.components.toon
-toonapilib==3.2.4
+toonapi==0.1.0
 
 # homeassistant.components.totalconnect
 total_connect_client==0.55

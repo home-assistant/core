@@ -444,7 +444,6 @@ omit =
     homeassistant/components/linux_battery/sensor.py
     homeassistant/components/lirc/*
     homeassistant/components/llamalab_automate/notify.py
-    homeassistant/components/lockitron/lock.py
     homeassistant/components/logi_circle/__init__.py
     homeassistant/components/logi_circle/camera.py
     homeassistant/components/logi_circle/const.py
@@ -757,7 +756,8 @@ omit =
     homeassistant/components/spotcrime/sensor.py
     homeassistant/components/spotify/__init__.py
     homeassistant/components/spotify/media_player.py
-    homeassistant/components/squeezebox/*
+    homeassistant/components/squeezebox/__init__.py
+    homeassistant/components/squeezebox/media_player.py
     homeassistant/components/starline/*
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
@@ -822,7 +822,16 @@ omit =
     homeassistant/components/todoist/const.py
     homeassistant/components/tof/sensor.py
     homeassistant/components/tomato/device_tracker.py
-    homeassistant/components/toon/*
+    homeassistant/components/toon/__init__.py
+    homeassistant/components/toon/binary_sensor.py
+    homeassistant/components/toon/climate.py
+    homeassistant/components/toon/const.py
+    homeassistant/components/toon/coordinator.py
+    homeassistant/components/toon/helpers.py
+    homeassistant/components/toon/models.py
+    homeassistant/components/toon/oauth2.py
+    homeassistant/components/toon/sensor.py
+    homeassistant/components/toon/switch.py
     homeassistant/components/torque/sensor.py
     homeassistant/components/totalconnect/*
     homeassistant/components/touchline/climate.py
@@ -909,7 +918,14 @@ omit =
     homeassistant/components/xeoma/camera.py
     homeassistant/components/xfinity/device_tracker.py
     homeassistant/components/xiaomi/camera.py
-    homeassistant/components/xiaomi_aqara/*
+    homeassistant/components/xiaomi_aqara/__init__.py
+    homeassistant/components/xiaomi_aqara/binary_sensor.py
+    homeassistant/components/xiaomi_aqara/const.py
+    homeassistant/components/xiaomi_aqara/cover.py
+    homeassistant/components/xiaomi_aqara/light.py
+    homeassistant/components/xiaomi_aqara/lock.py
+    homeassistant/components/xiaomi_aqara/sensor.py
+    homeassistant/components/xiaomi_aqara/switch.py
     homeassistant/components/xiaomi_miio/__init__.py
     homeassistant/components/xiaomi_miio/air_quality.py
     homeassistant/components/xiaomi_miio/alarm_control_panel.py

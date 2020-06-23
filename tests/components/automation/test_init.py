@@ -1040,6 +1040,7 @@ async def test_extraction_functions(hass):
 async def test_logbook_humanify_automation_triggered_event(hass):
     """Test humanifying Automation Trigger event."""
     await async_setup_component(hass, automation.DOMAIN, {})
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     event1, event2 = list(
         logbook.humanify(
@@ -1054,6 +1055,7 @@ async def test_logbook_humanify_automation_triggered_event(hass):
                     {ATTR_ENTITY_ID: "automation.bye", ATTR_NAME: "Bye Automation"},
                 ),
             ],
+            entity_attr_cache,
         )
     )
 

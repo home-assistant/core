@@ -40,7 +40,7 @@ DATA_LOGGING = "logging"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
 
-DEBUGGER_INTEGRATIONS = {"ptvsd"}
+DEBUGGER_INTEGRATIONS = {"debugpy", "ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
 LOGGING_INTEGRATIONS = {
     # Set log levels

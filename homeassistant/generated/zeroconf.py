@@ -38,6 +38,7 @@ ZEROCONF = {
         "ipp"
     ],
     "_miio._udp.local.": [
+        "xiaomi_aqara",
         "xiaomi_miio"
     ],
     "_nut._tcp.local.": [

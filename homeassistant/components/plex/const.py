@@ -15,6 +15,7 @@ DEBOUNCE_TIMEOUT = 1
 DISPATCHERS = "dispatchers"
 PLATFORMS = frozenset(["media_player", "sensor"])
 PLATFORMS_COMPLETED = "platforms_completed"
+PLAYER_SOURCE = "player_source"
 SERVERS = "servers"
 WEBSOCKETS = "websockets"
 

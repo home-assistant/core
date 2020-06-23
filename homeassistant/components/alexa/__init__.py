@@ -17,6 +17,7 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_LOCALE,
+    CONF_PASSWORD,
     CONF_SUPPORTED_LOCALES,
     CONF_TEXT,
     CONF_TITLE,
@@ -56,6 +57,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
             CONF_FLASH_BRIEFINGS: {
+                vol.Required(CONF_PASSWORD): cv.string,
                 cv.string: vol.All(
                     cv.ensure_list,
                     [
@@ -67,7 +69,7 @@ CONFIG_SCHEMA = vol.Schema(
                             vol.Optional(CONF_DISPLAY_URL): cv.template,
                         }
                     ],
-                )
+                ),
             },
             # vol.Optional here would mean we couldn't distinguish between an empty
             # smart_home: and none at all.
