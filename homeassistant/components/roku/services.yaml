@@ -2,8 +2,8 @@ search:
   description: Emulates opening search screen and entering search keyword.
   fields:
     entity_id:
-      description: Name(s) of the entities to search on
+      description: The entities to search on.
       example: "remote.living_room"
     keyword:
-      description: Search keyword
+      description: The keyword to search for.
       example: "Space Jam"
