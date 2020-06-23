@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_per_username_allowed": "Only one config entry per unique username is supported"
         },
+        "error": {
+            "cannot_connect": "Unable to connect to Plum Cloud."
+        },
         "step": {
             "user": {
                 "data": {

@@ -1,6 +1,9 @@
 """Config flow for Plum Lightpad."""
+import logging
 from typing import Any, Dict, Optional
 
+from aiohttp import ContentTypeError
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -10,32 +13,40 @@ from homeassistant.helpers import ConfigType
 from .const import DOMAIN
 from .utils import load_plum
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Plum Lightpad integration."""
 
     VERSION = 1
 
+    def _show_form(self, errors=None):
+        schema = {
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+        }
+
+        return self.async_show_form(
+            step_id="user", data_schema=vol.Schema(schema), errors=errors or {},
+        )
+
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by the user or redirected to by import."""
         if not user_input:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_USERNAME): str,
-                        vol.Required(CONF_PASSWORD): str,
-                    }
-                ),
-            )
+            return self._show_form()
 
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 
         # load Plum just so we know username/password work
-        await load_plum(username, password, self.hass)
+        try:
+            await load_plum(username, password, self.hass)
+        except (ContentTypeError, ConnectTimeout, HTTPError) as ex:
+            _LOGGER.error("Unable to connect to Plum cloud: %s", str(ex))
+            return self._show_form({"base": "cannot_connect"})
 
         already_registered = await self.async_set_unique_id(username)
         if already_registered:
