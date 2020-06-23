@@ -2,6 +2,8 @@
 import logging
 from typing import List
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
@@ -24,9 +26,10 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
+from homeassistant.helpers import entity_platform
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
-from .const import DOMAIN
+from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,12 +46,20 @@ SUPPORT_ROKU = (
     | SUPPORT_TURN_OFF
 )
 
+SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Roku config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
     async_add_entities([RokuMediaPlayer(unique_id, coordinator)], True)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SEARCH, SEARCH_SCHEMA, "search",
+    )
 
 
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
@@ -169,6 +180,11 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def source_list(self) -> List:
         """List of available input sources."""
         return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
+
+    @roku_exception_handler
+    async def search(self, keyword):
+        """Emulate opening the search screen and entering the search keyword."""
+        await self.coordinator.roku.search(keyword)
 
     @roku_exception_handler
     async def async_turn_on(self) -> None:
