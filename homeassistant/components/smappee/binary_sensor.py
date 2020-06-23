@@ -58,11 +58,6 @@ class SmappeePresence(BinarySensorEntity):
         return self._state
 
     @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        return STATE_ON if self._state else STATE_OFF
-
-    @property
     def icon(self):
         """Icon to use in the frontend."""
         return "mdi:motion-sensor"
@@ -128,11 +123,6 @@ class SmappeeAppliance(BinarySensorEntity):
     def is_on(self):
         """Return if the binary sensor is turned on."""
         return self._state
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return STATE_ON if self._state else STATE_OFF
 
     @property
     def icon(self):
