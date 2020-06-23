@@ -7,6 +7,8 @@ from gammu.asyncworker import (  # pylint: disable=import-error, no-member
     GammuAsyncWorker,
 )
 
+from homeassistant.core import callback
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,11 +26,11 @@ class Gateway:
     async def init_async(self):
         """Initialize the sms gateway asynchronously."""
         try:
-            await self._worker.SetIncomingSMSAsync()
+            await self._worker.set_incoming_sms_async()
         except gammu.ERR_NOTSUPPORTED:
             _LOGGER.warning("Your phone does not support incoming SMS notifications!")
         else:
-            await self._worker.SetIncomingCallbackAsync(self.sms_callback)
+            await self._worker.set_incoming_callback_async(self.sms_callback)
 
     def sms_callback(self, state_machine, callback_type, callback_data):
         """Receive notification about incoming event.
@@ -66,7 +68,7 @@ class Gateway:
             _LOGGER.debug(f"Append event data:{event_data}")
             data.append(event_data)
 
-        self._loop.call_soon_threadsafe(self._notify_incoming_sms, data)
+        self._hass.add_job(self._notify_incoming_sms, data)
 
     def get_and_delete_all_sms(self, state_machine, force=False):
         """Read and delete all SMS in the modem."""
@@ -122,6 +124,7 @@ class Gateway:
 
         return entries
 
+    @callback
     def _notify_incoming_sms(self, messages):
         """Notify hass when an incoming SMS message is received."""
         for message in messages:
@@ -131,7 +134,7 @@ class Gateway:
                 "text": message["message"],
             }
             _LOGGER.debug(f"Firing event:{event_data}")
-            self._hass.bus.fire(f"{DOMAIN}.incoming_sms", event_data)
+            self._hass.bus.async_fire(f"{DOMAIN}.incoming_sms", event_data)
 
     async def send_sms_async(self, message):
         """Send sms message via the worker."""
