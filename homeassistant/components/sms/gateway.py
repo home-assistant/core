@@ -22,7 +22,7 @@ class Gateway:
         self._hass = hass
 
     async def init_async(self):
-        """Initialize the sms gateway asyncronisly."""
+        """Initialize the sms gateway asynchronously."""
         try:
             await self._worker.set_incoming_sms_async()
         except gammu.ERR_NOTSUPPORTED:
@@ -132,7 +132,6 @@ class Gateway:
                 "date": message["date"],
                 "text": message["message"],
             }
-            _LOGGER.debug(f"Firing event:{event_data}")
             self._hass.bus.async_fire(f"{DOMAIN}.incoming_sms", event_data)
 
     async def send_sms_async(self, message):
