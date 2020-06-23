@@ -24,6 +24,10 @@ class Gateway:
         """Get the IMEI of the device."""
         return await self._worker.get_imei_async()
 
+    async def get_signal_quality_async(self):
+        """Get the current signal level of the modem."""
+        return await self._worker.get_signal_quality_async()
+
     async def terminate_async(self):
         """Terminate modem connection."""
         return await self._worker.terminate_async()
