@@ -54,9 +54,9 @@ class SmappeePresence(BinarySensorEntity):
         return self._state
 
     @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return "mdi:motion-sensor"
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return "presence"
 
     @property
     def unique_id(self,):
@@ -142,7 +142,8 @@ class SmappeeAppliance(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "plug"
+        # Only lights can be mapped onto the generic list of binary sensors
+        return "light" if self._appliance_type == "Lights" else "power"
 
     @property
     def unique_id(self,):
