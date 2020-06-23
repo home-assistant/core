@@ -3,7 +3,7 @@ search:
   fields:
     entity_id:
       description: The entities to search on.
-      example: "remote.living_room"
+      example: "media_player.roku"
     keyword:
       description: The keyword to search for.
       example: "Space Jam"
