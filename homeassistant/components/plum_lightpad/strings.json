@@ -5,8 +5,8 @@
       "user": {
         "title": "Fill in your Plum Cloud login information",
         "data": {
-          "username": "Email",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
