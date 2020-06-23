@@ -18,6 +18,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "climate",
     "cover",
     "fan",
+    "humidifier",
     "light",
     "lock",
     "media_player",
