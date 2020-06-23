@@ -113,8 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 force_update,
                 resource_template,
             )
-        ],
-        True,
+        ]
     )
 
 

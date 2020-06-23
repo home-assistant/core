@@ -86,7 +86,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 {"binary_sensor": {"platform": "rest", "resource": "http://localhost"}},
             )
             self.hass.block_till_done()
-        assert 2 == mock_req.call_count
+        assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
     def test_setup_minimum_resource_template(self, mock_req):
@@ -104,7 +104,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 },
             )
             self.hass.block_till_done()
-        assert mock_req.call_count == 2
+        assert mock_req.call_count == 1
 
     @requests_mock.Mocker()
     def test_setup_duplicate_resource(self, mock_req):
@@ -148,7 +148,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 },
             )
             self.hass.block_till_done()
-        assert 2 == mock_req.call_count
+        assert 1 == mock_req.call_count
 
     @requests_mock.Mocker()
     def test_setup_post(self, mock_req):
@@ -175,7 +175,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                 },
             )
             self.hass.block_till_done()
-        assert 2 == mock_req.call_count
+        assert 1 == mock_req.call_count
 
 
 class TestRestBinarySensor(unittest.TestCase):
