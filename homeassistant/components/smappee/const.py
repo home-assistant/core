@@ -7,7 +7,7 @@ DATA_CLIENT = "smappee_data"
 
 BASE = "BASE"
 
-SMAPPEE_PLATFORMS = ["sensor", "switch", "binary_sensor"]
+SMAPPEE_PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
