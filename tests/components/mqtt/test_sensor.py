@@ -337,7 +337,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one sensor per unique_id."""
     config = {
         sensor.DOMAIN: [
@@ -355,7 +355,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, sensor.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, sensor.DOMAIN, config)
 
 
 async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):

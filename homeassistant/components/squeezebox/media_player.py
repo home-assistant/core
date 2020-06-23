@@ -1,10 +1,11 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
+import asyncio
 import logging
-import socket
 
 from pysqueezebox import Server
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
@@ -28,14 +29,25 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_START,
+    STATE_IDLE,
     STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_UNAVAILABLE,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
 
-from .const import SQUEEZEBOX_MODE
+from .__init__ import start_server_discovery
+from .const import (
+    DEFAULT_PORT,
+    DOMAIN,
+    ENTRY_PLAYERS,
+    KNOWN_PLAYERS,
+    PLAYER_DISCOVERY_UNSUB,
+)
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -47,8 +59,7 @@ ATTR_SYNC_GROUP = "sync_group"
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = 9000
-TIMEOUT = 10
+DISCOVERY_INTERVAL = 60
 
 SUPPORT_SQUEEZEBOX = (
     SUPPORT_PAUSE
@@ -65,21 +76,23 @@ SUPPORT_SQUEEZEBOX = (
     | SUPPORT_CLEAR_PLAYLIST
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME): cv.string,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HOST),
+    cv.deprecated(CONF_PORT),
+    cv.deprecated(CONF_PASSWORD),
+    cv.deprecated(CONF_USERNAME),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_USERNAME): cv.string,
+        }
+    ),
 )
 
-DATA_SQUEEZEBOX = "squeezebox"
-
-KNOWN_SERVERS = "squeezebox_known_servers"
-
+KNOWN_SERVERS = "known_servers"
 ATTR_PARAMETERS = "parameters"
-
 ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
@@ -87,57 +100,84 @@ ATTR_TO_PROPERTY = [
     ATTR_SYNC_GROUP,
 ]
 
+SQUEEZEBOX_MODE = {
+    "pause": STATE_PAUSED,
+    "play": STATE_PLAYING,
+    "stop": STATE_IDLE,
+}
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the squeezebox platform."""
+    """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
 
-    known_servers = hass.data.get(KNOWN_SERVERS)
-    if known_servers is None:
-        hass.data[KNOWN_SERVERS] = known_servers = set()
+    if config:
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+        )
 
-    if DATA_SQUEEZEBOX not in hass.data:
-        hass.data[DATA_SQUEEZEBOX] = []
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up an LMS Server from a config entry."""
+    config = config_entry.data
+    _LOGGER.debug("Reached async_setup_entry for host=%s", config[CONF_HOST])
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
-    if discovery_info is not None:
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
-    else:
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
 
-    # In case the port is not discovered
-    if port is None:
-        port = DEFAULT_PORT
+    known_players = hass.data[DOMAIN].get(KNOWN_PLAYERS)
+    if known_players is None:
+        hass.data[DOMAIN][KNOWN_PLAYERS] = known_players = []
 
-    # Get IP of host, to prevent duplication of same host (different DNS names)
-    try:
-        ipaddr = await hass.async_add_executor_job(socket.gethostbyname, host)
-    except OSError as error:
-        _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
-        raise PlatformNotReady from error
+    entry_players = hass.data[DOMAIN][config_entry.entry_id].setdefault(
+        ENTRY_PLAYERS, []
+    )
 
-    if ipaddr in known_servers:
-        return
-
-    _LOGGER.debug("Creating LMS object for %s", ipaddr)
+    _LOGGER.debug("Creating LMS object for %s", host)
     lms = Server(async_get_clientsession(hass), host, port, username, password)
-    known_servers.add(ipaddr)
 
-    players = await lms.async_get_players()
-    if players is None:
-        raise PlatformNotReady
-    media_players = []
-    for player in players:
-        media_players.append(SqueezeBoxDevice(player))
+    async def _discovery(now=None):
+        """Discover squeezebox players by polling server."""
 
-    hass.data[DATA_SQUEEZEBOX].extend(media_players)
-    async_add_entities(media_players)
+        async def _discovered_player(player):
+            """Handle a (re)discovered player."""
+            entity = next(
+                (
+                    known
+                    for known in known_players
+                    if known.unique_id == player.player_id
+                ),
+                None,
+            )
+            if entity and not entity.available:
+                # check if previously unavailable player has connected
+                await player.async_update()
+                entity.available = player.connected
+            if not entity:
+                _LOGGER.debug("Adding new entity: %s", player)
+                entity = SqueezeBoxEntity(player)
+                known_players.append(entity)
+                entry_players.append(entity)
+                async_add_entities([entity])
 
+        players = await lms.async_get_players()
+        if players:
+            for player in players:
+                hass.async_create_task(_discovered_player(player))
+
+        hass.data[DOMAIN][config_entry.entry_id][
+            PLAYER_DISCOVERY_UNSUB
+        ] = hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
+
+    _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
+    asyncio.create_task(_discovery())
+
+    # Register entity services
     platform = entity_platform.current_platform.get()
-
     platform.async_register_entity_service(
         SERVICE_CALL_METHOD,
         {
@@ -148,7 +188,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         },
         "async_call_method",
     )
-
     platform.async_register_entity_service(
         SERVICE_CALL_QUERY,
         {
@@ -159,17 +198,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         },
         "async_call_query",
     )
-
     platform.async_register_entity_service(
         SERVICE_SYNC, {vol.Required(ATTR_OTHER_PLAYER): cv.string}, "async_sync",
     )
-
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
+
+    # Start server discovery task if not already running
+    if hass.is_running:
+        asyncio.create_task(start_server_discovery(hass))
+    else:
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
+        )
 
     return True
 
 
-class SqueezeBoxDevice(MediaPlayerEntity):
+class SqueezeBoxEntity(MediaPlayerEntity):
     """
     Representation of a SqueezeBox device.
 
@@ -181,6 +226,7 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         self._player = player
         self._last_update = None
         self._query_result = {}
+        self._available = True
 
     @property
     def device_state_attributes(self):
@@ -204,9 +250,21 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         return self._player.player_id
 
     @property
+    def available(self):
+        """Return True if device connected to LMS server."""
+        return self._available
+
+    @available.setter
+    def available(self, val):
+        """Set available to True or False."""
+        self._available = bool(val)
+
+    @property
     def state(self):
         """Return the state of the device."""
-        if self._player.power is not None and not self._player.power:
+        if not self.available:
+            return STATE_UNAVAILABLE
+        if not self._player.power:
             return STATE_OFF
         if self._player.mode:
             return SQUEEZEBOX_MODE.get(self._player.mode)
@@ -214,13 +272,15 @@ class SqueezeBoxDevice(MediaPlayerEntity):
 
     async def async_update(self):
         """Update the Player() object."""
-        last_media_position = self.media_position
-        await self._player.async_update()
-        if self.media_position != last_media_position:
-            _LOGGER.debug(
-                "Media position updated for %s: %s", self, self.media_position
-            )
-            self._last_update = utcnow()
+        # only update available players, newly available players will be rediscovered and marked available
+        if self._available:
+            last_media_position = self.media_position
+            await self._player.async_update()
+            if self.media_position != last_media_position:
+                self._last_update = utcnow()
+            if self._player.connected is False:
+                _LOGGER.info("Player %s is not available", self.name)
+                self._available = False
 
     @property
     def volume_level(self):
@@ -291,7 +351,9 @@ class SqueezeBoxDevice(MediaPlayerEntity):
     @property
     def sync_group(self):
         """List players we are synced with."""
-        player_ids = {p.unique_id: p.entity_id for p in self.hass.data[DATA_SQUEEZEBOX]}
+        player_ids = {
+            p.unique_id: p.entity_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
+        }
         sync_group = []
         for player in self._player.sync_group:
             if player in player_ids:
@@ -407,7 +469,9 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         If the other player is a member of a sync group, it will leave the current sync group
         without asking.
         """
-        player_ids = {p.entity_id: p.unique_id for p in self.hass.data[DATA_SQUEEZEBOX]}
+        player_ids = {
+            p.entity_id: p.unique_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
+        }
         other_player_id = player_ids.get(other_player)
         if other_player_id:
             await self._player.async_sync(other_player_id)

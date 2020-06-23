@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components import logbook, recorder, sun
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1230,7 +1231,7 @@ class TestComponentLogbook(unittest.TestCase):
     ):
         """Assert an entry is what is expected."""
         if when:
-            assert when == entry["when"]
+            assert when.isoformat() == entry["when"]
 
         if name:
             assert name == entry["name"]
@@ -1639,3 +1640,8 @@ class MockLazyEventPartialState(ha.Event):
     def context_user_id(self):
         """Context user id of event."""
         return self.context.user_id
+
+    @property
+    def time_fired_isoformat(self):
+        """Time event was fired in utc isoformat."""
+        return process_timestamp_to_utc_isoformat(self.time_fired)

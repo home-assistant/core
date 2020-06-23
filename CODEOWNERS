@@ -57,7 +57,7 @@ homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blebox/* @gadgetmobile
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmp280/* @belidzs
-homeassistant/components/bmw_connected_drive/* @gerard33
+homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bom/* @maddenp
 homeassistant/components/braviatv/* @robbiet480 @bieniu
 homeassistant/components/broadlink/* @danielhiversen @felipediel
@@ -86,6 +86,7 @@ homeassistant/components/cpuspeed/* @fabaff
 homeassistant/components/cups/* @fabaff
 homeassistant/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
+homeassistant/components/debugpy/* @frenck
 homeassistant/components/deconz/* @Kane610
 homeassistant/components/delijn/* @bollewolle @Emilv2
 homeassistant/components/demo/* @home-assistant/core

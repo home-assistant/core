@@ -1,0 +1,23 @@
+{
+    "config": {
+        "flow_title": "",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": ""
+                }
+            },
+            "settings": {
+                "description": "N\u00f8kkelen (passordet) kan hentes ved hjelp av denne veiviseren: [https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz](https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz). Hvis n\u00f8kkelen ikke oppgis, vil bare sensorer bli tilgjengelige",
+                "title": "Xiaomi Aqara Gateway, valgfrie innstillinger"
+            },
+            "user": {
+                "data": {
+                    "interface": "Nettverksgrensesnittet som skal brukes"
+                },
+                "description": "Koble til Xiaomi Aqara Gateway",
+                "title": ""
+            }
+        }
+    }
+}

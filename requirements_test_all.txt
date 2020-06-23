@@ -29,6 +29,9 @@ PyTransportNSW==0.1.1
 # homeassistant.components.homekit
 PyTurboJPEG==1.4.0
 
+# homeassistant.components.xiaomi_aqara
+PyXiaomiGateway==0.12.4
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -150,7 +153,7 @@ av==8.0.2
 avri-api==0.1.7
 
 # homeassistant.components.axis
-axis==32
+axis==33
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -207,6 +210,9 @@ datadog==0.15.0
 
 # homeassistant.components.metoffice
 datapoint==0.9.5
+
+# homeassistant.components.debugpy
+debugpy==1.0.0b11
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -433,7 +439,7 @@ numato-gpio==0.7.1
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.5
+numpy==1.19.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -564,7 +570,7 @@ pycoolmasternet==0.0.4
 pycountry==19.8.18
 
 # homeassistant.components.daikin
-pydaikin==2.1.2
+pydaikin==2.2.0
 
 # homeassistant.components.deconz
 pydeconz==71
@@ -690,7 +696,7 @@ pyotp==2.3.0
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.0.7
+pyps4-2ndscreen==1.1.0
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -723,8 +729,11 @@ pysonos==0.0.31
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
+# homeassistant.components.squeezebox
+pysqueezebox==0.2.4
+
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.5
+python-ecobee-api==0.2.7
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0

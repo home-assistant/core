@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert eller IP-adresse"
+                    "host": "Vert "
                 },
                 "description": "Sett opp WLED til \u00e5 integreres med Home Assistant."
             },
