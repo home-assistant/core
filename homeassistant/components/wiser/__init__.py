@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
 )
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -90,7 +89,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up Wiser from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    _async_import_options_from_data_if_missing(hass, config_entry)
 
     data = WiserHubHandle(hass, config_entry,)
 
@@ -137,26 +135,6 @@ async def async_setup_entry(hass, config_entry):
     await data.async_update_device_registry()
 
     return True
-
-
-@callback
-def _async_import_options_from_data_if_missing(hass, config_entry):
-    options = dict(config_entry.options)
-    modified = False
-    for importable_option in [
-        CONF_BOOST_TEMP,
-        CONF_BOOST_TEMP_TIME,
-        CONF_SCAN_INTERVAL,
-    ]:
-        if (
-            importable_option not in config_entry.options
-            and importable_option in config_entry.data
-        ):
-            options[importable_option] = config_entry.data[importable_option]
-            modified = True
-
-    if modified:
-        hass.config_entries.async_update_entry(config_entry, options=options)
 
 
 async def _async_update_listener(hass, config_entry):
