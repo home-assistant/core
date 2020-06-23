@@ -168,13 +168,9 @@ class SmappeeAppliance(BinarySensorEntity):
             "via_device": (DOMAIN, self._smappee_base.smappee.username),
         }
 
-    def set_state(self, power):
-        """Decides the binary sensor state based on power value."""
-        self._state = STATE_ON if power > 0 else STATE_OFF
-
     async def async_update(self):
         """Get the latest data from Smappee and update the state."""
         await self._smappee_base.async_update()
 
         appliance = self._service_location.appliances.get(self._appliance_id)
-        self._state = appliance.state
+        self._state = STATE_ON if appliance.state else STATE_OFF
