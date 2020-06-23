@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "no_results": "Sense resultats. Prova-ho amb una altra estaci\u00f3/adre\u00e7a"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "Estaci\u00f3/adre\u00e7a"
+                },
+                "title": "Introdueix estaci\u00f3/adre\u00e7a"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Estaci\u00f3/adre\u00e7a"
+                },
+                "title": "Selecciona d'estaci\u00f3/adre\u00e7a"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Connexi\u00f3 amb l'API d'HVV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Selecciona l\u00ednies",
+                    "offset": "\u00d2fset (minuts)",
+                    "real_time": "Utilitza dades en temps real"
+                },
+                "description": "Canvia les opcions d'aquest sensor de sortides",
+                "title": "Opcions"
+            }
+        }
+    },
+    "title": "HVV Departures"
+}

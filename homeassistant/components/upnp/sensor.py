@@ -198,6 +198,8 @@ class RawUpnpSensor(UpnpSensor):
         """Return the state of the device."""
         device_value_key = self._sensor_type["device_value_key"]
         value = self._coordinator.data[device_value_key]
+        if value is None:
+            return None
         return format(value, "d")
 
 
@@ -235,6 +237,8 @@ class DerivedUpnpSensor(UpnpSensor):
         # Can't calculate any derivative if we have only one value.
         device_value_key = self._sensor_type["device_value_key"]
         current_value = self._coordinator.data[device_value_key]
+        if current_value is None:
+            return None
         current_timestamp = self._coordinator.data[TIMESTAMP]
         if self._last_value is None or self._has_overflowed(current_value):
             self._last_value = current_value

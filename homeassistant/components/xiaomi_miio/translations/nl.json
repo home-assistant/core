@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_in_progress": "De configuratiestroom voor dit Xiaomi Miio-apparaat is al bezig."
+        },
         "error": {
             "connect_error": "Verbinding mislukt, probeer het opnieuw",
             "no_device_selected": "Geen apparaat geselecteerd, selecteer 1 apparaat alstublieft"

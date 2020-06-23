@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Vols configurar LIFX?",
-                "title": "LIFX"
+                "description": "Vols configurar LIFX?"
             }
         }
     }

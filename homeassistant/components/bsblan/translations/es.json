@@ -12,7 +12,7 @@
                 "data": {
                     "host": "Host o direcci\u00f3n IP",
                     "passkey": "Clave de acceso",
-                    "port": "N\u00famero de puerto"
+                    "port": "Puerto"
                 },
                 "description": "Configura tu dispositivo BSB-Lan para integrarse con Home Assistant.",
                 "title": "Conectar con el dispositivo BSB-Lan"

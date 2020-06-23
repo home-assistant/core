@@ -344,10 +344,13 @@ async def async_mock_mqtt_component(hass, config=None):
         assert result
         await hass.async_block_till_done()
 
-        hass.data["mqtt"] = MagicMock(
+        mqtt_component_mock = MagicMock(
             spec_set=hass.data["mqtt"], wraps=hass.data["mqtt"]
         )
+        hass.data["mqtt"].connected = mqtt_component_mock.connected
+        mqtt_component_mock._mqttc = mock_client
 
+        hass.data["mqtt"] = mqtt_component_mock
         return hass.data["mqtt"]
 
 
@@ -381,10 +384,11 @@ def mock_area_registry(hass, mock_entries=None):
     return registry
 
 
-def mock_device_registry(hass, mock_entries=None):
+def mock_device_registry(hass, mock_entries=None, mock_deleted_entries=None):
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = mock_entries or OrderedDict()
+    registry.deleted_devices = mock_deleted_entries or OrderedDict()
 
     hass.data[device_registry.DATA_REGISTRY] = registry
     return registry
@@ -989,6 +993,8 @@ def mock_integration(hass, module):
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
     hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
+
+    return integration
 
 
 def mock_entity_platform(hass, platform_path, module):

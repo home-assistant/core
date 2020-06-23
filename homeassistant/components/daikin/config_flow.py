@@ -6,6 +6,7 @@ from uuid import uuid4
 from aiohttp import ClientError, web_exceptions
 from async_timeout import timeout
 from pydaikin.daikin_base import Appliance
+from pydaikin.discovery import Discovery
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -40,8 +41,8 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def _create_entry(self, host, mac, key=None, uuid=None, password=None):
         """Register new entry."""
-        # Check if mac already is registered
-        await self.async_set_unique_id(mac)
+        if not self.unique_id:
+            await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
@@ -123,4 +124,13 @@ class FlowHandler(config_entries.ConfigFlow):
         await self.async_set_unique_id(discovery_info[KEY_MAC])
         self._abort_if_unique_id_configured()
         self.host = discovery_info[KEY_IP]
+        return await self.async_step_user()
+
+    async def async_step_zeroconf(self, discovery_info):
+        """Prepare configuration for a discovered Daikin device."""
+        _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
+        devices = Discovery().poll(ip=discovery_info[CONF_HOST])
+        await self.async_set_unique_id(next(iter(devices))[KEY_MAC])
+        self._abort_if_unique_id_configured()
+        self.host = discovery_info[CONF_HOST]
         return await self.async_step_user()

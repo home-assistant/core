@@ -1,0 +1,18 @@
+{
+  "domain": "guardian",
+  "name": "Elexa Guardian",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/guardian",
+  "requirements": [
+    "aioguardian==0.2.3"
+  ],
+  "ssdp": [],
+  "zeroconf": [
+    "_api._udp.local."
+  ],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

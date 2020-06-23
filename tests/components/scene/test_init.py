@@ -23,6 +23,7 @@ class TestScene(unittest.TestCase):
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {"platform": "test"}}
         )
+        self.hass.block_till_done()
 
         self.light_1, self.light_2 = test_light.ENTITIES[0:2]
 
@@ -34,8 +35,9 @@ class TestScene(unittest.TestCase):
 
         assert not self.light_1.is_on
         assert not self.light_2.is_on
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -72,6 +74,7 @@ class TestScene(unittest.TestCase):
                 ]
             },
         )
+        self.hass.block_till_done()
 
         common.activate(self.hass, "scene.test")
         self.hass.block_till_done()
@@ -121,6 +124,7 @@ class TestScene(unittest.TestCase):
                 ]
             },
         )
+        self.hass.block_till_done()
 
         common.activate(self.hass, "scene.test")
         self.hass.block_till_done()

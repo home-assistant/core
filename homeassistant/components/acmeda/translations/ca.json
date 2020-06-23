@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "all_configured": "No s'han descobert nous hubs de Pulse."
+        },
         "step": {
             "user": {
                 "data": {

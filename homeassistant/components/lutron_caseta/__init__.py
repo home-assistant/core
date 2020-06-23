@@ -39,11 +39,7 @@ LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan", "binary_
 async def async_setup(hass, base_config):
     """Set up the Lutron component."""
 
-    bridge_configs = base_config.get(DOMAIN)
-
-    if not bridge_configs:
-        return True
-
+    bridge_configs = base_config[DOMAIN]
     hass.data.setdefault(DOMAIN, {})
 
     for config in bridge_configs:
@@ -130,6 +126,16 @@ class LutronCasetaDevice(Entity):
     def unique_id(self):
         """Return the unique ID of the device (serial)."""
         return str(self.serial)
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.serial)},
+            "name": self.name,
+            "manufacturer": "Lutron",
+            "model": self._device["model"],
+        }
 
     @property
     def device_state_attributes(self):

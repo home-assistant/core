@@ -1,0 +1,40 @@
+{
+  "config": {
+    "flow_title": "Xiaomi Aqara Gateway: {name}",
+    "step": {
+      "user": {
+        "title": "Xiaomi Aqara Gateway",
+        "description": "Connect to your Xiaomi Aqara Gateway",
+        "data": {
+          "interface": "The network interface to use"
+        }
+      },
+      "settings": {
+        "title": "Xiaomi Aqara Gateway, optional settings",
+        "description": "The key (password) can be retrieved using this tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. If the key is not provided only sensors will be accessible",
+        "data": {
+          "key": "The key of your gateway",
+          "name": "Name of the Gateway"
+        }
+      },
+      "select": {
+        "title": "Select the Xiaomi Aqara Gateway that you wish to connect",
+        "description": "Run the setup again if you want to connect aditional gateways",
+        "data": {
+          "select_ip": "Gateway IP"
+        }
+      }
+    },
+    "error": {
+      "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
+      "not_found_error": "Zeroconf discovered Gateway could not be located to get the necessary information, try using the IP of the device running HomeAssistant as interface",
+      "invalid_interface": "Invalid network interface",
+      "invalid_key": "Invalid gateway key"
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "already_in_progress": "Config flow for this gateway is already in progress",
+      "not_xiaomi_aqara": "Not a Xiaomi Aqara Gateway, discovered device did not match known gateways"
+    }
+  }
+}

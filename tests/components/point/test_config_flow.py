@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
 from tests.async_mock import AsyncMock, patch
 
@@ -86,8 +87,8 @@ async def test_full_flow_implementation(
     result = await flow.async_step_code("123ABC")
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"]["refresh_args"] == {
-        "client_id": "id",
-        "client_secret": "secret",
+        CONF_CLIENT_ID: "id",
+        CONF_CLIENT_SECRET: "secret",
     }
     assert result["title"] == "john.doe@example.com"
     assert result["data"]["token"] == {"access_token": "boo"}

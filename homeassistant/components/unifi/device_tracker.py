@@ -11,6 +11,9 @@ from aiounifi.events import (
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_ROAM,
     WIRELESS_CLIENT_ROAMRADIO,
+    WIRELESS_GUEST_CONNECTED,
+    WIRELESS_GUEST_ROAM,
+    WIRELESS_GUEST_ROAMRADIO,
 )
 
 from homeassistant.components.device_tracker import DOMAIN
@@ -60,6 +63,9 @@ WIRELESS_CONNECTION = (
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_ROAM,
     WIRELESS_CLIENT_ROAMRADIO,
+    WIRELESS_GUEST_CONNECTED,
+    WIRELESS_GUEST_ROAM,
+    WIRELESS_GUEST_ROAMRADIO,
 )
 
 
@@ -301,7 +307,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             self.cancel_scheduled_update = async_track_point_in_utc_time(
                 self.hass,
                 _no_heartbeat,
-                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 10),
+                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
             )
 
         elif (

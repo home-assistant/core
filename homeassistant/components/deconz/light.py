@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_group(gateway.api.groups.values())
 
 
-class DeconzLight(DeconzDevice, LightEntity):
+class DeconzBaseLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
 
     def __init__(self, device, gateway):
@@ -176,6 +176,9 @@ class DeconzLight(DeconzDevice, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn off light."""
+        if not self._device.state:
+            return
+
         data = {"on": False}
 
         if ATTR_TRANSITION in kwargs:
@@ -201,7 +204,21 @@ class DeconzLight(DeconzDevice, LightEntity):
         return attributes
 
 
-class DeconzGroup(DeconzLight):
+class DeconzLight(DeconzBaseLight):
+    """Representation of a deCONZ light."""
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._device.ctmax or super().max_mireds
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._device.ctmin or super().min_mireds
+
+
+class DeconzGroup(DeconzBaseLight):
     """Representation of a deCONZ group."""
 
     def __init__(self, device, gateway):

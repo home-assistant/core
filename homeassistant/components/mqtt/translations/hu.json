@@ -15,8 +15,7 @@
                     "port": "Port",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
-                "description": "K\u00e9rlek, add meg az MQTT br\u00f3ker kapcsol\u00f3d\u00e1si adatait.",
-                "title": "MQTT"
+                "description": "K\u00e9rlek, add meg az MQTT br\u00f3ker kapcsol\u00f3d\u00e1si adatait."
             },
             "hassio_confirm": {
                 "data": {

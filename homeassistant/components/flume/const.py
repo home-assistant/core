@@ -5,8 +5,6 @@ PLATFORMS = ["sensor"]
 
 DEFAULT_NAME = "Flume Sensor"
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 FLUME_TYPE_SENSOR = 2
 
 FLUME_AUTH = "flume_auth"

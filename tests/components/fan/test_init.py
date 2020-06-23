@@ -21,8 +21,9 @@ class TestFanEntity(unittest.TestCase):
     def setUp(self):
         """Set up test data."""
         self.fan = BaseFan()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Tear down unit test data."""
         self.fan = None
 

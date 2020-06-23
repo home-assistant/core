@@ -7,6 +7,7 @@
         "create_entry": {
             "default": "Vellykket godkjenning med Withings."
         },
+        "flow_title": "Withings: {profil}",
         "step": {
             "pick_implementation": {
                 "title": "Velg godkjenningsmetode"
@@ -17,6 +18,10 @@
                 },
                 "description": "Hvilken profil valgte du p\u00e5 Withings nettsted? Det er viktig at profilene samsvarer, ellers blir data feilmerket.",
                 "title": "Brukerprofil."
+            },
+            "reauth": {
+                "description": "Profilen {profile} m\u00e5 godkjennes p\u00e5 nytt for \u00e5 kunne fortsette \u00e5 motta Withings-data.",
+                "title": "Re-autentisere {profil}"
             }
         }
     }

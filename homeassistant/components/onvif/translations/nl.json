@@ -17,6 +17,7 @@
             "manual_input": {
                 "data": {
                     "host": "Host",
+                    "name": "Naam",
                     "port": "Poort"
                 }
             }

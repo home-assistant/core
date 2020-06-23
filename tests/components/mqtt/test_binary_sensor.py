@@ -18,6 +18,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -40,11 +41,7 @@ from .test_common import (
 )
 
 from tests.async_mock import patch
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-)
+from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_CONFIG = {
     binary_sensor.DOMAIN: {
@@ -71,6 +68,7 @@ async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, 
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
@@ -99,6 +97,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
             }
         },
     )
+    await hass.async_block_till_done()
 
     # State should be unavailable since expire_after is defined and > 0
     state = hass.states.get("binary_sensor.test")
@@ -172,6 +171,7 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
 
@@ -201,6 +201,7 @@ async def test_invalid_sensor_value_via_mqtt_message(hass, mqtt_mock, caplog):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
 
@@ -240,6 +241,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template(hass, mqtt_moc
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_OFF
@@ -267,6 +269,7 @@ async def test_valid_device_class(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
     assert state.attributes.get("device_class") == "motion"
@@ -286,9 +289,17 @@ async def test_invalid_device_class(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
     assert state is None
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, binary_sensor.DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_availability_without_topic(hass, mqtt_mock):
@@ -327,6 +338,7 @@ async def test_force_update_disabled(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 
@@ -362,6 +374,7 @@ async def test_force_update_enabled(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 
@@ -398,6 +411,7 @@ async def test_off_delay(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     events = []
 
@@ -462,7 +476,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one sensor per unique_id."""
     config = {
         binary_sensor.DOMAIN: [
@@ -480,7 +494,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, binary_sensor.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, binary_sensor.DOMAIN, config)
 
 
 async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
@@ -509,8 +523,8 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     hass, mqtt_mock, caplog
 ):
     """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    await async_start(hass, "homeassistant", entry)
 
     config = {
         "name": "Test",
