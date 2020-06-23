@@ -365,7 +365,7 @@ async def test_state_changed_event_include_globs(hass, mqtt_mock):
 
     # Add the statestream component for publishing state updates
     # Set the filter to allow *.included_* items
-    assert add_statestream(
+    assert await add_statestream(
         hass, base_topic=base_topic, publish_include=incl, publish_exclude=excl
     )
     await hass.async_block_till_done()
@@ -380,10 +380,10 @@ async def test_state_changed_event_include_globs(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     # Make sure 'on' was published to pub/fake2/included_entity/state
-    assert mqtt_mock.async_publish.called
     mqtt_mock.async_publish.assert_called_with(
         "pub/fake2/included_entity/state", "on", 1, True
     )
+    assert mqtt_mock.async_publish.called
 
     mqtt_mock.async_publish.reset_mock()
     # Set a state of an entity that shouldn't be included
@@ -403,7 +403,7 @@ async def test_state_changed_event_exclude_globs(hass, mqtt_mock):
 
     # Add the statestream component for publishing state updates
     # Set the filter to allow *.excluded_* items
-    assert add_statestream(
+    assert await add_statestream(
         hass, base_topic=base_topic, publish_include=incl, publish_exclude=excl
     )
     await hass.async_block_till_done()
@@ -430,9 +430,7 @@ async def test_state_changed_event_exclude_globs(hass, mqtt_mock):
     assert not mqtt_mock.async_publish.called
 
 
-async def test_state_changed_event_exclude_domain_globs_include_entity(
-    hass, mqtt_mock
-    ):
+async def test_state_changed_event_exclude_domain_globs_include_entity(hass, mqtt_mock):
     """Test filtering with excluded domain and glob and included entity."""
     base_topic = "pub"
 
@@ -441,7 +439,7 @@ async def test_state_changed_event_exclude_domain_globs_include_entity(
 
     # Add the statestream component for publishing state updates
     # Set the filter to exclude with include filter
-    assert add_statestream(
+    assert await add_statestream(
         hass, base_topic=base_topic, publish_include=incl, publish_exclude=excl
     )
     await hass.async_block_till_done()
@@ -488,9 +486,7 @@ async def test_state_changed_event_exclude_domain_globs_include_entity(
     assert not mqtt_mock.async_publish.called
 
 
-async def test_state_changed_event_include_domain_globs_exclude_entity(
-    hass, mqtt_mock
-    ):
+async def test_state_changed_event_include_domain_globs_exclude_entity(hass, mqtt_mock):
     """Test filtering with included domain and glob and excluded entity."""
     base_topic = "pub"
 
@@ -499,7 +495,7 @@ async def test_state_changed_event_include_domain_globs_exclude_entity(
 
     # Add the statestream component for publishing state updates
     # Set the filter to include with exclude filter
-    assert add_statestream(
+    assert await add_statestream(
         hass, base_topic=base_topic, publish_include=incl, publish_exclude=excl
     )
     await hass.async_block_till_done()
