@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert (IP-adresse)",
+                    "host": "Vert",
                     "name": "Enhetsnavn",
                     "password": "Passord",
                     "username": "Brukernavn"

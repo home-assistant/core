@@ -21,7 +21,7 @@
             "node_pro": {
                 "data": {
                     "ip_address": "Enhetens IP-adresse / vertsnavn",
-                    "password": "Passord for enhet"
+                    "password": "Passord"
                 },
                 "description": "Overv\u00e5ke en personlig AirVisual-enhet. Passordet kan hentes fra enhetens brukergrensesnitt.",
                 "title": "Konfigurer en AirVisual Node / Pro"
