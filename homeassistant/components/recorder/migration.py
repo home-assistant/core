@@ -64,11 +64,15 @@ def _create_index(engine, table_name, index_name):
     within the table definition described in the models
     """
     table = Table(table_name, Base.metadata)
-    _LOGGER.debug("Looking up index for table %s", table_name)
+    _LOGGER.debug("Looking up index %s for table %s", index_name, table_name)
     # Look up the index object by name from the table is the models
-    index = next(idx for idx in table.indexes if idx.name == index_name)
+    index_list = [idx for idx in table.indexes if idx.name == index_name]
+    if not index_list:
+        _LOGGER.debug("The index %s no longer exists", index_name)
+        return
+    index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
-    _LOGGER.info(
+    _LOGGER.warning(
         "Adding index `%s` to database. Note: this can take several "
         "minutes on large databases and slow computers. Please "
         "be patient!",
@@ -155,7 +159,7 @@ def _drop_index(engine, table_name, index_name):
 
 def _add_columns(engine, table_name, columns_def):
     """Add columns to a table."""
-    _LOGGER.info(
+    _LOGGER.warning(
         "Adding columns %s to table %s. Note: this can take several "
         "minutes on large databases and slow computers. Please "
         "be patient!",
@@ -254,6 +258,23 @@ def _apply_update(engine, new_version, old_version):
         _add_columns(engine, "states", ["old_state_id INTEGER"])
         _create_index(engine, "states", "ix_states_context_parent_id")
         _create_index(engine, "events", "ix_events_context_parent_id")
+    elif new_version == 9:
+        # We now get the context from events with a join
+        # since its always there on state_changed events
+        #
+        # Ideally we would drop the columns from the states
+        # table as well but sqlite doesn't support that
+        # and we would have to move to something like
+        # sqlalchemy alembic to make that work
+        #
+        _drop_index(engine, "states", "ix_states_context_id")
+        _drop_index(engine, "states", "ix_states_context_user_id")
+        _drop_index(engine, "states", "ix_states_context_parent_id")
+        # Redundant keys on composite index:
+        # We already have ix_states_entity_id_last_updated
+        _drop_index(engine, "states", "ix_states_entity_id")
+        _create_index(engine, "events", "ix_events_event_type_time_fired")
+        _drop_index(engine, "events", "ix_events_event_type")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
