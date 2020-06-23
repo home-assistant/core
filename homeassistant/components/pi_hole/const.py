@@ -23,6 +23,9 @@ ATTR_BLOCKED_DOMAINS = "domains_blocked"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
+DATA_KEY_API = "api"
+DATA_KEY_COORDINATOR = "coordinator"
+
 SENSOR_DICT = {
     "ads_blocked_today": ["Ads Blocked Today", "ads", "mdi:close-octagon-outline"],
     "ads_percentage_today": [
