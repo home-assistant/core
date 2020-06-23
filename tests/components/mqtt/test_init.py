@@ -171,26 +171,26 @@ def test_validate_topic():
     """Test topic name/filter validation."""
     # Invalid UTF-8, must not contain U+D800 to U+DFFF.
     with pytest.raises(vol.Invalid):
-        mqtt.valid_topic("\ud800")
+        mqtt.util.valid_topic("\ud800")
     with pytest.raises(vol.Invalid):
-        mqtt.valid_topic("\udfff")
+        mqtt.util.valid_topic("\udfff")
     # Topic MUST NOT be empty
     with pytest.raises(vol.Invalid):
-        mqtt.valid_topic("")
+        mqtt.util.valid_topic("")
     # Topic MUST NOT be longer than 65535 encoded bytes.
     with pytest.raises(vol.Invalid):
-        mqtt.valid_topic("ü" * 32768)
+        mqtt.util.valid_topic("ü" * 32768)
     # UTF-8 MUST NOT include null character
     with pytest.raises(vol.Invalid):
-        mqtt.valid_topic("bad\0one")
+        mqtt.util.valid_topic("bad\0one")
 
     # Topics "SHOULD NOT" include these special characters
     # (not MUST NOT, RFC2119). The receiver MAY close the connection.
-    mqtt.valid_topic("\u0001")
-    mqtt.valid_topic("\u001F")
-    mqtt.valid_topic("\u009F")
-    mqtt.valid_topic("\u009F")
-    mqtt.valid_topic("\uffff")
+    mqtt.util.valid_topic("\u0001")
+    mqtt.util.valid_topic("\u001F")
+    mqtt.util.valid_topic("\u009F")
+    mqtt.util.valid_topic("\u009F")
+    mqtt.util.valid_topic("\uffff")
 
 
 def test_validate_subscribe_topic():
@@ -587,7 +587,7 @@ async def test_retained_message_on_subscribe_received(
     mqtt_client_mock.subscribe.side_effect = side_effect
 
     # Fake that the client is connected
-    mqtt_mock.connected = True
+    mqtt_mock().connected = True
 
     calls_a = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_a)
@@ -605,7 +605,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
 ):
     """Test not calling unsubscribe() when other subscribers are active."""
     # Fake that the client is connected
-    mqtt_mock.connected = True
+    mqtt_mock().connected = True
 
     unsub = await mqtt.async_subscribe(hass, "test/state", None)
     await mqtt.async_subscribe(hass, "test/state", None)
@@ -620,7 +620,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
 async def test_restore_subscriptions_on_reconnect(hass, mqtt_client_mock, mqtt_mock):
     """Test subscriptions are restored on reconnect."""
     # Fake that the client is connected
-    mqtt_mock.connected = True
+    mqtt_mock().connected = True
 
     await mqtt.async_subscribe(hass, "test/state", None)
     await hass.async_block_till_done()
@@ -637,7 +637,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 ):
     """Test active subscriptions are restored correctly on reconnect."""
     # Fake that the client is connected
-    mqtt_mock.connected = True
+    mqtt_mock().connected = True
 
     mqtt_client_mock.subscribe.side_effect = (
         (0, 1),
@@ -716,81 +716,107 @@ async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplo
         assert "Failed to connect to MQTT server due to exception:" in caplog.text
 
 
-async def test_setup_uses_certificate_on_certificate_set_to_auto(hass, mock_mqtt):
+async def test_setup_uses_certificate_on_certificate_set_to_auto(hass):
     """Test setup uses bundled certs when certificate is set to auto."""
-    entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
-        data={mqtt.CONF_BROKER: "test-broker", "certificate": "auto"},
-    )
+    calls = []
 
-    assert await mqtt.async_setup_entry(hass, entry)
+    def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
+        calls.append((certificate, certfile, keyfile, tls_version))
 
-    assert mock_mqtt.called
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().tls_set = mock_tls_set
+        entry = MockConfigEntry(
+            domain=mqtt.DOMAIN,
+            data={mqtt.CONF_BROKER: "test-broker", "certificate": "auto"},
+        )
 
-    import requests.certs
+        assert await mqtt.async_setup_entry(hass, entry)
 
-    expectedCertificate = requests.certs.where()
-    assert mock_mqtt.mock_calls[0][2]["certificate"] == expectedCertificate
+        assert calls
 
+        import certifi
 
-async def test_setup_does_not_use_certificate_on_mqtts_port(hass, mock_mqtt):
-    """Test setup doesn't use bundled certs when ssl set."""
-    entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker", "port": 8883}
-    )
-
-    assert await mqtt.async_setup_entry(hass, entry)
-
-    assert mock_mqtt.called
-    assert mock_mqtt.mock_calls[0][2]["port"] == 8883
-
-    import requests.certs
-
-    mqttsCertificateBundle = requests.certs.where()
-    assert mock_mqtt.mock_calls[0][2]["port"] != mqttsCertificateBundle
+        expectedCertificate = certifi.where()
+        # assert mock_mqtt.mock_calls[0][1][2]["certificate"] == expectedCertificate
+        assert calls[0][0] == expectedCertificate
 
 
-async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass, mock_mqtt):
+async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
     """Test setup defaults to TLSv1 under python3.6."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    calls = []
 
-    assert await mqtt.async_setup_entry(hass, entry)
+    def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
+        calls.append((certificate, certfile, keyfile, tls_version))
 
-    assert mock_mqtt.called
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().tls_set = mock_tls_set
+        entry = MockConfigEntry(
+            domain=mqtt.DOMAIN,
+            data={"certificate": "auto", mqtt.CONF_BROKER: "test-broker"},
+        )
 
-    import sys
+        assert await mqtt.async_setup_entry(hass, entry)
 
-    if sys.hexversion >= 0x03060000:
-        expectedTlsVersion = ssl.PROTOCOL_TLS  # pylint: disable=no-member
-    else:
-        expectedTlsVersion = ssl.PROTOCOL_TLSv1
+        assert calls
 
-    assert mock_mqtt.mock_calls[0][2]["tls_version"] == expectedTlsVersion
+        import sys
+
+        if sys.hexversion >= 0x03060000:
+            expectedTlsVersion = ssl.PROTOCOL_TLS  # pylint: disable=no-member
+        else:
+            expectedTlsVersion = ssl.PROTOCOL_TLSv1
+
+        assert calls[0][3] == expectedTlsVersion
 
 
-async def test_setup_with_tls_config_uses_tls_version1_2(hass, mock_mqtt):
+async def test_setup_with_tls_config_uses_tls_version1_2(hass):
     """Test setup uses specified TLS version."""
-    entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker", "tls_version": "1.2"}
-    )
+    calls = []
 
-    assert await mqtt.async_setup_entry(hass, entry)
+    def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
+        calls.append((certificate, certfile, keyfile, tls_version))
 
-    assert mock_mqtt.called
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().tls_set = mock_tls_set
+        entry = MockConfigEntry(
+            domain=mqtt.DOMAIN,
+            data={
+                "certificate": "auto",
+                mqtt.CONF_BROKER: "test-broker",
+                "tls_version": "1.2",
+            },
+        )
 
-    assert mock_mqtt.mock_calls[0][2]["tls_version"] == ssl.PROTOCOL_TLSv1_2
+        assert await mqtt.async_setup_entry(hass, entry)
+
+        assert calls
+
+        assert calls[0][3] == ssl.PROTOCOL_TLSv1_2
 
 
-async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass, mock_mqtt):
+async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass):
     """Test setup uses TLSv1.0 if explicitly chosen."""
-    entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker", "tls_version": "1.0"}
-    )
+    calls = []
 
-    assert await mqtt.async_setup_entry(hass, entry)
+    def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
+        calls.append((certificate, certfile, keyfile, tls_version))
 
-    assert mock_mqtt.called
-    assert mock_mqtt.mock_calls[0][2]["tls_version"] == ssl.PROTOCOL_TLSv1
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().tls_set = mock_tls_set
+        entry = MockConfigEntry(
+            domain=mqtt.DOMAIN,
+            data={
+                "certificate": "auto",
+                mqtt.CONF_BROKER: "test-broker",
+                "tls_version": "1.0",
+            },
+        )
+
+        assert await mqtt.async_setup_entry(hass, entry)
+
+        assert calls
+
+        assert calls[0][3] == ssl.PROTOCOL_TLSv1
 
 
 @pytest.mark.parametrize(

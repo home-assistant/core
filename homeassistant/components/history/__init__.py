@@ -50,9 +50,21 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SIGNIFICANT_DOMAINS = ("climate", "device_tracker", "thermostat", "water_heater")
+SIGNIFICANT_DOMAINS = (
+    "climate",
+    "device_tracker",
+    "humidifier",
+    "thermostat",
+    "water_heater",
+)
 IGNORE_DOMAINS = ("zone", "scene")
-NEED_ATTRIBUTE_DOMAINS = {"climate", "water_heater", "thermostat", "script"}
+NEED_ATTRIBUTE_DOMAINS = {
+    "climate",
+    "humidifier",
+    "script",
+    "thermostat",
+    "water_heater",
+}
 SCRIPT_DOMAIN = "script"
 ATTR_CAN_CANCEL = "can_cancel"
 
