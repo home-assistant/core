@@ -34,10 +34,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNAVAILABLE,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.util.dt import utcnow
 
 from .__init__ import start_server_discovery
@@ -56,6 +60,8 @@ SERVICE_UNSYNC = "unsync"
 
 ATTR_QUERY_RESULT = "query_result"
 ATTR_SYNC_GROUP = "sync_group"
+
+SIGNAL_PLAYER_AVAILABLE = "squeezebox_player_available"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,9 +135,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
 
-    known_players = hass.data[DOMAIN].get(KNOWN_PLAYERS)
-    if known_players is None:
-        hass.data[DOMAIN][KNOWN_PLAYERS] = known_players = []
+    known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
 
     entry_players = hass.data[DOMAIN][config_entry.entry_id].setdefault(
         ENTRY_PLAYERS, []
@@ -156,7 +160,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if entity and not entity.available:
                 # check if previously unavailable player has connected
                 await player.async_update()
-                entity.available = player.connected
+                if player.connected:
+                    async_dispatcher_send(
+                        hass, SIGNAL_PLAYER_AVAILABLE, entity.unique_id
+                    )
+
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
                 entity = SqueezeBoxEntity(player)
@@ -227,6 +235,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._last_update = None
         self._query_result = {}
         self._available = True
+        self._remove_dispatcher = None
 
     @property
     def device_state_attributes(self):
@@ -254,16 +263,16 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Return True if device connected to LMS server."""
         return self._available
 
-    @available.setter
-    def available(self, val):
-        """Set available to True or False."""
-        self._available = bool(val)
+    @callback
+    def set_available(self, unique_id):
+        """Make a player available again."""
+        if unique_id == self.unique_id:
+            self._available = True
+            self._remove_dispatcher()
 
     @property
     def state(self):
         """Return the state of the device."""
-        if not self.available:
-            return STATE_UNAVAILABLE
         if not self._player.power:
             return STATE_OFF
         if self._player.mode:
@@ -281,6 +290,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if self._player.connected is False:
                 _LOGGER.info("Player %s is not available", self.name)
                 self._available = False
+
+                # start listening for restored players
+                self._remove_dispatcher = async_dispatcher_connect(
+                    self.hass, SIGNAL_PLAYER_AVAILABLE, self.set_available
+                )
 
     @property
     def volume_level(self):
