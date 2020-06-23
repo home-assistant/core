@@ -265,7 +265,6 @@ omit =
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
     homeassistant/components/fortios/device_tracker.py
-    homeassistant/components/fortigate/*
     homeassistant/components/foscam/camera.py
     homeassistant/components/foscam/const.py
     homeassistant/components/foursquare/*
