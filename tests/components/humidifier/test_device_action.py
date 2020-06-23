@@ -122,6 +122,45 @@ async def test_get_action_no_modes(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
+async def test_get_action_no_state(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a humidifier."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "turn_on",
+            "device_id": device_entry.id,
+            "entity_id": "humidifier.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "turn_off",
+            "device_id": device_entry.id,
+            "entity_id": "humidifier.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "toggle",
+            "device_id": device_entry.id,
+            "entity_id": "humidifier.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "set_humidity",
+            "device_id": device_entry.id,
+            "entity_id": "humidifier.test_5678",
+        },
+    ]
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
 async def test_action(hass):
     """Test for actions."""
     hass.states.async_set(
@@ -253,6 +292,31 @@ async def test_action(hass):
 
 async def test_capabilities(hass):
     """Test getting capabilities."""
+    # Test capabililities without state
+    capabilities = await device_action.async_get_action_capabilities(
+        hass,
+        {
+            "domain": DOMAIN,
+            "device_id": "abcdefgh",
+            "entity_id": "humidifier.entity",
+            "type": "set_mode",
+        },
+    )
+
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "mode",
+            "options": [],
+            "required": True,
+            "type": "select",
+        }
+    ]
+
+    # Set state
     hass.states.async_set(
         "humidifier.entity",
         STATE_ON,
