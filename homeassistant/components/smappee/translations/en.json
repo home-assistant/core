@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Timeout generating authorize url.",
-            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "missing_configuration": "The component is not configured. Please follow the documentation, see [Smappee documentation](https://www.home-assistant.io/integrations/smappee).",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
