@@ -5,10 +5,9 @@ import pytest
 
 import homeassistant.components.apache_kafka as apache_kafka
 from homeassistant.const import STATE_ON
-from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, patch
+from tests.async_mock import patch
 
 APACHE_KAFKA_PATH = "homeassistant.components.apache_kafka"
 PRODUCER_PATH = f"{APACHE_KAFKA_PATH}.AIOKafkaProducer"
@@ -66,20 +65,7 @@ async def test_full_config(hass, mock_client):
     assert mock_client.start.called_once
 
 
-def make_event(entity_id):
-    """Make a mock event for test."""
-    domain = split_entity_id(entity_id)[0]
-    state = MagicMock(
-        state="not blank",
-        domain=domain,
-        entity_id=entity_id,
-        object_id="entity",
-        attributes={},
-    )
-    return MagicMock(data={"new_state": state}, time_fired=12345)
-
-
-async def _setup(hass, mock_client, filter_config):
+async def _setup(hass, filter_config):
     """Shared set up for filtering tests."""
     config = {apache_kafka.DOMAIN: {"filter": filter_config}}
     config[apache_kafka.DOMAIN].update(MIN_CONFIG)
@@ -88,11 +74,23 @@ async def _setup(hass, mock_client, filter_config):
     await hass.async_block_till_done()
 
 
+async def _run_filter_tests(hass, tests, mock_client):
+    """Run a series of filter tests on apache kafka."""
+    for test in tests:
+        hass.states.async_set(test.id, STATE_ON)
+        await hass.async_block_till_done()
+
+        if test.should_pass:
+            mock_client.send_and_wait.assert_called_once()
+            mock_client.send_and_wait.reset_mock()
+        else:
+            mock_client.send_and_wait.assert_not_called()
+
+
 async def test_allowlist(hass, mock_client):
     """Test an allowlist only config."""
     await _setup(
         hass,
-        mock_client,
         {
             "include_domains": ["light"],
             "include_entity_globs": ["sensor.included_*"],
@@ -109,22 +107,13 @@ async def test_allowlist(hass, mock_client):
         FilterTest("binary_sensor.excluded", False),
     ]
 
-    for test in tests:
-        hass.states.async_set(test.id, STATE_ON)
-        await hass.async_block_till_done()
-
-        if test.should_pass:
-            mock_client.send_and_wait.assert_called_once()
-            mock_client.send_and_wait.reset_mock()
-        else:
-            mock_client.send_and_wait.assert_not_called()
+    await _run_filter_tests(hass, tests, mock_client)
 
 
 async def test_denylist(hass, mock_client):
     """Test a denylist only config."""
     await _setup(
         hass,
-        mock_client,
         {
             "exclude_domains": ["climate"],
             "exclude_entity_globs": ["sensor.excluded_*"],
@@ -141,22 +130,13 @@ async def test_denylist(hass, mock_client):
         FilterTest("binary_sensor.excluded", False),
     ]
 
-    for test in tests:
-        hass.states.async_set(test.id, STATE_ON)
-        await hass.async_block_till_done()
-
-        if test.should_pass:
-            mock_client.send_and_wait.assert_called_once()
-            mock_client.send_and_wait.reset_mock()
-        else:
-            mock_client.send_and_wait.assert_not_called()
+    await _run_filter_tests(hass, tests, mock_client)
 
 
 async def test_filtered_allowlist(hass, mock_client):
     """Test an allowlist config with a filtering denylist."""
     await _setup(
         hass,
-        mock_client,
         {
             "include_domains": ["light"],
             "include_entity_globs": ["*.included_*"],
@@ -174,22 +154,13 @@ async def test_filtered_allowlist(hass, mock_client):
         FilterTest("climate.included_test", False),
     ]
 
-    for test in tests:
-        hass.states.async_set(test.id, STATE_ON)
-        await hass.async_block_till_done()
-
-        if test.should_pass:
-            mock_client.send_and_wait.assert_called_once()
-            mock_client.send_and_wait.reset_mock()
-        else:
-            mock_client.send_and_wait.assert_not_called()
+    await _run_filter_tests(hass, tests, mock_client)
 
 
 async def test_filtered_denylist(hass, mock_client):
     """Test a denylist config with a filtering allowlist."""
     await _setup(
         hass,
-        mock_client,
         {
             "include_entities": ["climate.included", "sensor.excluded_test"],
             "exclude_domains": ["climate"],
@@ -207,12 +178,4 @@ async def test_filtered_denylist(hass, mock_client):
         FilterTest("light.included", True),
     ]
 
-    for test in tests:
-        hass.states.async_set(test.id, STATE_ON)
-        await hass.async_block_till_done()
-
-        if test.should_pass:
-            mock_client.send_and_wait.assert_called_once()
-            mock_client.send_and_wait.reset_mock()
-        else:
-            mock_client.send_and_wait.assert_not_called()
+    await _run_filter_tests(hass, tests, mock_client)

@@ -1,23 +1,45 @@
-"""The tests for the Apache Kafka component."""
+"""The tests for the Azure Event Hub component."""
 from collections import namedtuple
 
 import pytest
 
 import homeassistant.components.azure_event_hub as azure_event_hub
-from homeassistant.core import split_entity_id
-from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, MagicMock, Mock, patch
+from tests.async_mock import patch
 
 AZURE_EVENT_HUB_PATH = "homeassistant.components.azure_event_hub"
+PRODUCER_PATH = f"{AZURE_EVENT_HUB_PATH}.EventHubProducerClient"
+MIN_CONFIG = {
+    "event_hub_namespace": "namespace",
+    "event_hub_instance_name": "name",
+    "event_hub_sas_policy": "policy",
+    "event_hub_sas_key": "key",
+}
+FilterTest = namedtuple("FilterTest", "id should_pass")
 
 
-@pytest.fixture(autouse=True, name="mock_client")
+@pytest.fixture(autouse=True, name="mock_client", scope="module")
 def mock_client_fixture():
     """Mock the azure event hub producer client."""
-    with patch(f"{AZURE_EVENT_HUB_PATH}.EventHubProducerClient") as client:
-        yield client
+    with patch(f"{PRODUCER_PATH}.create_batch") as mock_create_batch:
+        with patch(f"{PRODUCER_PATH}.send_batch") as mock_send_batch:
+            with patch(f"{PRODUCER_PATH}.close") as mock_close:
+                with patch(f"{PRODUCER_PATH}.__init__", return_value=None) as mock_init:
+                    yield (
+                        mock_init,
+                        mock_create_batch,
+                        mock_send_batch,
+                        mock_close,
+                    )
+
+
+@pytest.fixture(autouse=True, name="mock_policy")
+def mock_policy_fixture():
+    """Mock azure shared key credential."""
+    with patch(f"{AZURE_EVENT_HUB_PATH}.EventHubSharedKeyCredential") as policy:
+        yield policy
 
 
 @pytest.fixture(autouse=True, name="mock_event_data")
@@ -27,18 +49,23 @@ def mock_event_data_fixture():
         yield event_data
 
 
-@pytest.fixture(autouse=True)
-def mock_bus_and_json(hass, monkeypatch):
-    """Mock the event bus listener and os component."""
-    hass.async_create_task = AsyncMock()
-    monkeypatch.setattr(
-        f"{AZURE_EVENT_HUB_PATH}.json.dumps", Mock(return_value=MagicMock())
-    )
+@pytest.fixture(autouse=True, name="mock_call_later")
+def mock_call_later_fixture():
+    """Mock async_call_later to allow queue processing on demand."""
+    with patch(f"{AZURE_EVENT_HUB_PATH}.async_call_later") as mock_call_later:
+        yield mock_call_later
+
+
+@pytest.fixture(autouse=True, name="mock_json_dumps")
+def mock_json_dumps_fixture():
+    """Mock json.dumps method in module under test."""
+    with patch(f"{AZURE_EVENT_HUB_PATH}.json.dumps") as mock_json_dumps:
+        yield mock_json_dumps
 
 
 async def test_minimal_config(hass, mock_client):
     """Test the minimal config and defaults of component."""
-    config = {azure_event_hub.DOMAIN: {"event_hub_connection_string": "connection"}}
+    config = {azure_event_hub.DOMAIN: MIN_CONFIG}
     assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
 
 
@@ -46,7 +73,6 @@ async def test_full_config(hass, mock_client):
     """Test the full config of component."""
     config = {
         azure_event_hub.DOMAIN: {
-            "event_hub_connection_string": "connection",
             "send_interval": 10,
             "max_delay": 10,
             "filter": {
@@ -59,41 +85,40 @@ async def test_full_config(hass, mock_client):
             },
         }
     }
+    config[azure_event_hub.DOMAIN].update(MIN_CONFIG)
     assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
 
 
-FilterTest = namedtuple("FilterTest", "id should_pass")
-
-
-def make_event(entity_id):
-    """Make a mock event for test."""
-    domain = split_entity_id(entity_id)[0]
-    state = MagicMock(
-        state="not blank",
-        domain=domain,
-        entity_id=entity_id,
-        object_id="entity",
-        attributes={},
-    )
-    return MagicMock(data={"new_state": state}, time_fired=12345)
-
-
-async def _setup(hass, filter_config):
+async def _setup(hass, mock_call_later, filter_config):
     """Shared set up for filtering tests."""
-    return azure_event_hub.AzureEventHub(
-        hass,
-        {"event_hub_connection_string": "connection"},
-        True,
-        FILTER_SCHEMA(filter_config),
-        5,
-        30,
-    )
+    config = {azure_event_hub.DOMAIN: {"filter": filter_config}}
+    config[azure_event_hub.DOMAIN].update(MIN_CONFIG)
+
+    assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
+    await hass.async_block_till_done()
+    mock_call_later.assert_called_once()
+    return mock_call_later.call_args[0][2]
 
 
-async def test_allowlist(hass, mock_client):
+async def _run_filter_tests(hass, tests, process_queue, mock_json_dumps):
+    """Run a series of filter tests on azure event hub."""
+    for test in tests:
+        hass.states.async_set(test.id, STATE_ON)
+        await hass.async_block_till_done()
+        await process_queue(None)
+
+        if test.should_pass:
+            mock_json_dumps.assert_called_once()
+            mock_json_dumps.reset_mock()
+        else:
+            mock_json_dumps.assert_not_called()
+
+
+async def test_allowlist(hass, mock_json_dumps, mock_call_later):
     """Test an allowlist only config."""
-    event_hub = await _setup(
+    process_queue = await _setup(
         hass,
+        mock_call_later,
         {
             "include_domains": ["light"],
             "include_entity_globs": ["sensor.included_*"],
@@ -110,18 +135,14 @@ async def test_allowlist(hass, mock_client):
         FilterTest("binary_sensor.excluded", False),
     ]
 
-    for test in tests:
-        event = make_event(test.id)
-        # Azure event hub client is used asynchronously within methods, no
-        # real other way to test filtering functionality
-        # pylint: disable=protected-access
-        assert test.should_pass == bool(event_hub._event_to_filtered_event_data(event))
+    await _run_filter_tests(hass, tests, process_queue, mock_json_dumps)
 
 
-async def test_denylist(hass, mock_client, loop):
+async def test_denylist(hass, mock_json_dumps, mock_call_later):
     """Test a denylist only config."""
-    event_hub = await _setup(
+    process_queue = await _setup(
         hass,
+        mock_call_later,
         {
             "exclude_domains": ["climate"],
             "exclude_entity_globs": ["sensor.excluded_*"],
@@ -138,16 +159,14 @@ async def test_denylist(hass, mock_client, loop):
         FilterTest("binary_sensor.excluded", False),
     ]
 
-    for test in tests:
-        event = make_event(test.id)
-        # pylint: disable=protected-access
-        assert test.should_pass == bool(event_hub._event_to_filtered_event_data(event))
+    await _run_filter_tests(hass, tests, process_queue, mock_json_dumps)
 
 
-async def test_filtered_allowlist(hass, mock_client):
+async def test_filtered_allowlist(hass, mock_json_dumps, mock_call_later):
     """Test an allowlist config with a filtering denylist."""
-    event_hub = await _setup(
+    process_queue = await _setup(
         hass,
+        mock_call_later,
         {
             "include_domains": ["light"],
             "include_entity_globs": ["*.included_*"],
@@ -165,16 +184,14 @@ async def test_filtered_allowlist(hass, mock_client):
         FilterTest("climate.included_test", False),
     ]
 
-    for test in tests:
-        event = make_event(test.id)
-        # pylint: disable=protected-access
-        assert test.should_pass == bool(event_hub._event_to_filtered_event_data(event))
+    await _run_filter_tests(hass, tests, process_queue, mock_json_dumps)
 
 
-async def test_filtered_denylist(hass, mock_client):
+async def test_filtered_denylist(hass, mock_json_dumps, mock_call_later):
     """Test a denylist config with a filtering allowlist."""
-    event_hub = await _setup(
+    process_queue = await _setup(
         hass,
+        mock_call_later,
         {
             "include_entities": ["climate.included", "sensor.excluded_test"],
             "exclude_domains": ["climate"],
@@ -192,7 +209,4 @@ async def test_filtered_denylist(hass, mock_client):
         FilterTest("light.included", True),
     ]
 
-    for test in tests:
-        event = make_event(test.id)
-        # pylint: disable=protected-access
-        assert test.should_pass == bool(event_hub._event_to_filtered_event_data(event))
+    await _run_filter_tests(hass, tests, process_queue, mock_json_dumps)
