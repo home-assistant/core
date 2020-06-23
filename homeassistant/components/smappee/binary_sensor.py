@@ -126,25 +126,27 @@ class SmappeeAppliance(BinarySensorEntity):
     def icon(self):
         """Icon to use in the frontend."""
         icon_mapping = {
-            "Freezer": "mdi:fridge",
-            "Refrigerator": "mdi:fridge",
-            "Coffeemaker": "mdi:coffee",
-            "Washing Machine": "mdi:washing-machine",
-            "Clothes Dryer": "mdi:tumble-dryer",
-            "Dishwasher": "mdi:dishwasher",
-            "Clothes Iron": "mdi:hanger",
-            "Stove": "mdi:stove",
-            "Oven": "mdi:stove",
-            "Microwave": "mdi:microwave",
-            "Fan": "mdi:fan",
             "Car Charger": "mdi:car",
+            "Coffeemaker": "mdi:coffee",
+            "Clothes Dryer": "mdi:tumble-dryer",
+            "Clothes Iron": "mdi:hanger",
+            "Dishwasher": "mdi:dishwasher",
+            "Lights": "mdi:lightbulb",
+            "Fan": "mdi:fan",
+            "Freezer": "mdi:fridge",
+            "Microwave": "mdi:microwave",
+            "Oven": "mdi:stove",
+            "Refrigerator": "mdi:fridge",
+            "Stove": "mdi:stove",
+            "Washing Machine": "mdi:washing-machine",
             "Water Pump": "mdi:water-pump",
         }
-        return (
-            icon_mapping.get(self._appliance_type)
-            if self._appliance_type in icon_mapping
-            else "mdi:power-plug"
-        )
+        return icon_mapping.get(self._appliance_type)
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return "plug"
 
     @property
     def unique_id(self,):
