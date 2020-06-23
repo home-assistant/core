@@ -533,7 +533,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one alarm per unique_id."""
     config = {
         alarm_control_panel.DOMAIN: [
@@ -553,7 +553,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, alarm_control_panel.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, alarm_control_panel.DOMAIN, config)
 
 
 async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "P\u00e9riph\u00e9rique d\u00e9j\u00e0 configur\u00e9"
+        },
         "error": {
             "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
@@ -18,6 +21,16 @@
                     "username": "Identifiant"
                 },
                 "title": "Connectez-vous avec un compte Blink"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Intervalle de balayage (secondes)"
+                },
+                "title": "Options de clignotement"
             }
         }
     }

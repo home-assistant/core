@@ -8,6 +8,8 @@ from homeassistant.components.home_connect.const import (
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.async_mock import patch
+
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
@@ -53,6 +55,11 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch(
+        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1

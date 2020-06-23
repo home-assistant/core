@@ -185,7 +185,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data[CONF_PORT] = port
         try:
             status = await get_status(self.hass, host, port)
-            self.data[CONF_ID] = status["mac"].replace(":", "")
+            self.data[CONF_ID] = status.get("chipId", status["mac"].replace(":", ""))
         except (CannotConnect, KeyError):
             raise CannotConnect
         else:
@@ -293,7 +293,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             else:
-                self.data[CONF_ID] = status["mac"].replace(":", "")
+                self.data[CONF_ID] = status.get(
+                    "chipId", status["mac"].replace(":", "")
+                )
                 self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
 
                 # save off our discovered host info

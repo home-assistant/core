@@ -10,9 +10,9 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DOMAIN = "plum_lightpad"
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -26,8 +26,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLUM_DATA = "plum"
-
 
 async def async_setup(hass, config):
     """Plum Lightpad Platform initialization."""
@@ -35,7 +33,7 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
     plum = Plum(conf[CONF_USERNAME], conf[CONF_PASSWORD])
 
-    hass.data[PLUM_DATA] = plum
+    hass.data[DOMAIN] = plum
 
     def cleanup(event):
         """Clean up resources."""

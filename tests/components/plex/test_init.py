@@ -254,8 +254,11 @@ async def test_setup_with_photo_session(hass):
 
     server_id = mock_plex_server.machineIdentifier
 
-    async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
+        async_dispatcher_send(
+            hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
+        )
+        await hass.async_block_till_done()
 
     media_player = hass.states.get("media_player.plex_product_title")
     assert media_player.state == "idle"

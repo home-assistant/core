@@ -1,8 +1,10 @@
 """Script to run benchmarks."""
 import argparse
 import asyncio
+import collections
 from contextlib import suppress
 from datetime import datetime
+import json
 import logging
 from timeit import default_timer as timer
 from typing import Callable, Dict, TypeVar
@@ -10,6 +12,7 @@ from typing import Callable, Dict, TypeVar
 from homeassistant import core
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED
+from homeassistant.helpers.json import JSONEncoder
 from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -169,21 +172,22 @@ async def _logbook_filtering(hass, last_changed, last_updated):
         "last_changed": last_changed,
     }
 
-    event = core.Event(
-        EVENT_STATE_CHANGED,
-        {"entity_id": entity_id, "old_state": old_state, "new_state": new_state},
+    event = _create_state_changed_event_from_old_new(
+        entity_id, dt_util.utcnow(), old_state, new_state
     )
+
+    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     def yield_events(event):
         # pylint: disable=protected-access
         entities_filter = logbook._generate_filter_from_config({})
         for _ in range(10 ** 5):
-            if logbook._keep_event(hass, event, entities_filter):
+            if logbook._keep_event(hass, event, entities_filter, entity_attr_cache):
                 yield event
 
     start = timer()
 
-    list(logbook.humanify(hass, yield_events(event)))
+    list(logbook.humanify(hass, yield_events(event), entity_attr_cache))
 
     return timer() - start
 
@@ -208,3 +212,48 @@ async def json_serialize_states(hass):
     start = timer()
     JSON_DUMP(states)
     return timer() - start
+
+
+def _create_state_changed_event_from_old_new(
+    entity_id, event_time_fired, old_state, new_state
+):
+    """Create a state changed event from a old and new state."""
+    attributes = {}
+    if new_state is not None:
+        attributes = new_state.get("attributes")
+    attributes_json = json.dumps(attributes, cls=JSONEncoder)
+    if attributes_json == "null":
+        attributes_json = "{}"
+    row = collections.namedtuple(
+        "Row",
+        [
+            "event_type"
+            "event_data"
+            "time_fired"
+            "context_id"
+            "context_user_id"
+            "state"
+            "entity_id"
+            "domain"
+            "attributes"
+            "state_id",
+            "old_state_id",
+        ],
+    )
+
+    row.event_type = EVENT_STATE_CHANGED
+    row.event_data = "{}"
+    row.attributes = attributes_json
+    row.time_fired = event_time_fired
+    row.state = new_state and new_state.get("state")
+    row.entity_id = entity_id
+    row.domain = entity_id and core.split_entity_id(entity_id)[0]
+    row.context_id = None
+    row.context_user_id = None
+    row.old_state_id = old_state and 1
+    row.state_id = new_state and 1
+
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components import logbook
+
+    return logbook.LazyEventPartialState(row)

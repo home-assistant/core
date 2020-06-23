@@ -344,10 +344,13 @@ async def async_mock_mqtt_component(hass, config=None):
         assert result
         await hass.async_block_till_done()
 
-        hass.data["mqtt"] = MagicMock(
+        mqtt_component_mock = MagicMock(
             spec_set=hass.data["mqtt"], wraps=hass.data["mqtt"]
         )
+        hass.data["mqtt"].connected = mqtt_component_mock.connected
+        mqtt_component_mock._mqttc = mock_client
 
+        hass.data["mqtt"] = mqtt_component_mock
         return hass.data["mqtt"]
 
 
@@ -990,6 +993,8 @@ def mock_integration(hass, module):
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
     hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
+
+    return integration
 
 
 def mock_entity_platform(hass, platform_path, module):

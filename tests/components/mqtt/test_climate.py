@@ -870,7 +870,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one climate per unique_id."""
     config = {
         CLIMATE_DOMAIN: [
@@ -890,7 +890,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, CLIMATE_DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, CLIMATE_DOMAIN, config)
 
 
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
