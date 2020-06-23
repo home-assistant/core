@@ -1,6 +1,8 @@
 """Support for Plum Lightpad devices."""
 import logging
 
+from aiohttp import ContentTypeError
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -51,19 +53,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
-    plum = await load_plum(username, password, hass)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = plum
+    try:
+        plum = await load_plum(username, password, hass)
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+        hass.data.setdefault(DOMAIN, {})
+        hass.data[DOMAIN][entry.entry_id] = plum
 
-    def cleanup(event):
-        """Clean up resources."""
-        plum.cleanup()
+        for component in PLATFORMS:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, component)
+            )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
-    return True
+        def cleanup(event):
+            """Clean up resources."""
+            plum.cleanup()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+        return True
+
+    except (ContentTypeError, ConnectTimeout, HTTPError) as ex:
+        _LOGGER.error("Unable to connect to Plum cloud: %s", str(ex))
+        return False
