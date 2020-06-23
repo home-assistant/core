@@ -48,6 +48,7 @@ SUPPORT_ROKU = (
 
 SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Roku config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
