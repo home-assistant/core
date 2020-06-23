@@ -1,5 +1,6 @@
 """Config flow for MQTT."""
 from collections import OrderedDict
+import logging
 import queue
 
 import voluptuous as vol
@@ -13,7 +14,22 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY
+from .const import (
+    ATTR_PAYLOAD,
+    ATTR_QOS,
+    ATTR_RETAIN,
+    ATTR_TOPIC,
+    CONF_BIRTH_MESSAGE,
+    CONF_BROKER,
+    CONF_DISCOVERY,
+    CONF_WILL_MESSAGE,
+    DEFAULT_DISCOVERY,
+    DEFAULT_QOS,
+    DEFAULT_RETAIN,
+)
+from .util import MQTT_WILL_BIRTH_SCHEMA
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register("mqtt")
@@ -24,6 +40,11 @@ class FlowHandler(config_entries.ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     _hassio_discovery = None
+
+    @staticmethod
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return MQTTOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -74,12 +95,12 @@ class FlowHandler(config_entries.ConfigFlow):
 
         return self.async_create_entry(title="configuration.yaml", data={})
 
-    async def async_step_hassio(self, user_input=None):
+    async def async_step_hassio(self, discovery_info):
         """Receive a Hass.io discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        self._hassio_discovery = user_input
+        self._hassio_discovery = discovery_info
 
         return await self.async_step_hassio_confirm()
 
@@ -120,6 +141,163 @@ class FlowHandler(config_entries.ConfigFlow):
                 {vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): bool}
             ),
             errors=errors,
+        )
+
+
+class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle MQTT options."""
+
+    def __init__(self, config_entry):
+        """Initialize MQTT options flow."""
+        self.config_entry = config_entry
+        self.broker_config = {}
+        self.options = dict(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Manage the MQTT options."""
+        return await self.async_step_broker()
+
+    async def async_step_broker(self, user_input=None):
+        """Manage the MQTT options."""
+        errors = {}
+        current_config = self.config_entry.data
+        if user_input is not None:
+            can_connect = await self.hass.async_add_executor_job(
+                try_connection,
+                user_input[CONF_BROKER],
+                user_input[CONF_PORT],
+                user_input.get(CONF_USERNAME),
+                user_input.get(CONF_PASSWORD),
+            )
+
+            if can_connect:
+                self.broker_config.update(user_input)
+                return await self.async_step_options()
+
+            errors["base"] = "cannot_connect"
+
+        fields = OrderedDict()
+        fields[vol.Required(CONF_BROKER, default=current_config[CONF_BROKER])] = str
+        fields[vol.Required(CONF_PORT, default=current_config[CONF_PORT])] = vol.Coerce(
+            int
+        )
+        fields[
+            vol.Optional(
+                CONF_USERNAME,
+                description={"suggested_value": current_config.get(CONF_USERNAME)},
+            )
+        ] = str
+        fields[
+            vol.Optional(
+                CONF_PASSWORD,
+                description={"suggested_value": current_config.get(CONF_PASSWORD)},
+            )
+        ] = str
+
+        return self.async_show_form(
+            step_id="broker", data_schema=vol.Schema(fields), errors=errors,
+        )
+
+    async def async_step_options(self, user_input=None):
+        """Manage the MQTT options."""
+        errors = {}
+        current_config = self.config_entry.data
+        options_config = {}
+        if user_input is not None:
+            bad_birth = False
+            bad_will = False
+
+            if "birth_topic" in user_input:
+                birth_message = {
+                    ATTR_TOPIC: user_input["birth_topic"],
+                    ATTR_PAYLOAD: user_input.get("birth_payload", ""),
+                    ATTR_QOS: user_input["birth_qos"],
+                    ATTR_RETAIN: user_input["birth_retain"],
+                }
+                try:
+                    birth_message = MQTT_WILL_BIRTH_SCHEMA(birth_message)
+                    options_config[CONF_BIRTH_MESSAGE] = birth_message
+                except vol.Invalid:
+                    errors["base"] = "bad_birth"
+                    bad_birth = True
+
+            if "will_topic" in user_input:
+                will_message = {
+                    ATTR_TOPIC: user_input["will_topic"],
+                    ATTR_PAYLOAD: user_input.get("will_payload", ""),
+                    ATTR_QOS: user_input["will_qos"],
+                    ATTR_RETAIN: user_input["will_retain"],
+                }
+                try:
+                    will_message = MQTT_WILL_BIRTH_SCHEMA(will_message)
+                    options_config[CONF_WILL_MESSAGE] = will_message
+                except vol.Invalid:
+                    errors["base"] = "bad_will"
+                    bad_will = True
+
+            options_config[CONF_DISCOVERY] = user_input[CONF_DISCOVERY]
+
+            if not bad_birth and not bad_will:
+                updated_config = {}
+                updated_config.update(self.broker_config)
+                updated_config.update(options_config)
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=updated_config
+                )
+                return self.async_create_entry(title="", data=None)
+
+        birth_topic = None
+        birth_payload = None
+        birth_qos = DEFAULT_QOS
+        birth_retain = DEFAULT_RETAIN
+        if CONF_BIRTH_MESSAGE in current_config:
+            birth_topic = current_config[CONF_BIRTH_MESSAGE][ATTR_TOPIC]
+            birth_payload = current_config[CONF_BIRTH_MESSAGE][ATTR_PAYLOAD]
+            birth_qos = current_config[CONF_BIRTH_MESSAGE].get(ATTR_QOS, DEFAULT_QOS)
+            birth_retain = current_config[CONF_BIRTH_MESSAGE].get(
+                ATTR_RETAIN, DEFAULT_RETAIN
+            )
+
+        will_topic = None
+        will_payload = None
+        will_qos = DEFAULT_QOS
+        will_retain = DEFAULT_RETAIN
+        if CONF_WILL_MESSAGE in current_config:
+            will_topic = current_config[CONF_WILL_MESSAGE][ATTR_TOPIC]
+            will_payload = current_config[CONF_WILL_MESSAGE][ATTR_PAYLOAD]
+            will_qos = current_config[CONF_WILL_MESSAGE].get(ATTR_QOS, DEFAULT_QOS)
+            will_retain = current_config[CONF_WILL_MESSAGE].get(
+                ATTR_RETAIN, DEFAULT_RETAIN
+            )
+
+        fields = OrderedDict()
+        fields[
+            vol.Optional(
+                CONF_DISCOVERY,
+                default=current_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY),
+            )
+        ] = bool
+        fields[
+            vol.Optional("birth_topic", description={"suggested_value": birth_topic})
+        ] = str
+        fields[
+            vol.Optional(
+                "birth_payload", description={"suggested_value": birth_payload}
+            )
+        ] = str
+        fields[vol.Optional("birth_qos", default=birth_qos)] = vol.In([0, 1, 2])
+        fields[vol.Optional("birth_retain", default=birth_retain)] = bool
+        fields[
+            vol.Optional("will_topic", description={"suggested_value": will_topic})
+        ] = str
+        fields[
+            vol.Optional("will_payload", description={"suggested_value": will_payload})
+        ] = str
+        fields[vol.Optional("will_qos", default=will_qos)] = vol.In([0, 1, 2])
+        fields[vol.Optional("will_retain", default=will_retain)] = bool
+
+        return self.async_show_form(
+            step_id="options", data_schema=vol.Schema(fields), errors=errors,
         )
 
 

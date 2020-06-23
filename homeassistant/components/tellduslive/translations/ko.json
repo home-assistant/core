@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "TelldusLive \uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "already_setup": "TelldusLive \uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "authorize_url_fail": "\uc778\uc99d url \uc0dd\uc131\uc5d0 \uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4.",
             "authorize_url_timeout": "\uc778\uc99d url \uc0dd\uc131 \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",

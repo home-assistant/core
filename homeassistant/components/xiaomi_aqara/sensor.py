@@ -10,7 +10,8 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
 )
 
-from . import PY_XIAOMI_GATEWAY, XiaomiDevice
+from . import XiaomiDevice
+from .const import DOMAIN, GATEWAYS_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,50 +25,70 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
-    devices = []
-    for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
-        for device in gateway.devices["sensor"]:
-            if device["model"] == "sensor_ht":
-                devices.append(
-                    XiaomiSensor(device, "Temperature", "temperature", gateway)
+    entities = []
+    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    for device in gateway.devices["sensor"]:
+        if device["model"] == "sensor_ht":
+            entities.append(
+                XiaomiSensor(
+                    device, "Temperature", "temperature", gateway, config_entry
                 )
-                devices.append(XiaomiSensor(device, "Humidity", "humidity", gateway))
-            elif device["model"] in ["weather", "weather.v1"]:
-                devices.append(
-                    XiaomiSensor(device, "Temperature", "temperature", gateway)
+            )
+            entities.append(
+                XiaomiSensor(device, "Humidity", "humidity", gateway, config_entry)
+            )
+        elif device["model"] in ["weather", "weather.v1"]:
+            entities.append(
+                XiaomiSensor(
+                    device, "Temperature", "temperature", gateway, config_entry
                 )
-                devices.append(XiaomiSensor(device, "Humidity", "humidity", gateway))
-                devices.append(XiaomiSensor(device, "Pressure", "pressure", gateway))
-            elif device["model"] == "sensor_motion.aq2":
-                devices.append(XiaomiSensor(device, "Illumination", "lux", gateway))
-            elif device["model"] in ["gateway", "gateway.v3", "acpartner.v3"]:
-                devices.append(
-                    XiaomiSensor(device, "Illumination", "illumination", gateway)
+            )
+            entities.append(
+                XiaomiSensor(device, "Humidity", "humidity", gateway, config_entry)
+            )
+            entities.append(
+                XiaomiSensor(device, "Pressure", "pressure", gateway, config_entry)
+            )
+        elif device["model"] == "sensor_motion.aq2":
+            entities.append(
+                XiaomiSensor(device, "Illumination", "lux", gateway, config_entry)
+            )
+        elif device["model"] in ["gateway", "gateway.v3", "acpartner.v3"]:
+            entities.append(
+                XiaomiSensor(
+                    device, "Illumination", "illumination", gateway, config_entry
                 )
-            elif device["model"] in ["vibration"]:
-                devices.append(
-                    XiaomiSensor(device, "Bed Activity", "bed_activity", gateway)
+            )
+        elif device["model"] in ["vibration"]:
+            entities.append(
+                XiaomiSensor(
+                    device, "Bed Activity", "bed_activity", gateway, config_entry
                 )
-                devices.append(
-                    XiaomiSensor(device, "Tilt Angle", "final_tilt_angle", gateway)
+            )
+            entities.append(
+                XiaomiSensor(
+                    device, "Tilt Angle", "final_tilt_angle", gateway, config_entry
                 )
-                devices.append(
-                    XiaomiSensor(device, "Coordination", "coordination", gateway)
+            )
+            entities.append(
+                XiaomiSensor(
+                    device, "Coordination", "coordination", gateway, config_entry
                 )
-            else:
-                _LOGGER.warning("Unmapped Device Model ")
-    add_entities(devices)
+            )
+        else:
+            _LOGGER.warning("Unmapped Device Model")
+    async_add_entities(entities)
 
 
 class XiaomiSensor(XiaomiDevice):
     """Representation of a XiaomiSensor."""
 
-    def __init__(self, device, name, data_key, xiaomi_hub):
+    def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
         """Initialize the XiaomiSensor."""
         self._data_key = data_key
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+        super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
     def icon(self):

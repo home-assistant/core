@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "one_instance_allowed": "Nom\u00e9s cal una \u00fanica inst\u00e0ncia.",
-            "wrong_server_id": "L'identificador del servidor no \u00e9s v\u00e0lida"
+            "wrong_server_id": "L'identificador del servidor no \u00e9s v\u00e0lid"
         },
         "step": {
             "user": {
-                "description": "Esteu segur que voleu configurar el SpeedTest?",
-                "title": "Configurar SpeedTest"
+                "description": "Est\u00e0s segur que vols configurar SpeedTest?",
+                "title": "Configura SpeedTest"
             }
         }
     },
@@ -18,9 +18,9 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Desactiva l\u2019actualitzaci\u00f3 autom\u00e0tica",
+                    "manual": "Desactiva l'actualitzaci\u00f3 autom\u00e0tica",
                     "scan_interval": "Freq\u00fc\u00e8ncia d'actualitzaci\u00f3 (minuts)",
-                    "server_name": "Seleccioneu el servidor de proves"
+                    "server_name": "Seleccion el servidor de proves"
                 }
             }
         }

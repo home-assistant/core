@@ -42,6 +42,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_HOME,
     STATE_IDLE,
+    STATE_PAUSED,
     STATE_PLAYING,
     STATE_STANDBY,
     STATE_UNAVAILABLE,
@@ -211,6 +212,21 @@ async def test_attributes_app(
     assert state.attributes.get(ATTR_APP_ID) == "12"
     assert state.attributes.get(ATTR_APP_NAME) == "Netflix"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Netflix"
+
+
+async def test_attributes_app_media_paused(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test attributes for app with paused media."""
+    await setup_integration(hass, aioclient_mock, app="pluto", media_state="pause")
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_PAUSED
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_APP_ID) == "74519"
+    assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
+    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
 
 
 async def test_attributes_screensaver(

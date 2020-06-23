@@ -22,12 +22,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     EVENT_TIMER_OUT_OF_SYNC,
+    MATCH_ALL,
     __version__,
 )
 import homeassistant.core as ha
@@ -1333,3 +1335,35 @@ async def test_additional_data_in_core_config(hass, hass_storage):
     }
     await config.async_load()
     assert config.location_name == "Test Name"
+
+
+async def test_start_events(hass):
+    """Test events fired when starting Home Assistant."""
+    hass.state = ha.CoreState.not_running
+
+    all_events = []
+
+    @ha.callback
+    def capture_events(ev):
+        all_events.append(ev.event_type)
+
+    hass.bus.async_listen(MATCH_ALL, capture_events)
+
+    core_states = []
+
+    @ha.callback
+    def capture_core_state(_):
+        core_states.append(hass.state)
+
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, capture_core_state)
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert all_events == [
+        EVENT_CORE_CONFIG_UPDATE,
+        EVENT_HOMEASSISTANT_START,
+        EVENT_CORE_CONFIG_UPDATE,
+        EVENT_HOMEASSISTANT_STARTED,
+    ]
+    assert core_states == [ha.CoreState.starting, ha.CoreState.running]

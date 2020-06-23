@@ -16,7 +16,7 @@
                     "name": "Nom de la passarel\u00b7la",
                     "token": "Token de l'API"
                 },
-                "description": "Necessitar\u00e0s el token de l'API, consulta les instruccions a https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token.",
+                "description": "Necessitar\u00e0s el token de l'API de 32 car\u00e0cters, consulta les instruccions a https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token. Tingues en compte que aquest token \u00e9s diferent a la clau utilitzada per la integraci\u00f3 Xiaomi Aqara.",
                 "title": "Connexi\u00f3 amb la passarel\u00b7la de Xiaomi"
             },
             "user": {
