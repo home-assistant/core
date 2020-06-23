@@ -36,7 +36,7 @@ class Events(Base):  # type: ignore
 
     __tablename__ = "events"
     event_id = Column(Integer, primary_key=True)
-    event_type = Column(String(32), index=True)
+    event_type = Column(String(32))
     event_data = Column(Text)
     origin = Column(String(32))
     time_fired = Column(DateTime(timezone=True))
