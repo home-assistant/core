@@ -1,12 +1,22 @@
 """Support for the Roku remote."""
 from typing import Callable, List
 
+import voluptuous as vol
+
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
-from .const import DOMAIN
+from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+
+
+SEARCH_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_KEYWORD): str,
+    }
+)
 
 
 async def async_setup_entry(
@@ -18,6 +28,12 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
     async_add_entities([RokuRemote(unique_id, coordinator)], True)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SEARCH, SEARCH_SCHEMA, "search",
+    )
 
 
 class RokuRemote(RokuEntity, RemoteEntity):
@@ -42,6 +58,11 @@ class RokuRemote(RokuEntity, RemoteEntity):
     def is_on(self) -> bool:
         """Return true if device is on."""
         return not self.coordinator.data.state.standby
+
+    @roku_exception_handler
+    async def search(self, keyword):
+        """Emulate opening search screen and entering keyword."""
+        await self.coordinator.roku.search(keyword)
 
     @roku_exception_handler
     async def async_turn_on(self, **kwargs) -> None:
