@@ -188,5 +188,3 @@ class RestBinarySensor(BinarySensorDevice):
             self.rest.set_url(self._resource_template.render())
 
         self.rest.update()
-        value = self.rest.data
-        self._state = value
