@@ -1,10 +1,13 @@
 """The sms gateway to interact with a GSM modem."""
+import asyncio
 import logging
 
-import gammu
+import gammu  # pylint: disable=import-error, no-member
+from gammu.asyncworker import (  # pylint: disable=import-error, no-member
+    GammuAsyncWorker,
+)
 
 from .const import DOMAIN
-from .gammuasync import GammuAsyncWorker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,10 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 class Gateway:
     """SMS gateway to interact with a GSM modem."""
 
-    def __init__(self, worker, loop, hass):
+    def __init__(self, worker, hass):
         """Initialize the sms gateway."""
         self._worker = worker
-        self._loop = loop
+        self._loop = asyncio.get_running_loop()
         self._hass = hass
 
     async def init_async(self):
@@ -130,26 +133,26 @@ class Gateway:
             _LOGGER.debug(f"Firing event:{event_data}")
             self._hass.bus.fire(f"{DOMAIN}.incoming_sms", event_data)
 
-    async def GetSignalQualityAsync(self):
-        """Get the current signal quality of the gsm modem."""
-        return await self._worker.GetSignalQualityAsync()
-
-    async def SendSMSAsync(self, message):
+    async def send_sms_async(self, message):
         """Send sms message via the worker."""
-        return await self._worker.SendSMSAsync(message)
+        return await self._worker.send_sms_async(message)
 
-    async def TerminateAsync(self):
+    async def get_imei_async(self):
+        """Get the IMEI of the device."""
+        return await self._worker.get_imei_async()
+
+    async def terminate_async(self):
         """Terminate modem connection."""
-        return await self._worker.TerminateAsync()
+        return await self._worker.terminate_async()
 
 
-async def create_sms_gateway(config, loop, hass):
+async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
-        worker = GammuAsyncWorker(loop)
+        worker = GammuAsyncWorker()
         worker.configure(config)
         await worker.init_async()
-        gateway = Gateway(worker, loop, hass)
+        gateway = Gateway(worker, hass)
         await gateway.init_async()
         return gateway
     except gammu.GSMError as exc:  # pylint: disable=no-member
