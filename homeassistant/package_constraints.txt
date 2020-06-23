@@ -12,7 +12,7 @@ cryptography==2.9.2
 defusedxml==0.6.0
 distro==1.5.0
 emoji==0.5.4
-hass-nabucasa==0.34.6
+hass-nabucasa==0.34.7
 home-assistant-frontend==20200620.0
 importlib-metadata==1.6.0;python_version<'3.8'
 jinja2>=2.11.1
