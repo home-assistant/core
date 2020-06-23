@@ -232,8 +232,8 @@ def test_filter_schema_with_globs():
     assert filt.config == conf
 
 
-def test_filter_schema_alt():
-    """Test the alternate filter schema."""
+def test_filter_schema_include_exclude():
+    """Test the include exclude filter schema."""
     conf = {
         "include": {
             "domains": ["light"],

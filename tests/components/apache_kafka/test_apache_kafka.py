@@ -23,10 +23,10 @@ MockKafkaClient = namedtuple("MockKafkaClient", "init start send_and_wait")
 @pytest.fixture(name="mock_client")
 def mock_client_fixture():
     """Mock the apache kafka client."""
-    with patch(f"{PRODUCER_PATH}.start") as start:
-        with patch(f"{PRODUCER_PATH}.send_and_wait") as send_and_wait:
-            with patch(f"{PRODUCER_PATH}.__init__", return_value=None) as init:
-                yield MockKafkaClient(init, start, send_and_wait)
+    with patch(f"{PRODUCER_PATH}.start") as start, patch(
+        f"{PRODUCER_PATH}.send_and_wait"
+    ) as send_and_wait, patch(f"{PRODUCER_PATH}.__init__", return_value=None) as init:
+        yield MockKafkaClient(init, start, send_and_wait)
 
 
 @pytest.fixture(autouse=True, scope="module")

@@ -7,7 +7,7 @@ import homeassistant.components.azure_event_hub as azure_event_hub
 from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
+from tests.async_mock import MagicMock, patch
 
 AZURE_EVENT_HUB_PATH = "homeassistant.components.azure_event_hub"
 PRODUCER_PATH = f"{AZURE_EVENT_HUB_PATH}.EventHubProducerClient"
@@ -23,16 +23,22 @@ FilterTest = namedtuple("FilterTest", "id should_pass")
 @pytest.fixture(autouse=True, name="mock_client", scope="module")
 def mock_client_fixture():
     """Mock the azure event hub producer client."""
-    with patch(f"{PRODUCER_PATH}.create_batch") as mock_create_batch:
-        with patch(f"{PRODUCER_PATH}.send_batch") as mock_send_batch:
-            with patch(f"{PRODUCER_PATH}.close") as mock_close:
-                with patch(f"{PRODUCER_PATH}.__init__", return_value=None) as mock_init:
-                    yield (
-                        mock_init,
-                        mock_create_batch,
-                        mock_send_batch,
-                        mock_close,
-                    )
+    with patch(f"{PRODUCER_PATH}.send_batch") as mock_send_batch, patch(
+        f"{PRODUCER_PATH}.close"
+    ) as mock_close, patch(f"{PRODUCER_PATH}.__init__", return_value=None) as mock_init:
+        yield (
+            mock_init,
+            mock_send_batch,
+            mock_close,
+        )
+
+
+@pytest.fixture(autouse=True, name="mock_batch")
+def mock_batch_fixture():
+    """Mock batch creator and return mocked batch object."""
+    mock_batch = MagicMock()
+    with patch(f"{PRODUCER_PATH}.create_batch", return_value=mock_batch):
+        yield mock_batch
 
 
 @pytest.fixture(autouse=True, name="mock_policy")
@@ -56,20 +62,13 @@ def mock_call_later_fixture():
         yield mock_call_later
 
 
-@pytest.fixture(autouse=True, name="mock_json_dumps")
-def mock_json_dumps_fixture():
-    """Mock json.dumps method in module under test."""
-    with patch(f"{AZURE_EVENT_HUB_PATH}.json.dumps") as mock_json_dumps:
-        yield mock_json_dumps
-
-
-async def test_minimal_config(hass, mock_client):
+async def test_minimal_config(hass):
     """Test the minimal config and defaults of component."""
     config = {azure_event_hub.DOMAIN: MIN_CONFIG}
     assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
 
 
-async def test_full_config(hass, mock_client):
+async def test_full_config(hass):
     """Test the full config of component."""
     config = {
         azure_event_hub.DOMAIN: {
@@ -100,7 +99,7 @@ async def _setup(hass, mock_call_later, filter_config):
     return mock_call_later.call_args[0][2]
 
 
-async def _run_filter_tests(hass, tests, process_queue, mock_json_dumps):
+async def _run_filter_tests(hass, tests, process_queue, mock_batch):
     """Run a series of filter tests on azure event hub."""
     for test in tests:
         hass.states.async_set(test.id, STATE_ON)
@@ -108,13 +107,13 @@ async def _run_filter_tests(hass, tests, process_queue, mock_json_dumps):
         await process_queue(None)
 
         if test.should_pass:
-            mock_json_dumps.assert_called_once()
-            mock_json_dumps.reset_mock()
+            mock_batch.add.assert_called_once()
+            mock_batch.add.reset_mock()
         else:
-            mock_json_dumps.assert_not_called()
+            mock_batch.add.assert_not_called()
 
 
-async def test_allowlist(hass, mock_json_dumps, mock_call_later):
+async def test_allowlist(hass, mock_batch, mock_call_later):
     """Test an allowlist only config."""
     process_queue = await _setup(
         hass,
@@ -135,10 +134,10 @@ async def test_allowlist(hass, mock_json_dumps, mock_call_later):
         FilterTest("binary_sensor.excluded", False),
     ]
 
-    await _run_filter_tests(hass, tests, process_queue, mock_json_dumps)
+    await _run_filter_tests(hass, tests, process_queue, mock_batch)
 
 
-async def test_denylist(hass, mock_json_dumps, mock_call_later):
+async def test_denylist(hass, mock_batch, mock_call_later):
     """Test a denylist only config."""
     process_queue = await _setup(
         hass,
@@ -159,10 +158,10 @@ async def test_denylist(hass, mock_json_dumps, mock_call_later):
         FilterTest("binary_sensor.excluded", False),
     ]
 
-    await _run_filter_tests(hass, tests, process_queue, mock_json_dumps)
+    await _run_filter_tests(hass, tests, process_queue, mock_batch)
 
 
-async def test_filtered_allowlist(hass, mock_json_dumps, mock_call_later):
+async def test_filtered_allowlist(hass, mock_batch, mock_call_later):
     """Test an allowlist config with a filtering denylist."""
     process_queue = await _setup(
         hass,
@@ -184,10 +183,10 @@ async def test_filtered_allowlist(hass, mock_json_dumps, mock_call_later):
         FilterTest("climate.included_test", False),
     ]
 
-    await _run_filter_tests(hass, tests, process_queue, mock_json_dumps)
+    await _run_filter_tests(hass, tests, process_queue, mock_batch)
 
 
-async def test_filtered_denylist(hass, mock_json_dumps, mock_call_later):
+async def test_filtered_denylist(hass, mock_batch, mock_call_later):
     """Test a denylist config with a filtering allowlist."""
     process_queue = await _setup(
         hass,
@@ -209,4 +208,4 @@ async def test_filtered_denylist(hass, mock_json_dumps, mock_call_later):
         FilterTest("light.included", True),
     ]
 
-    await _run_filter_tests(hass, tests, process_queue, mock_json_dumps)
+    await _run_filter_tests(hass, tests, process_queue, mock_batch)
