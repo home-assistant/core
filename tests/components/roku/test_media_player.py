@@ -422,3 +422,19 @@ async def test_tv_services(
         )
 
         tune_mock.assert_called_once_with("55")
+
+
+async def test_integration_services(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test integration services."""
+    await setup_integration(hass, aioclient_mock)
+
+    with patch("homeassistant.components.roku.Roku.search") as search_mock:
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_SEARCH,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_KEYWORD: "Space Jam"},
+            blocking=True,
+        )
+        search_mock.assert_called_once_with("Space Jam")
