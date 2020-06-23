@@ -35,8 +35,9 @@ SUPPORTED_COMPONENTS = [
 ]
 
 ALREADY_DISCOVERED = "mqtt_discovered_components"
-DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
+DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
+DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
 MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
 
@@ -163,8 +164,15 @@ async def async_start(
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
-    await mqtt.async_subscribe(
+    hass.data[DISCOVERY_UNSUBSCRIBE] = await mqtt.async_subscribe(
         hass, f"{discovery_topic}/#", async_device_message_received, 0
     )
 
     return True
+
+
+async def async_stop(hass: HomeAssistantType) -> bool:
+    """Stop MQTT Discovery."""
+    if DISCOVERY_UNSUBSCRIBE in hass.data and hass.data[DISCOVERY_UNSUBSCRIBE]:
+        hass.data[DISCOVERY_UNSUBSCRIBE]()
+        hass.data[DISCOVERY_UNSUBSCRIBE] = None
