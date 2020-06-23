@@ -1,7 +1,7 @@
 """Support for Mojio Platform."""
 import logging
 
-from mojio_sdk import API
+from mojio_sdk.api import API
 import requests
 import voluptuous as vol
 
