@@ -647,9 +647,7 @@ class LazyState(State):
     def context(self):
         """State context."""
         if not self._context:
-            self._context = Context(
-                id=self._row.context_id, user_id=self._row.context_user_id
-            )
+            self._context = Context(id=None)
         return self._context
 
     @property  # type: ignore
