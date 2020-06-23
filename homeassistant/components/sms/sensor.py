@@ -6,16 +6,17 @@ import gammu  # pylint: disable=import-error, no-member
 from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, SMS_GATEWAY, SMS_GSM_SIGNAL_SENSOR_NAME
+from .const import DOMAIN, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the GSM Signal Sensor sensor."""
-    name = SMS_GSM_SIGNAL_SENSOR_NAME
     gateway = hass.data[DOMAIN][SMS_GATEWAY]
     entities = []
+    imei = await gateway.get_imei_async()
+    name = f"gsm_signal_imei_{imei}"
     entities.append(GSMSignalSensor(hass, gateway, name,))
     async_add_entities(entities, True)
 
@@ -57,14 +58,6 @@ class GSMSignalSensor(Entity):
         """Return the state of the device."""
         return self._state["SignalStrength"]
 
-    @property
-    async def async_force_update(self):
-        """Force update."""
-        try:
-            self._state = await self._gateway.get_signal_quality_async()
-        except gammu.GSMError as exc:  # pylint: disable=no-member
-            _LOGGER.error("Failed to read signal quality: %s", exc)
-
     async def async_update(self):
         """Get the latest data from the modem."""
         try:
@@ -76,3 +69,8 @@ class GSMSignalSensor(Entity):
     def device_state_attributes(self):
         """Return the sensor attributes."""
         return self._state
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
