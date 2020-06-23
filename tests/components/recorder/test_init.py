@@ -15,7 +15,7 @@ from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, callback
+from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, Context, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -55,7 +55,7 @@ class TestRecorder(unittest.TestCase):
             assert db_states[0].event_id > 0
             state = db_states[0].to_native()
 
-        assert state == self.hass.states.get(entity_id)
+        assert state == _state_empty_context(self.hass, entity_id)
 
     def test_saving_event(self):
         """Test saving and restoring an event."""
@@ -135,13 +135,21 @@ def _add_events(hass, events):
         return [ev.to_native() for ev in session.query(Events)]
 
 
+def _state_empty_context(hass, entity_id):
+    # We don't restore context unless we need it by joining the
+    # events table on the event_id for state_changed events
+    state = hass.states.get(entity_id)
+    state.context = Context(id=None)
+    return state
+
+
 # pylint: disable=redefined-outer-name,invalid-name
 def test_saving_state_include_domains(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({"include": {"domains": "test2"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert hass.states.get("test2.recorder") == states[0]
+    assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_state_incl_entities(hass_recorder):
@@ -149,7 +157,7 @@ def test_saving_state_incl_entities(hass_recorder):
     hass = hass_recorder({"include": {"entities": "test2.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert hass.states.get("test2.recorder") == states[0]
+    assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_event_exclude_event_type(hass_recorder):
@@ -165,7 +173,7 @@ def test_saving_state_exclude_domains(hass_recorder):
     hass = hass_recorder({"exclude": {"domains": "test"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert hass.states.get("test2.recorder") == states[0]
+    assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_state_exclude_entities(hass_recorder):
@@ -173,7 +181,7 @@ def test_saving_state_exclude_entities(hass_recorder):
     hass = hass_recorder({"exclude": {"entities": "test.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert hass.states.get("test2.recorder") == states[0]
+    assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
 def test_saving_state_exclude_domain_include_entity(hass_recorder):
@@ -192,8 +200,8 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
     )
     states = _add_entities(hass, ["test.recorder", "test2.recorder", "test.ok"])
     assert len(states) == 1
-    assert hass.states.get("test.ok") == states[0]
-    assert hass.states.get("test.ok").state == "state2"
+    assert _state_empty_context(hass, "test.ok") == states[0]
+    assert _state_empty_context(hass, "test.ok").state == "state2"
 
 
 def test_recorder_setup_failure():

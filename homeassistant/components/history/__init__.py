@@ -76,8 +76,6 @@ QUERY_STATES = [
     States.last_changed,
     States.last_updated,
     States.created,
-    States.context_id,
-    States.context_user_id,
 ]
 
 
@@ -685,5 +683,4 @@ class LazyState(State):
             and self.entity_id == other.entity_id
             and self.state == other.state
             and self.attributes == other.attributes
-            and self.context == other.context
         )
