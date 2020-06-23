@@ -51,6 +51,8 @@ async def _async_reproduce_states(
 
     # Then set the mode before target humidity, because switching modes
     # may invalidate target humidity
+    cur_state = hass.states.get(state.entity_id)
+
     if ATTR_MODE in state.attributes and state.attributes[
         ATTR_MODE
     ] != cur_state.attributes.get(ATTR_MODE):
