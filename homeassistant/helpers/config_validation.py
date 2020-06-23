@@ -465,6 +465,15 @@ def string(value: Any) -> str:
     return str(value)
 
 
+def string_with_no_html(value: Any) -> str:
+    """Validate that the value is a string without HTML."""
+    value = string(value)
+    regex = re.compile(r"<[a-z][\s\S]*>")
+    if regex.search(value):
+        raise vol.Invalid("the string should not contain HTML")
+    return str(value)
+
+
 def temperature_unit(value: Any) -> str:
     """Validate and transform temperature unit."""
     value = str(value).upper()
@@ -648,30 +657,30 @@ def deprecated(
 
     if replacement_key and invalidation_version:
         warning = (
-            "The '{key}' option (with value '{value}') is"
-            " deprecated, please replace it with '{replacement_key}'."
-            " This option will become invalid in version"
+            "The '{key}' option is deprecated,"
+            " please replace it with '{replacement_key}'."
+            " This option {invalidation_status} invalid in version"
             " {invalidation_version}"
         )
     elif replacement_key:
         warning = (
-            "The '{key}' option (with value '{value}') is"
-            " deprecated, please replace it with '{replacement_key}'"
+            "The '{key}' option is deprecated,"
+            " please replace it with '{replacement_key}'"
         )
     elif invalidation_version:
         warning = (
-            "The '{key}' option (with value '{value}') is"
-            " deprecated, please remove it from your configuration."
-            " This option will become invalid in version"
+            "The '{key}' option is deprecated,"
+            " please remove it from your configuration."
+            " This option {invalidation_status} invalid in version"
             " {invalidation_version}"
         )
     else:
         warning = (
-            "The '{key}' option (with value '{value}') is"
-            " deprecated, please remove it from your configuration"
+            "The '{key}' option is deprecated,"
+            " please remove it from your configuration"
         )
 
-    def check_for_invalid_version(value: Optional[Any]) -> None:
+    def check_for_invalid_version() -> None:
         """Raise error if current version has reached invalidation."""
         if not invalidation_version:
             return
@@ -680,8 +689,8 @@ def deprecated(
             raise vol.Invalid(
                 warning.format(
                     key=key,
-                    value=value,
                     replacement_key=replacement_key,
+                    invalidation_status="became",
                     invalidation_version=invalidation_version,
                 )
             )
@@ -689,19 +698,21 @@ def deprecated(
     def validator(config: Dict) -> Dict:
         """Check if key is in config and log warning."""
         if key in config:
-            value = config[key]
-            check_for_invalid_version(value)
+            check_for_invalid_version()
             KeywordStyleAdapter(logging.getLogger(module_name)).warning(
                 warning,
                 key=key,
-                value=value,
                 replacement_key=replacement_key,
+                invalidation_status="will become",
                 invalidation_version=invalidation_version,
             )
+
+            value = config[key]
             if replacement_key:
                 config.pop(key)
         else:
             value = default
+
         keys = [key]
         if replacement_key:
             keys.append(replacement_key)
@@ -833,7 +844,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_CONDITION): "numeric_state",
-            vol.Required(CONF_ENTITY_ID): entity_id,
+            vol.Required(CONF_ENTITY_ID): entity_ids,
             CONF_BELOW: vol.Coerce(float),
             CONF_ABOVE: vol.Coerce(float),
             vol.Optional(CONF_VALUE_TEMPLATE): template,
@@ -846,8 +857,8 @@ STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_CONDITION): "state",
-            vol.Required(CONF_ENTITY_ID): entity_id,
-            vol.Required(CONF_STATE): str,
+            vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Required(CONF_STATE): vol.Any(str, [str]),
             vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
@@ -894,8 +905,8 @@ TIME_CONDITION_SCHEMA = vol.All(
 ZONE_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "zone",
-        vol.Required(CONF_ENTITY_ID): entity_id,
-        "zone": entity_id,
+        vol.Required(CONF_ENTITY_ID): entity_ids,
+        "zone": entity_ids,
         # To support use_trigger_value in automation
         # Deprecated 2016/04/25
         vol.Optional("event"): vol.Any("enter", "leave"),
@@ -916,6 +927,17 @@ AND_CONDITION_SCHEMA = vol.Schema(
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "or",
+        vol.Required("conditions"): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
+NOT_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONDITION): "not",
         vol.Required("conditions"): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
@@ -945,6 +967,7 @@ CONDITION_SCHEMA: vol.Schema = key_value_schemas(
         "zone": ZONE_CONDITION_SCHEMA,
         "and": AND_CONDITION_SCHEMA,
         "or": OR_CONDITION_SCHEMA,
+        "not": NOT_CONDITION_SCHEMA,
         "device": DEVICE_CONDITION_SCHEMA,
     },
 )

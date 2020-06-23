@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Adressen er allerede konfigurert."
+            "address_exists": "Adressen er allerede satt opp."
         },
         "error": {
             "connection_error": "Tilkobling mislyktes.",
@@ -15,7 +15,7 @@
                     "post_code": "Postnummer"
                 },
                 "description": "Sett opp Twente Milieu som gir informasjon om innsamling av avfall p\u00e5 adressen din.",
-                "title": "Twente Milieu"
+                "title": ""
             }
         }
     }

@@ -7,8 +7,8 @@
         "data": {
           "protocol": "Protocol",
           "address": "The IP address or domain or serial port if connecting via serial.",
-          "username": "Username (secure only).",
-          "password": "Password (secure only).",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "prefix": "A unique prefix (leave blank if you only have one ElkM1).",
           "temperature_unit": "The temperature unit ElkM1 uses."
         }

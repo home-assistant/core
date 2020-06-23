@@ -1,5 +1,6 @@
 """Light platform support for yeelight."""
 import logging
+from typing import Optional
 
 import voluptuous as vol
 import yeelight
@@ -29,7 +30,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_NAME
 from homeassistant.core import callback
@@ -125,24 +126,6 @@ YEELIGHT_COLOR_EFFECT_LIST = [
     EFFECT_SLOWDOWN,
     *YEELIGHT_MONO_EFFECT_LIST,
 ]
-
-MODEL_TO_DEVICE_TYPE = {
-    "mono": BulbType.White,
-    "mono1": BulbType.White,
-    "color": BulbType.Color,
-    "color1": BulbType.Color,
-    "color2": BulbType.Color,
-    "strip1": BulbType.Color,
-    "bslamp1": BulbType.Color,
-    "bslamp2": BulbType.Color,
-    "RGBW": BulbType.Color,
-    "lamp1": BulbType.WhiteTemp,
-    "ceiling1": BulbType.WhiteTemp,
-    "ceiling2": BulbType.WhiteTemp,
-    "ceiling3": BulbType.WhiteTemp,
-    "ceiling4": BulbType.WhiteTempMood,
-    "ceiling13": BulbType.WhiteTemp,
-}
 
 EFFECTS_MAP = {
     EFFECT_DISCO: yee_transitions.disco,
@@ -272,10 +255,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     lights = []
 
-    if device.model:
-        device_type = MODEL_TO_DEVICE_TYPE.get(device.model, None)
-    else:
-        device_type = device.type
+    device_type = device.type
 
     def _lights_setup_helper(klass):
         lights.append(klass(device, custom_effects=custom_effects))
@@ -426,7 +406,7 @@ def setup_services(hass):
     )
 
 
-class YeelightGenericLight(Light):
+class YeelightGenericLight(LightEntity):
     """Representation of a Yeelight generic light."""
 
     def __init__(self, device, custom_effects=None):
@@ -468,6 +448,12 @@ class YeelightGenericLight(Light):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+
+        return self.device.unique_id
 
     @property
     def available(self) -> bool:
@@ -902,6 +888,16 @@ class YeelightNightLightMode(YeelightGenericLight):
     """Representation of a Yeelight when in nightlight mode."""
 
     @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        unique = super().unique_id
+
+        if unique:
+            return unique + "-nightlight"
+
+        return None
+
+    @property
     def name(self) -> str:
         """Return the name of the device if any."""
         return f"{self.device.name} nightlight"
@@ -983,6 +979,14 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
         self._max_mireds = kelvin_to_mired(1700)
 
         self._light_type = LightType.Ambient
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        unique = super().unique_id
+
+        if unique:
+            return unique + "-ambilight"
 
     @property
     def name(self) -> str:

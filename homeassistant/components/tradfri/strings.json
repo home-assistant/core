@@ -4,7 +4,10 @@
       "auth": {
         "title": "Enter security code",
         "description": "You can find the security code on the back of your gateway.",
-        "data": { "host": "Host", "security_code": "Security Code" }
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "security_code": "Security Code"
+        }
       }
     },
     "error": {

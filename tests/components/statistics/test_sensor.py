@@ -2,9 +2,6 @@
 from datetime import datetime, timedelta
 import statistics
 import unittest
-from unittest.mock import patch
-
-import pytest
 
 from homeassistant.components import recorder
 from homeassistant.components.statistics.sensor import StatisticsSensor
@@ -12,11 +9,13 @@ from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CE
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     fire_time_changed,
     get_test_home_assistant,
     init_recorder_component,
 )
+from tests.components.recorder.common import wait_recording_done
 
 
 class TestStatisticsSensor(unittest.TestCase):
@@ -57,6 +56,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -82,6 +82,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -121,6 +122,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -150,6 +152,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -197,6 +200,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -238,6 +242,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -291,6 +296,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 },
             )
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 
@@ -314,11 +320,12 @@ class TestStatisticsSensor(unittest.TestCase):
         ) == state.attributes.get("max_age")
         assert self.change_rate == state.attributes.get("change_rate")
 
-    @pytest.mark.skip("Flaky in CI")
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
         # enable the recorder
         init_recorder_component(self.hass)
+        self.hass.block_till_done()
+        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
         # store some values
         for value in self.values:
             self.hass.states.set(
@@ -326,7 +333,7 @@ class TestStatisticsSensor(unittest.TestCase):
             )
             self.hass.block_till_done()
         # wait for the recorder to really store the data
-        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+        wait_recording_done(self.hass)
         # only now create the statistics component, so that it must read the
         # data from the database
         assert setup_component(
@@ -342,6 +349,7 @@ class TestStatisticsSensor(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -349,7 +357,6 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test")
         assert str(self.mean) == state.state
 
-    @pytest.mark.skip("Flaky in CI")
     def test_initialize_from_database_with_maxage(self):
         """Test initializing the statistics from the database."""
         mock_data = {
@@ -373,6 +380,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
         # enable the recorder
         init_recorder_component(self.hass)
+        self.hass.block_till_done()
+        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
 
         with patch(
             "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
@@ -389,7 +398,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 mock_data["return_time"] += timedelta(hours=1)
 
             # wait for the recorder to really store the data
-            self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+            wait_recording_done(self.hass)
             # only now create the statistics component, so that it must read
             # the data from the database
             assert setup_component(
@@ -407,6 +416,7 @@ class TestStatisticsSensor(unittest.TestCase):
             )
             self.hass.block_till_done()
 
+            self.hass.block_till_done()
             self.hass.start()
             self.hass.block_till_done()
 

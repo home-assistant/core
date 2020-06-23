@@ -6,7 +6,7 @@ import snapcast.control
 from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE,
@@ -110,7 +110,7 @@ async def handle_set_latency(entity, service_call):
     await entity.async_set_latency(service_call.data[ATTR_LATENCY])
 
 
-class SnapcastGroupDevice(MediaPlayerDevice):
+class SnapcastGroupDevice(MediaPlayerEntity):
     """Representation of a Snapcast group device."""
 
     def __init__(self, group, uid_part):
@@ -200,7 +200,7 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         await self._group.restore()
 
 
-class SnapcastClientDevice(MediaPlayerDevice):
+class SnapcastClientDevice(MediaPlayerEntity):
     """Representation of a Snapcast client device."""
 
     def __init__(self, client, uid_part):

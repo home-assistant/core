@@ -8,7 +8,7 @@ from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
     FORMAT_TEXT,
     PLATFORM_SCHEMA,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -108,7 +108,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class IFTTTAlarmPanel(AlarmControlPanel):
+class IFTTTAlarmPanel(AlarmControlPanelEntity):
     """Representation of an alarm control panel controlled through IFTTT."""
 
     def __init__(

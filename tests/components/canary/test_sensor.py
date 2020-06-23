@@ -1,7 +1,6 @@
 """The tests for the Canary sensor platform."""
 import copy
 import unittest
-from unittest.mock import Mock
 
 from homeassistant.components.canary import DATA_CANARY, sensor as canary
 from homeassistant.components.canary.sensor import (
@@ -14,6 +13,7 @@ from homeassistant.components.canary.sensor import (
 )
 from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 
+from tests.async_mock import Mock
 from tests.common import get_test_home_assistant
 from tests.components.canary.test_init import mock_device, mock_location
 
@@ -34,10 +34,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         self.config = copy.deepcopy(VALID_CONFIG)
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup_sensors(self):
         """Test the sensor setup."""

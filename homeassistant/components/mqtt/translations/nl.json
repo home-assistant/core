@@ -15,8 +15,7 @@
                     "port": "Poort",
                     "username": "Gebruikersnaam"
                 },
-                "description": "MQTT",
-                "title": "MQTT"
+                "description": "MQTT"
             },
             "hassio_confirm": {
                 "data": {
@@ -25,6 +24,17 @@
                 "description": "Wilt u Home Assistant configureren om verbinding te maken met de MQTT-broker die wordt aangeboden door de hass.io add-on {addon} ?",
                 "title": "MQTTT Broker via Hass.io add-on"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Eerste knop",
+            "button_2": "Tweede knop",
+            "button_3": "Derde knop",
+            "button_4": "Vierde knop",
+            "button_5": "Vijfde knop",
+            "button_6": "Zesde knop",
+            "turn_off": "Uitschakelen"
         }
     }
 }

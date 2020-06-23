@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
 import unittest
-from unittest.mock import patch
 
 import pytest
 import pytz
@@ -14,6 +13,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -23,10 +23,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_setup(self):
         """Test the history statistics sensor setup."""
@@ -45,6 +42,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         }
 
         assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
         assert state.state == STATE_UNKNOWN

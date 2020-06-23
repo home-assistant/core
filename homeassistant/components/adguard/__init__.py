@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
+    if version and LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
         _LOGGER.error(
             "This integration requires AdGuard Home v0.99.0 or higher to work correctly"
         )
@@ -206,4 +206,5 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
             "name": "AdGuard Home",
             "manufacturer": "AdGuard Team",
             "sw_version": self.hass.data[DOMAIN].get(DATA_ADGUARD_VERION),
+            "entry_type": "service",
         }

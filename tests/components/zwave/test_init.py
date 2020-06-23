@@ -3,7 +3,6 @@ import asyncio
 from collections import OrderedDict
 from datetime import datetime
 import unittest
-from unittest.mock import MagicMock, patch
 
 import pytest
 from pytz import utc
@@ -23,14 +22,14 @@ from homeassistant.helpers.device_registry import async_get_registry as get_dev_
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.setup import setup_component
 
-from tests.common import (
-    async_fire_time_changed,
-    get_test_home_assistant,
-    mock_coro,
-    mock_registry,
-    mock_storage,
-)
+from tests.async_mock import AsyncMock, MagicMock, patch
+from tests.common import async_fire_time_changed, get_test_home_assistant, mock_registry
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
+
+
+@pytest.fixture(autouse=True)
+def mock_storage(hass_storage):
+    """Autouse hass_storage for the TestCase tests."""
 
 
 async def test_valid_device_config(hass, mock_openzwave):
@@ -829,8 +828,6 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
         self.hass.start()
         self.registry = mock_registry(self.hass)
 
@@ -862,17 +859,17 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.entity_id = "mock_component.mock_node_mock_value"
         self.zwave_config = {"zwave": {}}
         self.device_config = {self.entity_id: {}}
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
-        self.mock_storage.__exit__(None, None, None)
 
     @patch.object(zwave, "import_module")
     @patch.object(zwave, "discovery")
     def test_entity_discovery(self, discovery, import_module):
         """Test the creation of a new entity."""
-        discovery.async_load_platform.return_value = mock_coro()
+        discovery.async_load_platform = AsyncMock(return_value=None)
         mock_platform = MagicMock()
         import_module.return_value = mock_platform
         mock_device = MagicMock()
@@ -934,7 +931,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, "discovery")
     def test_entity_existing_values(self, discovery, import_module):
         """Test the loading of already discovered values."""
-        discovery.async_load_platform.return_value = mock_coro()
+        discovery.async_load_platform = AsyncMock(return_value=None)
         mock_platform = MagicMock()
         import_module.return_value = mock_platform
         mock_device = MagicMock()
@@ -1002,7 +999,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, "discovery")
     def test_entity_workaround_component(self, discovery, import_module):
         """Test component workaround."""
-        discovery.async_load_platform.return_value = mock_coro()
+        discovery.async_load_platform = AsyncMock(return_value=None)
         mock_platform = MagicMock()
         import_module.return_value = mock_platform
         mock_device = MagicMock()
@@ -1199,8 +1196,6 @@ class TestZWaveServices(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
         self.hass.start()
 
         # Initialize zwave
@@ -1210,13 +1205,13 @@ class TestZWaveServices(unittest.TestCase):
         self.zwave_network.state = MockNetwork.STATE_READY
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.services.call("zwave", "stop_network", {})
         self.hass.block_till_done()
         self.hass.stop()
-        self.mock_storage.__exit__(None, None, None)
 
     def test_add_node(self):
         """Test zwave add_node service."""

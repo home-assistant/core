@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_CODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
@@ -74,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class AlarmDecoderAlarmPanel(AlarmControlPanel):
+class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     def __init__(self, auto_bypass, code_arm_required):
@@ -108,6 +109,8 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
             self._state = STATE_ALARM_TRIGGERED
         elif message.armed_away:
             self._state = STATE_ALARM_ARMED_AWAY
+        elif message.armed_home and (message.entry_delay_off or message.perimeter_only):
+            self._state = STATE_ALARM_ARMED_NIGHT
         elif message.armed_home:
             self._state = STATE_ALARM_ARMED_HOME
         else:
@@ -178,28 +181,27 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if code:
-            if self._auto_bypass:
-                self.hass.data[DATA_AD].send(f"{code!s}6#")
-            self.hass.data[DATA_AD].send(f"{code!s}2")
-        elif not self._code_arm_required:
-            self.hass.data[DATA_AD].send("#2")
+        self.hass.data[DATA_AD].arm_away(
+            code=code,
+            code_arm_required=self._code_arm_required,
+            auto_bypass=self._auto_bypass,
+        )
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if code:
-            if self._auto_bypass:
-                self.hass.data[DATA_AD].send(f"{code!s}6#")
-            self.hass.data[DATA_AD].send(f"{code!s}3")
-        elif not self._code_arm_required:
-            self.hass.data[DATA_AD].send("#3")
+        self.hass.data[DATA_AD].arm_home(
+            code=code,
+            code_arm_required=self._code_arm_required,
+            auto_bypass=self._auto_bypass,
+        )
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        if code:
-            self.hass.data[DATA_AD].send(f"{code!s}7")
-        elif not self._code_arm_required:
-            self.hass.data[DATA_AD].send("#7")
+        self.hass.data[DATA_AD].arm_night(
+            code=code,
+            code_arm_required=self._code_arm_required,
+            auto_bypass=self._auto_bypass,
+        )
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""

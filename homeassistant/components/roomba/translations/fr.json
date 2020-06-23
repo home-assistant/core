@@ -1,33 +1,29 @@
 {
-  "config": {
-    "title": "iRobot Roomba",
-    "step": {
-      "user": {
-        "title": "Connexion au périphérique",
-	"description": "Actuellement la récupération du BLID et du mot de passe nécessite une procédure manuelle. Veuillez suivre les étapes décrites dans la documentation sur: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",	
-        "data": {
-          "host": "Nom ou Addresse IP",
-          "blid": "BLID",
-          "password": "Mot de passe",
-          "certificate": "Certificat",
-          "continuous": "Continue",
-          "delay": "Delais"
+    "config": {
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "En continu",
+                    "delay": "D\u00e9lai",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "password": "Mot de passe"
+                },
+                "title": "Se connecter \u00e0 l'appareil"
+            }
         }
-      }
     },
-    "error": {
-      "unknown" : "Erreur imprévu",    
-      "cannot_connect": "Impossible de se connecter"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "continuous": "Continue",
-          "delay": "Delais"
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Continue",
+                    "delay": "D\u00e9lai"
+                }
+            }
         }
-      }
     }
-  }
 }

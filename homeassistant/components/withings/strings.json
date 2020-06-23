@@ -1,16 +1,25 @@
 {
   "config": {
+    "flow_title": "Withings: {profile}",
     "step": {
       "profile": {
         "title": "User Profile.",
-        "description": "Which profile did you select on the Withings website? It's important the profiles match, otherwise data will be mis-labeled.",
-        "data": { "profile": "Profile" }
+        "description": "Provide a unique profile name for this data. Typically this is the name of the profile you selected in the previous step.",
+        "data": { "profile": "Profile Name" }
       },
-      "pick_implementation": { "title": "Pick Authentication Method" }
+      "pick_implementation": { "title": "Pick Authentication Method" },
+      "reauth": {
+        "title": "Re-authenticate Profile",
+        "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."
+      }
+    },
+    "error": {
+      "profile_exists": "User profile is already configured. Please provide a unique profile name."
     },
     "abort": {
       "authorize_url_timeout": "Timeout generating authorize url.",
-      "missing_configuration": "The Withings integration is not configured. Please follow the documentation."
+      "missing_configuration": "The Withings integration is not configured. Please follow the documentation.",
+      "already_configured": "Configuration updated for profile."
     },
     "create_entry": { "default": "Successfully authenticated with Withings." }
   }

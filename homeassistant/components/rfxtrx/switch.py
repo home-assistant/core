@@ -4,7 +4,7 @@ import logging
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_NAME, STATE_ON
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         RECEIVED_EVT_SUBSCRIBERS.append(switch_update)
 
 
-class RfxtrxSwitch(RfxtrxDevice, SwitchDevice, RestoreEntity):
+class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
     """Representation of a RFXtrx switch."""
 
     async def async_added_to_hass(self):

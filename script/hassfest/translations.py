@@ -1,5 +1,6 @@
 """Validate integration translation files."""
 from functools import partial
+from itertools import chain
 import json
 import logging
 import re
@@ -90,20 +91,20 @@ def gen_data_entry_schema(
     """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
     schema = {
-        vol.Optional("flow_title"): str,
+        vol.Optional("flow_title"): cv.string_with_no_html,
         vol.Required("step"): {
             str: {
-                step_title_class("title"): str,
-                vol.Optional("description"): str,
-                vol.Optional("data"): {str: str},
+                step_title_class("title"): cv.string_with_no_html,
+                vol.Optional("description"): cv.string_with_no_html,
+                vol.Optional("data"): {str: cv.string_with_no_html},
             }
         },
-        vol.Optional("error"): {str: str},
-        vol.Optional("abort"): {str: str},
-        vol.Optional("create_entry"): {str: str},
+        vol.Optional("error"): {str: cv.string_with_no_html},
+        vol.Optional("abort"): {str: cv.string_with_no_html},
+        vol.Optional("create_entry"): {str: cv.string_with_no_html},
     }
     if flow_title == REQUIRED:
-        schema[vol.Required("title")] = str
+        schema[vol.Required("title")] = cv.string_with_no_html
     elif flow_title == REMOVED:
         schema[vol.Optional("title", msg=REMOVED_TITLE_MSG)] = partial(
             removed_title_validator, config, integration
@@ -116,12 +117,12 @@ def gen_strings_schema(config: Config, integration: Integration):
     """Generate a strings schema."""
     return vol.Schema(
         {
-            vol.Optional("title"): str,
+            vol.Optional("title"): cv.string_with_no_html,
             vol.Optional("config"): gen_data_entry_schema(
                 config=config,
                 integration=integration,
                 flow_title=REMOVED,
-                require_step_title=True,
+                require_step_title=False,
             ),
             vol.Optional("options"): gen_data_entry_schema(
                 config=config,
@@ -130,10 +131,10 @@ def gen_strings_schema(config: Config, integration: Integration):
                 require_step_title=False,
             ),
             vol.Optional("device_automation"): {
-                vol.Optional("action_type"): {str: str},
-                vol.Optional("condition_type"): {str: str},
-                vol.Optional("trigger_type"): {str: str},
-                vol.Optional("trigger_subtype"): {str: str},
+                vol.Optional("action_type"): {str: cv.string_with_no_html},
+                vol.Optional("condition_type"): {str: cv.string_with_no_html},
+                vol.Optional("trigger_type"): {str: cv.string_with_no_html},
+                vol.Optional("trigger_subtype"): {str: cv.string_with_no_html},
             },
             vol.Optional("state"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
@@ -179,7 +180,7 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
         """
         if not value.startswith(f"{integration.domain}__"):
             raise vol.Invalid(
-                f"Device class need to start with '{integration.domain}__'. Key {value} is invalid"
+                f"Device class need to start with '{integration.domain}__'. Key {value} is invalid. See https://developers.home-assistant.io/docs/internationalization/core#stringssensorjson"
             )
 
         slug_friendly = value.replace("__", "_", 1)
@@ -202,7 +203,7 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
     )
 
 
-ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: str}})
+ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: cv.string_with_no_html}})
 
 
 def validate_translation_file(config: Config, integration: Integration, all_strings):
@@ -210,34 +211,61 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
     if config.specific_integrations:
         check_translations_directory_name(integration)
 
-    strings_file = integration.path / "strings.json"
+    strings_files = [integration.path / "strings.json"]
+
+    # Also validate translations for custom integrations
+    if config.specific_integrations:
+        # Only English needs to be always complete
+        strings_files.append(integration.path / "translations/en.json")
+
     references = []
 
-    if strings_file.is_file():
-        strings = json.loads(strings_file.read_text())
+    if integration.domain == "auth":
+        strings_schema = gen_auth_schema(config, integration)
+    elif integration.domain == "onboarding":
+        strings_schema = ONBOARDING_SCHEMA
+    else:
+        strings_schema = gen_strings_schema(config, integration)
 
-        if integration.domain == "auth":
-            schema = gen_auth_schema(config, integration)
-        elif integration.domain == "onboarding":
-            schema = ONBOARDING_SCHEMA
-        else:
-            schema = gen_strings_schema(config, integration)
+    for strings_file in strings_files:
+        if not strings_file.is_file():
+            continue
+
+        name = str(strings_file.relative_to(integration.path))
 
         try:
-            schema(strings)
+            strings = json.loads(strings_file.read_text())
+        except ValueError as err:
+            integration.add_error("translations", f"Invalid JSON in {name}: {err}")
+            continue
+
+        try:
+            strings_schema(strings)
         except vol.Invalid as err:
             integration.add_error(
-                "translations", f"Invalid strings.json: {humanize_error(strings, err)}"
+                "translations", f"Invalid {name}: {humanize_error(strings, err)}"
             )
         else:
-            find_references(strings, "strings.json", references)
+            if strings_file.name == "strings.json":
+                find_references(strings, name, references)
 
-    for path in integration.path.glob("strings.*.json"):
-        strings = json.loads(path.read_text())
-        schema = gen_platform_strings_schema(config, integration)
+    platform_string_schema = gen_platform_strings_schema(config, integration)
+    platform_strings = [integration.path.glob("strings.*.json")]
+
+    if config.specific_integrations:
+        platform_strings.append(integration.path.glob("translations/*.en.json"))
+
+    for path in chain(*platform_strings):
+        name = str(path.relative_to(integration.path))
 
         try:
-            schema(strings)
+            strings = json.loads(path.read_text())
+        except ValueError as err:
+            integration.add_error("translations", f"Invalid JSON in {name}: {err}")
+            continue
+
+        try:
+            platform_string_schema(strings)
         except vol.Invalid as err:
             msg = f"Invalid {path.name}: {humanize_error(strings, err)}"
             if config.specific_integrations:

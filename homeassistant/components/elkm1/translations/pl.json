@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "ElkM1 z tym adresem jest ju\u017c skonfigurowany.",
+            "already_configured": "ElkM1 z tym prefiksem jest ju\u017c skonfigurowany."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "invalid_auth": "Niepoprawne uwierzytelnienie.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Adres IP, domena lub port szeregowy w przypadku po\u0142\u0105czenia szeregowego.",
+                    "password": "Has\u0142o",
+                    "prefix": "Unikatowy prefiks (pozostaw pusty, je\u015bli masz tylko jeden ElkM1).",
+                    "protocol": "Protok\u00f3\u0142",
+                    "temperature_unit": "Jednostka temperatury u\u017cywanej przez ElkM1.",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Adres musi by\u0107 w postaci 'adres[:port]' dla tryb\u00f3w 'zabezpieczony' i 'niezabezpieczony'. Przyk\u0142ad: '192.168.1.1'. Port jest opcjonalny i domy\u015blnie ustawiony na 2101 dla po\u0142\u0105cze\u0144 'niezabezpieczonych' i 2601 dla 'zabezpieczonych'. W przypadku protoko\u0142u szeregowego adres musi by\u0107 w formie 'tty[:baudrate]'. Przyk\u0142ad: '/dev/ttyS1'. Warto\u015b\u0107 transmisji jest opcjonalna i domy\u015blnie wynosi 115200.",
+                "title": "Pod\u0142\u0105czenie do sterownika Elk-M1"
+            }
+        }
+    }
+}

@@ -9,9 +9,7 @@ import threading
 import time
 from typing import Any, Dict, Optional
 
-from sqlalchemy import create_engine, exc, select
-from sqlalchemy.engine import Engine
-from sqlalchemy.event import listens_for
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 import voluptuous as vol
@@ -125,24 +123,39 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
 
     There is also the run that covers point_in_time.
     """
+    run_info = run_information_from_instance(hass, point_in_time)
+    if run_info:
+        return run_info
+
+    with session_scope(hass=hass) as session:
+        return run_information_with_session(session, point_in_time)
+
+
+def run_information_from_instance(hass, point_in_time: Optional[datetime] = None):
+    """Return information about current run from the existing instance.
+
+    Does not query the database for older runs.
+    """
     ins = hass.data[DATA_INSTANCE]
 
-    recorder_runs = RecorderRuns
     if point_in_time is None or point_in_time > ins.recording_start:
         return ins.run_info
 
-    with session_scope(hass=hass) as session:
-        res = (
-            session.query(recorder_runs)
-            .filter(
-                (recorder_runs.start < point_in_time)
-                & (recorder_runs.end > point_in_time)
-            )
-            .first()
+
+def run_information_with_session(session, point_in_time: Optional[datetime] = None):
+    """Return information about current run from the database."""
+    recorder_runs = RecorderRuns
+
+    query = session.query(recorder_runs)
+    if point_in_time:
+        query = query.filter(
+            (recorder_runs.start < point_in_time) & (recorder_runs.end > point_in_time)
         )
-        if res:
-            session.expunge(res)
-        return res
+
+    res = query.first()
+    if res:
+        session.expunge(res)
+    return res
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -229,8 +242,10 @@ class Recorder(threading.Thread):
 
         self._timechanges_seen = 0
         self._keepalive_count = 0
+        self._old_state_ids = {}
         self.event_session = None
         self.get_session = None
+        self._completed_database_setup = False
 
     @callback
     def async_initialize(self):
@@ -370,6 +385,8 @@ class Recorder(threading.Thread):
 
             try:
                 dbevent = Events.from_event(event)
+                if event.event_type == EVENT_STATE_CHANGED:
+                    dbevent.event_data = "{}"
                 self.event_session.add(dbevent)
                 self.event_session.flush()
             except (TypeError, ValueError):
@@ -381,8 +398,14 @@ class Recorder(threading.Thread):
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
                     dbstate = States.from_event(event)
+                    dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
+                    self.event_session.flush()
+                    if "new_state" in event.data:
+                        self._old_state_ids[dbstate.entity_id] = dbstate.state_id
+                    elif dbstate.entity_id in self._old_state_ids:
+                        del self._old_state_ids[dbstate.entity_id]
                 except (TypeError, ValueError):
                     _LOGGER.warning(
                         "State is not JSON serializable: %s",
@@ -488,21 +511,26 @@ class Recorder(threading.Thread):
         """Ensure database is ready to fly."""
         kwargs = {}
 
-        # pylint: disable=unused-variable
-        @listens_for(Engine, "connect")
-        def setup_connection(dbapi_connection, connection_record):
+        def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
+
+            if self._completed_database_setup:
+                return
 
             # We do not import sqlite3 here so mysql/other
             # users do not have to pay for it to be loaded in
             # memory
-            if self.db_url == "sqlite://" or ":memory:" in self.db_url:
+            if self.db_url.startswith("sqlite://"):
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
                 cursor = dbapi_connection.cursor()
                 cursor.execute("PRAGMA journal_mode=WAL")
                 cursor.close()
                 dbapi_connection.isolation_level = old_isolation
+                # WAL mode only needs to be setup once
+                # instead of every time we open the sqlite connection
+                # as its persistent and isn't free to call every time.
+                self._completed_database_setup = True
             elif self.db_url.startswith("mysql"):
                 cursor = dbapi_connection.cursor()
                 cursor.execute("SET session wait_timeout=28800")
@@ -519,6 +547,9 @@ class Recorder(threading.Thread):
             self.engine.dispose()
 
         self.engine = create_engine(self.db_url, **kwargs)
+
+        sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
+
         Base.metadata.create_all(self.engine)
         self.get_session = scoped_session(sessionmaker(bind=self.engine))
 

@@ -16,15 +16,12 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
                     "password": "Wachtwoord",
-                    "port": "Poort",
                     "ssl": "AdGuard Home maakt gebruik van een SSL certificaat",
                     "username": "Gebruikersnaam",
                     "verify_ssl": "AdGuard Home maakt gebruik van een goed certificaat"
                 },
-                "description": "Stel uw AdGuard Home-instantie in om toezicht en controle mogelijk te maken.",
-                "title": "Link uw AdGuard Home."
+                "description": "Stel uw AdGuard Home-instantie in om toezicht en controle mogelijk te maken."
             }
         }
     }

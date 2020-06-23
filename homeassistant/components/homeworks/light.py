@@ -3,7 +3,11 @@ import logging
 
 from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -28,7 +32,7 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     add_entities(devs, True)
 
 
-class HomeworksLight(HomeworksDevice, Light):
+class HomeworksLight(HomeworksDevice, LightEntity):
     """Homeworks Light."""
 
     def __init__(self, controller, addr, name, rate):

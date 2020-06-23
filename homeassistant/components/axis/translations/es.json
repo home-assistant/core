@@ -8,7 +8,7 @@
         },
         "error": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n del dispositivo ya est\u00e1 en curso.",
+            "already_in_progress": "El flujo de configuraci\u00f3n del dispositivo ya est\u00e1 en marcha.",
             "device_unavailable": "El dispositivo no est\u00e1 disponible",
             "faulty_credentials": "Credenciales de usuario incorrectas"
         },
@@ -25,5 +25,14 @@
             }
         }
     },
-    "title": "Dispositivo Axis"
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Selecciona el perfil de transmisi\u00f3n a usar"
+                },
+                "title": "Opciones de transmisi\u00f3n de v\u00eddeo del dispositivo Axis"
+            }
+        }
+    }
 }

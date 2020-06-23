@@ -3,7 +3,6 @@
 import asyncio
 
 import aiodns
-from asynctest import patch
 from mcstatus.pinger import PingResponse
 
 from homeassistant.components.minecraft_server.const import (
@@ -20,6 +19,7 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -68,12 +68,12 @@ USER_INPUT_IPV6 = {
 
 USER_INPUT_PORT_TOO_SMALL = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: f"mc.dummyserver.com:1023",
+    CONF_HOST: "mc.dummyserver.com:1023",
 }
 
 USER_INPUT_PORT_TOO_LARGE = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: f"mc.dummyserver.com:65536",
+    CONF_HOST: "mc.dummyserver.com:65536",
 }
 
 SRV_RECORDS = asyncio.Future()

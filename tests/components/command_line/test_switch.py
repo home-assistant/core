@@ -20,10 +20,7 @@ class TestCommandSwitch(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_state_none(self):
         """Test with none state."""
@@ -43,6 +40,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
@@ -79,6 +77,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
@@ -117,6 +116,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
+            self.hass.block_till_done()
 
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
@@ -152,7 +152,7 @@ class TestCommandSwitch(unittest.TestCase):
                     }
                 },
             )
-
+            self.hass.block_till_done()
             state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 

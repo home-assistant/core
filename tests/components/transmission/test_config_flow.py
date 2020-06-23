@@ -1,6 +1,5 @@
 """Tests for Transmission config flow."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 from transmissionrpc.error import TransmissionError
@@ -22,6 +21,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 NAME = "Transmission"

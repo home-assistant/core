@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "De configuratiestroom voor dit Xiaomi Miio-apparaat is al bezig."
+        },
+        "error": {
+            "connect_error": "Verbinding mislukt, probeer het opnieuw",
+            "no_device_selected": "Geen apparaat geselecteerd, selecteer 1 apparaat alstublieft"
+        },
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP-adres",
+                    "name": "Naam van de gateway",
+                    "token": "API-token"
+                },
+                "description": "U heeft het API-token nodig, zie https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token voor instructies.",
+                "title": "Maak verbinding met een Xiaomi Gateway"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Maak verbinding met een Xiaomi Gateway"
+                },
+                "description": "Selecteer het apparaat waarmee u verbinding wilt maken",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

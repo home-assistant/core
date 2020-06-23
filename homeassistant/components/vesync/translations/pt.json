@@ -7,7 +7,7 @@
             "user": {
                 "data": {
                     "password": "Palavra-passe",
-                    "username": "Endere\u00e7o de e-mail"
+                    "username": "Endere\u00e7o de email"
                 },
                 "title": "Introduza o nome de utilizador e a palavra-passe"
             }

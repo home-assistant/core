@@ -4,15 +4,14 @@ import os
 import tempfile
 from typing import Tuple
 import unittest
-from unittest.mock import Mock, patch
 
 from homeassistant.components import shell_command
 from homeassistant.setup import setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
 
 
-@asyncio.coroutine
 def mock_process_creator(error: bool = False) -> asyncio.coroutine:
     """Mock a coroutine that creates a process when yielded."""
 
@@ -41,8 +40,9 @@ class TestShellCommand(unittest.TestCase):
         """
         self.hass = get_test_home_assistant()
         asyncio.get_child_watcher().attach_loop(self.hass.loop)
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

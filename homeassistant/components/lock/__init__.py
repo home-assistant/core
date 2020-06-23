@@ -25,6 +25,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_CHANGED_BY = "changed_by"
 
 DOMAIN = "lock"
@@ -75,7 +77,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class LockDevice(Entity):
+class LockEntity(Entity):
     """Representation of a lock."""
 
     @property
@@ -134,3 +136,14 @@ class LockDevice(Entity):
         if locked is None:
             return None
         return STATE_LOCKED if locked else STATE_UNLOCKED
+
+
+class LockDevice(LockEntity):
+    """Representation of a lock (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "LockDevice is deprecated, modify %s to extend LockEntity", cls.__name__,
+        )

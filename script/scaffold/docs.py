@@ -69,7 +69,7 @@ def print_relevant_docs(template: str, info: Info) -> None:
         print()
 
     print(
-        f"The next step is to look at the files and deal with all areas marked as TODO."
+        "The next step is to look at the files and deal with all areas marked as TODO."
     )
 
     if "extra" in data:

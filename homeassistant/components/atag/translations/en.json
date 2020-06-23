@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This device has already been added to HomeAssistant"
+        },
+        "error": {
+            "connection_error": "Failed to connect, please try again",
+            "unauthorized": "Pairing denied, check device for auth request"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email (Optional)",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Connect to the device"
+            }
+        }
+    },
+    "title": "Atag"
+}

@@ -10,6 +10,9 @@ from . import DOMAIN
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to BloomSky cameras."""
+    if discovery_info is not None:
+        return
+
     bloomsky = hass.data[DOMAIN]
 
     for device in bloomsky.devices.values():

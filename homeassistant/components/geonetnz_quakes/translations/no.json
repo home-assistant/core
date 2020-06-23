@@ -6,8 +6,8 @@
         "step": {
             "user": {
                 "data": {
-                    "mmi": "MMI",
-                    "radius": "Radius"
+                    "mmi": "",
+                    "radius": ""
                 },
                 "title": "Fyll ut filterdetaljene."
             }

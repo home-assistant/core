@@ -1,15 +1,15 @@
 """Test the Logitech Harmony Hub config flow."""
-from asynctest import CoroutineMock, MagicMock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN
 
+from tests.async_mock import AsyncMock, MagicMock, patch
+
 
 def _get_mock_harmonyapi(connect=None, close=None):
     harmonyapi_mock = MagicMock()
-    type(harmonyapi_mock).connect = CoroutineMock(return_value=connect)
-    type(harmonyapi_mock).close = CoroutineMock(return_value=close)
+    type(harmonyapi_mock).connect = AsyncMock(return_value=connect)
+    type(harmonyapi_mock).close = AsyncMock(return_value=close)
 
     return harmonyapi_mock
 
@@ -66,6 +66,7 @@ async def test_form_import(hass):
                 "name": "friend",
                 "activity": "Watch TV",
                 "delay_secs": 0.9,
+                "activity_notify": True,
                 "unique_id": "555234534543",
             },
         )
@@ -78,6 +79,7 @@ async def test_form_import(hass):
         "name": "friend",
         "activity": "Watch TV",
         "delay_secs": 0.9,
+        "activity_notify": True,
     }
     # It is not possible to import options at this time
     # so they end up in the config entry data and are
@@ -148,6 +150,7 @@ async def test_form_cannot_connect(hass):
                 "name": "friend",
                 "activity": "Watch TV",
                 "delay_secs": 0.2,
+                "activity_notify": True,
             },
         )
 

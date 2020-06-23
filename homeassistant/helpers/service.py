@@ -431,7 +431,8 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
         # Skip entities that don't have the required feature.
         if required_features is not None and not any(
-            entity.supported_features & feature_set for feature_set in required_features
+            entity.supported_features & feature_set == feature_set
+            for feature_set in required_features
         ):
             continue
 
@@ -504,7 +505,7 @@ def async_register_admin_service(
     """Register a service that requires admin access."""
 
     @wraps(service_func)
-    async def admin_handler(call):
+    async def admin_handler(call: ha.ServiceCall) -> None:
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
             if user is None:
@@ -545,19 +546,25 @@ def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
 
             reg = await hass.helpers.entity_registry.async_get_registry()
 
+            authorized = False
+
             for entity in reg.entities.values():
                 if entity.platform != domain:
                     continue
 
                 if user.permissions.check_entity(entity.entity_id, POLICY_CONTROL):
-                    return await service_handler(call)
+                    authorized = True
+                    break
 
-            raise Unauthorized(
-                context=call.context,
-                permission=POLICY_CONTROL,
-                user_id=call.context.user_id,
-                perm_category=CAT_ENTITIES,
-            )
+            if not authorized:
+                raise Unauthorized(
+                    context=call.context,
+                    permission=POLICY_CONTROL,
+                    user_id=call.context.user_id,
+                    perm_category=CAT_ENTITIES,
+                )
+
+            return await service_handler(call)
 
         return check_permissions
 

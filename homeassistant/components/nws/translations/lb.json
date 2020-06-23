@@ -10,11 +10,13 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Schl\u00ebssel (E-Mail)",
+                    "api_key": "API Schl\u00ebssel",
                     "latitude": "Breedegrad",
                     "longitude": "L\u00e4ngegrad",
                     "station": "METAR Statioun's Code"
-                }
+                },
+                "description": "Falls kee METAR Statioun's Code uginn ass, ginn L\u00e4ngegrad a Breedegrad benotzt fir d'Statioun auszewielen.",
+                "title": "Mam Nationale Wieder D\u00e9ngscht verbannen"
             }
         }
     }

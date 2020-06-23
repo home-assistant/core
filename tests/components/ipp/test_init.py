@@ -1,6 +1,4 @@
 """Tests for the IPP integration."""
-import aiohttp
-
 from homeassistant.components.ipp.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -17,9 +15,7 @@ async def test_config_entry_not_ready(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the IPP configuration entry not ready."""
-    aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=aiohttp.ClientError)
-
-    entry = await init_integration(hass, aioclient_mock)
+    entry = await init_integration(hass, aioclient_mock, conn_error=True)
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 

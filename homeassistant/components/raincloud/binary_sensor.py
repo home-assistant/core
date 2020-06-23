@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class RainCloudBinarySensor(RainCloudEntity, BinarySensorDevice):
+class RainCloudBinarySensor(RainCloudEntity, BinarySensorEntity):
     """A sensor implementation for raincloud device."""
 
     @property

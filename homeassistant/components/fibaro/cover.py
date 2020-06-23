@@ -5,7 +5,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    CoverDevice,
+    CoverEntity,
 )
 
 from . import FIBARO_DEVICES, FibaroDevice
@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class FibaroCover(FibaroDevice, CoverDevice):
+class FibaroCover(FibaroDevice, CoverEntity):
     """Representation a Fibaro Cover."""
 
     def __init__(self, fibaro_device):

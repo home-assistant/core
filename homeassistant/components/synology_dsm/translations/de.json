@@ -4,9 +4,11 @@
             "already_configured": "Host bereits konfiguriert"
         },
         "error": {
+            "connection": "Verbindungsfehler: Bitte \u00fcberpr\u00fcfe Host, Port und SSL",
             "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Benutzernamen & Passwort",
             "missing_data": "Fehlende Daten: Bitte versuchen Sie es sp\u00e4ter noch einmal oder eine andere Konfiguration",
-            "otp_failed": "Die zweistufige Authentifizierung ist fehlgeschlagen. Versuchen Sie es erneut mit einem neuen Code"
+            "otp_failed": "Die zweistufige Authentifizierung ist fehlgeschlagen. Versuchen Sie es erneut mit einem neuen Code",
+            "unknown": "Unbekannter Fehler: Bitte \u00fcberpr\u00fcfen Sie die Protokolle, um weitere Details zu erhalten"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -18,9 +20,8 @@
             },
             "link": {
                 "data": {
-                    "api_version": "DSM-Version",
                     "password": "Passwort",
-                    "port": "Port (optional)",
+                    "port": "Port",
                     "ssl": "Verwenden Sie SSL/TLS, um eine Verbindung zu Ihrem NAS herzustellen",
                     "username": "Benutzername"
                 },
@@ -29,14 +30,22 @@
             },
             "user": {
                 "data": {
-                    "api_version": "DSM-Version",
                     "host": "Host",
                     "password": "Passwort",
-                    "port": "Port (optional)",
+                    "port": "Port",
                     "ssl": "Verwenden Sie SSL/TLS, um eine Verbindung zu Ihrem NAS herzustellen",
                     "username": "Benutzername"
                 },
                 "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minuten zwischen den Scans"
+                }
             }
         }
     }

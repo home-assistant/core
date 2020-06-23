@@ -3,7 +3,6 @@
 from io import StringIO
 import os
 import unittest
-import unittest.mock as mock
 
 import pytest
 
@@ -21,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component, setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant, mock_service, mock_storage
 from tests.components.light import common
 
@@ -32,9 +32,9 @@ class TestLight(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -123,6 +123,7 @@ class TestLight(unittest.TestCase):
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
         )
+        self.hass.block_till_done()
 
         ent1, ent2, ent3 = platform.ENTITIES
 
@@ -263,6 +264,15 @@ class TestLight(unittest.TestCase):
             light.ATTR_HS_COLOR: (prof_h, prof_s),
         } == data
 
+        # Test toggle with parameters
+        common.toggle(self.hass, ent3.entity_id, profile=prof_name, brightness_pct=100)
+        self.hass.block_till_done()
+        _, data = ent3.last_call("turn_on")
+        assert {
+            light.ATTR_BRIGHTNESS: 255,
+            light.ATTR_HS_COLOR: (prof_h, prof_s),
+        } == data
+
         # Test bad data
         common.turn_on(self.hass)
         common.turn_on(self.hass, ent1.entity_id, profile="nonexisting")
@@ -326,6 +336,7 @@ class TestLight(unittest.TestCase):
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
         )
+        self.hass.block_till_done()
 
         ent1, _, _ = platform.ENTITIES
 
@@ -367,12 +378,13 @@ class TestLight(unittest.TestCase):
             return real_open(path, *args, **kwargs)
 
         profile_data = "id,x,y,brightness\ngroup.all_lights.default,.4,.6,99\n"
-        with mock.patch("os.path.isfile", side_effect=_mock_isfile):
-            with mock.patch("builtins.open", side_effect=_mock_open):
-                with mock_storage():
-                    assert setup_component(
-                        self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-                    )
+        with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
+            "builtins.open", side_effect=_mock_open
+        ), mock_storage():
+            assert setup_component(
+                self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+            )
+            self.hass.block_till_done()
 
         ent, _, _ = platform.ENTITIES
         common.turn_on(self.hass, ent.entity_id)
@@ -404,12 +416,13 @@ class TestLight(unittest.TestCase):
             + "group.all_lights.default,.3,.5,200\n"
             + "light.ceiling_2.default,.6,.6,100\n"
         )
-        with mock.patch("os.path.isfile", side_effect=_mock_isfile):
-            with mock.patch("builtins.open", side_effect=_mock_open):
-                with mock_storage():
-                    assert setup_component(
-                        self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-                    )
+        with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
+            "builtins.open", side_effect=_mock_open
+        ), mock_storage():
+            assert setup_component(
+                self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+            )
+            self.hass.block_till_done()
 
         dev = next(
             filter(lambda x: x.entity_id == "light.ceiling_2", platform.ENTITIES)
@@ -425,6 +438,7 @@ async def test_light_context(hass, hass_admin_user):
     platform = getattr(hass.components, "test.light")
     platform.init()
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.ceiling")
     assert state is not None
@@ -448,6 +462,7 @@ async def test_light_turn_on_auth(hass, hass_admin_user):
     platform = getattr(hass.components, "test.light")
     platform.init()
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.ceiling")
     assert state is not None
@@ -472,6 +487,7 @@ async def test_light_brightness_step(hass):
     entity.supported_features = light.SUPPORT_BRIGHTNESS
     entity.brightness = 100
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
@@ -506,6 +522,7 @@ async def test_light_brightness_pct_conversion(hass):
     entity.supported_features = light.SUPPORT_BRIGHTNESS
     entity.brightness = 100
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
@@ -548,3 +565,13 @@ async def test_light_brightness_pct_conversion(hass):
 
     _, data = entity.last_call("turn_on")
     assert data["brightness"] == 255, data
+
+
+def test_deprecated_base_class(caplog):
+    """Test deprecated base class."""
+
+    class CustomLight(light.Light):
+        pass
+
+    CustomLight()
+    assert "Light is deprecated, modify CustomLight" in caplog.text

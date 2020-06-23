@@ -1,8 +1,6 @@
 """The sms component."""
-import asyncio
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -11,10 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, SMS_GATEWAY
+from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = ["sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.isdevice})},
@@ -41,42 +38,19 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Configure Gammu state machine."""
 
-    entry_id = entry.entry_id
-    hass.data[DOMAIN].setdefault(entry_id, {})
-
     device = entry.data[CONF_DEVICE]
-    gateway = gammu.StateMachine()  # pylint: disable=no-member
-    try:
-        gateway.SetConfig(0, dict(Device=device, Connection="at"))
-        gateway.Init()
-    except gammu.GSMError as exc:  # pylint: disable=no-member
-        _LOGGER.error("Failed to initialize, error %s", exc)
+    config = {"Device": device, "Connection": "at"}
+    gateway = await create_sms_gateway(config, hass)
+    if not gateway:
         return False
-    else:
-        hass.data[DOMAIN][SMS_GATEWAY] = gateway
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
-        return True
+    hass.data[DOMAIN][SMS_GATEWAY] = gateway
+
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
 
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if SMS_GATEWAY in hass.data[DOMAIN]:
-            gateway = hass.data[DOMAIN][SMS_GATEWAY]
-            hass.data[DOMAIN].pop(SMS_GATEWAY)
-            gateway.Terminate()
-
-    return unload_ok
+    gateway = hass.data[DOMAIN].pop(SMS_GATEWAY)
+    await gateway.terminate_async()
+    return True

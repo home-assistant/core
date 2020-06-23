@@ -332,7 +332,7 @@ class StatisticsSensor(Entity):
             query = query.order_by(States.last_updated.desc()).limit(
                 self._sampling_size
             )
-            states = execute(query)
+            states = execute(query, to_native=True, validate_entity_ids=False)
 
         for state in reversed(states):
             self._add_state_to_queue(state)

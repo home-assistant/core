@@ -1,6 +1,5 @@
 """Test the Opentherm Gateway config flow."""
 import asyncio
-from unittest.mock import patch
 
 from pyotgw.vars import OTGW_ABOUT
 from serial import SerialException
@@ -13,7 +12,8 @@ from homeassistant.components.opentherm_gw.const import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, PRECISION_HALVES
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_form_user(hass):
@@ -26,16 +26,13 @@ async def test_form_user(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup",
-        return_value=mock_coro(True),
+        "homeassistant.components.opentherm_gw.async_setup", return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry",
-        return_value=mock_coro(True),
+        "homeassistant.components.opentherm_gw.async_setup_entry", return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect",
-        return_value=mock_coro({OTGW_ABOUT: "OpenTherm Gateway 4.2.5"}),
+        "pyotgw.pyotgw.connect", return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
     ) as mock_pyotgw_connect, patch(
-        "pyotgw.pyotgw.disconnect", return_value=mock_coro(None)
+        "pyotgw.pyotgw.disconnect", return_value=None
     ) as mock_pyotgw_disconnect:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
@@ -59,16 +56,13 @@ async def test_form_import(hass):
     """Test import from existing config."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup",
-        return_value=mock_coro(True),
+        "homeassistant.components.opentherm_gw.async_setup", return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry",
-        return_value=mock_coro(True),
+        "homeassistant.components.opentherm_gw.async_setup_entry", return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect",
-        return_value=mock_coro({OTGW_ABOUT: "OpenTherm Gateway 4.2.5"}),
+        "pyotgw.pyotgw.connect", return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
     ) as mock_pyotgw_connect, patch(
-        "pyotgw.pyotgw.disconnect", return_value=mock_coro(None)
+        "pyotgw.pyotgw.disconnect", return_value=None
     ) as mock_pyotgw_disconnect:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -102,16 +96,13 @@ async def test_form_duplicate_entries(hass):
     )
 
     with patch(
-        "homeassistant.components.opentherm_gw.async_setup",
-        return_value=mock_coro(True),
+        "homeassistant.components.opentherm_gw.async_setup", return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry",
-        return_value=mock_coro(True),
+        "homeassistant.components.opentherm_gw.async_setup_entry", return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect",
-        return_value=mock_coro({OTGW_ABOUT: "OpenTherm Gateway 4.2.5"}),
+        "pyotgw.pyotgw.connect", return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
     ) as mock_pyotgw_connect, patch(
-        "pyotgw.pyotgw.disconnect", return_value=mock_coro(None)
+        "pyotgw.pyotgw.disconnect", return_value=None
     ) as mock_pyotgw_disconnect:
         result1 = await hass.config_entries.flow.async_configure(
             flow1["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}

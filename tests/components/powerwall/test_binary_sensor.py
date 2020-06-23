@@ -1,12 +1,12 @@
 """The binary sensor tests for the powerwall platform."""
 
-from asynctest import patch
-
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .mocks import _mock_get_config, _mock_powerwall_with_fixtures
+
+from tests.async_mock import patch
 
 
 async def test_sensors(hass):
@@ -33,9 +33,6 @@ async def test_sensors(hass):
     state = hass.states.get("binary_sensor.powerwall_status")
     assert state.state == STATE_ON
     expected_attributes = {
-        "region": "IEEE1547a:2014",
-        "grid_code": "60Hz_240V_s_IEEE1547a_2014",
-        "nominal_system_power_kW": 25,
         "friendly_name": "Powerwall Status",
         "device_class": "power",
     }

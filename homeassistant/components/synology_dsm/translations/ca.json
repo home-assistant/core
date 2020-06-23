@@ -4,9 +4,11 @@
             "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat"
         },
         "error": {
-            "login": "Error d\u2019inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya",
+            "connection": "Error de connexi\u00f3: comprova l'amfitri\u00f3, la contrasenya i l'SSL",
+            "login": "Error d'inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya",
             "missing_data": "Falten dades: torna-ho a provar m\u00e9s tard o prova una altra configuraci\u00f3 diferent",
-            "otp_failed": "L'autenticaci\u00f3 en dos passos ha fallat, torna-ho a provar amb un nou codi"
+            "otp_failed": "L'autenticaci\u00f3 en dos passos ha fallat, torna-ho a provar amb un nou codi",
+            "unknown": "Error desconegut: consulta els registres per a m\u00e9s detalls."
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -18,9 +20,8 @@
             },
             "link": {
                 "data": {
-                    "api_version": "Versi\u00f3 DSM",
                     "password": "Contrasenya",
-                    "port": "Port (opcional)",
+                    "port": "Port",
                     "ssl": "Utilitza SSL/TLS per connectar-te al servidor NAS",
                     "username": "Nom d'usuari"
                 },
@@ -29,7 +30,6 @@
             },
             "user": {
                 "data": {
-                    "api_version": "Versi\u00f3 DSM",
                     "host": "Amfitri\u00f3",
                     "password": "Contrasenya",
                     "port": "Port",
@@ -37,6 +37,15 @@
                     "username": "Nom d'usuari"
                 },
                 "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minuts entre escanejos"
+                }
             }
         }
     }

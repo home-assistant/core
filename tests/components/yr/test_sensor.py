@@ -1,11 +1,11 @@
 """The tests for the Yr sensor platform."""
 from datetime import datetime
-from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import DEGREE, SPEED_METERS_PER_SECOND, UNIT_PERCENTAGE
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, load_fixture
 
 NOW = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
@@ -23,6 +23,7 @@ async def test_default_setup(hass, aioclient_mock):
         "homeassistant.components.yr.sensor.dt_util.utcnow", return_value=NOW
     ), assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.yr_symbol")
 
@@ -53,6 +54,7 @@ async def test_custom_setup(hass, aioclient_mock):
         "homeassistant.components.yr.sensor.dt_util.utcnow", return_value=NOW
     ), assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.yr_pressure")
     assert state.attributes.get("unit_of_measurement") == "hPa"
@@ -99,6 +101,7 @@ async def test_forecast_setup(hass, aioclient_mock):
         "homeassistant.components.yr.sensor.dt_util.utcnow", return_value=NOW
     ), assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.yr_pressure")
     assert state.attributes.get("unit_of_measurement") == "hPa"

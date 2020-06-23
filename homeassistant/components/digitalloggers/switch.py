@@ -5,7 +5,7 @@ import logging
 import dlipower
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(outlets)
 
 
-class DINRelay(SwitchDevice):
+class DINRelay(SwitchEntity):
     """Representation of an individual DIN III relay port."""
 
     def __init__(self, controller_name, parent_device, outlet):

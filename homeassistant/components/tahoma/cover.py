@@ -10,7 +10,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     DEVICE_CLASS_SHUTTER,
     DEVICE_CLASS_WINDOW,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.util.dt import utcnow
 
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class TahomaCover(TahomaDevice, CoverDevice):
+class TahomaCover(TahomaDevice, CoverEntity):
     """Representation a Tahoma Cover."""
 
     def __init__(self, tahoma_device, controller):

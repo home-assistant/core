@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerde konfigurert"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig legitimasjon",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "To-faktorskode"
+                },
+                "description": "Skriv inn pinnen som er sendt til din e-post. Hvis e-posten ikke inneholder en pin, m\u00e5 du la den st\u00e5 tom",
+                "title": "Totrinnsverifisering"
+            },
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": "Logg p\u00e5 med Blink-konto"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Skanneintervall (sekunder)"
+                },
+                "description": "Konfigurer Blink-integrasjon",
+                "title": "Alternativer for Blink"
+            }
+        }
+    }
+}

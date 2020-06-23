@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_setup": "Du kan kun konfigurere \u00e9n Somfy-konto.",
-            "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
             "missing_configuration": "Somfy-komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
         },
         "create_entry": {
-            "default": "Vellykket autentisering med Somfy."
+            "default": "Vellykket godkjenning med Somfy."
         },
         "step": {
             "pick_implementation": {
-                "title": "Velg autentiseringsmetode"
+                "title": "Velg godkjenningsmetode"
             }
         }
     }

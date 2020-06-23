@@ -1,6 +1,4 @@
 """Test Google Smart Home."""
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant.components import camera
@@ -22,6 +20,7 @@ from homeassistant.components.google_assistant import (
     smart_home as sh,
     trait,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
 from homeassistant.core import EVENT_CALL_SERVICE, State
 from homeassistant.helpers import device_registry
@@ -29,12 +28,8 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import (
-    mock_area_registry,
-    mock_coro,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.async_mock import patch
+from tests.common import mock_area_registry, mock_device_registry, mock_registry
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -262,6 +257,8 @@ async def test_query_message(hass):
         },
     }
 
+    await hass.async_block_till_done()
+
     assert len(events) == 4
     assert events[0].event_type == EVENT_QUERY_RECEIVED
     assert events[0].data == {
@@ -292,6 +289,7 @@ async def test_query_message(hass):
 async def test_execute(hass):
     """Test an execute command."""
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True
@@ -746,7 +744,7 @@ async def test_device_class_cover(hass, device_class, google_type):
 @pytest.mark.parametrize(
     "device_class,google_type",
     [
-        ("non_existing_class", "action.devices.types.SWITCH"),
+        ("non_existing_class", "action.devices.types.SETTOP"),
         ("tv", "action.devices.types.TV"),
     ],
 )
@@ -771,10 +769,16 @@ async def test_device_media_player(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {},
+                    "attributes": {
+                        "supportActivityState": True,
+                        "supportPlaybackState": True,
+                    },
                     "id": sensor.entity_id,
                     "name": {"name": sensor.name},
-                    "traits": ["action.devices.traits.OnOff"],
+                    "traits": [
+                        "action.devices.traits.OnOff",
+                        "action.devices.traits.MediaState",
+                    ],
                     "type": google_type,
                     "willReportState": False,
                 }
@@ -788,9 +792,7 @@ async def test_query_disconnect(hass):
     config = MockConfig(hass=hass)
     config.async_enable_report_state()
     assert config._unsub_report_state is not None
-    with patch.object(
-        config, "async_disconnect_agent_user", side_effect=mock_coro
-    ) as mock_disconnect:
+    with patch.object(config, "async_disconnect_agent_user") as mock_disconnect:
         result = await sh.async_handle_message(
             hass,
             config,
@@ -804,14 +806,16 @@ async def test_query_disconnect(hass):
 
 async def test_trait_execute_adding_query_data(hass):
     """Test a trait execute influencing query data."""
-    hass.config.api = Mock(base_url="http://1.1.1.1:8123")
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     hass.states.async_set(
         "camera.office", "idle", {"supported_features": camera.SUPPORT_STREAM}
     )
 
     with patch(
         "homeassistant.components.camera.async_request_stream",
-        return_value=mock_coro("/api/streams/bla"),
+        return_value="/api/streams/bla",
     ):
         result = await sh.async_handle_message(
             hass,
@@ -858,7 +862,7 @@ async def test_trait_execute_adding_query_data(hass):
                     "status": "SUCCESS",
                     "states": {
                         "online": True,
-                        "cameraStreamAccessUrl": "http://1.1.1.1:8123/api/streams/bla",
+                        "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
                     },
                 }
             ]

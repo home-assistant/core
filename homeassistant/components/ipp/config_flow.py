@@ -85,12 +85,12 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         unique_id = user_input[CONF_UUID] = info[CONF_UUID]
 
-        if unique_id is None and info[CONF_SERIAL] is not None:
+        if not unique_id and info[CONF_SERIAL]:
             _LOGGER.debug(
                 "Printer UUID is missing from IPP response. Falling back to IPP serial number"
             )
             unique_id = info[CONF_SERIAL]
-        elif unique_id is None:
+        elif not unique_id:
             _LOGGER.debug("Unable to determine unique id from IPP response")
 
         await self.async_set_unique_id(unique_id)
@@ -138,29 +138,31 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ipp_error")
 
         unique_id = self.discovery_info[CONF_UUID]
-        if unique_id is None and info[CONF_UUID] is not None:
+        if not unique_id and info[CONF_UUID]:
             _LOGGER.debug(
                 "Printer UUID is missing from discovery info. Falling back to IPP UUID"
             )
             unique_id = self.discovery_info[CONF_UUID] = info[CONF_UUID]
-        elif unique_id is None and info[CONF_SERIAL] is not None:
+        elif not unique_id and info[CONF_SERIAL]:
             _LOGGER.debug(
                 "Printer UUID is missing from discovery info and IPP response. Falling back to IPP serial number"
             )
             unique_id = info[CONF_SERIAL]
-        elif unique_id is None:
+        elif not unique_id:
             _LOGGER.debug(
                 "Unable to determine unique id from discovery info and IPP response"
             )
 
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: self.discovery_info[CONF_HOST],
-                CONF_NAME: self.discovery_info[CONF_NAME],
-            },
-        )
+        if unique_id:
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: self.discovery_info[CONF_HOST],
+                    CONF_NAME: self.discovery_info[CONF_NAME],
+                },
+            )
 
+        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(

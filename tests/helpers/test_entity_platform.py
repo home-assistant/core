@@ -2,14 +2,12 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import MagicMock, Mock, patch
 
-import asynctest
 import pytest
 
 from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_component import (
@@ -18,6 +16,7 @@ from homeassistant.helpers.entity_component import (
 )
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -136,7 +135,7 @@ async def test_update_state_adds_entities_with_update_before_add_false(hass):
     assert not ent.update.called
 
 
-@asynctest.patch("homeassistant.helpers.entity_platform.async_track_time_interval")
+@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_platform(mock_track, hass):
     """Test the setting of the scan interval via platform."""
 
@@ -183,13 +182,14 @@ async def test_platform_warn_slow_setup(hass):
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
+    with patch.object(hass.loop, "call_later") as mock_call:
         await component.async_setup({DOMAIN: {"platform": "platform"}})
+        await hass.async_block_till_done()
         assert mock_call.called
 
         # mock_calls[0] is the warning message for component setup
-        # mock_calls[3] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[3][1][:2]
+        # mock_calls[5] is the warning message for platform setup
+        timeout, logger_method = mock_call.mock_calls[5][1][:2]
 
         assert timeout == entity_platform.SLOW_SETUP_WARNING
         assert logger_method == _LOGGER.warning
@@ -210,6 +210,7 @@ async def test_platform_error_slow_setup(hass, caplog):
         component = EntityComponent(_LOGGER, DOMAIN, hass)
         mock_entity_platform(hass, "test_domain.test_platform", platform)
         await component.async_setup({DOMAIN: {"platform": "test_platform"}})
+        await hass.async_block_till_done()
         assert len(called) == 1
         assert "test_domain.test_platform" not in hass.config.components
         assert "test_platform is taking longer than 0 seconds" in caplog.text
@@ -243,6 +244,7 @@ async def test_parallel_updates_async_platform(hass):
     component._platforms = {}
 
     await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
     assert handle.parallel_updates is None
@@ -269,6 +271,7 @@ async def test_parallel_updates_async_platform_with_constant(hass):
     component._platforms = {}
 
     await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
 
@@ -294,6 +297,7 @@ async def test_parallel_updates_sync_platform(hass):
     component._platforms = {}
 
     await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
 
@@ -320,6 +324,7 @@ async def test_parallel_updates_sync_platform_with_constant(hass):
     component._platforms = {}
 
     await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
 
@@ -354,6 +359,11 @@ async def test_raise_error_on_update(hass):
     assert len(updates) == 1
     assert 1 in updates
 
+    assert entity1.hass is None
+    assert entity1.platform is None
+    assert entity2.hass is not None
+    assert entity2.platform is not None
+
 
 async def test_async_remove_with_platform(hass):
     """Remove an entity from a platform."""
@@ -375,10 +385,11 @@ async def test_not_adding_duplicate_entities_with_unique_id(hass):
 
     assert len(hass.states.async_entity_ids()) == 1
 
-    await component.async_add_entities(
-        [MockEntity(name="test2", unique_id="not_very_unique")]
-    )
+    ent2 = MockEntity(name="test2", unique_id="not_very_unique")
+    await component.async_add_entities([ent2])
 
+    assert ent2.hass is None
+    assert ent2.platform is None
     assert len(hass.states.async_entity_ids()) == 1
 
 
@@ -705,6 +716,7 @@ async def test_device_info_called(hass):
                         "model": "test-model",
                         "name": "test-name",
                         "sw_version": "test-sw",
+                        "entry_type": "service",
                         "via_device": ("hue", "via-id"),
                     },
                 ),
@@ -731,6 +743,7 @@ async def test_device_info_called(hass):
     assert device.model == "test-model"
     assert device.name == "test-name"
     assert device.sw_version == "test-sw"
+    assert device.entry_type == "service"
     assert device.via_device_id == via.id
 
 
@@ -784,6 +797,11 @@ async def test_entity_disabled_by_integration(hass):
     )
 
     await component.async_add_entities([entity_default, entity_disabled])
+
+    assert entity_default.hass is not None
+    assert entity_default.platform is not None
+    assert entity_disabled.hass is None
+    assert entity_disabled.platform is None
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -882,3 +900,13 @@ async def test_platforms_sharing_services(hass):
     assert len(entities) == 2
     assert entity1 in entities
     assert entity2 in entities
+
+
+async def test_invalid_entity_id(hass):
+    """Test specifying an invalid entity id."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(entity_id="invalid_entity_id")
+    with pytest.raises(HomeAssistantError):
+        await platform.async_add_entities([entity])
+    assert entity.hass is None
+    assert entity.platform is None

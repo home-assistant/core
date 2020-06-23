@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    Light,
+    LightEntity,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.util.color as color_util
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(AveaLight(bulb) for bulb in nearby_bulbs)
 
 
-class AveaLight(Light):
+class AveaLight(LightEntity):
     """Representation of an Avea."""
 
     def __init__(self, light):

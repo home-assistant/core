@@ -1,5 +1,4 @@
 """Models for SQLAlchemy."""
-from datetime import datetime
 import json
 import logging
 
@@ -25,9 +24,11 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 _LOGGER = logging.getLogger(__name__)
+
+DB_TIMEZONE = "+00:00"
 
 
 class Events(Base):  # type: ignore
@@ -39,10 +40,10 @@ class Events(Base):  # type: ignore
     event_data = Column(Text)
     origin = Column(String(32))
     time_fired = Column(DateTime(timezone=True), index=True)
-    created = Column(DateTime(timezone=True), default=datetime.utcnow)
+    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
-    # context_parent_id = Column(String(36), index=True)
+    context_parent_id = Column(String(36), index=True)
 
     @staticmethod
     def from_event(event):
@@ -54,7 +55,7 @@ class Events(Base):  # type: ignore
             time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
-            # context_parent_id=event.context.parent_id,
+            context_parent_id=event.context.parent_id,
         )
 
     def to_native(self):
@@ -65,7 +66,7 @@ class Events(Base):  # type: ignore
                 self.event_type,
                 json.loads(self.event_data),
                 EventOrigin(self.origin),
-                _process_timestamp(self.time_fired),
+                process_timestamp(self.time_fired),
                 context=context,
             )
         except ValueError:
@@ -84,12 +85,13 @@ class States(Base):  # type: ignore
     state = Column(String(255))
     attributes = Column(Text)
     event_id = Column(Integer, ForeignKey("events.event_id"), index=True)
-    last_changed = Column(DateTime(timezone=True), default=datetime.utcnow)
-    last_updated = Column(DateTime(timezone=True), default=datetime.utcnow, index=True)
-    created = Column(DateTime(timezone=True), default=datetime.utcnow)
+    last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
+    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
-    # context_parent_id = Column(String(36), index=True)
+    context_parent_id = Column(String(36), index=True)
+    old_state_id = Column(Integer)
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
@@ -107,7 +109,7 @@ class States(Base):  # type: ignore
             entity_id=entity_id,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
-            # context_parent_id=event.context.parent_id,
+            context_parent_id=event.context.parent_id,
         )
 
         # State got deleted
@@ -126,7 +128,7 @@ class States(Base):  # type: ignore
 
         return dbstate
 
-    def to_native(self):
+    def to_native(self, validate_entity_id=True):
         """Convert to an HA state object."""
         context = Context(id=self.context_id, user_id=self.context_user_id)
         try:
@@ -134,12 +136,10 @@ class States(Base):  # type: ignore
                 self.entity_id,
                 self.state,
                 json.loads(self.attributes),
-                _process_timestamp(self.last_changed),
-                _process_timestamp(self.last_updated),
+                process_timestamp(self.last_changed),
+                process_timestamp(self.last_updated),
                 context=context,
-                # Temp, because database can still store invalid entity IDs
-                # Remove with 1.0 or in 2020.
-                temp_invalid_id_bypass=True,
+                validate_entity_id=validate_entity_id,
             )
         except ValueError:
             # When json.loads fails
@@ -152,10 +152,10 @@ class RecorderRuns(Base):  # type: ignore
 
     __tablename__ = "recorder_runs"
     run_id = Column(Integer, primary_key=True)
-    start = Column(DateTime(timezone=True), default=datetime.utcnow)
+    start = Column(DateTime(timezone=True), default=dt_util.utcnow)
     end = Column(DateTime(timezone=True))
     closed_incorrect = Column(Boolean, default=False)
-    created = Column(DateTime(timezone=True), default=datetime.utcnow)
+    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
 
     __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
 
@@ -191,14 +191,24 @@ class SchemaChanges(Base):  # type: ignore
     __tablename__ = "schema_changes"
     change_id = Column(Integer, primary_key=True)
     schema_version = Column(Integer)
-    changed = Column(DateTime(timezone=True), default=datetime.utcnow)
+    changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
 
 
-def _process_timestamp(ts):
+def process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
         return None
     if ts.tzinfo is None:
-        return dt_util.UTC.localize(ts)
+        return ts.replace(tzinfo=dt_util.UTC)
 
     return dt_util.as_utc(ts)
+
+
+def process_timestamp_to_utc_isoformat(ts):
+    """Process a timestamp into UTC isotime."""
+    if ts is None:
+        return None
+    if ts.tzinfo is None:
+        return f"{ts.isoformat()}{DB_TIMEZONE}"
+
+    return dt_util.as_utc(ts).isoformat()

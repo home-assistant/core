@@ -14,7 +14,7 @@
         "step": {
             "init": {
                 "data": {
-                    "calc_method": "\u7948\u79b1\u8a08\u7b97\u65b9\u5f0f"
+                    "calculation_method": "\u7948\u79b1\u8a08\u7b97\u65b9\u5f0f"
                 }
             }
         }

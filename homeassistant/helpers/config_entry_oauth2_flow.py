@@ -21,6 +21,7 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.network import get_url
 
 from .aiohttp_client import async_get_clientsession
 
@@ -117,12 +118,18 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}"  # type: ignore
+        return f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}"
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
+        return {}
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         return str(
-            URL(self.authorize_url).with_query(
+            URL(self.authorize_url)
+            .with_query(
                 {
                     "response_type": "code",
                     "client_id": self.client_id,
@@ -130,6 +137,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                     "state": _encode_jwt(self.hass, {"flow_id": flow_id}),
                 }
             )
+            .update_query(self.extra_authorize_data)
         )
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
@@ -225,7 +233,9 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             ),
         )
 
-    async def async_step_auth(self, user_input: Optional[dict] = None) -> dict:
+    async def async_step_auth(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Create an entry for auth."""
         # Flow has been triggered by external data
         if user_input:
@@ -242,7 +252,9 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
         return self.async_external_step(step_id="auth", url=url)
 
-    async def async_step_creation(self, user_input: Optional[dict] = None) -> dict:
+    async def async_step_creation(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
         token["expires_at"] = time.time() + token["expires_in"]
@@ -260,7 +272,9 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
-    async def async_step_discovery(self, user_input: Optional[dict] = None) -> dict:
+    async def async_step_discovery(
+        self, discovery_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(self.DOMAIN)
 

@@ -1,16 +1,19 @@
 {
     "config": {
         "error": {
-            "unknown": "Onerwaarte Feeler"
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol."
         },
         "step": {
             "user": {
                 "data": {
                     "blid": "BLID",
-                    "certificate": "Zertifikat",
-                    "host": "Host Numm oder IP Adresse",
+                    "continuous": "Kontinu\u00e9ierlech",
+                    "delay": "Delai",
+                    "host": "Host",
                     "password": "Passwuert"
-                }
+                },
+                "description": "De Prozess fir BLID an Passwuert opzeruffen ass fir de Moment manuell. Folleg w.e.g. de Schr\u00ebtt d\u00e9i an der Dokumentatioun op https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials beschriwwe sinn.",
+                "title": "Mam Apparat verbannen"
             }
         }
     },
@@ -18,6 +21,7 @@
         "step": {
             "init": {
                 "data": {
+                    "continuous": "Kontinu\u00e9ierlech",
                     "delay": "Delai"
                 }
             }

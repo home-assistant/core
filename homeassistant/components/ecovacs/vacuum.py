@@ -14,7 +14,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
-    VacuumDevice,
+    VacuumEntity,
 )
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(vacuums, True)
 
 
-class EcovacsVacuum(VacuumDevice):
+class EcovacsVacuum(VacuumEntity):
     """Ecovacs Vacuums such as Deebot."""
 
     def __init__(self, device):

@@ -2,13 +2,17 @@
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
 import unittest
-from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import (
+    Recorder,
+    run_information,
+    run_information_from_instance,
+    run_information_with_session,
+)
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import Events, States
+from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, callback
@@ -17,6 +21,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import wait_recording_done
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -28,8 +33,9 @@ class TestRecorder(unittest.TestCase):
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)
         self.hass.start()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -257,3 +263,87 @@ def test_auto_purge(hass_recorder):
         assert len(purge_old_data.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
+
+
+def test_saving_sets_old_state(hass_recorder):
+    """Test saving sets old state."""
+    hass = hass_recorder()
+
+    hass.states.set("test.one", "on", {})
+    hass.states.set("test.two", "on", {})
+    wait_recording_done(hass)
+    hass.states.set("test.one", "off", {})
+    hass.states.set("test.two", "off", {})
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = list(session.query(States))
+        assert len(states) == 4
+
+        assert states[0].entity_id == "test.one"
+        assert states[1].entity_id == "test.two"
+        assert states[2].entity_id == "test.one"
+        assert states[3].entity_id == "test.two"
+
+        assert states[0].old_state_id is None
+        assert states[1].old_state_id is None
+        assert states[2].old_state_id == states[0].state_id
+        assert states[3].old_state_id == states[1].state_id
+
+
+def test_saving_state_with_serializable_data(hass_recorder, caplog):
+    """Test saving data that cannot be serialized does not crash."""
+    hass = hass_recorder()
+
+    hass.states.set("test.one", "on", {"fail": CannotSerializeMe()})
+    wait_recording_done(hass)
+    hass.states.set("test.two", "on", {})
+    wait_recording_done(hass)
+    hass.states.set("test.two", "off", {})
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = list(session.query(States))
+        assert len(states) == 2
+
+        assert states[0].entity_id == "test.two"
+        assert states[1].entity_id == "test.two"
+        assert states[0].old_state_id is None
+        assert states[1].old_state_id == states[0].state_id
+
+    assert "State is not JSON serializable" in caplog.text
+
+
+def test_run_information(hass_recorder):
+    """Ensure run_information returns expected data."""
+    before_start_recording = dt_util.utcnow()
+    hass = hass_recorder()
+    run_info = run_information_from_instance(hass)
+    assert isinstance(run_info, RecorderRuns)
+    assert run_info.closed_incorrect is False
+
+    with session_scope(hass=hass) as session:
+        run_info = run_information_with_session(session)
+        assert isinstance(run_info, RecorderRuns)
+        assert run_info.closed_incorrect is False
+
+    run_info = run_information(hass)
+    assert isinstance(run_info, RecorderRuns)
+    assert run_info.closed_incorrect is False
+
+    hass.states.set("test.two", "on", {})
+    wait_recording_done(hass)
+    run_info = run_information(hass)
+    assert isinstance(run_info, RecorderRuns)
+    assert run_info.closed_incorrect is False
+
+    run_info = run_information(hass, before_start_recording)
+    assert run_info is None
+
+    run_info = run_information(hass, dt_util.utcnow())
+    assert isinstance(run_info, RecorderRuns)
+    assert run_info.closed_incorrect is False
+
+
+class CannotSerializeMe:
+    """A class that the JSONEncoder cannot serialize."""

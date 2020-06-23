@@ -1,5 +1,11 @@
 {
     "state": {
+        "season__season": {
+            "autumn": "H\u00f6st",
+            "spring": "V\u00e5r",
+            "summer": "Sommar",
+            "winter": "Vinter"
+        },
         "season__season__": {
             "autumn": "H\u00f6st",
             "spring": "V\u00e5r",

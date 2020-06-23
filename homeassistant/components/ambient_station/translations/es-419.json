@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Esta clave de aplicaci\u00f3n ya est\u00e1 en uso."
+        },
         "error": {
             "invalid_key": "Clave de API y/o clave de aplicaci\u00f3n no v\u00e1lida",
             "no_devices": "No se han encontrado dispositivos en la cuenta."

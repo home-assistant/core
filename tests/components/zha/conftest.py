@@ -1,20 +1,20 @@
 """Test configuration for the ZHA component."""
-from unittest import mock
 
-import asynctest
 import pytest
 import zigpy
 from zigpy.application import ControllerApplication
+import zigpy.config
 import zigpy.group
 import zigpy.types
 
+from homeassistant.components.zha import DOMAIN
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
-import homeassistant.components.zha.core.registries as zha_regs
 from homeassistant.setup import async_setup_component
 
 from .common import FakeDevice, FakeEndpoint, get_zha_gateway
 
+from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 FIXTURE_GRP_ID = 0x1001
@@ -24,37 +24,28 @@ FIXTURE_GRP_NAME = "fixture group"
 @pytest.fixture
 def zigpy_app_controller():
     """Zigpy ApplicationController fixture."""
-    app = mock.MagicMock(spec_set=ControllerApplication)
-    app.startup = asynctest.CoroutineMock()
-    app.shutdown = asynctest.CoroutineMock()
+    app = MagicMock(spec_set=ControllerApplication)
+    app.startup = AsyncMock()
+    app.shutdown = AsyncMock()
     groups = zigpy.group.Groups(app)
     groups.add_group(FIXTURE_GRP_ID, FIXTURE_GRP_NAME, suppress_event=True)
     app.configure_mock(groups=groups)
-    type(app).ieee = mock.PropertyMock()
+    type(app).ieee = PropertyMock()
     app.ieee.return_value = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
-    type(app).nwk = mock.PropertyMock(return_value=zigpy.types.NWK(0x0000))
-    type(app).devices = mock.PropertyMock(return_value={})
+    type(app).nwk = PropertyMock(return_value=zigpy.types.NWK(0x0000))
+    type(app).devices = PropertyMock(return_value={})
     return app
-
-
-@pytest.fixture
-def zigpy_radio():
-    """Zigpy radio mock."""
-    radio = mock.MagicMock()
-    radio.connect = asynctest.CoroutineMock()
-    return radio
 
 
 @pytest.fixture(name="config_entry")
 async def config_entry_fixture(hass):
     """Fixture representing a config entry."""
     entry = MockConfigEntry(
-        version=1,
+        version=2,
         domain=zha_const.DOMAIN,
         data={
-            zha_const.CONF_BAUDRATE: zha_const.DEFAULT_BAUDRATE,
-            zha_const.CONF_RADIO_TYPE: "MockRadio",
-            zha_const.CONF_USB_PATH: "/dev/ttyUSB0",
+            zigpy.config.CONF_DEVICE: {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB0"},
+            zha_const.CONF_RADIO_TYPE: "ezsp",
         },
     )
     entry.add_to_hass(hass)
@@ -62,19 +53,18 @@ async def config_entry_fixture(hass):
 
 
 @pytest.fixture
-def setup_zha(hass, config_entry, zigpy_app_controller, zigpy_radio):
+def setup_zha(hass, config_entry, zigpy_app_controller):
     """Set up ZHA component."""
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
 
-    radio_details = {
-        zha_const.ZHA_GW_RADIO: mock.MagicMock(return_value=zigpy_radio),
-        zha_const.CONTROLLER: mock.MagicMock(return_value=zigpy_app_controller),
-        zha_const.ZHA_GW_RADIO_DESCRIPTION: "mock radio",
-    }
+    p1 = patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    )
 
     async def _setup(config=None):
         config = config or {}
-        with mock.patch.dict(zha_regs.RADIO_TYPES, {"MockRadio": radio_details}):
+        with p1:
             status = await async_setup_component(
                 hass, zha_const.DOMAIN, {zha_const.DOMAIN: {**zha_config, **config}}
             )
@@ -89,12 +79,12 @@ def channel():
     """Channel mock factory fixture."""
 
     def channel(name: str, cluster_id: int, endpoint_id: int = 1):
-        ch = mock.MagicMock()
+        ch = MagicMock()
         ch.name = name
         ch.generic_id = f"channel_0x{cluster_id:04x}"
         ch.id = f"{endpoint_id}:0x{cluster_id:04x}"
-        ch.async_configure = asynctest.CoroutineMock()
-        ch.async_initialize = asynctest.CoroutineMock()
+        ch.async_configure = AsyncMock()
+        ch.async_initialize = AsyncMock()
         return ch
 
     return channel
@@ -151,11 +141,27 @@ def zha_device_joined(hass, setup_zha):
 
 
 @pytest.fixture
-def zha_device_restored(hass, zigpy_app_controller, setup_zha):
+def zha_device_restored(hass, zigpy_app_controller, setup_zha, hass_storage):
     """Return a restored ZHA device."""
 
-    async def _zha_device(zigpy_dev):
+    async def _zha_device(zigpy_dev, last_seen=None):
         zigpy_app_controller.devices[zigpy_dev.ieee] = zigpy_dev
+
+        if last_seen is not None:
+            hass_storage[f"{DOMAIN}.storage"] = {
+                "key": f"{DOMAIN}.storage",
+                "version": 1,
+                "data": {
+                    "devices": [
+                        {
+                            "ieee": str(zigpy_dev.ieee),
+                            "last_seen": last_seen,
+                            "name": f"{zigpy_dev.manufacturer} {zigpy_dev.model}",
+                        }
+                    ],
+                },
+            }
+
         await setup_zha()
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         return zha_gateway.get_device(zigpy_dev.ieee)
@@ -198,7 +204,7 @@ def zha_device_mock(hass, zigpy_device_mock):
         zigpy_device = zigpy_device_mock(
             endpoints, ieee, manufacturer, model, node_desc
         )
-        zha_device = zha_core_device.ZHADevice(hass, zigpy_device, mock.MagicMock())
+        zha_device = zha_core_device.ZHADevice(hass, zigpy_device, MagicMock())
         return zha_device
 
     return _zha_device

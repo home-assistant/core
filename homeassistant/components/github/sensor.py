@@ -133,13 +133,17 @@ class GitHubSensor(Entity):
             ATTR_OPEN_PULL_REQUESTS: self._pull_request_count,
             ATTR_STARGAZERS: self._stargazers,
             ATTR_FORKS: self._forks,
-            ATTR_CLONES: self._clones,
-            ATTR_CLONES_UNIQUE: self._clones_unique,
-            ATTR_VIEWS: self._views,
-            ATTR_VIEWS_UNIQUE: self._views_unique,
         }
         if self._latest_release_tag is not None:
             attrs[ATTR_LATEST_RELEASE_TAG] = self._latest_release_tag
+        if self._clones is not None:
+            attrs[ATTR_CLONES] = self._clones
+        if self._clones_unique is not None:
+            attrs[ATTR_CLONES_UNIQUE] = self._clones_unique
+        if self._views is not None:
+            attrs[ATTR_VIEWS] = self._views
+        if self._views_unique is not None:
+            attrs[ATTR_VIEWS_UNIQUE] = self._views_unique
         return attrs
 
     @property
@@ -244,15 +248,16 @@ class GitHubData:
             if releases and releases.totalCount > 0:
                 self.latest_release_url = releases[0].html_url
 
-            clones = repo.get_clones_traffic()
-            if clones is not None:
-                self.clones = clones.get("count")
-                self.clones_unique = clones.get("uniques")
+            if repo.permissions.push:
+                clones = repo.get_clones_traffic()
+                if clones is not None:
+                    self.clones = clones.get("count")
+                    self.clones_unique = clones.get("uniques")
 
-            views = repo.get_views_traffic()
-            if views is not None:
-                self.views = views.get("count")
-                self.views_unique = views.get("uniques")
+                views = repo.get_views_traffic()
+                if views is not None:
+                    self.views = views.get("count")
+                    self.views_unique = views.get("uniques")
 
             self.available = True
         except self._github.GithubException as err:

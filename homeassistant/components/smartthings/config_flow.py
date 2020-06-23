@@ -7,7 +7,13 @@ from pysmartthings.installedapp import format_install_url
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_FORBIDDEN
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    HTTP_FORBIDDEN,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # pylint: disable=unused-import
@@ -17,8 +23,6 @@ from .const import (
     CONF_APP_ID,
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
-    CONF_OAUTH_CLIENT_ID,
-    CONF_OAUTH_CLIENT_SECRET,
     CONF_REFRESH_TOKEN,
     DOMAIN,
     VAL_UID_MATCHER,
@@ -26,6 +30,7 @@ from .const import (
 from .smartapp import (
     create_app,
     find_app,
+    format_unique_id,
     get_webhook_url,
     setup_smartapp,
     setup_smartapp_endpoint,
@@ -111,8 +116,8 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     None,
                 )
                 if existing:
-                    self.oauth_client_id = existing.data[CONF_OAUTH_CLIENT_ID]
-                    self.oauth_client_secret = existing.data[CONF_OAUTH_CLIENT_SECRET]
+                    self.oauth_client_id = existing.data[CONF_CLIENT_ID]
+                    self.oauth_client_secret = existing.data[CONF_CLIENT_SECRET]
                 else:
                     # Get oauth client id/secret by regenerating it
                     app_oauth = AppOAuth(app.app_id)
@@ -138,7 +143,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self._show_step_pat(errors)
         except ClientResponseError as ex:
-            if ex.status == 401:
+            if ex.status == HTTP_UNAUTHORIZED:
                 errors[CONF_ACCESS_TOKEN] = "token_unauthorized"
                 _LOGGER.debug(
                     "Unauthorized error received setting up SmartApp", exc_info=True
@@ -183,6 +188,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self.location_id = user_input[CONF_LOCATION_ID]
+        await self.async_set_unique_id(format_unique_id(self.app_id, self.location_id))
         return await self.async_step_authorize()
 
     async def async_step_authorize(self, user_input=None):
@@ -225,8 +231,8 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = {
             CONF_ACCESS_TOKEN: self.access_token,
             CONF_REFRESH_TOKEN: self.refresh_token,
-            CONF_OAUTH_CLIENT_ID: self.oauth_client_id,
-            CONF_OAUTH_CLIENT_SECRET: self.oauth_client_secret,
+            CONF_CLIENT_ID: self.oauth_client_id,
+            CONF_CLIENT_SECRET: self.oauth_client_secret,
             CONF_LOCATION_ID: self.location_id,
             CONF_APP_ID: self.app_id,
             CONF_INSTALLED_APP_ID: self.installed_app_id,
