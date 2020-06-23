@@ -890,7 +890,7 @@ tesla-powerwall==0.2.11
 teslajsonpy==0.8.1
 
 # homeassistant.components.toon
-toonapilib==3.2.4
+toonapi==0.1.0
 
 # homeassistant.components.totalconnect
 total_connect_client==0.55
