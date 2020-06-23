@@ -20,7 +20,6 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
-    ATTR_HIDDEN,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -88,8 +87,6 @@ QUERY_STATES = [
     States.last_changed,
     States.last_updated,
     States.created,
-    States.context_id,
-    States.context_user_id,
 ]
 
 
@@ -239,7 +236,7 @@ def _get_states_with_session(
             .order_by(States.last_updated.desc())
             .limit(1)
         )
-        return _dbquery_to_non_hidden_states(query)
+        return [LazyState(row) for row in execute(query)]
 
     if run is None:
         run = recorder.run_information_with_session(session, utc_point_in_time)
@@ -287,16 +284,7 @@ def _get_states_with_session(
     if filters:
         query = filters.apply(query, entity_ids)
 
-    return _dbquery_to_non_hidden_states(query)
-
-
-def _dbquery_to_non_hidden_states(query):
-    """Return states that are not hidden."""
-    return [
-        state
-        for state in (LazyState(row) for row in execute(query))
-        if not state.hidden
-    ]
+    return [LazyState(row) for row in execute(query)]
 
 
 def _sorted_states_to_json(
@@ -358,7 +346,6 @@ def _sorted_states_to_json(
                         domain != SCRIPT_DOMAIN
                         or native_state.attributes.get(ATTR_CAN_CANCEL)
                     )
-                    and not native_state.hidden
                 ]
             )
             continue
@@ -374,11 +361,6 @@ def _sorted_states_to_json(
         initial_state_count = len(ent_results)
 
         for db_state in group:
-            if ATTR_HIDDEN in db_state.attributes and LazyState(
-                db_state
-            ).attributes.get(ATTR_HIDDEN, False):
-                continue
-
             # With minimal response we do not care about attribute
             # changes so we can filter out duplicate states
             if db_state.state == prev_state.state:
@@ -647,19 +629,10 @@ class LazyState(State):
         return self._attributes
 
     @property
-    def hidden(self):
-        """Determine if a state is hidden."""
-        if ATTR_HIDDEN not in self._row.attributes:
-            return False
-        return self.attributes.get(ATTR_HIDDEN, False)
-
-    @property
     def context(self):
         """State context."""
         if not self._context:
-            self._context = Context(
-                id=self._row.context_id, user_id=self._row.context_user_id
-            )
+            self._context = Context(id=None)
         return self._context
 
     @property  # type: ignore
@@ -693,5 +666,4 @@ class LazyState(State):
             and self.entity_id == other.entity_id
             and self.state == other.state
             and self.attributes == other.attributes
-            and self.context == other.context
         )
