@@ -185,6 +185,7 @@ homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
+homeassistant/components/humidifier/* @home-assistant/core @Shulyaka
 homeassistant/components/hunterdouglas_powerview/* @bdraco
 homeassistant/components/hvv_departures/* @vigonotion
 homeassistant/components/hydrawise/* @ptcryan
