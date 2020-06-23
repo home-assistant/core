@@ -150,12 +150,11 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             error = await self._validate_input(user_input)
-            if error:
-                errors["base"] = error
-            else:
+            if not error:
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
                 )
+            errors["base"] = error
 
         return self.async_show_form(
             step_id="edit", data_schema=self.data_schema, errors=errors

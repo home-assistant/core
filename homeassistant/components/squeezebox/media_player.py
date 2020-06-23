@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from pysqueezebox import Server
+from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -23,6 +23,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.const import (
     ATTR_COMMAND,
     CONF_HOST,
@@ -44,9 +45,9 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.util.dt import utcnow
 
-from .__init__ import start_server_discovery
 from .const import (
     DEFAULT_PORT,
+    DISCOVERY_TASK,
     DOMAIN,
     ENTRY_PLAYERS,
     KNOWN_PLAYERS,
@@ -111,6 +112,30 @@ SQUEEZEBOX_MODE = {
     "play": STATE_PLAYING,
     "stop": STATE_IDLE,
 }
+
+
+async def start_server_discovery(hass):
+    """Start a server discovery task."""
+
+    def _discovered_server(server):
+        asyncio.create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_DISCOVERY},
+                data={
+                    CONF_HOST: server.host,
+                    CONF_PORT: int(server.port),
+                    "uuid": server.uuid,
+                },
+            )
+        )
+
+    hass.data.setdefault(DOMAIN, {})
+    if DISCOVERY_TASK not in hass.data[DOMAIN]:
+        _LOGGER.debug("Adding server discovery task for squeezebox")
+        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_task(
+            async_discover(_discovered_server)
+        )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

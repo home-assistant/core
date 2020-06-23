@@ -1,55 +1,24 @@
 """The Logitech Squeezebox integration."""
 
-import asyncio
 import logging
 
-from pysqueezebox import async_discover
-
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import SOURCE_DISCOVERY, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, ENTRY_PLAYERS, KNOWN_PLAYERS, PLAYER_DISCOVERY_UNSUB
+from .const import (
+    DISCOVERY_TASK,
+    DOMAIN,
+    ENTRY_PLAYERS,
+    KNOWN_PLAYERS,
+    PLAYER_DISCOVERY_UNSUB,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DISCOVERY_TASK = "discovery_task"
-
-
-async def start_server_discovery(hass):
-    """Start a server discovery task."""
-
-    def _discovered_server(server):
-        asyncio.create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_DISCOVERY},
-                data={
-                    CONF_HOST: server.host,
-                    CONF_PORT: int(server.port),
-                    "uuid": server.uuid,
-                },
-            )
-        )
-
-    hass.data.setdefault(DOMAIN, {})
-    if DISCOVERY_TASK not in hass.data[DOMAIN]:
-        _LOGGER.debug("Adding server discovery task for squeezebox")
-        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_task(
-            async_discover(_discovered_server)
-        )
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Logitech Squeezebox component."""
-    if hass.is_running:
-        asyncio.create_task(start_server_discovery(hass))
-    else:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
-        )
-
     return True
 
 
