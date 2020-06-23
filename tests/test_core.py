@@ -915,7 +915,7 @@ class TestConfig(unittest.TestCase):
             "components": set(),
             "config_dir": "/test/ha-config",
             "whitelist_external_dirs": set(),
-            "whitelist_external_urls": set(),
+            "allowlist_external_urls": set(),
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
@@ -958,7 +958,7 @@ class TestConfig(unittest.TestCase):
 
     def test_is_allowed_external_url(self):
         """Test is_allowed_external_url method."""
-        self.config.whitelist_external_urls = {
+        self.config.allowlist_external_urls = {
             "http://x.com/1.jpg",
             "http://y.com/2.png",
         }

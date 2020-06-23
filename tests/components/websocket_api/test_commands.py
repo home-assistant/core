@@ -234,9 +234,9 @@ async def test_get_config(hass, websocket_client):
         msg["result"]["whitelist_external_dirs"] = set(
             msg["result"]["whitelist_external_dirs"]
         )
-    if "whitelist_external_urls" in msg["result"]:
-        msg["result"]["whitelist_external_urls"] = set(
-            msg["result"]["whitelist_external_urls"]
+    if "allowlist_external_urls" in msg["result"]:
+        msg["result"]["allowlist_external_urls"] = set(
+            msg["result"]["allowlist_external_urls"]
         )
 
     assert msg["result"] == hass.config.as_dict()

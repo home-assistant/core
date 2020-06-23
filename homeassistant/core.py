@@ -1335,7 +1335,7 @@ class Config:
         self.whitelist_external_dirs: Set[str] = set()
 
         # List of allowed external URLs that integrations may use
-        self.whitelist_external_urls: Set[str] = set()
+        self.allowlist_external_urls: Set[str] = set()
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
@@ -1360,9 +1360,7 @@ class Config:
 
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
-        assert url is not None
-
-        return url in self.whitelist_external_urls
+        return url in self.allowlist_external_urls
 
     def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""
@@ -1406,7 +1404,7 @@ class Config:
             "components": self.components,
             "config_dir": self.config_dir,
             "whitelist_external_dirs": self.whitelist_external_dirs,
-            "whitelist_external_urls": self.whitelist_external_urls,
+            "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,
