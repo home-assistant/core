@@ -223,11 +223,8 @@ class TestComponentHistory(unittest.TestCase):
         # will happen with encoding a native state
         input_state = states["media_player.test"][1]
         orig_last_changed = json.dumps(
-            process_timestamp(input_state.last_changed.replace(microsecond=0)),
-            cls=JSONEncoder,
+            process_timestamp(input_state.last_changed), cls=JSONEncoder,
         ).replace('"', "")
-        if orig_last_changed.endswith("+00:00"):
-            orig_last_changed = f"{orig_last_changed[:-6]}{recorder.models.DB_TIMEZONE}"
         orig_state = input_state.state
         states["media_player.test"][1] = {
             "last_changed": orig_last_changed,
@@ -768,6 +765,16 @@ async def test_fetch_period_api_with_minimal_response(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?minimal_response"
     )
+    assert response.status == 200
+
+
+async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
+    """Test the fetch period view for history with no timestamp."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {})
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await hass_client()
+    response = await client.get("/api/history/period")
     assert response.status == 200
 
 

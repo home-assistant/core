@@ -12,6 +12,7 @@
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s"
                 },
+                "description": "Entrez votre jeton d'acc\u00e8s depuis https://developer.tibber.com/settings/accesstoken",
                 "title": "Tibber"
             }
         }

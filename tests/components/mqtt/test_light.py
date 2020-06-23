@@ -185,11 +185,7 @@ from .test_common import (
 )
 
 from tests.async_mock import call, patch
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_fire_mqtt_message,
-)
+from tests.common import assert_setup_component, async_fire_mqtt_message
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
@@ -1390,7 +1386,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one light per unique_id."""
     config = {
         light.DOMAIN: [
@@ -1410,7 +1406,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, light.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, light.DOMAIN, config)
 
 
 async def test_discovery_removal_light(hass, mqtt_mock, caplog):
@@ -1425,7 +1421,7 @@ async def test_discovery_removal_light(hass, mqtt_mock, caplog):
 
 async def test_discovery_deprecated(hass, mqtt_mock, caplog):
     """Test discovery of mqtt light with deprecated platform option."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await async_start(hass, "homeassistant", entry)
     data = (
         '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'

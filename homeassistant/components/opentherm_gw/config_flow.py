@@ -68,9 +68,9 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._show_form()
 
-    async def async_step_user(self, info=None):
+    async def async_step_user(self, user_input=None):
         """Handle manual initiation of the config flow."""
-        return await self.async_step_init(info)
+        return await self.async_step_init(user_input)
 
     async def async_step_import(self, import_config):
         """

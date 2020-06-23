@@ -17,7 +17,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_STANDBY
+from homeassistant.const import (
+    STATE_HOME,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
+)
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
 from .const import DOMAIN
@@ -81,7 +87,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if self.coordinator.data.app.name == "Roku":
             return STATE_HOME
 
-        if self.coordinator.data.app.name is not None:
+        if self.coordinator.data.media and self.coordinator.data.media.paused:
+            return STATE_PAUSED
+
+        if self.coordinator.data.app.name:
             return STATE_PLAYING
 
         return None
@@ -174,13 +183,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if self.state != STATE_STANDBY:
+        if self.state not in (STATE_STANDBY, STATE_PAUSED):
             await self.coordinator.roku.remote("play")
 
     @roku_exception_handler
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state != STATE_STANDBY:
+        if self.state not in (STATE_STANDBY, STATE_PLAYING):
             await self.coordinator.roku.remote("play")
 
     @roku_exception_handler
