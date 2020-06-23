@@ -1,8 +1,6 @@
 """Support for the Roku remote."""
 from typing import Callable, List
 
-import voluptuous as vol
-
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
