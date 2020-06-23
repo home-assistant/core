@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint: disable=unused-import
 from .utils import load_plum
 
 _LOGGER = logging.getLogger(__name__)
