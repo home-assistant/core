@@ -24,7 +24,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class Events(Base):  # type: ignore
 
     __tablename__ = "events"
     event_id = Column(Integer, primary_key=True)
-    event_type = Column(String(32), index=True)
+    event_type = Column(String(32))
     event_data = Column(Text)
     origin = Column(String(32))
     time_fired = Column(DateTime(timezone=True), index=True)
@@ -44,6 +44,12 @@ class Events(Base):  # type: ignore
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
     context_parent_id = Column(String(36), index=True)
+
+    __table_args__ = (
+        # Used for fetching events at a specific time
+        # see logbook
+        Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+    )
 
     @staticmethod
     def from_event(event):
@@ -60,7 +66,11 @@ class Events(Base):  # type: ignore
 
     def to_native(self):
         """Convert to a natve HA Event."""
-        context = Context(id=self.context_id, user_id=self.context_user_id)
+        context = Context(
+            id=self.context_id,
+            user_id=self.context_user_id,
+            parent_id=self.context_parent_id,
+        )
         try:
             return Event(
                 self.event_type,
@@ -81,16 +91,13 @@ class States(Base):  # type: ignore
     __tablename__ = "states"
     state_id = Column(Integer, primary_key=True)
     domain = Column(String(64))
-    entity_id = Column(String(255), index=True)
+    entity_id = Column(String(255))
     state = Column(String(255))
     attributes = Column(Text)
     event_id = Column(Integer, ForeignKey("events.event_id"), index=True)
     last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
     last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    context_id = Column(String(36), index=True)
-    context_user_id = Column(String(36), index=True)
-    context_parent_id = Column(String(36), index=True)
     old_state_id = Column(Integer)
 
     __table_args__ = (
@@ -105,12 +112,7 @@ class States(Base):  # type: ignore
         entity_id = event.data["entity_id"]
         state = event.data.get("new_state")
 
-        dbstate = States(
-            entity_id=entity_id,
-            context_id=event.context.id,
-            context_user_id=event.context.user_id,
-            context_parent_id=event.context.parent_id,
-        )
+        dbstate = States(entity_id=entity_id)
 
         # State got deleted
         if state is None:
@@ -130,7 +132,6 @@ class States(Base):  # type: ignore
 
     def to_native(self, validate_entity_id=True):
         """Convert to an HA state object."""
-        context = Context(id=self.context_id, user_id=self.context_user_id)
         try:
             return State(
                 self.entity_id,
@@ -138,7 +139,9 @@ class States(Base):  # type: ignore
                 json.loads(self.attributes),
                 process_timestamp(self.last_changed),
                 process_timestamp(self.last_updated),
-                context=context,
+                # Join the events table on event_id to get the context instead
+                # as it will always be there for state_changed events
+                context=Context(id=None),
                 validate_entity_id=validate_entity_id,
             )
         except ValueError:
