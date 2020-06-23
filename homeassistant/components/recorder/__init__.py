@@ -103,7 +103,6 @@ CONFIG_SCHEMA = vol.Schema(
                     ): cv.positive_int,
                 }
             ),
-            convert_include_exclude_filter,
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -152,8 +151,8 @@ def run_information_with_session(session, point_in_time: Optional[datetime] = No
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
-    entity_filter = config[DOMAIN]
-    conf = entity_filter.config
+    conf = config[DOMAIN]
+    entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
     commit_interval = conf[CONF_COMMIT_INTERVAL]

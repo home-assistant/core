@@ -22,16 +22,13 @@ DOMAIN = "mqtt_statestream"
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.All(
-            INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-                {
-                    vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
-                    vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
-                    vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean,
-                }
-            ),
-            convert_include_exclude_filter,
-        )
+        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+            {
+                vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
+                vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
+                vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean,
+            }
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -39,8 +36,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the MQTT state feed."""
-    publish_filter = config.get(DOMAIN)
-    conf = publish_filter.config
+    conf = config.get(DOMAIN)
+    publish_filter = convert_include_exclude_filter(conf)
     base_topic = conf.get(CONF_BASE_TOPIC)
     publish_attributes = conf.get(CONF_PUBLISH_ATTRIBUTES)
     publish_timestamps = conf.get(CONF_PUBLISH_TIMESTAMPS)

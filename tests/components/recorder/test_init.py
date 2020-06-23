@@ -292,10 +292,9 @@ async def test_defaults_set(hass):
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
-    assert hasattr(recorder_config, "config")
-    config = recorder_config.config
-    assert config["auto_purge"]
-    assert config["purge_keep_days"] == 10
+    # pylint: disable=unsubscriptable-object
+    assert recorder_config["auto_purge"]
+    assert recorder_config["purge_keep_days"] == 10
 
 
 def test_auto_purge(hass_recorder):
