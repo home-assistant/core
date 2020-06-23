@@ -1,6 +1,5 @@
 {
     "config": {
-	"flow_title": "Logitech Squeezebox: {host}",
         "abort": {
             "already_configured": "Device is already configured",
             "no_server_found": "No LMS server found."
@@ -11,6 +10,7 @@
             "no_server_found": "Could not automatically discover server.",
             "unknown": "Unexpected error"
         },
+        "flow_title": "Logitech Squeezebox: {host}",
         "step": {
             "edit": {
                 "data": {

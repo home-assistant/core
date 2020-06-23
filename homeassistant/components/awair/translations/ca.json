@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "no_devices": "No s'han trobat dispositius a la xarxa",
+            "reauth_successful": "Token d'acc\u00e9s actualitzat correctament"
+        },
+        "error": {
+            "auth": "Token d'acc\u00e9s no v\u00e0lid"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s",
+                    "email": "Correu electr\u00f2nic"
+                }
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s",
+                    "email": "Correu electr\u00f2nic"
+                }
+            }
+        }
+    }
+}
