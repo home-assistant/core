@@ -1,5 +1,5 @@
 search:
-  description: Emulates opening search screen and entering search keyword.
+  description: Emulates opening thd search screen and entering the search keyword.
   fields:
     entity_id:
       description: The entities to search on.
