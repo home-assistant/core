@@ -44,7 +44,7 @@ Mastodon.py==1.5.1
 OPi.GPIO==0.4.0
 
 # homeassistant.components.plugwise
-Plugwise_Smile==0.2.13
+Plugwise_Smile==1.1.0
 
 # homeassistant.components.essent
 PyEssent==0.13
