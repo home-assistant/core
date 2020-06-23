@@ -309,7 +309,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         """Return the device class of the humidifier."""
         return self._device_class
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs):
         """Turn hygrostat on."""
         if self._state is None:
             return
@@ -317,7 +317,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         await self._async_operate(force=True)
         await self.async_update_ha_state()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs):
         """Turn hygrostat off."""
         if self._state is None:
             return
