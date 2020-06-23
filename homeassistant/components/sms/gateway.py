@@ -157,4 +157,4 @@ async def create_sms_gateway(config, hass):
         return gateway
     except gammu.GSMError as exc:  # pylint: disable=no-member
         _LOGGER.error("Failed to initialize, error %s", exc)
-        return 0
+        return None
