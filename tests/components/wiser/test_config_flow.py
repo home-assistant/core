@@ -1,6 +1,10 @@
 """Test the Wiser Heating Component for Home Assistant config flow."""
+from wiserHeatingAPI.wiserHub import (
+    WiserHubAuthenticationException,
+    WiserHubTimeoutException,
+)
+
 from homeassistant import config_entries, setup
-from homeassistant.components.wiser.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.wiser.const import DOMAIN
 
 from tests.async_mock import MagicMock, patch
@@ -56,7 +60,8 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.wiser.config_flow.wiserHub", side_effect=InvalidAuth,
+        "homeassistant.components.wiser.config_flow.wiserHub",
+        side_effect=WiserHubAuthenticationException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_CREDENTIALS,
@@ -74,7 +79,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.wiser.config_flow.wiserHub",
-        side_effect=CannotConnect,
+        side_effect=WiserHubTimeoutException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_CREDENTIALS,

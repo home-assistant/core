@@ -75,7 +75,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hotwater_mode = service.data[ATTR_HOTWATER_MODE]
         hass.async_create_task(data.set_hotwater_mode(hotwater_mode))
 
-    """ Register Services """
+    # Register Services
     hass.services.async_register(
         DOMAIN,
         WISER_SERVICES["SERVICE_SET_SMARTPLUG_MODE"],
@@ -101,13 +101,13 @@ class WiserSwitch(SwitchEntity):
         self._hub_key = hubKey
         self._icon = icon
         self._switch_type = switchType
-        self._awayTemperature = None
+        self._away_temperature = None
 
     async def async_update(self):
         """Async Update to HA."""
         _LOGGER.debug("Wiser %s Switch Update requested", self._switch_type)
         if self._switch_type == "Away Mode":
-            self._awayTemperature = round(
+            self._away_temperature = round(
                 self.data.wiserhub.getSystem().get("AwayModeSetPointLimit") / 10, 1,
             )
 
@@ -146,7 +146,7 @@ class WiserSwitch(SwitchEntity):
         attrs = {}
 
         if self._switch_type == "Away Mode":
-            attrs["AwayModeTemperature"] = self._awayTemperature
+            attrs["AwayModeTemperature"] = self._away_temperature
 
         return attrs
 
@@ -157,13 +157,12 @@ class WiserSwitch(SwitchEntity):
         _LOGGER.debug("%s: %s", self._switch_type, status)
         if self._switch_type == "Away Mode":
             return status and status.lower() == "away"
-        else:
-            return status
+        return status
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         if self._switch_type == "Away Mode":
-            await self.data.set_away_mode(True, self._awayTemperature)
+            await self.data.set_away_mode(True, self._away_temperature)
         else:
             await self.data.set_system_switch(self._hub_key, True)
         return True
@@ -171,7 +170,7 @@ class WiserSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if self._switch_type == "Away Mode":
-            await self.data.set_away_mode(False, self._awayTemperature)
+            await self.data.set_away_mode(False, self._away_temperature)
         else:
             await self.data.set_system_switch(self._hub_key, False)
         return True
@@ -240,14 +239,15 @@ class WiserSmartPlug(SwitchEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        self._is_on = (
-            True
-            if self.data.wiserhub.getSmartPlug(self.smart_plug_id).get("OutputState")
-            == "On"
-            else False
+        self._is_on = self.data.wiserhub.getSmartPlug(self.smart_plug_id).get(
+            "OutputState"
         )
+
         _LOGGER.debug("Smartplug %s is currently %s", self.smart_plug_id, self._is_on)
-        return self._is_on
+
+        if self._is_on == "On":
+            return True
+        return False
 
     @property
     def device_state_attributes(self):
@@ -275,8 +275,7 @@ class WiserSmartPlug(SwitchEntity):
 
     async def set_smartplug_mode(self, plug_mode):
         """Set the smartplug mode."""
-        _LOGGER.debug("Setting Smartplug %s Mode to %s ", self.smart_plug_id, plug_mode)
-        self.data.wiserhub.setSmartPlugMode(self.smart_plug_id, plug_mode)
+        await self.data.set_smartplug_mode(self.smart_plug_id, plug_mode)
         return True
 
     async def async_added_to_hass(self):

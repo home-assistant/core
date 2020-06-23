@@ -157,11 +157,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for room in wiser_rooms:
             if room.entity_id == entity_id:
-                scheduleData = room.schedule
-                _LOGGER.debug("Sched Service Data = %s", scheduleData)
-                if scheduleData is not None:
-                    scheduleData = convert_from_wiser_schedule(scheduleData, room.name)
-                    yaml.save_yaml(filename, scheduleData)
+                schedule_data = room.schedule
+                _LOGGER.debug("Sched Service Data = %s", schedule_data)
+                if schedule_data is not None:
+                    schedule_data = convert_from_wiser_schedule(
+                        schedule_data, room.name
+                    )
+                    yaml.save_yaml(filename, schedule_data)
                 else:
                     raise Exception("No schedule data returned")
                 break
@@ -172,12 +174,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity_id = service.data[ATTR_ENTITY_ID]
         filename = service.data[ATTR_FILENAME]
         # Get schedule data
-        scheduleData = yaml.load_yaml(filename)
+        schedule_data = yaml.load_yaml(filename)
         # Set schedule
         for room in wiser_rooms:
             if room.entity_id == entity_id:
                 hass.async_create_task(
-                    room.set_room_schedule(room.room_id, scheduleData)
+                    room.set_room_schedule(room.room_id, schedule_data)
                 )
                 room.schedule_update_ha_state(True)
                 break
@@ -225,9 +227,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         copy_schedule,
         schema=COPY_SCHEDULE_SCHEMA,
     )
-
-
-""" Definition of WiserRoom """
 
 
 class WiserRoom(ClimateEntity):
@@ -314,10 +313,9 @@ class WiserRoom(ClimateEntity):
             self.data.wiserhub.getRoom(self.room_id).get("CalculatedTemperature") / 10
         )
         if temp < self.min_temp:
-            """ Sometimes we get really low temps (like -3000!),
-                not sure why, if we do then just set it to -20 for now till i
-                debug this.
-            """
+            # Sometimes we get really low temps (like -3000!),
+            # not sure why, if we do then just set it to -20 for now till i
+            # debug this.
             temp = self.min_temp
         return temp
 
@@ -326,11 +324,9 @@ class WiserRoom(ClimateEntity):
         """Return icon to show if radiator is heating, not heating or set to off."""
         if self.data.wiserhub.getRoom(self.room_id).get("ControlOutputState") == "On":
             return "mdi:radiator"
-        else:
-            if self.data.wiserhub.getRoom(self.room_id).get("CurrentSetPoint") == -200:
-                return "mdi:radiator-off"
-            else:
-                return "mdi:radiator-disabled"
+        if self.data.wiserhub.getRoom(self.room_id).get("CurrentSetPoint") == -200:
+            return "mdi:radiator-off"
+        return "mdi:radiator-disabled"
 
     @property
     def unique_id(self):
@@ -352,8 +348,7 @@ class WiserRoom(ClimateEntity):
         """Return hvac action from data."""
         if self.data.wiserhub.getRoom(self.room_id).get("ControlOutputState") == "On":
             return CURRENT_HVAC_HEAT
-        else:
-            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_IDLE
 
     @property
     def hvac_mode(self):
@@ -407,25 +402,19 @@ class WiserRoom(ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Async call to set preset mode ."""
-        boost_time = self.data._config_entry.options.get(
-            CONF_BOOST_TEMP_TIME, self.data.boost_time
-        )
-        boost_temp = self.data._config_entry.options.get(
-            CONF_BOOST_TEMP, self.data.boost_temp
-        )
+        boost_time = self.data.boost_time
+        boost_temp = self.data.boost_temp
 
-        """Set new preset mode."""
         _LOGGER.debug(
             "*******Setting Preset Mode %s for roomId %s", preset_mode, self.room_id,
         )
         # Convert HA preset to required api presets
 
-        """ Cancel boost mode """
-        # TODO: Map HVAC modes to Wiser Modes
+        # Cancel boost mode
         if preset_mode.lower() == PRESET_BOOST_CANCEL.lower():
             preset_mode = HASS_HVAC_TO_WISER[self.hvac_mode]
 
-        """ Deal with boost time variations """
+        # Deal with boost time variations
         if preset_mode.lower() == PRESET_BOOST30.lower():
             boost_time = 30
         if preset_mode.lower() == PRESET_BOOST60.lower():
@@ -435,11 +424,11 @@ class WiserRoom(ClimateEntity):
         if preset_mode.lower() == PRESET_BOOST180.lower():
             boost_time = 180
 
-        """ Set boost mode """
+        # Set boost mode
         if preset_mode[:5].lower() == PRESET_BOOST.lower():
             preset_mode = PRESET_BOOST
 
-            """ Set boost temp to current + boost_temp """
+            # Set boost temp to current + boost_temp
             boost_temp = (
                 self.data.wiserhub.getRoom(self.room_id).get("CalculatedTemperature")
                 / 10
@@ -526,19 +515,18 @@ class WiserRoom(ClimateEntity):
         await self.async_update_ha_state(True)
         return True
 
-    async def set_room_schedule(self, room_id, scheduleData):
+    async def set_room_schedule(self, room_id, schedule_data):
         """Set room schedules."""
-        if scheduleData is not None:
-            scheduleData = convert_to_wiser_schedule(scheduleData)
+        if schedule_data is not None:
+            schedule_data = convert_to_wiser_schedule(schedule_data)
             await self.hass.async_add_executor_job(
-                partial(self.data.wiserhub.setRoomSchedule, room_id, scheduleData)
+                partial(self.data.wiserhub.setRoomSchedule, room_id, schedule_data)
             )
             _LOGGER.debug("Set room schedule for %s", self.name)
             self._force_update = True
             await self.async_update_ha_state(True)
             return True
-        else:
-            return False
+        return False
 
     async def copy_room_schedule(self, room_id, to_room_id):
         """Copy room schedules."""

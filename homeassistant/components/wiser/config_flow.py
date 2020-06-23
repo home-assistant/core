@@ -10,6 +10,7 @@ import voluptuous as vol
 from wiserHeatingAPI.wiserHub import (
     WiserHubAuthenticationException,
     WiserHubTimeoutException,
+    WiserRESTException,
     wiserHub,
 )
 
@@ -48,21 +49,21 @@ async def validate_input(hass, data):
         wiser = await hass.async_add_executor_job(
             wiserHub, data[CONF_HOST], data[CONF_PASSWORD]
         )
-        wiserID = await hass.async_add_executor_job(wiser.getWiserHubName)
-    except AttributeError:
-        # bug in wiser api needs fixing
+        wiser_id = await hass.async_add_executor_job(wiser.getWiserHubName)
+
+    except WiserHubTimeoutException:
         raise CannotConnect
     except WiserHubAuthenticationException:
         raise InvalidAuth
-    except WiserHubTimeoutException:
-        raise CannotConnect
+    except WiserRESTException:
+        raise UnknownError
     except requests.exceptions.ConnectionError:
         raise CannotConnect
-    except Exception:
-        raise
+    except RuntimeError:
+        raise UnknownError
 
-    unique_id = str(f"{DOMAIN}-{wiserID}")
-    name = wiserID
+    unique_id = str(f"{DOMAIN}-{wiser_id}")
+    name = wiser_id
 
     return {"title": name, "unique_id": unique_id}
 
@@ -104,7 +105,7 @@ class WiserFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "auth_failure"
             except CannotConnect:
                 errors["base"] = "timeout_error"
-            except Exception:  # pylint: disable=broad-except
+            except UnknownError:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -168,3 +169,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class UnknownError(exceptions.HomeAssistantError):
+    """Error to indicate there is an unknown error."""

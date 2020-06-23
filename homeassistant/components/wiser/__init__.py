@@ -89,6 +89,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Wiser from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     _async_import_options_from_data_if_missing(hass, config_entry)
 
     data = WiserHubHandle(hass, config_entry,)
@@ -177,7 +178,7 @@ async def async_unload_entry(hass, config_entry):
         hass.services.async_remove(DOMAIN, WISER_SERVICES[service])
 
     _LOGGER.debug("Unloading Wiser Component")
-    """Unload a config entry."""
+    # Unload a config entry
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -204,7 +205,7 @@ class WiserHubHandle:
         self._hass = hass
         self._config_entry = config_entry
         self._name = config_entry.data[CONF_NAME]
-        self.ip = config_entry.data[CONF_HOST]
+        self.host = config_entry.data[CONF_HOST]
         self.secret = config_entry.data[CONF_PASSWORD]
         self.wiserhub = None
         self.minimum_temp = TEMP_MINIMUM
@@ -216,7 +217,7 @@ class WiserHubHandle:
 
     def connect(self):
         """Connect to Wiser Hub."""
-        self.wiserhub = wiserHub(self.ip, self.secret)
+        self.wiserhub = wiserHub(self.host, self.secret)
         return True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -233,21 +234,20 @@ class WiserHubHandle:
                 # Send update notice to all components to update
                 dispatcher_send(self._hass, "WiserHubUpdateMessage")
                 return True
-            else:
-                _LOGGER.error("Unable to update from wiser hub")
-                return False
-        except json.decoder.JSONDecodeError as JSONex:
+
+            _LOGGER.error("Unable to update from wiser hub")
+            return False
+        except json.decoder.JSONDecodeError as ex:
             _LOGGER.error(
-                "Data not in JSON format when getting data from the Wiser hub,"
-                + "did you enter the right URL? error %s",
-                str(JSONex),
+                "Data not in JSON format when getting data from the Wiser hub. Error is %s",
+                str(ex),
             )
             return False
         except WiserHubTimeoutException as ex:
             _LOGGER.error("Unable to update from Wiser hub due to timeout error")
             _LOGGER.debug("Error is %s", str(ex))
             return False
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error("Unable to update from Wiser hub due to unknown error")
             _LOGGER.debug("Error is %s", str(ex))
             return False
@@ -274,28 +274,62 @@ class WiserHubHandle:
         """Set Away mode, with temp."""
         mode = "AWAY" if away else "HOME"
         if self.wiserhub is None:
-            self.wiserhub = await self.async_connect()
+            self.wiserhub = await self._hass.async_add_executor_job(self.connect)
         _LOGGER.debug("Setting away mode to %s with temp %s.", mode, away_temperature)
         try:
             await self._hass.async_add_executor_job(
                 partial(self.wiserhub.setHomeAwayMode, mode, away_temperature)
             )
             await self.async_update(no_throttle=True)
-        except BaseException as e:
-            _LOGGER.debug("Error setting away mode! %s", str(e))
+        except BaseException as ex:  # pylint: disable=broad-except
+            _LOGGER.debug("Error setting away mode! %s", str(ex))
 
     async def set_system_switch(self, switch, mode):
         """Set the a system switch , stored in config files."""
         if self.wiserhub is None:
-            self.wiserhub = await self.async_connect()
+            self.wiserhub = await self._hass.async_add_executor_job(self.connect)
         _LOGGER.debug("Setting %s system switch to %s.", switch, mode)
         try:
             await self._hass.async_add_executor_job(
                 partial(self.wiserhub.setSystemSwitch, switch, mode)
             )
             await self.async_update(no_throttle=True)
-        except BaseException as e:
-            _LOGGER.debug("Error setting %s system switch! %s", switch, str(e))
+        except BaseException as ex:  # pylint: disable=broad-except
+            _LOGGER.debug("Error setting %s system switch! %s", switch, str(ex))
+
+    async def set_smartplug_mode(self, plug_id, plug_mode):
+        """
+        Set the mode of the smart plug.
+
+        :param plug_id:
+        :param mode: Can be manual or auto
+        :return:
+        """
+        if self.wiserhub is None:
+            self.wiserhub = await self._hass.async_add_executor_job(self.connect)
+
+        if plug_mode.lower() in ["auto", "manual"]:
+            _LOGGER.info("Setting SmartPlug %s mode to %s ", plug_id, plug_mode)
+
+            try:
+                await self._hass.async_add_executor_job(
+                    partial(self.wiserhub.setSmartPlugMode, plug_id, plug_mode)
+                )
+                # Add small delay to allow hub to update status before refreshing
+                await asyncio.sleep(0.5)
+                await self.async_update(no_throttle=True)
+
+            except BaseException as ex:  # pylint: disable=broad-except
+                _LOGGER.debug(
+                    "Error setting SmartPlug %s mode to %s, error %s",
+                    plug_id,
+                    plug_mode,
+                    str(ex),
+                )
+        else:
+            _LOGGER.error(
+                "Plug mode can only be auto or manual. Mode was %s", plug_mode
+            )
 
     async def set_smart_plug_state(self, plug_id, state):
         """
@@ -306,7 +340,7 @@ class WiserHubHandle:
         :return:
         """
         if self.wiserhub is None:
-            self.wiserhub = await self.async_connect()
+            self.wiserhub = await self._hass.async_add_executor_job(self.connect)
         _LOGGER.info("Setting SmartPlug %s to %s ", plug_id, state)
 
         try:
@@ -317,15 +351,15 @@ class WiserHubHandle:
             await asyncio.sleep(0.5)
             await self.async_update(no_throttle=True)
 
-        except BaseException as e:
+        except BaseException as ex:  # pylint: disable=broad-except
             _LOGGER.debug(
-                "Error setting SmartPlug %s to %s, error %s", plug_id, state, str(e),
+                "Error setting SmartPlug %s to %s, error %s", plug_id, state, str(ex),
             )
 
     async def set_hotwater_mode(self, hotwater_mode):
         """Set the hotwater mode."""
         if self.wiserhub is None:
-            self.wiserhub = await self.async_connect()
+            self.wiserhub = await self._hass.async_add_executor_job(self.connect)
         _LOGGER.info("Setting Hotwater to %s ", hotwater_mode)
         # Add small delay to allow hub to update status before refreshing
         await asyncio.sleep(0.5)
@@ -335,7 +369,7 @@ class WiserHubHandle:
             await self._hass.async_add_executor_job(
                 partial(self.wiserhub.setHotwaterMode, hotwater_mode)
             )
-        except BaseException as e:
+        except BaseException as ex:  # pylint: disable=broad-except
             _LOGGER.debug(
-                "Error setting Hotwater Mode to  %s, error %s".hotwater_mode, str(e),
+                "Error setting Hotwater Mode to  %s, error %s", hotwater_mode, str(ex),
             )
