@@ -282,6 +282,70 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
+async def test_attribute_templates(hass, calls):
+    """Test attribute_templates template."""
+    assert await setup.async_setup_component(
+        hass,
+        "vacuum",
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {
+                    "test_template_vacuum": {
+                        "value_template": "{{ 'cleaning' }}",
+                        "start": {"service": "script.vacuum_start"},
+                        "attribute_templates": {
+                            "test_attribute": "It {{ states.sensor.test_state.state }}."
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("vacuum.test_template_vacuum")
+    assert state.attributes["test_attribute"] == "It ."
+
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    await hass.helpers.entity_component.async_update_entity(
+        "vacuum.test_template_vacuum"
+    )
+    state = hass.states.get("vacuum.test_template_vacuum")
+    assert state.attributes["test_attribute"] == "It Works."
+
+
+async def test_invalid_attribute_template(hass, caplog):
+    """Test that errors are logged if rendering template fails."""
+    assert await setup.async_setup_component(
+        hass,
+        "vacuum",
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {
+                    "invalid_template": {
+                        "value_template": "{{ states('input_select.state') }}",
+                        "start": {"service": "script.vacuum_start"},
+                        "attribute_templates": {
+                            "test_attribute": "{{ this_function_does_not_exist() }}"
+                        },
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+    await hass.helpers.entity_component.async_update_entity("vacuum.invalid_template")
+
+    assert ("Error rendering attribute test_attribute") in caplog.text
+
+
 # End of template tests #
 
 
@@ -529,6 +593,9 @@ async def _register_components(hass):
                 },
             },
             "fan_speeds": ["low", "medium", "high"],
+            "attribute_templates": {
+                "test_attribute": "It {{ states.sensor.test_state.state }}."
+            },
         }
 
         assert await setup.async_setup_component(
