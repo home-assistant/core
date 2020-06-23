@@ -48,7 +48,7 @@ def purge_old_data(instance, purge_days, repack):
             # Optimize mysql / mariadb tables to free up space on disk
             elif instance.engine.driver == "mysqldb":
                 _LOGGER.debug("Optimizing SQL DB to free space")
-                instance.engine.execute("OPTIMIZE TABLE states, events")
+                instance.engine.execute("OPTIMIZE TABLE states, events, recorder_runs")
 
     except SQLAlchemyError as err:
         _LOGGER.warning("Error purging history: %s.", err)
