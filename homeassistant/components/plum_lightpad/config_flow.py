@@ -48,9 +48,8 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Unable to connect/authenticate to Plum cloud: %s", str(ex))
             return self._show_form({"base": "cannot_connect"})
 
-        already_registered = await self.async_set_unique_id(username)
-        if already_registered:
-            return self.async_abort(reason="single_instance_per_username_allowed")
+        await self.async_set_unique_id(username)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=username, data={CONF_USERNAME: username, CONF_PASSWORD: password}
