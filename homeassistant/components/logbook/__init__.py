@@ -27,7 +27,6 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_EXCLUDE,
@@ -484,10 +483,6 @@ def _keep_event(hass, event, entities_filter, entity_attr_cache):
         if not event.has_old_and_new_state:
             return False
 
-        # exclude entities which are customized hidden
-        if event.hidden:
-            return False
-
         if event.domain in CONTINUOUS_DOMAINS and entity_attr_cache.get(
             entity_id, ATTR_UNIT_OF_MEASUREMENT, event
         ):
@@ -700,13 +695,6 @@ class LazyEventPartialState:
             '"old_state": {' in self._row.event_data
             and '"new_state": {' in self._row.event_data
         )
-
-    @property
-    def hidden(self):
-        """Check the json to see if hidden."""
-        if '"hidden":' in self._row.attributes:
-            return self.attributes.get(ATTR_HIDDEN, False)
-        return False
 
 
 class EntityAttributeCache:
