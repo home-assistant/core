@@ -1,11 +1,24 @@
-#!/bin/sh
+#!/bin/bash
 # Setups the repository.
 
 # Stop on errors
 set -e
 
 cd "$(dirname "$0")/.."
+
+mkdir -p config
+
+python3 -m venv venv
+source venv/bin/activate
+
 script/bootstrap
 
 pre-commit install
 pip install -e .
+
+hass --script ensure_config -c config
+
+echo "logger:" >> config/configuration.yaml
+echo "  default: info" >> config/configuration.yaml
+echo "  logs:" >> config/configuration.yaml
+echo "    homeassistant.components.cloud: debug" >> config/configuration.yaml
