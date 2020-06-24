@@ -254,12 +254,12 @@ class ClimaCellEntity(Entity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        return f"{self._config_entry.data[CONF_NAME]}"
+        return self._config_entry.data[CONF_NAME]
 
     @property
     def unique_id(self) -> str:
         """Return the unique id of the entity."""
-        return f"{self._config_entry.unique_id}"
+        return self._config_entry.unique_id
 
     @property
     def attribution(self):
