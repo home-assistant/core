@@ -155,6 +155,11 @@ class ClimaCellWeatherEntity(WeatherEntity):
         self._async_unsub_listeners.clear()
 
     @property
+    def should_poll(self):
+        """Return the polling requirement of the entity."""
+        return False
+
+    @property
     def available(self) -> bool:
         """Return the availabiliity of the entity."""
         return self._coordinator.last_update_success

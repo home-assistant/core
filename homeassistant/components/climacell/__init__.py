@@ -79,7 +79,8 @@ def _set_update_interval(
     interval = timedelta(
         minutes=(
             ceil(
-                24 * 60 * (len(other_instance_entry_ids) + 1) * 2 / MAX_REQUESTS_PER_DAY
+                (24 * 60 * (len(other_instance_entry_ids) + 1) * 2)
+                / MAX_REQUESTS_PER_DAY
             )
         )
     )
