@@ -13,11 +13,19 @@
                 "data": {
                     "password": "[%key:common::config_flow::data::password%]",
                     "server": "Server",
-                    "unit_of_measurement": "Unit of measurement",
                     "username": "[%key:common::config_flow::data::username%]"
                 },
                 "description": "Enter Dexcom Share credentials",
                 "title": "Setup Dexcom integration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Unit of measurement"
+                }
             }
         }
     }

@@ -9,7 +9,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Dexcom sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     username = config_entry.data[CONF_USERNAME]
-    unit_of_measurement = config_entry.data[CONF_UNIT_OF_MEASUREMENT]
+    unit_of_measurement = config_entry.options[CONF_UNIT_OF_MEASUREMENT]
     sensors = []
     sensors.append(DexcomGlucoseTrendSensor(coordinator, username))
     sensors.append(DexcomGlucoseValueSensor(coordinator, username, unit_of_measurement))
