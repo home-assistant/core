@@ -188,7 +188,10 @@ class GeniusBroker:
         ) as err:
             if not self._connect_error:
                 self._connect_error = True
-                _LOGGER.warning("Update failed, message is: %s", err)
+                _LOGGER.warning(
+                    "Connection to geniushub failed (unable to update), message is: %s",
+                    err,
+                )
             return
         self.make_debug_log_entries()
 
