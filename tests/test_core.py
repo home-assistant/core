@@ -11,7 +11,6 @@ import unittest
 import pytest
 import pytz
 import voluptuous as vol
-import yarl
 
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -969,8 +968,7 @@ class TestConfig(unittest.TestCase):
         for url in valid:
             assert self.config.is_allowed_external_url(url)
 
-        relative_url = str(yarl.URL("http://z.com/bla/../something"))
-        invalid = [relative_url, "https://a.co"]
+        invalid = ["http://z.com/bla/../something", "https://a.co"]
         for url in invalid:
             assert not self.config.is_allowed_external_url(url)
 

@@ -1363,7 +1363,7 @@ class Config:
         return any(
             allowed
             for allowed in self.allowlist_external_urls
-            if url.startswith(allowed)
+            if str(yarl.URL(url)).startswith(allowed)
         )
 
     def is_allowed_path(self, path: str) -> bool:
