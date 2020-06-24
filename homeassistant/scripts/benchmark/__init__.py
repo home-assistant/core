@@ -12,6 +12,7 @@ from typing import Callable, Dict, TypeVar
 from homeassistant import core
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED
+from homeassistant.helpers.entityfilter import convert_include_exclude_filter
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.util import dt as dt_util
 
@@ -178,16 +179,84 @@ async def _logbook_filtering(hass, last_changed, last_updated):
 
     entity_attr_cache = logbook.EntityAttributeCache(hass)
 
+    entities_filter = convert_include_exclude_filter(
+        logbook.INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA({})
+    )
+
     def yield_events(event):
-        # pylint: disable=protected-access
-        entities_filter = logbook._generate_filter_from_config({})
         for _ in range(10 ** 5):
+            # pylint: disable=protected-access
             if logbook._keep_event(hass, event, entities_filter, entity_attr_cache):
                 yield event
 
     start = timer()
 
     list(logbook.humanify(hass, yield_events(event), entity_attr_cache))
+
+    return timer() - start
+
+
+@benchmark
+async def filtering_entity_id(hass):
+    """Run a 100k state changes through entity filter."""
+    config = {
+        "include": {
+            "domains": [
+                "automation",
+                "script",
+                "group",
+                "media_player",
+                "custom_component",
+            ],
+            "entity_globs": [
+                "binary_sensor.*_contact",
+                "binary_sensor.*_occupancy",
+                "binary_sensor.*_detected",
+                "binary_sensor.*_active",
+                "input_*",
+                "device_tracker.*_phone",
+                "switch.*_light",
+                "binary_sensor.*_charging",
+                "binary_sensor.*_lock",
+                "binary_sensor.*_connected",
+            ],
+            "entities": [
+                "test.entity_1",
+                "test.entity_2",
+                "binary_sensor.garage_door_open",
+                "test.entity_3",
+                "test.entity_4",
+            ],
+        },
+        "exclude": {
+            "domains": ["input_number"],
+            "entity_globs": ["media_player.google_*", "group.all_*"],
+            "entities": [],
+        },
+    }
+
+    entity_ids = [
+        "automation.home_arrival",
+        "script.shut_off_house",
+        "binary_sensor.garage_door_open",
+        "binary_sensor.front_door_lock",
+        "binary_sensor.kitchen_motion_sensor_occupancy",
+        "switch.desk_lamp",
+        "light.dining_room",
+        "input_boolean.guest_staying_over",
+        "person.eleanor_fant",
+        "alert.issue_at_home",
+        "calendar.eleanor_fant_s_calendar",
+        "sun.sun",
+    ]
+
+    entities_filter = convert_include_exclude_filter(config)
+    size = len(entity_ids)
+
+    start = timer()
+
+    for i in range(10 ** 5):
+        entities_filter(entity_ids[i % size])
 
     return timer() - start
 
