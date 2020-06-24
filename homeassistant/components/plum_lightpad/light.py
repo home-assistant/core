@@ -1,4 +1,9 @@
 """Support for Plum Lightpad lights."""
+import logging
+from typing import Callable, List
+
+from plumlightpad import Plum
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -6,30 +11,55 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Initialize the Plum Lightpad Light and GlowRing."""
-    if discovery_info is None:
-        return
 
-    plum = hass.data[DOMAIN]
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity]], None],
+) -> None:
+    """Set up Plum Lightpad dimmer lights and glow rings."""
 
-    entities = []
+    plum: Plum = hass.data[DOMAIN][entry.entry_id]
 
-    if "lpid" in discovery_info:
-        lightpad = plum.get_lightpad(discovery_info["lpid"])
-        entities.append(GlowRing(lightpad=lightpad))
+    def setup_entities(device) -> None:
+        entities = []
 
-    if "llid" in discovery_info:
-        logical_load = plum.get_load(discovery_info["llid"])
-        entities.append(PlumLight(load=logical_load))
+        if "lpid" in device:
+            lightpad = plum.get_lightpad(device["lpid"])
+            entities.append(GlowRing(lightpad=lightpad))
 
-    if entities:
-        async_add_entities(entities)
+        if "llid" in device:
+            logical_load = plum.get_load(device["llid"])
+            entities.append(PlumLight(load=logical_load))
+
+        if entities:
+            async_add_entities(entities)
+
+    async def new_load(device):
+        setup_entities(device)
+
+    async def new_lightpad(device):
+        setup_entities(device)
+
+    device_web_session = async_get_clientsession(hass, verify_ssl=False)
+    hass.loop.create_task(
+        plum.discover(
+            hass.loop,
+            loadListener=new_load,
+            lightpadListener=new_lightpad,
+            websession=device_web_session,
+        )
+    )
 
 
 class PlumLight(LightEntity):
@@ -63,6 +93,16 @@ class PlumLight(LightEntity):
     def name(self):
         """Return the name of the switch if any."""
         return self._load.name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "model": "Dimmer",
+            "manufacturer": "Plum",
+        }
 
     @property
     def brightness(self) -> int:
@@ -144,6 +184,16 @@ class GlowRing(LightEntity):
     def name(self):
         """Return the name of the switch if any."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "model": "Glow Ring",
+            "manufacturer": "Plum",
+        }
 
     @property
     def brightness(self) -> int:
