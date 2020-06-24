@@ -14,6 +14,12 @@ from .devolo_device import DevoloDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+DEVICE_CLASS_MAPPING = {
+    "temperature": DEVICE_CLASS_TEMPERATURE,
+    "light": DEVICE_CLASS_ILLUMINANCE,
+    "humidity": DEVICE_CLASS_HUMIDITY,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -53,14 +59,9 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
         self._multi_level_sensor_property = device_instance.multi_level_sensor_property[
             element_uid
         ]
-        if self._multi_level_sensor_property.sensor_type == "temperature":
-            self._device_class = DEVICE_CLASS_TEMPERATURE
-        elif self._multi_level_sensor_property.sensor_type == "light":
-            self._device_class = DEVICE_CLASS_ILLUMINANCE
-        elif self._multi_level_sensor_property.sensor_type == "humidity":
-            self._device_class = DEVICE_CLASS_HUMIDITY
-        else:
-            self._device_class = None
+        self._device_class = DEVICE_CLASS_MAPPING.get(
+            self._multi_level_sensor_property.sensor_type
+        )
         self._unit = self._multi_level_sensor_property.unit
 
     @property
