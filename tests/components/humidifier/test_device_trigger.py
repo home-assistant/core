@@ -1,5 +1,6 @@
 """The tests for Humidifier device triggers."""
 import datetime
+
 import pytest
 import pytz
 import voluptuous_serialize
@@ -212,7 +213,10 @@ async def test_if_fires_on_state_change(hass, calls):
     assert calls[1].data["some"] == "target_humidity_changed_above"
 
     # Wait 6 minutes
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: datetime.datetime.now(pytz.UTC) + datetime.timedelta(minutes=6)})
+    hass.bus.async_fire(
+        ha.EVENT_TIME_CHANGED,
+        {ha.ATTR_NOW: datetime.datetime.now(pytz.UTC) + datetime.timedelta(minutes=6)},
+    )
     await hass.async_block_till_done()
     assert len(calls) == 3
     assert calls[2].data["some"] == "target_humidity_changed_above_for"
