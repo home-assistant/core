@@ -81,15 +81,12 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.async_set_device(device, raise_on_progress=False)
                     return await self.async_step_auth()
 
-                else:
-                    errors["base"] = "invalid_host"
-                    mac_addr = ":".join(
-                        [format(octet, "x") for octet in self.device.mac]
-                    )
-                    err_msg = (
-                        "Invalid host for this configuration flow. "
-                        f"The MAC address should be {mac_addr}"
-                    )
+                errors["base"] = "invalid_host"
+                mac_addr = ":".join([format(octet, "x") for octet in self.device.mac])
+                err_msg = (
+                    "Invalid host for this configuration flow. "
+                    f"The MAC address should be {mac_addr}"
+                )
 
             LOGGER.error("Failed to discover the device at %s: %s", host, err_msg)
 
