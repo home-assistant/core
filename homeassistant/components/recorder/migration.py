@@ -254,9 +254,7 @@ def _apply_update(engine, new_version, old_version):
         _create_index(engine, "states", "ix_states_entity_id")
     elif new_version == 8:
         _add_columns(engine, "events", ["context_parent_id CHARACTER(36)"])
-        _add_columns(engine, "states", ["context_parent_id CHARACTER(36)"])
         _add_columns(engine, "states", ["old_state_id INTEGER"])
-        _create_index(engine, "states", "ix_states_context_parent_id")
         _create_index(engine, "events", "ix_events_context_parent_id")
     elif new_version == 9:
         # We now get the context from events with a join
@@ -269,7 +267,6 @@ def _apply_update(engine, new_version, old_version):
         #
         _drop_index(engine, "states", "ix_states_context_id")
         _drop_index(engine, "states", "ix_states_context_user_id")
-        _drop_index(engine, "states", "ix_states_context_parent_id")
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated
         _drop_index(engine, "states", "ix_states_entity_id")
