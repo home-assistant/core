@@ -29,10 +29,10 @@ from .const import (
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
     CONF_USER_ID,
+    DATA_CONFIG_ENTRIES,
     DOMAIN,
 )
 from .helpers import supports_encryption
-from .notify import push_registrations
 
 
 class RegistrationsView(HomeAssistantView):
@@ -92,8 +92,13 @@ class RegistrationsView(HomeAssistantView):
             # Fallback to DEVICE_ID
             data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
 
+        registrations = [
+            entry.data[ATTR_DEVICE_NAME]
+            for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items()
+        ]
+
         data[ATTR_APP_NAME] = ensure_unique_string(
-            data[ATTR_DEVICE_NAME], push_registrations(hass)
+            data[ATTR_DEVICE_NAME], registrations
         )
 
         await hass.async_create_task(
