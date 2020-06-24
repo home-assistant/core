@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
@@ -18,9 +19,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_FEET,
     LENGTH_KILOMETERS,
-    LENGTH_METERS,
     LENGTH_MILES,
     PRESSURE_HPA,
     PRESSURE_INHG,
@@ -40,7 +39,7 @@ from .const import (
     ATTR_WEATHER_DEWPOINT,
     ATTR_WEATHER_FEELS_LIKE,
     ATTR_WEATHER_MOON_PHASE,
-    ATTR_WEATHER_PRECIPITATION,
+    ATTR_WEATHER_PRECIPITATION_PROBABILITY,
     ATTR_WEATHER_PRECIPITATION_TYPE,
     ATTR_WEATHER_WIND_GUST,
     CLEAR_CONDITIONS,
@@ -81,6 +80,7 @@ def _forecast_dict(
     hass: HomeAssistantType,
     condition: str,
     precipitation: str,
+    precipitation_probability: float,
     temp: float,
     temp_low: Optional[float],
     time: str,
@@ -97,6 +97,7 @@ def _forecast_dict(
     data = {
         ATTR_FORECAST_CONDITION: translated_condition,
         ATTR_FORECAST_PRECIPITATION: precipitation,
+        ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
         ATTR_FORECAST_TEMP: temp,
         ATTR_FORECAST_TEMP_LOW: temp_low,
         ATTR_FORECAST_TIME: time,
@@ -239,16 +240,13 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         return feels_like
 
     @property
-    def precipitation(self):
-        """Return the precipitation."""
-        if "precipitation" not in self._coordinator.data[CURRENT]:
+    def precipitation_probability(self):
+        """Return the precipitation probability."""
+        if "precipitation_probability" not in self._coordinator.data[CURRENT]:
             return None
-        precipitation = self._coordinator.data[CURRENT]["precipitation"]["value"]
-        if self.hass.config.units.is_metric:
-            return (
-                distance_convert(precipitation / 12, LENGTH_FEET, LENGTH_METERS) * 1000
-            )
-        return precipitation
+        return (
+            self._coordinator.data[CURRENT]["precipitation_probability"]["value"] / 100
+        )
 
     @property
     def precipitation_type(self):
@@ -294,6 +292,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                         self.hass,
                         forecast["weather_code"]["value"],
                         forecast["precipitation_accumulation"]["value"],
+                        forecast["precipitation_probability"]["value"] / 100,
                         temp_max,
                         temp_min,
                         forecast["observation_time"]["value"],
@@ -317,6 +316,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                         self.hass,
                         forecast["weather_code"]["value"],
                         forecast["precipitation"]["value"],
+                        forecast["precipitation_probability"]["value"] / 100,
                         forecast["temp"]["value"],
                         None,
                         forecast["observation_time"]["value"],
@@ -346,8 +346,10 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         if self.wind_gust is not None:
             data[ATTR_WEATHER_WIND_GUST] = self.wind_gust
 
-        if self.precipitation is not None:
-            data[ATTR_WEATHER_PRECIPITATION] = self.precipitation
+        if self.precipitation_probability is not None:
+            data[
+                ATTR_WEATHER_PRECIPITATION_PROBABILITY
+            ] = self.precipitation_probability
 
         if self.precipitation_type is not None:
             data[ATTR_WEATHER_PRECIPITATION_TYPE] = self.precipitation_type
