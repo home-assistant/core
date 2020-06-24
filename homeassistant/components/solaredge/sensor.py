@@ -86,9 +86,9 @@ class SolarEdgeSensorFactory:
         for key in [
             "purchased_power",
             "production_power",
-            "feedin_power",
+            "feed_in_power",
             "consumption_power",
-            "selfconsumption_power",
+            "self_consumption_power",
         ]:
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
