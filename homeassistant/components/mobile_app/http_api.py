@@ -93,7 +93,7 @@ class RegistrationsView(HomeAssistantView):
             data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
 
         data[ATTR_APP_NAME] = ensure_unique_string(
-            data[ATTR_DEVICE_NAME], push_registrations
+            data[ATTR_DEVICE_NAME], push_registrations(hass)
         )
 
         await hass.async_create_task(
