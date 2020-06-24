@@ -1,5 +1,4 @@
 """Provides an HTTP API for mobile_app."""
-import logging
 import secrets
 from typing import Dict
 
@@ -34,8 +33,6 @@ from .const import (
     DOMAIN,
 )
 from .helpers import supports_encryption
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class RegistrationsView(HomeAssistantView):
@@ -100,15 +97,9 @@ class RegistrationsView(HomeAssistantView):
             for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items()
         ]
 
-        _LOGGER.warning(f"Current device name {data[ATTR_DEVICE_NAME]}")
-
-        _LOGGER.warning(f"Existing {registrations}")
-
         data[ATTR_DEVICE_NAME] = ensure_unique_string(
             data[ATTR_DEVICE_NAME], registrations
         )
-
-        _LOGGER.warning(f"Final device name {data[ATTR_DEVICE_NAME]}")
 
         await hass.async_create_task(
             hass.config_entries.flow.async_init(
