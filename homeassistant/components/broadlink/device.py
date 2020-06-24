@@ -12,15 +12,16 @@ from broadlink.exceptions import (
     DeviceOfflineError,
 )
 
-from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
+from .const import DOMAIN, DOMAINS_AND_TYPES
 from .updater import get_update_coordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_PORT = 80
 
 
 class BroadlinkDevice:
@@ -32,6 +33,7 @@ class BroadlinkDevice:
         self.config = config
         self.api = None
         self.coordinator = None
+        self.fw_version = None
         self.authorized = None
         self.reset_jobs = []
 
@@ -53,14 +55,13 @@ class BroadlinkDevice:
         """
         # Update the name in the registry.
         device_registry = await dr.async_get_registry(hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, entry.unique_id)}, connections=set()
-        )
+        device = device_registry.async_get_device({(DOMAIN, entry.unique_id)}, set())
         device_registry.async_update_device(device.id, name=entry.title)
 
-        # Update the name of the entities.
-        coordinator = hass.data[DOMAIN].devices[entry.entry_id].coordinator
-        await coordinator.async_request_refresh()
+        # Update the name in the API and related entities.
+        device = hass.data[DOMAIN].devices[entry.entry_id]
+        device.api.name = entry.title
+        await device.coordinator.async_request_refresh()
 
     async def async_setup(self):
         """Set up the device and related entities."""
@@ -99,20 +100,9 @@ class BroadlinkDevice:
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
         try:
-            fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
+            self.fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
         except BroadlinkException:
-            fw_version = None
-
-        device_registry = await dr.async_get_registry(self.hass)
-        device_registry.async_get_or_create(
-            config_entry_id=config.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_addr)},
-            identifiers={(DOMAIN, config.unique_id)},
-            manufacturer=api.manufacturer,
-            model=api.model,
-            name=name,
-            sw_version=fw_version,
-        )
+            self.fw_version = None
 
         # Forward entry setup to related domains.
         tasks = (
@@ -127,7 +117,7 @@ class BroadlinkDevice:
 
     async def async_unload(self):
         """Unload the device and related entities."""
-        if self.api is None or self.coordinator is None:
+        if self.coordinator is None:
             return True
 
         while self.reset_jobs:
@@ -170,17 +160,13 @@ class BroadlinkDevice:
             return
 
         self.authorized = False
-        host = self.config.data[CONF_HOST]
 
         _LOGGER.error(
-            "The device at %s is locked. Go to the integrations page and follow the config flow to unlock it.",
-            host,
+            "The device at %s is locked for authentication. Follow the configuration flow to unlock it",
+            self.config.data[CONF_HOST],
         )
-
         self.hass.async_create_task(
             self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=self.config.data,
+                DOMAIN, context={"source": "reauth"}, data=self.api,
             )
         )

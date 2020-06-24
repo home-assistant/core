@@ -48,14 +48,17 @@ class BroadlinkDataUpdater(ABC):
         """Fetch data from the device."""
         try:
             data = await self.async_fetch_data()
+
         except (AuthorizationError, ConnectionClosedError, DeviceOfflineError) as err:
             if self.coordinator.last_update_success:
                 _LOGGER.warning(
                     "Disconnected from the device at %s", self.device.api.host[0]
                 )
             raise UpdateFailed(err)
+
         except BroadlinkException as err:
             raise UpdateFailed(err)
+
         else:
             if not self.coordinator.last_update_success:
                 _LOGGER.warning(
@@ -97,7 +100,7 @@ class SP1DataUpdater(BroadlinkDataUpdater):
 
     async def async_fetch_data(self):
         """Fetch data from the device."""
-        return
+        return None
 
 
 class SP2DataUpdater(BroadlinkDataUpdater):

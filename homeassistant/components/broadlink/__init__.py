@@ -1,62 +1,24 @@
 """The Broadlink integration."""
-from collections import namedtuple
+from dataclasses import dataclass, field
 import logging
 
-import voluptuous as vol
-
-from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_TIMEOUT,
-    CONF_TYPE,
-)
-from homeassistant.helpers import config_validation as cv
-
-from .const import DEFAULT_TIMEOUT, DOMAIN
+from .const import DOMAIN
 from .device import BroadlinkDevice
-from .helpers import mac_address
 
 LOGGER = logging.getLogger(__name__)
 
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Inclusive(CONF_MAC, "manual_config"): mac_address,
-        vol.Inclusive(CONF_TYPE, "manual_config"): cv.positive_int,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
 
-DOMAIN_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])}
-)
+@dataclass
+class BroadlinkData:
+    """Class for sharing data within the Broadlink integration."""
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: DOMAIN_SCHEMA}, extra=vol.ALLOW_EXTRA)
+    devices: dict = field(default_factory=dict)
+    platforms: dict = field(default_factory=dict)
 
 
 async def async_setup(hass, config):
     """Set up the Broadlink integration."""
-    config = config.get(DOMAIN, {})
-    devices = config.get(CONF_DEVICES, {})
-
-    SharedData = namedtuple("SharedData", ["devices", "platforms"])
-    hass.data[DOMAIN] = SharedData({}, {})
-
-    configured_hosts = {
-        entry.data.get(CONF_HOST) for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-
-    for device in devices:
-        if device[CONF_HOST] in configured_hosts:
-            continue
-
-        import_device = hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=device,
-        )
-        hass.async_create_task(import_device)
-
+    hass.data[DOMAIN] = BroadlinkData()
     return True
 
 

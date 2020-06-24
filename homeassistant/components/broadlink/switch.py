@@ -114,7 +114,13 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
     @property
     def device_info(self):
         """Return device info."""
-        return {"identifiers": {(DOMAIN, self._device.unique_id)}}
+        return {
+            "identifiers": {(DOMAIN, self._device.unique_id)},
+            "manufacturer": self._device.api.manufacturer,
+            "model": self._device.api.model,
+            "name": self._device.name,
+            "sw_version": self._device.fw_version,
+        }
 
     @callback
     def update_data(self):

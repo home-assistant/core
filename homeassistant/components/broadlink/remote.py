@@ -79,7 +79,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     loaded = await remote.async_load_storage_files()
     if not loaded:
-        _LOGGER.error("Failed to create '%s' remote entity: Storage error", device.name)
+        _LOGGER.error("Failed to create '%s Remote' entity: Storage error", device.name)
         return
 
     async_add_entities([remote], False)
@@ -131,7 +131,13 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
     @property
     def device_info(self):
         """Return device info."""
-        return {"identifiers": {(DOMAIN, self._device.unique_id)}}
+        return {
+            "identifiers": {(DOMAIN, self._device.unique_id)},
+            "manufacturer": self._device.api.manufacturer,
+            "model": self._device.api.model,
+            "name": self._device.name,
+            "sw_version": self._device.fw_version,
+        }
 
     def get_code(self, command, device):
         """Return a code and a boolean indicating whether it is a toggle command.

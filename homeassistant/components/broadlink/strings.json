@@ -2,10 +2,10 @@
   "config": {
     "flow_title": "{name} ({model} at {host})",
     "step": {
-      "hello": {
+      "user": {
         "title": "Connect to the device",
         "data": {
-          "host": "Hostname or IP address",
+          "host": "[%key:common::config_flow::data::host%]",
           "timeout": "Timeout"
         }
       },
@@ -14,7 +14,7 @@
       },
       "reset": {
         "title": "Unlock the device",
-        "description": "Your device is locked. Follow this tutorial to unlock it:\n1. Factory reset the device.\n2. Use the Broadlink app to add the device to your local network.\n3. Stop. Do not finish the setup. Close the app.\nFor more information, refer to the troubleshooting section in the [documentation](https://www.home-assistant.io/integrations/broadlink/)."
+        "description": "Your device is locked for authentication. Follow the instructions to unlock it:\n1. Factory reset the device.\n2. Use the official app to add the device to your local network.\n3. Stop. Do not finish the setup. Close the app.\n4. Click Submit."
       },
       "unlock": {
         "title": "Unlock the device (optional)",
@@ -34,11 +34,9 @@
       "already_in_progress": "This config flow is already in progress."
     },
     "error": {
-      "device_not_found": "Device not found.",
-      "device_offline": "The device is offline.",
-      "invalid_hostname": "Invalid hostname.",
-      "invalid_ip_address": "Invalid IP address.",
-      "unknown_error": "Unknown error."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "Invalid hostname or IP address.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }
