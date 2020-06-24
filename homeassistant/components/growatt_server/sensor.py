@@ -129,7 +129,7 @@ INVERTER_SENSOR_TYPES = {
         {"device_class": "power"},
     ),
 }
-
+# Add ability to take this data from the inverter
 STORAGE_SENSOR_TYPES = {
     "storage_storage_production_today": (
         "Storage production today",
