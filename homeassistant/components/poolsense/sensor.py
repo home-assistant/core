@@ -147,7 +147,7 @@ class PoolSenseSensor(Entity):
         if self.info_type == "Chlorine Status":
             if self.coordinator.data[self.info_type] == "red":
                 return "mdi: thumb-down"
-            return "mdi: thumb-up"
+            return "mdi:thumb-up"
         return SENSORS[self.info_type]["icon"]
 
     @property
