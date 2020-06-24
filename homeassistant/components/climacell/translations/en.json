@@ -16,13 +16,13 @@
                 "data": {
                     "api_key": "[%key:common::config_flow::data::api_key%]",
                     "aqi_country": "Air Quality Index Country Standard",
-                    "forecast_frequency": "Forecast Frequency",
+                    "forecast_interval": "Forecast Interval",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "name": "Name",
                     "unit_system": "Unit System"
                 },
-                "description": "If [%key:component::climacell::config::step::user::data::forecast_frequency%] and [%key:component::climacell::config::step::user::data::forecast_frequency%] are not provided, the default values in the Home Assistant configuration will be used. Forecasts can be disabled by choosing `disable` for [%key:component::climacell::config::step::user::data::forecast_frequency%]."
+                "description": "If [%key:component::climacell::config::step::user::data::latitude%] and [%key:component::climacell::config::step::user::data::longitude%] are not provided, the default values in the Home Assistant configuration will be used. Forecasts can be disabled by choosing `disable` for [%key:component::climacell::config::step::user::data::forecast_interval%]."
             }
         }
     },
