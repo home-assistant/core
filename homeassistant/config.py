@@ -508,10 +508,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
     # already have it so that we can properly test "path ownership"
     if CONF_ALLOWLIST_EXTERNAL_URLS in config:
         hac.allowlist_external_urls.update(
-            {
-                url if url.endswith("/") else f"{url}/"
-                for url in config[CONF_ALLOWLIST_EXTERNAL_URLS]
-            }
+            url if url.endswith("/") else f"{url}/"
+            for url in config[CONF_ALLOWLIST_EXTERNAL_URLS]
         )
 
     # Customize
