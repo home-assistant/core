@@ -73,12 +73,21 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Pi-hole entry."""
+    # Move API key to options
+    if CONF_API_KEY in entry.data:
+        data = {**entry.data}
+        api_key = entry.data[CONF_API_KEY]
+        data.pop(CONF_API_KEY)
+        hass.config_entries.async_update_entry(
+            entry, data=data, options={CONF_API_KEY: api_key}
+        )
+
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
     use_tls = entry.data[CONF_SSL]
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
-    api_key = entry.data.get(CONF_API_KEY)
+    api_key = entry.options.get(CONF_API_KEY)
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
@@ -98,6 +107,8 @@ async def async_setup_entry(hass, entry):
             await api.get_data()
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicating with API: {err}")
+
+    entry.add_update_listener(async_update_listener)
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -119,12 +130,19 @@ async def async_setup_entry(hass, entry):
     return True
 
 
+async def async_update_listener(hass, entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_unload_entry(hass, entry):
     """Unload Pi-hole entry."""
-    hass.data[DOMAIN].pop(entry.data[CONF_NAME])
+    hass.data[DOMAIN].pop(entry.entry_id)
     return all(
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
+        [
+            await hass.config_entries.async_forward_entry_unload(entry, platform)
+            for platform in PLATFORMS
+        ]
     )
 
 
@@ -166,3 +184,7 @@ class PiHoleEntity(Entity):
     async def async_update(self):
         """Get the latest data from the Pi-hole API."""
         await self.coordinator.async_request_refresh()
+
+    async def async_disable(self, duration=None):
+        """Disable the service for a given duration."""
+        # Do nothing. To avoid problem caused by calling service targeting all entities.
