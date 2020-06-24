@@ -6,13 +6,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    DISCOVERY_TASK,
-    DOMAIN,
-    ENTRY_PLAYERS,
-    KNOWN_PLAYERS,
-    PLAYER_DISCOVERY_UNSUB,
-)
+from .const import DISCOVERY_TASK, DOMAIN, PLAYER_DISCOVERY_UNSUB
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,13 +28,6 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
     hass.data[DOMAIN][entry.entry_id][PLAYER_DISCOVERY_UNSUB]()
-
-    # Remove config entry's players from list of known players
-    entry_players = hass.data[DOMAIN][entry.entry_id][ENTRY_PLAYERS]
-    if entry_players:
-        for player in entry_players:
-            _LOGGER.debug("Remove entry player %s from list of known players.", player)
-            hass.data[DOMAIN][KNOWN_PLAYERS].remove(player)
 
     # Remove stored data for this config entry
     hass.data[DOMAIN].pop(entry.entry_id)

@@ -49,7 +49,6 @@ from .const import (
     DEFAULT_PORT,
     DISCOVERY_TASK,
     DOMAIN,
-    ENTRY_PLAYERS,
     KNOWN_PLAYERS,
     PLAYER_DISCOVERY_UNSUB,
 )
@@ -62,7 +61,7 @@ SERVICE_UNSYNC = "unsync"
 ATTR_QUERY_RESULT = "query_result"
 ATTR_SYNC_GROUP = "sync_group"
 
-SIGNAL_PLAYER_AVAILABLE = "squeezebox_player_available"
+SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,10 +161,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
 
-    entry_players = hass.data[DOMAIN][config_entry.entry_id].setdefault(
-        ENTRY_PLAYERS, []
-    )
-
     _LOGGER.debug("Creating LMS object for %s", host)
     lms = Server(async_get_clientsession(hass), host, port, username, password)
 
@@ -182,19 +177,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 ),
                 None,
             )
-            if entity and not entity.available:
-                # check if previously unavailable player has connected
+            if entity:
                 await player.async_update()
-                if player.connected:
-                    async_dispatcher_send(
-                        hass, SIGNAL_PLAYER_AVAILABLE, entity.unique_id
-                    )
+                async_dispatcher_send(
+                    hass, SIGNAL_PLAYER_REDISCOVERED, entity.unique_id, player.connected
+                )
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
                 entity = SqueezeBoxEntity(player)
                 known_players.append(entity)
-                entry_players.append(entity)
                 async_add_entities([entity])
 
         players = await lms.async_get_players()
@@ -289,10 +281,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return self._available
 
     @callback
-    def set_available(self, unique_id):
+    def rediscovered(self, unique_id, connected):
         """Make a player available again."""
-        if unique_id == self.unique_id:
+        if unique_id == self.unique_id and connected:
             self._available = True
+            _LOGGER.info("Player %s is available again.", self.name)
             self._remove_dispatcher()
 
     @property
@@ -318,8 +311,12 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
                 # start listening for restored players
                 self._remove_dispatcher = async_dispatcher_connect(
-                    self.hass, SIGNAL_PLAYER_AVAILABLE, self.set_available
+                    self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
                 )
+
+    async def async_will_remove_from_hass(self):
+        """Remove from list of known players when removed from hass."""
+        self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self)
 
     @property
     def volume_level(self):
