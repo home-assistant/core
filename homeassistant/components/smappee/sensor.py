@@ -16,13 +16,6 @@ TREND_SENSORS = {
         "total_power",
         DEVICE_CLASS_POWER,
     ],
-    "total_reactive_power": [
-        "Total consumption - Reactive power",
-        None,
-        POWER_WATT,
-        "total_reactive_power",
-        DEVICE_CLASS_POWER,
-    ],
     "alwayson": [
         "Always on - Active power",
         None,
@@ -297,8 +290,6 @@ class SmappeeSensor(Entity):
 
         if self._sensor == "total_power":
             self._state = self._service_location.total_power
-        elif self._sensor == "total_reactive_power":
-            self._state = self._service_location.total_reactive_power
         elif self._sensor == "solar_power":
             self._state = self._service_location.solar_power
         elif self._sensor == "alwayson":
