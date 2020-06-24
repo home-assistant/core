@@ -44,25 +44,24 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
 
     def __init__(self, homecontrol, device_instance, element_uid):
         """Initialize a devolo multi level sensor."""
-        super().__init__(
-            homecontrol=homecontrol,
-            device_instance=device_instance,
-            element_uid=element_uid,
-            name=f"{device_instance.itemName} {device_instance.multi_level_sensor_property.get(element_uid).sensor_type}",
-            sync=self._sync,
-        )
-
-        self._state = self._device_instance.multi_level_sensor_property[
-            element_uid
-        ].value
-
         self._multi_level_sensor_property = device_instance.multi_level_sensor_property[
             element_uid
         ]
+
+        self._state = self._multi_level_sensor_property.value
+
         self._device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
         )
         self._unit = self._multi_level_sensor_property.unit
+
+        super().__init__(
+            homecontrol=homecontrol,
+            device_instance=device_instance,
+            element_uid=element_uid,
+            name=f"{device_instance.itemName} {self._multi_level_sensor_property.sensor_type}",
+            sync=self._sync,
+        )
 
     @property
     def device_class(self) -> str:
