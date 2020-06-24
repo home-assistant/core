@@ -40,14 +40,26 @@ CONF_ORDER = "use_include_order"
 STATE_KEY = "state"
 LAST_CHANGED_KEY = "last_changed"
 
-CONFIG_SCHEMA = vol.Schema(
+# Not reusing from entityfilter because history does not support glob filtering
+_FILTER_SCHEMA_INNER = vol.Schema(
     {
-        DOMAIN: recorder.FILTER_SCHEMA.extend(
-            {vol.Optional(CONF_ORDER, default=False): cv.boolean}
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+        vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+    }
 )
+_FILTER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_INCLUDE, default=_FILTER_SCHEMA_INNER({})
+        ): _FILTER_SCHEMA_INNER,
+        vol.Optional(
+            CONF_EXCLUDE, default=_FILTER_SCHEMA_INNER({})
+        ): _FILTER_SCHEMA_INNER,
+        vol.Optional(CONF_ORDER, default=False): cv.boolean,
+    }
+)
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: _FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 SIGNIFICANT_DOMAINS = (
     "climate",
@@ -143,7 +155,6 @@ def _get_significant_states(
 
 def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
-
     with session_scope(hass=hass) as session:
         query = session.query(*QUERY_STATES).filter(
             (States.last_changed == States.last_updated)
@@ -165,7 +176,6 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
 
 def get_last_state_changes(hass, number_of_states, entity_id):
     """Return the last number_of_states."""
-
     start_time = dt_util.utcnow()
 
     with session_scope(hass=hass) as session:
@@ -196,7 +206,6 @@ def get_last_state_changes(hass, number_of_states, entity_id):
 
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
     """Return the states at a specific point in time."""
-
     if run is None:
         run = recorder.run_information_from_instance(hass, utc_point_in_time)
 
@@ -542,7 +551,6 @@ class Filters:
         * if include and exclude is defined - select the entities specified in
           the include and filter out the ones from the exclude list.
         """
-
         # specific entities requested - do not in/exclude anything
         if entity_ids is not None:
             return query.filter(States.entity_id.in_(entity_ids))

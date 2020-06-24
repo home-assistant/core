@@ -42,7 +42,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import generate_filter
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+    generate_filter,
+)
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
@@ -59,31 +63,8 @@ DOMAIN = "logbook"
 GROUP_BY_MINUTES = 15
 
 EMPTY_JSON_OBJECT = "{}"
-
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                CONF_EXCLUDE: vol.Schema(
-                    {
-                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                    }
-                ),
-                CONF_INCLUDE: vol.Schema(
-                    {
-                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                    }
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+    {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
 
 HOMEASSISTANT_EVENTS = [
@@ -129,7 +110,6 @@ def async_describe_event(hass, domain, event_name, describe_callback):
 
 async def async_setup(hass, config):
     """Logbook setup."""
-
     hass.data.setdefault(DOMAIN, {})
 
     @callback
@@ -360,26 +340,6 @@ def _get_related_entity_ids(session, entity_filter):
             time.sleep(QUERY_RETRY_WAIT)
 
 
-def _generate_filter_from_config(config):
-    excluded_entities = []
-    excluded_domains = []
-    included_entities = []
-    included_domains = []
-
-    exclude = config.get(CONF_EXCLUDE)
-    if exclude:
-        excluded_entities = exclude.get(CONF_ENTITIES, [])
-        excluded_domains = exclude.get(CONF_DOMAINS, [])
-    include = config.get(CONF_INCLUDE)
-    if include:
-        included_entities = include.get(CONF_ENTITIES, [])
-        included_domains = include.get(CONF_DOMAINS, [])
-
-    return generate_filter(
-        included_domains, included_entities, excluded_domains, excluded_entities
-    )
-
-
 def _all_entities_filter(_):
     """Filter that accepts all entities."""
     return True
@@ -387,7 +347,6 @@ def _all_entities_filter(_):
 
 def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
-
     entity_attr_cache = EntityAttributeCache(hass)
 
     def yield_events(query):
@@ -402,7 +361,7 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
             entity_ids = [entity_id.lower()]
             entities_filter = generate_filter([], entity_ids, [], [])
         elif config.get(CONF_EXCLUDE) or config.get(CONF_INCLUDE):
-            entities_filter = _generate_filter_from_config(config)
+            entities_filter = convert_include_exclude_filter(config)
             entity_ids = _get_related_entity_ids(session, entities_filter)
         else:
             entities_filter = _all_entities_filter
@@ -642,7 +601,6 @@ class LazyEventPartialState:
     @property
     def data(self):
         """Event data."""
-
         if not self._event_data:
             if self._row.event_data == EMPTY_JSON_OBJECT:
                 self._event_data = {}
@@ -679,7 +637,6 @@ class LazyEventPartialState:
     @property
     def has_old_and_new_state(self):
         """Check the json data to see if new_state and old_state is present without decoding."""
-
         # Delete this check once all states are saved in the v8 schema
         # format or later (they have the old_state_id column).
 
