@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy import Table, text
 from sqlalchemy.engine import reflection
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import InternalError, OperationalError, SQLAlchemyError
 
 from .models import SCHEMA_VERSION, Base, SchemaChanges
 from .util import session_scope
@@ -82,6 +82,13 @@ def _create_index(engine, table_name, index_name):
         index.create(engine)
     except OperationalError as err:
         if "already exists" not in str(err).lower():
+            raise
+
+        _LOGGER.warning(
+            "Index %s already exists on %s, continuing", index_name, table_name
+        )
+    except InternalError as err:
+        if "duplicate" not in str(err).lower():
             raise
 
         _LOGGER.warning(
@@ -178,7 +185,7 @@ def _add_columns(engine, table_name, columns_def):
             )
         )
         return
-    except OperationalError:
+    except (InternalError, OperationalError):
         # Some engines support adding all columns at once,
         # this error is when they don't
         _LOGGER.info("Unable to use quick column add. Adding 1 by 1.")
@@ -192,7 +199,7 @@ def _add_columns(engine, table_name, columns_def):
                     )
                 )
             )
-        except OperationalError as err:
+        except (InternalError, OperationalError) as err:
             if "duplicate" not in str(err).lower():
                 raise
 
