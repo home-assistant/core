@@ -3,7 +3,7 @@
         "abort": {
             "all_configured": "Ya se han configurado todas las pasarelas Philips Hue",
             "already_configured": "La pasarela ya esta configurada",
-            "already_in_progress": "La configuraci\u00f3n del flujo para la pasarela ya est\u00e1 en curso.",
+            "already_in_progress": "El flujo de configuraci\u00f3n para la pasarela ya est\u00e1 en marcha.",
             "cannot_connect": "No se puede conectar a la pasarela",
             "discover_timeout": "Imposible encontrar pasarelas Philips Hue",
             "no_bridges": "No se han encontrado pasarelas Philips Hue.",

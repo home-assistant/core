@@ -405,7 +405,7 @@ async def test_unique_id(hass, mqtt_mock):
             },
         ]
     }
-    await help_test_unique_id(hass, vacuum.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, vacuum.DOMAIN, config)
 
 
 async def test_discovery_removal_vacuum(hass, mqtt_mock, caplog):

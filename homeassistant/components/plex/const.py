@@ -9,10 +9,13 @@ DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
+PLEXTV_THROTTLE = 60
+
 DEBOUNCE_TIMEOUT = 1
 DISPATCHERS = "dispatchers"
 PLATFORMS = frozenset(["media_player", "sensor"])
 PLATFORMS_COMPLETED = "platforms_completed"
+PLAYER_SOURCE = "player_source"
 SERVERS = "servers"
 WEBSOCKETS = "websockets"
 

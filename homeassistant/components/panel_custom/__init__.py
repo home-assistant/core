@@ -38,18 +38,8 @@ def url_validator(value):
     has_html_url = CONF_WEBCOMPONENT_PATH in value
     has_module_url = CONF_MODULE_URL in value
 
-    if has_html_url:
-        if has_js_url or has_module_url:
-            raise vol.Invalid(
-                "You cannot specify other urls besides a webcomponent path"
-            )
-
-        return value
-
-    if not has_js_url and not has_module_url:
-        raise vol.Invalid(
-            f"You need to specify either {CONF_MODULE_URL} or {CONF_JS_URL} or both."
-        )
+    if has_html_url and (has_js_url or has_module_url):
+        raise vol.Invalid("You cannot specify other urls besides a webcomponent path")
 
     return value
 
@@ -165,6 +155,8 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
+    seen = set()
+
     for panel in config[DOMAIN]:
         name = panel[CONF_COMPONENT_NAME]
 
@@ -185,7 +177,14 @@ async def async_setup(hass, config):
         if CONF_MODULE_URL in panel:
             kwargs["module_url"] = panel[CONF_MODULE_URL]
 
-        if CONF_WEBCOMPONENT_PATH in panel:
+        if CONF_MODULE_URL not in panel and CONF_JS_URL not in panel:
+            if name in seen:
+                _LOGGER.warning(
+                    "Got HTML panel with duplicate name %s. Not registering", name
+                )
+                continue
+
+            seen.add(name)
             panel_path = panel.get(CONF_WEBCOMPONENT_PATH)
 
             if panel_path is None:

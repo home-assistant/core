@@ -1,7 +1,13 @@
 {
   "domain": "smappee",
   "name": "Smappee",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smappee",
-  "requirements": ["smappy==0.2.16"],
-  "codeowners": []
+  "dependencies": ["http"],
+  "requirements": [
+    "pysmappee==0.1.0"
+  ],
+  "codeowners": [
+    "@bsmappee"
+  ]
 }

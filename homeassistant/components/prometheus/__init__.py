@@ -167,7 +167,7 @@ class PrometheusMetrics:
             try:
                 value = float(value)
                 metric.labels(**self._labels(state)).set(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
 
     def _metric(self, metric, factory, documentation, extra_labels=None):
