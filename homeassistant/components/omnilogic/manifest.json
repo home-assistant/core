@@ -1,0 +1,16 @@
+{
+  "domain": "omnilogic",
+  "name": "Omnilogic",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/omnilogic",
+  "requirements": [
+    "omnilogic==0.1.8"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@oliver84"
+  ]
+}
