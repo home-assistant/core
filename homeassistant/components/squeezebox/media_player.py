@@ -180,7 +180,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if entity:
                 await player.async_update()
                 async_dispatcher_send(
-                    hass, SIGNAL_PLAYER_REDISCOVERED, entity.unique_id, player.connected
+                    hass, SIGNAL_PLAYER_REDISCOVERED, player.player_id, player.connected
                 )
 
             if not entity:
@@ -285,7 +285,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Make a player available again."""
         if unique_id == self.unique_id and connected:
             self._available = True
-            _LOGGER.info("Player %s is available again.", self.name)
+            _LOGGER.info("Player %s is available again", self.name)
             self._remove_dispatcher()
 
     @property
