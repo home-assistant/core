@@ -31,11 +31,11 @@
       }
     },
     "abort": {
-      "already_in_progress": "This config flow is already in progress."
+      "already_in_progress": "This configuration flow is already in progress"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_host": "Invalid hostname or IP address.",
+      "invalid_host": "Invalid hostname or IP address",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }

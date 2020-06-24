@@ -5,7 +5,7 @@
       "user": {
         "title": "Connect to the device",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "host": "Host",
           "timeout": "Timeout"
         }
       },
@@ -31,12 +31,12 @@
       }
     },
     "abort": {
-      "already_in_progress": "This config flow is already in progress."
+      "already_in_progress": "This configuration flow is already in progress"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_host": "Invalid hostname or IP address.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "Failed to connect",
+      "invalid_host": "Invalid hostname or IP address",
+      "unknown": "Unexpected error"
     }
   }
 }
