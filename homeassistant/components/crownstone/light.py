@@ -117,6 +117,7 @@ class Crownstone(LightEntity):
         """Return the supported features of this Crownstone."""
         if self.should_dim:
             return SUPPORT_BRIGHTNESS
+        return 0
 
     @property
     def should_poll(self) -> bool:
