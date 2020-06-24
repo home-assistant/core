@@ -100,6 +100,9 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==2.1.0
 
+# homeassistant.components.apache_kafka
+aiokafka==0.5.1
+
 # homeassistant.components.notion
 aionotion==1.1.0
 
@@ -154,6 +157,9 @@ avri-api==0.1.7
 
 # homeassistant.components.axis
 axis==33
+
+# homeassistant.components.azure_event_hub
+azure-eventhub==5.1.0
 
 # homeassistant.components.homekit
 base36==0.1.1

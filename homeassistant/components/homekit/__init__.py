@@ -33,14 +33,7 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import (
-    BASE_FILTER_SCHEMA,
-    CONF_EXCLUDE_DOMAINS,
-    CONF_EXCLUDE_ENTITIES,
-    CONF_INCLUDE_DOMAINS,
-    CONF_INCLUDE_ENTITIES,
-    convert_filter,
-)
+from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.loader import async_get_integration
 from homeassistant.util import get_local_ip
 
@@ -144,7 +137,6 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the HomeKit from yaml."""
-
     hass.data.setdefault(DOMAIN, {})
 
     _async_register_events_and_services(hass)
@@ -221,17 +213,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     safe_mode = options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE)
-    entity_filter = convert_filter(
-        options.get(
-            CONF_FILTER,
-            {
-                CONF_INCLUDE_DOMAINS: [],
-                CONF_EXCLUDE_DOMAINS: [],
-                CONF_INCLUDE_ENTITIES: [],
-                CONF_EXCLUDE_ENTITIES: [],
-            },
-        )
-    )
+    entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
 
     homekit = HomeKit(
         hass,
@@ -272,7 +254,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-
     dismiss_setup_message(hass, entry.entry_id)
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
@@ -319,7 +300,6 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
 @callback
 def _async_register_events_and_services(hass: HomeAssistant):
     """Register events and services for HomeKit."""
-
     hass.http.register_view(HomeKitPairingQRView)
 
     def handle_homekit_reset_accessory(service):
@@ -504,7 +484,6 @@ class HomeKit:
 
     async def async_start(self, *args):
         """Start the accessory driver."""
-
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
