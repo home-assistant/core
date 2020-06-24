@@ -85,8 +85,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Configure based on config entry."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
 
     use_webhook = entry.data.get(CONF_USE_WEBHOOK, False)
 
