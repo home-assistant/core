@@ -504,9 +504,15 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
     if CONF_WHITELIST_EXTERNAL_DIRS in config:
         hac.whitelist_external_dirs.update(set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
 
-    # Init whitelist external URL list
+    # Init whitelist external URL list – make sure to add / to every URL that doesn't
+    # already have it so that we can properly test "path ownership"
     if CONF_ALLOWLIST_EXTERNAL_URLS in config:
-        hac.allowlist_external_urls.update(set(config[CONF_ALLOWLIST_EXTERNAL_URLS]))
+        hac.allowlist_external_urls.update(
+            {
+                url if url.endswith("/") else f"{url}/"
+                for url in config[CONF_ALLOWLIST_EXTERNAL_URLS]
+            }
+        )
 
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])

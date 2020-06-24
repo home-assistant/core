@@ -959,16 +959,25 @@ class TestConfig(unittest.TestCase):
     def test_is_allowed_external_url(self):
         """Test is_allowed_external_url method."""
         self.config.allowlist_external_urls = [
-            "http://x.com",
-            "https://y.com",
-            "https://z.com/bla",
+            "http://x.com/",
+            "https://y.com/bla/",
+            "https://z.com/images/1.jpg/",
         ]
 
-        valid = ["http://x.com/1.jpg", "https://y.com/2.png"]
+        valid = [
+            "http://x.com/1.jpg",
+            "https://y.com/bla/2.png",
+            "https://z.com/images/1.jpg",
+        ]
         for url in valid:
             assert self.config.is_allowed_external_url(url)
 
-        invalid = ["http://z.com/bla/../something", "https://a.co"]
+        invalid = [
+            "https://a.co",
+            "https://y.com/bla_wrong",
+            "https://y.com/bla/../image.jpg",
+            "https://z.com/images",
+        ]
         for url in invalid:
             assert not self.config.is_allowed_external_url(url)
 

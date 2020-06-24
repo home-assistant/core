@@ -1360,10 +1360,12 @@ class Config:
 
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
+        parsed_url = f"{str(yarl.URL(url))}/"
+
         return any(
             allowed
             for allowed in self.allowlist_external_urls
-            if str(yarl.URL(url)).startswith(allowed)
+            if parsed_url.startswith(allowed)
         )
 
     def is_allowed_path(self, path: str) -> bool:
