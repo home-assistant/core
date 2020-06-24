@@ -11,7 +11,7 @@ CHINA = "china"
 CURRENT = "current"
 FORECASTS = "forecasts"
 
-DEFAULT_NAME = "climacell"
+DEFAULT_NAME = "ClimaCell"
 DOMAIN = "climacell"
 ATTRIBUTION = "Powered by ClimaCell"
 
