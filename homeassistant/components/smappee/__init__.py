@@ -5,7 +5,7 @@ from pysmappee import Smappee
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.util import Throttle
@@ -26,6 +26,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
+                vol.Optional(CONF_PLATFORM, default="PRODUCTION"): cv.string,
             }
         )
     },
@@ -47,8 +48,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
             DOMAIN,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            AUTHORIZE_URL,
-            TOKEN_URL,
+            AUTHORIZE_URL[config[DOMAIN][CONF_PLATFORM]],
+            TOKEN_URL[config[DOMAIN][CONF_PLATFORM]],
         ),
     )
 

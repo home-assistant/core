@@ -22,7 +22,18 @@ class ConfigEntrySmappeeApi(api.SmappeeApi):
         self.session = config_entry_oauth2_flow.OAuth2Session(
             hass, config_entry, implementation
         )
-        super().__init__(None, None, token=self.session.token)
+
+        platform_to_farm = {
+            "PRODUCTION": 1,
+            "ACCEPTANCE": 2,
+            "DEVELOPMENT": 3,
+        }
+        super().__init__(
+            None,
+            None,
+            token=self.session.token,
+            farm=platform_to_farm[config_entry["PLATFORM"]],
+        )
 
     def refresh_tokens(self) -> dict:
         """Refresh and return new Smappee tokens using Home Assistant OAuth2 session."""
