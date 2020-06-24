@@ -103,6 +103,7 @@ DEVICE_CLASSES = [DEFAULT_DEVICE_CLASS, DEVICE_ANDROIDTV, DEVICE_FIRETV]
 
 SERVICE_ADB_COMMAND = "adb_command"
 SERVICE_DOWNLOAD = "download"
+SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
 SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
@@ -115,6 +116,10 @@ SERVICE_DOWNLOAD_SCHEMA = vol.Schema(
         vol.Required(ATTR_DEVICE_PATH): cv.string,
         vol.Required(ATTR_LOCAL_PATH): cv.string,
     }
+)
+
+SERVICE_LEARN_SENDEVENT_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_ENTITY_ID): cv.entity_ids}
 )
 
 SERVICE_UPLOAD_SCHEMA = vol.Schema(
@@ -285,6 +290,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         SERVICE_ADB_COMMAND,
         service_adb_command,
         schema=SERVICE_ADB_COMMAND_SCHEMA,
+    )
+
+    def service_learn_sendevent(service):
+        """Translate a key press on a remote to ADB 'sendevent' commands."""
+        entity_id = service.data[ATTR_ENTITY_ID]
+        target_devices = [
+            dev
+            for dev in hass.data[ANDROIDTV_DOMAIN].values()
+            if dev.entity_id in entity_id
+        ]
+
+        for target_device in target_devices:
+            output = target_device.learn_sendevent()
+
+            # log the output, if there is any
+            if output:
+                _LOGGER.info(
+                    "Output of 'learn_sendevent' service from '%s': %s",
+                    target_device.entity_id,
+                    output,
+                )
+
+    hass.services.register(
+        ANDROIDTV_DOMAIN,
+        SERVICE_LEARN_SENDEVENT,
+        service_learn_sendevent,
+        schema=SERVICE_LEARN_SENDEVENT_SCHEMA,
     )
 
     def service_download(service):
@@ -591,6 +623,12 @@ class ADBDevice(MediaPlayerEntity):
 
         self.schedule_update_ha_state()
         return self._adb_response
+
+    @adb_decorator()
+    def learn_sendevent(self):
+        """Translate a key press on a remote to ADB 'sendevent' commands."""
+        self._adb_response = self.aftv.learn_sendevent()
+        self.schedule_update_ha_state()
 
     @adb_decorator()
     def adb_pull(self, local_path, device_path):

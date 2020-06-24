@@ -16,6 +16,7 @@ from homeassistant.components.androidtv.media_player import (
     KEYS,
     SERVICE_ADB_COMMAND,
     SERVICE_DOWNLOAD,
+    SERVICE_LEARN_SENDEVENT,
     SERVICE_UPLOAD,
 )
 from homeassistant.components.media_player.const import (
@@ -850,11 +851,10 @@ async def test_adb_command_get_properties(hass):
         assert state.attributes["adb_response"] == str(response)
 
 
-async def test_adb_command_learn_sendevent(hass):
-    """Test sending the "learn_sendevent" command via the `androidtv.adb_command` service."""
+async def test_learn_sendevent(hass):
+    """Test the `androidtv.learn_sendevent` service."""
     patch_key = "server"
     entity_id = "media_player.android_tv"
-    command = "LEARN_SENDEVENT"
     response = "sendevent 1 2 3 4"
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
@@ -868,8 +868,8 @@ async def test_adb_command_learn_sendevent(hass):
     ) as patch_learn_sendevent:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            SERVICE_ADB_COMMAND,
-            {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+            SERVICE_LEARN_SENDEVENT,
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
