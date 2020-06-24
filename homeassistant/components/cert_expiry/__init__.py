@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import CONF_CA_CERT, DEFAULT_PORT, DOMAIN
 from .errors import TemporaryFailure, ValidationFailure
 from .helper import get_cert_expiry_timestamp
 
@@ -27,8 +27,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Load the saved entities."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
+    ca_cert = entry.data.get(CONF_CA_CERT, None)
 
-    coordinator = CertExpiryDataUpdateCoordinator(hass, host, port)
+    coordinator = CertExpiryDataUpdateCoordinator(hass, host, port, ca_cert)
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -54,10 +55,11 @@ async def async_unload_entry(hass, entry):
 class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
     """Class to manage fetching Cert Expiry data from single endpoint."""
 
-    def __init__(self, hass, host, port):
+    def __init__(self, hass, host, port, ca_cert):
         """Initialize global Cert Expiry data updater."""
         self.host = host
         self.port = port
+        self.ca_cert = ca_cert
         self.cert_error = None
         self.is_cert_valid = False
 
@@ -74,7 +76,9 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
     async def _async_update_data(self) -> Optional[datetime]:
         """Fetch certificate."""
         try:
-            timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
+            timestamp = await get_cert_expiry_timestamp(
+                self.hass, self.host, self.port, self.ca_cert
+            )
         except TemporaryFailure as err:
             raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:

@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CA_CERT, DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
 from .errors import (
     ConnectionRefused,
     ConnectionTimeout,
@@ -35,6 +35,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
+                user_input.get(CONF_CA_CERT, None),
             )
             return True
         except ResolveFailed:
@@ -53,6 +54,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
+            ca_cert = user_input.get(CONF_CA_CERT, "")
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
 
@@ -61,7 +63,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title = f"{host}{title_port}"
                 return self.async_create_entry(
                     title=title,
-                    data={CONF_HOST: host, CONF_PORT: port},
+                    data={CONF_HOST: host, CONF_PORT: port, CONF_CA_CERT: ca_cert},
                 )
             if (  # pylint: disable=no-member
                 self.context["source"] == config_entries.SOURCE_IMPORT
@@ -72,6 +74,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {}
             user_input[CONF_HOST] = ""
             user_input[CONF_PORT] = DEFAULT_PORT
+            user_input[CONF_CA_CERT] = ""
 
         return self.async_show_form(
             step_id="user",
@@ -81,6 +84,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
                     ): int,
+                    vol.Optional(CONF_CA_CERT, default=user_input[CONF_CA_CERT]): str,
                 }
             ),
             errors=self._errors,

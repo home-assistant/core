@@ -13,9 +13,9 @@ from .errors import (
 )
 
 
-def get_cert(host, port):
+def get_cert(host, port, ca_cert):
     """Get the certificate for the host and port combination."""
-    ctx = ssl.create_default_context()
+    ctx = ssl.create_default_context(cafile=ca_cert)
     address = (host, port)
     with socket.create_connection(address, timeout=TIMEOUT) as sock:
         with ctx.wrap_socket(sock, server_hostname=address[0]) as ssock:
@@ -24,10 +24,10 @@ def get_cert(host, port):
             return cert
 
 
-async def get_cert_expiry_timestamp(hass, hostname, port):
+async def get_cert_expiry_timestamp(hass, hostname, port, ca_cert):
     """Return the certificate's expiration timestamp."""
     try:
-        cert = await hass.async_add_executor_job(get_cert, hostname, port)
+        cert = await hass.async_add_executor_job(get_cert, hostname, port, ca_cert)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
     except socket.timeout as err:
@@ -37,6 +37,10 @@ async def get_cert_expiry_timestamp(hass, hostname, port):
     except ConnectionRefusedError as err:
         raise ConnectionRefused(
             f"Connection refused by server: {hostname}:{port}"
+        ) from err
+    except FileNotFoundError as err:
+        raise ValidationFailure(
+            f"CA certificate file '{ca_cert}' is not accessible"
         ) from err
     except ssl.CertificateError as err:
         raise ValidationFailure(err.verify_message) from err

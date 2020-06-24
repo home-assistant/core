@@ -18,7 +18,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import CONF_CA_CERT, DEFAULT_PORT, DOMAIN
 
 SCAN_INTERVAL = timedelta(hours=12)
 
@@ -26,6 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_CA_CERT): cv.string,
     }
 )
 
@@ -73,10 +74,13 @@ class CertExpiryEntity(CoordinatorEntity):
     @property
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
-        return {
+        attributes = {
             "is_valid": self.coordinator.is_cert_valid,
             "error": str(self.coordinator.cert_error),
         }
+        if self.coordinator.ca_cert:
+            attributes[CONF_CA_CERT] = self.coordinator.ca_cert
+        return attributes
 
 
 class SSLCertificateDays(CertExpiryEntity):
