@@ -966,6 +966,8 @@ class TestConfig(unittest.TestCase):
 
         valid = [
             "http://x.com/1.jpg",
+            "http://x.com",
+            "https://y.com/bla/",
             "https://y.com/bla/2.png",
             "https://z.com/images/1.jpg",
         ]
