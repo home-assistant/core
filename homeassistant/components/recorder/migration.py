@@ -190,7 +190,7 @@ def _add_columns(engine, table_name, columns_def):
             )
         )
         return
-    except OperationalError:
+    except (InternalError, OperationalError):
         # Some engines support adding all columns at once,
         # this error is when they don't
         _LOGGER.info("Unable to use quick column add. Adding 1 by 1.")
@@ -204,7 +204,7 @@ def _add_columns(engine, table_name, columns_def):
                     )
                 )
             )
-        except OperationalError as err:
+        except (InternalError, OperationalError) as err:
             if "duplicate" not in str(err).lower():
                 raise
 
