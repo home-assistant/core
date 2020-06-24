@@ -67,9 +67,10 @@ def _set_update_interval(
     hass: HomeAssistantType, current_entry: ConfigEntry
 ) -> timedelta:
     """Recalculate update_interval based on existing ClimaCell instances and update them."""
-    # We check how many ClimaCell configured instances are using the same API key and calculate
-    # interval to not exceed allowed numbers of requests. Divide MAX_REQUESTS_PER_DAY by 2
-    # because every update requires two API calls.
+    # We check how many ClimaCell configured instances are using the same API key and
+    # calculate interval to not exceed allowed numbers of requests. Divide 90% of
+    # MAX_REQUESTS_PER_DAY by 2 because every update requires two API calls and we want
+    # a buffer in the number of API calls left at the end of the day.
     entries = hass.config_entries.async_entries(DOMAIN)
     other_instance_entry_ids = []
     for entry in entries:
