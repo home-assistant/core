@@ -47,5 +47,33 @@
             "button_short_release": "\"{subtype}\" utgitt",
             "button_triple_press": "\"{subtype}\" trippel klikket"
         }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Ugyldig f\u00f8dselsemne.",
+            "bad_will": "Ugyldig emne.",
+            "cannot_connect": "Kan ikke koble til megleren."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Megler"
+                },
+                "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler."
+            },
+            "options": {
+                "data": {
+                    "birth_qos": "F\u00f8dselsmelding QoS",
+                    "birth_retain": "F\u00f8dselsmelding beholder",
+                    "birth_topic": "F\u00f8dselsmeldingsemne",
+                    "discovery": "Aktiver oppdagelse",
+                    "will_payload": "Vil melde nyttelast",
+                    "will_qos": "Vil melding til QoS",
+                    "will_retain": "Vil meldingen beholde",
+                    "will_topic": "Vil melding emne"
+                },
+                "description": "Vennligst velg MQTT-alternativer."
+            }
+        }
     }
 }

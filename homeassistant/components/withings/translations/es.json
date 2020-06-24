@@ -1,11 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Configuraci\u00f3n actualizada para el perfil.",
             "authorize_url_timeout": "Tiempo de espera agotado para la autorizaci\u00f3n de la url.",
             "missing_configuration": "La integraci\u00f3n de Withings no est\u00e1 configurada. Por favor, siga la documentaci\u00f3n."
         },
         "create_entry": {
             "default": "Autenticado correctamente con Withings."
+        },
+        "error": {
+            "profile_exists": "El perfil de usuario ya est\u00e1 configurado. Por favor, proporciona un nombre de perfil \u00fanico."
         },
         "flow_title": "Withings: {profile}",
         "step": {
