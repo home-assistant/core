@@ -81,11 +81,6 @@ class PlaatoEntity(entity.Entity):
                 )
             )
 
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        if self._coordinator is not None:
-            self._coordinator.async_remove_listener(self.async_write_ha_state)
-
     @staticmethod
     def _to_snake_case(dictionary: dict):
         return {k.lower().replace(" ", "_"): v for k, v in dictionary.items()}
