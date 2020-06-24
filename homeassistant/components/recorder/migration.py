@@ -148,6 +148,11 @@ def _drop_index(engine, table_name, index_name):
             "Finished dropping index %s from table %s", index_name, table_name
         )
     else:
+        if index_name == "ix_states_context_parent_id":
+            # Was only there on nightly so we do not want
+            # to generate log noise or issues about it.
+            return
+
         _LOGGER.warning(
             "Failed to drop index %s from table %s. Schema "
             "Migration will continue; this is not a "
@@ -267,6 +272,9 @@ def _apply_update(engine, new_version, old_version):
         #
         _drop_index(engine, "states", "ix_states_context_id")
         _drop_index(engine, "states", "ix_states_context_user_id")
+        # This index won't be there if they were not running
+        # nightly but we don't treat that as a critical issue
+        _drop_index(engine, "states", "ix_states_context_parent_id")
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated
         _drop_index(engine, "states", "ix_states_entity_id")
