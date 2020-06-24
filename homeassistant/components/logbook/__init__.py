@@ -47,6 +47,9 @@ from homeassistant.helpers.entityfilter import (
     convert_include_exclude_filter,
     generate_filter,
 )
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platforms,
+)
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
@@ -102,15 +105,9 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
 
 
-@bind_hass
-def async_describe_event(hass, domain, event_name, describe_callback):
-    """Teach logbook how to describe a new event."""
-    hass.data.setdefault(DOMAIN, {})[event_name] = (domain, describe_callback)
-
-
 async def async_setup(hass, config):
     """Logbook setup."""
-    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN] = {}
 
     @callback
     def log_message(service):
@@ -131,7 +128,21 @@ async def async_setup(hass, config):
     )
 
     hass.services.async_register(DOMAIN, "log", log_message, schema=LOG_MESSAGE_SCHEMA)
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_logbook_platform)
+
     return True
+
+
+async def _process_logbook_platform(hass, domain, platform):
+    """Process a logbook platform."""
+
+    @callback
+    def _async_describe_event(domain, event_name, describe_callback):
+        """Teach logbook how to describe a new event."""
+        hass.data[DOMAIN][event_name] = (domain, describe_callback)
+
+    platform.async_describe_events(hass, _async_describe_event)
 
 
 class LogbookView(HomeAssistantView):
