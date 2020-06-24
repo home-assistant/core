@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
-            "unique_name_required": "Every [%key:component::climacell::title%] entry must have a unique case insensitive name. If you are attempting to update an existing entry, remove the old entry via the Integrations menu in the frontend first and then restart Home Assistant.",
             "updated_entry": "An entry has been updated via configuration import."
         },
         "error": {

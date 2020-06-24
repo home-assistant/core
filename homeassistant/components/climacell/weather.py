@@ -18,7 +18,6 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     LENGTH_FEET,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
@@ -35,7 +34,7 @@ from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
 from homeassistant.util.temperature import convert as temp_convert
 
-from . import ClimaCellDataUpdateCoordinator
+from . import ClimaCellEntity
 from .const import (
     ATTR_WEATHER_CLOUD_COVER,
     ATTR_WEATHER_DEWPOINT,
@@ -44,7 +43,6 @@ from .const import (
     ATTR_WEATHER_PRECIPITATION,
     ATTR_WEATHER_PRECIPITATION_TYPE,
     ATTR_WEATHER_WIND_GUST,
-    ATTRIBUTION,
     CLEAR_CONDITIONS,
     CONDITIONS,
     CONF_FORECAST_INTERVAL,
@@ -126,53 +124,8 @@ async def async_setup_entry(
     async_add_entities([entity], update_before_add=True)
 
 
-class ClimaCellWeatherEntity(WeatherEntity):
+class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     """Entity that talks to ClimaCell API to retrieve weather data."""
-
-    def __init__(
-        self, config_entry: ConfigEntry, coordinator: ClimaCellDataUpdateCoordinator
-    ) -> None:
-        """Initialize ClimaCell Weather Entity."""
-        self._config_entry = config_entry
-        self._coordinator = coordinator
-        self._async_unsub_listeners = []
-
-    async def async_update(self) -> None:
-        """Retrieve latest state of the device."""
-        await self._coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self._async_unsub_listeners.append(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks when entity is removed."""
-        for listener in self._async_unsub_listeners:
-            listener()
-
-        self._async_unsub_listeners.clear()
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
-    def available(self) -> bool:
-        """Return the availabiliity of the entity."""
-        return self._coordinator.last_update_success
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"{self._config_entry.data[CONF_NAME]}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the entity."""
-        return f"{self._config_entry.unique_id}_weather"
 
     @property
     def temperature(self):
@@ -235,11 +188,6 @@ class ClimaCellWeatherEntity(WeatherEntity):
         if "o3" not in self._coordinator.data[CURRENT]:
             return None
         return self._coordinator.data[CURRENT]["o3"]["value"]
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def condition(self):

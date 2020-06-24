@@ -20,7 +20,6 @@ from homeassistant.components.climacell.const import (
     USA,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import API_KEY, MIN_CONFIG, MockRequestInfo
@@ -53,13 +52,13 @@ async def test_user_flow_minimum_fields(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_AQI_COUNTRY] == USA
 
 
-async def test_user_flow_same_name(hass: HomeAssistantType) -> None:
-    """Test user config flow with the same name as an existing entry."""
+async def test_user_flow_same_unique_ids(hass: HomeAssistantType) -> None:
+    """Test user config flow with the same unique ID as an existing entry."""
     MockConfigEntry(
         domain=DOMAIN,
         data=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
         source=config_entries.SOURCE_USER,
-        unique_id=cv.slugify(DEFAULT_NAME),
+        unique_id=f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}",
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -160,7 +159,7 @@ async def test_import_flow_already_exists(hass: HomeAssistantType) -> None:
         domain=DOMAIN,
         data=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
         source=config_entries.SOURCE_USER,
-        unique_id=cv.slugify(DEFAULT_NAME),
+        unique_id=f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}",
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -179,7 +178,7 @@ async def test_import_flow_update_entry(hass: HomeAssistantType) -> None:
         domain=DOMAIN,
         data=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
         source=config_entries.SOURCE_USER,
-        unique_id=cv.slugify(DEFAULT_NAME),
+        unique_id=f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}",
     ).add_to_hass(hass)
 
     config = MIN_CONFIG.copy()
@@ -190,22 +189,3 @@ async def test_import_flow_update_entry(hass: HomeAssistantType) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "updated_entry"
-
-
-async def test_import_flow_unique_name_required(hass: HomeAssistantType) -> None:
-    """Test import config flow when new entry with same name is imported."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
-        source=config_entries.SOURCE_USER,
-        unique_id=cv.slugify(DEFAULT_NAME),
-    ).add_to_hass(hass)
-
-    config = MIN_CONFIG.copy()
-    config[CONF_API_KEY] = "different api key"
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=SCHEMA(config),
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "unique_name_required"
