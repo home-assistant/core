@@ -3,10 +3,14 @@ import socket
 import ssl
 
 from homeassistant import data_entry_flow
-from homeassistant.components.cert_expiry.const import DEFAULT_PORT, DOMAIN
+from homeassistant.components.cert_expiry.const import (
+    CONF_CA_CERT,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
-from .const import HOST, PORT
+from .const import CA_CERT, HOST, PORT
 from .helpers import future_timestamp
 
 from tests.async_mock import patch
@@ -147,6 +151,29 @@ async def test_import_with_name(hass):
     assert result["result"].unique_id == f"{HOST}:{PORT}"
 
 
+async def test_import_with_ca(hass):
+    """Test import with host only."""
+    with patch(
+        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+    ), patch(
+        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        return_value=future_timestamp(1),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={CONF_HOST: HOST, CONF_CA_CERT: CA_CERT},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == DEFAULT_PORT
+    assert result["result"].unique_id == f"{HOST}:{DEFAULT_PORT}"
+    assert result["data"][CONF_CA_CERT] == CA_CERT
+
+
 async def test_bad_import(hass):
     """Test import step."""
     with patch(
@@ -217,3 +244,24 @@ async def test_abort_on_socket_failed(hass):
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_HOST: "connection_refused"}
+
+
+async def test_import_with_unavailable_ca_cert(hass):
+    """Test import with host only."""
+    with patch(
+        "homeassistant.components.cert_expiry.helper.get_cert",
+        side_effect=FileNotFoundError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={CONF_HOST: HOST, CONF_CA_CERT: CA_CERT},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == DEFAULT_PORT
+    assert result["result"].unique_id == f"{HOST}:{DEFAULT_PORT}"
+    assert result["data"][CONF_CA_CERT] == CA_CERT

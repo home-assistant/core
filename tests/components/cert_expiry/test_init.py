@@ -1,14 +1,14 @@
 """Tests for Cert Expiry setup."""
 from datetime import timedelta
 
-from homeassistant.components.cert_expiry.const import DOMAIN
+from homeassistant.components.cert_expiry.const import CONF_CA_CERT, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .const import HOST, PORT
+from .const import CA_CERT, HOST, PORT
 from .helpers import future_timestamp, static_datetime
 
 from tests.async_mock import patch
@@ -21,6 +21,12 @@ async def test_setup_with_config(hass):
         SENSOR_DOMAIN: [
             {"platform": DOMAIN, CONF_HOST: HOST, CONF_PORT: PORT},
             {"platform": DOMAIN, CONF_HOST: HOST, CONF_PORT: 888},
+            {
+                "platform": DOMAIN,
+                CONF_HOST: HOST,
+                CONF_PORT: 666,
+                CONF_CA_CERT: CA_CERT,
+            },
         ],
     }
     assert await async_setup_component(hass, SENSOR_DOMAIN, config) is True
@@ -38,7 +44,7 @@ async def test_setup_with_config(hass):
     ):
         await hass.async_block_till_done()
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 3
 
 
 async def test_update_unique_id(hass):
