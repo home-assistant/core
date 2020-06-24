@@ -180,11 +180,6 @@ async def async_unload_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     return unloaded
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Reload config entry."""
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)
-
 
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook from Plaato."""
