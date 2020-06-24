@@ -61,7 +61,6 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
             self._device_class = DEVICE_CLASS_HUMIDITY
         else:
             self._device_class = None
-            self._unit = None
         self._unit = self._multi_level_sensor_property.unit
 
     @property
