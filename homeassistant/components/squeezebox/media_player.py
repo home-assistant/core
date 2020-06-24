@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from pysqueezebox import Server
+from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -23,6 +23,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.const import (
     ATTR_COMMAND,
     CONF_HOST,
@@ -34,17 +35,20 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNAVAILABLE,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.util.dt import utcnow
 
-from .__init__ import start_server_discovery
 from .const import (
     DEFAULT_PORT,
+    DISCOVERY_TASK,
     DOMAIN,
-    ENTRY_PLAYERS,
     KNOWN_PLAYERS,
     PLAYER_DISCOVERY_UNSUB,
 )
@@ -56,6 +60,8 @@ SERVICE_UNSYNC = "unsync"
 
 ATTR_QUERY_RESULT = "query_result"
 ATTR_SYNC_GROUP = "sync_group"
+
+SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +113,30 @@ SQUEEZEBOX_MODE = {
 }
 
 
+async def start_server_discovery(hass):
+    """Start a server discovery task."""
+
+    def _discovered_server(server):
+        asyncio.create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_DISCOVERY},
+                data={
+                    CONF_HOST: server.host,
+                    CONF_PORT: int(server.port),
+                    "uuid": server.uuid,
+                },
+            )
+        )
+
+    hass.data.setdefault(DOMAIN, {})
+    if DISCOVERY_TASK not in hass.data[DOMAIN]:
+        _LOGGER.debug("Adding server discovery task for squeezebox")
+        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_task(
+            async_discover(_discovered_server)
+        )
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
 
@@ -129,13 +159,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
 
-    known_players = hass.data[DOMAIN].get(KNOWN_PLAYERS)
-    if known_players is None:
-        hass.data[DOMAIN][KNOWN_PLAYERS] = known_players = []
-
-    entry_players = hass.data[DOMAIN][config_entry.entry_id].setdefault(
-        ENTRY_PLAYERS, []
-    )
+    known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
 
     _LOGGER.debug("Creating LMS object for %s", host)
     lms = Server(async_get_clientsession(hass), host, port, username, password)
@@ -153,15 +177,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 ),
                 None,
             )
-            if entity and not entity.available:
-                # check if previously unavailable player has connected
+            if entity:
                 await player.async_update()
-                entity.available = player.connected
+                async_dispatcher_send(
+                    hass, SIGNAL_PLAYER_REDISCOVERED, player.player_id, player.connected
+                )
+
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
                 entity = SqueezeBoxEntity(player)
                 known_players.append(entity)
-                entry_players.append(entity)
                 async_add_entities([entity])
 
         players = await lms.async_get_players()
@@ -227,6 +252,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._last_update = None
         self._query_result = {}
         self._available = True
+        self._remove_dispatcher = None
 
     @property
     def device_state_attributes(self):
@@ -254,16 +280,17 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Return True if device connected to LMS server."""
         return self._available
 
-    @available.setter
-    def available(self, val):
-        """Set available to True or False."""
-        self._available = bool(val)
+    @callback
+    def rediscovered(self, unique_id, connected):
+        """Make a player available again."""
+        if unique_id == self.unique_id and connected:
+            self._available = True
+            _LOGGER.info("Player %s is available again", self.name)
+            self._remove_dispatcher()
 
     @property
     def state(self):
         """Return the state of the device."""
-        if not self.available:
-            return STATE_UNAVAILABLE
         if not self._player.power:
             return STATE_OFF
         if self._player.mode:
@@ -281,6 +308,15 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if self._player.connected is False:
                 _LOGGER.info("Player %s is not available", self.name)
                 self._available = False
+
+                # start listening for restored players
+                self._remove_dispatcher = async_dispatcher_connect(
+                    self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
+                )
+
+    async def async_will_remove_from_hass(self):
+        """Remove from list of known players when removed from hass."""
+        self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self)
 
     @property
     def volume_level(self):
