@@ -86,7 +86,6 @@ class LcnOutputsCover(LcnDevice, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        self._is_closed = True
         self._is_opening = False
         self._is_closing = True
         state = pypck.lcn_defs.MotorStateModifier.DOWN
@@ -104,8 +103,6 @@ class LcnOutputsCover(LcnDevice, CoverEntity):
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        if self._is_opening or self._is_closing:
-            self._is_closed = self._is_closing
         self._is_closing = False
         self._is_opening = False
         state = pypck.lcn_defs.MotorStateModifier.STOP
@@ -129,6 +126,8 @@ class LcnOutputsCover(LcnDevice, CoverEntity):
                 self._is_closing = True
             self._is_closed = self._is_closing
         else:  # motor is off
+            # cover is assumed to be closed if we were in closing state before
+            self._is_closed = self._is_closing
             self._is_closing = False
             self._is_opening = False
 
@@ -177,7 +176,6 @@ class LcnRelayCover(LcnDevice, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        self._is_closed = True
         self._is_opening = False
         self._is_closing = True
         states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
@@ -197,8 +195,6 @@ class LcnRelayCover(LcnDevice, CoverEntity):
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        if self._is_opening or self._is_closing:
-            self._is_closed = self._is_closing
         self._is_closing = False
         self._is_opening = False
         states = [pypck.lcn_defs.MotorStateModifier.NOCHANGE] * 4
@@ -215,9 +211,9 @@ class LcnRelayCover(LcnDevice, CoverEntity):
         if states[self.motor_port_onoff]:  # motor is on
             self._is_opening = not states[self.motor_port_updown]  # set direction
             self._is_closing = states[self.motor_port_updown]  # set direction
-            self._is_closed = self._is_closing
         else:  # motor is off
             self._is_opening = False
             self._is_closing = False
+            self._is_closed = states[self.motor_port_updown]
 
         self.async_write_ha_state()
