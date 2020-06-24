@@ -55,8 +55,10 @@ class BroadlinkDevice:
         """
         # Update the name in the registry.
         device_registry = await dr.async_get_registry(hass)
-        device = device_registry.async_get_device({(DOMAIN, entry.unique_id)}, set())
-        device_registry.async_update_device(device.id, name=entry.title)
+        device_entry = device_registry.async_get_device(
+            {(DOMAIN, entry.unique_id)}, set()
+        )
+        device_registry.async_update_device(device_entry.id, name=entry.title)
 
         # Update the name in the API and related entities.
         device = hass.data[DOMAIN].devices[entry.entry_id]
