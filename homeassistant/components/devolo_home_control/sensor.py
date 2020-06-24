@@ -46,13 +46,13 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
             sync=self._sync,
         )
 
-        self._state = self._device_instance.multi_level_sensor_property.get(
+        self._state = self._device_instance.multi_level_sensor_property[
             element_uid
-        ).value
+        ].value
 
-        self._multi_level_sensor_property = device_instance.multi_level_sensor_property.get(
+        self._multi_level_sensor_property = device_instance.multi_level_sensor_property[
             element_uid
-        )
+        ]
         if self._multi_level_sensor_property.sensor_type == "temperature":
             self._device_class = DEVICE_CLASS_TEMPERATURE
         elif self._multi_level_sensor_property.sensor_type == "light":
