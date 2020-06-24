@@ -269,6 +269,34 @@ async def test_capabilities(hass):
     ]
 
 
+async def test_capabilities_no_state(hass):
+    """Test capabilities while state not available."""
+    # Test mode
+    capabilities = await device_condition.async_get_condition_capabilities(
+        hass,
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "device_id": "",
+            "entity_id": "humidifier.entity",
+            "type": "is_mode",
+        },
+    )
+
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "available_modes",
+            "options": [],
+            "required": True,
+            "type": "select",
+        }
+    ]
+
+
 async def test_get_condition_capabilities(hass, device_reg, entity_reg):
     """Test we get the expected toggle capabilities."""
     config_entry = MockConfigEntry(domain="test", data={})
