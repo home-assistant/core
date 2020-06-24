@@ -1,11 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Konfigurasjon oppdatert for profil.",
             "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
             "missing_configuration": "Withings-integrasjonen er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
         },
         "create_entry": {
             "default": "Vellykket godkjenning med Withings."
+        },
+        "error": {
+            "profile_exists": "Brukerprofilen er allerede konfigurert. Oppgi et unikt profilnavn."
         },
         "flow_title": "Withings: {profil}",
         "step": {

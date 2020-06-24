@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_server_found": "Ingen LMS-server funnet."
+        },
+        "step": {
+            "user": {
+                "title": "Konfigurer Logitech Media Server"
+            }
+        }
+    },
+    "title": "Logitech Squeezebox"
+}
