@@ -1,4 +1,7 @@
 """Test pi_hole component."""
+import logging
+
+from hole.exceptions import HoleError
 
 from homeassistant.components import pi_hole, switch
 from homeassistant.components.pi_hole.const import (
@@ -26,6 +29,7 @@ from . import (
     _patch_init_hole,
 )
 
+from tests.async_mock import AsyncMock
 from tests.common import MockConfigEntry
 
 
@@ -105,7 +109,7 @@ async def test_setup_name_config(hass):
     )
 
 
-async def test_switch(hass):
+async def test_switch(hass, caplog):
     """Test Pi-hole switch."""
     mocked_hole = _create_mocked_hole()
     with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
@@ -123,7 +127,6 @@ async def test_switch(hass):
             {"entity_id": SWITCH_ENTITY_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mocked_hole.enable.assert_called_once()
 
         await hass.services.async_call(
@@ -132,8 +135,26 @@ async def test_switch(hass):
             {"entity_id": SWITCH_ENTITY_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mocked_hole.disable.assert_called_once_with(True)
+
+        # Failed calls
+        type(mocked_hole).enable = AsyncMock(side_effect=HoleError("Error1"))
+        await hass.services.async_call(
+            switch.DOMAIN,
+            switch.SERVICE_TURN_ON,
+            {"entity_id": SWITCH_ENTITY_ID},
+            blocking=True,
+        )
+        type(mocked_hole).disable = AsyncMock(side_effect=HoleError("Error2"))
+        await hass.services.async_call(
+            switch.DOMAIN,
+            switch.SERVICE_TURN_OFF,
+            {"entity_id": SWITCH_ENTITY_ID},
+            blocking=True,
+        )
+        errors = [x for x in caplog.records if x.levelno == logging.ERROR]
+        assert errors[-2].message == "Unable to enable Pi-hole: Error1"
+        assert errors[-1].message == "Unable to disable Pi-hole: Error2"
 
 
 async def test_disable_service_call(hass):
