@@ -7,7 +7,7 @@ import logging
 import queue
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Callable, List, Optional
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -17,10 +17,7 @@ import voluptuous as vol
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_DOMAINS,
-    CONF_ENTITIES,
     CONF_EXCLUDE,
-    CONF_INCLUDE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
@@ -29,7 +26,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import generate_filter
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -69,22 +70,12 @@ CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
 CONF_COMMIT_INTERVAL = "commit_interval"
 
-FILTER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
-            {
-                vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_ENTITIES): cv.entity_ids,
-                vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
-            }
-        ),
-        vol.Optional(CONF_INCLUDE, default={}): vol.Schema(
-            {
-                vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_ENTITIES): cv.entity_ids,
-            }
-        ),
-    }
+EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
+    {vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string])}
+)
+
+FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+    {vol.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA}
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -161,6 +152,7 @@ def run_information_with_session(session, point_in_time: Optional[datetime] = No
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
+    entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
     commit_interval = conf[CONF_COMMIT_INTERVAL]
@@ -170,9 +162,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     db_url = conf.get(CONF_DB_URL)
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-
-    include = conf.get(CONF_INCLUDE, {})
-    exclude = conf.get(CONF_EXCLUDE, {})
+    exclude = conf[CONF_EXCLUDE]
+    exclude_t = exclude.get(CONF_EVENT_TYPES, [])
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -181,8 +172,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         uri=db_url,
         db_max_retries=db_max_retries,
         db_retry_wait=db_retry_wait,
-        include=include,
-        exclude=exclude,
+        entity_filter=entity_filter,
+        exclude_t=exclude_t,
     )
     instance.async_initialize()
     instance.start()
@@ -213,8 +204,8 @@ class Recorder(threading.Thread):
         uri: str,
         db_max_retries: int,
         db_retry_wait: int,
-        include: Dict,
-        exclude: Dict,
+        entity_filter: Callable[[str], bool],
+        exclude_t: List[str],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -232,13 +223,8 @@ class Recorder(threading.Thread):
         self.engine: Any = None
         self.run_info: Any = None
 
-        self.entity_filter = generate_filter(
-            include.get(CONF_DOMAINS, []),
-            include.get(CONF_ENTITIES, []),
-            exclude.get(CONF_DOMAINS, []),
-            exclude.get(CONF_ENTITIES, []),
-        )
-        self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
+        self.entity_filter = entity_filter
+        self.exclude_t = exclude_t
 
         self._timechanges_seen = 0
         self._keepalive_count = 0
@@ -513,7 +499,6 @@ class Recorder(threading.Thread):
 
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
-
             if self._completed_database_setup:
                 return
 
