@@ -80,6 +80,7 @@ SCAN_INTERVAL = timedelta(minutes=10)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Plaato component."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
