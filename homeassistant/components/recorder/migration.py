@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy import Table, text
 from sqlalchemy.engine import reflection
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import InternalError, OperationalError, SQLAlchemyError
 
 from .models import SCHEMA_VERSION, Base, SchemaChanges
 from .util import session_scope
@@ -82,6 +82,13 @@ def _create_index(engine, table_name, index_name):
         index.create(engine)
     except OperationalError as err:
         if "already exists" not in str(err).lower():
+            raise
+
+        _LOGGER.warning(
+            "Index %s already exists on %s, continuing", index_name, table_name
+        )
+    except InternalError as err:
+        if "duplicate" not in str(err).lower():
             raise
 
         _LOGGER.warning(
