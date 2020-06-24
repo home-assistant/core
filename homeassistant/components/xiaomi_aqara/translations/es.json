@@ -1,7 +1,40 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n para este gateway ya est\u00e1 en marcha.",
+            "not_xiaomi_aqara": "No es un Xiaomi Aqara Gateway, el dispositivo descubierto no coincide con los gateways conocidos"
+        },
+        "error": {
+            "discovery_error": "No se pudo descubrir un Xiaomi Aqara Gateway, intenta utilizar la IP del dispositivo que ejecuta HomeAssistant como interfaz",
+            "invalid_interface": "Interfaz de red inv\u00e1lida",
+            "invalid_key": "Clave del gateway inv\u00e1lida",
+            "not_found_error": "El Gateway descubierto por Zeroconf no puede localizarse para obtener toda la informaci\u00f3n necesaria, intenta usar la IP del dispositivo que ejecuta HomeAssistant como interfaz"
+        },
+        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP del gateway"
+                },
+                "description": "Ejecuta la configuraci\u00f3n de nuevo si deseas conectar gateways adicionales",
+                "title": "Selecciona el Xiaomi Aqara Gateway que quieres conectar"
+            },
+            "settings": {
+                "data": {
+                    "key": "La clave de tu gateway",
+                    "name": "Nombre del Gateway"
+                },
+                "description": "La clave (contrase\u00f1a) se puede obtener con este tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Si no se proporciona la clave solo se podr\u00e1 acceder a los sensores",
+                "title": "Xiaomi Aqara Gateway, configuraciones opcionales"
+            },
+            "user": {
+                "data": {
+                    "interface": "La interfaz de la red a usar"
+                },
+                "description": "Conectar con tu Xiaomi Aqara Gateway",
+                "title": "Xiaomi Aqara Gateway"
+            }
         }
     }
 }
