@@ -15,12 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
-    CONF_PORT_APP,
-    CONF_REFRESH_TIME,
-    DEFAULT_REFRESH_TIME,
-    DOMAIN,
-)
+from .const import CONF_PORT_APP, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 COMMS_THREAD = CommsThread()
@@ -55,7 +50,6 @@ class PlaceholderHub:
         self.message = await COMMS_THREAD.validate(
             self.host, self.port, self.app_port, self.name, self.password
         )
-        _LOGGER.debug("message:%s", self.message)
 
         return self.message
 
@@ -125,9 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow):
                 errors["base"] = "cannot_connect"
             except AppPortProblem:
                 errors["base"] = "app_port"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+
         return self._show_form(errors)
 
     @callback
@@ -135,41 +127,6 @@ class ConfigFlow(config_entries.ConfigFlow):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return MyIOoptionsFlowHandler(config_entry)
-
-
-class MyIOoptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle myIO options."""
-
-    def __init__(self, config_entry):
-        """Initialize myIO options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Manage the myIO options."""
-        return await self.async_step_myio_options()
-
-    async def async_step_myio_options(self, user_input=None):
-        """Manage the device tracker options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options = {
-            vol.Optional(
-                CONF_REFRESH_TIME,
-                default=self.config_entry.options.get(
-                    CONF_REFRESH_TIME, DEFAULT_REFRESH_TIME
-                ),
-            ): int,
-        }
-        return self.async_show_form(
-            step_id="myio_options", data_schema=vol.Schema(options)
         )
 
 
