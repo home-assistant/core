@@ -1,10 +1,13 @@
 """The tests for Humidifier device triggers."""
+import datetime
 import pytest
+import pytz
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
+import homeassistant.core as ha
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
 
@@ -135,6 +138,21 @@ async def test_if_fires_on_state_change(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": "humidifier.entity",
+                        "type": "target_humidity_changed",
+                        "above": 30,
+                        "for": {"seconds": 5},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "target_humidity_changed_above_for"},
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": "humidifier.entity",
                         "type": "turned_on",
                     },
                     "action": {
@@ -193,21 +211,71 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 2
     assert calls[1].data["some"] == "target_humidity_changed_above"
 
+    # Wait 6 minutes
+    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: datetime.datetime.now(pytz.UTC) + datetime.timedelta(minutes=6)})
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert calls[2].data["some"] == "target_humidity_changed_above_for"
+
     # Fake turn off
     hass.states.async_set("humidifier.entity", STATE_OFF, {const.ATTR_HUMIDITY: 37})
     await hass.async_block_till_done()
-    assert len(calls) == 3
+    assert len(calls) == 4
     assert (
-        calls[2].data["some"] == "turn_off device - humidifier.entity - on - off - None"
+        calls[3].data["some"] == "turn_off device - humidifier.entity - on - off - None"
     )
 
     # Fake turn on
     hass.states.async_set("humidifier.entity", STATE_ON, {const.ATTR_HUMIDITY: 37})
     await hass.async_block_till_done()
-    assert len(calls) == 4
+    assert len(calls) == 5
     assert (
-        calls[3].data["some"] == "turn_on device - humidifier.entity - off - on - None"
+        calls[4].data["some"] == "turn_on device - humidifier.entity - off - on - None"
     )
+
+
+async def test_invalid_config(hass, calls):
+    """Test for turn_on and turn_off triggers firing."""
+    hass.states.async_set(
+        "humidifier.entity",
+        STATE_ON,
+        {
+            const.ATTR_HUMIDITY: 23,
+            const.ATTR_MODE: "home",
+            const.ATTR_AVAILABLE_MODES: ["home", "away"],
+            ATTR_SUPPORTED_FEATURES: 1,
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": "humidifier.entity",
+                        "type": "target_humidity_changed",
+                        "below": 20,
+                        "invalid": "invalid",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "target_humidity_changed"},
+                    },
+                },
+            ]
+        },
+    )
+
+    # Fake that the humidity is changing
+    hass.states.async_set("humidifier.entity", STATE_ON, {const.ATTR_HUMIDITY: 7})
+    await hass.async_block_till_done()
+    # Should not trigger for invalid config
+    assert len(calls) == 0
 
 
 async def test_get_trigger_capabilities_on(hass):
