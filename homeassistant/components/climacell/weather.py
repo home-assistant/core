@@ -19,6 +19,8 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    LENGTH_CENTIMETERS,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PRESSURE_HPA,
@@ -29,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import is_up
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
 from homeassistant.util.temperature import convert as temp_convert
@@ -59,15 +62,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _translate_condition(
-    hass: HomeAssistantType, condition: Optional[str]
+    condition: Optional[str], sun_is_up: bool = True
 ) -> Optional[str]:
     """Translate ClimaCell condition into an HA condition."""
     if "clear" in condition.lower():
-        if is_up(hass):
+        if sun_is_up:
             return CLEAR_CONDITIONS["day"]
-
         return CLEAR_CONDITIONS["night"]
-
     return CONDITIONS[condition]
 
 
@@ -78,12 +79,13 @@ def _translate_wind_direction(direction: Optional[float]) -> Optional[str]:
 
 def _forecast_dict(
     hass: HomeAssistantType,
+    time: str,
+    use_datetime: bool,
     condition: str,
     precipitation: str,
     precipitation_probability: float,
     temp: float,
     temp_low: Optional[float],
-    time: str,
     wind_direction: Optional[float],
     wind_speed: Optional[float],
     humidity: Optional[float],
@@ -93,21 +95,65 @@ def _forecast_dict(
 ) -> Dict[str, Any]:
     """Return formatted Forecast dict from ClimaCell forecast data."""
     wind_bearing = _translate_wind_direction(wind_direction) if wind_direction else None
-    translated_condition = _translate_condition(hass, condition) if condition else None
-    data = {
-        ATTR_FORECAST_CONDITION: translated_condition,
-        ATTR_FORECAST_PRECIPITATION: precipitation,
-        ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
-        ATTR_FORECAST_TEMP: temp,
-        ATTR_FORECAST_TEMP_LOW: temp_low,
-        ATTR_FORECAST_TIME: time,
-        ATTR_FORECAST_WIND_BEARING: wind_bearing,
-        ATTR_FORECAST_WIND_SPEED: wind_speed,
-        ATTR_WEATHER_HUMIDITY: humidity,
-        ATTR_WEATHER_OZONE: ozone,
-        ATTR_WEATHER_PRESSURE: pressure,
-        ATTR_WEATHER_VISIBILITY: visibility,
-    }
+    if condition:
+        if use_datetime:
+            translated_condition = _translate_condition(
+                condition, is_up(hass, dt_util.parse_datetime(time))
+            )
+        else:
+            translated_condition = _translate_condition(condition, True)
+    else:
+        translated_condition = None
+
+    if hass.config.units.is_metric:
+        data = {
+            ATTR_FORECAST_TIME: time,
+            ATTR_FORECAST_CONDITION: translated_condition,
+            ATTR_FORECAST_PRECIPITATION: precipitation,
+            ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
+            ATTR_FORECAST_TEMP: temp,
+            ATTR_FORECAST_TEMP_LOW: temp_low,
+            ATTR_FORECAST_WIND_BEARING: wind_bearing,
+            ATTR_FORECAST_WIND_SPEED: wind_speed,
+            ATTR_WEATHER_HUMIDITY: humidity,
+            ATTR_WEATHER_OZONE: ozone,
+            ATTR_WEATHER_PRESSURE: pressure,
+            ATTR_WEATHER_VISIBILITY: visibility,
+        }
+    else:
+        data = {
+            ATTR_FORECAST_TIME: time,
+            ATTR_FORECAST_CONDITION: translated_condition,
+            ATTR_FORECAST_PRECIPITATION: distance_convert(
+                precipitation, LENGTH_INCHES, LENGTH_CENTIMETERS
+            )
+            * 10,
+            ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
+            ATTR_FORECAST_TEMP: temp_convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS),
+            ATTR_FORECAST_TEMP_LOW: temp_convert(
+                temp_low, TEMP_FAHRENHEIT, TEMP_CELSIUS
+            )
+            if temp_low
+            else None,
+            ATTR_FORECAST_WIND_BEARING: wind_bearing,
+            ATTR_FORECAST_WIND_SPEED: distance_convert(
+                wind_speed, LENGTH_MILES, LENGTH_KILOMETERS
+            )
+            if wind_speed
+            else None,
+            ATTR_WEATHER_HUMIDITY: humidity,
+            ATTR_WEATHER_OZONE: ozone,
+            ATTR_WEATHER_PRESSURE: pressure_convert(
+                pressure, PRESSURE_INHG, PRESSURE_HPA
+            )
+            if pressure
+            else None,
+            ATTR_WEATHER_VISIBILITY: distance_convert(
+                visibility, LENGTH_MILES, LENGTH_KILOMETERS
+            )
+            if visibility
+            else None,
+        }
 
     return {k: v for k, v in data.items() if v is not None}
 
@@ -196,7 +242,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         if "weather_code" not in self._coordinator.data[CURRENT]:
             return None
         return _translate_condition(
-            self.hass, self._coordinator.data[CURRENT]["weather_code"]["value"]
+            self._coordinator.data[CURRENT]["weather_code"]["value"], is_up(self.hass)
         )
 
     @property
@@ -290,12 +336,13 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                 forecasts.append(
                     _forecast_dict(
                         self.hass,
+                        forecast["observation_time"]["value"],
+                        True,
                         forecast["weather_code"]["value"],
                         forecast["precipitation_accumulation"]["value"],
                         forecast["precipitation_probability"]["value"] / 100,
                         temp_max,
                         temp_min,
-                        forecast["observation_time"]["value"],
                         None,
                         None,
                         None,
@@ -314,12 +361,13 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                 forecasts.append(
                     _forecast_dict(
                         self.hass,
+                        forecast["observation_time"]["value"],
+                        False,
                         forecast["weather_code"]["value"],
                         forecast["precipitation"]["value"],
                         forecast["precipitation_probability"]["value"] / 100,
                         forecast["temp"]["value"],
                         None,
-                        forecast["observation_time"]["value"],
                         forecast["wind_direction"]["value"],
                         forecast["wind_speed"]["value"],
                         forecast["humidity"]["value"],
