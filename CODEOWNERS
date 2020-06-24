@@ -316,7 +316,7 @@ homeassistant/components/plaato/* @JohNan
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/plex/* @jjlawren
 homeassistant/components/plugwise/* @CoMPaTech @bouwew
-homeassistant/components/plum_lightpad/* @ColinHarrington
+homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike
 homeassistant/components/powerwall/* @bdraco @jrester
 homeassistant/components/prometheus/* @knyar
