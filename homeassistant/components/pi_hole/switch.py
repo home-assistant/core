@@ -54,12 +54,12 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the switch."""
         return self._name
 
     @property
     def unique_id(self):
-        """Return the unique id of the sensor."""
+        """Return the unique id of the switch."""
         return f"{self._server_unique_id}/Switch"
 
     @property

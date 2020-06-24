@@ -164,7 +164,7 @@ class PiHoleEntity(Entity):
 
     @property
     def device_info(self):
-        """Return the device information of the sensor."""
+        """Return the device information of the entity."""
         return {
             "identifiers": {(DOMAIN, self._server_unique_id)},
             "name": self._name,
