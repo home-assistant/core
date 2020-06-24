@@ -153,7 +153,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._wet_tolerance = wet_tolerance
         self._keep_alive = keep_alive
         self._state = initial_state
-        self._saved_target_humidity = target_humidity or away_humidity
+        self._saved_target_humidity = away_humidity or target_humidity
         self._active = False
         self._cur_humidity = None
         self._humidity_lock = asyncio.Lock()
@@ -395,7 +395,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         """Update hygrostat with latest state from sensor."""
         try:
             self._cur_humidity = float(state.state)
-            _LOGGER.debug("self._cur_humidity = %s", self._cur_humidity)
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
             self._cur_humidity = None
@@ -414,13 +413,12 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 force = True
                 _LOGGER.info(
                     "Obtained current and target humidity. "
-                    "Generic hygrostat active. %s, %s, %s",
+                    "Generic hygrostat active. %s, %s",
                     self._cur_humidity,
                     self._target_humidity,
-                    self.available,
                 )
 
-            if not self._active:
+            if not self._active or not self._state:
                 return
 
             if not force and time is None:
