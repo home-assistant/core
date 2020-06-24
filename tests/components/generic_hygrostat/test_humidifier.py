@@ -144,7 +144,8 @@ async def test_humidifier_switch(hass, setup_comp_1):
     assert STATE_OFF == hass.states.get(humidifier_switch).state
 
     _setup_sensor(hass, 23)
-    #await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HUMIDITY,
@@ -1504,8 +1505,8 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     )
     assert STATE_OFF == hass.states.get(humidifier_switch).state
 
-    # Wait 11 minutes
-    _send_time_changed(hass, start_time + datetime.timedelta(minutes=11))
+    # Wait another 11 minutes
+    _send_time_changed(hass, start_time + datetime.timedelta(minutes=11*2))
     await hass.async_block_till_done()
 
     # Still off
