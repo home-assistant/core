@@ -83,6 +83,9 @@ async def test_setup_minimal_config(hass):
     assert hass.states.get("sensor.pi_hole_domains_blocked").state == "0"
     assert hass.states.get("sensor.pi_hole_seen_clients").state == "0"
 
+    assert hass.states.get("binary_sensor.pi_hole").name == "Pi-Hole"
+    assert hass.states.get("binary_sensor.pi_hole").state == "off"
+
 
 async def test_setup_name_config(hass):
     """Tests component setup with a custom name."""

@@ -15,6 +15,7 @@ from . import (
     CONF_CONFIG_FLOW,
     CONF_DATA,
     NAME,
+    STATUS_ENTITY_ID,
     SWITCH_ENTITY_ID,
     _create_mocked_hole,
     _patch_config_flow_hole,
@@ -119,6 +120,7 @@ async def test_options_flow(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert hass.states.get(SWITCH_ENTITY_ID) is not None
+        assert hass.states.get(STATUS_ENTITY_ID) is None
         assert config_entry.options[CONF_API_KEY] == API_KEY
         assert CONF_API_KEY not in config_entry.data
 
@@ -133,6 +135,7 @@ async def test_options_flow(hass):
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {}
         assert hass.states.get(SWITCH_ENTITY_ID) is None
+        assert hass.states.get(STATUS_ENTITY_ID) is not None
         assert CONF_API_KEY not in config_entry.options
 
         # Set new API key
@@ -143,4 +146,5 @@ async def test_options_flow(hass):
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {CONF_API_KEY: API_KEY}
         assert hass.states.get(SWITCH_ENTITY_ID) is not None
+        assert hass.states.get(STATUS_ENTITY_ID) is None
         assert config_entry.options[CONF_API_KEY] == API_KEY

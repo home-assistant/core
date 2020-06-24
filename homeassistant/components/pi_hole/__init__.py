@@ -51,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor", "switch"]
+PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 
 async def async_setup(hass, config):
@@ -161,6 +161,11 @@ class PiHoleEntity(Entity):
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return "mdi:pi-hole"
 
     @property
     def device_info(self):

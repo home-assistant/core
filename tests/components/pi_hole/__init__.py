@@ -21,7 +21,7 @@ ZERO_DATA = {
     "domains_being_blocked": 0,
     "queries_cached": 0,
     "queries_forwarded": 0,
-    "status": 0,
+    "status": "disabled",
     "unique_clients": 0,
     "unique_domains": 0,
 }
@@ -54,6 +54,7 @@ CONF_CONFIG_FLOW = {
 }
 
 SWITCH_ENTITY_ID = "switch.pi_hole"
+STATUS_ENTITY_ID = "binary_sensor.pi_hole"
 
 
 def _create_mocked_hole(raise_exception=False):
