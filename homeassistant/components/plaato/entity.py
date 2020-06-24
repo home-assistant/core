@@ -73,7 +73,7 @@ class PlaatoEntity(entity.Entity):
     async def async_added_to_hass(self):
         """When entity is added to hass."""
         if self._coordinator is not None:
-            self._coordinator.async_add_listener(self.async_write_ha_state)
+            self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
         else:
             self.async_on_remove(
                 self.hass.helpers.dispatcher.async_dispatcher_connect(
