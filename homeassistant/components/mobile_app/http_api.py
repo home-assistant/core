@@ -11,7 +11,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CONF_WEBHOOK_ID, HTTP_CREATED
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.util import ensure_unique_string, slugify
 
 from .const import (
     ATTR_APP_DATA,
@@ -32,6 +32,7 @@ from .const import (
     DOMAIN,
 )
 from .helpers import supports_encryption
+from .notify import push_registrations
 
 
 class RegistrationsView(HomeAssistantView):
@@ -90,6 +91,10 @@ class RegistrationsView(HomeAssistantView):
         else:
             # Fallback to DEVICE_ID
             data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
+
+        data[ATTR_APP_NAME] = ensure_unique_string(
+            data[ATTR_DEVICE_NAME], push_registrations
+        )
 
         await hass.async_create_task(
             hass.config_entries.flow.async_init(
