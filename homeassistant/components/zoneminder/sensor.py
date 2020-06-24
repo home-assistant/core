@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder sensor platform."""
     _LOGGER.warning(
-        "ZoneMinder sensor platform configuration through yaml configuration is no longer supported. Previousally available entities are automatcally created for you and disabled by default."
+        "ZoneMinder sensor platform configuration through yaml configuration is no longer supported. Previousally available entities are automatically created for you and disabled by default."
     )
 
 

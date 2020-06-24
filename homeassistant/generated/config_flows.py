@@ -177,5 +177,6 @@ FLOWS = [
     "xiaomi_miio",
     "zerproc",
     "zha",
+    "zoneminder",
     "zwave"
 ]
