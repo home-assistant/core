@@ -36,7 +36,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
     assert json == {"success": True}
     await hass.async_block_till_done()
 
-    entity = hass.states.get("sensor.test_1_battery_state")
+    entity = hass.states.get("sensor.test_clear_battery_state")
     assert entity is not None
 
     assert entity.attributes["device_class"] == "battery"
@@ -44,7 +44,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
     assert entity.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
     assert entity.attributes["foo"] == "bar"
     assert entity.domain == "sensor"
-    assert entity.name == "Test 1 Battery State"
+    assert entity.name == "Test Clear Battery State"
     assert entity.state == "100"
 
     update_resp = await webhook_client.post(
@@ -69,7 +69,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
     json = await update_resp.json()
     assert json["invalid_state"]["success"] is False
 
-    updated_entity = hass.states.get("sensor.test_1_battery_state")
+    updated_entity = hass.states.get("sensor.test_clear_battery_state")
     assert updated_entity.state == "123"
 
     dev_reg = await device_registry.async_get_registry(hass)
@@ -124,7 +124,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
 
     assert "Re-register existing sensor" not in caplog.text
 
-    entity = hass.states.get("sensor.test_1_battery_state")
+    entity = hass.states.get("sensor.test_clear_battery_state")
     assert entity is not None
 
     assert entity.attributes["device_class"] == "battery"
@@ -132,7 +132,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     assert entity.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
     assert entity.attributes["foo"] == "bar"
     assert entity.domain == "sensor"
-    assert entity.name == "Test 1 Battery State"
+    assert entity.name == "Test Clear Battery State"
     assert entity.state == "100"
 
     payload["data"]["state"] = 99
@@ -145,7 +145,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
 
     assert "Re-register existing sensor" in caplog.text
 
-    entity = hass.states.get("sensor.test_1_battery_state")
+    entity = hass.states.get("sensor.test_clear_battery_state")
     assert entity is not None
 
     assert entity.attributes["device_class"] == "battery"
@@ -153,7 +153,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     assert entity.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
     assert entity.attributes["foo"] == "bar"
     assert entity.domain == "sensor"
-    assert entity.name == "Test 1 Battery State"
+    assert entity.name == "Test Clear Battery State"
     assert entity.state == "99"
 
 
@@ -181,11 +181,11 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
     assert json == {"success": True}
     await hass.async_block_till_done()
 
-    entity = hass.states.get("sensor.test_1_battery_state")
+    entity = hass.states.get("sensor.test_clear_battery_state")
     assert entity is not None
 
     assert entity.domain == "sensor"
-    assert entity.name == "Test 1 Battery State"
+    assert entity.name == "Test Clear Battery State"
     assert entity.state == STATE_UNKNOWN
 
     reg_resp = await webhook_client.post(
@@ -206,11 +206,11 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
     assert json == {"success": True}
     await hass.async_block_till_done()
 
-    entity = hass.states.get("sensor.test_1_backup_battery_state")
+    entity = hass.states.get("sensor.test_clear_backup_battery_state")
     assert entity
 
     assert entity.domain == "sensor"
-    assert entity.name == "Test 1 Backup Battery State"
+    assert entity.name == "Test Clear Backup Battery State"
     assert entity.state == STATE_UNKNOWN
 
 
@@ -238,7 +238,7 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
     assert json == {"success": True}
     await hass.async_block_till_done()
 
-    entity = hass.states.get("sensor.test_1_battery_state")
+    entity = hass.states.get("sensor.test_clear_battery_state")
     assert entity is not None
     assert entity.state == "100"
 
@@ -255,5 +255,5 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
     json = await update_resp.json()
     assert json == {"battery_state": {"success": True}}
 
-    updated_entity = hass.states.get("sensor.test_1_battery_state")
+    updated_entity = hass.states.get("sensor.test_clear_battery_state")
     assert updated_entity.state == STATE_UNKNOWN

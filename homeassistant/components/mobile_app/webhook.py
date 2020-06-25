@@ -327,6 +327,29 @@ async def webhook_update_registration(hass, config_entry, data):
     """Handle an update registration webhook."""
     new_registration = {**config_entry.data, **data}
 
+    registrations = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
+
+    current_name = None
+    try:
+        current_name = registrations[new_registration[CONF_WEBHOOK_ID]].data[
+            ATTR_DEVICE_NAME
+        ]
+    except KeyError:
+        _LOGGER.warning(
+            "Could not find existing device name for webhook: %s",
+            new_registration[CONF_WEBHOOK_ID],
+        )
+
+    if current_name:
+        if new_registration[ATTR_DEVICE_NAME] != current_name:
+            # Ensure that device name changes are not propagated to avoid mismatches
+            _LOGGER.info(
+                f"Refusing to change device name from {current_name} "
+                + f"to {new_registration[ATTR_DEVICE_NAME]} proceeding with with "
+                + f"registration update using {current_name}"
+            )
+            new_registration[ATTR_DEVICE_NAME] = current_name
+
     device_registry = await dr.async_get_registry(hass)
 
     device_registry.async_get_or_create(

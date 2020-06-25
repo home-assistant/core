@@ -8,7 +8,12 @@ from homeassistant.components.mobile_app.const import CONF_SECRET, DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
-from .const import REGISTER, REGISTER_CLEARTEXT, RENDER_TEMPLATE
+from .const import (
+    REGISTER,
+    REGISTER_CLEARTEXT,
+    REGISTER_CLEARTEXT_DUPLICATE_NAME,
+    RENDER_TEMPLATE,
+)
 
 from tests.common import mock_coro
 
@@ -30,7 +35,7 @@ async def test_registration(hass, hass_client, hass_admin_user):
 
     assert len(add_user_dev_track.mock_calls) == 1
     assert add_user_dev_track.mock_calls[0][1][1] == hass_admin_user.id
-    assert add_user_dev_track.mock_calls[0][1][2] == "device_tracker.test_1"
+    assert add_user_dev_track.mock_calls[0][1][2] == "device_tracker.test_clear"
 
     assert resp.status == 201
     register_json = await resp.json()
@@ -100,3 +105,48 @@ async def test_registration_encryption(hass, hass_client):
     decrypted_data = decrypted_data.decode("utf-8")
 
     assert json.loads(decrypted_data) == {"one": "Hello world"}
+
+
+async def test_duplicate_device_name(hass, hass_client, hass_admin_user):
+    """Test that registering duplicate device name adds suffix."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    api_client = await hass_client()
+
+    # Register first device
+    with patch(
+        "homeassistant.components.person.async_add_user_device_tracker",
+        spec=True,
+        return_value=mock_coro(),
+    ) as add_user_dev_track:
+        resp = await api_client.post(
+            "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+        )
+
+    assert resp.status == 201
+
+    assert len(add_user_dev_track.mock_calls) == 1
+    assert add_user_dev_track.mock_calls[0][1][2] == "device_tracker.test_clear"
+
+    # Register second device with same name
+    with patch(
+        "homeassistant.components.person.async_add_user_device_tracker",
+        spec=True,
+        return_value=mock_coro(),
+    ) as add_user_dev_track:
+        resp = await api_client.post(
+            "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT_DUPLICATE_NAME
+        )
+
+    assert resp.status == 201
+
+    assert len(add_user_dev_track.mock_calls) == 1
+    assert add_user_dev_track.mock_calls[0][1][2] == "device_tracker.test_clear_2"
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert entries[0].data["device_name"] == REGISTER_CLEARTEXT["device_name"]
+    assert (
+        entries[1].data["device_name"]
+        == REGISTER_CLEARTEXT_DUPLICATE_NAME["device_name"] + "_2"
+    )

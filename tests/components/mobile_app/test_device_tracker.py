@@ -22,9 +22,9 @@ async def test_sending_location(hass, create_registrations, webhook_client):
 
     assert resp.status == 200
     await hass.async_block_till_done()
-    state = hass.states.get("device_tracker.test_1_2")
+    state = hass.states.get("device_tracker.test_clear")
     assert state is not None
-    assert state.name == "Test 1"
+    assert state.name == "Test Clear"
     assert state.state == "bar"
     assert state.attributes["source_type"] == "gps"
     assert state.attributes["latitude"] == 10
@@ -54,7 +54,7 @@ async def test_sending_location(hass, create_registrations, webhook_client):
 
     assert resp.status == 200
     await hass.async_block_till_done()
-    state = hass.states.get("device_tracker.test_1_2")
+    state = hass.states.get("device_tracker.test_clear")
     assert state is not None
     assert state.state == "not_home"
     assert state.attributes["source_type"] == "gps"
@@ -89,7 +89,7 @@ async def test_restoring_location(hass, create_registrations, webhook_client):
 
     assert resp.status == 200
     await hass.async_block_till_done()
-    state_1 = hass.states.get("device_tracker.test_1_2")
+    state_1 = hass.states.get("device_tracker.test_clear")
     assert state_1 is not None
 
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
@@ -99,11 +99,11 @@ async def test_restoring_location(hass, create_registrations, webhook_client):
     await hass.config_entries.async_forward_entry_setup(config_entry, "device_tracker")
     await hass.async_block_till_done()
 
-    state_2 = hass.states.get("device_tracker.test_1_2")
+    state_2 = hass.states.get("device_tracker.test_clear")
     assert state_2 is not None
 
     assert state_1 is not state_2
-    assert state_2.name == "Test 1"
+    assert state_2.name == "Test Clear"
     assert state_2.attributes["source_type"] == "gps"
     assert state_2.attributes["latitude"] == 10
     assert state_2.attributes["longitude"] == 20

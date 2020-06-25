@@ -11,7 +11,14 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
+from .const import (
+    CALL_SERVICE,
+    FIRE_EVENT,
+    REGISTER_CLEARTEXT,
+    RENDER_TEMPLATE,
+    UPDATE,
+    UPDATE_NEW_NAME,
+)
 
 from tests.async_mock import patch
 from tests.common import async_mock_service
@@ -140,6 +147,29 @@ async def test_webhook_update_registration(webhook_client, authed_api_client):
     assert CONF_SECRET not in update_json
 
 
+async def test_webhook_update_registration_new_name(webhook_client, authed_api_client):
+    """Test that device name change is ignored during registration update."""
+    register_resp = await authed_api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+
+    assert register_resp.status == 201
+    register_json = await register_resp.json()
+
+    webhook_id = register_json[CONF_WEBHOOK_ID]
+
+    update_container = {"type": "update_registration", "data": UPDATE_NEW_NAME}
+
+    update_resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}", json=update_container
+    )
+
+    assert update_resp.status == 200
+    update_json = await update_resp.json()
+    assert update_json["device_name"] == UPDATE["device_name"]
+    assert update_json["device_name"] != UPDATE_NEW_NAME["device_name"]
+
+
 async def test_webhook_handle_get_zones(hass, create_registrations, webhook_client):
     """Test that we can get zones properly."""
     await async_setup_component(
@@ -253,7 +283,7 @@ async def test_webhook_update_location(hass, webhook_client, create_registration
 
     assert resp.status == 200
 
-    state = hass.states.get("device_tracker.test_1_2")
+    state = hass.states.get("device_tracker.test_clear")
     assert state is not None
     assert state.attributes["latitude"] == 1.0
     assert state.attributes["longitude"] == 2.0

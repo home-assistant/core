@@ -1,4 +1,5 @@
 """Provides an HTTP API for mobile_app."""
+import logging
 import secrets
 from typing import Dict
 
@@ -11,7 +12,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CONF_WEBHOOK_ID, HTTP_CREATED
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.util import ensure_unique_string, slugify
 
 from .const import (
     ATTR_APP_DATA,
@@ -29,9 +30,12 @@ from .const import (
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
     CONF_USER_ID,
+    DATA_CONFIG_ENTRIES,
     DOMAIN,
 )
 from .helpers import supports_encryption
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RegistrationsView(HomeAssistantView):
@@ -90,6 +94,22 @@ class RegistrationsView(HomeAssistantView):
         else:
             # Fallback to DEVICE_ID
             data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
+
+        registrations = [
+            entry.data[ATTR_DEVICE_NAME]
+            for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items()
+        ]
+
+        requested_name = data[ATTR_DEVICE_NAME]
+
+        data[ATTR_DEVICE_NAME] = ensure_unique_string(requested_name, registrations)
+
+        if data[ATTR_DEVICE_NAME] != requested_name:
+            _LOGGER.warning(
+                "Using device name %s instead of %s to ensure unique",
+                data[ATTR_APP_NAME],
+                requested_name,
+            )
 
         await hass.async_create_task(
             hass.config_entries.flow.async_init(
