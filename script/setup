@@ -14,7 +14,7 @@ source venv/bin/activate
 script/bootstrap
 
 pre-commit install
-pip install -e .
+pip install -e . --constraint homeassistant/package_constraints.txt
 
 hass --script ensure_config -c config
 
