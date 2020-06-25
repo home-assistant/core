@@ -4,6 +4,8 @@ import logging
 import os
 from urllib.parse import urlparse
 
+from aiohttp import BasicAuth
+from aiohttp.client_exceptions import ClientError
 from slack import WebClient
 from slack.errors import SlackApiError
 import voluptuous as vol
@@ -61,6 +63,20 @@ async def async_get_service(hass, config, discovery_info=None):
     )
 
 
+async def _async_get_remote_file_contents(hass, url, *, username=None, password=None):
+    """Get the binary contents of a remote file."""
+    session = aiohttp_client.async_get_clientsession(hass)
+
+    if username and password:
+        resp = session.request("get", url, auth=BasicAuth(username, password=password))
+    else:
+        resp = session.request("get", url)
+
+    async with resp:
+        resp.raise_for_status()
+        return await resp.read()
+
+
 @callback
 def _async_sanitize_channel_names(channel_list):
     """Remove any # symbols from a channel list."""
@@ -111,6 +127,39 @@ class SlackNotificationService(BaseNotificationService):
             )
         except SlackApiError as err:
             _LOGGER.error("Error while uploading file-based message: %s", err)
+
+    async def _async_send_remote_file_message(
+        self, url, targets, message, title, *, username=None, password=None
+    ):
+        """Upload a remote file (with message) to Slack."""
+        try:
+            await _async_get_remote_file_contents(
+                self._hass, url, username=username, password=password
+            )
+        except ClientError as err:
+            _LOGGER.error("Error while retrieving %s: %s", url, err)
+            return
+
+        # try:
+        #     file_as_bytes = await self._hass.async_add_executor_job(
+        #         _get_remote_file_contents, url, username, password, auth_type
+        #     )
+        # except RequestException as err:
+        #     _LOGGER.error("Error while retrieving %s: %s", url, err)
+        #     return
+
+        # filename = _async_get_filename_from_url(url)
+
+        # try:
+        #     await self._client.files_upload(
+        #         channels=",".join(targets),
+        #         file=file_as_bytes,
+        #         filename=filename,
+        #         initial_comment=message,
+        #         title=title or filename,
+        #     )
+        # except SlackApiError as err:
+        #     _LOGGER.error("Error while uploading file-based message: %s", err)
 
     async def _async_send_text_only_message(
         self, targets, message, title, attachments, blocks
