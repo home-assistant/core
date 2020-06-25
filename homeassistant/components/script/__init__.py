@@ -188,19 +188,6 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
 
-    @callback
-    def async_describe_logbook_event(event):
-        """Describe the logbook event."""
-        return {
-            "name": event.data.get(ATTR_NAME),
-            "message": "started",
-            "entity_id": event.data.get(ATTR_ENTITY_ID),
-        }
-
-    hass.components.logbook.async_describe_event(
-        DOMAIN, EVENT_SCRIPT_STARTED, async_describe_logbook_event
-    )
-
     return True
 
 

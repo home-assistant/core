@@ -472,7 +472,9 @@ async def test_config(hass):
 
 async def test_logbook_humanify_script_started_event(hass):
     """Test humanifying script started event."""
+    hass.config.components.add("recorder")
     await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "logbook", {})
     entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     event1, event2 = list(
