@@ -4,13 +4,13 @@
             "already_configured": "El compte ja ha estat configurat"
         },
         "error": {
-            "connection_error": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Contrasenya",
-                    "username": "Nom d'usuari"
+                    "username": "Correu electr\u00f2nic"
                 }
             }
         }
