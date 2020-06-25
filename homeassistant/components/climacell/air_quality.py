@@ -48,7 +48,7 @@ class ClimaCellAirQualityEntity(ClimaCellEntity, AirQualityEntity):
     @property
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
-        field = AQI_FIELD_LOOKUP[self._config_entry.data[CONF_AQI_COUNTRY]]
+        field = AQI_FIELD_LOOKUP[self._config_entry.options[CONF_AQI_COUNTRY]]
         if field not in self._coordinator.data[CURRENT]:
             return None
         return self._coordinator.data[CURRENT][field]["value"]

@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -20,11 +21,16 @@ from .const import (
     CHINA,
     CONF_AQI_COUNTRY,
     CONF_FORECAST_INTERVAL,
+    CONF_TIMESTEP,
     DAILY,
+    DEFAULT_AQI_COUNTRY,
+    DEFAULT_FORECAST_INTERVAL,
     DEFAULT_NAME,
+    DEFAULT_TIMESTEP,
     DISABLE_FORECASTS,
     DOMAIN,
     HOURLY,
+    NOWCAST,
     USA,
 )
 
@@ -61,11 +67,10 @@ def _get_config_schema(
             ): cv.longitude,
             vol.Optional(
                 CONF_FORECAST_INTERVAL,
-                default=input_dict.get(CONF_FORECAST_INTERVAL, DAILY),
-            ): vol.In((DISABLE_FORECASTS, DAILY, HOURLY)),
-            vol.Optional(
-                CONF_AQI_COUNTRY, default=input_dict.get(CONF_AQI_COUNTRY, USA)
-            ): vol.In((USA, CHINA)),
+                default=input_dict.get(
+                    CONF_FORECAST_INTERVAL, DEFAULT_FORECAST_INTERVAL
+                ),
+            ): vol.In((DISABLE_FORECASTS, DAILY, HOURLY, NOWCAST)),
         },
         extra=vol.REMOVE_EXTRA,
     )
@@ -77,7 +82,48 @@ def _get_unique_id(hass: HomeAssistantType, input_dict: Dict[str, Any]):
         f"{input_dict[CONF_API_KEY]}"
         f"_{input_dict.get(CONF_LATITUDE, hass.config.latitude)}"
         f"_{input_dict.get(CONF_LONGITUDE, hass.config.longitude)}"
+        f"_{input_dict[CONF_FORECAST_INTERVAL]}"
     )
+
+
+class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
+    """Handle ClimaCell options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize ClimaCell options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Manage the ClimaCell options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options_schema = {
+            vol.Required(
+                CONF_AQI_COUNTRY,
+                default=self._config_entry.options.get(
+                    CONF_AQI_COUNTRY, DEFAULT_AQI_COUNTRY
+                ),
+            ): vol.In((USA, CHINA)),
+        }
+
+        if self._config_entry.data[CONF_FORECAST_INTERVAL] == NOWCAST:
+            options_schema.update(
+                {
+                    vol.Required(
+                        CONF_TIMESTEP,
+                        default=self._config_entry.options.get(
+                            CONF_TIMESTEP, DEFAULT_TIMESTEP
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
+                }
+            )
+
+        return self.async_show_form(
+            step_id="init", data_schema=vol.Schema(options_schema),
+        )
 
 
 class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -85,6 +131,14 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> ClimaCellOptionsConfigFlow:
+        """Get the options flow for this handler."""
+        return ClimaCellOptionsConfigFlow(config_entry)
 
     async def async_step_user(
         self, user_input: Dict[str, Any] = None
@@ -130,16 +184,24 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.unique_id == _get_unique_id(self.hass, import_config):
                 updated_data = {}
+                updated_options = {}
+
                 keys = entry.data.keys()
                 for key in keys:
                     if key in import_config and entry.data[key] != import_config[key]:
                         updated_data[key] = import_config[key]
 
-                if updated_data:
+                for key in (CONF_TIMESTEP, CONF_AQI_COUNTRY):
+                    if import_config[key] != entry.data[key]:
+                        updated_options.update({key: import_config[key]})
+
+                if updated_data or updated_options:
                     new_data = entry.data.copy()
                     new_data.update(updated_data)
+                    new_options = entry.options.copy()
+                    new_options.update(updated_options)
                     self.hass.config_entries.async_update_entry(
-                        entry=entry, data=new_data
+                        entry=entry, data=new_data, options=new_options
                     )
                     return self.async_abort(reason="updated_entry")
 

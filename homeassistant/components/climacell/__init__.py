@@ -5,7 +5,12 @@ import logging
 from math import ceil
 from typing import Any, Dict
 
-from pyclimacell.const import FORECAST_DAILY, FORECAST_HOURLY, REALTIME
+from pyclimacell.const import (
+    FORECAST_DAILY,
+    FORECAST_HOURLY,
+    FORECAST_NOWCAST,
+    REALTIME,
+)
 from pyclimacell.pyclimacell import (
     CantConnectException,
     ClimaCell,
@@ -30,14 +35,19 @@ from .const import (
     CHINA,
     CONF_AQI_COUNTRY,
     CONF_FORECAST_INTERVAL,
+    CONF_TIMESTEP,
     CURRENT,
     DAILY,
+    DEFAULT_AQI_COUNTRY,
+    DEFAULT_FORECAST_INTERVAL,
     DEFAULT_NAME,
+    DEFAULT_TIMESTEP,
     DISABLE_FORECASTS,
     DOMAIN,
     FORECASTS,
     HOURLY,
     MAX_REQUESTS_PER_DAY,
+    NOWCAST,
     USA,
 )
 
@@ -49,10 +59,15 @@ SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Inclusive(CONF_LATITUDE, "location"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "location"): cv.longitude,
-        vol.Optional(CONF_FORECAST_INTERVAL, default=DAILY): vol.In(
-            (DISABLE_FORECASTS, DAILY, HOURLY)
+        vol.Optional(CONF_FORECAST_INTERVAL, default=DEFAULT_FORECAST_INTERVAL): vol.In(
+            (DISABLE_FORECASTS, DAILY, HOURLY, NOWCAST)
         ),
-        vol.Optional(CONF_AQI_COUNTRY, default=USA): vol.In((USA, CHINA)),
+        vol.Optional(CONF_TIMESTEP, default=DEFAULT_TIMESTEP): vol.All(
+            int, vol.Range(1, 60)
+        ),
+        vol.Optional(CONF_AQI_COUNTRY, default=DEFAULT_AQI_COUNTRY): vol.In(
+            (USA, CHINA)
+        ),
     }
 )
 
@@ -110,6 +125,18 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
+    # If config entry options not set up, set them up
+    if not config_entry.options:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options={
+                CONF_TIMESTEP: config_entry.data.get(CONF_TIMESTEP, DEFAULT_TIMESTEP),
+                CONF_AQI_COUNTRY: config_entry.data.get(
+                    CONF_AQI_COUNTRY, DEFAULT_AQI_COUNTRY
+                ),
+            },
+        )
+
     coordinator = ClimaCellDataUpdateCoordinator(
         hass,
         config_entry,
@@ -203,6 +230,16 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                     self._api.availabile_fields(FORECAST_DAILY),
                     None,
                     timedelta(days=14),
+                )
+
+            if self._forecast_interval == NOWCAST:
+                data[FORECASTS] = await self._api.forecast_nowcast(
+                    self._api.availabile_fields(FORECAST_NOWCAST),
+                    None,
+                    timedelta(
+                        minutes=min(300, self._config_entry.options[CONF_TIMESTEP] * 30)
+                    ),
+                    self._config_entry.options[CONF_TIMESTEP],
                 )
 
             return data

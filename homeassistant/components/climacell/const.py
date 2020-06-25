@@ -1,10 +1,12 @@
 """Constants for the ClimaCell integration."""
 CONF_FORECAST_INTERVAL = "forecast_interval"
 CONF_AQI_COUNTRY = "aqi_country"
+CONF_TIMESTEP = "timestep"
 
 DISABLE_FORECASTS = "disable"
 DAILY = "daily"
 HOURLY = "hourly"
+NOWCAST = "nowcast"
 USA = "usa"
 CHINA = "china"
 
@@ -12,6 +14,9 @@ CURRENT = "current"
 FORECASTS = "forecasts"
 
 DEFAULT_NAME = "ClimaCell"
+DEFAULT_TIMESTEP = 15
+DEFAULT_FORECAST_INTERVAL = DAILY
+DEFAULT_AQI_COUNTRY = USA
 DOMAIN = "climacell"
 ATTRIBUTION = "Powered by ClimaCell"
 

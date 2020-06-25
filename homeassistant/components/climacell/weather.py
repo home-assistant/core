@@ -48,11 +48,13 @@ from .const import (
     CLEAR_CONDITIONS,
     CONDITIONS,
     CONF_FORECAST_INTERVAL,
+    CONF_TIMESTEP,
     CURRENT,
     DAILY,
     DOMAIN,
     FORECASTS,
     HOURLY,
+    NOWCAST,
     WIND_DIRECTIONS,
 )
 
@@ -83,7 +85,7 @@ def _forecast_dict(
     use_datetime: bool,
     condition: str,
     precipitation: str,
-    precipitation_probability: float,
+    precipitation_probability: Optional[float],
     temp: float,
     temp_low: Optional[float],
     wind_direction: Optional[float],
@@ -366,6 +368,35 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                         forecast["weather_code"]["value"],
                         forecast["precipitation"]["value"],
                         forecast["precipitation_probability"]["value"] / 100,
+                        forecast["temp"]["value"],
+                        None,
+                        forecast["wind_direction"]["value"],
+                        forecast["wind_speed"]["value"],
+                        forecast["humidity"]["value"],
+                        forecast["o3"]["value"],
+                        forecast["baro_pressure"]["value"],
+                        forecast["visibility"]["value"],
+                    )
+                )
+            return forecasts
+
+        if (
+            self._config_entry.data[CONF_FORECAST_INTERVAL] == NOWCAST
+            and self._coordinator.data[FORECASTS]
+        ):
+            for forecast in self._coordinator.data[FORECASTS]:
+                forecasts.append(
+                    _forecast_dict(
+                        self.hass,
+                        forecast["observation_time"]["value"],
+                        True,
+                        forecast["weather_code"]["value"],
+                        (
+                            forecast["precipitation"]["value"]
+                            * self._config_entry.options[CONF_TIMESTEP]
+                            / 60
+                        ),
+                        None,
                         forecast["temp"]["value"],
                         None,
                         forecast["wind_direction"]["value"],

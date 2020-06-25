@@ -9,14 +9,20 @@ from pyclimacell.pyclimacell import (
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.climacell import SCHEMA
-from homeassistant.components.climacell.config_flow import _get_config_schema
+from homeassistant.components.climacell.config_flow import (
+    _get_config_schema,
+    _get_unique_id,
+)
 from homeassistant.components.climacell.const import (
     CONF_AQI_COUNTRY,
     CONF_FORECAST_INTERVAL,
+    CONF_TIMESTEP,
     DAILY,
+    DEFAULT_AQI_COUNTRY,
     DEFAULT_NAME,
+    DEFAULT_TIMESTEP,
     DOMAIN,
-    HOURLY,
+    NOWCAST,
     USA,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
@@ -49,22 +55,20 @@ async def test_user_flow_minimum_fields(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_FORECAST_INTERVAL] == DAILY
     assert result["data"][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LONGITUDE] == hass.config.longitude
-    assert result["data"][CONF_AQI_COUNTRY] == USA
 
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistantType) -> None:
     """Test user config flow with the same unique ID as an existing entry."""
+    user_input = _get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG)
     MockConfigEntry(
         domain=DOMAIN,
-        data=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
+        data=user_input,
         source=config_entries.SOURCE_USER,
-        unique_id=f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}",
+        unique_id=_get_unique_id(hass, user_input),
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=user_input,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -155,17 +159,16 @@ async def test_import_flow_minimum_fields(hass: HomeAssistantType) -> None:
 
 async def test_import_flow_already_exists(hass: HomeAssistantType) -> None:
     """Test import config flow when entry already exists."""
+    import_config = SCHEMA(MIN_CONFIG)
     MockConfigEntry(
         domain=DOMAIN,
-        data=SCHEMA(MIN_CONFIG),
+        data=import_config,
         source=config_entries.SOURCE_IMPORT,
-        unique_id=f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}",
+        unique_id=_get_unique_id(hass, import_config),
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=SCHEMA(MIN_CONFIG),
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=import_config,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -174,18 +177,96 @@ async def test_import_flow_already_exists(hass: HomeAssistantType) -> None:
 
 async def test_import_flow_update_entry(hass: HomeAssistantType) -> None:
     """Test import config flow when config is updated."""
+    import_config = SCHEMA(MIN_CONFIG)
     MockConfigEntry(
         domain=DOMAIN,
-        data=SCHEMA(MIN_CONFIG),
+        data=import_config,
         source=config_entries.SOURCE_IMPORT,
-        unique_id=f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}",
+        unique_id=_get_unique_id(hass, import_config),
     ).add_to_hass(hass)
 
     config = MIN_CONFIG.copy()
-    config[CONF_FORECAST_INTERVAL] = HOURLY
+    config[CONF_NAME] = "test name"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=SCHEMA(config),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "updated_entry"
+
+
+async def test_import_flow_update_timestep(hass: HomeAssistantType) -> None:
+    """Test import config flow when timestep is updated."""
+    import_config = SCHEMA(MIN_CONFIG)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=import_config,
+        source=config_entries.SOURCE_IMPORT,
+        unique_id=_get_unique_id(hass, import_config),
+    )
+    entry.add_to_hass(hass)
+
+    config = MIN_CONFIG.copy()
+    config[CONF_TIMESTEP] = 1
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=SCHEMA(config),
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "updated_entry"
+    assert entry.data[CONF_TIMESTEP] == entry.options[CONF_TIMESTEP] == 1
+
+
+async def test_import_flow_update_aqi_country(hass: HomeAssistantType) -> None:
+    """Test import config flow when aqi_country is updated."""
+    import_config = SCHEMA(MIN_CONFIG)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=import_config,
+        source=config_entries.SOURCE_IMPORT,
+        unique_id=_get_unique_id(hass, import_config),
+    )
+    entry.add_to_hass(hass)
+
+    config = MIN_CONFIG.copy()
+    config[CONF_AQI_COUNTRY] = "china"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=SCHEMA(config),
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "updated_entry"
+    assert entry.data[CONF_AQI_COUNTRY] == entry.options[CONF_AQI_COUNTRY] == "china"
+
+
+async def test_options_flow(hass: HomeAssistantType) -> None:
+    """Test options config flow for climacell."""
+    import_config = SCHEMA(MIN_CONFIG)
+    import_config[CONF_FORECAST_INTERVAL] = NOWCAST
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=import_config,
+        source=config_entries.SOURCE_IMPORT,
+        unique_id=_get_unique_id(hass, import_config),
+    )
+    entry.add_to_hass(hass)
+
+    assert not entry.options
+    assert entry.data[CONF_TIMESTEP] == DEFAULT_TIMESTEP
+    assert entry.data[CONF_AQI_COUNTRY] == DEFAULT_AQI_COUNTRY
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_TIMESTEP: 1, CONF_AQI_COUNTRY: "china"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_TIMESTEP] == 1
+    assert entry.options[CONF_TIMESTEP] == 1
+    assert result["data"][CONF_AQI_COUNTRY] == "china"
+    assert entry.options[CONF_AQI_COUNTRY] == "china"
