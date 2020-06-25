@@ -107,7 +107,7 @@ class RegistrationsView(HomeAssistantView):
         if data[ATTR_DEVICE_NAME] != requested_name:
             _LOGGER.warning(
                 "Using device name %s instead of %s to ensure unique",
-                data[ATTR_APP_NAME],
+                data[ATTR_DEVICE_NAME],
                 requested_name,
             )
 
