@@ -302,15 +302,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ]
 
         for target_device in target_devices:
-            output = target_device.learn_sendevent()
-
-            # log the output, if there is any
-            if output:
-                _LOGGER.info(
-                    "Output of 'learn_sendevent' service from '%s': %s",
-                    target_device.entity_id,
-                    output,
-                )
+            target_device.learn_sendevent()
 
     hass.services.register(
         ANDROIDTV_DOMAIN,
@@ -604,11 +596,6 @@ class ADBDevice(MediaPlayerEntity):
             self.schedule_update_ha_state()
             return self._adb_response
 
-        if cmd == "LEARN_SENDEVENT":
-            self._adb_response = str(self.aftv.learn_sendevent())
-            self.schedule_update_ha_state()
-            return self._adb_response
-
         try:
             response = self.aftv.adb_shell(cmd)
         except UnicodeDecodeError:
@@ -627,8 +614,16 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     def learn_sendevent(self):
         """Translate a key press on a remote to ADB 'sendevent' commands."""
-        self._adb_response = self.aftv.learn_sendevent()
-        self.schedule_update_ha_state()
+        output = self.aftv.learn_sendevent()
+        if output:
+            self._adb_response = output
+            self.schedule_update_ha_state()
+
+            msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
+            self.hass.components.persistent_notification.async_create(
+                msg, title="Android TV"
+            )
+            _LOGGER.info("%s", msg)
 
     @adb_decorator()
     def adb_pull(self, local_path, device_path):
