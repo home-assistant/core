@@ -1,6 +1,5 @@
 """Tests for the mobile_app HTTP API."""
 import json
-from unittest.mock import patch
 
 import pytest
 
@@ -15,7 +14,7 @@ from .const import (
     RENDER_TEMPLATE,
 )
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 async def test_registration(hass, hass_client, hass_admin_user):
@@ -25,9 +24,7 @@ async def test_registration(hass, hass_client, hass_admin_user):
     api_client = await hass_client()
 
     with patch(
-        "homeassistant.components.person.async_add_user_device_tracker",
-        spec=True,
-        return_value=mock_coro(),
+        "homeassistant.components.person.async_add_user_device_tracker"
     ) as add_user_dev_track:
         resp = await api_client.post(
             "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
@@ -115,9 +112,7 @@ async def test_duplicate_device_name(hass, hass_client, hass_admin_user):
 
     # Register first device
     with patch(
-        "homeassistant.components.person.async_add_user_device_tracker",
-        spec=True,
-        return_value=mock_coro(),
+        "homeassistant.components.person.async_add_user_device_tracker"
     ) as add_user_dev_track:
         resp = await api_client.post(
             "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
@@ -130,9 +125,7 @@ async def test_duplicate_device_name(hass, hass_client, hass_admin_user):
 
     # Register second device with same name
     with patch(
-        "homeassistant.components.person.async_add_user_device_tracker",
-        spec=True,
-        return_value=mock_coro(),
+        "homeassistant.components.person.async_add_user_device_tracker"
     ) as add_user_dev_track:
         resp = await api_client.post(
             "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT_DUPLICATE_NAME
