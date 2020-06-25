@@ -36,8 +36,8 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.async_mock import Mock, patch
+from tests.common import get_test_home_assistant, init_recorder_component, mock_platform
 from tests.components.recorder.common import trigger_db_commit
 
 _LOGGER = logging.getLogger(__name__)
@@ -1563,6 +1563,22 @@ async def test_logbook_view_period_entity(hass, hass_client):
 async def test_logbook_describe_event(hass, hass_client):
     """Test teaching logbook about a new event."""
     await hass.async_add_executor_job(init_recorder_component, hass)
+
+    def _describe(event):
+        """Describe an event."""
+        return {"name": "Test Name", "message": "tested a message"}
+
+    hass.config.components.add("fake_integration")
+    mock_platform(
+        hass,
+        "fake_integration.logbook",
+        Mock(
+            async_describe_events=lambda hass, async_describe_event: async_describe_event(
+                "test_domain", "some_event", _describe
+            )
+        ),
+    )
+
     assert await async_setup_component(hass, "logbook", {})
     with patch(
         "homeassistant.util.dt.utcnow",
@@ -1573,12 +1589,6 @@ async def test_logbook_describe_event(hass, hass_client):
         await hass.async_add_executor_job(
             hass.data[recorder.DATA_INSTANCE].block_till_done
         )
-
-    def _describe(event):
-        """Describe an event."""
-        return {"name": "Test Name", "message": "tested a message"}
-
-    hass.components.logbook.async_describe_event("test_domain", "some_event", _describe)
 
     client = await hass_client()
     response = await client.get("/api/logbook")
@@ -1596,6 +1606,26 @@ async def test_exclude_described_event(hass, hass_client):
     entity_id = "automation.excluded_rule"
     entity_id2 = "automation.included_rule"
     entity_id3 = "sensor.excluded_domain"
+
+    def _describe(event):
+        """Describe an event."""
+        return {
+            "name": "Test Name",
+            "message": "tested a message",
+            "entity_id": event.data.get(ATTR_ENTITY_ID),
+        }
+
+    def async_describe_events(hass, async_describe_event):
+        """Mock to describe events."""
+        async_describe_event("automation", "some_automation_event", _describe)
+        async_describe_event("sensor", "some_event", _describe)
+
+    hass.config.components.add("fake_integration")
+    mock_platform(
+        hass,
+        "fake_integration.logbook",
+        Mock(async_describe_events=async_describe_events),
+    )
 
     await hass.async_add_executor_job(init_recorder_component, hass)
     assert await async_setup_component(
@@ -1630,19 +1660,6 @@ async def test_exclude_described_event(hass, hass_client):
         await hass.async_add_executor_job(
             hass.data[recorder.DATA_INSTANCE].block_till_done
         )
-
-    def _describe(event):
-        """Describe an event."""
-        return {
-            "name": "Test Name",
-            "message": "tested a message",
-            "entity_id": event.data.get(ATTR_ENTITY_ID),
-        }
-
-    hass.components.logbook.async_describe_event(
-        "automation", "some_automation_event", _describe
-    )
-    hass.components.logbook.async_describe_event("sensor", "some_event", _describe)
 
     client = await hass_client()
     response = await client.get("/api/logbook")
