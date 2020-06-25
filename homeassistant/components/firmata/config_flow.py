@@ -23,21 +23,6 @@ class FirmataFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    _hassio_discovery = None
-
-    def __init__(self):
-        """Initialize the firmata config flow."""
-        self.firmata_config = {}
-
-    async def _create_entry(self):
-        """Create entry for board."""
-        name = f"serial-{self.firmata_config[CONF_SERIAL_PORT]}"
-        self.firmata_config[CONF_NAME] = name
-
-        return self.async_create_entry(
-            title=self.firmata_config[CONF_NAME], data=self.firmata_config
-        )
-
     async def async_step_import(self, import_config):
         """Import a firmata board as a config entry.
 
@@ -45,8 +30,11 @@ class FirmataFlowHandler(config_entries.ConfigFlow):
         This flow is also triggered by `async_step_discovery`.
 
         This will execute for any board that does not have a
-        config entry yet (based on board name).
+        config entry yet (based on entry_id).
         """
-        self.firmata_config = import_config
+        name = f"serial-{import_config[CONF_SERIAL_PORT]}"
+        import_config[CONF_NAME] = name
 
-        return await self._create_entry()
+        return self.async_create_entry(
+            title=import_config[CONF_NAME], data=import_config
+        )

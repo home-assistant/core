@@ -1,7 +1,7 @@
 """Constants for the Firmata component."""
 import logging
 
-LOGGER = logging.getLogger(".")
+LOGGER = logging.getLogger(__package__)
 
 CONF_ARDUINO_INSTANCE_ID = "arduino_instance_id"
 CONF_ARDUINO_WAIT = "arduino_wait"

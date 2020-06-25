@@ -1,5 +1,5 @@
 """Support for Arduino-compatible Microcontrollers through Firmata."""
-from copy import deepcopy
+from copy import copy
 import logging
 
 import voluptuous as vol
@@ -84,13 +84,35 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Firmata domain."""
-    # Delete all current entries and re-add them to update them
-    if hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+    # Delete all entries if domain removed from config
+    if DOMAIN not in config:
+        if hass.config_entries.async_entries(DOMAIN):
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                await hass.config_entries.async_remove(entry.entry_id)
+        return True
+
+    # Delete specific entries that no longer exist in the config
+    if hass.config_entries.async_entries(DOMAIN):
         for entry in hass.config_entries.async_entries(DOMAIN):
-            await hass.config_entries.async_remove(entry.entry_id)
-    if DOMAIN in config:
-        for board in config[DOMAIN]:
-            firmata_config = deepcopy(board)
+            remove = True
+            for board in config[DOMAIN]:
+                if entry.data[CONF_SERIAL_PORT] == board[CONF_SERIAL_PORT]:
+                    remove = False
+                    break
+            if remove:
+                await hass.config_entries.async_remove(entry.entry_id)
+
+    # Setup new entries and update old entries
+    for board in config[DOMAIN]:
+        firmata_config = copy(board)
+        existing_entry = False
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if board[CONF_SERIAL_PORT] == entry.data[CONF_SERIAL_PORT]:
+                existing_entry = True
+                firmata_config[CONF_NAME] = entry.data[CONF_NAME]
+                hass.config_entries.async_update_entry(entry, data=firmata_config)
+                break
+        if not existing_entry:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
@@ -98,6 +120,14 @@ async def async_setup(hass, config):
                     data=firmata_config,
                 )
             )
+
+    async def handle_shutdown(event):
+        """Handle shutdown of baords when Home Assistant shuts down."""
+        for board in hass.data[DOMAIN]:
+            await hass.data[DOMAIN][board].async_reset()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_shutdown)
+
     return True
 
 
@@ -107,17 +137,18 @@ async def async_setup_entry(hass, config_entry):
         hass.data[DOMAIN] = {}
 
     _LOGGER.debug(
-        "Setting up Firmata id %s, config %s", config_entry.entry_id, config_entry.data
+        "Setting up Firmata id %s, name %s, config %s",
+        config_entry.entry_id,
+        config_entry.data[CONF_NAME],
+        config_entry.data,
     )
-    if not config_entry.options:
-        hass.config_entries.async_update_entry(config_entry)
 
     board = FirmataBoard(hass, config_entry)
 
     if not await board.async_setup():
         return False
 
-    hass.data[DOMAIN][board.name] = board
+    hass.data[DOMAIN][config_entry.entry_id] = board
 
     await board.async_update_device_registry()
     if CONF_BINARY_SENSORS in config_entry.data:
@@ -128,15 +159,17 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, "switch")
         )
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, board.async_reset)
     return True
 
 
-async def async_remove_entry(hass, config_entry) -> None:
+async def async_unload_entry(hass, config_entry) -> None:
     """Shutdown and close a Firmata board for a config entry."""
-    name = config_entry.data[CONF_NAME]
-
-    if DOMAIN in hass.data:
-        if name in hass.data[DOMAIN]:
-            _LOGGER.info("Closing Firmata board %s", name)
-            await hass.data[DOMAIN][name].async_reset()
+    _LOGGER.info("Closing Firmata board %s", config_entry.data[CONF_NAME])
+    if CONF_BINARY_SENSORS in config_entry.data:
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, "binary_sensor"
+        )
+    if CONF_SWITCHES in config_entry.data:
+        await hass.config_entries.async_forward_entry_unload(config_entry, "switch")
+    await hass.data[DOMAIN].pop(config_entry.entry_id).async_reset()
+    return True

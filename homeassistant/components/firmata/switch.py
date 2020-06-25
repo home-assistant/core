@@ -3,7 +3,6 @@
 import logging
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_NAME
 
 from .board import FirmataBoardPin
 from .const import CONF_INITIAL_STATE, CONF_NEGATE_STATE, DOMAIN, PIN_MODE_OUTPUT
@@ -15,11 +14,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Firmata switches."""
     new_entities = []
 
-    board_name = config_entry.data[CONF_NAME]
     boards = hass.data[DOMAIN]
-    board = boards[board_name]
+    board = boards[config_entry.entry_id]
     for switch in board.switches:
-        switch_entity = FirmataDigitalOut(hass, board_name, **switch)
+        switch_entity = FirmataDigitalOut(hass, config_entry, **switch)
         new_switch = await switch_entity.setup_pin()
         if new_switch:
             new_entities.append(switch_entity)
@@ -46,11 +44,22 @@ class FirmataDigitalOut(FirmataBoardPin, SwitchEntity):
         if self._pin_mode == PIN_MODE_OUTPUT:
             await api.set_pin_mode_digital_output(self._firmata_pin)
 
+        return True
+
+    async def async_added_to_hass(self):
+        """Set initial state ona pin."""
+        _LOGGER.debug(
+            "Setting initial state for output pin %s on board %s",
+            self._pin,
+            self._board_name,
+        )
+        api = self._board.api
         self._state = self._conf[CONF_INITIAL_STATE]
         if self._conf[CONF_INITIAL_STATE]:
             new_pin_state = not self._conf[CONF_NEGATE_STATE]
         else:
             new_pin_state = self._conf[CONF_NEGATE_STATE]
+
         await api.digital_pin_write(self._firmata_pin, int(new_pin_state))
         return True
 

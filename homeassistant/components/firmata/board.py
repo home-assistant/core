@@ -52,7 +52,9 @@ class FirmataBoard:
 
         if CONF_SAMPLING_INTERVAL in self.config:
             try:
-                self.api.set_sampling_interval(self.config[CONF_SAMPLING_INTERVAL])
+                await self.api.set_sampling_interval(
+                    self.config[CONF_SAMPLING_INTERVAL]
+                )
             except RuntimeError as err:
                 _LOGGER.error(
                     "Error setting sampling interval for PyMata \
@@ -72,11 +74,13 @@ board %s: %s",
 
     async def async_reset(self):
         """Reset the board to default state."""
+        _LOGGER.debug("Shutting down board %s", self.name)
         # If the board was never setup, continue.
         if self.api is None:
             return True
 
         await self.api.shutdown()
+        self.api = None
 
         return True
 
@@ -122,13 +126,14 @@ async def get_board(data: dict):
 class FirmataBoardPin(Entity):
     """Manages a single Firmata board pin."""
 
-    def __init__(self, hass, board_name: str, **kwargs):
+    def __init__(self, hass, config_entry, **kwargs):
         """Initialize the pin."""
         self.hass = hass
         self._name = kwargs[CONF_NAME]
         self._state = None
-        self._board_name = board_name
-        self._board = hass.data[DOMAIN][self._board_name]
+        self._config_entry = config_entry
+        self._board = hass.data[DOMAIN][self._config_entry.entry_id]
+        self._board_name = self._board.name
         self._conf = kwargs
         self._pin = self._conf[CONF_PIN]
         self._pin_mode = self._conf[CONF_PIN_MODE]
@@ -140,16 +145,13 @@ class FirmataBoardPin(Entity):
             self._firmata_pin += self._board.api.first_analog_pin
         else:
             self._pin_type = "digital"
-        self._location = (DOMAIN, self._board_name, "pin", self._pin)
+        self._location = (DOMAIN, self._config_entry.entry_id, "pin", self._pin)
         self._unique_id = "_".join(str(i) for i in self._location)
         self._device_info = self._conf
         self._device_info.update(
             {
-                "config_entry_id": self._board.config_entry.entry_id,
-                "pin_type": self._pin_type,
-                "firmata_pin": self._firmata_pin,
-                "firmata_pin_mode": self._firmata_pin_mode,
-                "identifiers": {(DOMAIN, self._board_name)},
+                "config_entry_id": self._config_entry.entry_id,
+                "identifiers": {(DOMAIN, self._config_entry.entry_id)},
                 "name": self._board_name,
                 "manufacturer": "Firmata",
             }
