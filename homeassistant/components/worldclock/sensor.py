@@ -18,7 +18,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TIME_ZONE): cv.time_zone,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_TIME_FORMAT, default=DEFAULT_TIME_STR_FORMAT): cv.string,
-        vol.Optional(CONF_TRIM_ZERO, default=DEFAULT_TRIM_ZERO): cv.boolean,
     }
 )
 
