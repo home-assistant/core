@@ -62,7 +62,7 @@ async def get_coordinator(hass, entry):
             return await poolsense.get_poolsense_data(
                 aiohttp_client.async_get_clientsession(hass),
                 entry.data[CONF_EMAIL],
-                entry.data["password"],
+                entry.data[CONF_PASSWORD],
             )
 
     hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
