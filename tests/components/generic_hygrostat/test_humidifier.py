@@ -1286,6 +1286,7 @@ def _mock_restore_cache(hass, humidity=40, state=STATE_OFF):
         ),
     )
 
+
 async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     """Test turn off on sensor stale."""
 
@@ -1351,7 +1352,7 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     assert STATE_OFF == hass.states.get(humidifier_switch).state
 
     # Wait another 11 minutes
-    _send_time_changed(hass, start_time + datetime.timedelta(minutes=11*2))
+    _send_time_changed(hass, start_time + datetime.timedelta(minutes=11 * 2))
     await hass.async_block_till_done()
 
     # Still off

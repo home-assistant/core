@@ -197,9 +197,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             """Init on startup."""
             sensor_state = self.hass.states.get(self._sensor_entity_id)
             await self._async_sensor_changed(self._sensor_entity_id, None, sensor_state)
-            #if sensor_state:
-            #    await self._async_update_humidity(sensor_state)
-            #    await self.async_update_ha_state()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
@@ -365,7 +362,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         if new_state is None:
             return
 
-        await self._async_update_humidity(new_state)
+        await self._async_update_humidity(new_state.state)
         await self._async_operate()
         await self.async_update_ha_state()
 
@@ -375,12 +372,14 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         sensor_state = self.hass.states.get(self._sensor_entity_id)
 
         if sensor_state.last_updated < now - self._sensor_stale_duration:
-            _LOGGER.debug("Time is %s, last changed is %s, stale duration is %s", now, sensor_state.last_updated, self._sensor_stale_duration)
+            _LOGGER.debug(
+                "Time is %s, last changed is %s, stale duration is %s",
+                now,
+                sensor_state.last_updated,
+                self._sensor_stale_duration,
+            )
             _LOGGER.warning("Sensor is stalled, call the emergency stop")
-            self._cur_humidity = None
-            self._active = False
-            if self._is_device_active:
-                await self._async_device_turn_off()
+            await self._async_update_humidity("Stalled")
 
         return
 
@@ -391,10 +390,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             return
         self.async_schedule_update_ha_state()
 
-    async def _async_update_humidity(self, state):
+    async def _async_update_humidity(self, humidity):
         """Update hygrostat with latest state from sensor."""
         try:
-            self._cur_humidity = float(state.state)
+            self._cur_humidity = float(humidity)
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
             self._cur_humidity = None
