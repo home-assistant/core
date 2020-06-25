@@ -915,6 +915,7 @@ class TestConfig(unittest.TestCase):
             "components": set(),
             "config_dir": "/test/ha-config",
             "whitelist_external_dirs": set(),
+            "allowlist_external_urls": set(),
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
@@ -954,6 +955,33 @@ class TestConfig(unittest.TestCase):
 
             with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
+
+    def test_is_allowed_external_url(self):
+        """Test is_allowed_external_url method."""
+        self.config.allowlist_external_urls = [
+            "http://x.com/",
+            "https://y.com/bla/",
+            "https://z.com/images/1.jpg/",
+        ]
+
+        valid = [
+            "http://x.com/1.jpg",
+            "http://x.com",
+            "https://y.com/bla/",
+            "https://y.com/bla/2.png",
+            "https://z.com/images/1.jpg",
+        ]
+        for url in valid:
+            assert self.config.is_allowed_external_url(url)
+
+        invalid = [
+            "https://a.co",
+            "https://y.com/bla_wrong",
+            "https://y.com/bla/../image.jpg",
+            "https://z.com/images",
+        ]
+        for url in invalid:
+            assert not self.config.is_allowed_external_url(url)
 
 
 async def test_event_on_update(hass):
