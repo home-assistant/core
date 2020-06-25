@@ -73,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_info = discovery_info
         _properties = self.discovery_info.get("properties")
 
-        unique_id = self.discovery_info["hostname"].split(".")[0]
+        unique_id = self.discovery_info.get("hostname").split(".")[0]
         await self._async_set_unique_id(unique_id)
 
         _product = _properties.get("product", None)
