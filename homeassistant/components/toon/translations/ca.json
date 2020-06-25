@@ -1,8 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "L\u2019acord seleccionat ja est\u00e0 configurat.",
+            "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
+            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "client_id": "L'identificador de client de la configuraci\u00f3 no \u00e9s v\u00e0lid.",
             "client_secret": "El codi secret de client de la configuraci\u00f3 no \u00e9s v\u00e0lid.",
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
             "no_agreements": "Aquest compte no t\u00e9 pantalles Toon.",
             "no_app": "Has de configurar Toon abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/toon/).",
             "unknown_auth_fail": "S'ha produ\u00eft un error inesperat durant l'autenticaci\u00f3."
