@@ -157,8 +157,8 @@ async def test_import_flow_already_exists(hass: HomeAssistantType) -> None:
     """Test import config flow when entry already exists."""
     MockConfigEntry(
         domain=DOMAIN,
-        data=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
-        source=config_entries.SOURCE_USER,
+        data=SCHEMA(MIN_CONFIG),
+        source=config_entries.SOURCE_IMPORT,
         unique_id=f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}",
     ).add_to_hass(hass)
 
@@ -176,8 +176,8 @@ async def test_import_flow_update_entry(hass: HomeAssistantType) -> None:
     """Test import config flow when config is updated."""
     MockConfigEntry(
         domain=DOMAIN,
-        data=_get_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
-        source=config_entries.SOURCE_USER,
+        data=SCHEMA(MIN_CONFIG),
+        source=config_entries.SOURCE_IMPORT,
         unique_id=f"{API_KEY}_{hass.config.latitude}_{hass.config.longitude}",
     ).add_to_hass(hass)
 

@@ -172,7 +172,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._config_entry = config_entry
         self._api = api
-        self._forecast_interval = config_entry.data.get(CONF_FORECAST_INTERVAL)
+        self._forecast_interval = config_entry.data[CONF_FORECAST_INTERVAL]
         self.name = config_entry.data[CONF_NAME]
         self.data = {CURRENT: {}, FORECASTS: []}
 
@@ -191,14 +191,14 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                 self._api.availabile_fields(REALTIME)
             )
 
-            if self._forecast_interval == HOURLY.lower():
+            if self._forecast_interval == HOURLY:
                 data[FORECASTS] = await self._api.forecast_hourly(
                     self._api.availabile_fields(FORECAST_HOURLY),
                     None,
                     timedelta(hours=90),
                 )
 
-            if self._forecast_interval == DAILY.lower():
+            if self._forecast_interval == DAILY:
                 data[FORECASTS] = await self._api.forecast_daily(
                     self._api.availabile_fields(FORECAST_DAILY),
                     None,
