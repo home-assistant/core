@@ -1,5 +1,7 @@
 """Meteoclimatic component constants."""
 
+from datetime import timedelta
+
 from meteoclimatic import Condition
 
 from homeassistant.const import (
@@ -17,7 +19,14 @@ DOMAIN = "meteoclimatic"
 PLATFORMS = ["sensor", "weather"]
 ATTRIBUTION = "Data provided by Meteoclimatic"
 
+SCAN_INTERVAL = timedelta(minutes=5)
+
 CONF_STATION_CODE = "station_code"
+
+METEOCLIMATIC_UPDATER = "meteoclimatic_updater"
+METEOCLIMATIC_COORDINATOR = "meteoclimatic_coordinator"
+METEOCLIMATIC_STATION_CODE = "meteoclimatic_station_code"
+METEOCLIMATIC_STATION_NAME = "meteoclimatic_station_name"
 
 DEFAULT_WEATHER_CARD = True
 
