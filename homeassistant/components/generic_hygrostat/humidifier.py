@@ -152,7 +152,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._dry_tolerance = dry_tolerance
         self._wet_tolerance = wet_tolerance
         self._keep_alive = keep_alive
-        self._state = initial_state == True
+        self._state = initial_state
         self._saved_target_humidity = away_humidity or target_humidity
         self._active = False
         self._cur_humidity = None
@@ -222,6 +222,8 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             _LOGGER.warning(
                 "No previously saved humidity, setting to %s", self._target_humidity
             )
+        if self._state is None:
+            self._state = False
 
         await _async_startup(None)  # init the sensor
 
