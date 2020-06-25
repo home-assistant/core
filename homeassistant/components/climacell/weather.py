@@ -107,7 +107,7 @@ def _forecast_dict(
     else:
         translated_condition = None
 
-    if hass.config.units.is_metric:
+    if not hass.config.units.is_metric:
         data = {
             ATTR_FORECAST_TIME: time,
             ATTR_FORECAST_CONDITION: translated_condition,
