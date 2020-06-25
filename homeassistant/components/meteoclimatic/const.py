@@ -19,7 +19,7 @@ DOMAIN = "meteoclimatic"
 PLATFORMS = ["sensor", "weather"]
 ATTRIBUTION = "Data provided by Meteoclimatic"
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 CONF_STATION_CODE = "station_code"
 

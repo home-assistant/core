@@ -148,4 +148,4 @@ class MeteoclimaticWeather(WeatherEntity):
     @property
     def available(self):
         """Return if state is available."""
-        return self._data is not None
+        return self._coordinator.last_update_success

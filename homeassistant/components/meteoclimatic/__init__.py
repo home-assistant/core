@@ -10,7 +10,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_STATION_CODE,
@@ -54,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up a Meteoclimatic entry."""
 
     station_code = entry.data[CONF_STATION_CODE]
-
     meteoclimatic_updater = MeteoclimaticUpdater(hass, station_code)
     await meteoclimatic_updater.async_update()
     meteoclimatic_data = meteoclimatic_updater.get_data()
@@ -76,11 +75,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         METEOCLIMATIC_STATION_NAME: meteoclimatic_data.station.name,
         METEOCLIMATIC_UPDATER: meteoclimatic_updater,
     }
-
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
-    if meteoclimatic_updater.get_data() is None:
-        raise ConfigEntryNotReady()
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -130,7 +124,5 @@ class MeteoclimaticUpdater:
         """Obtain the latest data from Meteoclimatic."""
         try:
             self._data = self._client.weather_at_station(self._station_code)
-        except MeteoclimaticError as exp:
-            _LOGGER.error(
-                "Unexpected error when obtaining data from Meteoclimatic: %s", exp
-            )
+        except MeteoclimaticError as err:
+            raise UpdateFailed(err)
