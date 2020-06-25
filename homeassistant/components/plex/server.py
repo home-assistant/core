@@ -95,7 +95,7 @@ class PlexServer:
     @property
     def account(self):
         """Return a MyPlexAccount instance."""
-        if not self._plex_account and self._use_plex_tv:
+        if not self._plex_account and self._token and self._use_plex_tv:
             try:
                 self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
             except Unauthorized:
@@ -107,12 +107,16 @@ class PlexServer:
     @property
     def plextv_resources(self):
         """Return all resources linked to Plex account."""
-        if self.account:
-            return self.account.resources()
-        return []
+        if self.account is None:
+            return []
+
+        return self.account.resources()
 
     def plextv_clients(self):
         """Return available clients linked to Plex account."""
+        if self.account is None:
+            return []
+
         now = time.time()
         if now - self._plextv_client_timestamp > PLEXTV_THROTTLE:
             self._plextv_client_timestamp = now
@@ -188,6 +192,10 @@ class PlexServer:
                         )
                         if _update_plexdirect_hostname():
                             config_entry_update_needed = True
+                        else:
+                            raise Unauthorized(
+                                "New certificate cannot be validated with provided token"
+                            )
                     else:
                         raise
                 else:
