@@ -616,7 +616,7 @@ class LazyState(State):
         self._last_updated = None
         self._context = None
 
-    @property
+    @property  # type: ignore
     def attributes(self):
         """State attributes."""
         if not self._attributes:
@@ -628,12 +628,22 @@ class LazyState(State):
                 self._attributes = {}
         return self._attributes
 
-    @property
+    @attributes.setter
+    def attributes(self, value):
+        """Set attributes."""
+        self._attributes = value
+
+    @property  # type: ignore
     def context(self):
         """State context."""
         if not self._context:
             self._context = Context(id=None)
         return self._context
+
+    @context.setter
+    def context(self, value):
+        """Set context."""
+        self._context = value
 
     @property  # type: ignore
     def last_changed(self):
