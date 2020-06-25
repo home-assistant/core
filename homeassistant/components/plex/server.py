@@ -168,8 +168,9 @@ class PlexServer:
                 self._plex_server = self.account.resource(matching_servers[0]).connect(
                     timeout=10
                 )
-            else:
-                _LOGGER.error("Attempt to update plex.direct hostname failed")
+                return True
+            _LOGGER.error("Attempt to update plex.direct hostname failed")
+            return False
 
         if self._url:
             try:
@@ -185,8 +186,8 @@ class PlexServer:
                         _LOGGER.warning(
                             "Plex SSL certificate's hostname changed, updating."
                         )
-                        _update_plexdirect_hostname()
-                        config_entry_update_needed = True
+                        if _update_plexdirect_hostname():
+                            config_entry_update_needed = True
                     else:
                         raise
                 else:
