@@ -152,7 +152,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._dry_tolerance = dry_tolerance
         self._wet_tolerance = wet_tolerance
         self._keep_alive = keep_alive
-        self._state = initial_state
+        self._state = initial_state == True
         self._saved_target_humidity = away_humidity or target_humidity
         self._active = False
         self._cur_humidity = None
@@ -200,54 +200,28 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
-        # Check If we have an old state
         old_state = await self.async_get_last_state()
         if old_state is not None:
             if old_state.attributes.get(ATTR_MODE) == MODE_AWAY:
                 self._is_away = True
-            # If we have no initial humidity, restore
-            if self._target_humidity is None:
-                # If we have a previously saved humidity
-                if old_state.attributes.get(ATTR_HUMIDITY) is None:
-                    if self._device_class == DEVICE_CLASS_HUMIDIFIER:
-                        self._target_humidity = self.min_humidity
-                    else:
-                        self._target_humidity = self.max_humidity
-                    _LOGGER.warning(
-                        "Undefined target humidity," "falling back to %s",
-                        self._target_humidity,
-                    )
-                else:
-                    self._target_humidity = float(old_state.attributes[ATTR_HUMIDITY])
-            elif self._is_away:
                 self._saved_target_humidity = self._target_humidity
-                if old_state.attributes.get(ATTR_HUMIDITY):
-                    self._target_humidity = float(
-                        old_state.attributes.get(ATTR_HUMIDITY)
-                    )
-                else:
-                    self._target_humidity = self._away_humidity
+                self._target_humidity = self._away_humidity or self._target_humidity
+            if old_state.attributes.get(ATTR_HUMIDITY):
+                self._target_humidity = float(old_state.attributes[ATTR_HUMIDITY])
             if old_state.attributes.get(ATTR_SAVED_HUMIDITY):
                 self._saved_target_humidity = float(
                     old_state.attributes[ATTR_SAVED_HUMIDITY]
                 )
-            if not self._state and old_state.state:
+            if old_state.state:
                 self._state = old_state.state == STATE_ON
-
-        else:
-            # No previous state, try and restore defaults
-            if self._target_humidity is None:
-                if self._device_class == DEVICE_CLASS_HUMIDIFIER:
-                    self._target_humidity = self.min_humidity
-                else:
-                    self._target_humidity = self.max_humidity
+        if self._target_humidity is None:
+            if self._device_class == DEVICE_CLASS_HUMIDIFIER:
+                self._target_humidity = self.min_humidity
+            else:
+                self._target_humidity = self.max_humidity
             _LOGGER.warning(
                 "No previously saved humidity, setting to %s", self._target_humidity
             )
-
-        # Set default state to off
-        if not self._state:
-            self._state = False
 
         await _async_startup(None)  # init the sensor
 

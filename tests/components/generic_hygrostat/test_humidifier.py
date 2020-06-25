@@ -33,14 +33,10 @@ from tests.common import assert_setup_component, mock_restore_cache
 ENTITY = "humidifier.test"
 ENT_SENSOR = "sensor.test"
 ENT_SWITCH = "switch.test"
-HUMIDIFY_ENTITY = "humidifier.test_humidifier"
-DRY_ENTITY = "humidifier.test_dehumidifier"
-ATTR_AWAY_MODE = "away_mode"
+ATTR_SAVED_HUMIDITY = "saved_humidity"
 MIN_HUMIDITY = 20.0
 MAX_HUMIDITY = 65.0
 TARGET_HUMIDITY = 42.0
-DRY_TOLERANCE = 0.5
-WET_TOLERANCE = 0.5
 
 
 async def test_setup_missing_conf(hass):
@@ -1182,6 +1178,101 @@ async def test_restore_state(hass):
     assert state.state == STATE_OFF
 
 
+async def test_restore_state_target_humidity(hass):
+    """Ensure restore target humidity if available."""
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "humidifier.test_hygrostat",
+                STATE_OFF,
+                {ATTR_ENTITY_ID: ENTITY, ATTR_HUMIDITY: "40"},
+            ),
+        ),
+    )
+
+    hass.state = CoreState.starting
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test_hygrostat",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_humidity": 32,
+                "target_humidity": 50,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.state == STATE_OFF
+
+
+async def test_restore_state_and_return_to_normal(hass):
+    """Ensure retain of target humidity for normal mode."""
+    _setup_sensor(hass, 55)
+    await hass.async_block_till_done()
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "humidifier.test_hygrostat",
+                STATE_OFF,
+                {
+                    ATTR_ENTITY_ID: ENTITY,
+                    ATTR_HUMIDITY: "40",
+                    ATTR_MODE: MODE_AWAY,
+                    ATTR_SAVED_HUMIDITY: "50",
+                },
+            ),
+        ),
+    )
+
+    hass.state = CoreState.starting
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test_hygrostat",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_humidity": 32,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[ATTR_SAVED_HUMIDITY] == 50
+    assert state.attributes[ATTR_MODE] == MODE_AWAY
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_MODE,
+        {ATTR_ENTITY_ID: "humidifier.test_hygrostat", ATTR_MODE: MODE_NORMAL},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state.attributes[ATTR_HUMIDITY] == 50
+    assert state.attributes[ATTR_MODE] == MODE_NORMAL
+    assert state.state == STATE_OFF
+
+
 async def test_no_restore_state(hass):
     """Ensure states are restored on startup if they exist.
 
@@ -1283,6 +1374,81 @@ def _mock_restore_cache(hass, humidity=40, state=STATE_OFF):
             ),
         ),
     )
+
+
+async def test_away_fixed_humidity_mode(hass):
+    """Ensure retain of target humidity for normal mode."""
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test_hygrostat",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_humidity": 32,
+                "target_humidity": 40,
+                "away_fixed": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.attributes[ATTR_MODE] == MODE_NORMAL
+    assert state.state == STATE_OFF
+
+    # Switch to Away mode
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_MODE,
+        {ATTR_ENTITY_ID: "humidifier.test_hygrostat", ATTR_MODE: MODE_AWAY},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Target humidity changed to away_humidity
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state.attributes[ATTR_MODE] == MODE_AWAY
+    assert state.attributes[ATTR_HUMIDITY] == 32
+    assert state.attributes[ATTR_SAVED_HUMIDITY] == 40
+    assert state.state == STATE_OFF
+
+    # Change target humidity
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HUMIDITY,
+        {ATTR_ENTITY_ID: "humidifier.test_hygrostat", ATTR_HUMIDITY: 42},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Current target humidity not changed
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state.attributes[ATTR_HUMIDITY] == 32
+    assert state.attributes[ATTR_SAVED_HUMIDITY] == 42
+    assert state.attributes[ATTR_MODE] == MODE_AWAY
+    assert state.state == STATE_OFF
+
+    # Return to Normal mode
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_MODE,
+        {ATTR_ENTITY_ID: "humidifier.test_hygrostat", ATTR_MODE: MODE_NORMAL},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Target humidity changed to away_humidity
+    state = hass.states.get("humidifier.test_hygrostat")
+    assert state.attributes[ATTR_HUMIDITY] == 42
+    assert state.attributes[ATTR_SAVED_HUMIDITY] == 32
+    assert state.attributes[ATTR_MODE] == MODE_NORMAL
+    assert state.state == STATE_OFF
 
 
 async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
