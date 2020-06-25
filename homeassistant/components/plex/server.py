@@ -76,7 +76,7 @@ class PlexServer:
         self._plextv_clients = None
         self._plextv_client_timestamp = 0
         self._plextv_device_cache = {}
-        self._use_plex_tv = True
+        self._use_plex_tv = self._token is not None
         self._version = None
         self.async_update_platforms = Debouncer(
             hass,
@@ -95,7 +95,7 @@ class PlexServer:
     @property
     def account(self):
         """Return a MyPlexAccount instance."""
-        if not self._plex_account and self._token and self._use_plex_tv:
+        if not self._plex_account and self._use_plex_tv:
             try:
                 self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
             except Unauthorized:
