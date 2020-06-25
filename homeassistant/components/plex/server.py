@@ -76,6 +76,7 @@ class PlexServer:
         self._plextv_clients = None
         self._plextv_client_timestamp = 0
         self._plextv_device_cache = {}
+        self._use_plex_tv = True
         self._version = None
         self.async_update_platforms = Debouncer(
             hass,
@@ -94,18 +95,31 @@ class PlexServer:
     @property
     def account(self):
         """Return a MyPlexAccount instance."""
-        if not self._plex_account:
-            self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
+        if not self._plex_account and self._use_plex_tv:
+            try:
+                self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
+            except Unauthorized:
+                self._use_plex_tv = False
+                _LOGGER.error("Not authorized to access plex.tv with provided token")
+                raise
         return self._plex_account
+
+    @property
+    def plextv_resources(self):
+        """Return all resources linked to Plex account."""
+        if self.account:
+            return self.account.resources()
+        return []
 
     def plextv_clients(self):
         """Return available clients linked to Plex account."""
         now = time.time()
         if now - self._plextv_client_timestamp > PLEXTV_THROTTLE:
             self._plextv_client_timestamp = now
-            resources = self.account.resources()
             self._plextv_clients = [
-                x for x in resources if "player" in x.provides and x.presence
+                x
+                for x in self.plextv_resources
+                if "player" in x.provides and x.presence
             ]
             _LOGGER.debug(
                 "Current available clients from plex.tv: %s", self._plextv_clients
@@ -119,7 +133,7 @@ class PlexServer:
         def _connect_with_token():
             available_servers = [
                 (x.name, x.clientIdentifier)
-                for x in self.account.resources()
+                for x in self.plextv_resources
                 if "server" in x.provides
             ]
 
@@ -145,14 +159,17 @@ class PlexServer:
             )
 
         def _update_plexdirect_hostname():
-            matching_server = [
+            matching_servers = [
                 x.name
-                for x in self.account.resources()
+                for x in self.plextv_resources
                 if x.clientIdentifier == self._server_id
-            ][0]
-            self._plex_server = self.account.resource(matching_server).connect(
-                timeout=10
-            )
+            ]
+            if matching_servers:
+                self._plex_server = self.account.resource(matching_servers[0]).connect(
+                    timeout=10
+                )
+            else:
+                _LOGGER.error("Attempt to update plex.direct hostname failed")
 
         if self._url:
             try:
