@@ -63,22 +63,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Plugwise config flow."""
         self.discovery_info = {}
 
+    async def _async_set_unique_id(self, id):
+        """Helperfunction setting the config entry's unique ID."""
+        await self.async_set_unique_id(id)
+        self._abort_if_unique_id_configured()
+
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Prepare configuration for a discovered Plugwise Smile."""
         self.discovery_info = discovery_info
         _properties = self.discovery_info.get("properties")
 
-        for entry in self._async_current_entries():
-            already_configured = False
-
-            if (
-                entry.data[CONF_HOST] == discovery_info[CONF_HOST]
-                and entry.data[DOMAIN] == DOMAIN
-            ):
-                already_configured = True
-
-            if already_configured:
-                return self.async_abort(reason="already_configured")
+        unique_id = self.discovery_info["hostname"].split(".")[0]
+        await self._async_set_unique_id(unique_id)
 
         _product = _properties.get("product", None)
         _version = _properties.get("version", "n/a")
@@ -94,6 +90,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
+
+        for entry in self._async_current_entries():
+            if entry.unique_id == self.discovery_info.get("hostname").split(".")[0]:
+                self._abort_if_unique_id_configured()
 
         if user_input is not None:
 
