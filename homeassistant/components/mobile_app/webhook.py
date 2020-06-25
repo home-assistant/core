@@ -343,10 +343,12 @@ async def webhook_update_registration(hass, config_entry, data):
     if current_name:
         if new_registration[ATTR_DEVICE_NAME] != current_name:
             # Ensure that device name changes are not propagated to avoid mismatches
-            _LOGGER.info(
-                f"Refusing to change device name from {current_name} "
-                + f"to {new_registration[ATTR_DEVICE_NAME]} proceeding with with "
-                + f"registration update using {current_name}"
+            _LOGGER.debug(
+                "Refusing to change device name from %s to %s. "
+                "Proceeding with with registration update using %s",
+                current_name,
+                new_registration[ATTR_DEVICE_NAME],
+                current_name,
             )
             new_registration[ATTR_DEVICE_NAME] = current_name
 
