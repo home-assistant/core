@@ -84,6 +84,7 @@ async def test_import_host_only(hass):
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
+    assert result["data"].get(CONF_CA_CERT) is None
     assert result["result"].unique_id == f"{HOST}:{DEFAULT_PORT}"
 
 
@@ -106,6 +107,7 @@ async def test_import_host_and_port(hass):
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
+    assert result["data"].get(CONF_CA_CERT) is None
     assert result["result"].unique_id == f"{HOST}:{PORT}"
 
 
@@ -148,6 +150,7 @@ async def test_import_with_name(hass):
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
+    assert result["data"].get(CONF_CA_CERT) is None
     assert result["result"].unique_id == f"{HOST}:{PORT}"
 
 
@@ -170,8 +173,8 @@ async def test_import_with_ca(hass):
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
-    assert result["result"].unique_id == f"{HOST}:{DEFAULT_PORT}"
     assert result["data"][CONF_CA_CERT] == CA_CERT
+    assert result["result"].unique_id == f"{HOST}:{DEFAULT_PORT}"
 
 
 async def test_bad_import(hass):
