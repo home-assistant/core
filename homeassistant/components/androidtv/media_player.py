@@ -273,18 +273,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         schema=SERVICE_ADB_COMMAND_SCHEMA,
     )
 
-    def service_learn_sendevent(service):
-        """Translate a key press on a remote to ADB 'sendevent' commands."""
-        entity_id = service.data[ATTR_ENTITY_ID]
-        target_devices = [
-            dev
-            for dev in hass.data[ANDROIDTV_DOMAIN].values()
-            if dev.entity_id in entity_id
-        ]
-
-        for target_device in target_devices:
-            target_device.learn_sendevent()
-
     platform.async_register_entity_service(
         SERVICE_LEARN_SENDEVENT, SERVICE_LEARN_SENDEVENT_SCHEMA, "learn_sendevent",
     )
