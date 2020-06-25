@@ -1,4 +1,5 @@
 """Support for Plum Lightpad lights."""
+import asyncio
 import logging
 from typing import Callable, List
 
@@ -52,7 +53,7 @@ async def async_setup_entry(
         setup_entities(device)
 
     device_web_session = async_get_clientsession(hass, verify_ssl=False)
-    hass.loop.create_task(
+    asyncio.create_task(
         plum.discover(
             hass.loop,
             loadListener=new_load,
