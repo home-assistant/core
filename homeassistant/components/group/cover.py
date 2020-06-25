@@ -209,21 +209,21 @@ class CoverGroup(CoverEntity):
         """Move the covers up."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, data, blocking=True
+            DOMAIN, SERVICE_OPEN_COVER, data, blocking=True, context=self._context
         )
 
     async def async_close_cover(self, **kwargs):
         """Move the covers down."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, data, blocking=True
+            DOMAIN, SERVICE_CLOSE_COVER, data, blocking=True, context=self._context
         )
 
     async def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_STOP]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_STOP_COVER, data, blocking=True
+            DOMAIN, SERVICE_STOP_COVER, data, blocking=True, context=self._context
         )
 
     async def async_set_cover_position(self, **kwargs):
@@ -233,28 +233,32 @@ class CoverGroup(CoverEntity):
             ATTR_POSITION: kwargs[ATTR_POSITION],
         }
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_SET_COVER_POSITION, data, blocking=True
+            DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_open_cover_tilt(self, **kwargs):
         """Tilt covers open."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER_TILT, data, blocking=True
+            DOMAIN, SERVICE_OPEN_COVER_TILT, data, blocking=True, context=self._context
         )
 
     async def async_close_cover_tilt(self, **kwargs):
         """Tilt covers closed."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER_TILT, data, blocking=True
+            DOMAIN, SERVICE_CLOSE_COVER_TILT, data, blocking=True, context=self._context
         )
 
     async def async_stop_cover_tilt(self, **kwargs):
         """Stop cover tilt."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_STOP]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_STOP_COVER_TILT, data, blocking=True
+            DOMAIN, SERVICE_STOP_COVER_TILT, data, blocking=True, context=self._context
         )
 
     async def async_set_cover_tilt_position(self, **kwargs):
@@ -264,7 +268,11 @@ class CoverGroup(CoverEntity):
             ATTR_TILT_POSITION: kwargs[ATTR_TILT_POSITION],
         }
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_SET_COVER_TILT_POSITION, data, blocking=True
+            DOMAIN,
+            SERVICE_SET_COVER_TILT_POSITION,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_update(self):
