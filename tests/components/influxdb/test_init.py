@@ -1,5 +1,5 @@
 """The tests for the InfluxDB component."""
-from collections import namedtuple
+from dataclasses import dataclass
 import datetime
 
 import pytest
@@ -23,7 +23,14 @@ BASE_V2_CONFIG = {
     "organization": "org",
     "token": "token",
 }
-FilterTest = namedtuple("FilterTest", "id should_pass")
+
+
+@dataclass
+class FilterTest:
+    """Class for capturing a filter test."""
+
+    id: str
+    should_pass: bool
 
 
 @pytest.fixture(autouse=True)
@@ -446,7 +453,6 @@ def execute_filter_test(hass, tests, handler_method, write_api, get_mock_call):
         ]
         handler_method(event)
         hass.data[influxdb.DOMAIN].block_till_done()
-        print(f"{test} - {write_api.call_count}")
 
         if test.should_pass:
             write_api.assert_called_once()
