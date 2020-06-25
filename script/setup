@@ -18,7 +18,9 @@ pip install -e .
 
 hass --script ensure_config -c config
 
-echo "logger:" >> config/configuration.yaml
-echo "  default: info" >> config/configuration.yaml
-echo "  logs:" >> config/configuration.yaml
-echo "    homeassistant.components.cloud: debug" >> config/configuration.yaml
+echo "
+logger:
+  default: info
+  logs:
+    homeassistant.components.cloud: debug
+" >> config/configuration.yaml
