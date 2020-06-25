@@ -7,6 +7,7 @@ import async_timeout
 from poolsense import PoolSense
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, update_coordinator
 
