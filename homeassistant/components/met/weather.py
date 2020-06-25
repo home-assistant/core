@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_MODE,
     CONF_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     LENGTH_FEET,
@@ -27,7 +28,7 @@ from homeassistant.util.distance import convert as convert_distance
 import homeassistant.util.dt as dt_util
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import CONF_TRACK_HOME
+from .const import CONF_TRACK_HOME, FORECAST_MODE, DEFAULT_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
         vol.Optional(CONF_ELEVATION): int,
+        vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(FORECAST_MODE),
     }
 )
 
@@ -78,6 +80,7 @@ class MetWeather(WeatherEntity):
         """Initialise the platform with a data instance and site."""
         self._config = config
         self._is_metric = is_metric
+        self._hourly = bool(config.get(CONF_MODE, DEFAULT_MODE) == "hourly")
         self._unsub_track_home = None
         self._unsub_fetch_data = None
         self._weather_data = None
@@ -161,7 +164,7 @@ class MetWeather(WeatherEntity):
         """Get the latest data from Met.no."""
         self._current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
-        self._forecast_data = self._weather_data.get_forecast(time_zone)
+        self._forecast_data = self._weather_data.get_forecast(time_zone, self._hourly)
         self.async_write_ha_state()
 
     @property

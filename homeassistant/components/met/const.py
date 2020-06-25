@@ -11,4 +11,7 @@ CONF_TRACK_HOME = "track_home"
 
 ENTITY_ID_SENSOR_FORMAT_HOME = f"{WEATHER_DOMAIN}.met_{HOME_LOCATION_NAME}"
 
+FORECAST_MODE = ["hourly", "daily"]
+DEFAULT_MODE = "daily"
+
 _LOGGER = logging.getLogger(".")
