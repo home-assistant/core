@@ -44,7 +44,7 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.storage import STORAGE_DIR
 
 ANDROIDTV_DOMAIN = "androidtv"
@@ -242,6 +242,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
         return
 
+    platform = entity_platform.current_platform.get()
+
     def service_adb_command(service):
         """Dispatch service calls to target entities."""
         cmd = service.data[ATTR_COMMAND]
@@ -283,11 +285,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         for target_device in target_devices:
             target_device.learn_sendevent()
 
-    hass.services.async_register(
-        ANDROIDTV_DOMAIN,
-        SERVICE_LEARN_SENDEVENT,
-        service_learn_sendevent,
-        schema=SERVICE_LEARN_SENDEVENT_SCHEMA,
+    platform.async_register_entity_service(
+        SERVICE_LEARN_SENDEVENT, SERVICE_LEARN_SENDEVENT_SCHEMA, "learn_sendevent",
     )
 
     def service_download(service):

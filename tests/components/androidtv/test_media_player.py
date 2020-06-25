@@ -863,20 +863,20 @@ async def test_learn_sendevent(hass):
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
         await hass.async_block_till_done()
 
-    with patch(
-        "androidtv.basetv.BaseTV.learn_sendevent", return_value=response
-    ) as patch_learn_sendevent:
-        await hass.services.async_call(
-            ANDROIDTV_DOMAIN,
-            SERVICE_LEARN_SENDEVENT,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
+        with patch(
+            "androidtv.basetv.BaseTV.learn_sendevent", return_value=response
+        ) as patch_learn_sendevent:
+            await hass.services.async_call(
+                ANDROIDTV_DOMAIN,
+                SERVICE_LEARN_SENDEVENT,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
 
-        patch_learn_sendevent.assert_called()
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.attributes["adb_response"] == response
+            patch_learn_sendevent.assert_called()
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.attributes["adb_response"] == response
 
 
 async def test_update_lock_not_acquired(hass):
