@@ -116,7 +116,7 @@ async def test_user_flow_rate_limited(hass: HomeAssistantType) -> None:
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "rate_limited"}
+        assert result["errors"] == {CONF_API_KEY: "rate_limited"}
 
 
 async def test_user_flow_rate_unknown(hass: HomeAssistantType) -> None:

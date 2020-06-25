@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
             "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-            "rate_limited": "[%key:common::config_flow::data::api_key%] is currently rate limited, please try again later.",
+            "rate_limited": "Currently rate limited, please try again later.",
             "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {

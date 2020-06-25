@@ -113,7 +113,7 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAPIKeyException:
                 errors[CONF_API_KEY] = "invalid_api_key"
             except RateLimitedException:
-                errors["base"] = "rate_limited"
+                errors[CONF_API_KEY] = "rate_limited"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
