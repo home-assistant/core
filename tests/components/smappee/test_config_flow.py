@@ -39,7 +39,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 
     assert result["url"] == (
-        f"{AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
+        f"{AUTHORIZE_URL['PRODUCTION']}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
     )
@@ -50,7 +50,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
-        TOKEN_URL,
+        TOKEN_URL["PRODUCTION"],
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
