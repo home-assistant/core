@@ -61,7 +61,7 @@ async def get_coordinator(hass, entry):
         with async_timeout.timeout(10):
             return await poolsense.get_poolsense_data(
                 aiohttp_client.async_get_clientsession(hass),
-                entry.data["email"],
+                entry.data[CONF_EMAIL],
                 entry.data["password"],
             )
 
