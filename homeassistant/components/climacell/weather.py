@@ -47,7 +47,7 @@ from .const import (
     ATTR_WEATHER_WIND_GUST,
     CLEAR_CONDITIONS,
     CONDITIONS,
-    CONF_FORECAST_INTERVAL,
+    CONF_FORECAST_TYPE,
     CONF_TIMESTEP,
     CURRENT,
     DAILY,
@@ -324,7 +324,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         forecasts = []
 
         if (
-            self._config_entry.data[CONF_FORECAST_INTERVAL] == DAILY
+            self._config_entry.data[CONF_FORECAST_TYPE] == DAILY
             and self._coordinator.data[FORECASTS]
         ):
             for forecast in self._coordinator.data[FORECASTS]:
@@ -356,7 +356,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
             return forecasts
 
         if (
-            self._config_entry.data[CONF_FORECAST_INTERVAL] == HOURLY
+            self._config_entry.data[CONF_FORECAST_TYPE] == HOURLY
             and self._coordinator.data[FORECASTS]
         ):
             for forecast in self._coordinator.data[FORECASTS]:
@@ -381,7 +381,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
             return forecasts
 
         if (
-            self._config_entry.data[CONF_FORECAST_INTERVAL] == NOWCAST
+            self._config_entry.data[CONF_FORECAST_TYPE] == NOWCAST
             and self._coordinator.data[FORECASTS]
         ):
             for forecast in self._coordinator.data[FORECASTS]:

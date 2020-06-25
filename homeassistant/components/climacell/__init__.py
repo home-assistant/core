@@ -34,12 +34,12 @@ from .const import (
     ATTRIBUTION,
     CHINA,
     CONF_AQI_COUNTRY,
-    CONF_FORECAST_INTERVAL,
+    CONF_FORECAST_TYPE,
     CONF_TIMESTEP,
     CURRENT,
     DAILY,
     DEFAULT_AQI_COUNTRY,
-    DEFAULT_FORECAST_INTERVAL,
+    DEFAULT_FORECAST_TYPE,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DISABLE_FORECASTS,
@@ -59,7 +59,7 @@ SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Inclusive(CONF_LATITUDE, "location"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "location"): cv.longitude,
-        vol.Optional(CONF_FORECAST_INTERVAL, default=DEFAULT_FORECAST_INTERVAL): vol.In(
+        vol.Optional(CONF_FORECAST_TYPE, default=DEFAULT_FORECAST_TYPE): vol.In(
             (DISABLE_FORECASTS, DAILY, HOURLY, NOWCAST)
         ),
         vol.Optional(CONF_TIMESTEP, default=DEFAULT_TIMESTEP): vol.All(
@@ -199,7 +199,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._config_entry = config_entry
         self._api = api
-        self._forecast_interval = config_entry.data[CONF_FORECAST_INTERVAL]
+        self._forecast_type = config_entry.data[CONF_FORECAST_TYPE]
         self.name = config_entry.data[CONF_NAME]
         self.data = {CURRENT: {}, FORECASTS: []}
 
@@ -218,21 +218,21 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                 self._api.availabile_fields(REALTIME)
             )
 
-            if self._forecast_interval == HOURLY:
+            if self._forecast_type == HOURLY:
                 data[FORECASTS] = await self._api.forecast_hourly(
                     self._api.availabile_fields(FORECAST_HOURLY),
                     None,
                     timedelta(hours=90),
                 )
 
-            if self._forecast_interval == DAILY:
+            if self._forecast_type == DAILY:
                 data[FORECASTS] = await self._api.forecast_daily(
                     self._api.availabile_fields(FORECAST_DAILY),
                     None,
                     timedelta(days=14),
                 )
 
-            if self._forecast_interval == NOWCAST:
+            if self._forecast_type == NOWCAST:
                 data[FORECASTS] = await self._api.forecast_nowcast(
                     self._api.availabile_fields(FORECAST_NOWCAST),
                     None,

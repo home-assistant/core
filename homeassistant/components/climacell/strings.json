@@ -3,14 +3,14 @@
   "config": {
     "step": {
       "user": {
-        "description": "If [%key:component::climacell::config::step::user::data::latitude%] and [%key:component::climacell::config::step::user::data::longitude%] are not provided, the default values in the Home Assistant configuration will be used. Forecasts can be disabled by choosing `disable` for [%key:component::climacell::config::step::user::data::forecast_interval%].",
+        "description": "If [%key:component::climacell::config::step::user::data::latitude%] and [%key:component::climacell::config::step::user::data::longitude%] are not provided, the default values in the Home Assistant configuration will be used. Forecasts can be disabled by choosing `disable` for [%key:component::climacell::config::step::user::data::forecast_type%].",
         "data": {
           "name": "Name",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "Latitude",
           "longitude": "Longitude",
           "unit_system": "Unit System",
-          "forecast_interval": "Forecast Interval"
+          "forecast_type": "Forecast Type"
         }
       }
     },
@@ -29,9 +29,9 @@
     "step": {
       "init": {
         "title": "Update [%key:component::climacell::title%] Options",
-        "description": "If you choose the `nowcast` forecast type, you can configure the number of minutes between each forecast. The number of forecasts will be dependent on the number of minutes chosen between forecasts, but the maximum number of forecasts is 30 and the maximum overall forecast period is 5 hours.",
+        "description": "If you choose the `nowcast` forecast type, you can configure the number of minutes between each forecast. For the NowCast forecast type, the number of forecasts will be dependent on the number of minutes chosen between forecasts, but the maximum number of forecasts is 30 and the maximum overall forecast period is 5 hours.",
         "data": {
-          "timestep": "Number of Minutes Between Forecasts",
+          "timestep": "Number of Minutes Between NowCast Forecasts",
           "aqi_contry": "Air Quality Index Country Standard"
         }
       }

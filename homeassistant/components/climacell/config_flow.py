@@ -20,11 +20,11 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     CHINA,
     CONF_AQI_COUNTRY,
-    CONF_FORECAST_INTERVAL,
+    CONF_FORECAST_TYPE,
     CONF_TIMESTEP,
     DAILY,
     DEFAULT_AQI_COUNTRY,
-    DEFAULT_FORECAST_INTERVAL,
+    DEFAULT_FORECAST_TYPE,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DISABLE_FORECASTS,
@@ -66,10 +66,8 @@ def _get_config_schema(
                 default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
             ): cv.longitude,
             vol.Optional(
-                CONF_FORECAST_INTERVAL,
-                default=input_dict.get(
-                    CONF_FORECAST_INTERVAL, DEFAULT_FORECAST_INTERVAL
-                ),
+                CONF_FORECAST_TYPE,
+                default=input_dict.get(CONF_FORECAST_TYPE, DEFAULT_FORECAST_TYPE),
             ): vol.In((DISABLE_FORECASTS, DAILY, HOURLY, NOWCAST)),
         },
         extra=vol.REMOVE_EXTRA,
@@ -82,7 +80,7 @@ def _get_unique_id(hass: HomeAssistantType, input_dict: Dict[str, Any]):
         f"{input_dict[CONF_API_KEY]}"
         f"_{input_dict.get(CONF_LATITUDE, hass.config.latitude)}"
         f"_{input_dict.get(CONF_LONGITUDE, hass.config.longitude)}"
-        f"_{input_dict[CONF_FORECAST_INTERVAL]}"
+        f"_{input_dict[CONF_FORECAST_TYPE]}"
     )
 
 
@@ -109,7 +107,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
             ): vol.In((USA, CHINA)),
         }
 
-        if self._config_entry.data[CONF_FORECAST_INTERVAL] == NOWCAST:
+        if self._config_entry.data[CONF_FORECAST_TYPE] == NOWCAST:
             options_schema.update(
                 {
                     vol.Required(
