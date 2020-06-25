@@ -482,7 +482,7 @@ plexwebsocket==0.0.10
 pmsensor==0.4
 
 # homeassistant.components.poolsense
-poolsense==0.0.4
+poolsense==0.0.5
 
 # homeassistant.components.reddit
 praw==6.5.1

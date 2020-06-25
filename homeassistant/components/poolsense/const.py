@@ -2,4 +2,3 @@
 
 DOMAIN = "poolsense"
 ATTRIBUTION = "PoolSense Data"
-CONF_SERIAL = "serial"

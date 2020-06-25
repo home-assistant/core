@@ -5,10 +5,10 @@ from poolsense import PoolSense
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_SERIAL, DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,6 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize PoolSense config flow."""
-        self._token = None
         self._email = None
         self._password = None
         self._errors = {}
@@ -53,11 +52,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not self._errors:
                 return self.async_create_entry(
                     title=self._email,
-                    data={
-                        CONF_EMAIL: self._email,
-                        CONF_PASSWORD: self._password,
-                        CONF_TOKEN: self._token,
-                    },
+                    data={CONF_EMAIL: self._email, CONF_PASSWORD: self._password},
                 )
 
         return await self._show_setup_form(user_input, self._errors)
@@ -70,11 +65,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_EMAIL): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_SERIAL): str,
-                }
+                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
             ),
             errors=errors or {},
         )

@@ -5,11 +5,13 @@ import logging
 
 import async_timeout
 from poolsense import PoolSense
+from poolsense.exceptions import PoolSenseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, update_coordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import DOMAIN
 
@@ -58,12 +60,18 @@ async def get_coordinator(hass, entry):
     async def async_get_data():
         _LOGGER.info("Run query to server")
         poolsense = PoolSense()
+        return_data = {}
         with async_timeout.timeout(10):
-            return await poolsense.get_poolsense_data(
-                aiohttp_client.async_get_clientsession(hass),
-                entry.data[CONF_EMAIL],
-                entry.data[CONF_PASSWORD],
-            )
+            try:
+                return_data = await poolsense.get_poolsense_data(
+                    aiohttp_client.async_get_clientsession(hass),
+                    entry.data[CONF_EMAIL],
+                    entry.data[CONF_PASSWORD],
+                )
+            except (PoolSenseError) as error:
+                raise UpdateFailed(error)
+
+        return return_data
 
     hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
         hass,
