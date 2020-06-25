@@ -9,7 +9,6 @@ from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.logbook import log_entry
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
@@ -165,6 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -228,6 +228,7 @@ class ConfiguredDoorBird:
         self._device = device
         self._custom_url = custom_url
         self.events = events
+        self.doorstation_events = [self._get_event_name(event) for event in self.events]
         self._token = token
 
     @property
@@ -259,9 +260,7 @@ class ConfiguredDoorBird:
         if self.custom_url is not None:
             hass_url = self.custom_url
 
-        for event in self.events:
-            event = self._get_event_name(event)
-
+        for event in self.doorstation_events:
             self._register_event(hass_url, event)
 
             _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
@@ -364,7 +363,5 @@ class DoorBirdRequestView(HomeAssistantView):
             return web.Response(status=HTTP_OK, text=message)
 
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
-
-        log_entry(hass, f"Doorbird {event}", "event was fired.", DOMAIN)
 
         return web.Response(status=HTTP_OK, text="OK")
