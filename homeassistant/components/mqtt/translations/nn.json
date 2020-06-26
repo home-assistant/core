@@ -14,8 +14,7 @@
                     "port": "Port",
                     "username": "Brukarnamn"
                 },
-                "description": "Ver vennleg \u00e5 skriv inn tilkoplingsinformasjonen for MQTT-meglaren din",
-                "title": "MQTT"
+                "description": "Ver vennleg \u00e5 skriv inn tilkoplingsinformasjonen for MQTT-meglaren din"
             }
         }
     }

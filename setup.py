@@ -39,7 +39,7 @@ REQUIRES = [
     "bcrypt==3.1.7",
     "certifi>=2020.4.5.1",
     "ciso8601==2.1.3",
-    "importlib-metadata==1.6.0",
+    "importlib-metadata==1.6.0;python_version<'3.8'",
     "jinja2>=2.11.1",
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.
@@ -48,7 +48,7 @@ REQUIRES = [
     "python-slugify==4.0.0",
     "pytz>=2020.1",
     "pyyaml==5.3.1",
-    "requests==2.23.0",
+    "requests==2.24.0",
     "ruamel.yaml==0.15.100",
     "voluptuous==0.11.7",
     "voluptuous-serialize==2.3.0",

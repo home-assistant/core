@@ -1,12 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Ta vnos je \u017ee nastavljen.",
             "updated_entry": "Ta vnos je bil \u017ee nastavljen, vendar se ime, aplikacije in/ali mo\u017enosti, dolo\u010dene v konfiguraciji, ne ujemajo s predhodno uvo\u017eeno konfiguracijo, zato je bil konfiguracijski vnos ustrezno posodobljen."
         },
         "error": {
-            "cant_connect": "Ni bilo mogo\u010de povezati z napravo. [Preglejte dokumente] (https://www.home-assistant.io/integrations/vizio/) in ponovno preverite, ali: \n \u2013 Naprava je vklopljena \n \u2013 Naprava je povezana z omre\u017ejem \n \u2013 Vrednosti, ki ste jih izpolnili, so to\u010dne \nnato poskusite ponovno.",
-            "complete_pairing failed": "Seznanjanja ni mogo\u010de dokon\u010dati. Zagotovite, da je PIN, ki ste ga vnesli, pravilen in da je televizor \u0161e vedno vklopljen in priklju\u010den na omre\u017eje, preden ponovno poizkusite.",
             "host_exists": "Naprava Vizio z dolo\u010denim gostiteljem je \u017ee konfigurirana.",
             "name_exists": "Naprava Vizio z navedenim imenom je \u017ee konfigurirana."
         },

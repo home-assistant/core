@@ -5,6 +5,9 @@
         },
         "step": {
             "2fa": {
+                "data": {
+                    "2fa": "2FA-pin"
+                },
                 "title": "Kaksivaiheinen tunnistus"
             },
             "user": {

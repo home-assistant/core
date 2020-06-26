@@ -431,7 +431,8 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
         # Skip entities that don't have the required feature.
         if required_features is not None and not any(
-            entity.supported_features & feature_set for feature_set in required_features
+            entity.supported_features & feature_set == feature_set
+            for feature_set in required_features
         ):
             continue
 
@@ -504,7 +505,7 @@ def async_register_admin_service(
     """Register a service that requires admin access."""
 
     @wraps(service_func)
-    async def admin_handler(call):
+    async def admin_handler(call: ha.ServiceCall) -> None:
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
             if user is None:

@@ -3,6 +3,5 @@
         "trigger_type": {
             "turn_on": "{entity_name} is gevraagd in te schakelen"
         }
-    },
-    "title": "Arcam FMJ"
+    }
 }

@@ -34,10 +34,6 @@
                 "description": "Na voljo je ve\u010d stre\u017enikov, izberite enega:",
                 "title": "Izberite stre\u017enik Plex"
             },
-            "start_website_auth": {
-                "description": "Nadaljujte z avtorizacijo na plex.tv.",
-                "title": "Pove\u017eite stre\u017enik Plex"
-            },
             "user": {
                 "description": "Nadaljujte do [plex.tv] (https://plex.tv), da pove\u017eete stre\u017enik Plex.",
                 "title": "Plex medijski stre\u017enik"

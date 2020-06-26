@@ -22,12 +22,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     EVENT_TIMER_OUT_OF_SYNC,
+    MATCH_ALL,
     __version__,
 )
 import homeassistant.core as ha
@@ -35,7 +37,7 @@ from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.async_mock import MagicMock, Mock, patch
+from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import async_mock_service, get_test_home_assistant
 
 PST = pytz.timezone("America/Los_Angeles")
@@ -901,6 +903,8 @@ class TestConfig(unittest.TestCase):
     def test_as_dict(self):
         """Test as dict."""
         self.config.config_dir = "/test/ha-config"
+        self.config.hass = MagicMock()
+        type(self.config.hass.state).value = PropertyMock(return_value="RUNNING")
         expected = {
             "latitude": 0,
             "longitude": 0,
@@ -911,9 +915,11 @@ class TestConfig(unittest.TestCase):
             "components": set(),
             "config_dir": "/test/ha-config",
             "whitelist_external_dirs": set(),
+            "allowlist_external_urls": set(),
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
+            "state": "RUNNING",
             "external_url": None,
             "internal_url": None,
         }
@@ -949,6 +955,33 @@ class TestConfig(unittest.TestCase):
 
             with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
+
+    def test_is_allowed_external_url(self):
+        """Test is_allowed_external_url method."""
+        self.config.allowlist_external_urls = [
+            "http://x.com/",
+            "https://y.com/bla/",
+            "https://z.com/images/1.jpg/",
+        ]
+
+        valid = [
+            "http://x.com/1.jpg",
+            "http://x.com",
+            "https://y.com/bla/",
+            "https://y.com/bla/2.png",
+            "https://z.com/images/1.jpg",
+        ]
+        for url in valid:
+            assert self.config.is_allowed_external_url(url)
+
+        invalid = [
+            "https://a.co",
+            "https://y.com/bla_wrong",
+            "https://y.com/bla/../image.jpg",
+            "https://z.com/images",
+        ]
+        for url in invalid:
+            assert not self.config.is_allowed_external_url(url)
 
 
 async def test_event_on_update(hass):
@@ -1330,3 +1363,35 @@ async def test_additional_data_in_core_config(hass, hass_storage):
     }
     await config.async_load()
     assert config.location_name == "Test Name"
+
+
+async def test_start_events(hass):
+    """Test events fired when starting Home Assistant."""
+    hass.state = ha.CoreState.not_running
+
+    all_events = []
+
+    @ha.callback
+    def capture_events(ev):
+        all_events.append(ev.event_type)
+
+    hass.bus.async_listen(MATCH_ALL, capture_events)
+
+    core_states = []
+
+    @ha.callback
+    def capture_core_state(_):
+        core_states.append(hass.state)
+
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, capture_core_state)
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert all_events == [
+        EVENT_CORE_CONFIG_UPDATE,
+        EVENT_HOMEASSISTANT_START,
+        EVENT_CORE_CONFIG_UPDATE,
+        EVENT_HOMEASSISTANT_STARTED,
+    ]
+    assert core_states == [ha.CoreState.starting, ha.CoreState.running]

@@ -94,11 +94,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             await bridge.close()
             return True
-        except (KeyError, ValueError):
-            _LOGGER.error(
-                "Error while checking connectivity to bridge %s", self.data[CONF_HOST],
-            )
-            return False
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown exception while checking connectivity to bridge %s",

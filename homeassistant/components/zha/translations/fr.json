@@ -25,8 +25,7 @@
             },
             "user": {
                 "data": {
-                    "path": "Chemin du p\u00e9riph\u00e9rique s\u00e9rie",
-                    "radio_type": "Type de radio"
+                    "path": "Chemin du p\u00e9riph\u00e9rique s\u00e9rie"
                 },
                 "description": "S\u00e9lectionnez le port s\u00e9rie de la radio Zigbee",
                 "title": "ZHA"

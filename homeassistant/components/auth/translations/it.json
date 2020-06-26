@@ -25,7 +25,7 @@
             },
             "step": {
                 "init": {
-                    "description": "Per attivare l'autenticazione a due fattori utilizzando le password monouso basate sul tempo, eseguire la scansione del codice QR con l'app di autenticazione. Se non ne hai uno, ti consigliamo [Google Authenticator] (https://support.google.com/accounts/answer/1066447) o [Authy] (https://authy.com/). \n\n {qr_code} \n \nDopo la scansione, inserisci il codice a sei cifre dalla tua app per verificare la configurazione. Se riscontri problemi con la scansione del codice QR, esegui una configurazione manuale con il codice ** ` {code} ` **.",
+                    "description": "Per attivare l'autenticazione a due fattori utilizzando le password monouso basate sul tempo, eseguire la scansione del codice QR con l'app di autenticazione. Se non ne hai uno, ti consigliamo [Google Authenticator](https://support.google.com/accounts/answer/1066447) o [Authy](https://authy.com/). \n\n {qr_code} \n \nDopo la scansione, inserisci il codice a sei cifre dalla tua app per verificare la configurazione. Se riscontri problemi con la scansione del codice QR, esegui una configurazione manuale con il codice **`{code}`**.",
                     "title": "Imposta l'autenticazione a due fattori usando TOTP"
                 }
             },

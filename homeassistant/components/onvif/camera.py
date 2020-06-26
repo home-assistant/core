@@ -96,8 +96,8 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
     def unique_id(self) -> str:
         """Return a unique ID."""
         if self.profile.index:
-            return f"{self.device.info.mac}_{self.profile.index}"
-        return self.device.info.mac
+            return f"{self.device.info.mac or self.device.info.serial_number}_{self.profile.index}"
+        return self.device.info.mac or self.device.info.serial_number
 
     @property
     def entity_registry_enabled_default(self) -> bool:

@@ -21,8 +21,7 @@
                     "username": "Anv\u00e4ndarnamn",
                     "verify_ssl": "AdGuard Home anv\u00e4nder ett korrekt certifikat"
                 },
-                "description": "St\u00e4ll in din AdGuard Home-instans f\u00f6r att till\u00e5ta \u00f6vervakning och kontroll.",
-                "title": "L\u00e4nka din AdGuard Home."
+                "description": "St\u00e4ll in din AdGuard Home-instans f\u00f6r att till\u00e5ta \u00f6vervakning och kontroll."
             }
         }
     }

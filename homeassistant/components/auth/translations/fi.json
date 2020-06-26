@@ -1,6 +1,9 @@
 {
     "mfa_setup": {
         "notify": {
+            "error": {
+                "invalid_code": "Virheellinen koodi. Yrit\u00e4 uudelleen."
+            },
             "step": {
                 "setup": {
                     "title": "Varmista asetukset"

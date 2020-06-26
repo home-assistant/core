@@ -1,7 +1,10 @@
 """Axis binary sensor platform tests."""
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_device import NAME, setup_axis_integration
@@ -58,7 +61,9 @@ async def test_binary_sensors(hass):
     pir = hass.states.get(f"binary_sensor.{NAME}_pir_0")
     assert pir.state == "off"
     assert pir.name == f"{NAME} PIR 0"
+    assert pir.attributes["device_class"] == DEVICE_CLASS_MOTION
 
     vmd4 = hass.states.get(f"binary_sensor.{NAME}_vmd4_camera1profile1")
     assert vmd4.state == "on"
     assert vmd4.name == f"{NAME} VMD4 Camera1Profile1"
+    assert vmd4.attributes["device_class"] == DEVICE_CLASS_MOTION

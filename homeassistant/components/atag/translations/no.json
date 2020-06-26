@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bare en Atag-enhet kan legges til Home Assistant"
+            "already_configured": "Denne enheten er allerede lagt til i HomeAssistant"
         },
         "error": {
-            "connection_error": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen"
+            "connection_error": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "unauthorized": "Parring nektet, sjekk enheten for autorisasjonsforesp\u00f8rsel"
         },
         "step": {
             "user": {

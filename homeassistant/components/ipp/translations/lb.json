@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebse Printer ass scho konfigur\u00e9iert.",
-            "connection_error": "Feeler beim verbannen mam Printer.",
+            "already_configured": "Apparat ass scho konfigur\u00e9iert.",
+            "connection_error": "Feeler beim verbannen",
             "connection_upgrade": "Feeler beim verbannen mam Printer well eng Aktualis\u00e9ierung vun der Verbindung erfuerderlech ass.",
             "ipp_error": "IPP Feeler opgetrueden.",
             "ipp_version_error": "IPP Versioun net vum Printer \u00ebnnerst\u00ebtzt.",
@@ -10,7 +10,7 @@
             "unique_id_required": "Dem Apparat feelt eng eenzegarteg Identifikatioun d\u00e9i ben\u00e9idegt ass fir d'Entdeckung."
         },
         "error": {
-            "connection_error": "Feeler beim verbannen mam Printer.",
+            "connection_error": "Feeler beim verbannen",
             "connection_upgrade": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol mat aktiv\u00e9ierter SSL/TLS Optioun."
         },
         "flow_title": "Printer: {name}",
@@ -18,7 +18,7 @@
             "user": {
                 "data": {
                     "base_path": "Relative Pad zum Printer",
-                    "host": "Numm oder IP Adresse",
+                    "host": "Host",
                     "port": "Port",
                     "ssl": "Printer \u00ebnnerst\u00ebtze Kommunikatioun iwwer SSL/TLS",
                     "verify_ssl": "Printer benotzt ee g\u00ebltegen SSL Zertifikat"
@@ -27,7 +27,7 @@
                 "title": "\u00c4re Printer verbannen"
             },
             "zeroconf_confirm": {
-                "description": "W\u00ebllt dir de Printer mam Numm `{name}` am Home Assistant dob\u00e4isetzen?",
+                "description": "Soll {name} konfigur\u00e9iert ginn?",
                 "title": "Entdeckte Printer"
             }
         }

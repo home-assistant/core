@@ -23,8 +23,7 @@
                     "username": "Nombre de usuario",
                     "verify_ssl": "AdGuard Home utiliza un certificado adecuado"
                 },
-                "description": "Configure su instancia de AdGuard Home para permitir la supervisi\u00f3n y el control.",
-                "title": "Enlace su AdGuard Home."
+                "description": "Configure su instancia de AdGuard Home para permitir la supervisi\u00f3n y el control."
             }
         }
     }

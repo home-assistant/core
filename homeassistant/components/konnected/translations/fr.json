@@ -15,6 +15,7 @@
                 "title": "Appareil Konnected pr\u00eat"
             },
             "import_confirm": {
+                "description": "Un panneau d'alarme Konnected avec l'ID {id} a \u00e9t\u00e9 d\u00e9couvert dans configuration.yaml. Ce flux vous permettra de l'importer dans une entr\u00e9e de configuration.",
                 "title": "Importer un appareil connect\u00e9"
             },
             "user": {
@@ -22,8 +23,7 @@
                     "host": "Adresse IP de l\u2019appareil Konnected",
                     "port": "Port de l'appareil Konnected"
                 },
-                "description": "Veuillez saisir les informations de l\u2019h\u00f4te de votre panneau Konnected.",
-                "title": "D\u00e9couverte d\u2019appareil Konnected"
+                "description": "Veuillez saisir les informations de l\u2019h\u00f4te de votre panneau Konnected."
             }
         }
     },
@@ -78,9 +78,14 @@
                     "alarm2_out2": "OUT2/ALARM2",
                     "out1": "OUT1"
                 },
+                "description": "S\u00e9lectionnez la configuration des E / S restantes ci-dessous. Vous pourrez configurer des options d\u00e9taill\u00e9es dans les \u00e9tapes suivantes.",
                 "title": "Configurer les E/S \u00e9tendues"
             },
             "options_misc": {
+                "data": {
+                    "blink": "Voyant du panneau clignotant lors de l'envoi d'un changement d'\u00e9tat"
+                },
+                "description": "Veuillez s\u00e9lectionner le comportement souhat\u00e9 de votre panneau",
                 "title": "Configurer divers"
             },
             "options_switch": {
@@ -91,7 +96,9 @@
                     "name": "Nom (facultatif)",
                     "pause": "Pause entre les impulsions (ms) (facultatif)",
                     "repeat": "Nombre de r\u00e9p\u00e9tition (-1=infini) (facultatif)"
-                }
+                },
+                "description": "Veuillez s\u00e9lectionner les options de sortie pour {zone} : \u00e9tat {state}",
+                "title": "Configurer la sortie commutable"
             }
         }
     }

@@ -1,0 +1,8 @@
+"""Constants for the Avri integration."""
+CONF_COUNTRY_CODE = "country_code"
+CONF_ZIP_CODE = "zip_code"
+CONF_HOUSE_NUMBER = "house_number"
+CONF_HOUSE_NUMBER_EXTENSION = "house_number_extension"
+DOMAIN = "avri"
+ICON = "mdi:trash-can-outline"
+DEFAULT_COUNTRY_CODE = "NL"

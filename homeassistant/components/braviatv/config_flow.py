@@ -4,6 +4,7 @@ import logging
 import re
 
 from bravia_tv import BraviaRC
+from bravia_tv.braviarc import NoIPControl
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -51,7 +52,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def init_device(self, pin):
         """Initialize Bravia TV device."""
         await self.hass.async_add_executor_job(
-            self.braviarc.connect, pin, CLIENTID_PREFIX, NICKNAME,
+            self.braviarc.connect, pin, CLIENTID_PREFIX, NICKNAME
         )
 
         if not self.braviarc.is_connected():
@@ -85,6 +86,9 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             _LOGGER.error("Import aborted, cannot connect to %s", self.host)
             return self.async_abort(reason="cannot_connect")
+        except NoIPControl:
+            _LOGGER.error("IP Control is disabled in the TV settings")
+            return self.async_abort(reason="no_ip_control")
         except ModelNotSupported:
             _LOGGER.error("Import aborted, your TV is not supported")
             return self.async_abort(reason="unsupported_model")
@@ -129,9 +133,12 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=self.title, data=user_input)
 
         # Connecting with th PIN "0000" to start the pairing process on the TV.
-        await self.hass.async_add_executor_job(
-            self.braviarc.connect, "0000", CLIENTID_PREFIX, NICKNAME,
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self.braviarc.connect, "0000", CLIENTID_PREFIX, NICKNAME
+            )
+        except NoIPControl:
+            return self.async_abort(reason="no_ip_control")
 
         return self.async_show_form(
             step_id="authorize",
@@ -156,7 +163,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
         self.braviarc = self.hass.data[DOMAIN][self.config_entry.entry_id][BRAVIARC]
         if not self.braviarc.is_connected():
             await self.hass.async_add_executor_job(
-                self.braviarc.connect, self.pin, CLIENTID_PREFIX, NICKNAME,
+                self.braviarc.connect, self.pin, CLIENTID_PREFIX, NICKNAME
             )
 
         content_mapping = await self.hass.async_add_executor_job(

@@ -2,6 +2,6 @@
   "domain": "delijn",
   "name": "De Lijn",
   "documentation": "https://www.home-assistant.io/integrations/delijn",
-  "codeowners": ["@bollewolle"],
+  "codeowners": ["@bollewolle", "@Emilv2"],
   "requirements": ["pydelijn==0.6.0"]
 }

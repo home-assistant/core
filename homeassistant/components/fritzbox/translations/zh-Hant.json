@@ -16,8 +16,7 @@
                     "password": "\u5bc6\u78bc",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f",
-                "title": "AVM FRITZ!Box"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
             },
             "user": {
                 "data": {
@@ -25,8 +24,7 @@
                     "password": "\u5bc6\u78bc",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u8f38\u5165 AVM FRITZ!Box \u8cc7\u8a0a\u3002",
-                "title": "AVM FRITZ!Box"
+                "description": "\u8f38\u5165 AVM FRITZ!Box \u8cc7\u8a0a\u3002"
             }
         }
     }

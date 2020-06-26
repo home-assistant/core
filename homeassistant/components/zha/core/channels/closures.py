@@ -7,7 +7,7 @@ from homeassistant.core import callback
 
 from .. import registries
 from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
-from .base import ZigbeeChannel
+from .base import ClientChannel, ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +48,11 @@ class DoorLockChannel(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.Shade.cluster_id)
 class Shade(ZigbeeChannel):
     """Shade channel."""
+
+
+@registries.CLIENT_CHANNELS_REGISTRY.register(closures.WindowCovering.cluster_id)
+class WindowCoveringClient(ClientChannel):
+    """Window client channel."""
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.WindowCovering.cluster_id)

@@ -2,8 +2,6 @@
 import json
 from typing import Dict
 
-from homeassistant.requirements import DISCOVERY_INTEGRATIONS
-
 from .model import Config, Integration
 
 BASE = """
@@ -17,7 +15,7 @@ To update, run python3 -m script.hassfest
 FLOWS = {}
 """.strip()
 
-UNIQUE_ID_IGNORE = {"esphome", "fritzbox", "heos", "huawei_lte"}
+UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
 
 
 def validate_integration(config: Config, integration: Integration):
@@ -25,26 +23,46 @@ def validate_integration(config: Config, integration: Integration):
     config_flow_file = integration.path / "config_flow.py"
 
     if not config_flow_file.is_file():
-        integration.add_error(
-            "config_flow", "Config flows need to be defined in the file config_flow.py"
-        )
+        if integration.get("config_flow"):
+            integration.add_error(
+                "config_flow",
+                "Config flows need to be defined in the file config_flow.py",
+            )
+        if integration.get("homekit"):
+            integration.add_error(
+                "config_flow",
+                "HomeKit information in a manifest requires a config flow to exist",
+            )
+        if integration.get("ssdp"):
+            integration.add_error(
+                "config_flow",
+                "SSDP information in a manifest requires a config flow to exist",
+            )
+        if integration.get("zeroconf"):
+            integration.add_error(
+                "config_flow",
+                "Zeroconf information in a manifest requires a config flow to exist",
+            )
         return
 
-    needs_unique_id = integration.domain not in UNIQUE_ID_IGNORE and any(
-        bool(integration.manifest.get(key))
-        for keys in DISCOVERY_INTEGRATIONS.values()
-        for key in keys
+    config_flow = config_flow_file.read_text()
+
+    needs_unique_id = integration.domain not in UNIQUE_ID_IGNORE and (
+        "async_step_discovery" in config_flow
+        or "async_step_hassio" in config_flow
+        or "async_step_homekit" in config_flow
+        or "async_step_ssdp" in config_flow
+        or "async_step_zeroconf" in config_flow
     )
 
     if not needs_unique_id:
         return
 
-    config_flow = config_flow_file.read_text()
-
     has_unique_id = (
         "self.async_set_unique_id" in config_flow
-        or "config_entry_flow.register_discovery_flow" in config_flow
-        or "config_entry_oauth2_flow.AbstractOAuth2FlowHandler" in config_flow
+        or "self._async_handle_discovery_without_unique_id" in config_flow
+        or "register_discovery_flow" in config_flow
+        or "AbstractOAuth2FlowHandler" in config_flow
     )
 
     if has_unique_id:
@@ -70,9 +88,12 @@ def generate_and_validate(integrations: Dict[str, Integration], config: Config):
         if not integration.manifest:
             continue
 
-        config_flow = integration.manifest.get("config_flow")
-
-        if not config_flow:
+        if not (
+            integration.manifest.get("config_flow")
+            or integration.manifest.get("homekit")
+            or integration.manifest.get("ssdp")
+            or integration.manifest.get("zeroconf")
+        ):
             continue
 
         validate_integration(config, integration)

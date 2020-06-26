@@ -1,170 +1,248 @@
 """Support for monitoring a Smappee energy sensor."""
-from datetime import timedelta
 import logging
 
-from homeassistant.const import (
-    DEGREE,
-    ELECTRICAL_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    UNIT_PERCENTAGE,
-    VOLT,
-    VOLUME_CUBIC_METERS,
-)
+from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
 from homeassistant.helpers.entity import Entity
 
-from . import DATA_SMAPPEE
+from .const import BASE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_PREFIX = "Smappee"
-SENSOR_TYPES = {
-    "solar": ["Solar", "mdi:white-balance-sunny", "local", POWER_WATT, "solar"],
-    "active_power": [
-        "Active Power",
-        "mdi:power-plug",
-        "local",
+TREND_SENSORS = {
+    "total_power": [
+        "Total consumption - Active power",
+        None,
         POWER_WATT,
-        "active_power",
+        "total_power",
+        DEVICE_CLASS_POWER,
     ],
-    "current": ["Current", "mdi:gauge", "local", ELECTRICAL_CURRENT_AMPERE, "current"],
-    "voltage": ["Voltage", "mdi:gauge", "local", VOLT, "voltage"],
-    "active_cosfi": [
-        "Power Factor",
-        "mdi:gauge",
-        "local",
-        UNIT_PERCENTAGE,
-        "active_cosfi",
+    "total_reactive_power": [
+        "Total consumption - Reactive power",
+        None,
+        POWER_WATT,
+        "total_reactive_power",
+        DEVICE_CLASS_POWER,
     ],
-    "alwayson_today": [
-        "Always On Today",
-        "mdi:gauge",
-        "remote",
-        ENERGY_KILO_WATT_HOUR,
-        "alwaysOn",
-    ],
-    "solar_today": [
-        "Solar Today",
-        "mdi:white-balance-sunny",
-        "remote",
-        ENERGY_KILO_WATT_HOUR,
-        "solar",
+    "alwayson": [
+        "Always on - Active power",
+        None,
+        POWER_WATT,
+        "alwayson",
+        DEVICE_CLASS_POWER,
     ],
     "power_today": [
-        "Power Today",
+        "Total consumption - Today",
         "mdi:power-plug",
-        "remote",
-        ENERGY_KILO_WATT_HOUR,
-        "consumption",
+        ENERGY_WATT_HOUR,
+        "power_today",
+        None,
     ],
-    "water_sensor_1": [
-        "Water Sensor 1",
-        "mdi:water",
-        "water",
-        VOLUME_CUBIC_METERS,
-        "value1",
+    "power_current_hour": [
+        "Total consumption - Current hour",
+        "mdi:power-plug",
+        ENERGY_WATT_HOUR,
+        "power_current_hour",
+        None,
     ],
-    "water_sensor_2": [
-        "Water Sensor 2",
-        "mdi:water",
-        "water",
-        VOLUME_CUBIC_METERS,
-        "value2",
+    "power_last_5_minutes": [
+        "Total consumption - Last 5 minutes",
+        "mdi:power-plug",
+        ENERGY_WATT_HOUR,
+        "power_last_5_minutes",
+        None,
     ],
-    "water_sensor_temperature": [
-        "Water Sensor Temperature",
-        "mdi:temperature-celsius",
-        "water",
-        DEGREE,
-        "temperature",
+    "alwayson_today": [
+        "Always on - Today",
+        "mdi:sleep",
+        ENERGY_WATT_HOUR,
+        "alwayson_today",
+        None,
     ],
-    "water_sensor_humidity": [
-        "Water Sensor Humidity",
-        "mdi:water-percent",
-        "water",
-        UNIT_PERCENTAGE,
-        "humidity",
+}
+SOLAR_SENSORS = {
+    "solar_power": [
+        "Total production - Active power",
+        None,
+        POWER_WATT,
+        "solar_power",
+        DEVICE_CLASS_POWER,
     ],
-    "water_sensor_battery": [
-        "Water Sensor Battery",
-        "mdi:battery",
-        "water",
-        UNIT_PERCENTAGE,
-        "battery",
+    "solar_today": [
+        "Total production - Today",
+        "mdi:white-balance-sunny",
+        ENERGY_WATT_HOUR,
+        "solar_today",
+        None,
+    ],
+    "solar_current_hour": [
+        "Total production - Current hour",
+        "mdi:white-balance-sunny",
+        ENERGY_WATT_HOUR,
+        "solar_current_hour",
+        None,
+    ],
+}
+VOLTAGE_SENSORS = {
+    "phase_voltages_a": [
+        "Phase voltages - A",
+        "mdi:flash",
+        VOLT,
+        "phase_voltage_a",
+        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
+        None,
+    ],
+    "phase_voltages_b": [
+        "Phase voltages - B",
+        "mdi:flash",
+        VOLT,
+        "phase_voltage_b",
+        ["TWO", "THREE_STAR", "THREE_DELTA"],
+        None,
+    ],
+    "phase_voltages_c": [
+        "Phase voltages - C",
+        "mdi:flash",
+        VOLT,
+        "phase_voltage_c",
+        ["THREE_STAR"],
+        None,
+    ],
+    "line_voltages_a": [
+        "Line voltages - A",
+        "mdi:flash",
+        VOLT,
+        "line_voltage_a",
+        ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
+        None,
+    ],
+    "line_voltages_b": [
+        "Line voltages - B",
+        "mdi:flash",
+        VOLT,
+        "line_voltage_b",
+        ["TWO", "THREE_STAR", "THREE_DELTA"],
+        None,
+    ],
+    "line_voltages_c": [
+        "Line voltages - C",
+        "mdi:flash",
+        VOLT,
+        "line_voltage_c",
+        ["THREE_STAR", "THREE_DELTA"],
+        None,
     ],
 }
 
-SCAN_INTERVAL = timedelta(seconds=30)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee sensor."""
-    smappee = hass.data[DATA_SMAPPEE]
+    smappee_base = hass.data[DOMAIN][BASE]
 
-    dev = []
-    if smappee.is_remote_active:
-        for location_id in smappee.locations.keys():
-            for sensor in SENSOR_TYPES:
-                if "remote" in SENSOR_TYPES[sensor]:
-                    dev.append(
-                        SmappeeSensor(
-                            smappee, location_id, sensor, SENSOR_TYPES[sensor]
-                        )
+    entities = []
+    for service_location in smappee_base.smappee.service_locations.values():
+        # Add all basic sensors (realtime values and aggregators)
+        for sensor in TREND_SENSORS:
+            entities.append(
+                SmappeeSensor(
+                    smappee_base=smappee_base,
+                    service_location=service_location,
+                    sensor=sensor,
+                    attributes=TREND_SENSORS[sensor],
+                )
+            )
+
+        # Add solar sensors
+        if service_location.has_solar_production:
+            for sensor in SOLAR_SENSORS:
+                entities.append(
+                    SmappeeSensor(
+                        smappee_base=smappee_base,
+                        service_location=service_location,
+                        sensor=sensor,
+                        attributes=SOLAR_SENSORS[sensor],
                     )
-                elif "water" in SENSOR_TYPES[sensor]:
-                    for items in smappee.info[location_id].get("sensors"):
-                        dev.append(
-                            SmappeeSensor(
-                                smappee,
-                                location_id,
-                                "{}:{}".format(sensor, items.get("id")),
-                                SENSOR_TYPES[sensor],
-                            )
-                        )
+                )
 
-    if smappee.is_local_active:
-        if smappee.is_remote_active:
-            location_keys = smappee.locations.keys()
-        else:
-            location_keys = [None]
-        for location_id in location_keys:
-            for sensor in SENSOR_TYPES:
-                if "local" in SENSOR_TYPES[sensor]:
-                    dev.append(
-                        SmappeeSensor(
-                            smappee, location_id, sensor, SENSOR_TYPES[sensor]
-                        )
+        # Add all CT measurements
+        for measurement_id, measurement in service_location.measurements.items():
+            entities.append(
+                SmappeeSensor(
+                    smappee_base=smappee_base,
+                    service_location=service_location,
+                    sensor="load",
+                    attributes=[
+                        measurement.name,
+                        None,
+                        POWER_WATT,
+                        measurement_id,
+                        DEVICE_CLASS_POWER,
+                    ],
+                )
+            )
+
+        # Add phase- and line voltages
+        for sensor_name, sensor in VOLTAGE_SENSORS.items():
+            if service_location.phase_type in sensor[4]:
+                entities.append(
+                    SmappeeSensor(
+                        smappee_base=smappee_base,
+                        service_location=service_location,
+                        sensor=sensor_name,
+                        attributes=sensor,
                     )
+                )
 
-    add_entities(dev, True)
+        # Add Gas and Water sensors
+        for sensor_id, sensor in service_location.sensors.items():
+            for channel in sensor.channels:
+                gw_icon = "mdi:gas-cylinder"
+                if channel.get("type") == "water":
+                    gw_icon = "mdi:water"
+
+                entities.append(
+                    SmappeeSensor(
+                        smappee_base=smappee_base,
+                        service_location=service_location,
+                        sensor="sensor",
+                        attributes=[
+                            channel.get("name"),
+                            gw_icon,
+                            channel.get("uom"),
+                            f"{sensor_id}-{channel.get('channel')}",
+                            None,
+                        ],
+                    )
+                )
+
+    async_add_entities(entities, True)
 
 
 class SmappeeSensor(Entity):
     """Implementation of a Smappee sensor."""
 
-    def __init__(self, smappee, location_id, sensor, attributes):
+    def __init__(self, smappee_base, service_location, sensor, attributes):
         """Initialize the Smappee sensor."""
-        self._smappee = smappee
-        self._location_id = location_id
-        self._attributes = attributes
+        self._smappee_base = smappee_base
+        self._service_location = service_location
         self._sensor = sensor
         self.data = None
         self._state = None
-        self._name = self._attributes[0]
-        self._icon = self._attributes[1]
-        self._type = self._attributes[2]
-        self._unit_of_measurement = self._attributes[3]
-        self._smappe_name = self._attributes[4]
+        self._name = attributes[0]
+        self._icon = attributes[1]
+        self._unit_of_measurement = attributes[2]
+        self._sensor_id = attributes[3]
+        self._device_class = attributes[4]
 
     @property
     def name(self):
-        """Return the name of the sensor."""
-        if self._location_id:
-            location_name = self._smappee.locations[self._location_id]
-        else:
-            location_name = "Local"
+        """Return the name for this sensor."""
+        if self._sensor in ["sensor", "load"]:
+            return (
+                f"{self._service_location.service_location_name} - "
+                f"{self._sensor.title()} - {self._name}"
+            )
 
-        return f"{SENSOR_PREFIX} {location_name} {self._name}"
+        return f"{self._service_location.service_location_name} - {self._name}"
 
     @property
     def icon(self):
@@ -177,96 +255,93 @@ class SmappeeSensor(Entity):
         return self._state
 
     @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._device_class
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-        if self._location_id:
-            attr["Location Id"] = self._location_id
-            attr["Location Name"] = self._smappee.locations[self._location_id]
-        return attr
-
-    def update(self):
-        """Get the latest data from Smappee and update the state."""
-        self._smappee.update()
-
-        if self._sensor in ["alwayson_today", "solar_today", "power_today"]:
-            data = self._smappee.consumption[self._location_id]
-            if data:
-                consumption = data.get("consumptions")[-1]
-                _LOGGER.debug("%s %s", self._sensor, consumption)
-                value = consumption.get(self._smappe_name)
-                self._state = round(value / 1000, 2)
-        elif self._sensor == "active_cosfi":
-            cosfi = self._smappee.active_cosfi()
-            _LOGGER.debug("%s %s", self._sensor, cosfi)
-            if cosfi:
-                self._state = round(cosfi, 2)
-        elif self._sensor == "current":
-            current = self._smappee.active_current()
-            _LOGGER.debug("%s %s", self._sensor, current)
-            if current:
-                self._state = round(current, 2)
-        elif self._sensor == "voltage":
-            voltage = self._smappee.active_voltage()
-            _LOGGER.debug("%s %s", self._sensor, voltage)
-            if voltage:
-                self._state = round(voltage, 3)
-        elif self._sensor == "active_power":
-            data = self._smappee.instantaneous
-            _LOGGER.debug("%s %s", self._sensor, data)
-            if data:
-                value1 = [
-                    float(i["value"])
-                    for i in data
-                    if i["key"].endswith("phase0ActivePower")
-                ]
-                value2 = [
-                    float(i["value"])
-                    for i in data
-                    if i["key"].endswith("phase1ActivePower")
-                ]
-                value3 = [
-                    float(i["value"])
-                    for i in data
-                    if i["key"].endswith("phase2ActivePower")
-                ]
-                active_power = sum(value1 + value2 + value3) / 1000
-                self._state = round(active_power, 2)
-        elif self._sensor == "solar":
-            data = self._smappee.instantaneous
-            _LOGGER.debug("%s %s", self._sensor, data)
-            if data:
-                value1 = [
-                    float(i["value"])
-                    for i in data
-                    if i["key"].endswith("phase3ActivePower")
-                ]
-                value2 = [
-                    float(i["value"])
-                    for i in data
-                    if i["key"].endswith("phase4ActivePower")
-                ]
-                value3 = [
-                    float(i["value"])
-                    for i in data
-                    if i["key"].endswith("phase5ActivePower")
-                ]
-                power = sum(value1 + value2 + value3) / 1000
-                self._state = round(power, 2)
-        elif self._type == "water":
-            sensor_name, sensor_id = self._sensor.split(":")
-            data = self._smappee.sensor_consumption[self._location_id].get(
-                int(sensor_id)
+    def unique_id(self,):
+        """Return the unique ID for this sensor."""
+        if self._sensor in ["load", "sensor"]:
+            return (
+                f"{self._service_location.device_serial_number}-"
+                f"{self._service_location.service_location_id}-"
+                f"{self._sensor}-{self._sensor_id}"
             )
-            if data:
-                tempdata = data.get("records")
-                if tempdata:
-                    consumption = tempdata[-1]
-                    _LOGGER.debug("%s (%s) %s", sensor_name, sensor_id, consumption)
-                    value = consumption.get(self._smappe_name)
-                    self._state = value
+
+        return (
+            f"{self._service_location.device_serial_number}-"
+            f"{self._service_location.service_location_id}-"
+            f"{self._sensor}"
+        )
+
+    @property
+    def device_info(self):
+        """Return the device info for this sensor."""
+        return {
+            "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
+            "name": self._service_location.service_location_name,
+            "manufacturer": "Smappee",
+            "model": self._service_location.device_model,
+            "sw_version": self._service_location.firmware_version,
+        }
+
+    async def async_update(self):
+        """Get the latest data from Smappee and update the state."""
+        await self._smappee_base.async_update()
+
+        if self._sensor == "total_power":
+            self._state = self._service_location.total_power
+        elif self._sensor == "total_reactive_power":
+            self._state = self._service_location.total_reactive_power
+        elif self._sensor == "solar_power":
+            self._state = self._service_location.solar_power
+        elif self._sensor == "alwayson":
+            self._state = self._service_location.alwayson
+        elif self._sensor in [
+            "phase_voltages_a",
+            "phase_voltages_b",
+            "phase_voltages_c",
+        ]:
+            phase_voltages = self._service_location.phase_voltages
+            if phase_voltages is not None:
+                if self._sensor == "phase_voltages_a":
+                    self._state = phase_voltages[0]
+                elif self._sensor == "phase_voltages_b":
+                    self._state = phase_voltages[1]
+                elif self._sensor == "phase_voltages_c":
+                    self._state = phase_voltages[2]
+        elif self._sensor in ["line_voltages_a", "line_voltages_b", "line_voltages_c"]:
+            line_voltages = self._service_location.line_voltages
+            if line_voltages is not None:
+                if self._sensor == "line_voltages_a":
+                    self._state = line_voltages[0]
+                elif self._sensor == "line_voltages_b":
+                    self._state = line_voltages[1]
+                elif self._sensor == "line_voltages_c":
+                    self._state = line_voltages[2]
+        elif self._sensor in [
+            "power_today",
+            "power_current_hour",
+            "power_last_5_minutes",
+            "solar_today",
+            "solar_current_hour",
+            "alwayson_today",
+        ]:
+            trend_value = self._service_location.aggregated_values.get(self._sensor)
+            self._state = round(trend_value) if trend_value is not None else None
+        elif self._sensor == "load":
+            self._state = self._service_location.measurements.get(
+                self._sensor_id
+            ).active_total
+        elif self._sensor == "sensor":
+            sensor_id, channel_id = self._sensor_id.split("-")
+            sensor = self._service_location.sensors.get(int(sensor_id))
+            for channel in sensor.channels:
+                if channel.get("channel") == int(channel_id):
+                    self._state = channel.get("value_today")

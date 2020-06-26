@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ya est\u00e1 en curso.",
+            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ya est\u00e1 en marcha.",
             "not_konn_panel": "No es un dispositivo Konnected.io reconocido",
             "unknown": "Se produjo un error desconocido"
         },
@@ -23,8 +23,7 @@
                     "host": "Direcci\u00f3n IP del dispositivo Konnected",
                     "port": "Puerto del dispositivo Konnected"
                 },
-                "description": "Introduzca la informaci\u00f3n del host de su panel Konnected.",
-                "title": "Descubrir el dispositivo Konnected"
+                "description": "Introduzca la informaci\u00f3n del host de su panel Konnected."
             }
         }
     },

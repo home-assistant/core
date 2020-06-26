@@ -453,6 +453,11 @@ class ADBDevice(MediaPlayerEntity):
         return {"adb_response": self._adb_response}
 
     @property
+    def media_image_hash(self):
+        """Hash value for media image."""
+        return f"{datetime.now().timestamp()}" if self._screencap else None
+
+    @property
     def name(self):
         """Return the device name."""
         return self._name
@@ -496,11 +501,6 @@ class ADBDevice(MediaPlayerEntity):
     def get_raw_media_data(self):
         """Raw image data."""
         return self.aftv.adb_screencap()
-
-    @property
-    def media_image_hash(self):
-        """Hash value for media image."""
-        return f"{datetime.now().timestamp()}"
 
     @adb_decorator()
     def media_play(self):

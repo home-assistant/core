@@ -6,8 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "\u00d8nsker du \u00e5 sette opp LIFX?",
-                "title": ""
+                "description": "\u00d8nsker du \u00e5 sette opp LIFX?"
             }
         }
     }

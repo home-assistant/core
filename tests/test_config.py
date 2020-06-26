@@ -14,7 +14,6 @@ import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
     CONF_CUSTOMIZE,
@@ -28,6 +27,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import async_get_integration
@@ -202,7 +202,7 @@ def test_core_config_schema():
 
 def test_customize_dict_schema():
     """Test basic customize config validation."""
-    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_HIDDEN: "2"}, {ATTR_ASSUMED_STATE: "2"})
+    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
 
     for val in values:
         print(val)
@@ -210,8 +210,8 @@ def test_customize_dict_schema():
             config_util.CUSTOMIZE_DICT_SCHEMA(val)
 
     assert config_util.CUSTOMIZE_DICT_SCHEMA(
-        {ATTR_FRIENDLY_NAME: 2, ATTR_HIDDEN: "1", ATTR_ASSUMED_STATE: "0"}
-    ) == {ATTR_FRIENDLY_NAME: "2", ATTR_HIDDEN: True, ATTR_ASSUMED_STATE: False}
+        {ATTR_FRIENDLY_NAME: 2, ATTR_ASSUMED_STATE: "0"}
+    ) == {ATTR_FRIENDLY_NAME: "2", ATTR_ASSUMED_STATE: False}
 
 
 def test_customize_glob_is_ordered():
@@ -1029,6 +1029,7 @@ async def test_component_config_exceptions(hass, caplog):
         ("non_existing", vol.Schema({"zone": int}), None),
         ("zone", vol.Schema({}), None),
         ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),
+        ("openuv", cv.deprecated("openuv", invalidation_version="0.115"), None),
     ],
 )
 def test_identify_config_schema(domain, schema, expected):

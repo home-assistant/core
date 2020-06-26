@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller site is already configured",
-            "no_local_user": "No local user found, configure a local account on controller and try again",
-            "user_privilege": "User needs to be administrator"
+            "already_configured": "Controller site is already configured"
         },
         "error": {
             "faulty_credentials": "Invalid authentication",
@@ -29,7 +27,6 @@
             "client_control": {
                 "data": {
                     "block_client": "Network access controlled clients",
-                    "new_client": "Add new client for network access control",
                     "poe_clients": "Allow POE control of clients"
                 },
                 "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",

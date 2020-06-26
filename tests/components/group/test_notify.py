@@ -63,8 +63,9 @@ class TestNotifyGroup(unittest.TestCase):
         ).result()
 
         assert self.service is not None
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

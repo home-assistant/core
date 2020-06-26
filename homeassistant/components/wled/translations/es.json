@@ -13,8 +13,7 @@
                 "data": {
                     "host": "Host o direcci\u00f3n IP"
                 },
-                "description": "Configura el WLED para integrarlo con Home Assistant.",
-                "title": "Vincula tu WLED"
+                "description": "Configura el WLED para integrarlo con Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "\u00bfQuieres a\u00f1adir el WLED `{name}` a Home Assistant?",

@@ -17,8 +17,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Enter your Roku information.",
-                "title": "Roku"
+                "description": "Enter your Roku information."
             }
         }
     }

@@ -24,13 +24,13 @@
     },
     "state": {
         "_": {
-            "armed": "Armado",
+            "armed": "Armada",
             "armed_away": "Armada ausente",
             "armed_custom_bypass": "Armada personalizada",
             "armed_home": "Armada en casa",
             "armed_night": "Armada noche",
             "arming": "Armando",
-            "disarmed": "Desarmado",
+            "disarmed": "Desarmada",
             "disarming": "Desarmando",
             "pending": "Pendiente",
             "triggered": "Disparada"

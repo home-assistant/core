@@ -16,8 +16,7 @@
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 },
-                "description": "Vols configurar {name}?",
-                "title": "AVM FRITZ!Box"
+                "description": "Vols configurar {name}?"
             },
             "user": {
                 "data": {
@@ -25,8 +24,7 @@
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 },
-                "description": "Introdueix la teva informaci\u00f3 de AVM FRITZ!Box.",
-                "title": "AVM FRITZ!Box"
+                "description": "Introdueix la teva informaci\u00f3 de AVM FRITZ!Box."
             }
         }
     }

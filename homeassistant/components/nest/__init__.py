@@ -10,6 +10,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_FILENAME,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
@@ -37,8 +39,6 @@ DATA_NEST_CONFIG = "nest_config"
 SIGNAL_NEST_UPDATE = "nest_update"
 
 NEST_CONFIG_FILE = "nest.conf"
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 ATTR_ETA = "eta"
 ATTR_ETA_WINDOW = "eta_window"
