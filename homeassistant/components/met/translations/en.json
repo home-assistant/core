@@ -9,8 +9,7 @@
                     "elevation": "Elevation",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "name": "Name",
-                    "mode": "Mode"
+                    "name": "Name"
                 },
                 "description": "Meteorologisk institutt",
                 "title": "Location"
