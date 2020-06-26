@@ -119,7 +119,7 @@ class Touchline(ClimateEntity):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return list(PRESET_MODES.keys())
+        return list(PRESET_MODES)
 
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
