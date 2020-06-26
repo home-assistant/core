@@ -128,7 +128,7 @@ class SkyHubDeviceScanner(DeviceScanner):
             return
         except (OSError, RuntimeError) as err:
             if not self.success_init:
-                message = f"Eror parsing data at initialisation for {self.host}, is this a Sky Router?"
+                message = f"Error parsing data at initialisation for {self.host}, is this a Sky Router?"
             else:
                 message = f"Invalid response from Sky Hub: {err}"
             self._log_message(
