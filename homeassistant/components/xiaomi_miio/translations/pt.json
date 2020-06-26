@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "Endere\u00e7o IP"
+                }
+            }
+        }
+    }
+}

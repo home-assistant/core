@@ -10,7 +10,6 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ALIAS,
     CONF_ICON,
-    EVENT_SCRIPT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -40,6 +39,8 @@ CONF_FIELDS = "fields"
 CONF_SEQUENCE = "sequence"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+
+EVENT_SCRIPT_STARTED = "script_started"
 
 SCRIPT_ENTRY_SCHEMA = vol.Schema(
     {
@@ -81,13 +82,11 @@ def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
     component = hass.data[DOMAIN]
 
-    results = []
-
-    for script_entity in component.entities:
-        if entity_id in script_entity.script.referenced_entities:
-            results.append(script_entity.entity_id)
-
-    return results
+    return [
+        script_entity.entity_id
+        for script_entity in component.entities
+        if entity_id in script_entity.script.referenced_entities
+    ]
 
 
 @callback
@@ -114,13 +113,11 @@ def scripts_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
 
     component = hass.data[DOMAIN]
 
-    results = []
-
-    for script_entity in component.entities:
-        if device_id in script_entity.script.referenced_devices:
-            results.append(script_entity.entity_id)
-
-    return results
+    return [
+        script_entity.entity_id
+        for script_entity in component.entities
+        if device_id in script_entity.script.referenced_devices
+    ]
 
 
 @callback
@@ -259,8 +256,7 @@ class ScriptEntity(ToggleEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        attrs = {}
-        attrs[ATTR_LAST_TRIGGERED] = self.script.last_triggered
+        attrs = {ATTR_LAST_TRIGGERED: self.script.last_triggered}
         if self.script.can_cancel:
             attrs[ATTR_CAN_CANCEL] = self.script.can_cancel
         if self.script.last_action:

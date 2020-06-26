@@ -128,6 +128,8 @@ async def test_sensor(
     zha_device = await zha_device_joined_restored(zigpy_device)
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
 
+    await async_enable_traffic(hass, [zha_device], enabled=False)
+    await hass.async_block_till_done()
     # ensure the sensor entity was created
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
@@ -247,6 +249,7 @@ async def test_temp_uom(
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
 
     if not restore:
+        await async_enable_traffic(hass, [zha_device], enabled=False)
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and devices

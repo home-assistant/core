@@ -15,6 +15,7 @@
             "not_found": "Serveur Plex introuvable",
             "ssl_error": "Probl\u00e8me de certificat SSL"
         },
+        "flow_title": "{name} ( {host} )",
         "step": {
             "manual_setup": {
                 "data": {

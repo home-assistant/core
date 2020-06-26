@@ -4,8 +4,8 @@
             "already_configured": "Kontroller Site ass scho konfigur\u00e9iert"
         },
         "error": {
-            "faulty_credentials": "Ong\u00eblteg Login Informatioune",
-            "service_unavailable": "Keen Service disponibel",
+            "faulty_credentials": "Ong\u00eblteg Authentifikatioun",
+            "service_unavailable": "Feeler beim verbannen",
             "unknown_client_mac": "Kee Cliwent mat der MAC Adress disponibel"
         },
         "step": {
@@ -43,12 +43,6 @@
                 },
                 "description": "Apparate verfollegen ariichten",
                 "title": "UniFi Optiounen 1/3"
-            },
-            "init": {
-                "data": {
-                    "one": "Een",
-                    "other": "M\u00e9i"
-                }
             },
             "simple_options": {
                 "data": {

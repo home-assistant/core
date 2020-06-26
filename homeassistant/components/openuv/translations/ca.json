@@ -5,7 +5,7 @@
         },
         "error": {
             "identifier_exists": "Les coordenades ja estan registrades",
-            "invalid_api_key": "Clau API no v\u00e0lida"
+            "invalid_api_key": "Clau API inv\u00e0lida"
         },
         "step": {
             "user": {

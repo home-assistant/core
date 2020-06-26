@@ -66,6 +66,7 @@ async def test_form_import(hass):
                 "name": "friend",
                 "activity": "Watch TV",
                 "delay_secs": 0.9,
+                "activity_notify": True,
                 "unique_id": "555234534543",
             },
         )
@@ -78,6 +79,7 @@ async def test_form_import(hass):
         "name": "friend",
         "activity": "Watch TV",
         "delay_secs": 0.9,
+        "activity_notify": True,
     }
     # It is not possible to import options at this time
     # so they end up in the config entry data and are
@@ -148,6 +150,7 @@ async def test_form_cannot_connect(hass):
                 "name": "friend",
                 "activity": "Watch TV",
                 "delay_secs": 0.2,
+                "activity_notify": True,
             },
         )
 

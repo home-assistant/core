@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "network_key": "Netzwerkschl\u00fcssel (leer lassen, um automatisch zu generieren)",
-                    "usb_path": "USB-Pfad"
+                    "usb_path": "USB-Ger\u00e4t Pfad"
                 },
                 "description": "Informationen zu den Konfigurationsvariablen findest du unter https://www.home-assistant.io/docs/z-wave/installation/",
                 "title": "Z-Wave einrichten"
@@ -27,7 +27,7 @@
         },
         "query_stage": {
             "dead": "Nicht erreichbar ({query_stage})",
-            "initializing": "Initialisiere ({query_stage})"
+            "initializing": "Initialisiere"
         }
     }
 }

@@ -158,6 +158,17 @@ async def test_config_flow_zeroconf_invalid(hass):
     )  # doesn't create the entry, tries to show form but gets abort
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "not_forked_daapd"
+    # test with svn mtd-version from Firefly
+    discovery_info = {
+        "host": "127.0.0.1",
+        "port": 23,
+        "properties": {"mtd-version": "svn-1676", "Machine Name": "firefly"},
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )  # doesn't create the entry, tries to show form but gets abort
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "not_forked_daapd"
 
 
 async def test_config_flow_zeroconf_valid(hass):

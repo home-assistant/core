@@ -167,7 +167,7 @@ class WebSocketHandler:
 
         # As the webserver is now started before the start
         # event we do not want to block for websocket responses
-        self._writer_task = self.hass.loop.create_task(self._writer())
+        self._writer_task = asyncio.create_task(self._writer())
 
         auth = AuthPhase(self._logger, self.hass, self._send_message, request)
         connection = None

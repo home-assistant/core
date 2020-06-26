@@ -9,7 +9,7 @@ from homeassistant.components.calendar import PLATFORM_SCHEMA, CalendarEventDevi
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.util import Throttle, dt
+from homeassistant.util import dt
 
 from .const import (
     ALL_DAY,
@@ -84,7 +84,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -302,8 +302,7 @@ class TodoistProjectData:
     platform itself, but are not used by this component at all.
 
     The 'update' method polls the Todoist API for new projects/tasks, as well
-    as any updates to current projects/tasks. This is throttled to every
-    MIN_TIME_BETWEEN_UPDATES minutes.
+    as any updates to current projects/tasks. This occurs every SCAN_INTERVAL minutes.
     """
 
     def __init__(
@@ -514,7 +513,6 @@ class TodoistProjectData:
                 events.append(event)
         return events
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
         if self._id is None:

@@ -12,8 +12,8 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "key": "Clave de autenticaci\u00f3n (s\u00f3lo utilizada por dispositivos BRP072C/Zena)",
-                    "password": "Contrase\u00f1a del dispositivo (s\u00f3lo utilizada por dispositivos SKYFi)"
+                    "key": "Clave API",
+                    "password": "Contrase\u00f1a"
                 },
                 "description": "Introduce la IP de tu aire acondicionado Daikin",
                 "title": "Configurar aire acondicionado Daikin"

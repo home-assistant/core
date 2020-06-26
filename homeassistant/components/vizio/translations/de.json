@@ -4,6 +4,7 @@
             "updated_entry": "Dieser Eintrag wurde bereits eingerichtet, aber der Name, die Apps und / oder die in der Konfiguration definierten Optionen stimmen nicht mit der zuvor importierten Konfiguration \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
         },
         "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "host_exists": "VIZIO-Ger\u00e4t mit angegebenem Host bereits konfiguriert.",
             "name_exists": "VIZIO-Ger\u00e4t mit angegebenem Namen bereits konfiguriert."
         },
@@ -27,7 +28,7 @@
                 "data": {
                     "access_token": "Zugangstoken",
                     "device_class": "Ger\u00e4tetyp",
-                    "host": "<Host/IP>:<Port>",
+                    "host": "Host",
                     "name": "Name"
                 },
                 "description": "Ein Zugriffstoken wird nur f\u00fcr Fernsehger\u00e4te ben\u00f6tigt. Wenn Sie ein Fernsehger\u00e4t konfigurieren und noch kein Zugriffstoken haben, lassen Sie es leer, um einen Pairing-Vorgang durchzuf\u00fchren.",

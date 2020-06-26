@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Smile gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "invalid_auth": "Autenticazione non valida. Controllare gli 8 caratteri dell'ID Smile",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Indirizzo IP Smile",
+                    "password": "ID Smile"
+                },
+                "description": "Dettagli",
+                "title": "Connettersi al dispositivo"
+            }
+        }
+    }
+}

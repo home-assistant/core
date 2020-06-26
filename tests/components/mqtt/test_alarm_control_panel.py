@@ -17,8 +17,10 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
+from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -40,11 +42,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import (
-    assert_setup_component,
-    async_fire_mqtt_message,
-    async_setup_component,
-)
+from tests.common import assert_setup_component, async_fire_mqtt_message
 from tests.components.alarm_control_panel import common
 
 CODE_NUMBER = "1234"
@@ -107,6 +105,7 @@ async def test_update_state_via_state_topic(hass, mqtt_mock):
     assert await async_setup_component(
         hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
     )
+    await hass.async_block_till_done()
 
     entity_id = "alarm_control_panel.test"
 
@@ -132,6 +131,7 @@ async def test_ignore_update_state_if_unknown_via_state_topic(hass, mqtt_mock):
     assert await async_setup_component(
         hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
     )
+    await hass.async_block_till_done()
 
     entity_id = "alarm_control_panel.test"
 
@@ -146,6 +146,7 @@ async def test_arm_home_publishes_mqtt(hass, mqtt_mock):
     assert await async_setup_component(
         hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
     )
+    await hass.async_block_till_done()
 
     await common.async_alarm_arm_home(hass)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -175,6 +176,7 @@ async def test_arm_home_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN]["code_arm_required"] = False
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    await hass.async_block_till_done()
 
     await common.async_alarm_arm_home(hass)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -187,6 +189,7 @@ async def test_arm_away_publishes_mqtt(hass, mqtt_mock):
     assert await async_setup_component(
         hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
     )
+    await hass.async_block_till_done()
 
     await common.async_alarm_arm_away(hass)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -216,6 +219,7 @@ async def test_arm_away_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN]["code_arm_required"] = False
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    await hass.async_block_till_done()
 
     await common.async_alarm_arm_away(hass)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -228,6 +232,7 @@ async def test_arm_night_publishes_mqtt(hass, mqtt_mock):
     assert await async_setup_component(
         hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
     )
+    await hass.async_block_till_done()
 
     await common.async_alarm_arm_night(hass)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -257,6 +262,7 @@ async def test_arm_night_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN]["code_arm_required"] = False
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    await hass.async_block_till_done()
 
     await common.async_alarm_arm_night(hass)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -278,6 +284,7 @@ async def test_arm_custom_bypass_publishes_mqtt(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     await common.async_alarm_arm_custom_bypass(hass)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -306,6 +313,7 @@ async def test_arm_custom_bypass_not_publishes_mqtt_with_invalid_code_when_req(
             }
         },
     )
+    await hass.async_block_till_done()
 
     call_count = mqtt_mock.async_publish.call_count
     await common.async_alarm_arm_custom_bypass(hass, "abcd")
@@ -331,6 +339,7 @@ async def test_arm_custom_bypass_publishes_mqtt_when_code_not_req(hass, mqtt_moc
             }
         },
     )
+    await hass.async_block_till_done()
 
     await common.async_alarm_arm_custom_bypass(hass)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -343,6 +352,7 @@ async def test_disarm_publishes_mqtt(hass, mqtt_mock):
     assert await async_setup_component(
         hass, alarm_control_panel.DOMAIN, DEFAULT_CONFIG,
     )
+    await hass.async_block_till_done()
 
     await common.async_alarm_disarm(hass)
     mqtt_mock.async_publish.assert_called_once_with("alarm/command", "DISARM", 0, False)
@@ -359,6 +369,7 @@ async def test_disarm_publishes_mqtt_with_template(hass, mqtt_mock):
         '{"action":"{{ action }}",' '"code":"{{ code }}"}'
     )
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    await hass.async_block_till_done()
 
     await common.async_alarm_disarm(hass, 1234)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -375,6 +386,7 @@ async def test_disarm_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
     config[alarm_control_panel.DOMAIN]["code"] = "1234"
     config[alarm_control_panel.DOMAIN]["code_disarm_required"] = False
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config,)
+    await hass.async_block_till_done()
 
     await common.async_alarm_disarm(hass)
     mqtt_mock.async_publish.assert_called_once_with("alarm/command", "DISARM", 0, False)
@@ -414,6 +426,7 @@ async def test_update_state_via_state_topic_template(hass, mqtt_mock):
             }
         },
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("alarm_control_panel.test")
     assert state.state == STATE_UNKNOWN
@@ -430,6 +443,7 @@ async def test_attributes_code_number(hass, mqtt_mock):
     config[alarm_control_panel.DOMAIN]["code"] = CODE_NUMBER
 
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+    await hass.async_block_till_done()
 
     state = hass.states.get("alarm_control_panel.test")
     assert (
@@ -444,11 +458,19 @@ async def test_attributes_code_text(hass, mqtt_mock):
     config[alarm_control_panel.DOMAIN]["code"] = CODE_TEXT
 
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+    await hass.async_block_till_done()
 
     state = hass.states.get("alarm_control_panel.test")
     assert (
         state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
         == alarm_control_panel.FORMAT_TEXT
+    )
+
+
+async def test_availability_when_connection_lost(hass, mqtt_mock):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG_CODE
     )
 
 
@@ -508,7 +530,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one alarm per unique_id."""
     config = {
         alarm_control_panel.DOMAIN: [
@@ -528,7 +550,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, alarm_control_panel.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, alarm_control_panel.DOMAIN, config)
 
 
 async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):

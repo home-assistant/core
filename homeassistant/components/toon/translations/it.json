@@ -4,7 +4,7 @@
             "client_id": "L'ID client dalla configurazione non \u00e8 valido.",
             "client_secret": "Il client segreto della configurazione non \u00e8 valido.",
             "no_agreements": "Questo account non ha display Toon.",
-            "no_app": "\u00c8 necessario configurare Toon prima di poter eseguire l'autenticazione con esso. [Si prega di leggere le istruzioni] (https://www.home-assistant.io/components/toon/).",
+            "no_app": "\u00c8 necessario configurare Toon prima di poter eseguire l'autenticazione con esso. [Si prega di leggere le istruzioni](https://www.home-assistant.io/components/toon/).",
             "unknown_auth_fail": "Si \u00e8 verificato un errore imprevisto durante l'autenticazione."
         },
         "error": {

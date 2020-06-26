@@ -79,6 +79,7 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitS
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from homeassistant.auth import AuthManager
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
 
@@ -174,6 +175,7 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
+    auth: "AuthManager"
     http: "HomeAssistantHTTP" = None  # type: ignore
     config_entries: "ConfigEntries" = None  # type: ignore
 
@@ -261,11 +263,11 @@ class HomeAssistant:
         This method is a coroutine.
         """
         _LOGGER.info("Starting Home Assistant")
-        self.state = CoreState.starting
-
         setattr(self.loop, "_thread_ident", threading.get_ident())
-        self.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+        self.state = CoreState.starting
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
@@ -291,8 +293,9 @@ class HomeAssistant:
             return
 
         self.state = CoreState.running
-        _async_create_timer(self)
+        self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        _async_create_timer(self)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.
@@ -736,14 +739,12 @@ class State:
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
-        # Temp, because database can still store invalid entity IDs
-        # Remove with 1.0 or in 2020.
-        temp_invalid_id_bypass: Optional[bool] = False,
+        validate_entity_id: Optional[bool] = True,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
 
-        if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
+        if validate_entity_id and not valid_entity_id(entity_id):
             raise InvalidEntityFormatError(
                 f"Invalid entity id encountered: {entity_id}. "
                 "Format should be <domain>.<object_id>"
@@ -1331,6 +1332,9 @@ class Config:
         # List of allowed external dirs to access
         self.whitelist_external_dirs: Set[str] = set()
 
+        # List of allowed external URLs that integrations may use
+        self.allowlist_external_urls: Set[str] = set()
+
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
 
@@ -1351,6 +1355,16 @@ class Config:
         if self.config_dir is None:
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
+
+    def is_allowed_external_url(self, url: str) -> bool:
+        """Check if an external URL is allowed."""
+        parsed_url = f"{str(yarl.URL(url))}/"
+
+        return any(
+            allowed
+            for allowed in self.allowlist_external_urls
+            if parsed_url.startswith(allowed)
+        )
 
     def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""
@@ -1394,6 +1408,7 @@ class Config:
             "components": self.components,
             "config_dir": self.config_dir,
             "whitelist_external_dirs": self.whitelist_external_dirs,
+            "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,

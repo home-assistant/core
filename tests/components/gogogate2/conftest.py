@@ -1,11 +1,12 @@
 """Fixtures for tests."""
 
-from mock import patch
 import pytest
 
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory
+
+from tests.async_mock import patch
 
 
 @pytest.fixture()

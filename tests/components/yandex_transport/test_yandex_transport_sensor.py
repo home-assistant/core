@@ -6,10 +6,11 @@ import pytest
 
 import homeassistant.components.sensor as sensor
 from homeassistant.const import CONF_NAME
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
-from tests.common import assert_setup_component, async_setup_component, load_fixture
+from tests.common import assert_setup_component, load_fixture
 
 REPLY = json.loads(load_fixture("yandex_transport_reply.json"))
 
@@ -50,6 +51,7 @@ async def assert_setup_sensor(hass, config, count=1):
     """Set up the sensor and assert it's been created."""
     with assert_setup_component(count):
         assert await async_setup_component(hass, sensor.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_setup_platform_valid_config(hass, mock_requester):

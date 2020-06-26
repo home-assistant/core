@@ -23,5 +23,16 @@
                 "title": "Logg p\u00e5 med Blink-konto"
             }
         }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Skanneintervall (sekunder)"
+                },
+                "description": "Konfigurer Blink-integrasjon",
+                "title": "Alternativer for Blink"
+            }
+        }
     }
 }

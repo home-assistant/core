@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Der DirecTV-Empf\u00e4nger ist bereits konfiguriert",
+            "already_configured": "Das Ger\u00e4t ist bereits konfiguriert.",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "flow_title": "DirecTV: {name}",
         "step": {
@@ -18,7 +18,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host oder IP-Adresse"
+                    "host": "Host"
                 }
             }
         }

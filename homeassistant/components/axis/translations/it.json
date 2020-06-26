@@ -24,5 +24,15 @@
                 "title": "Impostazione del dispositivo Axis"
             }
         }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Selezionare il profilo di flusso da utilizzare"
+                },
+                "title": "Opzioni del flusso video del dispositivo Axis"
+            }
+        }
     }
 }

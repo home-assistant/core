@@ -289,6 +289,7 @@ async def test_query_message(hass):
 async def test_execute(hass):
     """Test an execute command."""
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True
@@ -768,10 +769,16 @@ async def test_device_media_player(hass, device_class, google_type):
             "agentUserId": "test-agent",
             "devices": [
                 {
-                    "attributes": {},
+                    "attributes": {
+                        "supportActivityState": True,
+                        "supportPlaybackState": True,
+                    },
                     "id": sensor.entity_id,
                     "name": {"name": sensor.name},
-                    "traits": ["action.devices.traits.OnOff"],
+                    "traits": [
+                        "action.devices.traits.OnOff",
+                        "action.devices.traits.MediaState",
+                    ],
                     "type": google_type,
                     "willReportState": False,
                 }

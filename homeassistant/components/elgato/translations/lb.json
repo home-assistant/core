@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Numm oder IP Adresse",
-                    "port": "Port Nummer"
+                    "host": "Host",
+                    "port": "Port"
                 },
                 "description": "\u00c4ren Elgator Key Light als Integratioun mam Home Assistant ariichten."
             },

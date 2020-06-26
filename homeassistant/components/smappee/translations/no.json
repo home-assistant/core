@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
+            "missing_configuration": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            }
+        }
+    }
+}

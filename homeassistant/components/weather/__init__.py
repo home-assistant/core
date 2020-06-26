@@ -19,6 +19,7 @@ ATTR_CONDITION_CLASS = "condition_class"
 ATTR_FORECAST = "forecast"
 ATTR_FORECAST_CONDITION = "condition"
 ATTR_FORECAST_PRECIPITATION = "precipitation"
+ATTR_FORECAST_PRECIPITATION_PROBABILITY = "precipitation_probability"
 ATTR_FORECAST_TEMP = "temperature"
 ATTR_FORECAST_TEMP_LOW = "templow"
 ATTR_FORECAST_TIME = "datetime"
@@ -114,7 +115,7 @@ class WeatherEntity(Entity):
 
     @property
     def precision(self):
-        """Return the forecast."""
+        """Return the precision of the temperature value."""
         return (
             PRECISION_TENTHS
             if self.temperature_unit == TEMP_CELSIUS

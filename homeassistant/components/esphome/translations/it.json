@@ -26,7 +26,7 @@
                     "host": "Host",
                     "port": "Porta"
                 },
-                "description": "Inserisci le impostazioni di connessione del tuo nodo [ESPHome] (https://esphomelib.com/)."
+                "description": "Inserisci le impostazioni di connessione del tuo nodo [ESPHome](https://esphomelib.com/)."
             }
         }
     }

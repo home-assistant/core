@@ -21,7 +21,7 @@
             "link": {
                 "data": {
                     "password": "Passwuert",
-                    "port": "Port (Optionell)",
+                    "port": "Port",
                     "ssl": "Benotz SSL/TLS fir d'Verbindung mam NAS",
                     "username": "Benotzernumm"
                 },
@@ -32,7 +32,7 @@
                 "data": {
                     "host": "Apparat",
                     "password": "Passwuert",
-                    "port": "Port (Optionell)",
+                    "port": "Port",
                     "ssl": "Benotzt SSL/TLS fir sech mam NAS ze verbannen",
                     "username": "Benotzernumm"
                 },

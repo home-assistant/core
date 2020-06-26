@@ -42,6 +42,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     __version__,
 )
 import homeassistant.util.dt as dt_util
@@ -88,7 +89,7 @@ async def test_home_accessory(hass, hk_driver):
     entity_id2 = "light.accessory"
 
     hass.states.async_set(entity_id, None)
-    hass.states.async_set(entity_id2, None)
+    hass.states.async_set(entity_id2, STATE_UNAVAILABLE)
 
     await hass.async_block_till_done()
 
@@ -98,6 +99,7 @@ async def test_home_accessory(hass, hk_driver):
     assert acc.hass == hass
     assert acc.display_name == "Home Accessory"
     assert acc.aid == 2
+    assert acc.available is True
     assert acc.category == 1  # Category.OTHER
     assert len(acc.services) == 1
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
@@ -127,6 +129,7 @@ async def test_home_accessory(hass, hk_driver):
             ATTR_INTERGRATION: "luxe",
         },
     )
+    assert acc3.available is False
     serv = acc3.services[0]  # SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Lux Brands"

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquesta clau API ja est\u00e0 sent utilitzada."
+            "already_configured": "Aquestes coordenades o Node/Pro ID ja estan registrades."
         },
         "error": {
             "general_error": "S'ha produ\u00eft un error desconegut.",
@@ -32,7 +32,7 @@
                     "node_pro": "AirVisual Node Pro",
                     "type": "Tipus d'integraci\u00f3"
                 },
-                "description": "Monitoritzaci\u00f3 de la qualitat de l'aire per ubicaci\u00f3 geogr\u00e0fica.",
+                "description": "Tria quin tipus de dades d'AirVisual vols monitoritzar.",
                 "title": "Configura AirVisual"
             }
         }

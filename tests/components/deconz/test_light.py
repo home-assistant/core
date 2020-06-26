@@ -46,6 +46,8 @@ LIGHTS = {
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     },
     "2": {
+        "ctmax": 454,
+        "ctmin": 155,
         "id": "Tunable white light id",
         "name": "Tunable white light",
         "state": {"on": True, "colormode": "ct", "ct": 2500, "reachable": True},
@@ -111,6 +113,8 @@ async def test_lights_and_groups(hass):
     tunable_white_light = hass.states.get("light.tunable_white_light")
     assert tunable_white_light.state == "on"
     assert tunable_white_light.attributes["color_temp"] == 2500
+    assert tunable_white_light.attributes["max_mireds"] == 454
+    assert tunable_white_light.attributes["min_mireds"] == 155
     assert tunable_white_light.attributes["supported_features"] == 2
 
     on_off_light = hass.states.get("light.on_off_light")
@@ -184,6 +188,26 @@ async def test_lights_and_groups(hass):
             "/lights/1/state",
             json={"xy": (0.411, 0.351), "alert": "lselect", "effect": "none"},
         )
+
+    with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
+        await hass.services.async_call(
+            light.DOMAIN,
+            light.SERVICE_TURN_OFF,
+            {"entity_id": "light.rgb_light", "transition": 5, "flash": "short"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert not set_callback.called
+
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "1",
+        "state": {"on": True},
+    }
+    gateway.api.event_handler(state_changed_event)
+    await hass.async_block_till_done()
 
     with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
