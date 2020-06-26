@@ -4,7 +4,7 @@ import ssl
 import time
 from urllib.parse import urlparse
 
-from plexapi.exceptions import NotFound, Unauthorized
+from plexapi.exceptions import BadRequest, NotFound, Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -98,7 +98,7 @@ class PlexServer:
         if not self._plex_account and self._use_plex_tv:
             try:
                 self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
-            except Unauthorized:
+            except (BadRequest, Unauthorized):
                 self._use_plex_tv = False
                 _LOGGER.error("Not authorized to access plex.tv with provided token")
                 raise
