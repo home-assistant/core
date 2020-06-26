@@ -8,8 +8,7 @@
           "name": "Name",
           "latitude": "Latitude",
           "longitude": "Longitude",
-          "elevation": "Elevation",
-          "mode": "Mode"
+          "elevation": "Elevation"
         }
       }
     },

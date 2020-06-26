@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MODE,
     CONF_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     LENGTH_FEET,
@@ -28,7 +27,7 @@ from homeassistant.util.distance import convert as convert_distance
 import homeassistant.util.dt as dt_util
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import CONF_TRACK_HOME, FORECAST_MODE, DEFAULT_MODE
+from .const import CONF_TRACK_HOME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +49,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
         vol.Optional(CONF_ELEVATION): int,
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(FORECAST_MODE),
     }
 )
 
@@ -65,22 +63,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if config.get(CONF_LATITUDE) is None:
         config[CONF_TRACK_HOME] = True
 
-    async_add_entities([MetWeather(config, hass.config.units.is_metric)])
+    async_add_entities([MetWeather(config, hass.config.units.is_metric, False)])
+    async_add_entities([MetWeather(config, hass.config.units.is_metric, True)])
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    async_add_entities([MetWeather(config_entry.data, hass.config.units.is_metric)])
+    async_add_entities([MetWeather(config_entry.data, hass.config.units.is_metric, False)])
+    async_add_entities([MetWeather(config_entry.data, hass.config.units.is_metric, True)])
 
 
 class MetWeather(WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
-    def __init__(self, config, is_metric):
+    def __init__(self, config, is_metric, hourly):
         """Initialise the platform with a data instance and site."""
         self._config = config
         self._is_metric = is_metric
-        self._hourly = bool(config.get(CONF_MODE, DEFAULT_MODE) == "hourly")
+        self._hourly = hourly
+        self._name_appendix = "-hourly" if hourly else ""
         self._unsub_track_home = None
         self._unsub_fetch_data = None
         self._weather_data = None
@@ -181,9 +182,9 @@ class MetWeather(WeatherEntity):
     def unique_id(self):
         """Return unique ID."""
         if self.track_home:
-            return "home"
+            return f"home{self._name_appendix}"
 
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}"
+        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{self._name_appendix}"
 
     @property
     def name(self):
@@ -191,12 +192,12 @@ class MetWeather(WeatherEntity):
         name = self._config.get(CONF_NAME)
 
         if name is not None:
-            return name
+            return f"{name}{self._name_appendix}"
 
         if self.track_home:
-            return self.hass.config.location_name
+            return f"{self.hass.config.location_name}{self._name_appendix}"
 
-        return DEFAULT_NAME
+        return f"{DEFAULT_NAME}{self._name_appendix}"
 
     @property
     def condition(self):

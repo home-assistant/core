@@ -2,23 +2,11 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_ELEVATION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_MODE,
-)
+from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    CONF_TRACK_HOME,
-    DOMAIN,
-    HOME_LOCATION_NAME,
-    FORECAST_MODE,
-    DEFAULT_MODE,
-)
+from .const import CONF_TRACK_HOME, DOMAIN, HOME_LOCATION_NAME
 
 
 @callback
@@ -78,9 +66,6 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
                     vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
                     vol.Required(CONF_ELEVATION, default=elevation): int,
-                    vol.Required(CONF_MODE, default=DEFAULT_MODE): vol.In(
-                        FORECAST_MODE
-                    ),
                 }
             ),
             errors=self._errors,
