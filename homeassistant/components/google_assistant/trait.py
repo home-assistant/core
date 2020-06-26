@@ -1336,7 +1336,7 @@ class ModesTrait(_Trait):
             )
             return
 
-        elif self.state.domain == humidifier.DOMAIN:
+        if self.state.domain == humidifier.DOMAIN:
             requested_mode = settings["mode"]
             await self.hass.services.async_call(
                 humidifier.DOMAIN,
