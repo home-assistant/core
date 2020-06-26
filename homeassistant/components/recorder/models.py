@@ -64,7 +64,7 @@ class Events(Base):  # type: ignore
             context_parent_id=event.context.parent_id,
         )
 
-    def to_native(self):
+    def to_native(self, validate_entity_id=True):
         """Convert to a natve HA Event."""
         context = Context(
             id=self.context_id,
@@ -183,7 +183,7 @@ class RecorderRuns(Base):  # type: ignore
 
         return [row[0] for row in query]
 
-    def to_native(self):
+    def to_native(self, validate_entity_id=True):
         """Return self, native format is this model."""
         return self
 
