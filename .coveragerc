@@ -217,7 +217,6 @@ omit =
     homeassistant/components/enigma2/media_player.py
     homeassistant/components/enocean/__init__.py
     homeassistant/components/enocean/binary_sensor.py
-    homeassistant/components/enocean/
     homeassistant/components/enocean/const.py
     homeassistant/components/enocean/device.py
     homeassistant/components/enocean/dongle.py
