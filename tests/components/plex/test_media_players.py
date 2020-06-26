@@ -23,8 +23,8 @@ async def test_plex_tv_clients(hass):
     mock_plex_account = MockPlexAccount()
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ):
+        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
+    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -37,9 +37,7 @@ async def test_plex_tv_clients(hass):
         for x in mock_plex_account.resources()
         if x.name.startswith("plex.tv Resource Player")
     )
-    with patch(
-        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
-    ), patch.object(resource, "connect", side_effect=NotFound):
+    with patch.object(resource, "connect", side_effect=NotFound):
         await plex_server._async_update_platforms()
         await hass.async_block_till_done()
 
@@ -49,16 +47,15 @@ async def test_plex_tv_clients(hass):
     await hass.config_entries.async_unload(entry.entry_id)
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ):
+        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
+    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
-    with patch("plexapi.myplex.MyPlexAccount", return_value=mock_plex_account):
-        await plex_server._async_update_platforms()
-        await hass.async_block_till_done()
+    await plex_server._async_update_platforms()
+    await hass.async_block_till_done()
 
     media_players_after = len(hass.states.async_entity_ids("media_player"))
     assert media_players_after == media_players_before + 1
@@ -70,22 +67,20 @@ async def test_plex_tv_clients(hass):
     mock_plex_server.clear_sessions()
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ):
+        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
+    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
-    with patch("plexapi.myplex.MyPlexAccount", return_value=mock_plex_account):
-        await plex_server._async_update_platforms()
-        await hass.async_block_till_done()
+    await plex_server._async_update_platforms()
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids("media_player")) == 1
 
     # Ensure cache gets called
-    with patch("plexapi.myplex.MyPlexAccount", return_value=mock_plex_account):
-        await plex_server._async_update_platforms()
-        await hass.async_block_till_done()
+    await plex_server._async_update_platforms()
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids("media_player")) == 1
