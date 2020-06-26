@@ -5,6 +5,7 @@ import json
 import logging
 import time
 
+import sqlalchemy
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import aliased
 import voluptuous as vol
@@ -28,7 +29,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_EXCLUDE,
     CONF_INCLUDE,
     EVENT_HOMEASSISTANT_START,
@@ -66,6 +66,8 @@ DOMAIN = "logbook"
 GROUP_BY_MINUTES = 15
 
 EMPTY_JSON_OBJECT = "{}"
+UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
+
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
@@ -414,6 +416,15 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
                     & (States.state != old_state.state)
                 )
             )
+            #
+            # Prefilter out continuous domains that have
+            # ATTR_UNIT_OF_MEASUREMENT as its much faster in sql.
+            #
+            .filter(
+                (Events.event_type != EVENT_STATE_CHANGED)
+                | sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS))
+                | sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON))
+            )
             .filter(
                 Events.event_type.in_(ALL_EVENT_TYPES + list(hass.data.get(DOMAIN, {})))
             )
@@ -448,12 +459,6 @@ def _keep_event(hass, event, entities_filter, entity_attr_cache):
         # Do not report on new entities
         # Do not report on entity removal
         if not event.has_old_and_new_state:
-            return False
-
-        if event.domain in CONTINUOUS_DOMAINS and entity_attr_cache.get(
-            entity_id, ATTR_UNIT_OF_MEASUREMENT, event
-        ):
-            # Don't show continuous sensor value changes in the logbook
             return False
     elif event.event_type in HOMEASSISTANT_EVENTS:
         entity_id = f"{HA_DOMAIN}."
