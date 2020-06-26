@@ -112,7 +112,7 @@ class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_ORDER,
                 default=self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER),
-            ): vol.All(vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES)),
+            ): vol.All(vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES.keys())),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

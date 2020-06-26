@@ -28,9 +28,7 @@
       "init": {
         "title": "Configure options for Transmission",
         "data": {
-          "scan_interval": "Update frequency",
-          "limit": "Limit",
-          "order": "Order"
+          "scan_interval": "Update frequency"
         }
       }
     }
