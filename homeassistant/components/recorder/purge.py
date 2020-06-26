@@ -46,7 +46,7 @@ def purge_old_data(instance, purge_days, repack):
                 _LOGGER.debug("Vacuuming SQL DB to free space")
                 instance.engine.execute("VACUUM")
             # Optimize mysql / mariadb tables to free up space on disk
-            elif instance.engine.driver == "mysqldb":
+            elif instance.engine.driver in ("mysqldb", "pymysql"):
                 _LOGGER.debug("Optimizing SQL DB to free space")
                 instance.engine.execute("OPTIMIZE TABLE states, events, recorder_runs")
 
