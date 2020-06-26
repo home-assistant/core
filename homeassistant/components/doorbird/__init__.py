@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_DEVICES,
     CONF_HOST,
     CONF_NAME,
@@ -25,7 +26,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import CONF_EVENTS, DOMAIN, DOOR_STATION, DOOR_STATION_INFO, PLATFORMS
+from .const import (
+    CONF_EVENTS,
+    DOMAIN,
+    DOOR_STATION,
+    DOOR_STATION_EVENT_ENTITY_IDS,
+    DOOR_STATION_INFO,
+    PLATFORMS,
+)
 from .util import get_doorstation_by_token
 
 _LOGGER = logging.getLogger(__name__)
@@ -361,6 +369,10 @@ class DoorBirdRequestView(HomeAssistantView):
 
             message = f"HTTP Favorites cleared for {device.slug}"
             return web.Response(status=HTTP_OK, text=message)
+
+        event_data[ATTR_ENTITY_ID] = hass.data[DOMAIN][
+            DOOR_STATION_EVENT_ENTITY_IDS
+        ].get(event)
 
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
