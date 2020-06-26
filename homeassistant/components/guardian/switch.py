@@ -70,6 +70,7 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
             return
 
         self._is_on = False
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the valve on (open)."""
@@ -81,3 +82,4 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
             return
 
         self._is_on = True
+        self.async_write_ha_state()
