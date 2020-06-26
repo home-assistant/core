@@ -41,13 +41,13 @@ async def async_setup(hass: HomeAssistant, config: dict):
         return True
 
     # decide platform
-    PLATFORM = "PRODUCTION"
+    platform = "PRODUCTION"
     if config[DOMAIN][CONF_CLIENT_ID] == "homeassistant_f2":
-        PLATFORM = "ACCEPTANCE"
+        platform = "ACCEPTANCE"
     elif config[DOMAIN][CONF_CLIENT_ID] == "homeassistant_f3":
-        PLATFORM = "DEVELOPMENT"
+        platform = "DEVELOPMENT"
 
-    hass.data[DOMAIN][CONF_PLATFORM] = PLATFORM
+    hass.data[DOMAIN][CONF_PLATFORM] = platform
 
     config_flow.SmappeeFlowHandler.async_register_implementation(
         hass,
@@ -56,8 +56,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
             DOMAIN,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            AUTHORIZE_URL[PLATFORM],
-            TOKEN_URL[PLATFORM],
+            AUTHORIZE_URL[platform],
+            TOKEN_URL[platform],
         ),
     )
 
