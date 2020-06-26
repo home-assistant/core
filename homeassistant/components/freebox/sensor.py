@@ -1,5 +1,4 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
-from datetime import datetime
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,8 +19,6 @@ from .const import (
     TEMPERATURE_SENSOR_TEMPLATE,
 )
 from .router import FreeboxRouter
-
-TIMEZONE = dt_util.get_time_zone("Europe/Paris")
 
 
 async def async_setup_entry(
@@ -155,6 +152,6 @@ class FreeboxCallSensor(FreeboxSensor):
     def device_state_attributes(self) -> Dict[str, any]:
         """Return device specific state attributes."""
         return {
-            datetime.fromtimestamp(call["datetime"], TIMEZONE).isoformat(): call["name"]
+            dt_util.utc_from_timestamp(call["datetime"]).isoformat(): call["name"]
             for call in self._call_list_for_type
         }
