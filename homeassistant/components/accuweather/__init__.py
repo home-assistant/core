@@ -88,6 +88,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize."""
         self.location_key = location_key
         self.forecast = forecast
+        self.is_metric = hass.config.units.is_metric
         self.accuweather = AccuWeather(api_key, session, location_key=self.location_key)
 
         # Enabling the forecast download increases the number of requests per data
@@ -108,7 +109,9 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
             with timeout(10):
                 current = await self.accuweather.async_get_current_conditions()
                 forecast = (
-                    await self.accuweather.async_get_forecast() if self.forecast else {}
+                    await self.accuweather.async_get_forecast(metric=self.is_metric)
+                    if self.forecast
+                    else {}
                 )
         except (
             ApiError,
