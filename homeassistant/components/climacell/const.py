@@ -22,14 +22,6 @@ ATTRIBUTION = "Powered by ClimaCell"
 
 MAX_REQUESTS_PER_DAY = 1000
 
-ATTR_WEATHER_CLOUD_COVER = "cloud_cover"
-ATTR_WEATHER_DEWPOINT = "dewpoint"
-ATTR_WEATHER_FEELS_LIKE = "feels_like"
-ATTR_WEATHER_MOON_PHASE = "moon_phase"
-ATTR_WEATHER_PRECIPITATION_PROBABILITY = "precipitation_probability"
-ATTR_WEATHER_PRECIPITATION_TYPE = "precipitation_type"
-ATTR_WEATHER_WIND_GUST = "wind_gust"
-
 AQI_FIELD_LOOKUP = {USA: "epa_aqi", CHINA: "china_aqi"}
 
 DIRECTIONS_LIST = [

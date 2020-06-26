@@ -13,10 +13,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_VISIBILITY,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -40,13 +36,6 @@ from homeassistant.util.temperature import convert as temp_convert
 
 from . import ClimaCellEntity
 from .const import (
-    ATTR_WEATHER_CLOUD_COVER,
-    ATTR_WEATHER_DEWPOINT,
-    ATTR_WEATHER_FEELS_LIKE,
-    ATTR_WEATHER_MOON_PHASE,
-    ATTR_WEATHER_PRECIPITATION_PROBABILITY,
-    ATTR_WEATHER_PRECIPITATION_TYPE,
-    ATTR_WEATHER_WIND_GUST,
     CLEAR_CONDITIONS,
     CONDITIONS,
     CONF_FORECAST_TYPE,
@@ -96,10 +85,6 @@ def _forecast_dict(
     temp_low: Optional[float],
     wind_direction: Optional[float],
     wind_speed: Optional[float],
-    humidity: Optional[float],
-    ozone: Optional[float],
-    pressure: Optional[float],
-    visibility: Optional[float],
 ) -> Dict[str, Any]:
     """Return formatted Forecast dict from ClimaCell forecast data."""
     wind_bearing = _translate_wind_direction(wind_direction)
@@ -121,10 +106,6 @@ def _forecast_dict(
             ATTR_FORECAST_TEMP_LOW: temp_low,
             ATTR_FORECAST_WIND_BEARING: wind_bearing,
             ATTR_FORECAST_WIND_SPEED: wind_speed,
-            ATTR_WEATHER_HUMIDITY: humidity,
-            ATTR_WEATHER_OZONE: ozone,
-            ATTR_WEATHER_PRESSURE: pressure,
-            ATTR_WEATHER_VISIBILITY: visibility,
         }
     else:
         data = {
@@ -146,18 +127,6 @@ def _forecast_dict(
                 wind_speed, LENGTH_MILES, LENGTH_KILOMETERS
             )
             if wind_speed
-            else None,
-            ATTR_WEATHER_HUMIDITY: humidity,
-            ATTR_WEATHER_OZONE: ozone,
-            ATTR_WEATHER_PRESSURE: pressure_convert(
-                pressure, PRESSURE_INHG, PRESSURE_HPA
-            )
-            if pressure
-            else None,
-            ATTR_WEATHER_VISIBILITY: distance_convert(
-                visibility, LENGTH_MILES, LENGTH_KILOMETERS
-            )
-            if visibility
             else None,
         }
 
@@ -241,57 +210,6 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         return visibility
 
     @property
-    def wind_gust(self):
-        """Return the wind gust speed."""
-        wind_gust = self._coordinator.data[CURRENT].get("wind_gust", {}).get("value")
-        if self.hass.config.units.is_metric and wind_gust:
-            return distance_convert(wind_gust, LENGTH_MILES, LENGTH_KILOMETERS)
-        return wind_gust
-
-    @property
-    def dewpoint(self):
-        """Return the dewpoint temperature."""
-        dewpoint = self._coordinator.data[CURRENT].get("dewpoint", {}).get("value")
-        if self.hass.config.units.is_metric and dewpoint:
-            return temp_convert(dewpoint, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-        return dewpoint
-
-    @property
-    def feels_like(self):
-        """Return the feels like temperature."""
-        feels_like = self._coordinator.data[CURRENT].get("feels_like", {}).get("value")
-        if self.hass.config.units.is_metric and feels_like:
-            return temp_convert(feels_like, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-        return feels_like
-
-    @property
-    def precipitation_probability(self):
-        """Return the precipitation probability."""
-        pp = (
-            self._coordinator.data[CURRENT]
-            .get("precipitation_probability", {})
-            .get("value")
-        )
-        return pp / 100 if pp else None
-
-    @property
-    def precipitation_type(self):
-        """Return the type of precipitation."""
-        return (
-            self._coordinator.data[CURRENT].get("precipitation_type", {}).get("value")
-        )
-
-    @property
-    def cloud_cover(self):
-        """Return the cloud cover."""
-        return self._coordinator.data[CURRENT].get("cloud_cover", {}).get("value")
-
-    @property
-    def moon_phase(self):
-        """Return the moon phase."""
-        return self._coordinator.data[CURRENT].get("moon_phase", {}).get("value")
-
-    @property
     def forecast(self):
         """Return the forecast."""
         forecasts = []
@@ -320,10 +238,6 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                         temp_min,
                         None,
                         None,
-                        None,
-                        None,
-                        None,
-                        None,
                     )
                 )
             return forecasts
@@ -345,10 +259,6 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                         None,
                         forecast["wind_direction"]["value"],
                         forecast["wind_speed"]["value"],
-                        forecast["humidity"]["value"],
-                        forecast["o3"]["value"],
-                        forecast["baro_pressure"]["value"],
-                        forecast["visibility"]["value"],
                     )
                 )
             return forecasts
@@ -374,42 +284,8 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                         None,
                         forecast["wind_direction"]["value"],
                         forecast["wind_speed"]["value"],
-                        forecast["humidity"]["value"],
-                        forecast["o3"]["value"],
-                        forecast["baro_pressure"]["value"],
-                        forecast["visibility"]["value"],
                     )
                 )
             return forecasts
 
         return None
-
-    @property
-    def device_state_attributes(self):
-        """Return additional state attributes."""
-        data = {}
-
-        if self.feels_like is not None:
-            data[ATTR_WEATHER_FEELS_LIKE] = self.feels_like
-
-        if self.dewpoint is not None:
-            data[ATTR_WEATHER_DEWPOINT] = self.dewpoint
-
-        if self.wind_gust is not None:
-            data[ATTR_WEATHER_WIND_GUST] = self.wind_gust
-
-        if self.precipitation_probability is not None:
-            data[
-                ATTR_WEATHER_PRECIPITATION_PROBABILITY
-            ] = self.precipitation_probability
-
-        if self.precipitation_type is not None:
-            data[ATTR_WEATHER_PRECIPITATION_TYPE] = self.precipitation_type
-
-        if self.cloud_cover is not None:
-            data[ATTR_WEATHER_CLOUD_COVER] = self.cloud_cover
-
-        if self.moon_phase is not None:
-            data[ATTR_WEATHER_MOON_PHASE] = self.moon_phase
-
-        return data
