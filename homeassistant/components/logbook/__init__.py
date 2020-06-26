@@ -422,12 +422,8 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
             #
             .filter(
                 (Events.event_type != EVENT_STATE_CHANGED)
-                | (
-                    sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS))
-                    | sqlalchemy.not_(
-                        States.attributes.contains(UNIT_OF_MEASUREMENT_JSON)
-                    )
-                )
+                | sqlalchemy.not_(States.domain.in_(CONTINUOUS_DOMAINS))
+                | sqlalchemy.not_(States.attributes.contains(UNIT_OF_MEASUREMENT_JSON))
             )
             .filter(
                 Events.event_type.in_(ALL_EVENT_TYPES + list(hass.data.get(DOMAIN, {})))
