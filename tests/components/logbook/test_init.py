@@ -149,22 +149,6 @@ class TestComponentLogbook(unittest.TestCase):
             entries[1], pointC, "bla", domain="sensor", entity_id=entity_id
         )
 
-    def test_filter_continuous_sensor_values(self):
-        """Test remove continuous sensor events from logbook."""
-        entity_id = "sensor.bla"
-        pointA = dt_util.utcnow()
-        entity_attr_cache = logbook.EntityAttributeCache(self.hass)
-        attributes = {"unit_of_measurement": "foo"}
-        eventA = self.create_state_changed_event(pointA, entity_id, 10, attributes)
-
-        entities_filter = convert_include_exclude_filter(
-            logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})[logbook.DOMAIN]
-        )
-        assert (
-            logbook._keep_event(self.hass, eventA, entities_filter, entity_attr_cache)
-            is False
-        )
-
     def test_exclude_new_entities(self):
         """Test if events are excluded on first update."""
         entity_id = "sensor.bla"
@@ -1804,6 +1788,42 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     json_dict = await response.json()
     assert len(json_dict) == 1
     assert json_dict[0]["entity_id"] == entity_id_second
+
+
+async def test_filter_continuous_sensor_values(hass, hass_client):
+    """Test remove continuous sensor events from logbook."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "logbook", {})
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    entity_id_test = "switch.test"
+    hass.states.async_set(entity_id_test, STATE_OFF)
+    hass.states.async_set(entity_id_test, STATE_ON)
+    entity_id_second = "sensor.bla"
+    hass.states.async_set(entity_id_second, STATE_OFF, {"unit_of_measurement": "foo"})
+    hass.states.async_set(entity_id_second, STATE_ON, {"unit_of_measurement": "foo"})
+    entity_id_third = "light.bla"
+    hass.states.async_set(entity_id_third, STATE_OFF, {"unit_of_measurement": "foo"})
+    hass.states.async_set(entity_id_third, STATE_ON, {"unit_of_measurement": "foo"})
+
+    await hass.async_add_job(partial(trigger_db_commit, hass))
+    await hass.async_block_till_done()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries without filters
+    response = await client.get(f"/api/logbook/{start_date.isoformat()}")
+    assert response.status == 200
+    response_json = await response.json()
+
+    assert len(response_json) == 2
+    assert response_json[0]["entity_id"] == entity_id_test
+    assert response_json[1]["entity_id"] == entity_id_third
 
 
 class MockLazyEventPartialState(ha.Event):
