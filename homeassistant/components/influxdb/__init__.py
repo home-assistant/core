@@ -12,15 +12,12 @@ from influxdb_client import InfluxDBClient as InfluxDBClientV2
 from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
 from influxdb_client.rest import ApiException
 import requests.exceptions
+import urllib3.exceptions
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_API_VERSION,
-    CONF_DOMAINS,
-    CONF_ENTITIES,
-    CONF_EXCLUDE,
     CONF_HOST,
-    CONF_INCLUDE,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_PORT,
@@ -37,6 +34,10 @@ from homeassistant.const import (
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,24 +142,8 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
 
 _CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string})
 
-_CONFIG_SCHEMA = vol.Schema(
+_CONFIG_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
-        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
-            {
-                vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-            }
-        ),
-        vol.Optional(CONF_INCLUDE, default={}): vol.Schema(
-            {
-                vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-            }
-        ),
         vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
@@ -253,12 +238,7 @@ def setup(hass, config):
         if CONF_SSL in conf:
             kwargs["ssl"] = conf[CONF_SSL]
 
-    include = conf.get(CONF_INCLUDE, {})
-    exclude = conf.get(CONF_EXCLUDE, {})
-    whitelist_e = set(include.get(CONF_ENTITIES, []))
-    whitelist_d = set(include.get(CONF_DOMAINS, []))
-    blacklist_e = set(exclude.get(CONF_ENTITIES, []))
-    blacklist_d = set(exclude.get(CONF_DOMAINS, []))
+    entity_filter = convert_include_exclude_filter(conf)
     tags = conf.get(CONF_TAGS)
     tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
@@ -285,7 +265,7 @@ def setup(hass, config):
         )
         event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
         return True
-    except ApiException as exc:
+    except (ApiException, urllib3.exceptions.HTTPError) as exc:
         _LOGGER.error(
             "Bucket is not accessible due to '%s', please "
             "check your entries in the configuration file (url, org, "
@@ -303,19 +283,11 @@ def setup(hass, config):
         if (
             state is None
             or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
-            or state.entity_id in blacklist_e
-            or state.domain in blacklist_d
+            or not entity_filter(state.entity_id)
         ):
             return
 
         try:
-            if (
-                (whitelist_e or whitelist_d)
-                and state.entity_id not in whitelist_e
-                and state.domain not in whitelist_d
-            ):
-                return
-
             _include_state = _include_value = False
 
             _state_as_value = float(state.state)
