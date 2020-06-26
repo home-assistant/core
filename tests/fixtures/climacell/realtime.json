@@ -1,0 +1,147 @@
+{
+  "lat": 32.87336,
+  "lon": -117.22743,
+  "temp": {
+    "value": 63.5,
+    "units": "F"
+  },
+  "feels_like": {
+    "value": 63.5,
+    "units": "F"
+  },
+  "dewpoint": {
+    "value": 58.55,
+    "units": "F"
+  },
+  "wind_speed": {
+    "value": 4.89,
+    "units": "mph"
+  },
+  "wind_gust": {
+    "value": 5.31,
+    "units": "mph"
+  },
+  "baro_pressure": {
+    "value": 29.864,
+    "units": "inHg"
+  },
+  "visibility": {
+    "value": 6.21371,
+    "units": "mi"
+  },
+  "humidity": {
+    "value": 83.75,
+    "units": "%"
+  },
+  "wind_direction": {
+    "value": 278.69,
+    "units": "degrees"
+  },
+  "precipitation": {
+    "value": 0,
+    "units": "in/hr"
+  },
+  "precipitation_type": {
+    "value": "none"
+  },
+  "cloud_cover": {
+    "value": 19.69,
+    "units": "%"
+  },
+  "cloud_ceiling": {
+    "value": null,
+    "units": "ft"
+  },
+  "cloud_base": {
+    "value": null,
+    "units": "ft"
+  },
+  "surface_shortwave_radiation": {
+    "value": 0,
+    "units": "w/sqm"
+  },
+  "fire_index": {
+    "value": 4
+  },
+  "sunrise": {
+    "value": "2020-06-26T12:42:55.208Z"
+  },
+  "sunset": {
+    "value": "2020-06-27T03:01:19.695Z"
+  },
+  "moon_phase": {
+    "value": "waxing_crescent"
+  },
+  "weather_code": {
+    "value": "mostly_clear"
+  },
+  "road_risk_score": {
+    "value": "Low risk",
+    "units": "ClimaCell Road Risk Score"
+  },
+  "road_risk_confidence": {
+    "value": 100,
+    "units": "%"
+  },
+  "road_risk_conditions": {
+    "value": "Clear",
+    "units": "ClimaCell Road Risk Conditions"
+  },
+  "epa_aqi": {
+    "value": 29.3125
+  },
+  "epa_primary_pollutant": {
+    "value": "o3"
+  },
+  "china_aqi": {
+    "value": 16.4375
+  },
+  "china_primary_pollutant": {
+    "value": "o3"
+  },
+  "pm25": {
+    "value": 10.25,
+    "units": "\u00b5g/m3"
+  },
+  "pm10": {
+    "value": 25.625,
+    "units": "\u00b5g/m3"
+  },
+  "o3": {
+    "value": 28.8125,
+    "units": "ppb"
+  },
+  "no2": {
+    "value": 19.625,
+    "units": "ppb"
+  },
+  "co": {
+    "value": 14.9375,
+    "units": "ppm"
+  },
+  "so2": {
+    "value": 15,
+    "units": "ppb"
+  },
+  "epa_health_concern": {
+    "value": "Good"
+  },
+  "china_health_concern": {
+    "value": "Good"
+  },
+  "pollen_tree": {
+    "value": 0,
+    "units": "Climacell Pollen Index"
+  },
+  "pollen_weed": {
+    "value": 0,
+    "units": "Climacell Pollen Index"
+  },
+  "pollen_grass": {
+    "value": 0,
+    "units": "Climacell Pollen Index"
+  },
+  "observation_time": {
+    "value": "2020-06-26T04:05:17.275Z"
+  }
+}

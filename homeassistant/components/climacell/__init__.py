@@ -222,7 +222,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                 data[FORECASTS] = await self._api.forecast_hourly(
                     self._api.availabile_fields(FORECAST_HOURLY),
                     None,
-                    timedelta(hours=90),
+                    timedelta(hours=24),
                 )
 
             if self._forecast_type == DAILY:

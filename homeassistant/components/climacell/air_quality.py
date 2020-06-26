@@ -34,49 +34,38 @@ class ClimaCellAirQualityEntity(ClimaCellEntity, AirQualityEntity):
     @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        if "pm25" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["pm25"]["value"]
+        return self._coordinator.data[CURRENT].get("pm25", {}).get("value")
 
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        if "pm10" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["pm10"]["value"]
+        return self._coordinator.data[CURRENT].get("pm10", {}).get("value")
 
     @property
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
-        field = AQI_FIELD_LOOKUP[self._config_entry.options[CONF_AQI_COUNTRY]]
-        if field not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT][field]["value"]
+        return (
+            self._coordinator.data[CURRENT]
+            .get(AQI_FIELD_LOOKUP[self._config_entry.options[CONF_AQI_COUNTRY]], {})
+            .get("value")
+        )
 
     @property
     def ozone(self):
         """Return the O3 (ozone) level."""
-        if "o3" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["o3"]["value"]
+        return self._coordinator.data[CURRENT].get("o3", {}).get("value")
 
     @property
     def carbon_monoxide(self):
         """Return the CO (carbon monoxide) level."""
-        if "co" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["co"]["value"]
+        return self._coordinator.data[CURRENT].get("co", {}).get("value")
 
     @property
     def sulphur_dioxide(self):
         """Return the SO2 (sulphur dioxide) level."""
-        if "so2" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["no2"]["value"]
+        return self._coordinator.data[CURRENT].get("so2", {}).get("value")
 
     @property
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        if "no2" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["no2"]["value"]
+        return self._coordinator.data[CURRENT].get("no2", {}).get("value")

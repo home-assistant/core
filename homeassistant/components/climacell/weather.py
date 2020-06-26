@@ -2,6 +2,8 @@
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
+import pytz
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
@@ -67,6 +69,8 @@ def _translate_condition(
     condition: Optional[str], sun_is_up: bool = True
 ) -> Optional[str]:
     """Translate ClimaCell condition into an HA condition."""
+    if not condition:
+        return None
     if "clear" in condition.lower():
         if sun_is_up:
             return CLEAR_CONDITIONS["day"]
@@ -76,7 +80,9 @@ def _translate_condition(
 
 def _translate_wind_direction(direction: Optional[float]) -> Optional[str]:
     """Translate ClimaCell wind direction in degrees to a bearing."""
-    return WIND_DIRECTIONS.get(int(direction * 16 / 360))
+    if direction:
+        return WIND_DIRECTIONS.get(int(direction * 16 / 360))
+    return None
 
 
 def _forecast_dict(
@@ -96,16 +102,14 @@ def _forecast_dict(
     visibility: Optional[float],
 ) -> Dict[str, Any]:
     """Return formatted Forecast dict from ClimaCell forecast data."""
-    wind_bearing = _translate_wind_direction(wind_direction) if wind_direction else None
-    if condition:
-        if use_datetime:
-            translated_condition = _translate_condition(
-                condition, is_up(hass, dt_util.parse_datetime(time))
-            )
-        else:
-            translated_condition = _translate_condition(condition, True)
+    wind_bearing = _translate_wind_direction(wind_direction)
+    if use_datetime:
+        translated_condition = _translate_condition(
+            condition,
+            is_up(hass, dt_util.parse_datetime(time).replace(tzinfo=pytz.utc)),
+        )
     else:
-        translated_condition = None
+        translated_condition = _translate_condition(condition, True)
 
     if not hass.config.units.is_metric:
         data = {
@@ -179,9 +183,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def temperature(self):
         """Return the platform temperature."""
-        if "temp" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["temp"]["value"]
+        return self._coordinator.data[CURRENT].get("temp", {}).get("value")
 
     @property
     def temperature_unit(self):
@@ -191,132 +193,103 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        if "baro_pressure" not in self._coordinator.data[CURRENT]:
-            return None
-        pressure = self._coordinator.data[CURRENT]["baro_pressure"]["value"]
-        if self.hass.config.units.is_metric:
+        pressure = self._coordinator.data[CURRENT].get("baro_pressure", {}).get("value")
+        if self.hass.config.units.is_metric and pressure:
             return pressure_convert(pressure, PRESSURE_INHG, PRESSURE_HPA)
         return pressure
 
     @property
-    def pressure_unit(self):
-        """Return the pressure unit."""
-        if self.hass.config.units.is_metric:
-            return PRESSURE_HPA
-        return PRESSURE_INHG
-
-    @property
     def humidity(self):
         """Return the humidity."""
-        if "humidity" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["humidity"]["value"]
+        humidity = self._coordinator.data[CURRENT].get("humidity", {}).get("value")
+        return humidity / 100 if humidity else None
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        if "wind_speed" not in self._coordinator.data[CURRENT]:
-            return None
-        wind_speed = self._coordinator.data[CURRENT]["wind_speed"]["value"]
-        if self.hass.config.units.is_metric:
+        wind_speed = self._coordinator.data[CURRENT].get("wind_speed", {}).get("value")
+        if self.hass.config.units.is_metric and wind_speed:
             return distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
         return wind_speed
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        if "wind_direction" not in self._coordinator.data[CURRENT]:
-            return None
         return _translate_wind_direction(
-            self._coordinator.data[CURRENT]["wind_direction"]["value"]
+            self._coordinator.data[CURRENT].get("wind_direction", {}).get("value")
         )
 
     @property
     def ozone(self):
         """Return the O3 (ozone) level."""
-        if "o3" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["o3"]["value"]
+        return self._coordinator.data[CURRENT].get("o3", {}).get("value")
 
     @property
     def condition(self):
         """Return the condition."""
-        if "weather_code" not in self._coordinator.data[CURRENT]:
-            return None
         return _translate_condition(
-            self._coordinator.data[CURRENT]["weather_code"]["value"], is_up(self.hass)
+            self._coordinator.data[CURRENT].get("weather_code", {}).get("value"),
+            is_up(self.hass),
         )
 
     @property
     def visibility(self):
         """Return the visibility."""
-        if "visibility" not in self._coordinator.data[CURRENT]:
-            return None
-        visibility = self._coordinator.data[CURRENT]["visibility"]["value"]
-        if self.hass.config.units.is_metric:
+        visibility = self._coordinator.data[CURRENT].get("visibility", {}).get("value")
+        if self.hass.config.units.is_metric and visibility:
             return distance_convert(visibility, LENGTH_MILES, LENGTH_KILOMETERS)
         return visibility
 
     @property
     def wind_gust(self):
         """Return the wind gust speed."""
-        if "wind_gust" not in self._coordinator.data[CURRENT]:
-            return None
-        wind_gust = self._coordinator.data[CURRENT]["wind_gust"]["value"]
-        if self.hass.config.units.is_metric:
+        wind_gust = self._coordinator.data[CURRENT].get("wind_gust", {}).get("value")
+        if self.hass.config.units.is_metric and wind_gust:
             return distance_convert(wind_gust, LENGTH_MILES, LENGTH_KILOMETERS)
         return wind_gust
 
     @property
     def dewpoint(self):
         """Return the dewpoint temperature."""
-        if "dewpoint" not in self._coordinator.data[CURRENT]:
-            return None
-        dewpoint = self._coordinator.data[CURRENT]["dewpoint"]["value"]
-        if self.hass.config.units.is_metric:
+        dewpoint = self._coordinator.data[CURRENT].get("dewpoint", {}).get("value")
+        if self.hass.config.units.is_metric and dewpoint:
             return temp_convert(dewpoint, TEMP_FAHRENHEIT, TEMP_CELSIUS)
         return dewpoint
 
     @property
     def feels_like(self):
         """Return the feels like temperature."""
-        if "feels_like" not in self._coordinator.data[CURRENT]:
-            return None
-        feels_like = self._coordinator.data[CURRENT]["feels_like"]["value"]
-        if self.hass.config.units.is_metric:
+        feels_like = self._coordinator.data[CURRENT].get("feels_like", {}).get("value")
+        if self.hass.config.units.is_metric and feels_like:
             return temp_convert(feels_like, TEMP_FAHRENHEIT, TEMP_CELSIUS)
         return feels_like
 
     @property
     def precipitation_probability(self):
         """Return the precipitation probability."""
-        if "precipitation_probability" not in self._coordinator.data[CURRENT]:
-            return None
-        return (
-            self._coordinator.data[CURRENT]["precipitation_probability"]["value"] / 100
+        pp = (
+            self._coordinator.data[CURRENT]
+            .get("precipitation_probability", {})
+            .get("value")
         )
+        return pp / 100 if pp else None
 
     @property
     def precipitation_type(self):
         """Return the type of precipitation."""
-        if "precipitation_type" not in self._coordinator.data[CURRENT]:
-            return None
-
-        return self._coordinator.data[CURRENT]["precipitation_type"]["value"]
+        return (
+            self._coordinator.data[CURRENT].get("precipitation_type", {}).get("value")
+        )
 
     @property
     def cloud_cover(self):
         """Return the cloud cover."""
-        if "cloud_cover" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["cloud_cover"]["value"]
+        return self._coordinator.data[CURRENT].get("cloud_cover", {}).get("value")
 
     @property
     def moon_phase(self):
         """Return the moon phase."""
-        if "moon_phase" not in self._coordinator.data[CURRENT]:
-            return None
-        return self._coordinator.data[CURRENT]["moon_phase"]["value"]
+        return self._coordinator.data[CURRENT].get("moon_phase", {}).get("value")
 
     @property
     def forecast(self):
