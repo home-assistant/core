@@ -21,7 +21,3 @@ class SmappeeFlowHandler(
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
-
-    async def async_step_user(self, user_input=None):
-        """Handle a flow start."""
-        return await super().async_step_user(user_input)
