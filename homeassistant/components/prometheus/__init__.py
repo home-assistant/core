@@ -324,14 +324,14 @@ class PrometheusMetrics:
                 )
 
     def _handle_humidifier(self, state):
-        humidifer_target_humidity_percent = state.attributes.get(ATTR_HUMIDITY)
-        if humidifer_target_humidity_percent:
+        humidifier_target_humidity_percent = state.attributes.get(ATTR_HUMIDITY)
+        if humidifier_target_humidity_percent:
             metric = self._metric(
-                "humidifer_target_humidity_percent",
+                "humidifier_target_humidity_percent",
                 self.prometheus_cli.Gauge,
                 "Target Relative Humidity",
             )
-            metric.labels(**self._labels(state)).set(humidifer_target_humidity_percent)
+            metric.labels(**self._labels(state)).set(humidifier_target_humidity_percent)
 
         metric = self._metric(
             "humidifier_state",
