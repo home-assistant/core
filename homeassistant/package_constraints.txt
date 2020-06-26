@@ -23,7 +23,7 @@ pytz>=2020.1
 pyyaml==5.3.1
 requests==2.24.0
 ruamel.yaml==0.15.100
-sqlalchemy==1.3.17
+sqlalchemy==1.3.18
 voluptuous-serialize==2.3.0
 voluptuous==0.11.7
 zeroconf==0.27.1
