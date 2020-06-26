@@ -205,7 +205,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
         await self.hass.services.async_call(
-            DOMAIN, service_name, service_data, blocking=True
+            DOMAIN, service_name, service_data, blocking=True, context=self._context
         )
 
     @property
