@@ -54,16 +54,15 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
             )
             _LOGGER.debug("Deleted %s events", deleted_rows_events)
 
-        # If states or events purging isn't processing the purge_before yet,
-        # return false, as we are not done yet.
-        if (states_purge_before and states_purge_before != purge_before) or (
-            events_purge_before and events_purge_before != purge_before
-        ):
-            _LOGGER.debug("Purging hasn't fully completed yet.")
-            return False
+            # If states or events purging isn't processing the purge_before yet,
+            # return false, as we are not done yet.
+            if (states_purge_before and states_purge_before != purge_before) or (
+                events_purge_before and events_purge_before != purge_before
+            ):
+                _LOGGER.debug("Purging hasn't fully completed yet.")
+                return False
 
-        # Recorder runs is small, no need to batch run it
-        with session_scope(session=instance.get_session()) as session:
+            # Recorder runs is small, no need to batch run it
             deleted_rows = (
                 session.query(RecorderRuns)
                 .filter(RecorderRuns.start < purge_before)
