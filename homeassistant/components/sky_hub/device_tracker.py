@@ -113,7 +113,9 @@ class SkyHubDeviceScanner(DeviceScanner):
 
         except asyncio.TimeoutError:
             self._log_message(
-                "Connection to the router timed out", level=_ERROR, error_type=_CONNECTION_ERROR,
+                "Connection to the router timed out",
+                level=_ERROR,
+                error_type=_CONNECTION_ERROR,
             )
             return
         except aiohttp.client_exceptions.ClientConnectorError as err:
@@ -125,9 +127,7 @@ class SkyHubDeviceScanner(DeviceScanner):
             return
         except (OSError, RuntimeError) as err:
             if not self.success_init:
-                message = (
-                    f"Error parsing data at initialisation for {self.host}, is this a Sky Router?"
-                )
+                message = f"Error parsing data at initialisation for {self.host}, is this a Sky Router?"
             else:
                 message = f"Invalid response from Sky Hub: {err}"
             self._log_message(
@@ -135,7 +135,9 @@ class SkyHubDeviceScanner(DeviceScanner):
             )
             return
 
-    def _log_message(self, log_message, unset_error=False, level=_ERROR, error_type=None):
+    def _log_message(
+        self, log_message, unset_error=False, level=_ERROR, error_type=None
+    ):
         if level == _INFO:
             _LOGGER.info(log_message)
             return
@@ -164,7 +166,9 @@ def _parse_skyhub_response(data_str):
     """Parse the Sky Hub data format."""
     pattmatch = re.search("attach_dev = '(.*)'", data_str)
     if pattmatch is None:
-        raise OSError("Error: Impossible to fetch data from Sky Hub. Try to reboot the router.")
+        raise OSError(
+            "Error: Impossible to fetch data from Sky Hub. Try to reboot the router."
+        )
     patt = pattmatch.group(1)
 
     dev = [patt1.split(",") for patt1 in patt.split("<lf>")]
