@@ -335,7 +335,7 @@ class Recorder(threading.Thread):
         self.event_session = self.get_session()
         # Use a session for the event read loop
         # with a commit every time the event time
-        # has changed.  This reduces the disk io.
+        # has changed. This reduces the disk io.
         while True:
             event = self.queue.get()
             if event is None:
@@ -344,7 +344,9 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 return
             if isinstance(event, PurgeTask):
-                purge.purge_old_data(self, event.keep_days, event.repack)
+                # Schedule a new purge task if this one didn't finish
+                if not purge.purge_old_data(self, event.keep_days, event.repack):
+                    self.queue.put(PurgeTask(event.keep_days, event.repack))
                 self.queue.task_done()
                 continue
             if event.event_type == EVENT_TIME_CHANGED:

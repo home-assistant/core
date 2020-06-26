@@ -317,7 +317,7 @@ def test_auto_purge(hass_recorder):
     test_time = tz.localize(datetime(2020, 1, 1, 4, 12, 0))
 
     with patch(
-        "homeassistant.components.recorder.purge.purge_old_data"
+        "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data:
         for delta in (-1, 0, 1):
             hass.bus.fire(

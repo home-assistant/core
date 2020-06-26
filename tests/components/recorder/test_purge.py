@@ -130,9 +130,16 @@ class TestRecorderPurge(unittest.TestCase):
             assert states.count() == 6
 
             # run purge_old_data()
-            purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert not finished
+            assert states.count() == 4
 
-            # we should only have 2 states left after purging
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert not finished
+            assert states.count() == 2
+
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert finished
             assert states.count() == 2
 
     def test_purge_old_events(self):
@@ -144,9 +151,17 @@ class TestRecorderPurge(unittest.TestCase):
             assert events.count() == 6
 
             # run purge_old_data()
-            purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert not finished
+            assert events.count() == 4
+
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert not finished
+            assert events.count() == 2
 
             # we should only have 2 events left
+            finished = purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+            assert finished
             assert events.count() == 2
 
     def test_purge_method(self):
