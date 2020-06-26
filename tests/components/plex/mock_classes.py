@@ -35,6 +35,18 @@ class MockGDM:
         pass
 
 
+class MockWebsocket:
+    """Mock a PlexWebsocket instance."""
+
+    async def listen():
+        """Mock the listen method."""
+        pass
+
+    def close():
+        """Mock the close method."""
+        pass
+
+
 class MockResource:
     """Mock a PlexAccount resource."""
 
