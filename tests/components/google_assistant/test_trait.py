@@ -23,8 +23,8 @@ from homeassistant.components import (
     vacuum,
 )
 from homeassistant.components.climate import const as climate
-from homeassistant.components.humidifier import const as humidifier
 from homeassistant.components.google_assistant import const, error, helpers, trait
+from homeassistant.components.humidifier import const as humidifier
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
