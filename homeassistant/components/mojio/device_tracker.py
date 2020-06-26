@@ -36,13 +36,13 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
     """Set up the DeviceScanner and check if login is valid."""
     scanner = MojioDeviceScanner(config, see)
     if not scanner.login(hass):
-        _LOGGER.error("FleetGO authentication failed")
+        _LOGGER.error("Mojio authentication failed")
         return False
     return True
 
 
 class MojioDeviceScanner:
-    """Define a scanner for the FleetGO platform."""
+    """Define a scanner for the Mojio platform."""
 
     def __init__(self, config, see):
         """Initialize MojioDeviceScanner."""
@@ -61,9 +61,7 @@ class MojioDeviceScanner:
     def setup(self, hass):
         """Set up a timer and start gathering devices."""
         self._refresh()
-        track_utc_time_change(
-            hass, lambda now: self._refresh(), second=range(0, 60, 30)
-        )
+        track_utc_time_change(hass, lambda now: self._refresh(), minute=range(0, 60, 5))
 
     def login(self, hass):
         """Perform a login on the Mojio API."""
@@ -84,7 +82,7 @@ class MojioDeviceScanner:
                     #     device.get_map_details()
 
                     self._see(
-                        dev_id=vehicle.licence_plate,
+                        dev_id=vehicle.licence_plate.replace("-", "_"),
                         gps=(vehicle.location.latitude, vehicle.location.longitude),
                         # attributes=vehicle.state_attributes,
                         icon="mdi:car",
