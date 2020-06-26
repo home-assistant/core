@@ -62,7 +62,7 @@ class FreeboxDevice(ScannerEntity):
         self._active = False
         self._attrs = {}
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the Freebox device."""
         device = self._router.devices[self._mac]
         self._active = device["active"]
