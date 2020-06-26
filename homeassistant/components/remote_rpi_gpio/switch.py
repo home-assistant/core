@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class RemoteRPiGPIOSwitch(SwitchEntity):
-    """Representation of a Remtoe Raspberry Pi GPIO."""
+    """Representation of a Remote Raspberry Pi GPIO."""
 
     def __init__(self, name, led):
         """Initialize the pin."""
