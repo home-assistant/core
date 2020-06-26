@@ -140,12 +140,6 @@ class SmappeeAppliance(BinarySensorEntity):
         return icon_mapping.get(self._appliance_type)
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        # Only lights can be mapped onto the generic list of binary sensors
-        return "light" if self._appliance_type == "Lights" else "power"
-
-    @property
     def unique_id(self,):
         """Return the unique ID for this binary sensor."""
         return (
