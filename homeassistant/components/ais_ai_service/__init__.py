@@ -2355,7 +2355,7 @@ async def async_setup(hass, config):
         # display favorites from Spotify only if Spotify is available
         if hass.services.has_service("ais_spotify_service", "get_favorites"):
             hass.services.call(
-                "ais_spotify_service", "get_favorites", {"type": "playlists"}
+                "ais_spotify_service", "get_favorites", {"type": "featured-playlists"}
             )
 
         text = "Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?"
