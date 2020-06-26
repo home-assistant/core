@@ -161,12 +161,20 @@ async def async_setup_entry(hass, entry):
         }
     )
 
-    hass.services.async_register(
-        PLEX_DOMAIN,
-        SERVICE_PLAY_ON_SONOS,
-        async_play_on_sonos_service,
-        schema=play_on_sonos_schema,
-    )
+    def get_plex_account(plex_server):
+        try:
+            return plex_server.account
+        except plexapi.exceptions.Unauthorized:
+            return None
+
+    plex_account = await hass.async_add_executor_job(get_plex_account, plex_server)
+    if plex_account:
+        hass.services.async_register(
+            PLEX_DOMAIN,
+            SERVICE_PLAY_ON_SONOS,
+            async_play_on_sonos_service,
+            schema=play_on_sonos_schema,
+        )
 
     return True
 
