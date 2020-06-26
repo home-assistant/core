@@ -26,7 +26,6 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
-                vol.Optional(CONF_PLATFORM, default="PRODUCTION"): cv.string,
             }
         )
     },
@@ -40,7 +39,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     if DOMAIN not in config:
         return True
-    hass.data[DOMAIN][CONF_PLATFORM] = config[DOMAIN][CONF_PLATFORM]
+
+    # decide platform
+    PLATFORM = "PRODUCTION"
+    if config[DOMAIN][CONF_CLIENT_ID] == "homeassistant_f2":
+        PLATFORM = "ACCEPTANCE"
+    elif config[DOMAIN][CONF_CLIENT_ID] == "homeassistant_f3":
+        PLATFORM = "DEVELOPMENT"
+
+    hass.data[DOMAIN][CONF_PLATFORM] = PLATFORM
 
     config_flow.SmappeeFlowHandler.async_register_implementation(
         hass,
@@ -49,8 +56,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
             DOMAIN,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            AUTHORIZE_URL[config[DOMAIN][CONF_PLATFORM]],
-            TOKEN_URL[config[DOMAIN][CONF_PLATFORM]],
+            AUTHORIZE_URL[PLATFORM],
+            TOKEN_URL[PLATFORM],
         ),
     )
 
