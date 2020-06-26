@@ -17,9 +17,9 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_CENTIMETERS,
-    LENGTH_INCHES,
+    LENGTH_FEET,
     LENGTH_KILOMETERS,
+    LENGTH_METERS,
     LENGTH_MILES,
     PRESSURE_HPA,
     PRESSURE_INHG,
@@ -112,9 +112,9 @@ def _forecast_dict(
             ATTR_FORECAST_TIME: time,
             ATTR_FORECAST_CONDITION: translated_condition,
             ATTR_FORECAST_PRECIPITATION: distance_convert(
-                precipitation, LENGTH_INCHES, LENGTH_CENTIMETERS
+                precipitation / 12, LENGTH_FEET, LENGTH_METERS
             )
-            * 10,
+            * 1000,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
             ATTR_FORECAST_TEMP: temp_convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS),
             ATTR_FORECAST_TEMP_LOW: temp_convert(
