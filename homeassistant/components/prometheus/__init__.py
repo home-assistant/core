@@ -324,12 +324,14 @@ class PrometheusMetrics:
                 )
 
     def _handle_humidifier(self, state):
-        humidity = state.attributes.get(ATTR_HUMIDITY)
-        if humidity:
+        humidifer_target_humidity_percent = state.attributes.get(ATTR_HUMIDITY)
+        if humidifer_target_humidity_percent:
             metric = self._metric(
-                "humidity", self.prometheus_cli.Gauge, "Target Relative Humidity"
+                "humidifer_target_humidity_percent",
+                self.prometheus_cli.Gauge,
+                "Target Relative Humidity",
             )
-            metric.labels(**self._labels(state)).set(humidity)
+            metric.labels(**self._labels(state)).set(humidifer_target_humidity_percent)
 
         metric = self._metric(
             "humidifier_state",
@@ -338,16 +340,23 @@ class PrometheusMetrics:
         )
         try:
             value = self.state_as_number(state)
-        except ValueError:
-            value = 0.0
-        metric.labels(**self._labels(state)).set(value)
-
-        mode = state.attributes.get(ATTR_MODE)
-        modes = state.attributes.get(ATTR_AVAILABLE_MODES)
-        if mode and modes:
-            metric = self._metric("mode", self.prometheus_cli.Gauge, "Humidifier Mode")
-            value = modes.index(mode)
             metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
+
+        current_mode = state.attributes.get(ATTR_MODE)
+        available_modes = state.attributes.get(ATTR_AVAILABLE_MODES)
+        if current_mode and available_modes:
+            metric = self._metric(
+                "humidifier_mode",
+                self.prometheus_cli.Gauge,
+                "Humidifier Mode",
+                ["mode"],
+            )
+            for mode in available_modes:
+                metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == current_mode)
+                )
 
     def _handle_sensor(self, state):
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))

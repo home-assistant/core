@@ -109,7 +109,7 @@ async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
     )
 
     assert (
-        'humidity{domain="humidifier",'
+        'humidifer_target_humidity_percent{domain="humidifier",'
         'entity="humidifier.humidifier",'
         'friendly_name="Humidifier"} 68.0' in body
     )
@@ -121,9 +121,16 @@ async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
     )
 
     assert (
-        'mode{domain="humidifier",'
+        'humidifier_mode{domain="humidifier",'
         'entity="humidifier.hygrostat",'
-        'friendly_name="Hygrostat"} 0.0' in body
+        'friendly_name="Hygrostat",'
+        'mode="home"} 1.0' in body
+    )
+    assert (
+        'humidifier_mode{domain="humidifier",'
+        'entity="humidifier.hygrostat",'
+        'friendly_name="Hygrostat",'
+        'mode="eco"} 0.0' in body
     )
 
     assert (
