@@ -147,6 +147,12 @@ class SlackNotificationService(BaseNotificationService):
         )
 
         if ATTR_FILE in data:
+            if not self.hass.config.is_allowed_path(data[ATTR_FILE]):
+                _LOGGER.error(
+                    "Filepath does not exist or is not allowed: %s", data[ATTR_FILE]
+                )
+                return
+
             return await self._async_send_local_file_message(
                 data[ATTR_FILE], targets, message, title
             )
