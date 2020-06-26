@@ -22,7 +22,7 @@ from homeassistant.setup import async_setup_component
 from tests.async_mock import MagicMock, patch
 
 INFLUXDB_PATH = "homeassistant.components.influxdb"
-INFLUXDB_CLIENT_PATH = f"{INFLUXDB_PATH}.sensor.InfluxDBClient"
+INFLUXDB_CLIENT_PATH = f"{INFLUXDB_PATH}.InfluxDBClient"
 INFLUXDB_SENSOR_PATH = f"{INFLUXDB_PATH}.sensor"
 
 BASE_V1_CONFIG = {}
@@ -451,3 +451,52 @@ async def test_error_rendering_template(
     assert (
         len([record for record in caplog.records if record.levelname == "ERROR"]) == 1
     )
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, queries, set_query_mock, test_exception",
+    [
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            BASE_V1_QUERY,
+            _set_query_mock_v1,
+            OSError("fail"),
+        ),
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            BASE_V1_QUERY,
+            _set_query_mock_v1,
+            InfluxDBClientError("fail"),
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+            BASE_V2_QUERY,
+            _set_query_mock_v2,
+            OSError("fail"),
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+            BASE_V2_QUERY,
+            _set_query_mock_v2,
+            ApiException(),
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_connection_error_at_startup(
+    hass, caplog, mock_client, config_ext, queries, set_query_mock, test_exception
+):
+    """Test behavior of sensor when influx returns error."""
+    set_query_mock(mock_client, side_effect=test_exception)
+
+    with patch(f"{INFLUXDB_SENSOR_PATH}.event_helper") as event_helper:
+        await _setup(hass, config_ext, queries, [])
+        assert (
+            len([record for record in caplog.records if record.levelname == "ERROR"])
+            == 1
+        )
+        event_helper.call_later.assert_called_once()
