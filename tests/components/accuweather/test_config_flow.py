@@ -11,6 +11,13 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
+VALID_CONFIG = {
+    CONF_NAME: "abcd",
+    CONF_API_KEY: "32-character-string-1234567890qw",
+    CONF_LATITUDE: 55.55,
+    CONF_LONGITUDE: 122.12,
+}
+
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
@@ -46,14 +53,7 @@ async def test_invalid_api_key_2(hass):
     ):
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_NAME: "abcd",
-                CONF_API_KEY: "32-character-string-1234567890qw",
-                CONF_LATITUDE: 55.55,
-                CONF_LONGITUDE: 122.12,
-            },
+            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
         )
 
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
@@ -67,14 +67,7 @@ async def test_api_error(hass):
     ):
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_NAME: "abcd",
-                CONF_API_KEY: "32-character-string-1234567890qw",
-                CONF_LATITUDE: 55.55,
-                CONF_LONGITUDE: 122.12,
-            },
+            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
         )
 
         assert result["errors"] == {"base": "cannot_connect"}
@@ -90,45 +83,24 @@ async def test_requests_exceeded_error(hass):
     ):
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_NAME: "abcd",
-                CONF_API_KEY: "32-character-string-1234567890qw",
-                CONF_LATITUDE: 55.55,
-                CONF_LONGITUDE: 122.12,
-            },
+            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
         )
 
         assert result["errors"] == {CONF_API_KEY: "requests_exceeded"}
 
 
-async def test_duplicate_error(hass):
-    """Test that errors are shown when duplicates are added."""
+async def test_integration_already_exists(hass):
+    """Test we only allow a single config flow."""
     with patch(
         "accuweather.AccuWeather._async_get_data",
         return_value=json.loads(load_fixture("accuweather_location_data.json")),
     ):
         MockConfigEntry(
-            domain=DOMAIN,
-            unique_id="123456",
-            data={
-                CONF_NAME: "dcba",
-                CONF_API_KEY: "32-character-string-1234567890qw",
-                CONF_LATITUDE: 44.44,
-                CONF_LONGITUDE: 111.11,
-            },
+            domain=DOMAIN, unique_id="123456", data=VALID_CONFIG,
         ).add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_NAME: "abcd",
-                CONF_API_KEY: "32-character-string-1234567890qw",
-                CONF_LATITUDE: 55.55,
-                CONF_LONGITUDE: 122.12,
-            },
+            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
         )
 
         assert result["type"] == "abort"
@@ -143,14 +115,7 @@ async def test_create_entry(hass):
     ):
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_NAME: "abcd",
-                CONF_API_KEY: "32-character-string-1234567890qw",
-                CONF_LATITUDE: 55.55,
-                CONF_LONGITUDE: 122.12,
-            },
+            DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
