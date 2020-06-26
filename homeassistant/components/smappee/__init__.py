@@ -40,6 +40,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     if DOMAIN not in config:
         return True
+    hass.data[DOMAIN][CONF_PLATFORM] = config[DOMAIN][CONF_PLATFORM]
 
     config_flow.SmappeeFlowHandler.async_register_implementation(
         hass,
@@ -90,6 +91,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if unload_ok:
         hass.data[DOMAIN].pop(BASE, None)
+        hass.data[DOMAIN].pop(CONF_PLATFORM, None)
 
     return unload_ok
 
