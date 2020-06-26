@@ -1,12 +1,10 @@
 """Support for Sky Hub."""
+import aiohttp
+import asyncio
 import logging
 import re
-import asyncio
-import aiohttp
 
 import voluptuous as vol
-
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
@@ -14,6 +12,7 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, HTTP_OK
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
