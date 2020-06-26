@@ -3,6 +3,7 @@ from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -64,13 +65,15 @@ class FreeboxSensor(Entity):
         self._device_class = sensor[SENSOR_DEVICE_CLASS]
         self._unique_id = f"{self._router.mac} {self._name}"
 
-    def update(self) -> None:
+    @callback
+    async def async_on_demand_update(self) -> None:
         """Update the Freebox sensor."""
         state = self._router.sensors[self._sensor_type]
         if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
             self._state = round(state / 1000, 2)
         else:
             self._state = state
+        self.async_write_ha_state()
 
     @property
     def unique_id(self) -> str:
@@ -112,10 +115,6 @@ class FreeboxSensor(Entity):
         """No polling needed."""
         return False
 
-    async def async_on_demand_update(self):
-        """Update state."""
-        self.async_schedule_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register state update callback."""
         self.async_on_remove(
@@ -137,7 +136,8 @@ class FreeboxCallSensor(FreeboxSensor):
         self._call_list_for_type = []
         super().__init__(router, sensor_type, sensor)
 
-    def update(self) -> None:
+    @callback
+    async def async_on_demand_update(self) -> None:
         """Update the Freebox call sensor."""
         self._call_list_for_type = []
         for call in self._router.call_list:
@@ -147,6 +147,7 @@ class FreeboxCallSensor(FreeboxSensor):
                 self._call_list_for_type.append(call)
 
         self._state = len(self._call_list_for_type)
+        self.async_write_ha_state()
 
     @property
     def device_state_attributes(self) -> Dict[str, any]:
