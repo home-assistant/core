@@ -141,6 +141,10 @@ class SlackNotificationService(BaseNotificationService):
         self, url, targets, message, title, *, username=None, password=None
     ):
         """Upload a remote file (with message) to Slack."""
+        if not self._hass.config.is_allowed_external_url(url):
+            _LOGGER.error("URL is not allowed: %s", url)
+            return
+
         try:
             file_as_bytes = await _async_get_remote_file_contents(
                 self._hass, url, username=username, password=password
@@ -196,42 +200,40 @@ class SlackNotificationService(BaseNotificationService):
             kwargs.get(ATTR_TARGET, [self._default_channel])
         )
 
-        if ATTR_FILE in data:
-            if not self.hass.config.is_allowed_path(data[ATTR_FILE]):
-                _LOGGER.error(
-                    "Filepath does not exist or is not allowed: %s", data[ATTR_FILE]
-                )
-                return
-
-            if data[ATTR_FILE].startswith(("http://", "https://")):
-                return await self._async_send_remote_file_message(
-                    data[ATTR_FILE],
-                    targets,
-                    message,
-                    title,
-                    username=data.get(ATTR_USERNAME),
-                    password=data.get(ATTR_PASSWORD),
+        # Message Type 1: A text-only message
+        if ATTR_FILE not in data:
+            attachments = data.get(ATTR_ATTACHMENTS, {})
+            if attachments:
+                _LOGGER.warning(
+                    "Attachments are deprecated and part of Slack's legacy API; "
+                    "support for them will be dropped in 0.114.0. In most cases, "
+                    "Blocks should be used instead: "
+                    "https://www.home-assistant.io/integrations/slack/"
                 )
 
-            return await self._async_send_local_file_message(
-                data[ATTR_FILE], targets, message, title
+            if ATTR_BLOCKS_TEMPLATE in data:
+                blocks = _async_templatize_blocks(self.hass, data[ATTR_BLOCKS_TEMPLATE])
+            elif ATTR_BLOCKS in data:
+                blocks = data[ATTR_BLOCKS]
+            else:
+                blocks = {}
+
+            return await self._async_send_text_only_message(
+                targets, message, title, attachments, blocks
             )
 
-        attachments = data.get(ATTR_ATTACHMENTS, {})
-        if attachments:
-            _LOGGER.warning(
-                "Attachments are deprecated and part of Slack's legacy API; support "
-                "for them will be dropped in 0.114.0. In most cases, Blocks should be "
-                "used instead: https://www.home-assistant.io/integrations/slack/"
+        # Message Type 2: A message that uploads a remote file
+        if data[ATTR_FILE].startswith(("http://", "https://")):
+            return await self._async_send_remote_file_message(
+                data[ATTR_FILE],
+                targets,
+                message,
+                title,
+                username=data.get(ATTR_USERNAME),
+                password=data.get(ATTR_PASSWORD),
             )
 
-        if ATTR_BLOCKS_TEMPLATE in data:
-            blocks = _async_templatize_blocks(self.hass, data[ATTR_BLOCKS_TEMPLATE])
-        elif ATTR_BLOCKS in data:
-            blocks = data[ATTR_BLOCKS]
-        else:
-            blocks = {}
-
-        return await self._async_send_text_only_message(
-            targets, message, title, attachments, blocks
+        # Message Type 3: A message that uploads a local file
+        return await self._async_send_local_file_message(
+            data[ATTR_FILE], targets, message, title
         )
