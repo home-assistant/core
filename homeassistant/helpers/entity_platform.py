@@ -319,6 +319,8 @@ class EntityPlatform:
                 await entity.async_device_update(warning=False)
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("%s: Error on device update!", self.platform_name)
+                entity.hass = None
+                entity.platform = None
                 return
 
         suggested_object_id = None
@@ -391,6 +393,8 @@ class EntityPlatform:
                     or entity.name
                     or f'"{self.platform_name} {entity.unique_id}"',
                 )
+                entity.hass = None
+                entity.platform = None
                 return
 
         # We won't generate an entity ID if the platform has already set one
@@ -416,6 +420,8 @@ class EntityPlatform:
 
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):
+            entity.hass = None
+            entity.platform = None
             raise HomeAssistantError(f"Invalid entity id: {entity.entity_id}")
 
         already_exists = entity.entity_id in self.entities
@@ -431,6 +437,8 @@ class EntityPlatform:
             if entity.unique_id is not None:
                 msg += f". Platform {self.platform_name} does not generate unique IDs"
             self.logger.error(msg)
+            entity.hass = None
+            entity.platform = None
             return
 
         entity_id = entity.entity_id

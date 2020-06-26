@@ -245,6 +245,8 @@ async def test_light(
     cluster_color = getattr(zigpy_device.endpoints[1], "light_color", None)
     cluster_identify = getattr(zigpy_device.endpoints[1], "identify", None)
 
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the lights were created and that they are unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
@@ -516,6 +518,10 @@ async def test_zha_group_light_entity(
 
     dev1_cluster_level = device_light_1.device.endpoints[1].level
 
+    await async_enable_traffic(
+        hass, [device_light_1, device_light_2, device_light_3], enabled=False
+    )
+    await hass.async_block_till_done()
     # test that the lights were created and that they are unavailable
     assert hass.states.get(group_entity_id).state == STATE_UNAVAILABLE
 

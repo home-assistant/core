@@ -6,7 +6,7 @@
   "requirements": [
     "bellows==0.17.0",
     "pyserial==3.4",
-    "zha-quirks==0.0.39",
+    "zha-quirks==0.0.40",
     "zigpy-cc==0.4.4",
     "zigpy-deconz==0.9.2",
     "zigpy==0.21.0",

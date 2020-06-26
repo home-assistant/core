@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from alarmdecoder import AlarmDecoder
+from adext import AdExt
 from alarmdecoder.devices import SerialDevice, SocketDevice, USBDevice
 from alarmdecoder.util import NoDeviceError
 import voluptuous as vol
@@ -189,13 +189,13 @@ def setup(hass, config):
     if device_type == "socket":
         host = device[CONF_HOST]
         port = device[CONF_DEVICE_PORT]
-        controller = AlarmDecoder(SocketDevice(interface=(host, port)))
+        controller = AdExt(SocketDevice(interface=(host, port)))
     elif device_type == "serial":
         path = device[CONF_DEVICE_PATH]
         baud = device[CONF_DEVICE_BAUD]
-        controller = AlarmDecoder(SerialDevice(interface=path))
+        controller = AdExt(SerialDevice(interface=path))
     elif device_type == "usb":
-        AlarmDecoder(USBDevice.find())
+        AdExt(USBDevice.find())
         return False
 
     controller.on_message += handle_message

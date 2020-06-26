@@ -69,6 +69,11 @@ class MockOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implementa
         """Domain that is providing the implementation."""
         return "test"
 
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
+        return {"extra": "data"}
+
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         return "http://example.com/auth"

@@ -1,4 +1,6 @@
 """The tests for the Prometheus exporter."""
+from collections import namedtuple
+
 import pytest
 
 from homeassistant import setup
@@ -10,8 +12,14 @@ from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
+    EVENT_STATE_CHANGED,
 )
+from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
+
+import tests.async_mock as mock
+
+PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
 
 @pytest.fixture
@@ -139,3 +147,171 @@ async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
         'entity="sensor.sps30_pm_1um_weight_concentration",'
         'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
     )
+
+
+@pytest.fixture(name="mock_client")
+def mock_client_fixture():
+    """Mock the prometheus client."""
+    with mock.patch(f"{PROMETHEUS_PATH}.prometheus_client") as client:
+        counter_client = mock.MagicMock()
+        client.Counter = mock.MagicMock(return_value=counter_client)
+        setattr(counter_client, "labels", mock.MagicMock(return_value=mock.MagicMock()))
+        yield counter_client
+
+
+@pytest.fixture
+def mock_bus(hass):
+    """Mock the event bus listener."""
+    hass.bus.listen = mock.MagicMock()
+
+
+@pytest.mark.usefixtures("mock_bus")
+async def test_minimal_config(hass, mock_client):
+    """Test the minimal config and defaults of component."""
+    config = {prometheus.DOMAIN: {}}
+    assert await async_setup_component(hass, prometheus.DOMAIN, config)
+    await hass.async_block_till_done()
+    assert hass.bus.listen.called
+    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+
+
+@pytest.mark.usefixtures("mock_bus")
+async def test_full_config(hass, mock_client):
+    """Test the full config of component."""
+    config = {
+        prometheus.DOMAIN: {
+            "namespace": "ns",
+            "default_metric": "m",
+            "override_metric": "m",
+            "component_config": {"fake.test": {"override_metric": "km"}},
+            "component_config_glob": {"fake.time_*": {"override_metric": "h"}},
+            "component_config_domain": {"climate": {"override_metric": "°C"}},
+            "filter": {
+                "include_domains": ["climate"],
+                "include_entity_globs": ["fake.time_*"],
+                "include_entities": ["fake.test"],
+                "exclude_domains": ["script"],
+                "exclude_entity_globs": ["climate.excluded_*"],
+                "exclude_entities": ["fake.time_excluded"],
+            },
+        }
+    }
+    assert await async_setup_component(hass, prometheus.DOMAIN, config)
+    await hass.async_block_till_done()
+    assert hass.bus.listen.called
+    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+
+
+FilterTest = namedtuple("FilterTest", "id should_pass")
+
+
+def make_event(entity_id):
+    """Make a mock event for test."""
+    domain = split_entity_id(entity_id)[0]
+    state = mock.MagicMock(
+        state="not blank",
+        domain=domain,
+        entity_id=entity_id,
+        object_id="entity",
+        attributes={},
+    )
+    return mock.MagicMock(data={"new_state": state}, time_fired=12345)
+
+
+async def _setup(hass, filter_config):
+    """Shared set up for filtering tests."""
+    config = {prometheus.DOMAIN: {"filter": filter_config}}
+    assert await async_setup_component(hass, prometheus.DOMAIN, config)
+    await hass.async_block_till_done()
+    return hass.bus.listen.call_args_list[0][0][1]
+
+
+@pytest.mark.usefixtures("mock_bus")
+async def test_allowlist(hass, mock_client):
+    """Test an allowlist only config."""
+    handler_method = await _setup(
+        hass,
+        {
+            "include_domains": ["fake"],
+            "include_entity_globs": ["test.included_*"],
+            "include_entities": ["not_real.included"],
+        },
+    )
+
+    tests = [
+        FilterTest("climate.excluded", False),
+        FilterTest("fake.included", True),
+        FilterTest("test.excluded_test", False),
+        FilterTest("test.included_test", True),
+        FilterTest("not_real.included", True),
+        FilterTest("not_real.excluded", False),
+    ]
+
+    for test in tests:
+        event = make_event(test.id)
+        handler_method(event)
+
+        was_called = mock_client.labels.call_count == 1
+        assert test.should_pass == was_called
+        mock_client.labels.reset_mock()
+
+
+@pytest.mark.usefixtures("mock_bus")
+async def test_denylist(hass, mock_client):
+    """Test a denylist only config."""
+    handler_method = await _setup(
+        hass,
+        {
+            "exclude_domains": ["fake"],
+            "exclude_entity_globs": ["test.excluded_*"],
+            "exclude_entities": ["not_real.excluded"],
+        },
+    )
+
+    tests = [
+        FilterTest("fake.excluded", False),
+        FilterTest("light.included", True),
+        FilterTest("test.excluded_test", False),
+        FilterTest("test.included_test", True),
+        FilterTest("not_real.included", True),
+        FilterTest("not_real.excluded", False),
+    ]
+
+    for test in tests:
+        event = make_event(test.id)
+        handler_method(event)
+
+        was_called = mock_client.labels.call_count == 1
+        assert test.should_pass == was_called
+        mock_client.labels.reset_mock()
+
+
+@pytest.mark.usefixtures("mock_bus")
+async def test_filtered_denylist(hass, mock_client):
+    """Test a denylist config with a filtering allowlist."""
+    handler_method = await _setup(
+        hass,
+        {
+            "include_entities": ["fake.included", "test.excluded_test"],
+            "exclude_domains": ["fake"],
+            "exclude_entity_globs": ["*.excluded_*"],
+            "exclude_entities": ["not_real.excluded"],
+        },
+    )
+
+    tests = [
+        FilterTest("fake.excluded", False),
+        FilterTest("fake.included", True),
+        FilterTest("alt_fake.excluded_test", False),
+        FilterTest("test.excluded_test", True),
+        FilterTest("not_real.excluded", False),
+        FilterTest("not_real.included", True),
+    ]
+
+    for test in tests:
+        event = make_event(test.id)
+        handler_method(event)
+
+        was_called = mock_client.labels.call_count == 1
+        assert test.should_pass == was_called
+        mock_client.labels.reset_mock()

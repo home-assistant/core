@@ -23,5 +23,16 @@
                 "title": "Mam Blink Kont verbannen"
             }
         }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Scan Intervall (sekonnen)"
+                },
+                "description": "Blink Integratioun ariichten",
+                "title": "Blink Optiounen"
+            }
+        }
     }
 }

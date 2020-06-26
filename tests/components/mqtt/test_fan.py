@@ -664,7 +664,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique_id option only creates one fan per id."""
     config = {
         fan.DOMAIN: [
@@ -684,7 +684,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, fan.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, fan.DOMAIN, config)
 
 
 async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
