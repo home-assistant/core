@@ -18,7 +18,6 @@ from homeassistant.components.plex.const import (
     DOMAIN,
     MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
-    PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
 )
 from homeassistant.config import async_process_ha_core_config
@@ -34,9 +33,9 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
+from .helpers import trigger_plex_update
 from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer, MockResource
 
 from tests.async_mock import patch
@@ -480,7 +479,7 @@ async def test_option_flow_new_users_available(hass, caplog):
     server_id = mock_plex_server.machineIdentifier
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
-        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        trigger_plex_update(hass, mock_plex_server)
         await hass.async_block_till_done()
 
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
