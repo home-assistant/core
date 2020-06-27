@@ -199,6 +199,7 @@ class HomeAssistant:
         self.config = Config(self)
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
+        self.simple_state_tracker = TrackSimpleStateChange(self)
         # This is a dictionary that any component can store any data on.
         self.data: dict = {}
         self.state = CoreState.not_running
@@ -1542,6 +1543,77 @@ class Config:
             CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True
         )
         await store.async_save(data)
+
+
+class TrackSimpleStateChange:
+    """A class to track simple state changes.
+
+    This class takes care of tracking state changes
+    for listener that want all the state data for
+    a given entity in order to avoid hundreds of
+    state change listeners being fired when a large
+    number of entities exist.
+    """
+
+    def __init__(self, hass: HomeAssistant):
+        """Create the simple tracker."""
+        self.hass = hass
+        self._entity_callbacks: Dict[str, Any] = {}
+        self._state_change_listener: Optional[Callable[[], None]] = None
+
+    @callback
+    def async_add_listener(
+        self,
+        hass: HomeAssistant,
+        entity_id: str,
+        action: Callable[[str, State, State], None],
+    ) -> Callable[[], None]:
+        """Listen for a single entities state changes."""
+        if not self._state_change_listener:
+            self._state_change_listener = hass.bus.async_listen(
+                EVENT_STATE_CHANGED, self._async_state_change_dispatcher
+            )
+
+        if entity_id not in self._entity_callbacks:
+            self._entity_callbacks[entity_id] = []
+
+        self._entity_callbacks[entity_id].append(action)
+
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self.async_remove_listener(entity_id, action)
+
+        return remove_listener
+
+    @callback
+    def async_remove_listener(
+        self, entity_id: str, action: Callable[[str, State, State], None]
+    ) -> None:
+        """Remove a listener."""
+        self._entity_callbacks[entity_id].remove(action)
+
+        if len(self._entity_callbacks[entity_id]) == 0:
+            del self._entity_callbacks[entity_id]
+
+        if not self._entity_callbacks and self._state_change_listener:
+            self._state_change_listener()
+            self._state_change_listener = None
+
+    @callback
+    def _async_state_change_dispatcher(self, event: Event) -> None:
+        entity_id = cast(str, event.data.get("entity_id"))
+
+        if entity_id not in self._entity_callbacks:
+            return
+
+        for action in self._entity_callbacks[entity_id]:
+            self.hass.async_run_job(
+                action,
+                entity_id,
+                event.data.get("old_state"),
+                event.data.get("new_state"),
+            )
 
 
 def _async_create_timer(hass: HomeAssistant) -> None:

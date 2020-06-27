@@ -74,6 +74,10 @@ def async_track_state_change(
     if entity_ids == MATCH_ALL:
         pass
     elif isinstance(entity_ids, str):
+        if from_state is None and to_state is None and action is not None:
+            return hass.simple_state_tracker.async_add_listener(
+                hass, entity_ids.lower(), action
+            )
         entity_ids = (entity_ids.lower(),)
     else:
         entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
