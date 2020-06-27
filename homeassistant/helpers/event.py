@@ -69,12 +69,14 @@ def async_track_state_change(
     """
     match_from_state = process_state_match(from_state)
     match_to_state = process_state_match(to_state)
+    single_entity = None
 
     # Ensure it is a lowercase list with entity ids we want to match on
     if entity_ids == MATCH_ALL:
         pass
     elif isinstance(entity_ids, str):
         entity_ids = (entity_ids.lower(),)
+        single_entity = entity_ids[0]
     else:
         entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
 
@@ -102,6 +104,11 @@ def async_track_state_change(
                 event.data.get("old_state"),
                 event.data.get("new_state"),
             )
+
+    if single_entity is not None:
+        return hass.simple_state_tracker.async_add_listener(
+            single_entity, state_change_listener
+        )
 
     return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
 

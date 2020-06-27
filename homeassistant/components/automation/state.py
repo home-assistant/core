@@ -153,7 +153,12 @@ async def async_attach_trigger(
             hass, period[entity], call_action, _check_same_state, entity_ids=entity,
         )
 
-    unsub = hass.bus.async_listen(EVENT_STATE_CHANGED, state_automation_listener)
+    if len(entity_id) == 1:
+        unsub = hass.simple_state_tracker.async_add_listener(
+            entity_id[0], state_automation_listener
+        )
+    else:
+        unsub = hass.bus.async_listen(EVENT_STATE_CHANGED, state_automation_listener)
 
     @callback
     def async_remove():
