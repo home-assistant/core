@@ -104,9 +104,11 @@ def async_track_state_change(
         # If we have a list of entity ids we use
         # async_track_state_change_event to route
         # by entity_id to avoid iterating though state change
-        # events and creating a jobs that where the most
+        # events and creating a jobs where the most
         # common outcome is to return right away because
-        # the entity_id does not match.
+        # the entity_id does not match since usually
+        # only one or two listeners want that specific
+        # entity_id.
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
