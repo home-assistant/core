@@ -1,7 +1,7 @@
 """Helpers for listening to events."""
 from datetime import datetime, timedelta
 import functools as ft
-from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union, cast
+from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union
 
 import attr
 
@@ -69,26 +69,18 @@ def async_track_state_change(
     """
     match_from_state = process_state_match(from_state)
     match_to_state = process_state_match(to_state)
-    single_entity = None
 
     # Ensure it is a lowercase list with entity ids we want to match on
     if entity_ids == MATCH_ALL:
         pass
     elif isinstance(entity_ids, str):
         entity_ids = (entity_ids.lower(),)
-        single_entity = entity_ids[0]
     else:
         entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
 
     @callback
     def state_change_listener(event: Event) -> None:
         """Handle specific state changes."""
-        if (
-            entity_ids != MATCH_ALL
-            and cast(str, event.data.get("entity_id")) not in entity_ids
-        ):
-            return
-
         old_state = event.data.get("old_state")
         if old_state is not None:
             old_state = old_state.state
@@ -105,9 +97,9 @@ def async_track_state_change(
                 event.data.get("new_state"),
             )
 
-    if single_entity is not None:
+    if entity_ids != MATCH_ALL:
         return hass.simple_state_tracker.async_add_listener(
-            single_entity, state_change_listener
+            entity_ids, state_change_listener
         )
 
     return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)

@@ -24,6 +24,7 @@ from typing import (
     Callable,
     Coroutine,
     Dict,
+    Iterable,
     List,
     Mapping,
     Optional,
@@ -414,9 +415,7 @@ class HomeAssistant:
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks if not task.done()]
-            _LOGGER.debug("Waiting for pending tasks: %s", pending)
             self._pending_tasks.clear()
-
             if pending:
                 await asyncio.wait(pending)
             else:
@@ -1565,7 +1564,7 @@ class TrackSimpleStateChange:
 
     @callback
     def async_add_listener(
-        self, entity_id: str, action: Callable[[Event], None],
+        self, entity_ids: Iterable[str], action: Callable[[Event], None],
     ) -> Callable[[], None]:
         """Listen for a single entities state changes."""
         if not self._state_change_listener:
@@ -1573,15 +1572,17 @@ class TrackSimpleStateChange:
                 EVENT_STATE_CHANGED, self._async_state_change_dispatcher
             )
 
-        if entity_id not in self._entity_callbacks:
-            self._entity_callbacks[entity_id] = []
+        for entity_id in entity_ids:
+            if entity_id not in self._entity_callbacks:
+                self._entity_callbacks[entity_id] = []
 
-        self._entity_callbacks[entity_id].append(action)
+            self._entity_callbacks[entity_id].append(action)
 
         @callback
         def remove_listener() -> None:
             """Remove update listener."""
-            self.async_remove_listener(entity_id, action)
+            for entity_id in entity_ids:
+                self.async_remove_listener(entity_id, action)
 
         return remove_listener
 

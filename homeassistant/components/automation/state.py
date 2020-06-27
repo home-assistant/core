@@ -6,7 +6,7 @@ from typing import Dict
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_FOR, CONF_PLATFORM, EVENT_STATE_CHANGED, MATCH_ALL
+from homeassistant.const import CONF_FOR, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
@@ -153,12 +153,9 @@ async def async_attach_trigger(
             hass, period[entity], call_action, _check_same_state, entity_ids=entity,
         )
 
-    if len(entity_id) == 1:
-        unsub = hass.simple_state_tracker.async_add_listener(
-            entity_id[0], state_automation_listener
-        )
-    else:
-        unsub = hass.bus.async_listen(EVENT_STATE_CHANGED, state_automation_listener)
+    unsub = hass.simple_state_tracker.async_add_listener(
+        entity_id, state_automation_listener
+    )
 
     @callback
     def async_remove():
