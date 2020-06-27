@@ -145,6 +145,7 @@ class AccuWeatherEntity(WeatherEntity):
                 for item in self.coordinator.data["DailyForecasts"]
             ]
             return forecast
+        return None
 
     @property
     def entity_registry_enabled_default(self):
