@@ -1,27 +1,14 @@
 {
-  "title": "ScreenLogic",
+  "title": "Screenlogic",
   "config": {
-    "error": {
-      "can_not_connect":"Unable to connect to a ScreenLogic Gateway at the address provided.",
-      "already_configured": "Gateway already configured."
-    },
     "step": {
       "confirm": {
-        "description": "Do you want to start set up?"
-      },
-      "user": {
-        "title": "ScreenLogic",
-        "description": "Enter your ScreenLogic Gateway information.",
-        "data": {
-            "ip_address": "IP Address",
-            "port": "Port",
-            "scan_interval":"Scan Interval"
-          }
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "No devices found on the network"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }
