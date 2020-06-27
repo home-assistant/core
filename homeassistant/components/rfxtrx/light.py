@@ -20,7 +20,7 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
-    RECEIVED_EVT_SUBSCRIBERS,
+    SIGNAL_EVENT,
     RfxtrxDevice,
     apply_received_command,
     get_devices_from_config,
@@ -64,13 +64,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         new_device = get_new_device(event, config, RfxtrxLight)
         if new_device:
+            apply_received_command(event, new_device)
             add_entities([new_device])
 
-        apply_received_command(event)
-
     # Subscribe to main RFXtrx events
-    if light_update not in RECEIVED_EVT_SUBSCRIBERS:
-        RECEIVED_EVT_SUBSCRIBERS.append(light_update)
+    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, light_update)
 
 
 class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
@@ -90,6 +88,19 @@ class RfxtrxLight(RfxtrxDevice, LightEntity, RestoreEntity):
             and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
         ):
             self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
+
+        def _handle_event(event):
+            """Check if event applies to me and update."""
+            if event.device.id_string != self._event.device.id_string:
+                return
+
+            apply_received_command(event, self)
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_EVENT, _handle_event
+            )
+        )
 
     @property
     def brightness(self):

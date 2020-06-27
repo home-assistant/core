@@ -25,8 +25,8 @@ from . import (
     CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
-    RECEIVED_EVT_SUBSCRIBERS,
     RFX_DEVICES,
+    SIGNAL_EVENT,
     apply_received_command,
     find_possible_pt2262_device,
     get_pt2262_cmd,
@@ -58,6 +58,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+def _apply_received_command(hass, event, sensor):
+    """Apply command from rfxtrx."""
+    if sensor.is_lighting4:
+        if sensor.data_bits is not None:
+            cmd = get_pt2262_cmd(event.device.device_id, sensor.data_bits)
+            sensor.apply_cmd(int(cmd, 16))
+        else:
+            sensor.update_state(True)
+    else:
+        apply_received_command(event, sensor)
+
+    if sensor.is_on and sensor.off_delay is not None and sensor.delay_listener is None:
+
+        def off_delay_listener(now):
+            """Switch device off after a delay."""
+            sensor.delay_listener = None
+            sensor.update_state(False)
+
+        sensor.delay_listener = evt.track_point_in_time(
+            hass, off_delay_listener, dt_util.utcnow() + sensor.off_delay
+        )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -130,43 +153,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 event.device.subtype,
             )
 
-        elif not isinstance(sensor, RfxtrxBinarySensor):
-            return
-        else:
-            _LOGGER.debug(
-                "Binary sensor update (Device ID: %s Class: %s Sub: %s)",
-                slugify(event.device.id_string.lower()),
-                event.device.__class__.__name__,
-                event.device.subtype,
-            )
-
-        if sensor.is_lighting4:
-            if sensor.data_bits is not None:
-                cmd = get_pt2262_cmd(device_id, sensor.data_bits)
-                sensor.apply_cmd(int(cmd, 16))
-            else:
-                sensor.update_state(True)
-        else:
-            apply_received_command(event)
-
-        if (
-            sensor.is_on
-            and sensor.off_delay is not None
-            and sensor.delay_listener is None
-        ):
-
-            def off_delay_listener(now):
-                """Switch device off after a delay."""
-                sensor.delay_listener = None
-                sensor.update_state(False)
-
-            sensor.delay_listener = evt.track_point_in_time(
-                hass, off_delay_listener, dt_util.utcnow() + sensor.off_delay
-            )
+            _apply_received_command(hass, event, sensor)
 
     # Subscribe to main RFXtrx events
-    if binary_sensor_update not in RECEIVED_EVT_SUBSCRIBERS:
-        RECEIVED_EVT_SUBSCRIBERS.append(binary_sensor_update)
+    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, binary_sensor_update)
 
 
 class RfxtrxBinarySensor(BinarySensorEntity):
@@ -203,6 +193,30 @@ class RfxtrxBinarySensor(BinarySensorEntity):
             )
         else:
             self._masked_id = None
+
+    async def async_added_to_hass(self):
+        """Restore RFXtrx switch device state (ON/OFF)."""
+        await super().async_added_to_hass()
+
+        def _handle_event(event):
+            """Check if event applies to me and update."""
+            if event.device.id_string != self.event.device.id_string:
+                return
+
+            _LOGGER.debug(
+                "Binary sensor update (Device ID: %s Class: %s Sub: %s)",
+                slugify(event.device.id_string.lower()),
+                event.device.__class__.__name__,
+                event.device.subtype,
+            )
+
+            _apply_received_command(self.hass, event, self)
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_EVENT, _handle_event
+            )
+        )
 
     @property
     def name(self):

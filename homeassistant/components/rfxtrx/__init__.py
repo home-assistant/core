@@ -44,6 +44,7 @@ CONF_DUMMY = "dummy"
 CONF_DEBUG = "debug"
 CONF_OFF_DELAY = "off_delay"
 EVENT_BUTTON_PRESSED = "button_pressed"
+SIGNAL_EVENT = f"{DOMAIN}_event"
 
 DATA_TYPES = OrderedDict(
     [
@@ -79,7 +80,6 @@ DATA_TYPES = OrderedDict(
     ]
 )
 
-RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = "rfxobject"
@@ -120,8 +120,7 @@ def setup(hass, config):
         )
 
         # Callback to HA registered components.
-        for subscriber in RECEIVED_EVT_SUBSCRIBERS:
-            subscriber(event)
+        hass.helpers.dispatcher.dispatcher_send(SIGNAL_EVENT, event)
 
     device = config[DOMAIN].get(ATTR_DEVICE)
     host = config[DOMAIN].get(CONF_HOST)
@@ -301,15 +300,12 @@ def get_new_device(event, config, device):
     return new_device
 
 
-def apply_received_command(event):
-    """Apply command from rfxtrx."""
-    device_id = slugify(event.device.id_string.lower())
-    # Check if entity exists or previously added automatically
-    if device_id not in RFX_DEVICES:
-        return
-
+def apply_received_command(event, entity):
+    """Apply command from rfxtrx to a specific entity."""
     _LOGGER.debug(
-        "Device_id: %s device_update. Command: %s", device_id, event.values["Command"],
+        "Device_id: %s device_update. Command: %s",
+        event.device.id_string,
+        event.values["Command"],
     )
 
     if event.values["Command"] in [
@@ -335,24 +331,21 @@ def apply_received_command(event):
             is_on = True
         elif command in ["Off", "Down", "Close (inline relay)"]:
             is_on = False
-        RFX_DEVICES[device_id].update_state(is_on)
+        entity.update_state(is_on)
 
-    elif (
-        hasattr(RFX_DEVICES[device_id], "brightness")
-        and event.values["Command"] == "Set level"
-    ):
+    elif hasattr(entity, "brightness") and event.values["Command"] == "Set level":
         _brightness = event.values["Dim level"] * 255 // 100
 
         # Update the rfxtrx device state
         is_on = _brightness > 0
-        RFX_DEVICES[device_id].update_state(is_on, _brightness)
+        entity.update_state(is_on, _brightness)
 
     # Fire event
-    if RFX_DEVICES[device_id].should_fire_event:
-        RFX_DEVICES[device_id].hass.bus.fire(
+    if entity.should_fire_event:
+        entity.hass.bus.fire(
             EVENT_BUTTON_PRESSED,
             {
-                ATTR_ENTITY_ID: RFX_DEVICES[device_id].entity_id,
+                ATTR_ENTITY_ID: entity.entity_id,
                 ATTR_STATE: event.values["Command"].lower(),
             },
         )
@@ -360,7 +353,7 @@ def apply_received_command(event):
             "Rfxtrx fired event: (event_type: %s, %s: %s, %s: %s)",
             EVENT_BUTTON_PRESSED,
             ATTR_ENTITY_ID,
-            RFX_DEVICES[device_id].entity_id,
+            entity.entity_id,
             ATTR_STATE,
             event.values["Command"].lower(),
         )

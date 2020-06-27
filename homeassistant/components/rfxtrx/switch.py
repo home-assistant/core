@@ -15,7 +15,7 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
-    RECEIVED_EVT_SUBSCRIBERS,
+    SIGNAL_EVENT,
     RfxtrxDevice,
     apply_received_command,
     get_devices_from_config,
@@ -59,13 +59,11 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
         new_device = get_new_device(event, config, RfxtrxSwitch)
         if new_device:
+            apply_received_command(event, new_device)
             add_entities_callback([new_device])
 
-        apply_received_command(event)
-
     # Subscribe to main RFXtrx events
-    if switch_update not in RECEIVED_EVT_SUBSCRIBERS:
-        RECEIVED_EVT_SUBSCRIBERS.append(switch_update)
+    hass.helpers.dispatcher.dispatcher_connect(SIGNAL_EVENT, switch_update)
 
 
 class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
@@ -78,6 +76,19 @@ class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
         old_state = await self.async_get_last_state()
         if old_state is not None:
             self._state = old_state.state == STATE_ON
+
+        def _handle_event(event):
+            """Check if event applies to me and update."""
+            if event.device.id_string != self._event.device.id_string:
+                return
+
+            apply_received_command(event, self)
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_EVENT, _handle_event
+            )
+        )
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
