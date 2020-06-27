@@ -128,6 +128,8 @@ def async_track_state_change_event(
     if TRACK_STATE_CHANGE_CALLBACKS not in hass.data:
         hass.data[TRACK_STATE_CHANGE_CALLBACKS] = {}
 
+    entity_callbacks = hass.data[TRACK_STATE_CHANGE_CALLBACKS]
+
     if TRACK_STATE_CHANGE_LISTENER not in hass.data:
 
         @callback
@@ -135,19 +137,23 @@ def async_track_state_change_event(
             """Dispatch state changes by entity_id."""
             entity_id = event.data.get("entity_id")
 
-            if entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]:
+            import pprint
+
+            pprint.pprint([event, entity_callbacks])
+
+            if entity_id not in entity_callbacks:
                 return
 
-            for action in hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]:
+            for action in entity_callbacks[entity_id]:
                 hass.async_run_job(action, event)
 
         hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED, _async_state_change_dispatcher
         )
 
-    entity_callbacks = hass.data[TRACK_STATE_CHANGE_CALLBACKS]
+    for unproc_entity_id in entity_ids:
+        entity_id = unproc_entity_id.lower()
 
-    for entity_id in entity_ids:
         if entity_id not in entity_callbacks:
             entity_callbacks[entity_id] = []
 

@@ -15,6 +15,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_same_state,
     async_track_state_change,
+    async_track_state_change_event,
     async_track_sunrise,
     async_track_sunset,
     async_track_template,
@@ -161,6 +162,80 @@ async def test_track_state_change(hass):
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 5
     assert len(wildercard_runs) == 6
+
+
+async def test_async_track_state_change_event(hass):
+    """Test async_track_state_change_event."""
+    single_runs = []
+    multiple_runs = []
+
+    @ha.callback
+    def single_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        single_runs.append((old_state, new_state))
+
+    @ha.callback
+    def multiple_run_callback(event):
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        multiple_runs.append((old_state, new_state))
+
+    async_track_state_change_event(hass, ["light.Bowl"], single_run_callback)
+    async_track_state_change_event(
+        hass, ["light.Bowl", "switch.kitchen"], multiple_run_callback
+    )
+
+    # Adding state to state machine
+    hass.states.async_set("light.Bowl", "on")
+    await hass.async_block_till_done()
+    assert len(single_runs) == 1
+    assert single_runs[-1][0] is None
+    assert single_runs[-1][1] is not None
+    assert len(multiple_runs) == 1
+    assert multiple_runs[-1][0] is None
+    assert multiple_runs[-1][1] is not None
+
+    # Set same state should not trigger a state change/listener
+    hass.states.async_set("light.Bowl", "on")
+    await hass.async_block_till_done()
+    assert len(single_runs) == 1
+    assert len(multiple_runs) == 1
+
+    # State change off -> on
+    hass.states.async_set("light.Bowl", "off")
+    await hass.async_block_till_done()
+    assert len(single_runs) == 2
+    assert len(multiple_runs) == 2
+
+    # State change off -> off
+    hass.states.async_set("light.Bowl", "off", {"some_attr": 1})
+    await hass.async_block_till_done()
+    assert len(single_runs) == 3
+    assert len(multiple_runs) == 3
+
+    # State change off -> on
+    hass.states.async_set("light.Bowl", "on")
+    await hass.async_block_till_done()
+    assert len(single_runs) == 4
+    assert len(multiple_runs) == 4
+
+    hass.states.async_remove("light.bowl")
+    await hass.async_block_till_done()
+    assert len(single_runs) == 5
+    assert single_runs[-1][0] is not None
+    assert single_runs[-1][1] is None
+    assert len(multiple_runs) == 5
+    assert multiple_runs[-1][0] is not None
+    assert multiple_runs[-1][1] is None
+
+    # Set state for different entity id
+    hass.states.async_set("switch.kitchen", "on")
+    await hass.async_block_till_done()
+    assert len(single_runs) == 5
+    assert len(multiple_runs) == 6
 
 
 async def test_track_template(hass):
