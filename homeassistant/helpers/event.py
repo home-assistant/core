@@ -145,10 +145,6 @@ def async_track_state_change_event(
             """Dispatch state changes by entity_id."""
             entity_id = event.data.get("entity_id")
 
-            import pprint
-
-            pprint.pprint([event, entity_callbacks])
-
             if entity_id not in entity_callbacks:
                 return
 
@@ -159,9 +155,9 @@ def async_track_state_change_event(
             EVENT_STATE_CHANGED, _async_state_change_dispatcher
         )
 
-    for unproc_entity_id in entity_ids:
-        entity_id = unproc_entity_id.lower()
+    entity_ids = [entity_id.lower() for entity_id in entity_ids]
 
+    for entity_id in entity_ids:
         if entity_id not in entity_callbacks:
             entity_callbacks[entity_id] = []
 
@@ -170,23 +166,22 @@ def async_track_state_change_event(
     @callback
     def remove_listener() -> None:
         """Remove state change listener."""
-        for entity_id in entity_ids:
-            _async_remove_state_change_listener(hass, entity_id, action)
+        _async_remove_state_change_listeners(hass, entity_ids, action)
 
     return remove_listener
 
 
 @callback
-def _async_remove_state_change_listener(
-    hass: HomeAssistant, entity_id: str, action: Callable[[Event], None]
+def _async_remove_state_change_listeners(
+    hass: HomeAssistant, entity_ids: Iterable[str], action: Callable[[Event], None]
 ) -> None:
     """Remove a listener."""
     entity_callbacks = hass.data[TRACK_STATE_CHANGE_CALLBACKS]
 
-    entity_callbacks[entity_id].remove(action)
-
-    if len(entity_callbacks[entity_id]) == 0:
-        del entity_callbacks[entity_id]
+    for entity_id in entity_ids:
+        entity_callbacks[entity_id].remove(action)
+        if len(entity_callbacks[entity_id]) == 0:
+            del entity_callbacks[entity_id]
 
     if not entity_callbacks:
         hass.data[TRACK_STATE_CHANGE_LISTENER]()
