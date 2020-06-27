@@ -9,7 +9,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -54,6 +54,7 @@ ATTR_TIME_PERIOD = "time_period"
 
 WATER_HEATER_TIMER_SCHEMA = vol.Schema(
     {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
             cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
         ),
@@ -236,7 +237,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     def set_timer(self, time_period, temperature=None):
         """Set the timer on the entity, and temperature if supported."""
         if not self._supports_temperature_control and temperature is not None:
-            return
+            temperature = None
 
         self._control_heater(
             hvac_mode=CONST_MODE_HEAT, target_temp=temperature, duration=time_period
