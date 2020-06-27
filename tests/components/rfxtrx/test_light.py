@@ -24,8 +24,9 @@ class TestLightRfxtrx(unittest.TestCase):
         """Stop everything that was started."""
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx_core.RFX_DEVICES = {}
-        if rfxtrx_core.RFXOBJECT:
-            rfxtrx_core.RFXOBJECT.close_connection()
+        if rfxtrx_core.DATA_RFXOBJECT in self.hass.data:
+            self.hass.data[rfxtrx_core.DATA_RFXOBJECT].close_connection()
+            del self.hass.data[rfxtrx_core.DATA_RFXOBJECT]
         self.hass.stop()
 
     def test_valid_config(self):
@@ -111,7 +112,7 @@ class TestLightRfxtrx(unittest.TestCase):
             },
         )
 
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
+        self.hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
             "", transport_protocol=rfxtrxmod.DummyTransport
         )
 
@@ -161,7 +162,7 @@ class TestLightRfxtrx(unittest.TestCase):
 
         import RFXtrx as rfxtrxmod
 
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
+        self.hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
             "", transport_protocol=rfxtrxmod.DummyTransport
         )
 

@@ -24,8 +24,9 @@ class TestRFXTRX(unittest.TestCase):
         """Stop everything that was started."""
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx.RFX_DEVICES = {}
-        if rfxtrx.RFXOBJECT:
-            rfxtrx.RFXOBJECT.close_connection()
+        if rfxtrx.DATA_RFXOBJECT in self.hass.data:
+            self.hass.data[rfxtrx.DATA_RFXOBJECT].close_connection()
+            del self.hass.data[rfxtrx.DATA_RFXOBJECT]
         self.hass.stop()
 
     def test_default_config(self):
@@ -48,7 +49,7 @@ class TestRFXTRX(unittest.TestCase):
             {"sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
         )
 
-        assert len(rfxtrx.RFXOBJECT.sensors()) == 2
+        assert len(self.hass.data[rfxtrx.DATA_RFXOBJECT].sensors()) == 2
 
     def test_valid_config(self):
         """Test configuration."""
