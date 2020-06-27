@@ -468,7 +468,10 @@ class SoundTouchDevice(MediaPlayerEntity):
         # In addition to this shortcoming, libsoundtouch seems to report the "is_master"
         # property wrong on some slaves, so the only reliable way to detect if the current
         # devices is the master, is by comparing the master_id of the zone with the device_id
-        if self.entity_id is not None and zone_status.master_id == self._device.config.device_id:
+        if (
+            self.entity_id is not None
+            and zone_status.master_id == self._device.config.device_id
+        ):
             return self._build_zone_info(self.entity_id, zone_status.slaves)
 
         # The master device has to be searched by it's ID and not IP since libsoundtouch / BOSE API
