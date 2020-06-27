@@ -1,6 +1,7 @@
 """Config flow for Omnilogic integration."""
 import logging
 
+from omnilogic.omnilogic import OmniLogic
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -10,7 +11,7 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+DATA_SCHEMA = vol.Schema({"username": str, "password": str})
 
 
 class PlaceholderHub:
@@ -60,16 +61,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     # TODO pick one of the available connection classes in homeassistant/config_entries.py
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
-
-                return self.async_create_entry(title=info["title"], data=user_input)
+                # info = await validate_input(self.hass, user_input)
+                _LOGGER.info("TEST TEST TEST")
+                await self.async_set_unique_id(user_input["username"])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title="Omnilogic", data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
