@@ -12,6 +12,7 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     Event,
     async_track_same_state,
+    async_track_state_change_event,
     process_state_match,
 )
 
@@ -153,9 +154,7 @@ async def async_attach_trigger(
             hass, period[entity], call_action, _check_same_state, entity_ids=entity,
         )
 
-    unsub = hass.simple_state_tracker.async_add_listener(
-        entity_id, state_automation_listener
-    )
+    unsub = async_track_state_change_event(hass, entity_id, state_automation_listener)
 
     @callback
     def async_remove():
