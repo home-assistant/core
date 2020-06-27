@@ -163,7 +163,9 @@ async def test_setup_with_photo_session(hass):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
+    ), patch(
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
+    ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -171,7 +173,7 @@ async def test_setup_with_photo_session(hass):
     assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
     assert entry.state == ENTRY_STATE_LOADED
 
-    trigger_plex_update(hass, mock_plex_server)
+    trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
 
     media_player = hass.states.get("media_player.plex_product_title")
@@ -261,15 +263,15 @@ async def test_tokenless_server(hass):
     )
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ):
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
+    ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_LOADED
 
-    trigger_plex_update(hass, mock_plex_server)
+    trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
 
 
@@ -286,12 +288,14 @@ async def test_bad_token_with_tokenless_server(hass):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", side_effect=plexapi.exceptions.Unauthorized
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
+    ), patch(
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
+    ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_LOADED
 
-    trigger_plex_update(hass, mock_plex_server)
+    trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
