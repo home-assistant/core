@@ -166,6 +166,35 @@ ANDROIDTV_STATES = {
 }
 
 
+def setup_androidtv(hass, config):
+    """Generate an ADB key (if needed) and connect to the Android TV / Fire TV."""
+    adbkey = config.get(CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey"))
+    if CONF_ADB_SERVER_IP not in config:
+        # Use "adb_shell" (Python ADB implementation)
+        if not os.path.isfile(adbkey):
+            # Generate ADB key files
+            keygen(adbkey)
+
+        adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
+
+    else:
+        # Use "pure-python-adb" (communicate with ADB server)
+        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+
+    aftv = setup(
+        config[CONF_HOST],
+        config[CONF_PORT],
+        adbkey,
+        config.get(CONF_ADB_SERVER_IP, ""),
+        config[CONF_ADB_SERVER_PORT],
+        config[CONF_STATE_DETECTION_RULES],
+        config[CONF_DEVICE_CLASS],
+        10.0,
+    )
+
+    return aftv, adb_log
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
@@ -176,30 +205,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.warning("Platform already setup on %s, skipping", address)
         return
 
-    adbkey = config.get(CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey"))
-    if CONF_ADB_SERVER_IP not in config:
-        # Use "adb_shell" (Python ADB implementation)
-        if not os.path.isfile(adbkey):
-            # Generate ADB key files
-            await hass.async_add_executor_job(keygen, adbkey)
-
-        adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
-
-    else:
-        # Use "pure-python-adb" (communicate with ADB server)
-        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
-
-    setup_args = (
-        config[CONF_HOST],
-        config[CONF_PORT],
-        adbkey,
-        config.get(CONF_ADB_SERVER_IP, ""),
-        config[CONF_ADB_SERVER_PORT],
-        config[CONF_STATE_DETECTION_RULES],
-        config[CONF_DEVICE_CLASS],
-        10.0,
-    )
-    aftv = await hass.async_add_executor_job(setup, *setup_args)
+    aftv, adb_log = await hass.async_add_executor_job(setup_androidtv, hass, config)
 
     if not aftv.available:
         # Determine the name that will be used for the device in the log
