@@ -1,0 +1,16 @@
+{
+  "domain": "screenlogic",
+  "name": "Screenlogic",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/screenlogic",
+  "requirements": [
+    "screenlogicpy==1.0.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@dieselrabbit"
+  ]
+}
