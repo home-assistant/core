@@ -9,7 +9,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -52,15 +52,12 @@ SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 SERVICE_WATER_HEATER_TIMER = "set_water_heater_timer"
 ATTR_TIME_PERIOD = "time_period"
 
-WATER_HEATER_TIMER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
-            cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
-        ),
-        vol.Optional(ATTR_TEMPERATURE): vol.Coerce(float),
-    }
-)
+WATER_HEATER_TIMER_SCHEMA = {
+    vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
+        cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
+    ),
+    vol.Optional(ATTR_TEMPERATURE): vol.Coerce(float),
+}
 
 
 async def async_setup_entry(
