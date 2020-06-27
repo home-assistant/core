@@ -17,7 +17,7 @@ class TestCoverRfxtrx(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        mock_component("rfxtrx")
+        mock_component(self.hass, "rfxtrx")
         self.addCleanup(self.tear_down_cleanup)
 
     def tear_down_cleanup(self):
