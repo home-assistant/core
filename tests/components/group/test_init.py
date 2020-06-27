@@ -390,7 +390,7 @@ class TestComponentsGroup(unittest.TestCase):
             "group.second_group",
             "group.test_group",
         ]
-        assert self.hass.bus.listeners["state_changed"] == 3
+        assert self.hass.bus.listeners["state_changed"] == 1
 
         with patch(
             "homeassistant.config.load_yaml_config_file",
@@ -405,7 +405,7 @@ class TestComponentsGroup(unittest.TestCase):
             "group.all_tests",
             "group.hello",
         ]
-        assert self.hass.bus.listeners["state_changed"] == 2
+        assert self.hass.bus.listeners["state_changed"] == 1
 
     def test_modify_group(self):
         """Test modifying a group."""
