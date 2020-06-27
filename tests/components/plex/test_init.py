@@ -18,7 +18,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update
-from .mock_classes import MockPlexAccount, MockPlexServer, MockWebsocket
+from .mock_classes import MockPlexAccount, MockPlexServer
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -164,7 +164,7 @@ async def test_setup_with_photo_session(hass):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
     ), patch(
-        "homeassistant.components.plex.PlexWebsocket", return_value=MockWebsocket
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -263,7 +263,7 @@ async def test_tokenless_server(hass):
     )
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket", return_value=MockWebsocket
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -289,7 +289,7 @@ async def test_bad_token_with_tokenless_server(hass):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", side_effect=plexapi.exceptions.Unauthorized
     ), patch(
-        "homeassistant.components.plex.PlexWebsocket", return_value=MockWebsocket
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)

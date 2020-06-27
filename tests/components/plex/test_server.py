@@ -33,7 +33,6 @@ from .mock_classes import (
     MockPlexLibrarySection,
     MockPlexMediaItem,
     MockPlexServer,
-    MockWebsocket,
 )
 
 from tests.async_mock import patch
@@ -59,7 +58,7 @@ async def test_new_users_available(hass):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
     ), patch(
-        "homeassistant.components.plex.PlexWebsocket", return_value=MockWebsocket
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -100,7 +99,7 @@ async def test_new_ignored_users_available(hass, caplog):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
     ), patch(
-        "homeassistant.components.plex.PlexWebsocket", return_value=MockWebsocket
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -145,7 +144,7 @@ async def test_network_error_during_refresh(hass, caplog):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
     ), patch(
-        "homeassistant.components.plex.PlexWebsocket", return_value=MockWebsocket
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -183,7 +182,7 @@ async def test_mark_sessions_idle(hass):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
     ), patch(
-        "homeassistant.components.plex.PlexWebsocket", return_value=MockWebsocket
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -226,7 +225,7 @@ async def test_ignore_plex_web_client(hass):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount(players=0)
     ), patch(
-        "homeassistant.components.plex.PlexWebsocket", return_value=MockWebsocket
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -258,7 +257,7 @@ async def test_media_lookups(hass):
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
     ), patch(
-        "homeassistant.components.plex.PlexWebsocket", return_value=MockWebsocket
+        "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
