@@ -39,7 +39,7 @@ class Events(Base):  # type: ignore
     event_type = Column(String(32))
     event_data = Column(Text)
     origin = Column(String(32))
-    time_fired = Column(DateTime(timezone=True))
+    time_fired = Column(DateTime(timezone=True), index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
