@@ -101,6 +101,14 @@ def async_track_state_change(
             )
 
     if entity_ids != MATCH_ALL:
+        # If we have a list of entity ids we use
+        # async_track_state_change_event to route
+        # by entity_id to avoid iterating though state change
+        # events and creating a jobs where the most
+        # common outcome is to return right away because
+        # the entity_id does not match since usually
+        # only one or two listeners want that specific
+        # entity_id.
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
@@ -113,7 +121,10 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 def async_track_state_change_event(
     hass: HomeAssistant, entity_ids: Iterable[str], action: Callable[[Event], None]
 ) -> Callable[[], None]:
-    """Track state change events indexed by entity_id.
+    """Track specific state change events indexed by entity_id.
+
+    Unlike async_track_state_change, async_track_state_change_event
+    passes the full event to the callback.
 
     In order to avoid having to iterate a long list
     of EVENT_STATE_CHANGED and fire and create a job
@@ -125,6 +136,8 @@ def async_track_state_change_event(
     if TRACK_STATE_CHANGE_CALLBACKS not in hass.data:
         hass.data[TRACK_STATE_CHANGE_CALLBACKS] = {}
 
+    entity_callbacks = hass.data[TRACK_STATE_CHANGE_CALLBACKS]
+
     if TRACK_STATE_CHANGE_LISTENER not in hass.data:
 
         @callback
@@ -132,19 +145,23 @@ def async_track_state_change_event(
             """Dispatch state changes by entity_id."""
             entity_id = event.data.get("entity_id")
 
-            if entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]:
+            import pprint
+
+            pprint.pprint([event, entity_callbacks])
+
+            if entity_id not in entity_callbacks:
                 return
 
-            for action in hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]:
+            for action in entity_callbacks[entity_id]:
                 hass.async_run_job(action, event)
 
         hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED, _async_state_change_dispatcher
         )
 
-    entity_callbacks = hass.data[TRACK_STATE_CHANGE_CALLBACKS]
+    for unproc_entity_id in entity_ids:
+        entity_id = unproc_entity_id.lower()
 
-    for entity_id in entity_ids:
         if entity_id not in entity_callbacks:
             entity_callbacks[entity_id] = []
 
