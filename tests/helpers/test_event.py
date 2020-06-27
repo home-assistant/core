@@ -183,8 +183,10 @@ async def test_async_track_state_change_event(hass):
 
         multiple_entity_id_tracker.append((old_state, new_state))
 
-    async_track_state_change_event(hass, ["light.Bowl"], single_run_callback)
-    async_track_state_change_event(
+    cancel_single = async_track_state_change_event(
+        hass, ["light.Bowl"], single_run_callback
+    )
+    cancel_multi = async_track_state_change_event(
         hass, ["light.Bowl", "switch.kitchen"], multiple_run_callback
     )
 
@@ -236,6 +238,15 @@ async def test_async_track_state_change_event(hass):
     await hass.async_block_till_done()
     assert len(single_entity_id_tracker) == 5
     assert len(multiple_entity_id_tracker) == 6
+
+    cancel_single()
+    # Ensure canceling the listener works
+    hass.states.async_set("light.Bowl", "off")
+    await hass.async_block_till_done()
+    assert len(single_entity_id_tracker) == 5
+    assert len(multiple_entity_id_tracker) == 7
+
+    cancel_multi()
 
 
 async def test_track_template(hass):
