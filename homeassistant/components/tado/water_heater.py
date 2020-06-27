@@ -9,7 +9,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -300,13 +300,12 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             self._tado.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, TYPE_HOT_WATER)
             return
 
+        overlay_mode = CONST_OVERLAY_MANUAL
         if duration:
             overlay_mode = CONST_OVERLAY_TIMER
-        # Fallback to Smart Schedule at next Schedule switch if we have fallback enabled
         elif self._tado.fallback:
+            # Fallback to Smart Schedule at next Schedule switch if we have fallback enabled
             overlay_mode = CONST_OVERLAY_TADO_MODE
-        else:
-            overlay_mode = CONST_OVERLAY_MANUAL
 
         _LOGGER.debug(
             "Switching to %s for zone %s (%d) with temperature %s",
