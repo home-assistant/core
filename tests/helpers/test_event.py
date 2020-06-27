@@ -38,11 +38,6 @@ def teardown():
     dt_util.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 
-def _send_time_changed(hass, now):
-    """Send a time changed event."""
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
-
-
 async def test_track_point_in_time(hass):
     """Test track point in time."""
     before_birthday = datetime(1985, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -55,16 +50,16 @@ async def test_track_point_in_time(hass):
         hass, callback(lambda x: runs.append(1)), birthday_paulus
     )
 
-    _send_time_changed(hass, before_birthday)
+    async_fire_time_changed(hass, before_birthday)
     await hass.async_block_till_done()
     assert len(runs) == 0
 
-    _send_time_changed(hass, birthday_paulus)
+    async_fire_time_changed(hass, birthday_paulus)
     await hass.async_block_till_done()
     assert len(runs) == 1
 
     # A point in time tracker will only fire once, this should do nothing
-    _send_time_changed(hass, birthday_paulus)
+    async_fire_time_changed(hass, birthday_paulus)
     await hass.async_block_till_done()
     assert len(runs) == 1
 
@@ -72,7 +67,7 @@ async def test_track_point_in_time(hass):
         hass, callback(lambda x: runs.append(1)), birthday_paulus
     )
 
-    _send_time_changed(hass, after_birthday)
+    async_fire_time_changed(hass, after_birthday)
     await hass.async_block_till_done()
     assert len(runs) == 2
 
@@ -81,7 +76,7 @@ async def test_track_point_in_time(hass):
     )
     unsub()
 
-    _send_time_changed(hass, after_birthday)
+    async_fire_time_changed(hass, after_birthday)
     await hass.async_block_till_done()
     assert len(runs) == 2
 
@@ -449,21 +444,21 @@ async def test_track_time_interval(hass):
         hass, lambda x: specific_runs.append(1), timedelta(seconds=10)
     )
 
-    _send_time_changed(hass, utc_now + timedelta(seconds=5))
+    async_fire_time_changed(hass, utc_now + timedelta(seconds=5))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, utc_now + timedelta(seconds=13))
+    async_fire_time_changed(hass, utc_now + timedelta(seconds=13))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, utc_now + timedelta(minutes=20))
+    async_fire_time_changed(hass, utc_now + timedelta(minutes=20))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     unsub()
 
-    _send_time_changed(hass, utc_now + timedelta(seconds=30))
+    async_fire_time_changed(hass, utc_now + timedelta(seconds=30))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
@@ -505,17 +500,17 @@ async def test_track_sunrise(hass):
         unsub2 = async_track_sunrise(hass, lambda: offset_runs.append(1), offset)
 
     # run tests
-    _send_time_changed(hass, next_rising - offset)
+    async_fire_time_changed(hass, next_rising - offset)
     await hass.async_block_till_done()
     assert len(runs) == 0
     assert len(offset_runs) == 0
 
-    _send_time_changed(hass, next_rising)
+    async_fire_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     assert len(runs) == 1
     assert len(offset_runs) == 0
 
-    _send_time_changed(hass, next_rising + offset)
+    async_fire_time_changed(hass, next_rising + offset)
     await hass.async_block_till_done()
     assert len(runs) == 1
     assert len(offset_runs) == 1
@@ -523,7 +518,7 @@ async def test_track_sunrise(hass):
     unsub()
     unsub2()
 
-    _send_time_changed(hass, next_rising + offset)
+    async_fire_time_changed(hass, next_rising + offset)
     await hass.async_block_till_done()
     assert len(runs) == 1
     assert len(offset_runs) == 1
@@ -558,7 +553,7 @@ async def test_track_sunrise_update_location(hass):
         async_track_sunrise(hass, lambda: runs.append(1))
 
     # Mimic sunrise
-    _send_time_changed(hass, next_rising)
+    async_fire_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     assert len(runs) == 1
 
@@ -568,7 +563,7 @@ async def test_track_sunrise_update_location(hass):
         await hass.async_block_till_done()
 
     # Mimic sunrise
-    _send_time_changed(hass, next_rising)
+    async_fire_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     # Did not increase
     assert len(runs) == 1
@@ -584,7 +579,7 @@ async def test_track_sunrise_update_location(hass):
         mod += 1
 
     # Mimic sunrise at new location
-    _send_time_changed(hass, next_rising)
+    async_fire_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     assert len(runs) == 2
 
@@ -626,17 +621,17 @@ async def test_track_sunset(hass):
         unsub2 = async_track_sunset(hass, lambda: offset_runs.append(1), offset)
 
     # Run tests
-    _send_time_changed(hass, next_setting - offset)
+    async_fire_time_changed(hass, next_setting - offset)
     await hass.async_block_till_done()
     assert len(runs) == 0
     assert len(offset_runs) == 0
 
-    _send_time_changed(hass, next_setting)
+    async_fire_time_changed(hass, next_setting)
     await hass.async_block_till_done()
     assert len(runs) == 1
     assert len(offset_runs) == 0
 
-    _send_time_changed(hass, next_setting + offset)
+    async_fire_time_changed(hass, next_setting + offset)
     await hass.async_block_till_done()
     assert len(runs) == 1
     assert len(offset_runs) == 1
@@ -644,7 +639,7 @@ async def test_track_sunset(hass):
     unsub()
     unsub2()
 
-    _send_time_changed(hass, next_setting + offset)
+    async_fire_time_changed(hass, next_setting + offset)
     await hass.async_block_till_done()
     assert len(runs) == 1
     assert len(offset_runs) == 1
@@ -660,17 +655,17 @@ async def test_async_track_time_change(hass):
         hass, lambda x: specific_runs.append(1), second=[0, 30]
     )
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 12, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 12, 0, 15))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 15))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 2
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 12, 0, 30))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 30))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
@@ -678,7 +673,7 @@ async def test_async_track_time_change(hass):
     unsub()
     unsub_utc()
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 12, 0, 30))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 30))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
@@ -692,21 +687,21 @@ async def test_periodic_task_minute(hass):
         hass, lambda x: specific_runs.append(1), minute="/5", second=0
     )
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 12, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 12, 3, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 3, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 12, 5, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 5, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     unsub()
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 12, 5, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 12, 5, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
@@ -719,29 +714,29 @@ async def test_periodic_task_hour(hass):
         hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
     )
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 23, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 23, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, datetime(2014, 5, 25, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 25, 0, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    _send_time_changed(hass, datetime(2014, 5, 25, 1, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 25, 1, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    _send_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
     unsub()
 
-    _send_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
@@ -755,7 +750,7 @@ async def test_periodic_task_wrong_input(hass):
             hass, lambda x: specific_runs.append(1), hour="/two"
         )
 
-    _send_time_changed(hass, datetime(2014, 5, 2, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 2, 0, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
@@ -768,29 +763,29 @@ async def test_periodic_task_clock_rollback(hass):
         hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
     )
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 23, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 23, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 0, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
-    _send_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
     unsub()
 
-    _send_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 25, 2, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
@@ -803,15 +798,15 @@ async def test_periodic_task_duplicate_time(hass):
         hass, lambda x: specific_runs.append(1), hour="/2", minute=0, second=0
     )
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 24, 22, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, datetime(2014, 5, 25, 0, 0, 0))
+    async_fire_time_changed(hass, datetime(2014, 5, 25, 0, 0, 0))
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
@@ -828,19 +823,19 @@ async def test_periodic_task_entering_dst(hass):
         hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
     )
 
-    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 1, 50, 0)))
+    async_fire_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 1, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 3, 50, 0)))
+    async_fire_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 3, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 1, 50, 0)))
+    async_fire_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 1, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 2, 50, 0)))
+    async_fire_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 2, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
@@ -857,25 +852,25 @@ async def test_periodic_task_leaving_dst(hass):
         hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
     )
 
-    _send_time_changed(
+    async_fire_time_changed(
         hass, timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(
+    async_fire_time_changed(
         hass, timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(
+    async_fire_time_changed(
         hass, timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(
+    async_fire_time_changed(
         hass, timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True)
     )
     await hass.async_block_till_done()
