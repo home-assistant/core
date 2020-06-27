@@ -25,7 +25,7 @@
             },
             "reauth": {
                 "description": "Profilen {profile} m\u00e5 godkjennes p\u00e5 nytt for \u00e5 kunne fortsette \u00e5 motta Withings-data.",
-                "title": "Re-autentisere {profil}"
+                "title": "Autentiser profil p\u00e5 nytt"
             }
         }
     }

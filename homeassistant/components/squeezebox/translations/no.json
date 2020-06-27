@@ -3,7 +3,13 @@
         "abort": {
             "no_server_found": "Ingen LMS-server funnet."
         },
+        "error": {
+            "no_server_found": "Kan ikke automatisk oppdage serveren."
+        },
         "step": {
+            "edit": {
+                "title": "Redigere tilkoblingsinformasjon"
+            },
             "user": {
                 "title": "Konfigurer Logitech Media Server"
             }
