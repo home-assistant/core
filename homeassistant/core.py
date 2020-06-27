@@ -1565,14 +1565,11 @@ class TrackSimpleStateChange:
 
     @callback
     def async_add_listener(
-        self,
-        hass: HomeAssistant,
-        entity_id: str,
-        action: Callable[[str, State, State], None],
+        self, entity_id: str, action: Callable[[Event], None],
     ) -> Callable[[], None]:
         """Listen for a single entities state changes."""
         if not self._state_change_listener:
-            self._state_change_listener = hass.bus.async_listen(
+            self._state_change_listener = self.hass.bus.async_listen(
                 EVENT_STATE_CHANGED, self._async_state_change_dispatcher
             )
 
@@ -1590,7 +1587,7 @@ class TrackSimpleStateChange:
 
     @callback
     def async_remove_listener(
-        self, entity_id: str, action: Callable[[str, State, State], None]
+        self, entity_id: str, action: Callable[[Event], None]
     ) -> None:
         """Remove a listener."""
         self._entity_callbacks[entity_id].remove(action)
@@ -1610,12 +1607,7 @@ class TrackSimpleStateChange:
             return
 
         for action in self._entity_callbacks[entity_id]:
-            self.hass.async_run_job(
-                action,
-                entity_id,
-                event.data.get("old_state"),
-                event.data.get("new_state"),
-            )
+            self.hass.async_run_job(action, event)
 
 
 def _async_create_timer(hass: HomeAssistant) -> None:
