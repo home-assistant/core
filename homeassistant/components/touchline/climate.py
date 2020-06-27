@@ -64,8 +64,8 @@ class Touchline(ClimateEntity):
         self._name = self.unit.get_name()
         self._current_temperature = self.unit.get_current_temperature()
         self._target_temperature = self.unit.get_target_temperature()
-        self._preset_mode = self.map_mode_touchline_hass(
-            self.unit.get_operation_mode(), self.unit.get_week_program()
+        self._preset_mode = TOUCHLINE_HA_PRESETS.get(
+            (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
 
     @property
