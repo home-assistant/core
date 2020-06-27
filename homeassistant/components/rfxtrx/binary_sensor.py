@@ -255,6 +255,11 @@ class RfxtrxBinarySensor(BinarySensorEntity):
         """Return true if the sensor state is True."""
         return self._state
 
+    @property
+    def unique_id(self):
+        """Return unique identifier of remote device."""
+        return f"{slugify(self.event.device.type_string.lower())}_{slugify(self.event.device.id_string.lower())}"
+
     def apply_cmd(self, cmd):
         """Apply a command for updating the state."""
         if cmd == self.cmd_on:

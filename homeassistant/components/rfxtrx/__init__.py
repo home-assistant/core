@@ -409,6 +409,11 @@ class RfxtrxDevice(Entity):
         """Return true if unable to access real state of entity."""
         return True
 
+    @property
+    def unique_id(self):
+        """Return unique identifier of remote device."""
+        return f"{slugify(self._event.device.type_string.lower())}_{slugify(self._event.device.id_string.lower())}"
+
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._send_command("turn_off")
