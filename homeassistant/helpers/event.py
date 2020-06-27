@@ -113,7 +113,10 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 def async_track_state_change_event(
     hass: HomeAssistant, entity_ids: Iterable[str], action: Callable[[Event], None]
 ) -> Callable[[], None]:
-    """Track state change events indexed by entity_id.
+    """Track specific state change events indexed by entity_id.
+
+    Unlike async_track_state_change, async_track_state_change_event
+    passes the full event to the callback.
 
     In order to avoid having to iterate a long list
     of EVENT_STATE_CHANGED and fire and create a job
