@@ -16,10 +16,7 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
-    ATTR_ENTITY_PICTURE,
-    ATTR_ICON,
     CONF_EXCLUDE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -63,8 +60,6 @@ DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
 KEEPALIVE_TIME = 30
-
-DISPLAY_ATTRIBUTES = {ATTR_ICON, ATTR_ATTRIBUTION, ATTR_ENTITY_PICTURE}
 
 CONF_AUTO_PURGE = "auto_purge"
 CONF_DB_URL = "db_url"
@@ -390,21 +385,12 @@ class Recorder(threading.Thread):
 
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
-                    new_state = event.data.get("new_state")
-                    if new_state:
-                        # Do not store display attributes in the database
-                        dbstate = States.from_event_with_attributes(
-                            event,
-                            new_state,
-                            _without_display_attributes(new_state.attributes),
-                        )
-                    else:
-                        dbstate = States.from_event(event)
+                    dbstate = States.from_event(event)
                     dbstate.old_state_id = self._old_state_ids.get(dbstate.entity_id)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
                     self.event_session.flush()
-                    if new_state:
+                    if "new_state" in event.data:
                         self._old_state_ids[dbstate.entity_id] = dbstate.state_id
                     elif dbstate.entity_id in self._old_state_ids:
                         del self._old_state_ids[dbstate.entity_id]
@@ -587,20 +573,3 @@ class Recorder(threading.Thread):
             self.event_session.close()
 
         self.run_info = None
-
-
-def _without_display_attributes(attributes):
-    """Remove attributes that are primarily used for the display layer.
-
-    These attributes are mostly static and
-    take of a lot of space in the database
-    and are not needed for any core functionality.
-    """
-    if DISPLAY_ATTRIBUTES.intersection(attributes):
-        return {
-            attr: value
-            for attr, value in attributes.items()
-            if attr not in DISPLAY_ATTRIBUTES
-        }
-
-    return attributes

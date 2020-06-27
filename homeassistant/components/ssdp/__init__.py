@@ -67,7 +67,6 @@ class Scanner:
     async def _process_entries(self, entries):
         """Process SSDP entries."""
         tasks = []
-        _LOGGER.debug("entries: %s", entries)
 
         for entry in entries:
             key = (entry.st, entry.location)

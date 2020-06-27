@@ -71,7 +71,6 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
             _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
 
         if repack:
-            _LOGGER.debug("Using driver: %s", instance.engine.driver)
             # Execute sqlite or postgresql vacuum command to free up space on disk
             if instance.engine.driver in ("pysqlite", "postgresql"):
                 _LOGGER.debug("Vacuuming SQL DB to free space")
