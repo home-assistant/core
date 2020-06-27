@@ -23,6 +23,10 @@ PRESET_MODES = {
     "Pro 2": {"mode": 0, "program": 2},
     "Pro 3": {"mode": 0, "program": 3},
 }
+TOUCHLINE_HA_PRESETS = {
+    (settings["mode"], settings["program"]): preset
+    for preset, settings in PRESET_MODES.items()
+}
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
