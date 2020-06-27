@@ -32,11 +32,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.async_mock import patch
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-    mock_restore_cache,
-)
+from tests.common import assert_setup_component, mock_restore_cache
 from tests.components.climate import common
 
 ENTITY = "climate.test"
@@ -953,13 +949,13 @@ async def test_temp_change_ac_trigger_on_long_enough_3(hass, setup_comp_7):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    async_fire_time_changed(hass, test_time)
+    _send_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -976,19 +972,24 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass, setup_comp_7):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    async_fire_time_changed(hass, test_time)
+    _send_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
     assert HASS_DOMAIN == call.domain
     assert SERVICE_TURN_OFF == call.service
     assert ENT_SWITCH == call.data["entity_id"]
+
+
+def _send_time_changed(hass, now):
+    """Send a time changed event."""
+    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
 
 @pytest.fixture
@@ -1024,13 +1025,13 @@ async def test_temp_change_heater_trigger_on_long_enough_2(hass, setup_comp_8):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    async_fire_time_changed(hass, test_time)
+    _send_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -1047,13 +1048,13 @@ async def test_temp_change_heater_trigger_off_long_enough_2(hass, setup_comp_8):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    async_fire_time_changed(hass, test_time)
+    _send_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
