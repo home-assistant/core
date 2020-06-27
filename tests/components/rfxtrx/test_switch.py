@@ -41,7 +41,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                     "devices": {
                         "0b1100cd0213c7f210010f51": {
                             "name": "Test",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
+                            rfxtrx_core.ATTR_FIRE_EVENT: True,
                         }
                     },
                 }
@@ -60,7 +60,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                     "devices": {
                         710000141010170: {
                             "name": "Test",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
+                            rfxtrx_core.ATTR_FIRE_EVENT: True,
                         }
                     },
                 }
@@ -101,7 +101,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                         "213c7f216": {
                             "name": "Test",
                             "packetid": "0b1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
+                            rfxtrx_core.ATTR_FIRE_EVENT: True,
                         }
                     },
                 }
@@ -121,7 +121,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                         "213c7f216": {
                             "name": "Test",
                             "packetid": "AA1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
+                            rfxtrx_core.ATTR_FIRE_EVENT: True,
                         }
                     },
                 }
@@ -138,7 +138,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                     "platform": "rfxtrx",
                     "automatic_add": True,
                     "devices": {
-                        "213c7f216": {"name": "Test", rfxtrx_core.ATTR_FIREEVENT: True}
+                        "213c7f216": {"name": "Test", rfxtrx_core.ATTR_FIRE_EVENT: True}
                     },
                 }
             },

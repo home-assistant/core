@@ -41,7 +41,7 @@ class TestLightRfxtrx(unittest.TestCase):
                     "devices": {
                         "0b1100cd0213c7f210010f51": {
                             "name": "Test",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
+                            rfxtrx_core.ATTR_FIRE_EVENT: True,
                         }
                     },
                 }
@@ -80,7 +80,7 @@ class TestLightRfxtrx(unittest.TestCase):
                         "213c7f216": {
                             "name": "Test",
                             "packetid": "0b1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
+                            rfxtrx_core.ATTR_FIRE_EVENT: True,
                         }
                     },
                 }
