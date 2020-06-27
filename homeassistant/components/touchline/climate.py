@@ -24,6 +24,11 @@ PRESET_MODES = {
     "Pro 3": {"mode": 0, "program": 3},
 }
 
+TOUCHLINE_HA_PRESETS = {
+    (settings["mode"], settings["program"]): preset
+    for preset, settings in PRESET_MODES.items()
+}
+
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
@@ -64,8 +69,8 @@ class Touchline(ClimateEntity):
         self._name = self.unit.get_name()
         self._current_temperature = self.unit.get_current_temperature()
         self._target_temperature = self.unit.get_target_temperature()
-        self._preset_mode = self.map_mode_touchline_hass(
-            self.unit.get_operation_mode(), self.unit.get_week_program()
+        self._preset_mode = TOUCHLINE_HA_PRESETS.get(
+            (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
 
     @property
@@ -107,11 +112,6 @@ class Touchline(ClimateEntity):
         return self._target_temperature
 
     @property
-    def current_operation_mode(self):
-        """Return the current operation mode."""
-        return self._current_operation_mode
-
-    @property
     def preset_mode(self):
         """Return the current preset mode."""
         return self._preset_mode
@@ -119,7 +119,7 @@ class Touchline(ClimateEntity):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return list(PRESET_MODES.keys())
+        return list(PRESET_MODES)
 
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
