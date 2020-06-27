@@ -133,10 +133,7 @@ def async_track_state_change_event(
     do a fast dict lookup to route events.
     """
 
-    if TRACK_STATE_CHANGE_CALLBACKS not in hass.data:
-        hass.data[TRACK_STATE_CHANGE_CALLBACKS] = {}
-
-    entity_callbacks = hass.data[TRACK_STATE_CHANGE_CALLBACKS]
+    entity_callbacks = hass.data.setdefault(TRACK_STATE_CHANGE_CALLBACKS, {})
 
     if TRACK_STATE_CHANGE_LISTENER not in hass.data:
 
