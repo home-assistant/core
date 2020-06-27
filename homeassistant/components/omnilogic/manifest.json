@@ -1,6 +1,6 @@
 {
   "domain": "omnilogic",
-  "name": "Omnilogic",
+  "name": "Hayward Omnilogic",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/omnilogic",
   "requirements": [
