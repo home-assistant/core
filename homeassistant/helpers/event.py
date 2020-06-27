@@ -126,6 +126,18 @@ def async_track_state_change_event(
         hass.data[TRACK_STATE_CHANGE_CALLBACKS] = {}
 
     if TRACK_STATE_CHANGE_LISTENER not in hass.data:
+
+        @callback
+        def _async_state_change_dispatcher(event: Event) -> None:
+            """Dispatch state changes by entity_id."""
+            entity_id = event.data.get("entity_id")
+
+            if entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]:
+                return
+
+            for action in hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]:
+                hass.async_run_job(action, event)
+
         hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED, _async_state_change_dispatcher
         )
@@ -162,18 +174,6 @@ def _async_remove_state_change_listener(
     if not entity_callbacks:
         hass.data[TRACK_STATE_CHANGE_LISTENER]()
         del hass.data[TRACK_STATE_CHANGE_LISTENER]
-
-
-@callback
-def _async_state_change_dispatcher(hass: HomeAssistant, event: Event) -> None:
-    """Dispatch state changes by entity_id."""
-    entity_id = event.data.get("entity_id")
-
-    if entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]:
-        return
-
-    for action in hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]:
-        hass.async_run_job(action, event)
 
 
 @callback
