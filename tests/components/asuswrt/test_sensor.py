@@ -61,6 +61,7 @@ async def test_sensors(hass: HomeAssistant):
             return_value=MOCK_CURRENT_TRANSFER_RATES
         )
 
+        assert 0
         now = datetime(2020, 1, 1, 1, tzinfo=dt_util.UTC)
         with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
             assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_ROUTER_SSH)
