@@ -66,7 +66,7 @@ class TestCoverRfxtrx(unittest.TestCase):
                 }
             },
         )
-
+        self.hass.block_till_done()
         self.hass.data[rfxtrx_core.DATA_RFXOBJECT] = rfxtrxmod.Core(
             "", transport_protocol=rfxtrxmod.DummyTransport
         )
