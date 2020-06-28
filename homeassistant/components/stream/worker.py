@@ -70,6 +70,7 @@ def stream_worker(hass, stream, quit_event):
     while not quit_event.is_set():
         try:
             packet = next(container.demux(video_stream))
+            _LOGGER.debug("got packet: %s", packet)
             if packet.dts is None:
                 if first_packet:
                     continue
