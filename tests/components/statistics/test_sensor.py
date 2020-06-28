@@ -184,6 +184,7 @@ class TestStatisticsSensor(unittest.TestCase):
         def mock_now():
             return mock_data["return_time"]
 
+        assert 0
         with patch(
             "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
         ):
@@ -226,6 +227,7 @@ class TestStatisticsSensor(unittest.TestCase):
         def mock_now():
             return mock_data["return_time"]
 
+        assert 0
         with patch(
             "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
         ):
@@ -281,6 +283,7 @@ class TestStatisticsSensor(unittest.TestCase):
         def mock_now():
             return mock_data["return_time"]
 
+        assert 0
         with patch(
             "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
         ):
@@ -383,6 +386,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
         self.hass.data[recorder.DATA_INSTANCE].block_till_done()
 
+        assert 0
         with patch(
             "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
         ), patch.object(StatisticsSensor, "_purge_old", mock_purge):

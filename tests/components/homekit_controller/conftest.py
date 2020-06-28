@@ -11,6 +11,7 @@ import tests.async_mock
 @pytest.fixture
 def utcnow(request):
     """Freeze time at a known point."""
+    assert 0
     start_dt = datetime.datetime(2019, 1, 1, 0, 0, 0)
     with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt

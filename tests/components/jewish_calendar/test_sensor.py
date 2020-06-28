@@ -154,6 +154,7 @@ async def test_jewish_calendar_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
+    assert 0
     with alter_time(test_time):
         assert await async_setup_component(
             hass,
@@ -496,6 +497,7 @@ async def test_shabbat_times_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
+    assert 0
     with alter_time(test_time):
         assert await async_setup_component(
             hass,
@@ -557,6 +559,7 @@ async def test_omer_sensor(hass, test_time, result):
     """Test Omer Count sensor output."""
     test_time = hass.config.time_zone.localize(test_time)
 
+    assert 0
     with alter_time(test_time):
         assert await async_setup_component(
             hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"name": "test"}}
@@ -591,6 +594,7 @@ async def test_dafyomi_sensor(hass, test_time, result):
     """Test Daf Yomi sensor output."""
     test_time = hass.config.time_zone.localize(test_time)
 
+    assert 0
     with alter_time(test_time):
         assert await async_setup_component(
             hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"name": "test"}}

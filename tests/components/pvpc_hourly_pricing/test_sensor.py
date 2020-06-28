@@ -39,6 +39,7 @@ async def test_sensor_availability(
     def mock_now():
         return mock_data["return_time"]
 
+    assert 0
     with patch("homeassistant.util.dt.utcnow", new=mock_now):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

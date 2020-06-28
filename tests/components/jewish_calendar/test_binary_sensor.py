@@ -70,6 +70,7 @@ async def test_issur_melacha_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
+    assert 0
     with alter_time(test_time):
         assert await async_setup_component(
             hass,
