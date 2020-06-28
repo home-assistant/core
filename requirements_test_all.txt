@@ -1096,7 +1096,7 @@ statsd==3.2.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.3.0
+subarulink==0.3.1
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
