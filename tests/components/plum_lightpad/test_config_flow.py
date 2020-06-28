@@ -1,4 +1,6 @@
 """Test the Plum Lightpad config flow."""
+from requests.exceptions import ConnectTimeout
+
 from homeassistant import config_entries, setup
 from homeassistant.components.plum_lightpad.const import DOMAIN
 
@@ -34,6 +36,25 @@ async def test_form(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_cannot_connect(hass):
+    """Test we handle invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.test_lightpad.config_flow.PlaceholderHub.authenticate",
+        side_effect=ConnectTimeout,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-plum-username", "password": "test-plum-password"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_import(hass):
