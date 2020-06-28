@@ -55,9 +55,8 @@ class TestLightRfxtrx(unittest.TestCase):
                     "platform": "rfxtrx",
                     "automatic_add": True,
                     "devices": {
-                        "213c7f216": {
+                        "0b1100cd0213c7f210010f51": {
                             "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
                             "signal_repetitions": 3,
                         }
                     },

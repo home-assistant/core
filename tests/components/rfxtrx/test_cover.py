@@ -47,26 +47,6 @@ class TestCoverRfxtrx(unittest.TestCase):
             },
         )
 
-    def test_invalid_config_capital_letters(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "2FF7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            "signal_repetitions": 3,
-                        }
-                    },
-                }
-            },
-        )
-
     def test_invalid_config_extra_key(self):
         """Test configuration."""
         assert not setup_component(
@@ -78,47 +58,10 @@ class TestCoverRfxtrx(unittest.TestCase):
                     "automatic_add": True,
                     "invalid_key": "afda",
                     "devices": {
-                        "213c7f216": {
+                        "0b1100cd0213c7f210010f51": {
                             "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
                             rfxtrx_core.ATTR_FIRE_EVENT: True,
                         }
-                    },
-                }
-            },
-        )
-
-    def test_invalid_config_capital_packetid(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "AA1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIRE_EVENT: True,
-                        }
-                    },
-                }
-            },
-        )
-
-    def test_invalid_config_missing_packetid(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {"name": "Test", rfxtrx_core.ATTR_FIRE_EVENT: True}
                     },
                 }
             },
