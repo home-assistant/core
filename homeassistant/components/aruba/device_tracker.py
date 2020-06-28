@@ -35,7 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 DEFAULT_USE_API = False
 DEFAULT_TIMEOUT = 10
 USE_API = False
-login_result_sid = ''
+login_result_sid = ""
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Aruba scanner."""
@@ -60,8 +61,10 @@ class ArubaDeviceScanner(DeviceScanner):
 
         # Test if we can use REST API
         # Aruba Instant API only likes double quotes in the json data and rejects single quotes
-        login_data = '{"user": "' + self.username+ '", "passwd": "'+ self.password +'" }'
-        login_headers = {'Content-Type': 'application/json' }
+        login_data = (
+            '{"user": "' + self.username + '", "passwd": "' + self.password + '" }'
+        )
+        login_headers = {"Content-Type": "application/json"}
         login_method = "POST"
         login_resource = "https://" + self.host + ":4343/rest/login"
 
@@ -71,7 +74,7 @@ class ArubaDeviceScanner(DeviceScanner):
             login_headers,
             login_data,
             False,
-            DEFAULT_TIMEOUT
+            DEFAULT_TIMEOUT,
         )
         rest_login.update()
 
@@ -125,10 +128,17 @@ class ArubaDeviceScanner(DeviceScanner):
 
         if USE_API == True:
             _LOGGER.debug("Using REST API")
-            show_clients_data = ''
-            show_clients_headers = {'Content-Type': 'application/json' }
+            show_clients_data = ""
+            show_clients_headers = {"Content-Type": "application/json"}
             show_clients_method = "GET"
-            show_clients_resource = "https://" + self.host + ":4343/rest/show-cmd?iap_ip_addr=" + self.host + "&cmd=show%20clients&sid=" + login_result_sid
+            show_clients_resource = (
+                "https://"
+                + self.host
+                + ":4343/rest/show-cmd?iap_ip_addr="
+                + self.host
+                + "&cmd=show%20clients&sid="
+                + login_result_sid
+            )
 
             rest_show_clients = RestData(
                 show_clients_method,
@@ -136,21 +146,29 @@ class ArubaDeviceScanner(DeviceScanner):
                 show_clients_headers,
                 show_clients_data,
                 False,
-                DEFAULT_TIMEOUT
+                DEFAULT_TIMEOUT,
             )
             rest_show_clients.update()
 
             if rest_show_clients.headers is not None:
-                show_clients_result_content_type = rest_show_clients.headers.get("content-type")
+                show_clients_result_content_type = rest_show_clients.headers.get(
+                    "content-type"
+                )
                 if show_clients_result_content_type == "application/json":
                     show_clients_result_json = json.loads(rest_show_clients.data)
                     show_clients_result_status = show_clients_result_json.get("Status")
                     if show_clients_result_status == "Success":
-                        show_clients_result_command_output = show_clients_result_json.get("Command output")
-                        show_clients_result_bytes = (json.dumps(show_clients_result_command_output)).encode()
+                        show_clients_result_command_output = show_clients_result_json.get(
+                            "Command output"
+                        )
+                        show_clients_result_bytes = (
+                            json.dumps(show_clients_result_command_output)
+                        ).encode()
                         devices_result = show_clients_result_bytes.split(b"\\n")
                     else:
-                        _LOGGER.debug("Error getting client list via Aruba Instant REST API")
+                        _LOGGER.debug(
+                            "Error getting client list via Aruba Instant REST API"
+                        )
                         return
 
         else:
@@ -204,6 +222,7 @@ class ArubaDeviceScanner(DeviceScanner):
                     "name": match.group("name"),
                 }
         return devices
+
 
 class RestData:
     """Class for handling the data retrieval."""
