@@ -2,8 +2,6 @@
 import asyncio
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.humidifier import PLATFORM_SCHEMA, HumidifierEntity
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,

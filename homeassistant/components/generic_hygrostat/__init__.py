@@ -63,7 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-
+    """Set up the Generic Hygrostat component."""
     if DOMAIN not in config:
         return True
 
