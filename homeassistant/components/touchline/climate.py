@@ -135,23 +135,3 @@ class Touchline(ClimateEntity):
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         self.unit.set_target_temperature(self._target_temperature)
-
-    @staticmethod
-    def map_mode_touchline_hass(operation_mode, week_program):
-        """Map Touchline Operation Modes to Home Assistant Preset Modes."""
-        if operation_mode == 0 and week_program == 0:
-            preset_mode = list(PRESET_MODES.keys())[0]
-        elif operation_mode == 1 and week_program == 0:
-            preset_mode = list(PRESET_MODES.keys())[1]
-        elif operation_mode == 2 and week_program == 0:
-            preset_mode = list(PRESET_MODES.keys())[2]
-        elif operation_mode == 0 and week_program == 1:
-            preset_mode = list(PRESET_MODES.keys())[3]
-        elif operation_mode == 0 and week_program == 2:
-            preset_mode = list(PRESET_MODES.keys())[4]
-        elif operation_mode == 0 and week_program == 3:
-            preset_mode = list(PRESET_MODES.keys())[5]
-        else:
-            preset_mode = None
-
-        return preset_mode
