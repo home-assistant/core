@@ -78,11 +78,6 @@ class TestSensorRfxtrx(unittest.TestCase):
         assert TEMP_CELSIUS == entity.unit_of_measurement
         assert entity.state is None
 
-        entity_id = rfxtrx_core.RFX_DEVICES["sensor_0502"]["Temperature"].entity_id
-        entity = self.hass.states.get(entity_id)
-        assert "Test" == entity.name
-        assert "unknown" == entity.state
-
     def test_several_sensors(self):
         """Test with 3 sensors."""
         assert setup_component(
