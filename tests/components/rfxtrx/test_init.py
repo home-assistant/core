@@ -1,5 +1,6 @@
 """The tests for the Rfxtrx component."""
 # pylint: disable=protected-access
+import time
 import unittest
 
 import pytest
@@ -48,6 +49,8 @@ class TestRFXTRX(unittest.TestCase):
             "sensor",
             {"sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
         )
+
+        time.sleep(1)  # Dummy startup is slow
 
         assert len(self.hass.data[rfxtrx.DATA_RFXOBJECT].sensors()) == 2
 
