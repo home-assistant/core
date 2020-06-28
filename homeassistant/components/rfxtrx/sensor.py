@@ -127,6 +127,7 @@ class RfxtrxSensor(Entity):
         self.should_fire_event = should_fire_event
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES.get(data_type, "")
+        self._unique_id = f"{slugify(self.event.device.type_string.lower())}_{slugify(self.event.device.id_string.lower())}_{slugify(self.data_type)}"
 
     def __str__(self):
         """Return the name of the sensor."""
@@ -155,3 +156,8 @@ class RfxtrxSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def unique_id(self):
+        """Return unique identifier of remote device."""
+        return self._unique_id
