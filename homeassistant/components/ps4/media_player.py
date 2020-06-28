@@ -77,7 +77,9 @@ async def update_listener(hass, config_entry):
     """Handle PS4 options update."""
     _LOGGER.debug("PS4 options applied")
     for device in hass.data[PS4_DATA].devices:
-        if device._entry_id == config_entry.entry_id:
+        if (
+            device._entry_id == config_entry.entry_id
+        ):  # noqa: pylint: disable=protected-access
             await device.async_options_port_update(config_entry.options[CONF_PORT])
 
 
@@ -157,7 +159,7 @@ class PS4Device(MediaPlayerEntity):
             # Manually set protocol to default protocol.
             protocol = self._ps4.ddp_protocol
             protocol.close()
-            self._ps4._port = DEFAULT_PORT
+            self._ps4._port = DEFAULT_PORT  # noqa: pylint: disable=protected-access
             self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
             _LOGGER.debug("Closing: %s; Using Default", protocol)
         else:
@@ -178,7 +180,7 @@ class PS4Device(MediaPlayerEntity):
         # New Protocol will be assigned if port available.
         port_available = await self._ps4.get_ddp_endpoint()
         if not port_available:
-            self._ps4._port = DEFAULT_PORT
+            self._ps4._port = DEFAULT_PORT  # noqa: pylint: disable=protected-access
             _LOGGER.warning(
                 "Port %s is unavailable, Using default port", port,
             )
