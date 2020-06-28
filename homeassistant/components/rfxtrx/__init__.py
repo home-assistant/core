@@ -378,6 +378,7 @@ class RfxtrxDevice(Entity):
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIRE_EVENT]
         self._brightness = 0
+        self._unique_id = f"{slugify(self._event.device.type_string.lower())}_{slugify(self._event.device.id_string.lower())}"
         self.added_to_hass = False
 
     async def async_added_to_hass(self):
@@ -408,6 +409,11 @@ class RfxtrxDevice(Entity):
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return True
+
+    @property
+    def unique_id(self):
+        """Return unique identifier of remote device."""
+        return self._unique_id
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
