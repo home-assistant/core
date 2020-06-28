@@ -93,8 +93,8 @@ def stream_worker(hass, stream, quit_event):
         packet.pts -= first_pts
 
         # Reset segment on every keyframe
-        if not first_packet and (packet.is_keyframe or packet.pts < 60):
-            _LOGGER.debug("put packet to outputs: %s", outputs)
+        if not first_packet and (packet.is_keyframe or packet.dts < 60):
+            _LOGGER.debug("put packet to %s outputs: %s", packet.dts, outputs)
             # Calculate the segment duration by multiplying the presentation
             # timestamp by the time base, which gets us total seconds.
             # By then dividing by the sequence, we can calculate how long
